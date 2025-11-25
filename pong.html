@@ -101,6 +101,9 @@
         let highScore = localStorage.getItem('pongHighScore') || 0;
         let gameRunning = false;
         let gameLoop;
+        let lastFrameTime = 0;
+        const targetFPS = 60;
+        const frameDelay = 1000 / targetFPS;
 
         highScoreElement.textContent = highScore;
 
@@ -230,9 +233,18 @@
             aiPaddle.y = canvas.height / 2 - aiPaddle.height / 2;
             resetBall();
             gameRunning = true;
+            lastFrameTime = performance.now();
         }
 
-        function gameLoopFunction() {
+        function gameLoopFunction(currentTime) {
+            // Frame rate limiting
+            const deltaTime = currentTime - lastFrameTime;
+            if (deltaTime < frameDelay) {
+                requestAnimationFrame(gameLoopFunction);
+                return;
+            }
+            lastFrameTime = currentTime - (deltaTime % frameDelay);
+
             updateGame();
             drawGame();
         }
@@ -261,7 +273,7 @@
         restartBtn.addEventListener('click', startGame);
 
         // Start game loop
-        gameLoop = setInterval(gameLoopFunction, 1000 / 60);
+        requestAnimationFrame(gameLoopFunction);
 
         // Draw initial state
         drawGame();

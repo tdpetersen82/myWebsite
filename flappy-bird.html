@@ -88,6 +88,9 @@
         let highScore = localStorage.getItem('flappyHighScore') || 0;
         let gameRunning = false;
         let gameLoop;
+        let lastFrameTime = 0;
+        const targetFPS = 60;
+        const frameDelay = 1000 / targetFPS;
 
         highScoreElement.textContent = highScore;
 
@@ -198,8 +201,16 @@
             drawScore();
         }
 
-        function update() {
+        function update(currentTime) {
             if (!gameRunning) return;
+
+            // Frame rate limiting
+            const deltaTime = currentTime - lastFrameTime;
+            if (deltaTime < frameDelay) {
+                gameLoop = requestAnimationFrame(update);
+                return;
+            }
+            lastFrameTime = currentTime - (deltaTime % frameDelay);
 
             frameCount++;
 
@@ -301,6 +312,7 @@
             scoreElement.textContent = score;
             
             gameRunning = true;
+            lastFrameTime = performance.now();
             gameLoop = requestAnimationFrame(update);
         }
 

@@ -98,6 +98,9 @@
         let alienDropDistance = 20;
         let lastAlienShot = 0;
         let gameLoop;
+        let lastFrameTime = 0;
+        const targetFPS = 60;
+        const frameDelay = 1000 / targetFPS;
 
         function createAliens() {
             aliens = [];
@@ -188,6 +191,14 @@
 
         function update(timestamp) {
             if (!gameRunning) return;
+
+            // Frame rate limiting
+            const deltaTime = timestamp - lastFrameTime;
+            if (deltaTime < frameDelay) {
+                gameLoop = requestAnimationFrame(update);
+                return;
+            }
+            lastFrameTime = timestamp - (deltaTime % frameDelay);
 
             // Move player
             player.x += player.dx;
@@ -338,6 +349,7 @@
             createAliens();
             
             gameRunning = true;
+            lastFrameTime = performance.now();
             lastAlienShot = performance.now();
             gameLoop = requestAnimationFrame(update);
         }
