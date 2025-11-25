@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pong Game</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        canvas {
+            border: 2px solid #333;
+            background-color: #111;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏓 Pong Game</h1>
+        <div class="game-info">
+            <p>Score: <span id="score">0</span></p>
+            <p>High Score: <span id="highScore">0</span></p>
+        </div>
+        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        <div class="controls">
+            <p>Use Arrow Keys (↑↓) to move the paddle</p>
+            <p>Press Space to start</p>
+            <button id="restartBtn" class="play-button">Restart Game</button>
+        </div>
+        <a href="index.html" class="back-button">← Back to Game Hub</a>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const highScoreElement = document.getElementById('highScore');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // Sound effects using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(frequency, duration, type = 'sine') {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function playPaddleHitSound() {
+            playSound(400, 0.1, 'square');
+        }
+
+        function playScoreSound() {
+            playSound(600, 0.15, 'sine');
+        }
+
+        function playGameOverSound() {
+            playSound(200, 0.1);
+            setTimeout(() => playSound(150, 0.2), 100);
+        }
+
+        // Game objects
+        const paddle = {
+            x: canvas.width - 30,
+            y: canvas.height / 2 - 40,
+            width: 10,
+            height: 80,
+            speed: 6,
+            dy: 0
+        };
+
+        const aiPaddle = {
+            x: 20,
+            y: canvas.height / 2 - 40,
+            width: 10,
+            height: 80,
+            speed: 3
+        };
+
+        const ball = {
+            x: canvas.width / 2,
+            y: canvas.height / 2,
+            radius: 8,
+            dx: 4,
+            dy: 4,
+            speed: 4
+        };
+
+        let score = 0;
+        let highScore = localStorage.getItem('pongHighScore') || 0;
+        let gameRunning = false;
+        let gameLoop;
+
+        highScoreElement.textContent = highScore;
+
+        function drawRect(x, y, w, h, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x, y, w, h);
+        }
+
+        function drawCircle(x, y, r, color) {
+            ctx.fillStyle = color;
+            ctx.beginPath();
+            ctx.arc(x, y, r, 0, Math.PI * 2);
+            ctx.fill();
+        }
+
+        function drawGame() {
+            // Clear canvas
+            drawRect(0, 0, canvas.width, canvas.height, '#111');
+
+            // Draw center line
+            for (let i = 0; i < canvas.height; i += 20) {
+                drawRect(canvas.width / 2 - 2, i, 4, 10, '#333');
+            }
+
+            // Draw paddles
+            drawRect(paddle.x, paddle.y, paddle.width, paddle.height, '#4CAF50');
+            drawRect(aiPaddle.x, aiPaddle.y, aiPaddle.width, aiPaddle.height, '#2196F3');
+
+            // Draw ball
+            drawCircle(ball.x, ball.y, ball.radius, '#FF5252');
+        }
+
+        function updateGame() {
+            if (!gameRunning) return;
+
+            // Move player paddle
+            paddle.y += paddle.dy;
+            if (paddle.y < 0) paddle.y = 0;
+            if (paddle.y + paddle.height > canvas.height) {
+                paddle.y = canvas.height - paddle.height;
+            }
+
+            // AI paddle follows ball
+            const aiPaddleCenter = aiPaddle.y + aiPaddle.height / 2;
+            if (aiPaddleCenter < ball.y - 35) {
+                aiPaddle.y += aiPaddle.speed;
+            } else if (aiPaddleCenter > ball.y + 35) {
+                aiPaddle.y -= aiPaddle.speed;
+            }
+
+            // Keep AI paddle in bounds
+            if (aiPaddle.y < 0) aiPaddle.y = 0;
+            if (aiPaddle.y + aiPaddle.height > canvas.height) {
+                aiPaddle.y = canvas.height - aiPaddle.height;
+            }
+
+            // Move ball
+            ball.x += ball.dx;
+            ball.y += ball.dy;
+
+            // Ball collision with top and bottom
+            if (ball.y - ball.radius < 0 || ball.y + ball.radius > canvas.height) {
+                ball.dy *= -1;
+                playPaddleHitSound();
+            }
+
+            // Ball collision with player paddle
+            if (ball.x + ball.radius > paddle.x &&
+                ball.y > paddle.y &&
+                ball.y < paddle.y + paddle.height) {
+                ball.dx = -Math.abs(ball.dx);
+                score++;
+                scoreElement.textContent = score;
+                playScoreSound();
+                
+                if (score > highScore) {
+                    highScore = score;
+                    highScoreElement.textContent = highScore;
+                    localStorage.setItem('pongHighScore', highScore);
+                }
+                
+                // Increase difficulty slightly
+                ball.dx *= 1.05;
+                ball.dy *= 1.05;
+            }
+
+            // Ball collision with AI paddle
+            if (ball.x - ball.radius < aiPaddle.x + aiPaddle.width &&
+                ball.y > aiPaddle.y &&
+                ball.y < aiPaddle.y + aiPaddle.height) {
+                ball.dx = Math.abs(ball.dx);
+                playPaddleHitSound();
+            }
+
+            // Ball out of bounds (player missed)
+            if (ball.x + ball.radius < 0 || ball.x - ball.radius > canvas.width) {
+                gameOver();
+            }
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            playGameOverSound();
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#fff';
+            ctx.font = '30px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2);
+            ctx.font = '20px Arial';
+            ctx.fillText('Press Restart or Space to play again', canvas.width / 2, canvas.height / 2 + 40);
+        }
+
+        function resetBall() {
+            ball.x = canvas.width / 2;
+            ball.y = canvas.height / 2;
+            ball.dx = (Math.random() > 0.5 ? 1 : -1) * 4;
+            ball.dy = (Math.random() > 0.5 ? 1 : -1) * 4;
+        }
+
+        function startGame() {
+            if (gameRunning) return;
+            
+            score = 0;
+            scoreElement.textContent = score;
+            paddle.y = canvas.height / 2 - paddle.height / 2;
+            aiPaddle.y = canvas.height / 2 - aiPaddle.height / 2;
+            resetBall();
+            gameRunning = true;
+        }
+
+        function gameLoopFunction() {
+            updateGame();
+            drawGame();
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                if (!gameRunning) {
+                    startGame();
+                }
+            }
+
+            if (e.key === 'ArrowUp') {
+                paddle.dy = -paddle.speed;
+            } else if (e.key === 'ArrowDown') {
+                paddle.dy = paddle.speed;
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
+                paddle.dy = 0;
+            }
+        });
+
+        restartBtn.addEventListener('click', startGame);
+
+        // Start game loop
+        gameLoop = setInterval(gameLoopFunction, 1000 / 60);
+
+        // Draw initial state
+        drawGame();
+    </script>
+</body>
+</html>

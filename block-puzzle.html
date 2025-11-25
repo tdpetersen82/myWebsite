@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Block Puzzle</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        canvas {
+            border: 2px solid #333;
+            background-color: #000;
+            display: block;
+            margin: 20px auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🟦 Block Puzzle</h1>
+        <div class="game-info">
+            <p>Score: <span id="score">0</span></p>
+            <p>Lines: <span id="lines">0</span></p>
+            <p>Level: <span id="level">1</span></p>
+        </div>
+        <canvas id="gameCanvas" width="300" height="600"></canvas>
+        <div class="controls">
+            <p>← → : Move | ↑ : Rotate | ↓ : Drop Faster</p>
+            <p>Press any arrow key to start</p>
+            <button id="restartBtn" class="play-button">Restart Game</button>
+        </div>
+        <a href="index.html" class="back-button">← Back to Game Hub</a>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const scoreElement = document.getElementById('score');
+        const linesElement = document.getElementById('lines');
+        const levelElement = document.getElementById('level');
+        const restartBtn = document.getElementById('restartBtn');
+
+        // Sound effects using Web Audio API
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        function playSound(frequency, duration, type = 'sine') {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = frequency;
+            oscillator.type = type;
+            
+            gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + duration);
+        }
+
+        function playRotateSound() {
+            playSound(300, 0.05, 'square');
+        }
+
+        function playDropSound() {
+            playSound(150, 0.1, 'square');
+        }
+
+        function playClearLineSound() {
+            playSound(500, 0.1, 'sine');
+            setTimeout(() => playSound(700, 0.15, 'sine'), 50);
+        }
+
+        function playGameOverSound() {
+            playSound(200, 0.1);
+            setTimeout(() => playSound(150, 0.2), 100);
+        }
+
+        const COLS = 10;
+        const ROWS = 20;
+        const BLOCK_SIZE = 30;
+
+        // Tetromino shapes
+        const SHAPES = [
+            [[1,1,1,1]], // I
+            [[1,1],[1,1]], // O
+            [[0,1,0],[1,1,1]], // T
+            [[1,0,0],[1,1,1]], // L
+            [[0,0,1],[1,1,1]], // J
+            [[0,1,1],[1,1,0]], // S
+            [[1,1,0],[0,1,1]]  // Z
+        ];
+
+        const COLORS = [
+            '#00f0f0', // cyan
+            '#f0f000', // yellow
+            '#a000f0', // purple
+            '#f0a000', // orange
+            '#0000f0', // blue
+            '#00f000', // green
+            '#f00000'  // red
+        ];
+
+        let board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+        let currentPiece = null;
+        let currentX = 0;
+        let currentY = 0;
+        let score = 0;
+        let lines = 0;
+        let level = 1;
+        let gameRunning = false;
+        let dropInterval = 1000;
+        let lastDrop = 0;
+        let gameLoop;
+
+        function createPiece() {
+            const shapeIndex = Math.floor(Math.random() * SHAPES.length);
+            return {
+                shape: SHAPES[shapeIndex],
+                color: COLORS[shapeIndex]
+            };
+        }
+
+        function drawBlock(x, y, color) {
+            ctx.fillStyle = color;
+            ctx.fillRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+            ctx.strokeStyle = '#000';
+            ctx.strokeRect(x * BLOCK_SIZE, y * BLOCK_SIZE, BLOCK_SIZE - 1, BLOCK_SIZE - 1);
+        }
+
+        function drawBoard() {
+            ctx.fillStyle = '#000';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    if (board[y][x]) {
+                        drawBlock(x, y, board[y][x]);
+                    }
+                }
+            }
+        }
+
+        function drawPiece() {
+            if (!currentPiece) return;
+            
+            currentPiece.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value) {
+                        drawBlock(currentX + x, currentY + y, currentPiece.color);
+                    }
+                });
+            });
+        }
+
+        function collision(offsetX = 0, offsetY = 0, shape = currentPiece.shape) {
+            for (let y = 0; y < shape.length; y++) {
+                for (let x = 0; x < shape[y].length; x++) {
+                    if (shape[y][x]) {
+                        const newX = currentX + x + offsetX;
+                        const newY = currentY + y + offsetY;
+                        
+                        if (newX < 0 || newX >= COLS || newY >= ROWS) {
+                            return true;
+                        }
+                        if (newY >= 0 && board[newY][newX]) {
+                            return true;
+                        }
+                    }
+                }
+            }
+            return false;
+        }
+
+        function merge() {
+            currentPiece.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value) {
+                        if (currentY + y >= 0) {
+                            board[currentY + y][currentX + x] = currentPiece.color;
+                        }
+                    }
+                });
+            });
+        }
+
+        function clearLines() {
+            let linesCleared = 0;
+            
+            for (let y = ROWS - 1; y >= 0; y--) {
+                if (board[y].every(cell => cell !== 0)) {
+                    board.splice(y, 1);
+                    board.unshift(Array(COLS).fill(0));
+                    linesCleared++;
+                    y++; // Check same row again
+                }
+            }
+
+            if (linesCleared > 0) {
+                lines += linesCleared;
+                score += linesCleared * 100 * level;
+                level = Math.floor(lines / 10) + 1;
+                dropInterval = Math.max(100, 1000 - (level - 1) * 100);
+                
+                playClearLineSound();
+                linesElement.textContent = lines;
+                scoreElement.textContent = score;
+                levelElement.textContent = level;
+            }
+        }
+
+        function rotate() {
+            const rotated = currentPiece.shape[0].map((_, i) =>
+                currentPiece.shape.map(row => row[i]).reverse()
+            );
+            
+            if (!collision(0, 0, rotated)) {
+                currentPiece.shape = rotated;
+                playRotateSound();
+            }
+        }
+
+        function moveDown() {
+            if (!collision(0, 1)) {
+                currentY++;
+            } else {
+                playDropSound();
+                merge();
+                clearLines();
+                spawnPiece();
+            }
+        }
+
+        function spawnPiece() {
+            currentPiece = createPiece();
+            currentX = Math.floor(COLS / 2) - Math.floor(currentPiece.shape[0].length / 2);
+            currentY = 0;
+
+            if (collision()) {
+                gameOver();
+            }
+        }
+
+        function gameOver() {
+            gameRunning = false;
+            cancelAnimationFrame(gameLoop);
+            playGameOverSound();
+            
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#fff';
+            ctx.font = '30px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2);
+            ctx.font = '20px Arial';
+            ctx.fillText('Press Restart to play again', canvas.width / 2, canvas.height / 2 + 40);
+        }
+
+        function update(timestamp) {
+            if (!gameRunning) return;
+
+            if (timestamp - lastDrop > dropInterval) {
+                moveDown();
+                lastDrop = timestamp;
+            }
+
+            drawBoard();
+            drawPiece();
+            
+            gameLoop = requestAnimationFrame(update);
+        }
+
+        function startGame() {
+            board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
+            score = 0;
+            lines = 0;
+            level = 1;
+            dropInterval = 1000;
+            
+            scoreElement.textContent = score;
+            linesElement.textContent = lines;
+            levelElement.textContent = level;
+            
+            spawnPiece();
+            gameRunning = true;
+            lastDrop = performance.now();
+            gameLoop = requestAnimationFrame(update);
+        }
+
+        document.addEventListener('keydown', (e) => {
+            if (!gameRunning && e.key.startsWith('Arrow')) {
+                startGame();
+                return;
+            }
+
+            if (!gameRunning) return;
+
+            switch (e.key) {
+                case 'ArrowLeft':
+                    if (!collision(-1, 0)) currentX--;
+                    break;
+                case 'ArrowRight':
+                    if (!collision(1, 0)) currentX++;
+                    break;
+                case 'ArrowDown':
+                    moveDown();
+                    break;
+                case 'ArrowUp':
+                    rotate();
+                    break;
+            }
+            
+            drawBoard();
+            drawPiece();
+        });
+
+        restartBtn.addEventListener('click', startGame);
+
+        // Draw initial empty board
+        drawBoard();
+    </script>
+</body>
+</html>
