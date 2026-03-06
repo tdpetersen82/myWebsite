@@ -89,6 +89,126 @@
         .nn-panel button {
             margin-top: 4px;
         }
+        /* ---- Battle Simulator ---- */
+        .sim-panel {
+            border: 1px solid #444;
+            border-radius: 8px;
+            margin: 14px auto;
+            max-width: 560px;
+            overflow: hidden;
+        }
+        .sim-panel-header {
+            background: #1e1e2e;
+            padding: 10px 16px;
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-weight: bold;
+            font-size: 1em;
+            user-select: none;
+        }
+        .sim-panel-header:hover { background: #252538; }
+        .sim-panel-body {
+            background: #12121e;
+            padding: 14px 16px;
+            display: none;
+        }
+        .sim-selectors {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            flex-wrap: wrap;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        .sim-selectors select {
+            padding: 6px 10px;
+            border-radius: 6px;
+            border: 2px solid #555;
+            background: #222;
+            color: #fff;
+            font-size: 0.9em;
+            cursor: pointer;
+        }
+        .sim-selectors label { font-size: 0.85em; color: #aaa; }
+        .sim-vs { font-weight: bold; font-size: 1.1em; color: #888; }
+        .sim-options {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+            justify-content: center;
+            flex-wrap: wrap;
+            margin-bottom: 10px;
+            font-size: 0.85em;
+            color: #aaa;
+        }
+        .sim-options input[type=number] {
+            width: 70px;
+            padding: 4px 8px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background: #222;
+            color: #fff;
+            font-size: 0.9em;
+        }
+        .sim-options select {
+            padding: 4px 8px;
+            border-radius: 5px;
+            border: 1px solid #555;
+            background: #222;
+            color: #fff;
+            font-size: 0.85em;
+            cursor: pointer;
+        }
+        .sim-controls {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin-bottom: 12px;
+        }
+        .sim-progress { width: 100%; height: 8px; margin: 6px 0 10px; display: none; }
+        .sim-results { display: none; }
+        .sim-result-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin: 6px 0;
+            font-size: 0.85em;
+        }
+        .sim-algo-label {
+            width: 110px;
+            text-align: right;
+            flex-shrink: 0;
+            color: #ccc;
+            font-size: 0.82em;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        .sim-bar-wrap {
+            flex: 1;
+            background: #2a2a3a;
+            border-radius: 4px;
+            height: 16px;
+            overflow: hidden;
+        }
+        .sim-bar {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+        .sim-bar-a    { background: #e74c3c; }
+        .sim-bar-b    { background: #2563eb; }
+        .sim-bar-draw { background: #555; }
+        .sim-pct   { width: 38px; text-align: right; color: #eee; font-weight: bold; font-size: 0.82em; }
+        .sim-count { width: 60px; color: #888; font-size: 0.78em; }
+        .sim-meta {
+            margin-top: 10px;
+            font-size: 0.78em;
+            color: #666;
+            text-align: center;
+        }
     </style>
 </head>
 <body>
@@ -150,6 +270,77 @@
             <div class="nn-status" id="nnStatus">Neural Net: Untrained (random play)</div>
             <button id="trainBtn" class="play-button">Train Model (2000 games)</button>
             <progress id="trainProgress" value="0" max="2000" style="display:none"></progress>
+        </div>
+
+        <!-- ===== BATTLE SIMULATOR ===== -->
+        <div class="sim-panel">
+            <div class="sim-panel-header" id="simPanelHeader">
+                <span>&#x2694; Battle Simulator</span>
+                <span id="simChevron">&#x25BC;</span>
+            </div>
+            <div class="sim-panel-body" id="simPanelBody">
+                <div class="sim-selectors">
+                    <div>
+                        <label>Algorithm A</label><br>
+                        <select id="simASelect">
+                            <option value="random">Lv1: Random</option>
+                            <option value="greedy">Lv2: Greedy</option>
+                            <option value="heuristic">Lv3: Heuristic</option>
+                            <option value="minimax" selected>Lv4: Minimax</option>
+                            <option value="neural">Lv5: Neural Net</option>
+                            <option value="mcts">Lv6: MCTS</option>
+                        </select>
+                    </div>
+                    <span class="sim-vs">vs</span>
+                    <div>
+                        <label>Algorithm B</label><br>
+                        <select id="simBSelect">
+                            <option value="random" selected>Lv1: Random</option>
+                            <option value="greedy">Lv2: Greedy</option>
+                            <option value="heuristic">Lv3: Heuristic</option>
+                            <option value="minimax">Lv4: Minimax</option>
+                            <option value="neural">Lv5: Neural Net</option>
+                            <option value="mcts">Lv6: MCTS</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="sim-options">
+                    <label>Games: <input type="number" id="simGameCount" value="100" min="1" max="5000"></label>
+                    <label>Speed:
+                        <select id="simSpeed">
+                            <option value="fast">Fast (reduced depth)</option>
+                            <option value="full">Full Strength</option>
+                        </select>
+                    </label>
+                    <label><input type="checkbox" id="simAlternate" checked> Alternate first player</label>
+                </div>
+                <div class="sim-controls">
+                    <button id="simRunBtn" class="play-button">&#x25B6; Run</button>
+                    <button id="simStopBtn" class="play-button" style="display:none">&#x25A0; Stop</button>
+                </div>
+                <progress class="sim-progress" id="simProgress" value="0" max="100"></progress>
+                <div class="sim-results" id="simResults">
+                    <div class="sim-result-row">
+                        <span class="sim-algo-label" id="simLabelA">Minimax</span>
+                        <div class="sim-bar-wrap"><div class="sim-bar sim-bar-a" id="simBarA" style="width:0%"></div></div>
+                        <span class="sim-pct" id="simPctA">0%</span>
+                        <span class="sim-count" id="simCountA">0 wins</span>
+                    </div>
+                    <div class="sim-result-row">
+                        <span class="sim-algo-label" id="simLabelB">Random</span>
+                        <div class="sim-bar-wrap"><div class="sim-bar sim-bar-b" id="simBarB" style="width:0%"></div></div>
+                        <span class="sim-pct" id="simPctB">0%</span>
+                        <span class="sim-count" id="simCountB">0 wins</span>
+                    </div>
+                    <div class="sim-result-row">
+                        <span class="sim-algo-label">Draws</span>
+                        <div class="sim-bar-wrap"><div class="sim-bar sim-bar-draw" id="simBarDraw" style="width:0%"></div></div>
+                        <span class="sim-pct" id="simPctDraw">0%</span>
+                        <span class="sim-count" id="simCountDraw">0</span>
+                    </div>
+                    <div class="sim-meta" id="simMeta"></div>
+                </div>
+            </div>
         </div>
 
         <a href="index.html" class="back-button">&#x2190; Back to Game Hub</a>
@@ -395,7 +586,7 @@
         let minimaxNodes = 0;
         const COL_ORDER  = [3, 2, 4, 1, 5, 0, 6];
 
-        function minimaxMove(player, b) {
+        function minimaxMove(player, b, depth = MINIMAX_DEPTH) {
             minimaxNodes = 0;
             // Work on a copy so we can safely mutate
             const wb    = b.map(r => r.slice());
@@ -403,7 +594,7 @@
             let bestCol = valid[0], bestScore = -Infinity;
             for (const col of valid) {
                 const row = dropMut(wb, col, player);
-                const score = minimax(wb, row, col, MINIMAX_DEPTH - 1, -Infinity, Infinity, false, player);
+                const score = minimax(wb, row, col, depth - 1, -Infinity, Infinity, false, player);
                 undoMut(wb, row, col);
                 if (score > bestScore) { bestScore = score; bestCol = col; }
             }
@@ -703,11 +894,11 @@
             }
         }
 
-        function mctsMove(player, b) {
+        function mctsMove(player, b, sims = MCTS_SIMS) {
             mctsSimsRun = 0;
             const root = new MCTSNode(b.map(r => r.slice()), opponent(player), -1, -1, null);
 
-            for (let sim = 0; sim < MCTS_SIMS; sim++) {
+            for (let sim = 0; sim < sims; sim++) {
                 mctsSimsRun++;
 
                 // Selection
@@ -777,6 +968,150 @@
                 default:          return randomMove(b);
             }
         }
+
+        // =============================================
+        // BATTLE SIMULATOR
+        // =============================================
+        const simASelect    = document.getElementById('simASelect');
+        const simBSelect    = document.getElementById('simBSelect');
+        const simGameCount  = document.getElementById('simGameCount');
+        const simSpeed      = document.getElementById('simSpeed');
+        const simAlternate  = document.getElementById('simAlternate');
+        const simRunBtn     = document.getElementById('simRunBtn');
+        const simStopBtn    = document.getElementById('simStopBtn');
+        const simProgress   = document.getElementById('simProgress');
+        const simResults    = document.getElementById('simResults');
+        const simLabelA     = document.getElementById('simLabelA');
+        const simLabelB     = document.getElementById('simLabelB');
+        const simBarA       = document.getElementById('simBarA');
+        const simBarB       = document.getElementById('simBarB');
+        const simBarDraw    = document.getElementById('simBarDraw');
+        const simPctA       = document.getElementById('simPctA');
+        const simPctB       = document.getElementById('simPctB');
+        const simPctDraw    = document.getElementById('simPctDraw');
+        const simCountA     = document.getElementById('simCountA');
+        const simCountB     = document.getElementById('simCountB');
+        const simCountDraw  = document.getElementById('simCountDraw');
+        const simMeta       = document.getElementById('simMeta');
+
+        // Collapsible panel toggle
+        document.getElementById('simPanelHeader').addEventListener('click', () => {
+            const body    = document.getElementById('simPanelBody');
+            const chevron = document.getElementById('simChevron');
+            const open    = body.style.display !== 'none';
+            body.style.display    = open ? 'none' : 'block';
+            chevron.textContent   = open ? '\u25BC' : '\u25B2';
+        });
+
+        let simRunning = false;
+
+        function simMoveFor(type, player, b, fast) {
+            switch (type) {
+                case 'random':    return randomMove(b);
+                case 'greedy':    return greedyMove(player, b);
+                case 'heuristic': return heuristicMove(player, b);
+                case 'minimax':   return minimaxMove(player, b, fast ? 4 : MINIMAX_DEPTH);
+                case 'neural':    return neuralNetMove(player, b);
+                case 'mcts':      return mctsMove(player, b, fast ? 50 : MCTS_SIMS);
+                default:          return randomMove(b);
+            }
+        }
+
+        // Runs one complete game synchronously. typeA plays as `colorA`, typeB as the other.
+        function runOneSimGame(typeA, typeB, colorA, fast) {
+            const b      = Array.from({ length: ROWS }, () => Array(COLS).fill(EMPTY));
+            const colorB = opponent(colorA);
+            let player   = RED;
+            while (true) {
+                const type = player === colorA ? typeA : typeB;
+                const col  = simMoveFor(type, player, b, fast);
+                const row  = dropMut(b, col, player);
+                const win  = checkWinAt(b, row, col);
+                if (win) return win === colorA ? 'A' : 'B';
+                if (isFull(b)) return 'draw';
+                player = opponent(player);
+            }
+        }
+
+        function updateSimResults(winsA, winsB, draws, completed, total, elapsedMs) {
+            const pctA    = completed > 0 ? Math.round(winsA / completed * 100) : 0;
+            const pctB    = completed > 0 ? Math.round(winsB / completed * 100) : 0;
+            const pctDraw = completed > 0 ? Math.round(draws / completed * 100) : 0;
+
+            simBarA.style.width    = pctA + '%';
+            simBarB.style.width    = pctB + '%';
+            simBarDraw.style.width = pctDraw + '%';
+
+            simPctA.textContent    = pctA + '%';
+            simPctB.textContent    = pctB + '%';
+            simPctDraw.textContent = pctDraw + '%';
+
+            simCountA.textContent    = winsA + ' wins';
+            simCountB.textContent    = winsB + ' wins';
+            simCountDraw.textContent = draws;
+
+            simProgress.value = completed;
+
+            const gps = elapsedMs > 0 ? Math.round(completed / (elapsedMs / 1000)) : '?';
+            simMeta.textContent = `${completed} / ${total} games  \u2022  ${gps} games/sec`;
+        }
+
+        function runSimBatch(typeA, typeB, fast, alternate, total, winsA, winsB, draws, completed, startMs) {
+            if (!simRunning) return;
+            const BATCH = fast ? 20 : 2; // fewer games/batch for slow algos to stay responsive
+            for (let i = 0; i < BATCH && completed < total; i++, completed++) {
+                // Alternate who goes first to neutralise first-mover advantage
+                const colorA = (alternate && completed % 2 === 1) ? BLUE : RED;
+                const result = runOneSimGame(typeA, typeB, colorA, fast);
+                if (result === 'A') winsA++;
+                else if (result === 'B') winsB++;
+                else draws++;
+            }
+            updateSimResults(winsA, winsB, draws, completed, total, performance.now() - startMs);
+            if (completed >= total) {
+                simRunning = false;
+                simRunBtn.style.display  = 'inline-block';
+                simStopBtn.style.display = 'none';
+                simProgress.style.display = 'none';
+                return;
+            }
+            setTimeout(() => runSimBatch(typeA, typeB, fast, alternate, total, winsA, winsB, draws, completed, startMs), 0);
+        }
+
+        simRunBtn.addEventListener('click', () => {
+            if (simRunning) return;
+            const typeA    = simASelect.value;
+            const typeB    = simBSelect.value;
+            const total    = Math.max(1, Math.min(5000, parseInt(simGameCount.value) || 100));
+            const fast     = simSpeed.value === 'fast';
+            const alternate = simAlternate.checked;
+
+            simLabelA.textContent     = PLAYER_NAMES[typeA];
+            simLabelB.textContent     = PLAYER_NAMES[typeB];
+            simProgress.max           = total;
+            simProgress.value         = 0;
+            simProgress.style.display = 'block';
+            simResults.style.display  = 'block';
+            simRunBtn.style.display   = 'none';
+            simStopBtn.style.display  = 'inline-block';
+            simMeta.textContent       = 'Starting...';
+
+            // Reset bars
+            [simBarA, simBarB, simBarDraw].forEach(b => b.style.width = '0%');
+            [simPctA, simPctB, simPctDraw].forEach(s => s.textContent = '0%');
+            [simCountA, simCountB].forEach(s => s.textContent = '0 wins');
+            simCountDraw.textContent = '0';
+
+            simRunning = true;
+            setTimeout(() => runSimBatch(typeA, typeB, fast, alternate, total, 0, 0, 0, 0, performance.now()), 0);
+        });
+
+        simStopBtn.addEventListener('click', () => {
+            simRunning = false;
+            simRunBtn.style.display  = 'inline-block';
+            simStopBtn.style.display = 'none';
+            simProgress.style.display = 'none';
+        });
 
         // =============================================
         // GAME LOGIC
