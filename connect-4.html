@@ -268,7 +268,7 @@
 
         <div class="nn-panel" id="nnPanel" style="display:none">
             <div class="nn-status" id="nnStatus">Neural Net: Untrained (random play)</div>
-            <button id="trainBtn" class="play-button">Train Model (2000 games)</button>
+            <button id="trainBtn" class="play-button">Train Model (5000 games vs Greedy)</button>
             <progress id="trainProgress" value="0" max="2000" style="display:none"></progress>
         </div>
 
@@ -393,7 +393,7 @@
 
         const MINIMAX_DEPTH = 7;
         const MCTS_SIMS     = 500;
-        const TRAIN_TOTAL   = 2000;
+        const TRAIN_TOTAL   = 5000;
 
         // =============================================
         // STATE
@@ -793,35 +793,44 @@
         let trainingInProgress = false;
 
         function runTrainingGame() {
+            // Train against Greedy (fixed, competent opponent) rather than self-play.
+            // Alternating sides ensures the net learns from both RED and BLUE perspectives.
+            const nnColor  = Math.random() < 0.5 ? RED : BLUE;
+            const oppColor = opponent(nnColor);
+
             let tb = Array.from({ length: ROWS }, () => Array(COLS).fill(EMPTY));
             let tp = RED;
-            const history = [];
+            const history = []; // only the NN's (state, action) pairs
 
             while (true) {
                 const valid = getValidCols(tb);
                 if (valid.length === 0) break;
 
-                const input = boardToInput(tb, tp);
-                const { probs } = neuralNet.forward(input);
-
-                // Epsilon-greedy
-                const col = Math.random() < 0.2
-                    ? valid[Math.floor(Math.random() * valid.length)]
-                    : valid.reduce((best, c) => probs[c] > probs[best] ? c : best, valid[0]);
-
-                history.push({ player: tp, input, col });
+                let col;
+                if (tp === nnColor) {
+                    const input = boardToInput(tb, tp);
+                    const { probs } = neuralNet.forward(input);
+                    // Epsilon-greedy exploration
+                    col = Math.random() < 0.15
+                        ? valid[Math.floor(Math.random() * valid.length)]
+                        : valid.reduce((best, c) => probs[c] > probs[best] ? c : best, valid[0]);
+                    history.push({ input, col });
+                } else {
+                    // Opponent: Greedy AI provides clear, consistent signal
+                    col = greedyMove(oppColor, tb);
+                }
 
                 const row = dropMut(tb, col, tp);
                 const winner = checkWinAt(tb, row, col);
 
                 if (winner) {
-                    for (const h of history) {
-                        neuralNet.update(h.input, h.col, h.player === winner ? 1 : -1);
-                    }
+                    const reward = winner === nnColor ? 1 : -1;
+                    for (const h of history) neuralNet.update(h.input, h.col, reward);
                     return;
                 }
                 if (isFull(tb)) {
-                    for (const h of history) neuralNet.update(h.input, h.col, -0.1);
+                    // Draw is slightly positive — better than losing
+                    for (const h of history) neuralNet.update(h.input, h.col, 0.1);
                     return;
                 }
                 tp = opponent(tp);
@@ -860,6 +869,9 @@
             trainBtn.disabled  = true;
             trainProgress.style.display = 'block';
             trainProgress.value = 0;
+            // Reset weights so training always starts fresh
+            Object.assign(neuralNet, new NeuralNet());
+            localStorage.removeItem('c4NeuralNetWeights');
             trainProgress.max   = TRAIN_TOTAL;
             trainBatch(TRAIN_TOTAL);
         });
