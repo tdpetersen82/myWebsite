@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect 4</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        canvas {
+            border: 2px solid #333;
+            background-color: #111;
+            display: block;
+            margin: 20px auto;
+            cursor: pointer;
+        }
+        .turn-indicator {
+            font-size: 1.2em;
+            font-weight: bold;
+            margin: 8px 0;
+            min-height: 1.5em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔴 Connect 4</h1>
+        <div class="game-info">
+            <p>Red Wins: <span id="redWins">0</span></p>
+            <p>Yellow Wins: <span id="yellowWins">0</span></p>
+        </div>
+        <p class="turn-indicator" id="turnIndicator">Red's turn</p>
+        <canvas id="gameCanvas" width="490" height="490"></canvas>
+        <div class="controls">
+            <p>Click a column to drop your piece. Get 4 in a row to win!</p>
+            <button id="restartBtn" class="play-button">New Game</button>
+        </div>
+        <a href="index.html" class="back-button">← Back to Game Hub</a>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const turnIndicator = document.getElementById('turnIndicator');
+        const redWinsEl = document.getElementById('redWins');
+        const yellowWinsEl = document.getElementById('yellowWins');
+        const restartBtn = document.getElementById('restartBtn');
+
+        const COLS = 7;
+        const ROWS = 6;
+        const CELL = 70;
+        const RADIUS = 28;
+        const BOARD_TOP = CELL; // top row reserved for hover preview
+
+        const EMPTY = 0;
+        const RED = 1;
+        const YELLOW = 2;
+
+        const COLORS = {
+            [EMPTY]: '#111',
+            [RED]: '#e74c3c',
+            [YELLOW]: '#f1c40f',
+        };
+
+        let board = [];
+        let currentPlayer = RED;
+        let gameOver = false;
+        let hoverCol = -1;
+        let redWins = 0;
+        let yellowWins = 0;
+
+        // --- Audio ---
+        const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(freq, duration, type = 'sine') {
+            const osc = audioCtx.createOscillator();
+            const gain = audioCtx.createGain();
+            osc.connect(gain);
+            gain.connect(audioCtx.destination);
+            osc.type = type;
+            osc.frequency.setValueAtTime(freq, audioCtx.currentTime);
+            gain.gain.setValueAtTime(0.15, audioCtx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioCtx.currentTime + duration);
+            osc.start();
+            osc.stop(audioCtx.currentTime + duration);
+        }
+
+        function playDrop() { playSound(300, 0.1); }
+        function playWin() {
+            [523, 659, 784, 1047].forEach((f, i) =>
+                setTimeout(() => playSound(f, 0.25), i * 120));
+        }
+        function playDraw() { playSound(200, 0.4, 'sawtooth'); }
+
+        // --- Game Logic ---
+        function initBoard() {
+            board = Array.from({ length: ROWS }, () => Array(COLS).fill(EMPTY));
+        }
+
+        function startGame() {
+            initBoard();
+            currentPlayer = RED;
+            gameOver = false;
+            hoverCol = -1;
+            updateTurnIndicator();
+            draw();
+        }
+
+        function dropPiece(col) {
+            if (gameOver) return;
+            // Find lowest empty row in column
+            for (let row = ROWS - 1; row >= 0; row--) {
+                if (board[row][col] === EMPTY) {
+                    board[row][col] = currentPlayer;
+                    playDrop();
+
+                    const winner = checkWinner(row, col);
+                    if (winner) {
+                        gameOver = true;
+                        if (winner === RED) {
+                            redWins++;
+                            redWinsEl.textContent = redWins;
+                            turnIndicator.textContent = '🔴 Red wins!';
+                        } else {
+                            yellowWins++;
+                            yellowWinsEl.textContent = yellowWins;
+                            turnIndicator.textContent = '🟡 Yellow wins!';
+                        }
+                        playWin();
+                        draw();
+                        return;
+                    }
+
+                    if (isBoardFull()) {
+                        gameOver = true;
+                        turnIndicator.textContent = "It's a draw!";
+                        playDraw();
+                        draw();
+                        return;
+                    }
+
+                    currentPlayer = currentPlayer === RED ? YELLOW : RED;
+                    updateTurnIndicator();
+                    draw();
+                    return;
+                }
+            }
+            // Column is full — do nothing
+        }
+
+        function isBoardFull() {
+            return board[0].every(cell => cell !== EMPTY);
+        }
+
+        function checkWinner(row, col) {
+            const player = board[row][col];
+            const directions = [
+                [0, 1],  // horizontal
+                [1, 0],  // vertical
+                [1, 1],  // diagonal /
+                [1, -1], // diagonal \
+            ];
+
+            for (const [dr, dc] of directions) {
+                let count = 1;
+                count += countDirection(row, col, dr, dc, player);
+                count += countDirection(row, col, -dr, -dc, player);
+                if (count >= 4) return player;
+            }
+            return null;
+        }
+
+        function countDirection(row, col, dr, dc, player) {
+            let count = 0;
+            let r = row + dr;
+            let c = col + dc;
+            while (r >= 0 && r < ROWS && c >= 0 && c < COLS && board[r][c] === player) {
+                count++;
+                r += dr;
+                c += dc;
+            }
+            return count;
+        }
+
+        function updateTurnIndicator() {
+            turnIndicator.textContent = currentPlayer === RED ? "🔴 Red's turn" : "🟡 Yellow's turn";
+        }
+
+        // --- Drawing ---
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawPreviewRow();
+            drawBoard();
+        }
+
+        function drawPreviewRow() {
+            if (hoverCol < 0 || gameOver) return;
+            const x = hoverCol * CELL + CELL / 2;
+            const y = CELL / 2;
+            ctx.beginPath();
+            ctx.arc(x, y, RADIUS, 0, Math.PI * 2);
+            ctx.fillStyle = COLORS[currentPlayer];
+            ctx.globalAlpha = 0.5;
+            ctx.fill();
+            ctx.globalAlpha = 1.0;
+        }
+
+        function drawBoard() {
+            // Draw board background
+            ctx.fillStyle = '#2563eb';
+            ctx.fillRect(0, BOARD_TOP, canvas.width, ROWS * CELL);
+
+            for (let row = 0; row < ROWS; row++) {
+                for (let col = 0; col < COLS; col++) {
+                    const x = col * CELL + CELL / 2;
+                    const y = BOARD_TOP + row * CELL + CELL / 2;
+                    drawCell(x, y, board[row][col], row, col);
+                }
+            }
+        }
+
+        function drawCell(x, y, player, row, col) {
+            ctx.beginPath();
+            ctx.arc(x, y, RADIUS, 0, Math.PI * 2);
+
+            if (player === EMPTY) {
+                // Subtle highlight for hovered column
+                ctx.fillStyle = hoverCol === col && !gameOver ? '#1a1a2e' : '#111';
+            } else {
+                ctx.fillStyle = COLORS[player];
+            }
+            ctx.fill();
+            ctx.strokeStyle = '#1d4ed8';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+        }
+
+        // --- Events ---
+        canvas.addEventListener('mousemove', (e) => {
+            if (gameOver) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            hoverCol = Math.floor(x / CELL);
+            if (hoverCol < 0 || hoverCol >= COLS) hoverCol = -1;
+            draw();
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            hoverCol = -1;
+            draw();
+        });
+
+        canvas.addEventListener('click', (e) => {
+            if (gameOver) return;
+            const rect = canvas.getBoundingClientRect();
+            const x = e.clientX - rect.left;
+            const col = Math.floor(x / CELL);
+            if (col >= 0 && col < COLS) dropPiece(col);
+        });
+
+        restartBtn.addEventListener('click', startGame);
+
+        // Start the game
+        startGame();
+    </script>
+</body>
+</html>
