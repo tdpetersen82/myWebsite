@@ -268,7 +268,7 @@
 
         <div class="nn-panel" id="nnPanel" style="display:none">
             <div class="nn-status" id="nnStatus">Neural Net: Untrained (random play)</div>
-            <button id="trainBtn" class="play-button">Train Model (5000 games vs Greedy)</button>
+            <button id="trainBtn" class="play-button">Train Model (5000 games, imitation)</button>
             <progress id="trainProgress" value="0" max="2000" style="display:none"></progress>
         </div>
 
@@ -699,49 +699,49 @@
                 return { h1, h2, probs: this._softmax(logits) };
             }
 
-            // Policy gradient (REINFORCE) update
-            update(input, actionIdx, reward, lr = 0.001) {
+            // Supervised cross-entropy update: teach net to pick targetCol
+            updateSupervised(input, targetCol, lr = 0.003) {
                 const { h1, h2, probs } = this.forward(input);
-
-                // Output gradient
+                // dL/dlogit = onehot - prob  (gradient ascent on log-prob of correct action)
                 const dOut = new Float64Array(7);
                 for (let i = 0; i < 7; i++) {
-                    dOut[i] = reward * ((i === actionIdx ? 1 : 0) - probs[i]);
+                    dOut[i] = (i === targetCol ? 1 : 0) - probs[i];
                 }
+                this._applyGradients(h1, h2, input, dOut, lr);
+            }
 
-                // Gradient w.r.t. h2 (before updating w3)
+            _applyGradients(h1, h2, input, dOut, lr) {
                 const dH2 = new Float64Array(32);
                 for (let i = 0; i < 7; i++) {
                     for (let j = 0; j < 32; j++) dH2[j] += dOut[i] * this.w3[i * 32 + j];
                 }
-                // Update w3, b3
                 for (let i = 0; i < 7; i++) {
                     for (let j = 0; j < 32; j++) this.w3[i * 32 + j] += lr * dOut[i] * h2[j];
                     this.b3[i] += lr * dOut[i];
                 }
-
-                // ReLU deriv through h2
                 const dH2Act = dH2.map((v, i) => h2[i] > 0 ? v : 0);
-
-                // Gradient w.r.t. h1 (before updating w2)
                 const dH1 = new Float64Array(64);
                 for (let i = 0; i < 32; i++) {
                     for (let j = 0; j < 64; j++) dH1[j] += dH2Act[i] * this.w2[i * 64 + j];
                 }
-                // Update w2, b2
                 for (let i = 0; i < 32; i++) {
                     for (let j = 0; j < 64; j++) this.w2[i * 64 + j] += lr * dH2Act[i] * h1[j];
                     this.b2[i] += lr * dH2Act[i];
                 }
-
-                // ReLU deriv through h1
                 const dH1Act = dH1.map((v, i) => h1[i] > 0 ? v : 0);
-
-                // Update w1, b1
                 for (let i = 0; i < 64; i++) {
                     for (let j = 0; j < 42; j++) this.w1[i * 42 + j] += lr * dH1Act[i] * input[j];
                     this.b1[i] += lr * dH1Act[i];
                 }
+            }
+
+            update(input, actionIdx, reward, lr = 0.001) {
+                const { h1, h2, probs } = this.forward(input);
+                const dOut = new Float64Array(7);
+                for (let i = 0; i < 7; i++) {
+                    dOut[i] = reward * ((i === actionIdx ? 1 : 0) - probs[i]);
+                }
+                this._applyGradients(h1, h2, input, dOut, lr);
             }
 
             save() {
@@ -793,46 +793,19 @@
         let trainingInProgress = false;
 
         function runTrainingGame() {
-            // Train against Greedy (fixed, competent opponent) rather than self-play.
-            // Alternating sides ensures the net learns from both RED and BLUE perspectives.
-            const nnColor  = Math.random() < 0.5 ? RED : BLUE;
-            const oppColor = opponent(nnColor);
-
+            // Imitation learning: play a full game as Greedy (both sides) and train
+            // the net to copy every move via supervised cross-entropy. This gives a
+            // dense training signal (~30 labeled examples per game) and converges far
+            // faster than REINFORCE which only signals at game end.
             let tb = Array.from({ length: ROWS }, () => Array(COLS).fill(EMPTY));
             let tp = RED;
-            const history = []; // only the NN's (state, action) pairs
-
             while (true) {
                 const valid = getValidCols(tb);
                 if (valid.length === 0) break;
-
-                let col;
-                if (tp === nnColor) {
-                    const input = boardToInput(tb, tp);
-                    const { probs } = neuralNet.forward(input);
-                    // Epsilon-greedy exploration
-                    col = Math.random() < 0.15
-                        ? valid[Math.floor(Math.random() * valid.length)]
-                        : valid.reduce((best, c) => probs[c] > probs[best] ? c : best, valid[0]);
-                    history.push({ input, col });
-                } else {
-                    // Opponent: Greedy AI provides clear, consistent signal
-                    col = greedyMove(oppColor, tb);
-                }
-
+                const col = greedyMove(tp, tb);
+                neuralNet.updateSupervised(boardToInput(tb, tp), col);
                 const row = dropMut(tb, col, tp);
-                const winner = checkWinAt(tb, row, col);
-
-                if (winner) {
-                    const reward = winner === nnColor ? 1 : -1;
-                    for (const h of history) neuralNet.update(h.input, h.col, reward);
-                    return;
-                }
-                if (isFull(tb)) {
-                    // Draw is slightly positive — better than losing
-                    for (const h of history) neuralNet.update(h.input, h.col, 0.1);
-                    return;
-                }
+                if (checkWinAt(tb, row, col) || isFull(tb)) break;
                 tp = opponent(tp);
             }
         }
