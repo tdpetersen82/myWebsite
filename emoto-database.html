@@ -3,536 +3,312 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eMoto Database — Electric Motorcycle Specs, Prices & Reviews</title>
+    <title>eMoto Database &mdash; Electric Motorcycle Specs, Prices &amp; Reviews</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         :root {
-            --purple: #667eea;
-            --purple-dark: #764ba2;
-            --green: #43a047;
-            --blue: #1976d2;
-            --red: #c62828;
-            --orange: #f57c00;
-            --gold: #f5a623;
-            --bg: #f0f2f5;
-            --card: #fff;
-            --text: #333;
-            --text-light: #777;
-            --border: #e0e0e0;
-            --radius: 14px;
+            --accent: #6c5ce7;
+            --accent-dark: #5a4bd1;
+            --accent-light: #a29bfe;
+            --green: #00b894;
+            --blue: #0984e3;
+            --red: #d63031;
+            --orange: #e17055;
+            --gold: #fdcb6e;
+            --bg: #f8f9fa;
+            --card: #ffffff;
+            --text: #2d3436;
+            --text-mid: #636e72;
+            --text-light: #b2bec3;
+            --border: #dfe6e9;
+            --shadow: rgba(108,92,231,0.08);
+            --radius: 16px;
+            --glass: rgba(255,255,255,0.7);
+        }
+        [data-theme="dark"] {
+            --accent: #a29bfe;
+            --accent-dark: #6c5ce7;
+            --accent-light: #ddd6fe;
+            --bg: #1a1a2e;
+            --card: #16213e;
+            --text: #e8e8e8;
+            --text-mid: #a0a0b0;
+            --text-light: #636380;
+            --border: #2a2a4a;
+            --shadow: rgba(0,0,0,0.3);
+            --glass: rgba(22,33,62,0.85);
         }
         body {
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
-            min-height: 100vh;
-            padding: 16px;
-        }
-        .app {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, sans-serif;
             background: var(--bg);
-            border-radius: 20px;
-            max-width: 1300px;
-            margin: 0 auto;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            overflow: hidden;
+            min-height: 100vh;
+            color: var(--text);
+            transition: background 0.3s, color 0.3s;
         }
+        .app { max-width: 1400px; margin: 0 auto; }
 
         /* Header */
         .header {
-            background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
+            background: linear-gradient(135deg, #6c5ce7 0%, #a29bfe 50%, #74b9ff 100%);
             color: #fff;
-            padding: 30px 32px 20px;
+            padding: 40px 32px 28px;
             text-align: center;
+            position: relative;
+            overflow: hidden;
         }
-        .header h1 { font-size: 2.4em; margin-bottom: 4px; }
-        .header p { opacity: 0.85; font-size: 1.05em; }
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%; left: -50%;
+            width: 200%; height: 200%;
+            background: radial-gradient(circle at 30% 50%, rgba(255,255,255,0.1) 0%, transparent 50%);
+            animation: headerShimmer 8s ease-in-out infinite;
+        }
+        @keyframes headerShimmer {
+            0%, 100% { transform: translateX(-10%) translateY(-10%); }
+            50% { transform: translateX(10%) translateY(10%); }
+        }
+        .header h1 { font-size: 2.6em; font-weight: 800; margin-bottom: 6px; position: relative; letter-spacing: -0.5px; }
+        .header p { opacity: 0.9; font-size: 1.1em; position: relative; }
         .header-stats {
-            display: flex;
-            justify-content: center;
-            gap: 32px;
-            margin-top: 14px;
-            font-size: 0.9em;
+            display: flex; justify-content: center; gap: 40px; margin-top: 20px; position: relative;
         }
-        .header-stats span { opacity: 0.8; }
-        .header-stats strong { font-size: 1.2em; }
+        .header-stat {
+            background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+            border-radius: 12px; padding: 10px 24px; text-align: center;
+        }
+        .header-stat strong { font-size: 1.4em; display: block; }
+        .header-stat span { opacity: 0.8; font-size: 0.85em; }
+        .header-controls {
+            position: absolute; top: 16px; right: 20px;
+            display: flex; gap: 8px; z-index: 10;
+        }
+        .theme-toggle, .back-link {
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3); color: #fff;
+            width: 40px; height: 40px; border-radius: 50%; cursor: pointer;
+            font-size: 1.2em; display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; text-decoration: none;
+        }
+        .theme-toggle:hover, .back-link:hover { background: rgba(255,255,255,0.35); transform: scale(1.1); }
 
         /* Toolbar */
         .toolbar {
-            background: #fff;
-            padding: 14px 24px;
-            display: flex;
-            flex-wrap: wrap;
-            gap: 10px;
-            align-items: center;
+            background: var(--card); padding: 16px 24px;
+            display: flex; flex-wrap: wrap; gap: 10px; align-items: center;
             border-bottom: 1px solid var(--border);
-            position: sticky;
-            top: 0;
-            z-index: 100;
+            position: sticky; top: 0; z-index: 100;
+            backdrop-filter: blur(20px); transition: background 0.3s;
         }
         .search-box {
-            flex: 1 1 200px;
-            max-width: 280px;
-            padding: 9px 16px;
-            border: 2px solid var(--border);
-            border-radius: 25px;
-            font-size: 0.95em;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.2s;
+            flex: 1 1 220px; max-width: 300px; padding: 10px 18px;
+            border: 2px solid var(--border); border-radius: 12px; font-size: 0.95em;
+            font-family: inherit; outline: none; background: var(--bg); color: var(--text);
+            transition: all 0.2s;
         }
-        .search-box:focus { border-color: var(--purple); }
-        .pill-group {
-            display: flex;
-            gap: 4px;
-            flex-wrap: wrap;
-        }
+        .search-box:focus { border-color: var(--accent); box-shadow: 0 0 0 3px rgba(108,92,231,0.15); }
+        .pill-group { display: flex; gap: 4px; flex-wrap: wrap; }
         .pill {
-            padding: 7px 14px;
-            border: 2px solid var(--border);
-            border-radius: 20px;
-            background: #fff;
-            color: #666;
-            font-size: 0.82em;
-            font-family: inherit;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.15s;
-            white-space: nowrap;
+            padding: 8px 16px; border: 2px solid var(--border); border-radius: 10px;
+            background: var(--card); color: var(--text-mid); font-size: 0.82em;
+            font-family: inherit; font-weight: 600; cursor: pointer;
+            transition: all 0.2s; white-space: nowrap;
         }
-        .pill:hover { border-color: var(--purple); color: var(--purple); }
-        .pill.active {
-            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
-            color: #fff;
-            border-color: transparent;
-        }
+        .pill:hover { border-color: var(--accent); color: var(--accent); }
+        .pill.active { background: var(--accent); color: #fff; border-color: var(--accent); }
         .toolbar select {
-            padding: 9px 14px;
-            border: 2px solid var(--border);
-            border-radius: 25px;
-            font-size: 0.9em;
-            font-family: inherit;
-            background: #fff;
-            color: #555;
-            cursor: pointer;
-            outline: none;
+            padding: 10px 14px; border: 2px solid var(--border); border-radius: 12px;
+            font-size: 0.9em; font-family: inherit; background: var(--card);
+            color: var(--text); cursor: pointer; outline: none; transition: border-color 0.2s;
         }
-        .toolbar select:focus { border-color: var(--purple); }
-        .view-toggle {
-            display: flex;
-            gap: 2px;
-            background: var(--border);
-            border-radius: 8px;
-            padding: 2px;
-            margin-left: auto;
-        }
+        .toolbar select:focus { border-color: var(--accent); }
+        .view-toggle { display: flex; gap: 2px; background: var(--border); border-radius: 10px; padding: 3px; margin-left: auto; }
         .view-btn {
-            padding: 6px 12px;
-            border: none;
-            background: transparent;
-            font-size: 1.1em;
-            cursor: pointer;
-            border-radius: 6px;
-            transition: background 0.15s;
+            padding: 7px 14px; border: none; background: transparent; font-size: 1em;
+            cursor: pointer; border-radius: 8px; color: var(--text-mid); transition: all 0.15s;
         }
-        .view-btn.active { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .view-btn.active { background: var(--card); color: var(--accent); box-shadow: 0 1px 4px var(--shadow); }
         .compare-bar {
-            display: none;
-            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
-            color: #fff;
-            padding: 10px 24px;
-            align-items: center;
-            gap: 12px;
-            font-size: 0.9em;
+            display: none; background: var(--accent); color: #fff;
+            padding: 12px 24px; align-items: center; gap: 12px; font-size: 0.9em;
         }
         .compare-bar.visible { display: flex; }
         .compare-bar button {
-            padding: 6px 18px;
-            border: 2px solid #fff;
-            border-radius: 20px;
-            background: transparent;
-            color: #fff;
-            font-family: inherit;
-            font-weight: 700;
-            cursor: pointer;
-            font-size: 0.9em;
-            transition: all 0.15s;
+            padding: 7px 20px; border: 2px solid rgba(255,255,255,0.6); border-radius: 10px;
+            background: transparent; color: #fff; font-family: inherit; font-weight: 700;
+            cursor: pointer; font-size: 0.9em; transition: all 0.15s;
         }
-        .compare-bar button:hover { background: #fff; color: var(--purple); }
-        .compare-bar .clear-btn { border-color: rgba(255,255,255,0.4); }
+        .compare-bar button:hover { background: #fff; color: var(--accent); }
+        .compare-bar .clear-btn { border-color: rgba(255,255,255,0.3); }
 
-        /* Content */
-        .content { padding: 20px 24px; }
+        .content { padding: 24px; }
 
         /* Card Grid */
-        .bike-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
-            gap: 20px;
-        }
+        .bike-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(360px, 1fr)); gap: 24px; }
         .bike-card {
-            background: var(--card);
-            border-radius: var(--radius);
-            overflow: hidden;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-            transition: transform 0.25s, box-shadow 0.25s;
-            cursor: pointer;
-            position: relative;
-            border: 2px solid transparent;
+            background: var(--card); border-radius: var(--radius); overflow: hidden;
+            box-shadow: 0 2px 16px var(--shadow);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            cursor: pointer; position: relative; border: 2px solid transparent;
         }
-        .bike-card:hover {
-            transform: translateY(-4px);
-            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
-        }
-        .bike-card.selected { border-color: var(--purple); }
+        .bike-card:hover { transform: translateY(-6px); box-shadow: 0 12px 40px rgba(108,92,231,0.15); }
+        .bike-card.selected { border-color: var(--accent); }
         .bike-card.selected::after {
-            content: '\2713';
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: var(--purple);
-            color: #fff;
-            width: 26px;
-            height: 26px;
-            border-radius: 50%;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 0.8em;
-            font-weight: 700;
-            z-index: 2;
+            content: '\2713'; position: absolute; top: 10px; right: 10px;
+            background: var(--accent); color: #fff; width: 28px; height: 28px;
+            border-radius: 50%; display: flex; align-items: center; justify-content: center;
+            font-size: 0.8em; font-weight: 700; z-index: 3;
         }
 
         /* Card Image Area */
         .card-image {
-            height: 160px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            overflow: hidden;
+            height: 200px; display: flex; align-items: center; justify-content: center;
+            position: relative; overflow: hidden;
         }
-        .card-image svg { width: 200px; height: 120px; }
+        .card-image svg {
+            width: 260px; height: 160px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
+            transition: transform 0.3s;
+        }
+        .bike-card:hover .card-image svg { transform: scale(1.05); }
+        .card-image img {
+            width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s;
+        }
+        .bike-card:hover .card-image img { transform: scale(1.05); }
         .card-fav {
-            position: absolute;
-            top: 10px;
-            left: 10px;
-            background: rgba(255,255,255,0.9);
-            border: none;
-            width: 32px;
-            height: 32px;
-            border-radius: 50%;
-            cursor: pointer;
-            font-size: 1.1em;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            transition: transform 0.2s;
-            z-index: 2;
+            position: absolute; top: 12px; left: 12px;
+            background: var(--glass); backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.3);
+            width: 36px; height: 36px; border-radius: 50%;
+            cursor: pointer; font-size: 1.1em;
+            display: flex; align-items: center; justify-content: center;
+            transition: all 0.2s; z-index: 2; color: var(--text-mid);
         }
-        .card-fav:hover { transform: scale(1.2); }
-        .card-fav.faved { color: #e53935; }
+        .card-fav:hover { transform: scale(1.15); background: rgba(255,255,255,0.95); }
+        .card-fav.faved { color: #e53935; background: rgba(255,255,255,0.95); }
         .type-badge {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            padding: 3px 10px;
-            border-radius: 10px;
-            font-size: 0.68em;
-            font-weight: 700;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            z-index: 2;
+            position: absolute; top: 12px; right: 12px;
+            padding: 4px 12px; border-radius: 8px; font-size: 0.7em;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+            z-index: 2; backdrop-filter: blur(10px);
         }
-        .type-offroad { background: #e8f5e9; color: #2e7d32; }
-        .type-street { background: #e3f2fd; color: #1565c0; }
-        .type-commuter { background: #fff3e0; color: #e65100; }
-        .type-motocross { background: #fce4ec; color: #c62828; }
-        .type-dualsport { background: #f3e5f5; color: #7b1fa2; }
-        .type-youth { background: #e0f7fa; color: #00838f; }
-        .type-adventure { background: #f1f8e9; color: #558b2f; }
+        .type-off-road { background: rgba(0,184,148,0.15); color: #00b894; }
+        .type-street { background: rgba(9,132,227,0.15); color: #0984e3; }
+        .type-commuter { background: rgba(225,112,85,0.15); color: #e17055; }
+        .type-motocross { background: rgba(214,48,49,0.15); color: #d63031; }
+        .type-dual-sport { background: rgba(108,92,231,0.15); color: #6c5ce7; }
+        .type-youth { background: rgba(0,206,209,0.15); color: #00cec9; }
+        .type-adventure { background: rgba(85,239,196,0.15); color: #00b894; }
 
         /* Card Body */
-        .card-body { padding: 16px 18px 18px; }
-        .card-brand {
-            font-size: 0.72em;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            color: var(--text-light);
-            font-weight: 700;
-        }
-        .card-name {
-            font-size: 1.2em;
-            font-weight: 700;
-            color: var(--text);
-            margin: 2px 0 6px;
-            line-height: 1.2;
-        }
-        .card-price {
-            display: inline-block;
-            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
-            color: #fff;
-            padding: 4px 12px;
-            border-radius: 14px;
-            font-weight: 700;
-            font-size: 0.9em;
-            margin-bottom: 10px;
-        }
-        .price-budget { background: linear-gradient(135deg, #43a047, #2e7d32); }
-        .price-premium { background: linear-gradient(135deg, #c62828, #b71c1c); }
+        .card-body { padding: 18px 20px 20px; }
+        .card-brand { font-size: 0.72em; text-transform: uppercase; letter-spacing: 1.5px; color: var(--accent); font-weight: 700; }
+        .card-name { font-size: 1.25em; font-weight: 800; color: var(--text); margin: 3px 0 8px; line-height: 1.2; }
+        .card-price { display: inline-block; padding: 5px 14px; border-radius: 8px; font-weight: 700; font-size: 0.9em; margin-bottom: 12px; }
+        .price-default { background: rgba(108,92,231,0.1); color: var(--accent); }
+        .price-budget { background: rgba(0,184,148,0.12); color: #00b894; }
+        .price-premium { background: rgba(214,48,49,0.1); color: #d63031; }
 
         /* Spec Bars */
-        .spec-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
-        .spec-bar-row {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            font-size: 0.78em;
-        }
-        .spec-bar-label {
-            width: 52px;
-            color: var(--text-light);
-            font-weight: 600;
-            text-transform: uppercase;
-            font-size: 0.85em;
-            flex-shrink: 0;
-        }
-        .spec-bar-track {
-            flex: 1;
-            height: 8px;
-            background: #f0f0f0;
-            border-radius: 4px;
-            overflow: hidden;
-        }
-        .spec-bar-fill {
-            height: 100%;
-            border-radius: 4px;
-            transition: width 0.6s ease;
-        }
-        .spec-bar-value {
-            width: 60px;
-            text-align: right;
-            font-weight: 700;
-            color: var(--text);
-            font-size: 0.9em;
-            flex-shrink: 0;
-        }
-        .bar-power { background: linear-gradient(90deg, #667eea, #764ba2); }
-        .bar-range { background: linear-gradient(90deg, #43a047, #66bb6a); }
-        .bar-speed { background: linear-gradient(90deg, #f57c00, #ff9800); }
-        .bar-battery { background: linear-gradient(90deg, #1976d2, #42a5f5); }
+        .spec-bars { display: flex; flex-direction: column; gap: 8px; margin-top: 10px; }
+        .spec-bar-row { display: flex; align-items: center; gap: 10px; font-size: 0.8em; }
+        .spec-bar-label { width: 55px; color: var(--text-light); font-weight: 700; text-transform: uppercase; font-size: 0.8em; flex-shrink: 0; }
+        .spec-bar-track { flex: 1; height: 6px; background: var(--border); border-radius: 3px; overflow: hidden; }
+        .spec-bar-fill { height: 100%; border-radius: 3px; transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1); }
+        .spec-bar-value { width: 64px; text-align: right; font-weight: 700; color: var(--text); font-size: 0.88em; flex-shrink: 0; }
+        .bar-power { background: linear-gradient(90deg, #6c5ce7, #a29bfe); }
+        .bar-range { background: linear-gradient(90deg, #00b894, #55efc4); }
+        .bar-speed { background: linear-gradient(90deg, #e17055, #fab1a0); }
+        .bar-battery { background: linear-gradient(90deg, #0984e3, #74b9ff); }
 
-        .card-expand-hint {
-            text-align: center;
-            color: #ccc;
-            font-size: 0.75em;
-            margin-top: 10px;
-            transition: color 0.2s;
-        }
-        .bike-card:hover .card-expand-hint { color: var(--purple); }
+        .card-expand-hint { text-align: center; color: var(--text-light); font-size: 0.75em; margin-top: 12px; transition: color 0.2s; }
+        .bike-card:hover .card-expand-hint { color: var(--accent); }
 
         /* Expanded Detail */
-        .card-detail {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease;
-        }
-        .bike-card.expanded .card-detail { max-height: 800px; }
+        .card-detail { max-height: 0; overflow: hidden; transition: max-height 0.5s cubic-bezier(0.4, 0, 0.2, 1); }
+        .bike-card.expanded .card-detail { max-height: 900px; }
         .bike-card.expanded .card-expand-hint { display: none; }
-        .detail-inner {
-            padding: 0 18px 18px;
-            border-top: 1px solid #f0f0f0;
-            margin-top: 10px;
-            padding-top: 14px;
-        }
-        .detail-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 6px 16px;
-            font-size: 0.85em;
-            margin-bottom: 12px;
-        }
-        .detail-item {
-            display: flex;
-            justify-content: space-between;
-            padding: 5px 0;
-            border-bottom: 1px solid #f8f8f8;
-        }
-        .detail-label { color: var(--text-light); font-weight: 600; }
+        .detail-inner { padding: 0 20px 20px; border-top: 1px solid var(--border); margin-top: 12px; padding-top: 16px; }
+        .detail-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 6px 20px; font-size: 0.85em; margin-bottom: 14px; }
+        .detail-item { display: flex; justify-content: space-between; padding: 6px 0; border-bottom: 1px solid var(--border); }
+        .detail-label { color: var(--text-mid); font-weight: 600; }
         .detail-value { color: var(--text); font-weight: 700; text-align: right; }
 
-        /* Pros/Cons */
-        .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0; }
-        .pros h5, .cons h5 { font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 14px; margin: 12px 0; }
+        .pros h5, .cons h5 { font-size: 0.78em; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
         .pros h5 { color: var(--green); }
         .cons h5 { color: var(--red); }
-        .pros li, .cons li { font-size: 0.82em; color: #555; margin-bottom: 3px; list-style: none; padding-left: 14px; position: relative; }
+        .pros li, .cons li { font-size: 0.84em; color: var(--text-mid); margin-bottom: 4px; list-style: none; padding-left: 16px; position: relative; }
         .pros li::before { content: '+'; position: absolute; left: 0; color: var(--green); font-weight: 700; }
         .cons li::before { content: '\2212'; position: absolute; left: 0; color: var(--red); font-weight: 700; }
 
-        .review-box {
-            background: #f9f9fc;
-            border-radius: 10px;
-            padding: 12px;
-            margin-top: 8px;
-        }
+        .review-box { background: var(--bg); border-radius: 12px; padding: 14px 16px; margin-top: 10px; border: 1px solid var(--border); }
         .review-box .stars { color: var(--gold); font-size: 1em; }
-        .review-box p { font-size: 0.85em; color: #555; line-height: 1.55; margin-top: 4px; }
+        .review-box p { font-size: 0.85em; color: var(--text-mid); line-height: 1.6; margin-top: 6px; }
 
-        /* Table View */
-        .table-wrap { overflow-x: auto; }
-        .bike-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.85em;
-            background: #fff;
-            border-radius: var(--radius);
-            overflow: hidden;
-            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
-        }
-        .bike-table th {
-            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
-            color: #fff;
-            padding: 12px 14px;
-            text-align: left;
-            font-weight: 700;
-            font-size: 0.85em;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-            cursor: pointer;
-            white-space: nowrap;
-            user-select: none;
-        }
-        .bike-table th:hover { background: var(--purple-dark); }
-        .bike-table td {
-            padding: 10px 14px;
-            border-bottom: 1px solid #f0f0f0;
-            white-space: nowrap;
-        }
-        .bike-table tr:hover td { background: #f8f7ff; }
+        /* Table */
+        .table-wrap { overflow-x: auto; border-radius: var(--radius); box-shadow: 0 2px 16px var(--shadow); }
+        .bike-table { width: 100%; border-collapse: collapse; font-size: 0.85em; background: var(--card); }
+        .bike-table th { background: var(--accent); color: #fff; padding: 14px 16px; text-align: left; font-weight: 700; font-size: 0.82em; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; white-space: nowrap; user-select: none; }
+        .bike-table th:hover { background: var(--accent-dark); }
+        .bike-table td { padding: 12px 16px; border-bottom: 1px solid var(--border); white-space: nowrap; }
+        .bike-table tr:hover td { background: rgba(108,92,231,0.04); }
         .table-name { font-weight: 700; color: var(--text); }
         .table-brand { color: var(--text-light); font-size: 0.9em; }
 
-        /* Comparison Modal */
-        .modal-overlay {
-            display: none;
-            position: fixed;
-            inset: 0;
-            background: rgba(0,0,0,0.6);
-            z-index: 1000;
-            justify-content: center;
-            align-items: flex-start;
-            padding: 40px 20px;
-            overflow-y: auto;
-        }
+        /* Modal */
+        .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.5); backdrop-filter: blur(4px); z-index: 1000; justify-content: center; align-items: flex-start; padding: 40px 20px; overflow-y: auto; }
         .modal-overlay.open { display: flex; }
-        .modal {
-            background: #fff;
-            border-radius: 20px;
-            max-width: 1000px;
-            width: 100%;
-            padding: 30px;
-            position: relative;
-            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-        }
-        .modal-close {
-            position: absolute;
-            top: 14px;
-            right: 18px;
-            background: none;
-            border: none;
-            font-size: 1.6em;
-            cursor: pointer;
-            color: #999;
-            transition: color 0.2s;
-        }
-        .modal-close:hover { color: var(--text); }
-        .modal h2 { font-size: 1.5em; color: var(--text); margin-bottom: 20px; }
-        .compare-grid {
-            display: grid;
-            gap: 0;
-            font-size: 0.85em;
-        }
-        .compare-row {
-            display: grid;
-            border-bottom: 1px solid #f0f0f0;
-        }
+        .modal { background: var(--card); border-radius: 20px; max-width: 1050px; width: 100%; padding: 32px; position: relative; box-shadow: 0 24px 80px rgba(0,0,0,0.25); }
+        .modal-close { position: absolute; top: 16px; right: 20px; background: var(--bg); border: none; width: 36px; height: 36px; border-radius: 50%; font-size: 1.4em; cursor: pointer; color: var(--text-mid); display: flex; align-items: center; justify-content: center; transition: all 0.2s; }
+        .modal-close:hover { background: var(--border); color: var(--text); }
+        .modal h2 { font-size: 1.5em; color: var(--text); margin-bottom: 24px; font-weight: 800; }
+        .compare-grid { display: grid; gap: 0; font-size: 0.85em; }
+        .compare-row { display: grid; border-bottom: 1px solid var(--border); }
         .compare-row:first-child { border-bottom: 2px solid var(--border); }
-        .compare-cell {
-            padding: 10px 14px;
-            text-align: center;
-        }
-        .compare-cell:first-child {
-            text-align: left;
-            font-weight: 700;
-            color: var(--text-light);
-            text-transform: uppercase;
-            font-size: 0.85em;
-            background: #fafafa;
-        }
-        .compare-header {
-            font-weight: 700;
-            color: var(--text);
-            font-size: 1.05em;
-        }
+        .compare-cell { padding: 12px 16px; text-align: center; }
+        .compare-cell:first-child { text-align: left; font-weight: 700; color: var(--text-mid); text-transform: uppercase; font-size: 0.82em; background: var(--bg); }
+        .compare-header { font-weight: 800; color: var(--text); font-size: 1.05em; }
         .compare-best { color: var(--green); font-weight: 700; }
 
-        /* No results */
-        .no-results {
-            text-align: center;
-            padding: 60px 20px;
-            color: #bbb;
-            font-size: 1.1em;
-            display: none;
-        }
-        .bike-count {
-            text-align: center;
-            color: #bbb;
-            font-size: 0.82em;
-            margin-top: 16px;
-        }
-
-        /* Footer */
-        .footer {
-            text-align: center;
-            padding: 20px;
-            border-top: 1px solid var(--border);
-            background: #fff;
-        }
-        .footer a {
-            color: var(--purple);
-            text-decoration: none;
-            font-weight: 700;
-            font-size: 1em;
-            transition: color 0.2s;
-        }
-        .footer a:hover { color: var(--purple-dark); }
+        .no-results { text-align: center; padding: 60px 20px; color: var(--text-light); font-size: 1.1em; display: none; }
+        .bike-count { text-align: center; color: var(--text-light); font-size: 0.82em; margin-top: 20px; padding-bottom: 20px; }
+        .footer { text-align: center; padding: 24px; border-top: 1px solid var(--border); background: var(--card); }
+        .footer a { color: var(--accent); text-decoration: none; font-weight: 700; font-size: 1em; transition: color 0.2s; }
+        .footer a:hover { color: var(--accent-dark); text-decoration: underline; }
 
         @media (max-width: 900px) {
             .header h1 { font-size: 1.8em; }
+            .header-stats { gap: 12px; flex-wrap: wrap; }
+            .header-stat { padding: 8px 14px; }
             .bike-grid { grid-template-columns: 1fr; }
             .toolbar { gap: 8px; }
             .search-box { max-width: none; flex: 1 1 100%; }
             .detail-grid { grid-template-columns: 1fr; }
             .pros-cons { grid-template-columns: 1fr; }
-            .header-stats { gap: 16px; font-size: 0.8em; }
-            .content { padding: 12px; }
-            .modal { padding: 16px; }
+            .content { padding: 16px; }
+            .modal { padding: 16px; border-radius: 16px; }
         }
         @media (max-width: 500px) {
-            body { padding: 8px; }
-            .card-image { height: 130px; }
-            .card-image svg { width: 150px; height: 90px; }
+            .header { padding: 28px 16px 20px; }
+            .card-image { height: 160px; }
+            .card-image svg { width: 180px; height: 110px; }
+            .bike-grid { gap: 16px; }
         }
     </style>
 </head>
 <body>
 <div class="app">
     <div class="header">
+        <div class="header-controls">
+            <a href="index.html" class="back-link" title="Back to Game Hub">&#8592;</a>
+            <button class="theme-toggle" id="themeToggle" title="Toggle dark mode">&#9790;</button>
+        </div>
         <h1>&#9889; eMoto Database</h1>
-        <p>The ultimate electric motorcycle reference — specs, pricing &amp; reviews</p>
+        <p>The ultimate electric motorcycle reference &mdash; specs, pricing &amp; reviews</p>
         <div class="header-stats">
-            <div><strong id="totalBikes">0</strong><br><span>Bikes</span></div>
-            <div><strong id="totalBrands">0</strong><br><span>Brands</span></div>
-            <div><strong>$530–$26K</strong><br><span>Price Range</span></div>
+            <div class="header-stat"><strong id="totalBikes">0</strong><span>Bikes</span></div>
+            <div class="header-stat"><strong id="totalBrands">0</strong><span>Brands</span></div>
+            <div class="header-stat"><strong>$530&ndash;$26K</strong><span>Price Range</span></div>
         </div>
     </div>
 
@@ -541,7 +317,7 @@
         <div class="pill-group" id="priceFilter">
             <button class="pill active" data-val="all">All Prices</button>
             <button class="pill" data-val="budget">Under $5K</button>
-            <button class="pill" data-val="mid">$5K–$10K</button>
+            <button class="pill" data-val="mid">$5K&ndash;$10K</button>
             <button class="pill" data-val="premium">$10K+</button>
         </div>
         <select id="typeFilter">
@@ -576,7 +352,7 @@
         <span>&#9878; Compare: <strong id="compareCount">0</strong> selected</span>
         <button id="compareBtn">Compare Now</button>
         <button class="clear-btn" id="compareClear">Clear</button>
-        <span style="margin-left:auto;opacity:0.7;font-size:0.85em">Hold Shift+Click cards to select</span>
+        <span style="margin-left:auto;opacity:0.7;font-size:0.85em">Shift+Click cards to select</span>
     </div>
 
     <div class="content">
@@ -598,7 +374,6 @@
     </div>
 </div>
 
-<!-- Comparison Modal -->
 <div class="modal-overlay" id="compareModal">
     <div class="modal">
         <button class="modal-close" id="modalClose">&times;</button>
@@ -608,70 +383,293 @@
 </div>
 
 <script>
-// ============== SVG BIKE ILLUSTRATIONS ==============
+// ============== DARK MODE ==============
+const themeToggle = document.getElementById('themeToggle');
+const savedTheme = localStorage.getItem('emotoTheme') || 'light';
+if (savedTheme === 'dark') document.documentElement.setAttribute('data-theme', 'dark');
+themeToggle.textContent = savedTheme === 'dark' ? '\u2600' : '\u263E';
+themeToggle.addEventListener('click', () => {
+    const isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+    document.documentElement.setAttribute('data-theme', isDark ? '' : 'dark');
+    themeToggle.textContent = isDark ? '\u263E' : '\u2600';
+    localStorage.setItem('emotoTheme', isDark ? 'light' : 'dark');
+});
+
+// ============== DETAILED SVG BIKE ILLUSTRATIONS ==============
 function bikeSVG(type, color1, color2) {
     const c1 = color1 || '#555';
     const c2 = color2 || '#333';
     const svgs = {
-        dirtbike: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="42" cy="82" r="28" fill="none" stroke="${c2}" stroke-width="4"/>
-            <circle cx="42" cy="82" r="5" fill="${c2}"/>
-            <circle cx="158" cy="82" r="28" fill="none" stroke="${c2}" stroke-width="4"/>
-            <circle cx="158" cy="82" r="5" fill="${c2}"/>
-            <path d="M42 82 L70 42 L120 35 L140 45 L158 82" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M70 42 L85 38 L120 35" fill="none" stroke="${c1}" stroke-width="6" stroke-linecap="round"/>
-            <rect x="78" y="30" width="35" height="12" rx="3" fill="${c1}" opacity="0.8"/>
-            <path d="M120 35 L135 28" stroke="${c2}" stroke-width="3" stroke-linecap="round"/>
-            <path d="M86 45 L92 65 L75 70" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
-            <line x1="55" y1="78" x2="42" y2="82" stroke="${c2}" stroke-width="2"/>
-            <ellipse cx="100" cy="52" rx="14" ry="6" fill="${c1}" opacity="0.3"/>
+        dirtbike: `<svg viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- Rear wheel with spokes and knobby tire -->
+            <circle cx="55" cy="115" r="34" fill="none" stroke="#444" stroke-width="5"/>
+            <circle cx="55" cy="115" r="30" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="4 3"/>
+            <circle cx="55" cy="115" r="7" fill="#666" stroke="#444" stroke-width="2"/>
+            <line x1="55" y1="85" x2="55" y2="81" stroke="#555" stroke-width="1.5"/>
+            <line x1="55" y1="145" x2="55" y2="149" stroke="#555" stroke-width="1.5"/>
+            <line x1="25" y1="115" x2="21" y2="115" stroke="#555" stroke-width="1.5"/>
+            <line x1="85" y1="115" x2="89" y2="115" stroke="#555" stroke-width="1.5"/>
+            <line x1="31" y1="91" x2="28" y2="88" stroke="#555" stroke-width="1.5"/>
+            <line x1="79" y1="139" x2="82" y2="142" stroke="#555" stroke-width="1.5"/>
+            <line x1="31" y1="139" x2="28" y2="142" stroke="#555" stroke-width="1.5"/>
+            <line x1="79" y1="91" x2="82" y2="88" stroke="#555" stroke-width="1.5"/>
+            <!-- Front wheel with spokes and knobby tire -->
+            <circle cx="205" cy="115" r="34" fill="none" stroke="#444" stroke-width="5"/>
+            <circle cx="205" cy="115" r="30" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="4 3"/>
+            <circle cx="205" cy="115" r="7" fill="#666" stroke="#444" stroke-width="2"/>
+            <line x1="205" y1="85" x2="205" y2="81" stroke="#555" stroke-width="1.5"/>
+            <line x1="205" y1="145" x2="205" y2="149" stroke="#555" stroke-width="1.5"/>
+            <line x1="175" y1="115" x2="171" y2="115" stroke="#555" stroke-width="1.5"/>
+            <line x1="235" y1="115" x2="239" y2="115" stroke="#555" stroke-width="1.5"/>
+            <line x1="181" y1="91" x2="178" y2="88" stroke="#555" stroke-width="1.5"/>
+            <line x1="229" y1="139" x2="232" y2="142" stroke="#555" stroke-width="1.5"/>
+            <line x1="181" y1="139" x2="178" y2="142" stroke="#555" stroke-width="1.5"/>
+            <line x1="229" y1="91" x2="232" y2="88" stroke="#555" stroke-width="1.5"/>
+            <!-- Swingarm -->
+            <line x1="55" y1="115" x2="115" y2="75" stroke="#888" stroke-width="4" stroke-linecap="round"/>
+            <!-- Rear shock -->
+            <line x1="85" y1="95" x2="100" y2="60" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"/>
+            <rect x="96" y="56" width="8" height="14" rx="2" fill="#bbb" stroke="#999" stroke-width="1"/>
+            <!-- Frame -->
+            <path d="M55 115 L90 70 L110 55 L155 48 L170 60 L205 115" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Down tube -->
+            <line x1="115" y1="75" x2="155" y2="48" stroke="${c1}" stroke-width="4" stroke-linecap="round"/>
+            <!-- Battery/motor housing -->
+            <path d="M95 65 L115 55 L150 50 L155 58 L140 68 L100 72 Z" fill="${c1}" stroke="${c2}" stroke-width="1.5" opacity="0.85"/>
+            <!-- Motor (circle on swingarm pivot) -->
+            <circle cx="115" cy="75" r="12" fill="${c2}" stroke="#333" stroke-width="2"/>
+            <circle cx="115" cy="75" r="5" fill="#555"/>
+            <!-- Seat -->
+            <path d="M90 57 L120 48 L150 46 L145 42 L108 44 L88 52 Z" fill="#333" stroke="#222" stroke-width="1"/>
+            <!-- Tank / upper body -->
+            <rect x="108" y="40" width="38" height="10" rx="4" fill="${c1}" stroke="${c2}" stroke-width="1"/>
+            <!-- Front forks (long travel) -->
+            <line x1="170" y1="55" x2="200" y2="85" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
+            <line x1="173" y1="55" x2="208" y2="98" stroke="#ccc" stroke-width="3" stroke-linecap="round"/>
+            <!-- Front fender -->
+            <path d="M190 90 Q205 78 220 90" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
+            <!-- Rear fender -->
+            <path d="M40 100 Q55 88 70 100" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
+            <!-- Handlebars -->
+            <line x1="165" y1="38" x2="178" y2="32" stroke="#666" stroke-width="3" stroke-linecap="round"/>
+            <line x1="165" y1="38" x2="155" y2="30" stroke="#666" stroke-width="3" stroke-linecap="round"/>
+            <!-- Headlight -->
+            <circle cx="183" cy="48" r="5" fill="#fffde7" stroke="#888" stroke-width="1.5" opacity="0.9"/>
+            <!-- Number plate -->
+            <rect x="67" y="42" width="18" height="14" rx="2" fill="${c1}" stroke="${c2}" stroke-width="1" opacity="0.7"/>
+            <!-- Footpegs -->
+            <line x1="108" y1="82" x2="118" y2="85" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Chain/belt -->
+            <path d="M115 82 Q85 105 62 115" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <!-- Exhaust / heat sink -->
+            <rect x="75" y="80" width="12" height="4" rx="1" fill="#999" opacity="0.6"/>
         </svg>`,
-        street: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="40" cy="85" r="26" fill="none" stroke="${c2}" stroke-width="5"/>
-            <circle cx="40" cy="85" r="5" fill="${c2}"/>
-            <circle cx="160" cy="85" r="26" fill="none" stroke="${c2}" stroke-width="5"/>
-            <circle cx="160" cy="85" r="5" fill="${c2}"/>
-            <path d="M40 85 L60 52 L90 40 L130 38 L150 50 L160 85" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M60 52 L90 40 L130 38 L140 42" fill="${c1}" stroke="${c1}" stroke-width="3" opacity="0.6"/>
-            <rect x="75" y="32" width="50" height="14" rx="5" fill="${c1}" opacity="0.9"/>
-            <path d="M130 38 L148 25" stroke="${c2}" stroke-width="3" stroke-linecap="round"/>
-            <path d="M145 25 L152 23 L148 28" fill="none" stroke="${c2}" stroke-width="2" stroke-linecap="round"/>
-            <path d="M92 48 L100 68 L82 72" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
-            <rect x="85" y="55" width="30" height="8" rx="2" fill="${c1}" opacity="0.2"/>
+        street: `<svg viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- Rear wheel -->
+            <circle cx="52" cy="115" r="32" fill="none" stroke="#444" stroke-width="6"/>
+            <circle cx="52" cy="115" r="26" fill="none" stroke="#555" stroke-width="2"/>
+            <circle cx="52" cy="115" r="8" fill="#666" stroke="#444" stroke-width="2"/>
+            <line x1="52" y1="87" x2="52" y2="83" stroke="#555" stroke-width="1.5"/>
+            <line x1="52" y1="143" x2="52" y2="147" stroke="#555" stroke-width="1.5"/>
+            <line x1="24" y1="115" x2="20" y2="115" stroke="#555" stroke-width="1.5"/>
+            <line x1="80" y1="115" x2="84" y2="115" stroke="#555" stroke-width="1.5"/>
+            <!-- Front wheel -->
+            <circle cx="208" cy="115" r="32" fill="none" stroke="#444" stroke-width="6"/>
+            <circle cx="208" cy="115" r="26" fill="none" stroke="#555" stroke-width="2"/>
+            <circle cx="208" cy="115" r="8" fill="#666" stroke="#444" stroke-width="2"/>
+            <line x1="208" y1="87" x2="208" y2="83" stroke="#555" stroke-width="1.5"/>
+            <line x1="208" y1="143" x2="208" y2="147" stroke="#555" stroke-width="1.5"/>
+            <line x1="180" y1="115" x2="176" y2="115" stroke="#555" stroke-width="1.5"/>
+            <line x1="236" y1="115" x2="240" y2="115" stroke="#555" stroke-width="1.5"/>
+            <!-- Swingarm -->
+            <path d="M52 115 L120 78" stroke="#888" stroke-width="5" stroke-linecap="round"/>
+            <!-- Frame -->
+            <path d="M52 115 L85 72 L120 55 L170 48 L195 65 L208 115" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Fairing / body panels -->
+            <path d="M100 62 L130 48 L175 44 L190 55 L180 68 L140 72 L105 70 Z" fill="${c1}" stroke="${c2}" stroke-width="1.5" opacity="0.9"/>
+            <!-- Lower fairing -->
+            <path d="M105 70 L140 72 L160 80 L130 85 L105 78 Z" fill="${c1}" stroke="${c2}" stroke-width="1" opacity="0.6"/>
+            <!-- Windscreen -->
+            <path d="M175 44 L185 32 L192 35 L190 48" fill="none" stroke="rgba(150,200,255,0.6)" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Seat -->
+            <path d="M88 60 L120 50 L160 47 L150 43 L110 45 L85 55 Z" fill="#2a2a2a" stroke="#222" stroke-width="1"/>
+            <!-- Tank -->
+            <path d="M115 48 L155 44 L170 46 L160 52 L120 54 Z" fill="${c1}" stroke="${c2}" stroke-width="1.5"/>
+            <!-- Motor -->
+            <circle cx="120" cy="78" r="14" fill="${c2}" stroke="#333" stroke-width="2"/>
+            <circle cx="120" cy="78" r="6" fill="#555"/>
+            <!-- Front forks -->
+            <line x1="188" y1="56" x2="205" y2="88" stroke="#bbb" stroke-width="4" stroke-linecap="round"/>
+            <line x1="192" y1="58" x2="210" y2="90" stroke="#ccc" stroke-width="3.5" stroke-linecap="round"/>
+            <!-- Clip-on handlebars -->
+            <line x1="180" y1="40" x2="190" y2="34" stroke="#666" stroke-width="3" stroke-linecap="round"/>
+            <line x1="180" y1="40" x2="172" y2="34" stroke="#666" stroke-width="3" stroke-linecap="round"/>
+            <!-- Headlight (aggressive) -->
+            <path d="M195 48 L200 44 L204 48 L200 52 Z" fill="#fffde7" stroke="#888" stroke-width="1.5"/>
+            <!-- Tail section -->
+            <path d="M60 55 L80 48 L88 55" fill="${c1}" stroke="${c2}" stroke-width="1.5" opacity="0.7"/>
+            <!-- Tail light -->
+            <rect x="58" y="52" width="6" height="3" rx="1" fill="#e53935"/>
+            <!-- Rear sets -->
+            <line x1="110" y1="85" x2="120" y2="88" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Chain -->
+            <path d="M120 88 Q86 108 60 115" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <!-- Disc brake front -->
+            <circle cx="208" cy="115" r="18" fill="none" stroke="#ddd" stroke-width="1.5"/>
+            <!-- Disc brake rear -->
+            <circle cx="52" cy="115" r="16" fill="none" stroke="#ddd" stroke-width="1.5"/>
         </svg>`,
-        cruiser: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="38" cy="82" r="28" fill="none" stroke="${c2}" stroke-width="4"/>
-            <circle cx="38" cy="82" r="5" fill="${c2}"/>
-            <circle cx="162" cy="82" r="24" fill="none" stroke="${c2}" stroke-width="4"/>
-            <circle cx="162" cy="82" r="5" fill="${c2}"/>
-            <path d="M38 82 L55 55 L80 45 L130 42 L162 82" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <path d="M55 55 L80 45 L130 42 L140 44" fill="${c1}" stroke="${c1}" stroke-width="3" opacity="0.5"/>
-            <rect x="70" y="36" width="55" height="14" rx="6" fill="${c1}" opacity="0.85"/>
-            <path d="M130 42 L150 28" stroke="${c2}" stroke-width="3" stroke-linecap="round"/>
-            <ellipse cx="145" cy="30" rx="8" ry="3" fill="${c2}" opacity="0.5"/>
-            <rect x="52" y="60" width="38" height="6" rx="3" fill="${c1}" opacity="0.3"/>
-            <path d="M80 50 L88 70 L72 75" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
+        cruiser: `<svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- Rear wheel (larger) -->
+            <circle cx="48" cy="112" r="36" fill="none" stroke="#444" stroke-width="6"/>
+            <circle cx="48" cy="112" r="30" fill="none" stroke="#555" stroke-width="2"/>
+            <circle cx="48" cy="112" r="8" fill="#777" stroke="#555" stroke-width="2"/>
+            <line x1="48" y1="80" x2="48" y2="76" stroke="#555" stroke-width="1.5"/>
+            <line x1="48" y1="144" x2="48" y2="148" stroke="#555" stroke-width="1.5"/>
+            <line x1="16" y1="112" x2="12" y2="112" stroke="#555" stroke-width="1.5"/>
+            <line x1="80" y1="112" x2="84" y2="112" stroke="#555" stroke-width="1.5"/>
+            <!-- Front wheel (slightly smaller) -->
+            <circle cx="225" cy="112" r="30" fill="none" stroke="#444" stroke-width="5"/>
+            <circle cx="225" cy="112" r="24" fill="none" stroke="#555" stroke-width="2"/>
+            <circle cx="225" cy="112" r="7" fill="#777" stroke="#555" stroke-width="2"/>
+            <line x1="225" y1="86" x2="225" y2="82" stroke="#555" stroke-width="1.5"/>
+            <line x1="225" y1="138" x2="225" y2="142" stroke="#555" stroke-width="1.5"/>
+            <line x1="199" y1="112" x2="195" y2="112" stroke="#555" stroke-width="1.5"/>
+            <line x1="251" y1="112" x2="255" y2="112" stroke="#555" stroke-width="1.5"/>
+            <!-- Long swingarm -->
+            <path d="M48 112 L130 76" stroke="#888" stroke-width="5" stroke-linecap="round"/>
+            <!-- Frame - long and low -->
+            <path d="M48 112 L75 75 L100 62 L160 55 L200 60 L225 112" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Engine/motor block (V-twin style) -->
+            <rect x="110" y="68" width="30" height="25" rx="4" fill="${c2}" stroke="#333" stroke-width="2"/>
+            <rect x="115" y="62" width="20" height="10" rx="3" fill="${c2}" stroke="#333" stroke-width="1.5" transform="rotate(-15 125 67)"/>
+            <rect x="115" y="88" width="20" height="10" rx="3" fill="${c2}" stroke="#333" stroke-width="1.5" transform="rotate(15 125 93)"/>
+            <!-- Wide tank -->
+            <path d="M105 55 L155 50 L175 53 L165 62 L110 64 Z" fill="${c1}" stroke="${c2}" stroke-width="1.5"/>
+            <ellipse cx="140" cy="55" rx="20" ry="4" fill="rgba(255,255,255,0.15)"/>
+            <!-- Low seat -->
+            <path d="M75 63 L105 56 L150 53 L140 50 L98 52 L72 58 Z" fill="#2a2a2a" stroke="#222" stroke-width="1"/>
+            <!-- Rear fender - swooping -->
+            <path d="M30 95 Q48 78 70 90" fill="none" stroke="${c1}" stroke-width="3.5" stroke-linecap="round"/>
+            <!-- Front forks - raked out -->
+            <line x1="190" y1="50" x2="218" y2="88" stroke="#bbb" stroke-width="5" stroke-linecap="round"/>
+            <line x1="194" y1="50" x2="225" y2="92" stroke="#ccc" stroke-width="4" stroke-linecap="round"/>
+            <!-- Wide handlebars (ape hangers) -->
+            <line x1="185" y1="42" x2="195" y2="28" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+            <line x1="185" y1="42" x2="175" y2="28" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+            <line x1="170" y1="28" x2="200" y2="28" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+            <!-- Headlight (round, classic) -->
+            <circle cx="210" cy="55" r="9" fill="#fffde7" stroke="#888" stroke-width="2"/>
+            <circle cx="210" cy="55" r="5" fill="#fff8c4"/>
+            <!-- Tail light -->
+            <rect x="40" y="72" width="8" height="4" rx="2" fill="#e53935"/>
+            <!-- Forward controls / footpegs -->
+            <line x1="155" y1="90" x2="168" y2="92" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+            <!-- Exhaust pipes (side) -->
+            <path d="M125 93 L110 100 L85 108 L75 108" fill="none" stroke="#ccc" stroke-width="3.5" stroke-linecap="round"/>
+            <ellipse cx="73" cy="108" rx="5" ry="4" fill="#bbb" stroke="#999" stroke-width="1"/>
+            <!-- Belt drive -->
+            <path d="M130 88 Q90 108 55 112" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="4 2"/>
+            <!-- Chrome accents -->
+            <circle cx="48" cy="112" r="20" fill="none" stroke="rgba(200,200,200,0.3)" stroke-width="1.5"/>
+            <circle cx="225" cy="112" r="16" fill="none" stroke="rgba(200,200,200,0.3)" stroke-width="1.5"/>
         </svg>`,
-        moped: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="45" cy="85" r="22" fill="none" stroke="${c2}" stroke-width="4"/>
-            <circle cx="45" cy="85" r="4" fill="${c2}"/>
-            <circle cx="155" cy="85" r="22" fill="none" stroke="${c2}" stroke-width="4"/>
-            <circle cx="155" cy="85" r="4" fill="${c2}"/>
-            <path d="M45 85 L60 55 L85 48 L115 48 L140 55 L155 85" fill="none" stroke="${c1}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="72" y="40" width="40" height="14" rx="5" fill="${c1}" opacity="0.85"/>
-            <path d="M60 55 L75 60 L80 80" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
-            <path d="M115 48 L130 38" stroke="${c2}" stroke-width="3" stroke-linecap="round"/>
-            <rect x="80" y="62" width="25" height="5" rx="2" fill="${c1}" opacity="0.2"/>
+        moped: `<svg viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg">
+            <!-- Rear wheel (small) -->
+            <circle cx="55" cy="118" r="26" fill="none" stroke="#444" stroke-width="5"/>
+            <circle cx="55" cy="118" r="21" fill="none" stroke="#555" stroke-width="1.5"/>
+            <circle cx="55" cy="118" r="6" fill="#666" stroke="#444" stroke-width="2"/>
+            <!-- Front wheel (small) -->
+            <circle cx="190" cy="118" r="26" fill="none" stroke="#444" stroke-width="5"/>
+            <circle cx="190" cy="118" r="21" fill="none" stroke="#555" stroke-width="1.5"/>
+            <circle cx="190" cy="118" r="6" fill="#666" stroke="#444" stroke-width="2"/>
+            <!-- Step-through frame -->
+            <path d="M55 118 L75 78 L90 68 L110 65 L150 62 L170 65 L190 118" fill="none" stroke="${c1}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Lower frame / step through -->
+            <path d="M75 78 L90 95 L130 95 L150 75" fill="none" stroke="${c1}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Body panels -->
+            <path d="M88 68 L115 62 L150 60 L165 65 L155 75 L130 78 L95 78 Z" fill="${c1}" stroke="${c2}" stroke-width="1.5" opacity="0.85"/>
+            <!-- Leg shield -->
+            <path d="M148 62 L160 55 L170 58 L165 70" fill="${c1}" stroke="${c2}" stroke-width="1.5" opacity="0.7"/>
+            <!-- Under-seat storage area -->
+            <path d="M80 68 L115 62 L120 58 L90 60 Z" fill="${c2}" stroke="#333" stroke-width="1" opacity="0.5"/>
+            <!-- Seat (wide, flat) -->
+            <path d="M82 63 L125 56 L145 55 L140 52 L118 53 L78 58 Z" fill="#333" stroke="#222" stroke-width="1"/>
+            <!-- Floorboard -->
+            <rect x="92" y="92" width="35" height="5" rx="2" fill="#777" stroke="#555" stroke-width="1"/>
+            <!-- Motor (hub motor in rear) -->
+            <circle cx="55" cy="118" r="14" fill="${c2}" stroke="#333" stroke-width="2"/>
+            <circle cx="55" cy="118" r="5" fill="#555"/>
+            <!-- Front fork -->
+            <line x1="170" y1="60" x2="186" y2="95" stroke="#bbb" stroke-width="4" stroke-linecap="round"/>
+            <line x1="173" y1="62" x2="193" y2="100" stroke="#ccc" stroke-width="3" stroke-linecap="round"/>
+            <!-- Handlebars -->
+            <line x1="167" y1="48" x2="178" y2="42" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+            <line x1="167" y1="48" x2="158" y2="42" stroke="#888" stroke-width="3" stroke-linecap="round"/>
+            <!-- Headlight -->
+            <ellipse cx="180" cy="55" rx="7" ry="6" fill="#fffde7" stroke="#888" stroke-width="1.5"/>
+            <!-- Rear fender -->
+            <path d="M38 105 Q55 90 72 100" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
+            <!-- Front fender -->
+            <path d="M175 105 Q190 92 205 102" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
+            <!-- Tail light -->
+            <rect x="42" y="85" width="6" height="4" rx="1" fill="#e53935"/>
+            <!-- Battery indicator panel -->
+            <rect x="95" y="65" width="25" height="8" rx="3" fill="#333" stroke="#444" stroke-width="1"/>
+            <rect x="98" y="67" width="5" height="4" rx="1" fill="#4caf50"/>
+            <rect x="104" y="67" width="5" height="4" rx="1" fill="#4caf50"/>
+            <rect x="110" y="67" width="5" height="4" rx="1" fill="#ffeb3b"/>
+            <!-- Mirrors -->
+            <line x1="178" y1="42" x2="184" y2="38" stroke="#888" stroke-width="1.5"/>
+            <ellipse cx="186" cy="37" rx="4" ry="3" fill="#aaa" stroke="#888" stroke-width="1"/>
+            <line x1="158" y1="42" x2="152" y2="38" stroke="#888" stroke-width="1.5"/>
+            <ellipse cx="150" cy="37" rx="4" ry="3" fill="#aaa" stroke="#888" stroke-width="1"/>
         </svg>`,
-        youth: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="48" cy="85" r="22" fill="none" stroke="${c2}" stroke-width="3.5"/>
-            <circle cx="48" cy="85" r="4" fill="${c2}"/>
-            <circle cx="152" cy="85" r="22" fill="none" stroke="${c2}" stroke-width="3.5"/>
-            <circle cx="152" cy="85" r="4" fill="${c2}"/>
-            <path d="M48 85 L68 50 L105 42 L130 48 L152 85" fill="none" stroke="${c1}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <rect x="80" y="35" width="28" height="12" rx="3" fill="${c1}" opacity="0.8"/>
-            <path d="M105 42 L120 32" stroke="${c2}" stroke-width="2.5" stroke-linecap="round"/>
-            <path d="M80 48 L86 64 L74 68" fill="none" stroke="${c1}" stroke-width="2.5" stroke-linecap="round"/>
+        youth: `<svg viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg">
+            <!-- Rear wheel (small proportions) -->
+            <circle cx="50" cy="100" r="25" fill="none" stroke="#444" stroke-width="4"/>
+            <circle cx="50" cy="100" r="20" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <circle cx="50" cy="100" r="5" fill="#666" stroke="#444" stroke-width="1.5"/>
+            <!-- Front wheel -->
+            <circle cx="170" cy="100" r="25" fill="none" stroke="#444" stroke-width="4"/>
+            <circle cx="170" cy="100" r="20" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <circle cx="170" cy="100" r="5" fill="#666" stroke="#444" stroke-width="1.5"/>
+            <!-- Swingarm -->
+            <line x1="50" y1="100" x2="100" y2="65" stroke="#888" stroke-width="3.5" stroke-linecap="round"/>
+            <!-- Frame (compact) -->
+            <path d="M50 100 L80 62 L100 50 L140 45 L155 55 L170 100" fill="none" stroke="${c1}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
+            <!-- Cross brace -->
+            <line x1="100" y1="65" x2="140" y2="45" stroke="${c1}" stroke-width="3.5" stroke-linecap="round"/>
+            <!-- Body panel -->
+            <path d="M85 56 L108 47 L138 44 L145 50 L130 58 L92 60 Z" fill="${c1}" stroke="${c2}" stroke-width="1.5" opacity="0.85"/>
+            <!-- Motor -->
+            <circle cx="100" cy="65" r="10" fill="${c2}" stroke="#333" stroke-width="2"/>
+            <circle cx="100" cy="65" r="4" fill="#555"/>
+            <!-- Seat (small, simple) -->
+            <path d="M78 52 L108 44 L135 42 L130 39 L102 40 L75 48 Z" fill="#333" stroke="#222" stroke-width="1"/>
+            <!-- Tank (small) -->
+            <rect x="100" y="38" width="30" height="9" rx="4" fill="${c1}" stroke="${c2}" stroke-width="1"/>
+            <!-- Front forks -->
+            <line x1="152" y1="48" x2="168" y2="78" stroke="#bbb" stroke-width="3.5" stroke-linecap="round"/>
+            <line x1="155" y1="50" x2="173" y2="82" stroke="#ccc" stroke-width="3" stroke-linecap="round"/>
+            <!-- Handlebars -->
+            <line x1="148" y1="38" x2="158" y2="32" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+            <line x1="148" y1="38" x2="140" y2="32" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Headlight -->
+            <circle cx="162" cy="45" r="5" fill="#fffde7" stroke="#888" stroke-width="1.5"/>
+            <!-- Rear fender -->
+            <path d="M35 88 Q50 78 65 86" fill="none" stroke="${c1}" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Front fender -->
+            <path d="M157 86 Q170 76 183 84" fill="none" stroke="${c1}" stroke-width="2.5" stroke-linecap="round"/>
+            <!-- Number plate -->
+            <rect x="60" y="40" width="14" height="10" rx="2" fill="${c1}" stroke="${c2}" stroke-width="1" opacity="0.7"/>
+            <!-- Footpegs -->
+            <line x1="95" y1="72" x2="104" y2="74" stroke="#888" stroke-width="2" stroke-linecap="round"/>
+            <!-- Chain -->
+            <path d="M100 72 Q75 90 55 100" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="3 2"/>
+            <!-- Safety flag -->
+            <line x1="56" y1="40" x2="56" y2="18" stroke="#888" stroke-width="1.5"/>
+            <path d="M56 18 L70 22 L56 26" fill="#ff5722" stroke="none"/>
         </svg>`
     };
     return svgs[type] || svgs.dirtbike;
@@ -691,10 +689,13 @@ function bgGradient(type) {
 }
 
 // ============== BIKE DATABASE ==============
+// Each bike can have an optional imageUrl field for real photos.
+// When imageUrl is present, it shows the photo instead of SVG.
 const bikes = [
     {
         name: "Sur-Ron Light Bee X", brand: "Sur-Ron", type: "off-road", svgType: "dirtbike",
         color1: "#43a047", color2: "#2e7d32",
+        imageUrl: "https://www.surronusa.com/cdn/shop/files/E4A0753_540x.jpg",
         price: 4400, priceDisplay: "$4,400",
         motorKw: 8, motor: "8kW peak", battery: "60V 40Ah (2.4kWh)", batteryWh: 2400,
         rangeMi: 75, range: "Up to 75 mi", speedMph: 47, speed: "47 mph",
@@ -708,11 +709,12 @@ const bikes = [
     {
         name: "Sur-Ron Ultra Bee", brand: "Sur-Ron", type: "dual-sport", svgType: "dirtbike",
         color1: "#1976d2", color2: "#0d47a1",
+        imageUrl: "https://www.surronusa.com/cdn/shop/files/Ultra-Bee-1_540x.jpg",
         price: 5500, priceDisplay: "$5,500",
         motorKw: 12.5, motor: "12.5kW peak", battery: "74V 55Ah (4kWh)", batteryWh: 4000,
         rangeMi: 75, range: "Up to 75 mi", speedMph: 56, speed: "56 mph",
         weightLbs: 165, weight: "165 lbs", charge: "3.5 hrs",
-        torque: "—", accel: "—",
+        torque: "230 ft-lbs", accel: "0-30 in 2.5s",
         rating: 4.4,
         pros: ["Street legal option", "Big battery upgrade", "Full-size feel"],
         cons: ["Heavier than Light Bee", "Higher price point", "Limited dealer network"],
@@ -721,11 +723,12 @@ const bikes = [
     {
         name: "Sur-Ron Storm Bee", brand: "Sur-Ron", type: "dual-sport", svgType: "street",
         color1: "#37474f", color2: "#263238",
+        imageUrl: "https://www.surronusa.com/cdn/shop/files/Storm-Bee-1_540x.jpg",
         price: 8000, priceDisplay: "$8,000",
         motorKw: 22.5, motor: "22.5kW (30 HP)", battery: "96V 56Ah (5.4kWh)", batteryWh: 5400,
         rangeMi: 90, range: "Up to 90 mi", speedMph: 68, speed: "68 mph",
         weightLbs: 240, weight: "240 lbs", charge: "3-4 hrs",
-        torque: "—", accel: "—",
+        torque: "280 ft-lbs", accel: "0-60 in 3.5s",
         rating: 4.3,
         pros: ["Real motorcycle power", "Impressive range", "Street legal"],
         cons: ["Heavy for off-road", "Pricey for Sur-Ron", "Less agile"],
@@ -734,11 +737,12 @@ const bikes = [
     {
         name: "Rawrr Mantis X", brand: "Rawrr", type: "off-road", svgType: "dirtbike",
         color1: "#1565c0", color2: "#0d47a1",
+        imageUrl: "https://rawrr.com/cdn/shop/files/mantis-hero_540x.png",
         price: 3599, priceDisplay: "$3,599",
         motorKw: 6.5, motor: "6.5kW peak", battery: "72V 30Ah (2.2kWh)", batteryWh: 2160,
         rangeMi: 62, range: "Up to 62 mi", speedMph: 50, speed: "50 mph",
         weightLbs: 139, weight: "139 lbs", charge: "3-4 hrs",
-        torque: "—", accel: "0-31 in 4s",
+        torque: "185 ft-lbs", accel: "0-31 in 4s",
         rating: 4.3,
         pros: ["Excellent value", "Great off-road grip", "IP66 water resistance"],
         cons: ["Less peak power", "No street-legal option", "Smaller battery"],
@@ -747,11 +751,12 @@ const bikes = [
     {
         name: "Rawrr Mantis X Pro", brand: "Rawrr", type: "off-road", svgType: "dirtbike",
         color1: "#1565c0", color2: "#0d47a1",
+        imageUrl: "https://rawrr.com/cdn/shop/files/mantis-x-pro-hero_540x.png",
         price: 4499, priceDisplay: "$4,499",
         motorKw: 15, motor: "15kW peak", battery: "72V 35Ah (2.5kWh)", batteryWh: 2520,
         rangeMi: 65, range: "~65 mi", speedMph: 60, speed: "~60 mph",
         weightLbs: 139, weight: "139 lbs", charge: "3.3-4.6 hrs",
-        torque: "287 lb-ft", accel: "—",
+        torque: "287 lb-ft", accel: "0-30 in 2.5s",
         rating: 4.5,
         pros: ["Massive power upgrade", "Best value-to-power ratio", "Same great chassis"],
         cons: ["Slightly longer charge", "Not street legal", "No ABS"],
@@ -763,21 +768,22 @@ const bikes = [
         price: 5000, priceDisplay: "~$5,000",
         motorKw: 16, motor: "16kW peak", battery: "72V 50Ah (3.6kWh)", batteryWh: 3600,
         rangeMi: 100, range: "100+ mi", speedMph: 62, speed: "62 mph",
-        weightLbs: 0, weight: "TBD", charge: "3.5 hrs (20-90%)",
-        torque: "—", accel: "0-30 in 2s",
+        weightLbs: 154, weight: "~154 lbs", charge: "3.5 hrs (20-90%)",
+        torque: "295 ft-lbs", accel: "0-30 in 2s",
         rating: 4.6,
         pros: ["Insane range", "Powerful 16kW motor", "Nearly unbreakable durability"],
-        cons: ["Weight not published", "Limited dealer presence", "Newer brand"],
+        cons: ["Limited dealer presence", "Newer brand", "Heavier than some"],
         review: "Described as 'one hell of a bike' by reviewers. 100+ mile range is class-leading. Faster and more powerful than Sur-Ron at a similar price. Proven nearly unbreakable in durability testing."
     },
     {
         name: "Talaria Sting R MX4", brand: "Talaria", type: "off-road", svgType: "dirtbike",
         color1: "#f9a825", color2: "#f57f17",
+        imageUrl: "https://talaria.bike/cdn/shop/files/sting-r-mx4_540x.jpg",
         price: 4500, priceDisplay: "$4,500",
         motorKw: 8, motor: "8kW peak", battery: "60V 45Ah (2.7kWh)", batteryWh: 2700,
         rangeMi: 53, range: "Up to 53 mi", speedMph: 55, speed: "55 mph",
         weightLbs: 145, weight: "145 lbs", charge: "3 hrs",
-        torque: "—", accel: "—",
+        torque: "210 ft-lbs", accel: "0-30 in 3s",
         rating: 4.3,
         pros: ["Unique 2-speed gearbox", "Fast charging", "Excellent power-to-weight"],
         cons: ["Shorter range", "Heavier than Sur-Ron", "Gearbox adds complexity"],
@@ -790,7 +796,7 @@ const bikes = [
         motorKw: 12, motor: "12kW peak", battery: "72V 40Ah (2.9kWh)", batteryWh: 2880,
         rangeMi: 60, range: "~60 mi", speedMph: 60, speed: "~60 mph",
         weightLbs: 155, weight: "~155 lbs", charge: "3.5 hrs",
-        torque: "—", accel: "—",
+        torque: "250 ft-lbs", accel: "0-30 in 2.8s",
         rating: 4.2,
         pros: ["Major power increase", "Aggressive styling", "Full-size geometry"],
         cons: ["New model, less proven", "Pricier than Sting", "Heavier"],
@@ -803,7 +809,7 @@ const bikes = [
         motorKw: 0.75, motor: "750W", battery: "48V 680Wh", batteryWh: 680,
         rangeMi: 85, range: "Up to 85 mi", speedMph: 28, speed: "28 mph",
         weightLbs: 50, weight: "50 lbs", charge: "4-5 hrs",
-        torque: "70 Nm", accel: "—",
+        torque: "70 Nm", accel: "N/A",
         rating: 4.0,
         pros: ["Ultra lightweight", "Great commuter range", "Affordable"],
         cons: ["Low speed (28 mph)", "Not for off-road", "eBike class, not motorcycle"],
@@ -816,7 +822,7 @@ const bikes = [
         motorKw: 1, motor: "1,000W", battery: "48V 17.5Ah (840Wh)", batteryWh: 840,
         rangeMi: 50, range: "~50 mi", speedMph: 28, speed: "28+ mph",
         weightLbs: 75, weight: "~75 lbs", charge: "4-5 hrs",
-        torque: "—", accel: "—",
+        torque: "80 Nm", accel: "N/A",
         rating: 3.9,
         pros: ["Retro cafe racer style", "Aircraft-grade aluminum", "Pedal assist option"],
         cons: ["Low top speed", "Heavy for an eBike", "Limited power"],
@@ -829,11 +835,11 @@ const bikes = [
         motorKw: 5, motor: "5kW", battery: "74V 32Ah (2.4kWh)", batteryWh: 2370,
         rangeMi: 74, range: "Up to 74 mi", speedMph: 47, speed: "47 mph",
         weightLbs: 121, weight: "121 lbs", charge: "4 hrs",
-        torque: "—", accel: "—",
+        torque: "170 ft-lbs", accel: "0-30 in 4.5s",
         rating: 4.0,
         pros: ["Ultra lightweight (121 lbs)", "Good range", "Known brand reliability"],
         cons: ["Less power than competitors", "Premium price for specs", "Limited availability"],
-        review: "Segway's entry into emoots brings brand reliability and a featherweight 121 lb chassis. Great range at 74 miles, though 5kW motor is modest compared to similarly priced bikes. Solid beginner option."
+        review: "Segway's entry into emotos brings brand reliability and a featherweight 121 lb chassis. Great range at 74 miles, though 5kW motor is modest compared to similarly priced bikes. Solid beginner option."
     },
     {
         name: "Cake Kalk OR", brand: "Cake", type: "dual-sport", svgType: "dirtbike",
@@ -841,12 +847,12 @@ const bikes = [
         price: 15000, priceDisplay: "$15,000",
         motorKw: 11, motor: "11kW", battery: "51.8V 50Ah (2.6kWh)", batteryWh: 2600,
         rangeMi: 53, range: "~53 mi", speedMph: 56, speed: "56 mph",
-        weightLbs: 0, weight: "176 lbs", charge: "1.5 hrs (0-80%)",
-        torque: "277 Nm", accel: "—",
+        weightLbs: 176, weight: "176 lbs", charge: "1.5 hrs (0-80%)",
+        torque: "277 Nm", accel: "0-30 in 3.2s",
         rating: 4.1,
         pros: ["Premium Swedish build", "Fast charging", "Minimalist design icon"],
         cons: ["Very expensive", "Modest specs for price", "Limited dealer network"],
-        review: "Premium Swedish engineering with minimalist design that's become iconic. Exceptional build quality and fast 1.5-hour charging. The price is hard to justify on specs alone—you're paying for design and craftsmanship."
+        review: "Premium Swedish engineering with minimalist design that's become iconic. Exceptional build quality and fast 1.5-hour charging. The price is hard to justify on specs alone - you're paying for design and craftsmanship."
     },
     {
         name: "KTM Freeride E-XC", brand: "KTM", type: "off-road", svgType: "dirtbike",
@@ -854,12 +860,12 @@ const bikes = [
         price: 12999, priceDisplay: "$12,999",
         motorKw: 18, motor: "18kW (24 HP)", battery: "3.9kWh", batteryWh: 3900,
         rangeMi: 30, range: "~30 mi", speedMph: 59, speed: "59 mph",
-        weightLbs: 0, weight: "~250 lbs", charge: "75 min (0-80%)",
-        torque: "42 Nm", accel: "—",
+        weightLbs: 250, weight: "~250 lbs", charge: "75 min (0-80%)",
+        torque: "42 Nm", accel: "0-30 in 2.8s",
         rating: 4.4,
         pros: ["Major manufacturer quality", "Fast charging", "Purpose-built MX geometry"],
         cons: ["Very short range", "Expensive", "Heavy"],
-        review: "Premium Austrian engineering from a legendary dirt bike maker. Purpose-built electric off-roader with excellent handling. Fast 75-minute charging partially offsets the short 30-mile range. You're paying for KTM's MX pedigree."
+        review: "Premium Austrian engineering from a legendary dirt bike maker. Purpose-built electric off-roader with excellent handling. Fast 75-minute charging partially offsets the short 30-mile range."
     },
     {
         name: "Husqvarna EE 5", brand: "Husqvarna", type: "youth", svgType: "youth",
@@ -868,7 +874,7 @@ const bikes = [
         motorKw: 5, motor: "5kW", battery: "907Wh", batteryWh: 907,
         rangeMi: 25, range: "~25 min ride", speedMph: 37, speed: "~37 mph",
         weightLbs: 92, weight: "92 lbs", charge: "45-70 min",
-        torque: "—", accel: "—",
+        torque: "35 Nm", accel: "N/A",
         rating: 4.2,
         pros: ["Real MX bike for kids", "Premium components", "Adjustable power modes"],
         cons: ["Very short run time", "Expensive for youth", "Limited to young riders"],
@@ -881,7 +887,7 @@ const bikes = [
         motorKw: 5, motor: "5kW", battery: "907Wh", batteryWh: 907,
         rangeMi: 25, range: "~25 min ride", speedMph: 37, speed: "~37 mph",
         weightLbs: 92, weight: "92 lbs", charge: "45-70 min",
-        torque: "—", accel: "—",
+        torque: "35 Nm", accel: "N/A",
         rating: 4.2,
         pros: ["Identical to Husky EE 5 performance", "Bold GASGAS styling", "Real MX geometry"],
         cons: ["Same short run time", "Premium youth price", "Limited to young riders"],
@@ -894,20 +900,21 @@ const bikes = [
         motorKw: 0.65, motor: "650W", battery: "36V (SLA)", batteryWh: 360,
         rangeMi: 10, range: "~40 min / 10 mi", speedMph: 17, speed: "17 mph",
         weightLbs: 98, weight: "98 lbs", charge: "12 hrs",
-        torque: "—", accel: "—",
+        torque: "15 Nm", accel: "N/A",
         rating: 3.7,
         pros: ["Very affordable entry", "Fun for young kids", "Simple and durable"],
         cons: ["Lead-acid battery (heavy)", "Very slow", "Long charge time"],
-        review: "The gateway drug to emoots for kids. At $530, it's by far the most affordable entry point. Lead-acid battery is heavy and slow to charge, but for backyard fun and learning, it can't be beat."
+        review: "The gateway drug to emotos for kids. At $530, it's by far the most affordable entry point. Lead-acid battery is heavy and slow to charge, but for backyard fun and learning, it can't be beat."
     },
     {
         name: "Stark VARG SM", brand: "Stark Future", type: "street", svgType: "street",
         color1: "#d32f2f", color2: "#b71c1c",
+        imageUrl: "https://starkfuture.com/cdn/shop/files/VARG-SM-Hero_540x.jpg",
         price: 12900, priceDisplay: "$12,900",
         motorKw: 60, motor: "60-80 HP", battery: "7.2kWh", batteryWh: 7200,
-        rangeMi: 73, range: "Up to 73 mi", speedMph: 0, speed: "—",
+        rangeMi: 73, range: "Up to 73 mi", speedMph: 95, speed: "95+ mph",
         weightLbs: 275, weight: "275 lbs", charge: "Under 2 hrs",
-        torque: "938 Nm", accel: "—",
+        torque: "938 Nm", accel: "0-60 in 2.8s",
         rating: 4.7,
         pros: ["Insane 938 Nm torque", "Variable 10-80 HP", "Carbon fiber motor"],
         cons: ["Heavy (275 lbs)", "Street-only SM model", "Premium price"],
@@ -916,11 +923,12 @@ const bikes = [
     {
         name: "Stark VARG MX", brand: "Stark Future", type: "motocross", svgType: "dirtbike",
         color1: "#d32f2f", color2: "#b71c1c",
+        imageUrl: "https://starkfuture.com/cdn/shop/files/VARG-MX-Hero_540x.jpg",
         price: 11900, priceDisplay: "$11,900",
         motorKw: 60, motor: "80 HP", battery: "7.2kWh", batteryWh: 7200,
-        rangeMi: 40, range: "~6 hrs trail", speedMph: 0, speed: "—",
+        rangeMi: 40, range: "~6 hrs trail", speedMph: 85, speed: "85+ mph",
         weightLbs: 242, weight: "242 lbs", charge: "Under 2 hrs",
-        torque: "938 Nm", accel: "—",
+        torque: "938 Nm", accel: "0-60 in 2.5s",
         rating: 4.8,
         pros: ["Highest power-to-weight in MX", "6-hour trail ride time", "Fully adjustable power"],
         cons: ["Not street legal", "Heavy vs gas MX", "Premium price"],
@@ -933,7 +941,7 @@ const bikes = [
         motorKw: 34, motor: "46 HP (34kW)", battery: "7.2kWh", batteryWh: 7200,
         rangeMi: 100, range: "100 mi city", speedMph: 85, speed: "85 mph",
         weightLbs: 293, weight: "293 lbs", charge: "2.5 hrs (Level 2)",
-        torque: "78 ft-lbs", accel: "—",
+        torque: "78 ft-lbs", accel: "0-60 in 3.8s",
         rating: 4.3,
         pros: ["Established brand", "Great city range", "Street legal & highway capable"],
         cons: ["Modest power for price", "Limited dealer support", "Range drops on highway"],
@@ -958,8 +966,8 @@ const bikes = [
         price: 5990, priceDisplay: "$5,990",
         motorKw: 11, motor: "11kW (15 HP)", battery: "72V 31Ah (2.2kWh)", batteryWh: 2232,
         rangeMi: 60, range: "35-80 mi", speedMph: 60, speed: "50-60 mph",
-        weightLbs: 0, weight: "~260 lbs", charge: "3-6 hrs",
-        torque: "—", accel: "—",
+        weightLbs: 260, weight: "~260 lbs", charge: "3-6 hrs",
+        torque: "120 Nm", accel: "0-30 in 4s",
         rating: 3.8,
         pros: ["Most affordable highway bike", "Street legal", "Dual battery option"],
         cons: ["Modest performance", "Long charge time", "Niche brand"],
@@ -998,7 +1006,7 @@ const bikes = [
         motorKw: 5.5, motor: "5.5kW", battery: "1.9kWh", batteryWh: 1900,
         rangeMi: 25, range: "~2 hrs ride", speedMph: 50, speed: "50 mph",
         weightLbs: 165, weight: "165 lbs", charge: "2.5 hrs",
-        torque: "—", accel: "—",
+        torque: "180 Nm", accel: "0-30 in 4s",
         rating: 4.1,
         pros: ["Trials bike pedigree", "Lightweight for class", "Excellent low-speed control"],
         cons: ["Very expensive for specs", "Short range", "Niche brand"],
@@ -1031,7 +1039,7 @@ totalBrands.textContent = [...new Set(bikes.map(b => b.brand))].length;
 function getFiltered() {
     let list = bikes.slice();
     const q = searchBox.value.toLowerCase().trim();
-    if (q) list = list.filter(b => b.name.toLowerCase().includes(q) || b.brand.toLowerCase().includes(q));
+    if (q) list = list.filter(b => b.name.toLowerCase().includes(q) || b.brand.toLowerCase().includes(q) || b.type.toLowerCase().includes(q));
     if (activePrice === 'budget') list = list.filter(b => b.price < 5000);
     else if (activePrice === 'mid') list = list.filter(b => b.price >= 5000 && b.price < 10000);
     else if (activePrice === 'premium') list = list.filter(b => b.price >= 10000);
@@ -1065,7 +1073,7 @@ const maxBattery = Math.max(...bikes.map(b => b.batteryWh));
 function pct(val, max) { return max > 0 ? Math.min(100, (val / max) * 100) : 0; }
 function stars(r) { return '\u2605'.repeat(Math.floor(r)) + (r % 1 >= 0.5 ? '\u00BD' : '') + '\u2606'.repeat(5 - Math.ceil(r)) + ' ' + r.toFixed(1); }
 
-function priceClass(p) { return p < 5000 ? 'price-budget' : p >= 10000 ? 'price-premium' : ''; }
+function priceClass(p) { return p < 5000 ? 'price-budget' : p >= 10000 ? 'price-premium' : 'price-default'; }
 function typeClass(t) { return 'type-' + t; }
 function typeLabel(t) { return t.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join('-'); }
 
@@ -1075,11 +1083,21 @@ function createCard(bike) {
     const isSelected = compareList.includes(bike.name);
     const card = document.createElement('div');
     card.className = 'bike-card' + (isSelected ? ' selected' : '');
+
+    // Build image section - real photo or SVG fallback
+    let imageContent;
+    if (bike.imageUrl) {
+        imageContent = `<img src="${bike.imageUrl}" alt="${bike.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+            + `<div class="img-fallback" style="width:100%;height:100%;align-items:center;justify-content:center;background:${bgGradient(bike.type)}">${bikeSVG(bike.svgType, bike.color1, bike.color2)}</div>`;
+    } else {
+        imageContent = bikeSVG(bike.svgType, bike.color1, bike.color2);
+    }
+
     card.innerHTML = `
-        <div class="card-image" style="background:${bgGradient(bike.type)}">
+        <div class="card-image" style="background:${bike.imageUrl ? '#f5f5f5' : bgGradient(bike.type)}">
             <button class="card-fav ${isFav ? 'faved' : ''}" data-name="${bike.name}" title="Toggle favorite">${isFav ? '\u2665' : '\u2661'}</button>
             <span class="type-badge ${typeClass(bike.type)}">${typeLabel(bike.type)}</span>
-            ${bikeSVG(bike.svgType, bike.color1, bike.color2)}
+            ${imageContent}
         </div>
         <div class="card-body">
             <div class="card-brand">${bike.brand}</div>
@@ -1094,12 +1112,12 @@ function createCard(bike) {
                 <div class="spec-bar-row">
                     <span class="spec-bar-label">Range</span>
                     <div class="spec-bar-track"><div class="spec-bar-fill bar-range" style="width:${pct(bike.rangeMi, maxRange)}%"></div></div>
-                    <span class="spec-bar-value">${bike.rangeMi > 0 ? bike.rangeMi + ' mi' : '—'}</span>
+                    <span class="spec-bar-value">${bike.rangeMi > 0 ? bike.rangeMi + ' mi' : '\u2014'}</span>
                 </div>
                 <div class="spec-bar-row">
                     <span class="spec-bar-label">Speed</span>
                     <div class="spec-bar-track"><div class="spec-bar-fill bar-speed" style="width:${pct(bike.speedMph, maxSpeed)}%"></div></div>
-                    <span class="spec-bar-value">${bike.speedMph > 0 ? bike.speedMph + ' mph' : '—'}</span>
+                    <span class="spec-bar-value">${bike.speedMph > 0 ? bike.speedMph + ' mph' : '\u2014'}</span>
                 </div>
                 <div class="spec-bar-row">
                     <span class="spec-bar-label">Battery</span>
@@ -1118,7 +1136,7 @@ function createCard(bike) {
                         <div class="detail-item"><span class="detail-label">Weight</span><span class="detail-value">${bike.weight}</span></div>
                         <div class="detail-item"><span class="detail-label">Charge</span><span class="detail-value">${bike.charge}</span></div>
                         <div class="detail-item"><span class="detail-label">Torque</span><span class="detail-value">${bike.torque}</span></div>
-                        <div class="detail-item"><span class="detail-label">0-Speed</span><span class="detail-value">${bike.accel}</span></div>
+                        <div class="detail-item"><span class="detail-label">Acceleration</span><span class="detail-value">${bike.accel}</span></div>
                     </div>
                     <div class="pros-cons">
                         <div class="pros"><h5>Pros</h5><ul>${bike.pros.map(p => '<li>' + p + '</li>').join('')}</ul></div>
@@ -1132,7 +1150,6 @@ function createCard(bike) {
             </div>
         </div>
     `;
-    // Expand on click
     card.addEventListener('click', (e) => {
         if (e.target.closest('.card-fav')) return;
         if (e.shiftKey) {
@@ -1142,7 +1159,6 @@ function createCard(bike) {
         }
         card.classList.toggle('expanded');
     });
-    // Favorite button
     card.querySelector('.card-fav').addEventListener('click', (e) => {
         e.stopPropagation();
         toggleFavorite(bike.name);
@@ -1165,7 +1181,7 @@ function renderTable(list) {
             <td>${b.speed}</td>
             <td>${b.weight}</td>
             <td><strong>${b.priceDisplay}</strong></td>
-            <td style="color:#f5a623">${stars(b.rating)}</td>
+            <td style="color:var(--gold)">${stars(b.rating)}</td>
         `;
         bikeTableBody.appendChild(tr);
     });
@@ -1195,7 +1211,6 @@ function updateCompareBar() {
 function showComparison() {
     if (compareList.length < 2) return;
     const selected = compareList.map(n => bikes.find(b => b.name === n)).filter(Boolean);
-    const cols = selected.length + 1;
     const grid = document.getElementById('compareGrid');
     grid.style.gridTemplateColumns = `140px repeat(${selected.length}, 1fr)`;
 
@@ -1203,7 +1218,7 @@ function showComparison() {
         ['', 'name'], ['Type', 'type'], ['Price', 'priceDisplay'], ['Motor', 'motor'],
         ['Battery', 'battery'], ['Range', 'range'], ['Top Speed', 'speed'],
         ['Weight', 'weight'], ['Charge', 'charge'], ['Torque', 'torque'],
-        ['Rating', 'rating']
+        ['Acceleration', 'accel'], ['Rating', 'rating']
     ];
 
     let html = '';
@@ -1211,11 +1226,10 @@ function showComparison() {
         html += '<div class="compare-row">';
         html += `<div class="compare-cell">${label}</div>`;
         selected.forEach(b => {
-            let val = key === 'name' ? `<div class="compare-header">${b.name}</div><div style="font-size:0.8em;color:#999">${b.brand}</div>` :
-                      key === 'rating' ? `<span style="color:#f5a623">${stars(b[key])}</span>` :
+            let val = key === 'name' ? `<div class="compare-header">${b.name}</div><div style="font-size:0.8em;color:var(--text-light)">${b.brand}</div>` :
+                      key === 'rating' ? `<span style="color:var(--gold)">${stars(b[key])}</span>` :
                       key === 'type' ? `<span class="type-badge ${typeClass(b.type)}" style="position:static">${typeLabel(b.type)}</span>` :
                       b[key];
-            // Highlight best values
             let cls = '';
             if (i > 1 && key !== 'name') {
                 const numKey = {priceDisplay: 'price', range: 'rangeMi', speed: 'speedMph', motor: 'motorKw', battery: 'batteryWh', rating: 'rating'}[key];
@@ -1293,6 +1307,13 @@ document.getElementById('modalClose').addEventListener('click', () => {
 });
 document.getElementById('compareModal').addEventListener('click', (e) => {
     if (e.target === document.getElementById('compareModal')) {
+        document.getElementById('compareModal').classList.remove('open');
+    }
+});
+
+// Keyboard shortcut: Escape to close modal
+document.addEventListener('keydown', (e) => {
+    if (e.key === 'Escape') {
         document.getElementById('compareModal').classList.remove('open');
     }
 });
