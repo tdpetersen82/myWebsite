@@ -60,7 +60,7 @@
             </div>
             <div class="player-controls">
                 <strong style="color:#333">Space = Start / Restart</strong>
-                <span>🧊 Freeze opponent &nbsp;⚡ Speed boost</span>
+                <span>🧊 Freeze &nbsp;⚡ Speed &nbsp;🧲 Magnet &nbsp;🛡️ Shield &nbsp;📏 Wide</span>
             </div>
             <div class="player-controls">
                 <strong class="p2-label">Player 2 (Red)</strong>
@@ -108,17 +108,31 @@
         const playGo     = () => [523, 659, 784, 1047].forEach((f, i) => playTone(f, 'sine', 0.16, 0.35, i * 0.08));
         const playWin    = () => [523, 659, 784, 1047, 1319].forEach((f, i) => playTone(f, 'sine', 0.22, 0.38, i * 0.1));
         const playTie    = () => [440, 440].forEach((f, i) => playTone(f, 'sine', 0.2, 0.3, i * 0.25));
+        const playMagnet = () => [300, 450, 600].forEach((f, i) => playTone(f, 'triangle', 0.12, 0.2, i * 0.06));
+        const playShield = () => [500, 700, 500].forEach((f, i) => playTone(f, 'sine', 0.08, 0.25, i * 0.06));
+        const playShieldBlock = () => { playTone(800, 'sine', 0.15, 0.3); playTone(600, 'sine', 0.15, 0.25, 0.08); };
+        const playWide   = () => [350, 500, 700].forEach((f, i) => playTone(f, 'square', 0.08, 0.2, i * 0.05));
+        const playFever  = () => [523, 659, 784, 880, 1047].forEach((f, i) => playTone(f, 'sine', 0.12, 0.3, i * 0.06));
+        const playWave   = () => [440, 554, 659].forEach((f, i) => playTone(f, 'triangle', 0.15, 0.2, i * 0.1));
+        const playGolden = () => [880, 1100, 1320, 1540].forEach((f, i) => playTone(f, 'sine', 0.1, 0.25, i * 0.06));
+        const playRainbow = () => [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => playTone(f, 'sine', 0.08, 0.2, i * 0.05));
 
         // ── Constants ─────────────────────────────────────────────────────────
         const BW = 104, BH = 28;         // basket width / height
+        const WIDE_BW = 156;             // wide basket width
         const BASE_SPEED = 6;
         const BOOST_SPEED = 10;
         const ITEM_FS = 30;              // item font size
         const ITEM_R  = 16;              // item collision radius
         const GAME_DURATION = 60;
-        const FI = 1000 / 60;           // frame interval ms
-        const MAX_ITEMS = 12;
+        const FI = 1000 / 60;            // frame interval ms
+        const MAX_ITEMS = 14;
         const BASKET_Y = H - 38;
+        const MAGNET_RANGE = 120;        // magnet attraction range
+        const MAGNET_FORCE = 1.8;        // magnet pull strength
+        const FEVER_COMBO_THRESHOLD = 8; // combo needed for fever mode
+        const FEVER_DURATION = 5000;     // fever mode lasts 5s
+        const WAVE_DURATION = 15;        // seconds per wave
 
         const ITEM_TYPES = [
             { label: '🍎', color: '#EF4444', points: 1,  weight: 10 },
@@ -127,10 +141,20 @@
             { label: '🍊', color: '#FB923C', points: 1,  weight: 10 },
             { label: '🍇', color: '#A855F7', points: 1,  weight: 10 },
             { label: '🍑', color: '#FDBA74', points: 1,  weight: 10 },
-            { label: '⭐', color: '#FBBF24', points: 3,  weight: 7  },
+            { label: '🥝', color: '#86EFAC', points: 1,  weight: 8  },
+            { label: '🍓', color: '#FB7185', points: 2,  weight: 6  },
+            { label: '🍍', color: '#FDE047', points: 2,  weight: 5  },
+            { label: '🥭', color: '#FDBA74', points: 2,  weight: 5  },
+            { label: '⭐', color: '#FBBF24', points: 3,  weight: 6  },
+            { label: '🌟', color: '#FFD700', points: 5,  weight: 2  },
+            { label: '🌈', color: '#EC4899', points: 4,  weight: 2  },
             { label: '💣', color: '#374151', points: -2, weight: 10 },
+            { label: '☠️', color: '#1F2937', points: -4, weight: 3  },
             { label: '🧊', color: '#BAE6FD', points: 0,  weight: 4, special: 'freeze' },
             { label: '⚡', color: '#FDE047', points: 0,  weight: 4, special: 'speed'  },
+            { label: '🧲', color: '#94A3B8', points: 0,  weight: 3, special: 'magnet' },
+            { label: '🛡️', color: '#60A5FA', points: 0,  weight: 3, special: 'shield' },
+            { label: '📏', color: '#A78BFA', points: 0,  weight: 3, special: 'wide'   },
         ];
 
         // ── Clouds ────────────────────────────────────────────────────────────
@@ -142,6 +166,29 @@
             { x: 380, y: 100, r: 24, speed: 0.09 },
         ];
 
+        // ── Scenery ───────────────────────────────────────────────────────────
+        const TREES = [
+            { x: 45,  trunkH: 50, canopyR: 32 },
+            { x: 180, trunkH: 40, canopyR: 26 },
+            { x: 620, trunkH: 55, canopyR: 35 },
+            { x: 760, trunkH: 42, canopyR: 28 },
+        ];
+        const BUSHES = [
+            { x: 110, r: 18 },
+            { x: 320, r: 14 },
+            { x: 500, r: 16 },
+            { x: 690, r: 15 },
+        ];
+        const FLOWERS = [];
+        for (let i = 0; i < 12; i++) {
+            FLOWERS.push({
+                x: 30 + Math.random() * (W - 60),
+                color: ['#F472B6', '#FCD34D', '#C084FC', '#FB923C', '#60A5FA', '#EF4444'][Math.floor(Math.random() * 6)],
+                size: 3 + Math.random() * 3,
+                swayOffset: Math.random() * Math.PI * 2,
+            });
+        }
+
         // ── State ─────────────────────────────────────────────────────────────
         let gameState    = 'waiting';
         let timeLeft     = GAME_DURATION;
@@ -152,7 +199,10 @@
         let countdownVal  = 3;
         let lastCountdown = 0;
         let shakeFrames   = 0;
-        let currentTs     = 0;         // updated every frame
+        let currentTs     = 0;
+        let currentWave   = 1;
+        let waveAnnounceTimer = 0;
+        let frameCount    = 0;
 
         let items     = [];
         let particles = [];
@@ -160,21 +210,43 @@
 
         const keys = {};
 
-        const p1 = { x: 165, y: BASKET_Y, score: 0, combo: 0, frozen: 0, speedBoost: 0, catchAnim: 0 };
-        const p2 = { x: 635, y: BASKET_Y, score: 0, combo: 0, frozen: 0, speedBoost: 0, catchAnim: 0 };
+        function makePlayer(x) {
+            return {
+                x, y: BASKET_Y, score: 0, combo: 0, maxCombo: 0,
+                frozen: 0, speedBoost: 0, magnet: 0, shield: false, wide: 0,
+                catchAnim: 0, fever: 0, feverActive: false,
+                totalCaught: 0, fruitsOnly: 0, bombsCaught: 0,
+                powerUpsCaught: 0, starsGolden: 0,
+            };
+        }
+
+        let p1 = makePlayer(165);
+        let p2 = makePlayer(635);
 
         // ── Helpers ───────────────────────────────────────────────────────────
         function pickItem() {
-            const total = ITEM_TYPES.reduce((s, t) => s + t.weight, 0);
+            // Late-game higher chance of rare items
+            let types = ITEM_TYPES;
+            if (currentWave >= 3) {
+                // Slightly boost rare item weights in later waves
+                types = types.map(t => {
+                    if (t.points >= 3 || t.special) return { ...t, weight: t.weight + 1 };
+                    if (t.points < 0) return { ...t, weight: t.weight + 2 };
+                    return t;
+                });
+            }
+            const total = types.reduce((s, t) => s + t.weight, 0);
             let r = Math.random() * total;
-            for (const t of ITEM_TYPES) { r -= t.weight; if (r <= 0) return t; }
+            for (const t of types) { r -= t.weight; if (r <= 0) return t; }
             return ITEM_TYPES[0];
         }
 
         function getDiff() {
-            if (timeLeft > 30) return { sMin: 1.5, sMax: 3.0, iMin: 1400, iMax: 2000 };
-            if (timeLeft > 15) return { sMin: 2.0, sMax: 4.2, iMin: 950,  iMax: 1450 };
-            return               { sMin: 2.6, sMax: 5.5, iMin: 650,  iMax: 1050 };
+            const wave = currentWave;
+            if (wave <= 1) return { sMin: 1.5, sMax: 3.0, iMin: 1400, iMax: 2000 };
+            if (wave <= 2) return { sMin: 2.0, sMax: 4.2, iMin: 950,  iMax: 1450 };
+            if (wave <= 3) return { sMin: 2.6, sMax: 5.0, iMin: 700,  iMax: 1100 };
+            return               { sMin: 3.0, sMax: 5.8, iMin: 550,  iMax: 900  };
         }
 
         function spawnItem(ts) {
@@ -216,23 +288,31 @@
         }
 
         // ── Catch & scoring ───────────────────────────────────────────────────
+        function getBasketWidth(player) {
+            return (player.wide > currentTs) ? WIDE_BW : BW;
+        }
+
         function checkCatch(basket, item) {
+            const bw = getBasketWidth(basket);
             return (
                 item.y + ITEM_R >= basket.y - BH / 2 &&
                 item.y + ITEM_R <= basket.y + BH / 2 + 10 &&
-                item.x >= basket.x - BW / 2 &&
-                item.x <= basket.x + BW / 2
+                item.x >= basket.x - bw / 2 &&
+                item.x <= basket.x + bw / 2
             );
         }
 
         function handleCatch(player, other, item) {
             const { type } = item;
+            player.totalCaught++;
 
+            // --- Power-ups ---
             if (type.special === 'freeze') {
                 other.frozen = currentTs + 2600;
                 playFreeze();
                 spawnPopup(player.x, player.y - 40, '🧊 FREEZE!', '#38BDF8');
                 spawnParticles(item.x, item.y, '#BAE6FD', 14);
+                player.powerUpsCaught++;
                 return;
             }
             if (type.special === 'speed') {
@@ -240,36 +320,120 @@
                 playSpeed();
                 spawnPopup(player.x, player.y - 40, '⚡ SPEED!', '#FDE047');
                 spawnParticles(item.x, item.y, '#FDE047', 14);
+                player.powerUpsCaught++;
+                return;
+            }
+            if (type.special === 'magnet') {
+                player.magnet = currentTs + 4000;
+                playMagnet();
+                spawnPopup(player.x, player.y - 40, '🧲 MAGNET!', '#94A3B8');
+                spawnParticles(item.x, item.y, '#94A3B8', 14);
+                player.powerUpsCaught++;
+                return;
+            }
+            if (type.special === 'shield') {
+                player.shield = true;
+                playShield();
+                spawnPopup(player.x, player.y - 40, '🛡️ SHIELD!', '#60A5FA');
+                spawnParticles(item.x, item.y, '#60A5FA', 14);
+                player.powerUpsCaught++;
+                return;
+            }
+            if (type.special === 'wide') {
+                player.wide = currentTs + 5000;
+                playWide();
+                spawnPopup(player.x, player.y - 40, '📏 WIDE!', '#A78BFA');
+                spawnParticles(item.x, item.y, '#A78BFA', 14);
+                player.powerUpsCaught++;
                 return;
             }
 
-            player.score = Math.max(0, player.score + type.points);
-            player.catchAnim = 1;
-
-            if (type.points > 1) {
-                player.combo++;
-                playStar();
-                spawnPopup(item.x, item.y - 10, '+3 ⭐', '#FBBF24');
-                spawnParticles(item.x, item.y, '#FBBF24', 16);
-            } else if (type.points < 0) {
+            // --- Bomb with shield check ---
+            if (type.points < 0) {
+                if (player.shield) {
+                    player.shield = false;
+                    playShieldBlock();
+                    spawnPopup(item.x, item.y - 10, '🛡️ BLOCKED!', '#60A5FA');
+                    spawnParticles(item.x, item.y, '#60A5FA', 12);
+                    player.catchAnim = 1;
+                    player.bombsCaught++;
+                    return;
+                }
                 player.combo = 0;
+                player.feverActive = false;
+                player.score = Math.max(0, player.score + type.points);
+                player.catchAnim = 1;
+                player.bombsCaught++;
                 playBomb();
                 shakeFrames = 12;
-                spawnPopup(item.x, item.y - 10, '-2 💣', '#EF4444');
+                const txt = type.points === -4 ? '-4 ☠️' : '-2 💣';
+                spawnPopup(item.x, item.y - 10, txt, '#EF4444');
                 spawnParticles(item.x, item.y, '#6B7280', 14);
+                updateHUD(player);
+                updateScoreBar();
+                return;
+            }
+
+            // --- Scoring ---
+            let pts = type.points;
+            // Fever mode doubles points
+            if (player.feverActive) pts *= 2;
+
+            player.score += pts;
+            player.catchAnim = 1;
+            player.fruitsOnly++;
+
+            if (type.points >= 5) {
+                // Golden star / rainbow
+                player.combo++;
+                player.starsGolden++;
+                playGolden();
+                spawnPopup(item.x, item.y - 10, `+${pts} 🌟`, '#FFD700');
+                spawnParticles(item.x, item.y, '#FFD700', 20);
+            } else if (type.points >= 3) {
+                player.combo++;
+                player.starsGolden++;
+                if (type.label === '🌈') {
+                    playRainbow();
+                    spawnPopup(item.x, item.y - 10, `+${pts} 🌈`, '#EC4899');
+                    spawnParticles(item.x, item.y, '#EC4899', 16);
+                } else {
+                    playStar();
+                    spawnPopup(item.x, item.y - 10, `+${pts} ⭐`, '#FBBF24');
+                    spawnParticles(item.x, item.y, '#FBBF24', 16);
+                }
+            } else if (type.points === 2) {
+                player.combo++;
+                playCatch();
+                spawnPopup(item.x, item.y - 10, `+${pts}`, '#FDE68A');
+                spawnParticles(item.x, item.y, type.color, 10);
             } else {
                 player.combo++;
                 playCatch();
-                spawnPopup(item.x, item.y - 10, '+1', '#fff');
+                spawnPopup(item.x, item.y - 10, `+${pts}`, '#fff');
                 spawnParticles(item.x, item.y, type.color, 8);
             }
 
+            // Track max combo
+            if (player.combo > player.maxCombo) player.maxCombo = player.combo;
+
             // Combo reward at 4+
             if (player.combo >= 4 && type.points > 0) {
-                player.score += 1;
+                const bonus = Math.min(Math.floor(player.combo / 4), 3);
+                player.score += bonus;
                 playCombo(player.combo);
-                spawnPopup(player.x, player.y - 70, `COMBO ×${player.combo}! +1`, '#FFD700');
+                spawnPopup(player.x, player.y - 70, `COMBO ×${player.combo}! +${bonus}`, '#FFD700');
                 spawnParticles(player.x, player.y - 30, '#FFD700', 12);
+            }
+
+            // Fever mode trigger
+            if (player.combo >= FEVER_COMBO_THRESHOLD && !player.feverActive) {
+                player.feverActive = true;
+                player.fever = currentTs + FEVER_DURATION;
+                playFever();
+                spawnPopup(player.x, player.y - 100, '🔥 FEVER MODE! 🔥', '#FF6B35');
+                spawnParticles(player.x, player.y - 50, '#FF6B35', 20);
+                spawnParticles(player.x, player.y - 50, '#FCD34D', 15);
             }
 
             updateHUD(player);
@@ -295,6 +459,7 @@
         // ── Update ────────────────────────────────────────────────────────────
         function update(ts) {
             currentTs = ts;
+            frameCount++;
 
             if (gameState === 'countdown') {
                 if (lastCountdown === 0) lastCountdown = ts;
@@ -324,6 +489,24 @@
                 if (timeLeft <= 0) { endGame(); return; }
             }
 
+            // Wave system
+            const elapsed = GAME_DURATION - timeLeft;
+            const newWave = Math.floor(elapsed / WAVE_DURATION) + 1;
+            if (newWave > currentWave) {
+                currentWave = newWave;
+                waveAnnounceTimer = ts + 2000;
+                playWave();
+                spawnPopup(W / 2, H / 3, `⚡ WAVE ${currentWave} ⚡`, '#FDE047');
+                spawnParticles(W / 2, H / 3, '#FDE047', 18);
+            }
+
+            // Fever mode expiry
+            [p1, p2].forEach(p => {
+                if (p.feverActive && ts > p.fever) {
+                    p.feverActive = false;
+                }
+            });
+
             // Move baskets
             const p1Frozen = p1.frozen > ts;
             const p2Frozen = p2.frozen > ts;
@@ -339,9 +522,10 @@
                 if (keys['ArrowRight']) p2.x += p2Spd;
             }
 
-            const hw = BW / 2;
-            p1.x = Math.max(hw, Math.min(W - hw, p1.x));
-            p2.x = Math.max(hw, Math.min(W - hw, p2.x));
+            [p1, p2].forEach(p => {
+                const hw = getBasketWidth(p) / 2;
+                p.x = Math.max(hw, Math.min(W - hw, p.x));
+            });
 
             // Catch animations decay
             p1.catchAnim = Math.max(0, p1.catchAnim - 0.12);
@@ -350,12 +534,35 @@
             // Spawn items
             if (ts - lastSpawn >= nextSpawnMs) spawnItem(ts);
 
+            // Magnet attraction
+            [p1, p2].forEach(player => {
+                if (player.magnet > ts) {
+                    items.forEach(item => {
+                        if (item.type.points < 0 || item.type.special) return;
+                        const dx = player.x - item.x;
+                        const dy = player.y - item.y;
+                        const dist = Math.sqrt(dx * dx + dy * dy);
+                        if (dist < MAGNET_RANGE && dist > 5) {
+                            item.x += (dx / dist) * MAGNET_FORCE;
+                            item.y += (dy / dist) * MAGNET_FORCE * 0.5;
+                        }
+                    });
+                }
+            });
+
             // Update items
             items = items.filter(item => {
                 item.wobble += item.wobbleSpeed || 0;
                 item.x += Math.sin(item.wobble) * (item.wobbleAmp || 0);
                 item.y += item.speed;
                 item.rot += item.rotSpeed;
+
+                // Trail
+                if (frameCount % 3 === 0) {
+                    item.trail.push({ x: item.x, y: item.y, life: 1 });
+                    if (item.trail.length > 5) item.trail.shift();
+                }
+                item.trail.forEach(t => t.life -= 0.06);
 
                 if (checkCatch(p1, item)) { handleCatch(p1, p2, item); return false; }
                 if (checkCatch(p2, item)) { handleCatch(p2, p1, item); return false; }
@@ -365,7 +572,7 @@
             // Update particles
             particles = particles.filter(p => {
                 p.x += p.vx; p.y += p.vy;
-                p.vy += 0.18;  // gravity
+                p.vy += 0.18;
                 p.vx *= 0.96;
                 p.life -= 0.025;
                 return p.life > 0;
@@ -396,7 +603,7 @@
 
         // ── Draw ──────────────────────────────────────────────────────────────
         function drawBackground() {
-            // Sky
+            // Sky gradient
             const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.8);
             skyGrad.addColorStop(0, '#60A5FA');
             skyGrad.addColorStop(0.5, '#93C5FD');
@@ -404,15 +611,31 @@
             ctx.fillStyle = skyGrad;
             ctx.fillRect(0, 0, W, H);
 
-            // Sun
-            const sunGrad = ctx.createRadialGradient(60, 60, 5, 60, 60, 50);
+            // Sun with rays
+            const sunX = 60, sunY = 60;
+            const sunGrad = ctx.createRadialGradient(sunX, sunY, 5, sunX, sunY, 50);
             sunGrad.addColorStop(0, '#FEF08A');
             sunGrad.addColorStop(0.5, '#FDE047');
             sunGrad.addColorStop(1, 'rgba(253,224,71,0)');
             ctx.fillStyle = sunGrad;
             ctx.beginPath();
-            ctx.arc(60, 60, 50, 0, Math.PI * 2);
+            ctx.arc(sunX, sunY, 50, 0, Math.PI * 2);
             ctx.fill();
+
+            // Sun rays
+            ctx.save();
+            ctx.translate(sunX, sunY);
+            ctx.rotate(frameCount * 0.003);
+            ctx.strokeStyle = 'rgba(253,224,71,0.2)';
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 12; i++) {
+                const angle = (Math.PI * 2 / 12) * i;
+                ctx.beginPath();
+                ctx.moveTo(Math.cos(angle) * 25, Math.sin(angle) * 25);
+                ctx.lineTo(Math.cos(angle) * 55, Math.sin(angle) * 55);
+                ctx.stroke();
+            }
+            ctx.restore();
 
             // Clouds
             CLOUDS.forEach(c => {
@@ -425,52 +648,161 @@
             });
 
             // Ground gradient
-            const groundGrad = ctx.createLinearGradient(0, H - 60, 0, H);
+            const groundY = H - 55;
+            const groundGrad = ctx.createLinearGradient(0, groundY, 0, H);
             groundGrad.addColorStop(0, '#4ADE80');
             groundGrad.addColorStop(0.35, '#22C55E');
             groundGrad.addColorStop(1, '#15803D');
             ctx.fillStyle = groundGrad;
-            ctx.fillRect(0, H - 55, W, 55);
+            ctx.fillRect(0, groundY, W, 55);
+
+            // Trees
+            TREES.forEach(t => {
+                // Trunk
+                ctx.fillStyle = '#92400E';
+                ctx.fillRect(t.x - 6, groundY - t.trunkH, 12, t.trunkH + 5);
+                // Canopy
+                const canopyY = groundY - t.trunkH - t.canopyR * 0.5;
+                const cGrad = ctx.createRadialGradient(t.x, canopyY, 2, t.x, canopyY, t.canopyR);
+                cGrad.addColorStop(0, '#4ADE80');
+                cGrad.addColorStop(0.6, '#22C55E');
+                cGrad.addColorStop(1, '#16A34A');
+                ctx.fillStyle = cGrad;
+                ctx.beginPath();
+                ctx.arc(t.x, canopyY, t.canopyR, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(t.x - t.canopyR * 0.6, canopyY + t.canopyR * 0.3, t.canopyR * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(t.x + t.canopyR * 0.6, canopyY + t.canopyR * 0.3, t.canopyR * 0.7, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Bushes
+            BUSHES.forEach(b => {
+                ctx.fillStyle = '#16A34A';
+                ctx.beginPath();
+                ctx.arc(b.x, groundY + 2, b.r, Math.PI, 0);
+                ctx.fill();
+                ctx.fillStyle = '#22C55E';
+                ctx.beginPath();
+                ctx.arc(b.x - b.r * 0.5, groundY + 2, b.r * 0.7, Math.PI, 0);
+                ctx.fill();
+                ctx.beginPath();
+                ctx.arc(b.x + b.r * 0.5, groundY + 2, b.r * 0.7, Math.PI, 0);
+                ctx.fill();
+            });
 
             // Grass blade strip at top of ground
             ctx.fillStyle = '#4ADE80';
             for (let gx = 0; gx < W; gx += 14) {
                 ctx.beginPath();
-                ctx.moveTo(gx, H - 55);
-                ctx.quadraticCurveTo(gx + 4, H - 68, gx + 7, H - 55);
+                ctx.moveTo(gx, groundY);
+                ctx.quadraticCurveTo(gx + 4, groundY - 13, gx + 7, groundY);
                 ctx.fill();
             }
+
+            // Flowers
+            const swayT = currentTs * 0.001;
+            FLOWERS.forEach(f => {
+                const sway = Math.sin(swayT + f.swayOffset) * 2;
+                const fx = f.x + sway;
+                const fy = groundY - 2;
+                // Stem
+                ctx.strokeStyle = '#16A34A';
+                ctx.lineWidth = 1.5;
+                ctx.beginPath();
+                ctx.moveTo(fx, fy);
+                ctx.lineTo(fx + sway * 0.5, fy - f.size * 3);
+                ctx.stroke();
+                // Petals
+                ctx.fillStyle = f.color;
+                const petalY = fy - f.size * 3;
+                for (let p = 0; p < 5; p++) {
+                    const a = (Math.PI * 2 / 5) * p;
+                    ctx.beginPath();
+                    ctx.arc(fx + sway * 0.5 + Math.cos(a) * f.size, petalY + Math.sin(a) * f.size, f.size * 0.6, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+                // Center
+                ctx.fillStyle = '#FDE047';
+                ctx.beginPath();
+                ctx.arc(fx + sway * 0.5, petalY, f.size * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+            });
         }
 
-        function drawCloud() {} // handled in drawBackground
+        function drawItemTrails() {
+            items.forEach(item => {
+                item.trail.forEach(t => {
+                    if (t.life <= 0) return;
+                    ctx.globalAlpha = t.life * 0.3;
+                    ctx.font = `${ITEM_FS * t.life}px serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(item.type.label, t.x, t.y);
+                });
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        function drawItemShadows() {
+            const groundY = H - 55;
+            items.forEach(item => {
+                if (item.y < 0) return;
+                const progress = Math.min(1, item.y / groundY);
+                const shadowSize = 4 + progress * 12;
+                const alpha = 0.1 + progress * 0.15;
+                ctx.fillStyle = `rgba(0,0,0,${alpha})`;
+                ctx.beginPath();
+                ctx.ellipse(item.x, groundY + 3, shadowSize, shadowSize * 0.3, 0, 0, Math.PI * 2);
+                ctx.fill();
+            });
+        }
 
         function drawBasket(b, color, label) {
             const anim = b.catchAnim;
             const frozen = b.frozen > currentTs;
             const boosted = b.speedBoost > currentTs;
+            const magnetActive = b.magnet > currentTs;
+            const wideActive = b.wide > currentTs;
+            const bw = getBasketWidth(b);
 
             ctx.save();
             ctx.translate(b.x, b.y);
             ctx.scale(1 + anim * 0.12, 1 - anim * 0.18);
 
-            const hw = BW / 2, hh = BH / 2;
-            const bw = BW * 0.68; // narrower bottom
+            const hw = bw / 2, hh = BH / 2;
+            const bottomW = bw * 0.68;
 
+            // Fever glow
+            if (b.feverActive) {
+                ctx.shadowColor = '#FF6B35';
+                ctx.shadowBlur = 22 + Math.sin(currentTs * 0.008) * 8;
+            }
             // Speed glow
-            if (boosted) {
+            else if (boosted) {
                 ctx.shadowColor = '#FDE047';
                 ctx.shadowBlur = 18;
             }
             // Freeze glow
-            if (frozen) {
+            else if (frozen) {
                 ctx.shadowColor = '#BAE6FD';
                 ctx.shadowBlur = 16;
+            }
+            // Magnet glow
+            else if (magnetActive) {
+                ctx.shadowColor = '#94A3B8';
+                ctx.shadowBlur = 14;
             }
 
             // Trapezoid body
             const bodyGrad = ctx.createLinearGradient(0, -hh, 0, hh);
             const lightColor = frozen  ? '#93C5FD' :
-                               boosted ? '#FEF08A' : color;
+                               boosted ? '#FEF08A' :
+                               b.feverActive ? '#FF6B35' :
+                               magnetActive ? '#CBD5E1' : color;
             bodyGrad.addColorStop(0, lightColor);
             bodyGrad.addColorStop(1, color);
             ctx.fillStyle = bodyGrad;
@@ -478,8 +810,8 @@
             ctx.beginPath();
             ctx.moveTo(-hw, -hh);
             ctx.lineTo( hw, -hh);
-            ctx.lineTo( bw / 2,  hh);
-            ctx.lineTo(-bw / 2,  hh);
+            ctx.lineTo( bottomW / 2,  hh);
+            ctx.lineTo(-bottomW / 2,  hh);
             ctx.closePath();
             ctx.fill();
 
@@ -503,10 +835,11 @@
             // Vertical dividers inside basket
             ctx.strokeStyle = 'rgba(255,255,255,0.3)';
             ctx.lineWidth = 1.5;
-            for (let i = 1; i < 4; i++) {
-                const t = i / 4;
-                const tx = -hw + BW * t;
-                const bx = -bw / 2 + bw * t;
+            const divCount = wideActive ? 5 : 4;
+            for (let i = 1; i < divCount; i++) {
+                const t = i / divCount;
+                const tx = -hw + bw * t;
+                const bx = -bottomW / 2 + bottomW * t;
                 ctx.beginPath();
                 ctx.moveTo(tx, -hh + 2);
                 ctx.lineTo(bx,  hh - 2);
@@ -516,6 +849,32 @@
             ctx.restore();
             ctx.shadowBlur = 0;
 
+            // Shield indicator
+            if (b.shield) {
+                ctx.save();
+                ctx.strokeStyle = 'rgba(96,165,250,0.6)';
+                ctx.lineWidth = 2;
+                ctx.setLineDash([5, 3]);
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, hw + 8, Math.PI, 0);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.restore();
+            }
+
+            // Magnet range indicator
+            if (magnetActive) {
+                ctx.save();
+                ctx.strokeStyle = `rgba(148,163,184,${0.15 + Math.sin(currentTs * 0.005) * 0.1})`;
+                ctx.lineWidth = 1;
+                ctx.setLineDash([4, 4]);
+                ctx.beginPath();
+                ctx.arc(b.x, b.y, MAGNET_RANGE, 0, Math.PI * 2);
+                ctx.stroke();
+                ctx.setLineDash([]);
+                ctx.restore();
+            }
+
             // Player label above basket
             ctx.font = 'bold 13px sans-serif';
             ctx.textAlign = 'center';
@@ -524,13 +883,26 @@
             ctx.fillText(label, b.x, b.y - BH / 2 - 4);
 
             // Status icons
-            if (frozen) {
-                ctx.font = '16px serif';
-                ctx.fillText('❄️', b.x, b.y - BH / 2 - 18);
+            let iconY = b.y - BH / 2 - 20;
+            const icons = [];
+            if (frozen) icons.push('❄️');
+            if (boosted) icons.push('⚡');
+            if (magnetActive) icons.push('🧲');
+            if (b.shield) icons.push('🛡️');
+            if (wideActive) icons.push('📏');
+            if (b.feverActive) icons.push('🔥');
+
+            if (icons.length > 0) {
+                ctx.font = '14px serif';
+                const iconsStr = icons.join('');
+                ctx.fillText(iconsStr, b.x, iconY);
             }
-            if (boosted) {
-                ctx.font = '16px serif';
-                ctx.fillText('⚡', b.x, b.y - BH / 2 - 18);
+
+            // Combo counter
+            if (b.combo >= 3) {
+                ctx.font = 'bold 11px sans-serif';
+                ctx.fillStyle = b.feverActive ? '#FF6B35' : '#FFD700';
+                ctx.fillText(`×${b.combo}`, b.x + hw + 12, b.y - 5);
             }
         }
 
@@ -542,9 +914,18 @@
                 ctx.font = `${ITEM_FS}px serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                // Subtle shadow behind items for depth
                 ctx.shadowColor = 'rgba(0,0,0,0.3)';
                 ctx.shadowBlur = 4;
+
+                // Special glow for high-value items
+                if (item.type.points >= 5) {
+                    ctx.shadowColor = '#FFD700';
+                    ctx.shadowBlur = 12 + Math.sin(currentTs * 0.01) * 4;
+                } else if (item.type.points >= 3) {
+                    ctx.shadowColor = item.type.color;
+                    ctx.shadowBlur = 8;
+                }
+
                 ctx.fillText(item.type.label, 0, 0);
                 ctx.restore();
             });
@@ -568,7 +949,6 @@
                 ctx.font = `bold ${14 + Math.floor((1 - p.life) * 4)}px sans-serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                // Dark outline
                 ctx.strokeStyle = 'rgba(0,0,0,0.6)';
                 ctx.lineWidth = 3;
                 ctx.strokeText(p.text, p.x, p.y);
@@ -576,6 +956,51 @@
                 ctx.fillText(p.text, p.x, p.y);
             });
             ctx.globalAlpha = 1;
+        }
+
+        function drawWaveIndicator() {
+            if (gameState !== 'playing') return;
+            ctx.font = 'bold 12px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'top';
+            ctx.fillStyle = 'rgba(255,255,255,0.7)';
+            ctx.fillText(`Wave ${currentWave}`, 10, 10);
+
+            // Wave announce flash
+            if (currentTs < waveAnnounceTimer && currentWave > 1) {
+                const progress = (waveAnnounceTimer - currentTs) / 2000;
+                ctx.globalAlpha = progress;
+                ctx.font = 'bold 36px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.shadowColor = '#FDE047';
+                ctx.shadowBlur = 20;
+                ctx.fillStyle = '#FDE047';
+                ctx.fillText(`⚡ WAVE ${currentWave} ⚡`, W / 2, H / 4);
+                ctx.shadowBlur = 0;
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function drawFeverBorder(player) {
+            if (!player.feverActive) return;
+            const side = player === p1 ? 'left' : 'right';
+            const pulse = 0.3 + Math.sin(currentTs * 0.008) * 0.2;
+            ctx.save();
+            if (side === 'left') {
+                const grad = ctx.createLinearGradient(0, 0, 40, 0);
+                grad.addColorStop(0, `rgba(255,107,53,${pulse})`);
+                grad.addColorStop(1, 'rgba(255,107,53,0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, 40, H);
+            } else {
+                const grad = ctx.createLinearGradient(W, 0, W - 40, 0);
+                grad.addColorStop(0, `rgba(255,107,53,${pulse})`);
+                grad.addColorStop(1, 'rgba(255,107,53,0)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(W - 40, 0, 40, H);
+            }
+            ctx.restore();
         }
 
         function drawCountdown() {
@@ -588,7 +1013,6 @@
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
 
-            // Glow
             ctx.shadowColor = countdownVal > 0 ? '#FDE047' : '#4ADE80';
             ctx.shadowBlur = 30;
             ctx.fillStyle = '#fff';
@@ -597,7 +1021,6 @@
         }
 
         function drawOverlay(lines, colors) {
-            // Semi-transparent backdrop
             ctx.fillStyle = 'rgba(15,23,42,0.72)';
             ctx.fillRect(0, 0, W, H);
 
@@ -616,6 +1039,79 @@
             ctx.shadowBlur = 0;
         }
 
+        function drawGameOverStats() {
+            let winLine, winColor;
+            if (p1.score > p2.score)      { winLine = '🎉 Player 1 Wins!'; winColor = '#60A5FA'; }
+            else if (p2.score > p1.score) { winLine = '🎉 Player 2 Wins!'; winColor = '#F87171'; }
+            else                          { winLine = "🤝 It's a Tie!";    winColor = '#FCD34D'; }
+
+            ctx.fillStyle = 'rgba(15,23,42,0.80)';
+            ctx.fillRect(0, 0, W, H);
+
+            const cx = W / 2;
+
+            // Title
+            ctx.font = 'bold 48px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = winColor;
+            ctx.shadowBlur = 20;
+            ctx.fillStyle = winColor;
+            ctx.fillText(winLine, cx, 60);
+            ctx.shadowBlur = 0;
+
+            // Score
+            ctx.font = 'bold 30px sans-serif';
+            ctx.fillStyle = '#fff';
+            ctx.fillText(`P1: ${p1.score}  •  P2: ${p2.score}`, cx, 110);
+
+            // Stats columns
+            const colX1 = cx - 160;
+            const colX2 = cx + 160;
+            const startY = 160;
+            const lineH = 28;
+
+            const stats = [
+                ['Fruits Caught', p1.fruitsOnly, p2.fruitsOnly],
+                ['Total Items', p1.totalCaught, p2.totalCaught],
+                ['Max Combo', p1.maxCombo, p2.maxCombo],
+                ['Power-Ups', p1.powerUpsCaught, p2.powerUpsCaught],
+                ['Stars/Golden', p1.starsGolden, p2.starsGolden],
+                ['Bombs Hit', p1.bombsCaught, p2.bombsCaught],
+            ];
+
+            // Column headers
+            ctx.font = 'bold 16px sans-serif';
+            ctx.fillStyle = '#3B82F6';
+            ctx.fillText('P1', colX1, startY - 10);
+            ctx.fillStyle = '#94A3B8';
+            ctx.fillText('Stat', cx, startY - 10);
+            ctx.fillStyle = '#EF4444';
+            ctx.fillText('P2', colX2, startY - 10);
+
+            ctx.font = '16px sans-serif';
+            stats.forEach((row, i) => {
+                const y = startY + 18 + i * lineH;
+                // Highlight winner of each stat
+                const p1Win = row[1] > row[2];
+                const p2Win = row[2] > row[1];
+
+                ctx.fillStyle = p1Win ? '#60A5FA' : '#94A3B8';
+                ctx.fillText(String(row[1]), colX1, y);
+
+                ctx.fillStyle = '#CBD5E1';
+                ctx.fillText(row[0], cx, y);
+
+                ctx.fillStyle = p2Win ? '#F87171' : '#94A3B8';
+                ctx.fillText(String(row[2]), colX2, y);
+            });
+
+            // Restart prompt
+            ctx.font = '20px sans-serif';
+            ctx.fillStyle = '#94A3B8';
+            ctx.fillText('Press SPACE to play again', cx, H - 40);
+        }
+
         function draw() {
             ctx.clearRect(0, 0, W, H);
 
@@ -629,28 +1125,26 @@
             ctx.translate(sx, sy);
 
             drawBackground();
+            drawFeverBorder(p1);
+            drawFeverBorder(p2);
+            drawItemShadows();
+            drawItemTrails();
             drawItems();
             drawParticles();
             drawBasket(p1, '#3B82F6', '🔵 P1');
             drawBasket(p2, '#EF4444', '🔴 P2');
             drawPopups();
+            drawWaveIndicator();
 
             if (gameState === 'waiting') {
                 drawOverlay(
-                    ['🍎 Fruit Catcher', '2 Players — Same Keyboard!', 'P1: A / D  •  P2: ← / →', 'Catch fruits, grab power-ups 🧊⚡', 'Press SPACE to start!'],
+                    ['🍎 Fruit Catcher', '2 Players — Same Keyboard!', 'P1: A / D  •  P2: ← / →', 'Catch fruits, grab power-ups!', 'Press SPACE to start!'],
                     ['#FCD34D', '#93C5FD', '#fff', '#86EFAC', '#FCD34D']
                 );
             } else if (gameState === 'countdown') {
                 drawCountdown();
             } else if (gameState === 'gameover') {
-                let winLine, winColor;
-                if (p1.score > p2.score)      { winLine = '🎉 Player 1 Wins!'; winColor = '#60A5FA'; }
-                else if (p2.score > p1.score) { winLine = '🎉 Player 2 Wins!'; winColor = '#F87171'; }
-                else                          { winLine = "🤝 It's a Tie!";    winColor = '#FCD34D'; }
-                drawOverlay(
-                    [winLine, `P1: ${p1.score}  •  P2: ${p2.score}`, 'Press SPACE to play again'],
-                    [winColor, '#fff', '#94A3B8']
-                );
+                drawGameOverStats();
             }
 
             ctx.restore();
@@ -682,13 +1176,15 @@
 
         // ── Start / restart ───────────────────────────────────────────────────
         function startGame() {
-            p1.score = 0; p1.combo = 0; p1.frozen = 0; p1.speedBoost = 0; p1.catchAnim = 0; p1.x = 165;
-            p2.score = 0; p2.combo = 0; p2.frozen = 0; p2.speedBoost = 0; p2.catchAnim = 0; p2.x = 635;
+            p1 = makePlayer(165);
+            p2 = makePlayer(635);
             timeLeft = GAME_DURATION;
             items = []; particles = []; popups = [];
             countdownVal = 3; lastCountdown = 0;
             lastSpawn = 0; lastTimerTick = 0;
             shakeFrames = 0;
+            currentWave = 1;
+            waveAnnounceTimer = 0;
             p1ScoreEl.textContent = 'P1: 0';
             p2ScoreEl.textContent = 'P2: 0';
             timerEl.textContent = GAME_DURATION;
