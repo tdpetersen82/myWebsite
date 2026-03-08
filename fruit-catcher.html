@@ -10,39 +10,32 @@
             border: 3px solid #333;
             border-radius: 12px;
             display: block;
-            margin: 10px auto;
+            margin: 6px auto;
         }
-        #p1score {
-            color: #3B82F6;
-            font-size: 1.5em;
-            font-weight: bold;
+        #p1score { color: #3B82F6; font-size: 1.5em; font-weight: bold; }
+        #p2score { color: #EF4444; font-size: 1.5em; font-weight: bold; }
+        #timer    { font-size: 1.5em; font-weight: bold; color: #333; transition: color 0.3s; }
+        #timer.urgent { color: #EF4444; animation: pulse 0.5s ease-in-out infinite alternate; }
+        @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
+        #scorebar-wrap {
+            width: 800px;
+            margin: 4px auto;
+            height: 10px;
+            border-radius: 5px;
+            background: #e5e7eb;
+            overflow: hidden;
+            display: flex;
         }
-        #p2score {
-            color: #EF4444;
-            font-size: 1.5em;
-            font-weight: bold;
-        }
-        #timer {
-            font-size: 1.5em;
-            font-weight: bold;
-            color: #333;
-        }
+        #p1bar { background: #3B82F6; width: 50%; transition: width 0.3s ease; }
+        #p2bar { background: #EF4444; width: 50%; transition: width 0.3s ease; }
         .controls-row {
             display: flex;
             justify-content: center;
-            gap: 60px;
-            margin-top: 12px;
+            gap: 50px;
+            margin-top: 10px;
         }
-        .player-controls {
-            text-align: center;
-            font-size: 1em;
-            color: #555;
-        }
-        .player-controls strong {
-            display: block;
-            margin-bottom: 4px;
-            font-size: 1.05em;
-        }
+        .player-controls { text-align: center; font-size: 0.95em; color: #555; }
+        .player-controls strong { display: block; margin-bottom: 3px; font-size: 1em; }
         .p1-label { color: #3B82F6; }
         .p2-label { color: #EF4444; }
     </style>
@@ -55,7 +48,11 @@
             <span id="timer">60</span>
             <span id="p2score">P2: 0</span>
         </div>
-        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <div id="scorebar-wrap">
+            <div id="p1bar"></div>
+            <div id="p2bar"></div>
+        </div>
+        <canvas id="gameCanvas" width="800" height="480"></canvas>
         <div class="controls-row">
             <div class="player-controls">
                 <strong class="p1-label">Player 1 (Blue)</strong>
@@ -63,7 +60,7 @@
             </div>
             <div class="player-controls">
                 <strong style="color:#333">Space = Start / Restart</strong>
-                <span>Catch fruits! Avoid bombs 💣</span>
+                <span>🧊 Freeze opponent &nbsp;⚡ Speed boost</span>
             </div>
             <div class="player-controls">
                 <strong class="p2-label">Player 2 (Red)</strong>
@@ -74,117 +71,243 @@
     </div>
 
     <script>
-        // ── Canvas setup ──────────────────────────────────────────────────────
+        // ── Canvas & DOM ───────────────────────────────────────────────────────
         const canvas = document.getElementById('gameCanvas');
-        const ctx = canvas.getContext('2d');
+        const ctx    = canvas.getContext('2d');
         const p1ScoreEl = document.getElementById('p1score');
         const p2ScoreEl = document.getElementById('p2score');
-        const timerEl = document.getElementById('timer');
+        const timerEl   = document.getElementById('timer');
+        const p1barEl   = document.getElementById('p1bar');
+        const p2barEl   = document.getElementById('p2bar');
+
+        const W = canvas.width, H = canvas.height;
 
         // ── Audio ─────────────────────────────────────────────────────────────
-        let audioCtx = null;
+        let _ac = null;
+        function ac() { return _ac || (_ac = new (window.AudioContext || window.webkitAudioContext)()); }
 
-        function getAudio() {
-            if (!audioCtx) {
-                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-            }
-            return audioCtx;
+        function playTone(freq, type = 'square', dur = 0.1, vol = 0.25, delay = 0) {
+            const a = ac();
+            const osc  = a.createOscillator();
+            const gain = a.createGain();
+            osc.connect(gain); gain.connect(a.destination);
+            osc.type = type; osc.frequency.value = freq;
+            const t = a.currentTime + delay;
+            gain.gain.setValueAtTime(vol, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + dur);
+            osc.start(t); osc.stop(t + dur);
         }
 
-        function playSound(freq, type = 'square', duration = 0.1, vol = 0.3, delay = 0) {
-            const ctx2 = getAudio();
-            const osc = ctx2.createOscillator();
-            const gain = ctx2.createGain();
-            osc.connect(gain);
-            gain.connect(ctx2.destination);
-            osc.type = type;
-            osc.frequency.value = freq;
-            const start = ctx2.currentTime + delay;
-            gain.gain.setValueAtTime(vol, start);
-            gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
-            osc.start(start);
-            osc.stop(start + duration);
-        }
-
-        function playCatchSound()  { playSound(800, 'square', 0.1); }
-        function playStarSound()   { [600, 800, 1000].forEach((f, i) => playSound(f, 'sine', 0.09, 0.3, i * 0.07)); }
-        function playBombSound()   { playSound(100, 'sawtooth', 0.3, 0.4); }
-        function playCountSound()  { playSound(440, 'sine', 0.15); }
-        function playGoSound()     { [523, 659, 784].forEach((f, i) => playSound(f, 'sine', 0.15, 0.3, i * 0.1)); }
-        function playEndSound()    { [784, 659, 523, 392].forEach((f, i) => playSound(f, 'sine', 0.2, 0.3, i * 0.15)); }
+        const playCatch  = () => playTone(700, 'square', 0.09, 0.22);
+        const playStar   = () => [600, 820, 1060].forEach((f, i) => playTone(f, 'sine', 0.1, 0.3, i * 0.08));
+        const playBomb   = () => { playTone(90, 'sawtooth', 0.35, 0.5); playTone(60, 'sawtooth', 0.25, 0.3, 0.05); };
+        const playFreeze = () => [900, 700, 500].forEach((f, i) => playTone(f, 'sine', 0.1, 0.28, i * 0.07));
+        const playSpeed  = () => [400, 600, 800, 1050].forEach((f, i) => playTone(f, 'square', 0.07, 0.18, i * 0.05));
+        const playCombo  = (n) => playTone(440 + n * 80, 'sine', 0.18, 0.35);
+        const playCount  = () => playTone(440, 'sine', 0.15);
+        const playGo     = () => [523, 659, 784, 1047].forEach((f, i) => playTone(f, 'sine', 0.16, 0.35, i * 0.08));
+        const playWin    = () => [523, 659, 784, 1047, 1319].forEach((f, i) => playTone(f, 'sine', 0.22, 0.38, i * 0.1));
+        const playTie    = () => [440, 440].forEach((f, i) => playTone(f, 'sine', 0.2, 0.3, i * 0.25));
 
         // ── Constants ─────────────────────────────────────────────────────────
-        const BASKET_WIDTH      = 90;
-        const BASKET_HEIGHT     = 20;
-        const BASKET_SPEED      = 5;
-        const ITEM_RADIUS       = 18;
-        const GAME_DURATION     = 60;
-        const FRAME_INTERVAL    = 1000 / 60;
-        const MAX_ITEMS         = 10;
-        const SPAWN_MIN         = 1400;
-        const SPAWN_MAX         = 2000;
+        const BW = 104, BH = 28;         // basket width / height
+        const BASE_SPEED = 6;
+        const BOOST_SPEED = 10;
+        const ITEM_FS = 30;              // item font size
+        const ITEM_R  = 16;              // item collision radius
+        const GAME_DURATION = 60;
+        const FI = 1000 / 60;           // frame interval ms
+        const MAX_ITEMS = 12;
+        const BASKET_Y = H - 38;
 
         const ITEM_TYPES = [
-            { label: '🍎', color: '#EF4444', points: 1 },
-            { label: '🍌', color: '#FCD34D', points: 1 },
-            { label: '🍒', color: '#F472B6', points: 1 },
-            { label: '🍊', color: '#FB923C', points: 1 },
-            { label: '⭐', color: '#FBBF24', points: 3 },
-            { label: '💣', color: '#1F2937', points: -2 },
+            { label: '🍎', color: '#EF4444', points: 1,  weight: 10 },
+            { label: '🍌', color: '#FCD34D', points: 1,  weight: 10 },
+            { label: '🍒', color: '#F472B6', points: 1,  weight: 10 },
+            { label: '🍊', color: '#FB923C', points: 1,  weight: 10 },
+            { label: '🍇', color: '#A855F7', points: 1,  weight: 10 },
+            { label: '🍑', color: '#FDBA74', points: 1,  weight: 10 },
+            { label: '⭐', color: '#FBBF24', points: 3,  weight: 7  },
+            { label: '💣', color: '#374151', points: -2, weight: 10 },
+            { label: '🧊', color: '#BAE6FD', points: 0,  weight: 4, special: 'freeze' },
+            { label: '⚡', color: '#FDE047', points: 0,  weight: 4, special: 'speed'  },
         ];
 
-        // ── Game state ────────────────────────────────────────────────────────
-        let gameState = 'waiting';
-        let p1Score, p2Score, timeLeft;
-        let lastTime = 0, lastSpawn = 0, lastTimerTick = 0;
-        let countdownValue = 3, lastCountdown = 0;
-        let items = [];
-        let nextSpawnDelay = SPAWN_MIN;
+        // ── Clouds ────────────────────────────────────────────────────────────
+        const CLOUDS = [
+            { x: 90,  y: 55,  r: 38, speed: 0.18 },
+            { x: 270, y: 80,  r: 30, speed: 0.12 },
+            { x: 500, y: 45,  r: 45, speed: 0.22 },
+            { x: 700, y: 75,  r: 34, speed: 0.14 },
+            { x: 380, y: 100, r: 24, speed: 0.09 },
+        ];
+
+        // ── State ─────────────────────────────────────────────────────────────
+        let gameState    = 'waiting';
+        let timeLeft     = GAME_DURATION;
+        let lastTime     = 0;
+        let lastSpawn    = 0;
+        let nextSpawnMs  = 1500;
+        let lastTimerTick = 0;
+        let countdownVal  = 3;
+        let lastCountdown = 0;
+        let shakeFrames   = 0;
+        let currentTs     = 0;         // updated every frame
+
+        let items     = [];
+        let particles = [];
+        let popups    = [];
+
         const keys = {};
 
-        const p1 = { x: 200, y: 465 };
-        const p2 = { x: 600, y: 465 };
+        const p1 = { x: 165, y: BASKET_Y, score: 0, combo: 0, frozen: 0, speedBoost: 0, catchAnim: 0 };
+        const p2 = { x: 635, y: BASKET_Y, score: 0, combo: 0, frozen: 0, speedBoost: 0, catchAnim: 0 };
 
-        // ── Spawning ──────────────────────────────────────────────────────────
-        function spawnItem(timestamp) {
-            if (items.length >= MAX_ITEMS) return;
-            const type = ITEM_TYPES[Math.floor(Math.random() * ITEM_TYPES.length)];
-            items.push({
-                x: ITEM_RADIUS + Math.random() * (canvas.width - ITEM_RADIUS * 2),
-                y: -ITEM_RADIUS,
-                speed: 1.5 + Math.random() * 1.5,
-                type,
-            });
-            lastSpawn = timestamp;
-            nextSpawnDelay = SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN);
+        // ── Helpers ───────────────────────────────────────────────────────────
+        function pickItem() {
+            const total = ITEM_TYPES.reduce((s, t) => s + t.weight, 0);
+            let r = Math.random() * total;
+            for (const t of ITEM_TYPES) { r -= t.weight; if (r <= 0) return t; }
+            return ITEM_TYPES[0];
         }
 
-        // ── Collision ─────────────────────────────────────────────────────────
+        function getDiff() {
+            if (timeLeft > 30) return { sMin: 1.5, sMax: 3.0, iMin: 1400, iMax: 2000 };
+            if (timeLeft > 15) return { sMin: 2.0, sMax: 4.2, iMin: 950,  iMax: 1450 };
+            return               { sMin: 2.6, sMax: 5.5, iMin: 650,  iMax: 1050 };
+        }
+
+        function spawnItem(ts) {
+            if (items.length >= MAX_ITEMS) return;
+            const d = getDiff();
+            items.push({
+                x:        ITEM_R + Math.random() * (W - ITEM_R * 2),
+                y:        -ITEM_R,
+                speed:    d.sMin + Math.random() * (d.sMax - d.sMin),
+                rot:      Math.random() * Math.PI * 2,
+                rotSpeed: (Math.random() - 0.5) * 0.10,
+                wobble:   Math.random() * Math.PI * 2,
+                wobbleAmp: (Math.random() < 0.4) ? 0.6 + Math.random() * 0.8 : 0,
+                type:     pickItem(),
+                trail:    [],
+            });
+            lastSpawn = ts;
+            const d2 = getDiff();
+            nextSpawnMs = d2.iMin + Math.random() * (d2.iMax - d2.iMin);
+        }
+
+        function spawnParticles(x, y, color, count = 10) {
+            for (let i = 0; i < count; i++) {
+                const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.6;
+                const spd   = 2.5 + Math.random() * 4;
+                particles.push({
+                    x, y,
+                    vx: Math.cos(angle) * spd,
+                    vy: Math.sin(angle) * spd - 1.5,
+                    color,
+                    life: 1,
+                    size: 3 + Math.random() * 5,
+                });
+            }
+        }
+
+        function spawnPopup(x, y, text, color) {
+            popups.push({ x, y, vy: -1.8, text, color, life: 1 });
+        }
+
+        // ── Catch & scoring ───────────────────────────────────────────────────
         function checkCatch(basket, item) {
-            const left = basket.x - BASKET_WIDTH / 2;
-            const right = basket.x + BASKET_WIDTH / 2;
-            const top = basket.y - BASKET_HEIGHT / 2;
             return (
-                item.y + ITEM_RADIUS >= top &&
-                item.y + ITEM_RADIUS <= top + BASKET_HEIGHT + 8 &&
-                item.x >= left && item.x <= right
+                item.y + ITEM_R >= basket.y - BH / 2 &&
+                item.y + ITEM_R <= basket.y + BH / 2 + 10 &&
+                item.x >= basket.x - BW / 2 &&
+                item.x <= basket.x + BW / 2
             );
         }
 
+        function handleCatch(player, other, item) {
+            const { type } = item;
+
+            if (type.special === 'freeze') {
+                other.frozen = currentTs + 2600;
+                playFreeze();
+                spawnPopup(player.x, player.y - 40, '🧊 FREEZE!', '#38BDF8');
+                spawnParticles(item.x, item.y, '#BAE6FD', 14);
+                return;
+            }
+            if (type.special === 'speed') {
+                player.speedBoost = currentTs + 3200;
+                playSpeed();
+                spawnPopup(player.x, player.y - 40, '⚡ SPEED!', '#FDE047');
+                spawnParticles(item.x, item.y, '#FDE047', 14);
+                return;
+            }
+
+            player.score = Math.max(0, player.score + type.points);
+            player.catchAnim = 1;
+
+            if (type.points > 1) {
+                player.combo++;
+                playStar();
+                spawnPopup(item.x, item.y - 10, '+3 ⭐', '#FBBF24');
+                spawnParticles(item.x, item.y, '#FBBF24', 16);
+            } else if (type.points < 0) {
+                player.combo = 0;
+                playBomb();
+                shakeFrames = 12;
+                spawnPopup(item.x, item.y - 10, '-2 💣', '#EF4444');
+                spawnParticles(item.x, item.y, '#6B7280', 14);
+            } else {
+                player.combo++;
+                playCatch();
+                spawnPopup(item.x, item.y - 10, '+1', '#fff');
+                spawnParticles(item.x, item.y, type.color, 8);
+            }
+
+            // Combo reward at 4+
+            if (player.combo >= 4 && type.points > 0) {
+                player.score += 1;
+                playCombo(player.combo);
+                spawnPopup(player.x, player.y - 70, `COMBO ×${player.combo}! +1`, '#FFD700');
+                spawnParticles(player.x, player.y - 30, '#FFD700', 12);
+            }
+
+            updateHUD(player);
+            updateScoreBar();
+        }
+
+        function updateHUD(player) {
+            if (player === p1) p1ScoreEl.textContent = 'P1: ' + p1.score;
+            else               p2ScoreEl.textContent = 'P2: ' + p2.score;
+        }
+
+        function updateScoreBar() {
+            const total = p1.score + p2.score;
+            if (total === 0) {
+                p1barEl.style.width = '50%';
+                p2barEl.style.width = '50%';
+            } else {
+                p1barEl.style.width = (p1.score / total * 100) + '%';
+                p2barEl.style.width = (p2.score / total * 100) + '%';
+            }
+        }
+
         // ── Update ────────────────────────────────────────────────────────────
-        function update(timestamp) {
+        function update(ts) {
+            currentTs = ts;
+
             if (gameState === 'countdown') {
-                if (lastCountdown === 0) lastCountdown = timestamp;
-                if (timestamp - lastCountdown >= 1000) {
-                    lastCountdown = timestamp;
-                    countdownValue--;
-                    if (countdownValue > 0) {
-                        playCountSound();
+                if (lastCountdown === 0) lastCountdown = ts;
+                if (ts - lastCountdown >= 1000) {
+                    lastCountdown = ts;
+                    countdownVal--;
+                    if (countdownVal > 0) {
+                        playCount();
                     } else {
-                        playGoSound();
-                        gameState = 'playing';
-                        lastTimerTick = timestamp;
-                        lastSpawn = timestamp;
+                        playGo();
+                        gameState    = 'playing';
+                        lastTimerTick = ts;
+                        lastSpawn    = ts;
                     }
                 }
                 return;
@@ -192,190 +315,353 @@
 
             if (gameState !== 'playing') return;
 
-            // Timer
-            if (timestamp - lastTimerTick >= 1000) {
-                lastTimerTick = timestamp;
+            // Timer tick
+            if (ts - lastTimerTick >= 1000) {
+                lastTimerTick = ts;
                 timeLeft--;
                 timerEl.textContent = timeLeft;
-                if (timeLeft <= 0) {
-                    endGame();
-                    return;
-                }
+                timerEl.classList.toggle('urgent', timeLeft <= 10);
+                if (timeLeft <= 0) { endGame(); return; }
             }
 
             // Move baskets
-            if (keys['a'] || keys['A']) p1.x -= BASKET_SPEED;
-            if (keys['d'] || keys['D']) p1.x += BASKET_SPEED;
-            if (keys['ArrowLeft'])  p2.x -= BASKET_SPEED;
-            if (keys['ArrowRight']) p2.x += BASKET_SPEED;
+            const p1Frozen = p1.frozen > ts;
+            const p2Frozen = p2.frozen > ts;
+            const p1Spd = (p1.speedBoost > ts) ? BOOST_SPEED : BASE_SPEED;
+            const p2Spd = (p2.speedBoost > ts) ? BOOST_SPEED : BASE_SPEED;
 
-            // Clamp baskets to canvas
-            const halfW = BASKET_WIDTH / 2;
-            p1.x = Math.max(halfW, Math.min(canvas.width - halfW, p1.x));
-            p2.x = Math.max(halfW, Math.min(canvas.width - halfW, p2.x));
+            if (!p1Frozen) {
+                if (keys['a'] || keys['A']) p1.x -= p1Spd;
+                if (keys['d'] || keys['D']) p1.x += p1Spd;
+            }
+            if (!p2Frozen) {
+                if (keys['ArrowLeft'])  p2.x -= p2Spd;
+                if (keys['ArrowRight']) p2.x += p2Spd;
+            }
+
+            const hw = BW / 2;
+            p1.x = Math.max(hw, Math.min(W - hw, p1.x));
+            p2.x = Math.max(hw, Math.min(W - hw, p2.x));
+
+            // Catch animations decay
+            p1.catchAnim = Math.max(0, p1.catchAnim - 0.12);
+            p2.catchAnim = Math.max(0, p2.catchAnim - 0.12);
 
             // Spawn items
-            if (timestamp - lastSpawn >= nextSpawnDelay) {
-                spawnItem(timestamp);
-            }
+            if (ts - lastSpawn >= nextSpawnMs) spawnItem(ts);
 
-            // Move items + check catches
+            // Update items
             items = items.filter(item => {
+                item.wobble += item.wobbleSpeed || 0;
+                item.x += Math.sin(item.wobble) * (item.wobbleAmp || 0);
                 item.y += item.speed;
+                item.rot += item.rotSpeed;
 
-                // Check catches
-                if (checkCatch(p1, item)) {
-                    applyPoints(1, item.type.points);
-                    return false;
-                }
-                if (checkCatch(p2, item)) {
-                    applyPoints(2, item.type.points);
-                    return false;
-                }
-
-                // Remove if off screen
-                return item.y - ITEM_RADIUS <= canvas.height;
+                if (checkCatch(p1, item)) { handleCatch(p1, p2, item); return false; }
+                if (checkCatch(p2, item)) { handleCatch(p2, p1, item); return false; }
+                return item.y - ITEM_R < H;
             });
-        }
 
-        function applyPoints(player, pts) {
-            if (player === 1) {
-                p1Score = Math.max(0, p1Score + pts);
-                p1ScoreEl.textContent = 'P1: ' + p1Score;
-                if (pts > 1) playStarSound();
-                else if (pts < 0) playBombSound();
-                else playCatchSound();
-            } else {
-                p2Score = Math.max(0, p2Score + pts);
-                p2ScoreEl.textContent = 'P2: ' + p2Score;
-                if (pts > 1) playStarSound();
-                else if (pts < 0) playBombSound();
-                else playCatchSound();
-            }
+            // Update particles
+            particles = particles.filter(p => {
+                p.x += p.vx; p.y += p.vy;
+                p.vy += 0.18;  // gravity
+                p.vx *= 0.96;
+                p.life -= 0.025;
+                return p.life > 0;
+            });
+
+            // Update popups
+            popups = popups.filter(p => {
+                p.y += p.vy;
+                p.life -= 0.022;
+                return p.life > 0;
+            });
+
+            // Drift clouds
+            CLOUDS.forEach(c => {
+                c.x += c.speed;
+                if (c.x - c.r * 2.5 > W) c.x = -c.r * 2.5;
+            });
+
+            // Screen shake decay
+            if (shakeFrames > 0) shakeFrames--;
         }
 
         function endGame() {
             gameState = 'gameover';
-            playEndSound();
             items = [];
+            if (p1.score !== p2.score) playWin(); else playTie();
         }
 
         // ── Draw ──────────────────────────────────────────────────────────────
         function drawBackground() {
-            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
-            grad.addColorStop(0, '#BAE6FD');
-            grad.addColorStop(0.85, '#E0F2FE');
-            grad.addColorStop(1, '#86EFAC');
-            ctx.fillStyle = grad;
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            // Sky
+            const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.8);
+            skyGrad.addColorStop(0, '#60A5FA');
+            skyGrad.addColorStop(0.5, '#93C5FD');
+            skyGrad.addColorStop(1, '#DBEAFE');
+            ctx.fillStyle = skyGrad;
+            ctx.fillRect(0, 0, W, H);
 
-            // Ground
+            // Sun
+            const sunGrad = ctx.createRadialGradient(60, 60, 5, 60, 60, 50);
+            sunGrad.addColorStop(0, '#FEF08A');
+            sunGrad.addColorStop(0.5, '#FDE047');
+            sunGrad.addColorStop(1, 'rgba(253,224,71,0)');
+            ctx.fillStyle = sunGrad;
+            ctx.beginPath();
+            ctx.arc(60, 60, 50, 0, Math.PI * 2);
+            ctx.fill();
+
+            // Clouds
+            CLOUDS.forEach(c => {
+                ctx.fillStyle = 'rgba(255,255,255,0.88)';
+                ctx.beginPath();
+                ctx.ellipse(c.x,           c.y,           c.r * 1.8, c.r * 0.9, 0, 0, Math.PI * 2);
+                ctx.ellipse(c.x - c.r * 0.8, c.y + c.r * 0.3, c.r * 1.1, c.r * 0.75, 0, 0, Math.PI * 2);
+                ctx.ellipse(c.x + c.r * 0.8, c.y + c.r * 0.3, c.r * 1.1, c.r * 0.75, 0, 0, Math.PI * 2);
+                ctx.fill();
+            });
+
+            // Ground gradient
+            const groundGrad = ctx.createLinearGradient(0, H - 60, 0, H);
+            groundGrad.addColorStop(0, '#4ADE80');
+            groundGrad.addColorStop(0.35, '#22C55E');
+            groundGrad.addColorStop(1, '#15803D');
+            ctx.fillStyle = groundGrad;
+            ctx.fillRect(0, H - 55, W, 55);
+
+            // Grass blade strip at top of ground
             ctx.fillStyle = '#4ADE80';
-            ctx.fillRect(0, canvas.height - 12, canvas.width, 12);
+            for (let gx = 0; gx < W; gx += 14) {
+                ctx.beginPath();
+                ctx.moveTo(gx, H - 55);
+                ctx.quadraticCurveTo(gx + 4, H - 68, gx + 7, H - 55);
+                ctx.fill();
+            }
         }
 
-        function drawBasket(basket, color) {
-            const x = basket.x - BASKET_WIDTH / 2;
-            const y = basket.y - BASKET_HEIGHT / 2;
-            const r = 8;
+        function drawCloud() {} // handled in drawBackground
+
+        function drawBasket(b, color, label) {
+            const anim = b.catchAnim;
+            const frozen = b.frozen > currentTs;
+            const boosted = b.speedBoost > currentTs;
+
+            ctx.save();
+            ctx.translate(b.x, b.y);
+            ctx.scale(1 + anim * 0.12, 1 - anim * 0.18);
+
+            const hw = BW / 2, hh = BH / 2;
+            const bw = BW * 0.68; // narrower bottom
+
+            // Speed glow
+            if (boosted) {
+                ctx.shadowColor = '#FDE047';
+                ctx.shadowBlur = 18;
+            }
+            // Freeze glow
+            if (frozen) {
+                ctx.shadowColor = '#BAE6FD';
+                ctx.shadowBlur = 16;
+            }
+
+            // Trapezoid body
+            const bodyGrad = ctx.createLinearGradient(0, -hh, 0, hh);
+            const lightColor = frozen  ? '#93C5FD' :
+                               boosted ? '#FEF08A' : color;
+            bodyGrad.addColorStop(0, lightColor);
+            bodyGrad.addColorStop(1, color);
+            ctx.fillStyle = bodyGrad;
 
             ctx.beginPath();
-            ctx.moveTo(x + r, y);
-            ctx.lineTo(x + BASKET_WIDTH - r, y);
-            ctx.quadraticCurveTo(x + BASKET_WIDTH, y, x + BASKET_WIDTH, y + r);
-            ctx.lineTo(x + BASKET_WIDTH, y + BASKET_HEIGHT - r);
-            ctx.quadraticCurveTo(x + BASKET_WIDTH, y + BASKET_HEIGHT, x + BASKET_WIDTH - r, y + BASKET_HEIGHT);
-            ctx.lineTo(x + r, y + BASKET_HEIGHT);
-            ctx.quadraticCurveTo(x, y + BASKET_HEIGHT, x, y + BASKET_HEIGHT - r);
-            ctx.lineTo(x, y + r);
-            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.moveTo(-hw, -hh);
+            ctx.lineTo( hw, -hh);
+            ctx.lineTo( bw / 2,  hh);
+            ctx.lineTo(-bw / 2,  hh);
             ctx.closePath();
-
-            ctx.fillStyle = color;
             ctx.fill();
-            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+
+            if (frozen) {
+                ctx.fillStyle = 'rgba(186,230,253,0.45)';
+                ctx.fill();
+            }
+
+            ctx.strokeStyle = 'rgba(0,0,0,0.25)';
             ctx.lineWidth = 2;
             ctx.stroke();
 
-            // Basket weave lines
-            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            // Rim highlight
+            ctx.beginPath();
+            ctx.moveTo(-hw, -hh);
+            ctx.lineTo( hw, -hh);
+            ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+
+            // Vertical dividers inside basket
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
             ctx.lineWidth = 1.5;
-            for (let i = 1; i < 3; i++) {
-                const lx = x + (BASKET_WIDTH / 3) * i;
+            for (let i = 1; i < 4; i++) {
+                const t = i / 4;
+                const tx = -hw + BW * t;
+                const bx = -bw / 2 + bw * t;
                 ctx.beginPath();
-                ctx.moveTo(lx, y + 2);
-                ctx.lineTo(lx, y + BASKET_HEIGHT - 2);
+                ctx.moveTo(tx, -hh + 2);
+                ctx.lineTo(bx,  hh - 2);
                 ctx.stroke();
+            }
+
+            ctx.restore();
+            ctx.shadowBlur = 0;
+
+            // Player label above basket
+            ctx.font = 'bold 13px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'bottom';
+            ctx.fillStyle = color;
+            ctx.fillText(label, b.x, b.y - BH / 2 - 4);
+
+            // Status icons
+            if (frozen) {
+                ctx.font = '16px serif';
+                ctx.fillText('❄️', b.x, b.y - BH / 2 - 18);
+            }
+            if (boosted) {
+                ctx.font = '16px serif';
+                ctx.fillText('⚡', b.x, b.y - BH / 2 - 18);
             }
         }
 
         function drawItems() {
-            ctx.font = '28px serif';
-            ctx.textAlign = 'center';
-            ctx.textBaseline = 'middle';
             items.forEach(item => {
-                ctx.fillText(item.type.label, item.x, item.y);
-            });
-        }
-
-        function drawOverlay(lines, subColor = '#fff') {
-            ctx.fillStyle = 'rgba(0,0,0,0.6)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            lines.forEach((line, i) => {
-                ctx.fillStyle = i === 0 ? '#fff' : subColor;
-                ctx.font = i === 0 ? 'bold 52px sans-serif' : '26px sans-serif';
+                ctx.save();
+                ctx.translate(item.x, item.y);
+                ctx.rotate(item.rot);
+                ctx.font = `${ITEM_FS}px serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
-                ctx.fillText(line, canvas.width / 2, canvas.height / 2 - 40 + i * 55);
+                // Subtle shadow behind items for depth
+                ctx.shadowColor = 'rgba(0,0,0,0.3)';
+                ctx.shadowBlur = 4;
+                ctx.fillText(item.type.label, 0, 0);
+                ctx.restore();
             });
+            ctx.shadowBlur = 0;
+        }
+
+        function drawParticles() {
+            particles.forEach(p => {
+                ctx.globalAlpha = p.life;
+                ctx.fillStyle   = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, p.size * p.life, 0, Math.PI * 2);
+                ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        function drawPopups() {
+            popups.forEach(p => {
+                ctx.globalAlpha = p.life;
+                ctx.font = `bold ${14 + Math.floor((1 - p.life) * 4)}px sans-serif`;
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                // Dark outline
+                ctx.strokeStyle = 'rgba(0,0,0,0.6)';
+                ctx.lineWidth = 3;
+                ctx.strokeText(p.text, p.x, p.y);
+                ctx.fillStyle = p.color;
+                ctx.fillText(p.text, p.x, p.y);
+            });
+            ctx.globalAlpha = 1;
         }
 
         function drawCountdown() {
             ctx.fillStyle = 'rgba(0,0,0,0.45)';
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
-            ctx.fillStyle = '#fff';
-            ctx.font = 'bold 100px sans-serif';
+            ctx.fillRect(0, 0, W, H);
+
+            const label = countdownVal > 0 ? String(countdownVal) : 'GO!';
+            const size  = countdownVal > 0 ? 110 : 90;
+            ctx.font = `bold ${size}px sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
-            ctx.fillText(countdownValue > 0 ? countdownValue : 'GO!', canvas.width / 2, canvas.height / 2);
+
+            // Glow
+            ctx.shadowColor = countdownVal > 0 ? '#FDE047' : '#4ADE80';
+            ctx.shadowBlur = 30;
+            ctx.fillStyle = '#fff';
+            ctx.fillText(label, W / 2, H / 2);
+            ctx.shadowBlur = 0;
+        }
+
+        function drawOverlay(lines, colors) {
+            // Semi-transparent backdrop
+            ctx.fillStyle = 'rgba(15,23,42,0.72)';
+            ctx.fillRect(0, 0, W, H);
+
+            const cx = W / 2, cy = H / 2;
+            lines.forEach((line, i) => {
+                ctx.font = i === 0 ? 'bold 52px sans-serif' : (i === lines.length - 1 ? '20px sans-serif' : '27px sans-serif');
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+
+                const color = colors[i] || '#fff';
+                ctx.shadowColor = color;
+                ctx.shadowBlur  = i === 0 ? 20 : 0;
+                ctx.fillStyle   = color;
+                ctx.fillText(line, cx, cy - 55 + i * 55);
+            });
+            ctx.shadowBlur = 0;
         }
 
         function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            ctx.clearRect(0, 0, W, H);
+
+            // Screen shake
+            let sx = 0, sy = 0;
+            if (shakeFrames > 0) {
+                sx = (Math.random() - 0.5) * shakeFrames * 1.2;
+                sy = (Math.random() - 0.5) * shakeFrames * 1.2;
+            }
+            ctx.save();
+            ctx.translate(sx, sy);
+
             drawBackground();
             drawItems();
-            drawBasket(p1, '#3B82F6');
-            drawBasket(p2, '#EF4444');
+            drawParticles();
+            drawBasket(p1, '#3B82F6', '🔵 P1');
+            drawBasket(p2, '#EF4444', '🔴 P2');
+            drawPopups();
 
             if (gameState === 'waiting') {
-                drawOverlay([
-                    '🍎 Fruit Catcher',
-                    'P1: A / D keys   •   P2: Arrow keys',
-                    'Catch fruits, avoid bombs 💣',
-                    'Press SPACE to start!',
-                ], '#FCD34D');
+                drawOverlay(
+                    ['🍎 Fruit Catcher', '2 Players — Same Keyboard!', 'P1: A / D  •  P2: ← / →', 'Catch fruits, grab power-ups 🧊⚡', 'Press SPACE to start!'],
+                    ['#FCD34D', '#93C5FD', '#fff', '#86EFAC', '#FCD34D']
+                );
             } else if (gameState === 'countdown') {
                 drawCountdown();
             } else if (gameState === 'gameover') {
-                let winLine;
-                if (p1Score > p2Score)       winLine = '🎉 Player 1 Wins!';
-                else if (p2Score > p1Score)  winLine = '🎉 Player 2 Wins!';
-                else                         winLine = "🤝 It's a Tie!";
-                drawOverlay([
-                    winLine,
-                    `P1: ${p1Score}   •   P2: ${p2Score}`,
-                    'Press SPACE to play again',
-                ], '#FCD34D');
+                let winLine, winColor;
+                if (p1.score > p2.score)      { winLine = '🎉 Player 1 Wins!'; winColor = '#60A5FA'; }
+                else if (p2.score > p1.score) { winLine = '🎉 Player 2 Wins!'; winColor = '#F87171'; }
+                else                          { winLine = "🤝 It's a Tie!";    winColor = '#FCD34D'; }
+                drawOverlay(
+                    [winLine, `P1: ${p1.score}  •  P2: ${p2.score}`, 'Press SPACE to play again'],
+                    [winColor, '#fff', '#94A3B8']
+                );
             }
+
+            ctx.restore();
         }
 
         // ── Game loop ─────────────────────────────────────────────────────────
-        function gameLoop(timestamp) {
-            const delta = timestamp - lastTime;
-            if (delta >= FRAME_INTERVAL) {
-                lastTime = timestamp - (delta % FRAME_INTERVAL);
-                update(timestamp);
+        function gameLoop(ts) {
+            const delta = ts - lastTime;
+            if (delta >= FI) {
+                lastTime = ts - (delta % FI);
+                update(ts);
                 draw();
             }
             requestAnimationFrame(gameLoop);
@@ -384,41 +670,33 @@
         // ── Input ─────────────────────────────────────────────────────────────
         document.addEventListener('keydown', e => {
             keys[e.key] = true;
-
             if (e.key === ' ' || e.key === 'Spacebar') {
                 e.preventDefault();
-                if (gameState === 'waiting' || gameState === 'gameover') {
-                    startGame();
-                }
+                if (gameState === 'waiting' || gameState === 'gameover') startGame();
             }
-
-            // Prevent arrow keys from scrolling page
-            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) {
                 e.preventDefault();
             }
         });
+        document.addEventListener('keyup', e => { keys[e.key] = false; });
 
-        document.addEventListener('keyup', e => {
-            keys[e.key] = false;
-        });
-
-        // ── Init ──────────────────────────────────────────────────────────────
+        // ── Start / restart ───────────────────────────────────────────────────
         function startGame() {
-            p1Score = 0;
-            p2Score = 0;
+            p1.score = 0; p1.combo = 0; p1.frozen = 0; p1.speedBoost = 0; p1.catchAnim = 0; p1.x = 165;
+            p2.score = 0; p2.combo = 0; p2.frozen = 0; p2.speedBoost = 0; p2.catchAnim = 0; p2.x = 635;
             timeLeft = GAME_DURATION;
-            items = [];
-            p1.x = 200;
-            p2.x = 600;
-            countdownValue = 3;
-            lastCountdown = 0;
-            lastSpawn = 0;
-            lastTimerTick = 0;
+            items = []; particles = []; popups = [];
+            countdownVal = 3; lastCountdown = 0;
+            lastSpawn = 0; lastTimerTick = 0;
+            shakeFrames = 0;
             p1ScoreEl.textContent = 'P1: 0';
             p2ScoreEl.textContent = 'P2: 0';
             timerEl.textContent = GAME_DURATION;
+            timerEl.classList.remove('urgent');
+            p1barEl.style.width = '50%';
+            p2barEl.style.width = '50%';
             gameState = 'countdown';
-            playCountSound();
+            playCount();
         }
 
         requestAnimationFrame(gameLoop);
