@@ -3,740 +3,1301 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>eMoto Database</title>
+    <title>eMoto Database — Electric Motorcycle Specs, Prices & Reviews</title>
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
-
+        :root {
+            --purple: #667eea;
+            --purple-dark: #764ba2;
+            --green: #43a047;
+            --blue: #1976d2;
+            --red: #c62828;
+            --orange: #f57c00;
+            --gold: #f5a623;
+            --bg: #f0f2f5;
+            --card: #fff;
+            --text: #333;
+            --text-light: #777;
+            --border: #e0e0e0;
+            --radius: 14px;
+        }
         body {
             font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
             min-height: 100vh;
-            padding: 20px;
+            padding: 16px;
         }
-
-        .container {
-            background: rgba(255, 255, 255, 0.95);
+        .app {
+            background: var(--bg);
             border-radius: 20px;
-            padding: 40px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            max-width: 1100px;
-            width: 100%;
+            max-width: 1300px;
             margin: 0 auto;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
         }
 
-        h1 {
-            color: #333;
-            font-size: 2.5em;
-            margin-bottom: 5px;
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--purple) 0%, var(--purple-dark) 100%);
+            color: #fff;
+            padding: 30px 32px 20px;
             text-align: center;
         }
-
-        .subtitle {
-            color: #666;
-            font-size: 1.1em;
-            margin-bottom: 25px;
-            text-align: center;
-        }
-
-        /* Controls Bar */
-        .controls-bar {
+        .header h1 { font-size: 2.4em; margin-bottom: 4px; }
+        .header p { opacity: 0.85; font-size: 1.05em; }
+        .header-stats {
             display: flex;
-            flex-wrap: wrap;
-            gap: 12px;
-            align-items: center;
             justify-content: center;
-            margin-bottom: 25px;
-        }
-
-        .search-box {
-            flex: 1 1 220px;
-            max-width: 300px;
-            padding: 10px 16px;
-            border: 2px solid #ddd;
-            border-radius: 25px;
-            font-size: 1em;
-            font-family: inherit;
-            outline: none;
-            transition: border-color 0.2s;
-        }
-
-        .search-box:focus {
-            border-color: #667eea;
-        }
-
-        .filter-buttons {
-            display: flex;
-            gap: 6px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-
-        .filter-btn {
-            padding: 8px 16px;
-            border: 2px solid #ddd;
-            border-radius: 20px;
-            background: white;
-            color: #555;
+            gap: 32px;
+            margin-top: 14px;
             font-size: 0.9em;
-            font-family: inherit;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
         }
+        .header-stats span { opacity: 0.8; }
+        .header-stats strong { font-size: 1.2em; }
 
-        .filter-btn:hover {
-            border-color: #667eea;
-            color: #667eea;
+        /* Toolbar */
+        .toolbar {
+            background: #fff;
+            padding: 14px 24px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            align-items: center;
+            border-bottom: 1px solid var(--border);
+            position: sticky;
+            top: 0;
+            z-index: 100;
         }
-
-        .filter-btn.active {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            border-color: transparent;
-        }
-
-        .sort-select {
-            padding: 10px 16px;
-            border: 2px solid #ddd;
+        .search-box {
+            flex: 1 1 200px;
+            max-width: 280px;
+            padding: 9px 16px;
+            border: 2px solid var(--border);
             border-radius: 25px;
             font-size: 0.95em;
             font-family: inherit;
-            background: white;
-            color: #555;
-            cursor: pointer;
             outline: none;
             transition: border-color 0.2s;
         }
-
-        .sort-select:focus {
-            border-color: #667eea;
+        .search-box:focus { border-color: var(--purple); }
+        .pill-group {
+            display: flex;
+            gap: 4px;
+            flex-wrap: wrap;
         }
+        .pill {
+            padding: 7px 14px;
+            border: 2px solid var(--border);
+            border-radius: 20px;
+            background: #fff;
+            color: #666;
+            font-size: 0.82em;
+            font-family: inherit;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            white-space: nowrap;
+        }
+        .pill:hover { border-color: var(--purple); color: var(--purple); }
+        .pill.active {
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            color: #fff;
+            border-color: transparent;
+        }
+        .toolbar select {
+            padding: 9px 14px;
+            border: 2px solid var(--border);
+            border-radius: 25px;
+            font-size: 0.9em;
+            font-family: inherit;
+            background: #fff;
+            color: #555;
+            cursor: pointer;
+            outline: none;
+        }
+        .toolbar select:focus { border-color: var(--purple); }
+        .view-toggle {
+            display: flex;
+            gap: 2px;
+            background: var(--border);
+            border-radius: 8px;
+            padding: 2px;
+            margin-left: auto;
+        }
+        .view-btn {
+            padding: 6px 12px;
+            border: none;
+            background: transparent;
+            font-size: 1.1em;
+            cursor: pointer;
+            border-radius: 6px;
+            transition: background 0.15s;
+        }
+        .view-btn.active { background: #fff; box-shadow: 0 1px 3px rgba(0,0,0,0.1); }
+        .compare-bar {
+            display: none;
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            color: #fff;
+            padding: 10px 24px;
+            align-items: center;
+            gap: 12px;
+            font-size: 0.9em;
+        }
+        .compare-bar.visible { display: flex; }
+        .compare-bar button {
+            padding: 6px 18px;
+            border: 2px solid #fff;
+            border-radius: 20px;
+            background: transparent;
+            color: #fff;
+            font-family: inherit;
+            font-weight: 700;
+            cursor: pointer;
+            font-size: 0.9em;
+            transition: all 0.15s;
+        }
+        .compare-bar button:hover { background: #fff; color: var(--purple); }
+        .compare-bar .clear-btn { border-color: rgba(255,255,255,0.4); }
 
-        /* Bike Grid */
+        /* Content */
+        .content { padding: 20px 24px; }
+
+        /* Card Grid */
         .bike-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
-            gap: 24px;
-            margin-top: 10px;
+            grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
+            gap: 20px;
+        }
+        .bike-card {
+            background: var(--card);
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+            transition: transform 0.25s, box-shadow 0.25s;
+            cursor: pointer;
+            position: relative;
+            border: 2px solid transparent;
+        }
+        .bike-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 30px rgba(0,0,0,0.12);
+        }
+        .bike-card.selected { border-color: var(--purple); }
+        .bike-card.selected::after {
+            content: '\2713';
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: var(--purple);
+            color: #fff;
+            width: 26px;
+            height: 26px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.8em;
+            font-weight: 700;
+            z-index: 2;
         }
 
-        .bike-card {
-            background: white;
-            border-radius: 15px;
-            padding: 24px;
-            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.08);
-            cursor: pointer;
-            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        /* Card Image Area */
+        .card-image {
+            height: 160px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
             position: relative;
             overflow: hidden;
         }
-
-        .bike-card:hover {
-            transform: translateY(-6px);
-            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.15);
-        }
-
-        .bike-card-header {
+        .card-image svg { width: 200px; height: 120px; }
+        .card-fav {
+            position: absolute;
+            top: 10px;
+            left: 10px;
+            background: rgba(255,255,255,0.9);
+            border: none;
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            font-size: 1.1em;
             display: flex;
             align-items: center;
-            gap: 14px;
-            margin-bottom: 12px;
+            justify-content: center;
+            transition: transform 0.2s;
+            z-index: 2;
         }
-
-        .bike-emoji {
-            font-size: 2.4em;
-            line-height: 1;
-        }
-
-        .bike-title-group {
-            flex: 1;
-        }
-
-        .bike-name {
-            font-size: 1.25em;
-            font-weight: 700;
-            color: #333;
-            margin-bottom: 2px;
-        }
-
-        .bike-brand {
-            font-size: 0.85em;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .price-badge {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-weight: 700;
-            font-size: 1em;
-            white-space: nowrap;
-        }
-
-        .quick-specs {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-top: 14px;
-        }
-
-        .spec-pill {
-            background: #f5f5ff;
-            border-radius: 8px;
-            padding: 8px 10px;
-            text-align: center;
-        }
-
-        .spec-pill-label {
-            font-size: 0.7em;
-            color: #999;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
-
-        .spec-pill-value {
-            font-size: 0.95em;
-            font-weight: 700;
-            color: #444;
-        }
-
-        .expand-hint {
-            text-align: center;
-            margin-top: 14px;
-            font-size: 0.8em;
-            color: #bbb;
-            transition: color 0.2s;
-        }
-
-        .bike-card:hover .expand-hint {
-            color: #667eea;
-        }
-
-        /* Detail Panel */
-        .bike-detail {
-            max-height: 0;
-            overflow: hidden;
-            transition: max-height 0.4s ease, margin-top 0.3s ease;
-            margin-top: 0;
-        }
-
-        .bike-card.expanded .bike-detail {
-            max-height: 600px;
-            margin-top: 16px;
-        }
-
-        .bike-card.expanded .expand-hint {
-            display: none;
-        }
-
-        .detail-divider {
-            height: 1px;
-            background: #eee;
-            margin-bottom: 16px;
-        }
-
-        .specs-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 0.9em;
-        }
-
-        .specs-table tr {
-            border-bottom: 1px solid #f0f0f0;
-        }
-
-        .specs-table td {
-            padding: 8px 6px;
-        }
-
-        .specs-table td:first-child {
-            color: #999;
-            font-weight: 600;
-            width: 40%;
-            font-size: 0.85em;
-            text-transform: uppercase;
-            letter-spacing: 0.3px;
-        }
-
-        .specs-table td:last-child {
-            color: #333;
-            font-weight: 600;
-        }
-
-        .review-section {
-            margin-top: 14px;
-        }
-
-        .review-section h4 {
-            font-size: 0.85em;
-            text-transform: uppercase;
-            color: #999;
-            letter-spacing: 0.5px;
-            margin-bottom: 6px;
-        }
-
-        .star-rating {
-            color: #f5a623;
-            font-size: 1.1em;
-            margin-bottom: 6px;
-        }
-
-        .review-text {
-            font-size: 0.9em;
-            color: #555;
-            line-height: 1.6;
-        }
-
-        .category-tag {
-            display: inline-block;
+        .card-fav:hover { transform: scale(1.2); }
+        .card-fav.faved { color: #e53935; }
+        .type-badge {
+            position: absolute;
+            top: 10px;
+            right: 10px;
             padding: 3px 10px;
             border-radius: 10px;
-            font-size: 0.7em;
+            font-size: 0.68em;
             font-weight: 700;
             text-transform: uppercase;
             letter-spacing: 0.5px;
-            margin-top: 6px;
+            z-index: 2;
         }
+        .type-offroad { background: #e8f5e9; color: #2e7d32; }
+        .type-street { background: #e3f2fd; color: #1565c0; }
+        .type-commuter { background: #fff3e0; color: #e65100; }
+        .type-motocross { background: #fce4ec; color: #c62828; }
+        .type-dualsport { background: #f3e5f5; color: #7b1fa2; }
+        .type-youth { background: #e0f7fa; color: #00838f; }
+        .type-adventure { background: #f1f8e9; color: #558b2f; }
 
-        .cat-budget { background: #e8f5e9; color: #388e3c; }
-        .cat-mid { background: #e3f2fd; color: #1976d2; }
-        .cat-premium { background: #fce4ec; color: #c62828; }
+        /* Card Body */
+        .card-body { padding: 16px 18px 18px; }
+        .card-brand {
+            font-size: 0.72em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-light);
+            font-weight: 700;
+        }
+        .card-name {
+            font-size: 1.2em;
+            font-weight: 700;
+            color: var(--text);
+            margin: 2px 0 6px;
+            line-height: 1.2;
+        }
+        .card-price {
+            display: inline-block;
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            color: #fff;
+            padding: 4px 12px;
+            border-radius: 14px;
+            font-weight: 700;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+        }
+        .price-budget { background: linear-gradient(135deg, #43a047, #2e7d32); }
+        .price-premium { background: linear-gradient(135deg, #c62828, #b71c1c); }
+
+        /* Spec Bars */
+        .spec-bars { display: flex; flex-direction: column; gap: 6px; margin-top: 8px; }
+        .spec-bar-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.78em;
+        }
+        .spec-bar-label {
+            width: 52px;
+            color: var(--text-light);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.85em;
+            flex-shrink: 0;
+        }
+        .spec-bar-track {
+            flex: 1;
+            height: 8px;
+            background: #f0f0f0;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .spec-bar-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.6s ease;
+        }
+        .spec-bar-value {
+            width: 60px;
+            text-align: right;
+            font-weight: 700;
+            color: var(--text);
+            font-size: 0.9em;
+            flex-shrink: 0;
+        }
+        .bar-power { background: linear-gradient(90deg, #667eea, #764ba2); }
+        .bar-range { background: linear-gradient(90deg, #43a047, #66bb6a); }
+        .bar-speed { background: linear-gradient(90deg, #f57c00, #ff9800); }
+        .bar-battery { background: linear-gradient(90deg, #1976d2, #42a5f5); }
+
+        .card-expand-hint {
+            text-align: center;
+            color: #ccc;
+            font-size: 0.75em;
+            margin-top: 10px;
+            transition: color 0.2s;
+        }
+        .bike-card:hover .card-expand-hint { color: var(--purple); }
+
+        /* Expanded Detail */
+        .card-detail {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease;
+        }
+        .bike-card.expanded .card-detail { max-height: 800px; }
+        .bike-card.expanded .card-expand-hint { display: none; }
+        .detail-inner {
+            padding: 0 18px 18px;
+            border-top: 1px solid #f0f0f0;
+            margin-top: 10px;
+            padding-top: 14px;
+        }
+        .detail-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 6px 16px;
+            font-size: 0.85em;
+            margin-bottom: 12px;
+        }
+        .detail-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 5px 0;
+            border-bottom: 1px solid #f8f8f8;
+        }
+        .detail-label { color: var(--text-light); font-weight: 600; }
+        .detail-value { color: var(--text); font-weight: 700; text-align: right; }
+
+        /* Pros/Cons */
+        .pros-cons { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin: 10px 0; }
+        .pros h5, .cons h5 { font-size: 0.78em; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+        .pros h5 { color: var(--green); }
+        .cons h5 { color: var(--red); }
+        .pros li, .cons li { font-size: 0.82em; color: #555; margin-bottom: 3px; list-style: none; padding-left: 14px; position: relative; }
+        .pros li::before { content: '+'; position: absolute; left: 0; color: var(--green); font-weight: 700; }
+        .cons li::before { content: '\2212'; position: absolute; left: 0; color: var(--red); font-weight: 700; }
+
+        .review-box {
+            background: #f9f9fc;
+            border-radius: 10px;
+            padding: 12px;
+            margin-top: 8px;
+        }
+        .review-box .stars { color: var(--gold); font-size: 1em; }
+        .review-box p { font-size: 0.85em; color: #555; line-height: 1.55; margin-top: 4px; }
+
+        /* Table View */
+        .table-wrap { overflow-x: auto; }
+        .bike-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85em;
+            background: #fff;
+            border-radius: var(--radius);
+            overflow: hidden;
+            box-shadow: 0 2px 12px rgba(0,0,0,0.06);
+        }
+        .bike-table th {
+            background: linear-gradient(135deg, var(--purple), var(--purple-dark));
+            color: #fff;
+            padding: 12px 14px;
+            text-align: left;
+            font-weight: 700;
+            font-size: 0.85em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            cursor: pointer;
+            white-space: nowrap;
+            user-select: none;
+        }
+        .bike-table th:hover { background: var(--purple-dark); }
+        .bike-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f0f0f0;
+            white-space: nowrap;
+        }
+        .bike-table tr:hover td { background: #f8f7ff; }
+        .table-name { font-weight: 700; color: var(--text); }
+        .table-brand { color: var(--text-light); font-size: 0.9em; }
+
+        /* Comparison Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.6);
+            z-index: 1000;
+            justify-content: center;
+            align-items: flex-start;
+            padding: 40px 20px;
+            overflow-y: auto;
+        }
+        .modal-overlay.open { display: flex; }
+        .modal {
+            background: #fff;
+            border-radius: 20px;
+            max-width: 1000px;
+            width: 100%;
+            padding: 30px;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        .modal-close {
+            position: absolute;
+            top: 14px;
+            right: 18px;
+            background: none;
+            border: none;
+            font-size: 1.6em;
+            cursor: pointer;
+            color: #999;
+            transition: color 0.2s;
+        }
+        .modal-close:hover { color: var(--text); }
+        .modal h2 { font-size: 1.5em; color: var(--text); margin-bottom: 20px; }
+        .compare-grid {
+            display: grid;
+            gap: 0;
+            font-size: 0.85em;
+        }
+        .compare-row {
+            display: grid;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .compare-row:first-child { border-bottom: 2px solid var(--border); }
+        .compare-cell {
+            padding: 10px 14px;
+            text-align: center;
+        }
+        .compare-cell:first-child {
+            text-align: left;
+            font-weight: 700;
+            color: var(--text-light);
+            text-transform: uppercase;
+            font-size: 0.85em;
+            background: #fafafa;
+        }
+        .compare-header {
+            font-weight: 700;
+            color: var(--text);
+            font-size: 1.05em;
+        }
+        .compare-best { color: var(--green); font-weight: 700; }
 
         /* No results */
         .no-results {
             text-align: center;
             padding: 60px 20px;
-            color: #999;
+            color: #bbb;
             font-size: 1.1em;
             display: none;
         }
-
-        /* Back button */
-        .back-button {
-            display: inline-block;
-            margin-top: 30px;
-            color: #667eea;
-            text-decoration: none;
-            font-size: 1.1em;
-            font-weight: bold;
-            transition: color 0.2s ease;
-        }
-
-        .back-button:hover {
-            color: #764ba2;
-        }
-
-        .footer {
-            text-align: center;
-        }
-
         .bike-count {
             text-align: center;
-            font-size: 0.85em;
             color: #bbb;
-            margin-top: 18px;
+            font-size: 0.82em;
+            margin-top: 16px;
         }
 
-        @media (max-width: 768px) {
-            h1 { font-size: 1.8em; }
-            .container { padding: 20px; }
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 20px;
+            border-top: 1px solid var(--border);
+            background: #fff;
+        }
+        .footer a {
+            color: var(--purple);
+            text-decoration: none;
+            font-weight: 700;
+            font-size: 1em;
+            transition: color 0.2s;
+        }
+        .footer a:hover { color: var(--purple-dark); }
+
+        @media (max-width: 900px) {
+            .header h1 { font-size: 1.8em; }
             .bike-grid { grid-template-columns: 1fr; }
-            .controls-bar { flex-direction: column; align-items: stretch; }
-            .search-box { max-width: none; }
-            .filter-buttons { justify-content: center; }
+            .toolbar { gap: 8px; }
+            .search-box { max-width: none; flex: 1 1 100%; }
+            .detail-grid { grid-template-columns: 1fr; }
+            .pros-cons { grid-template-columns: 1fr; }
+            .header-stats { gap: 16px; font-size: 0.8em; }
+            .content { padding: 12px; }
+            .modal { padding: 16px; }
+        }
+        @media (max-width: 500px) {
+            body { padding: 8px; }
+            .card-image { height: 130px; }
+            .card-image svg { width: 150px; height: 90px; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+<div class="app">
+    <div class="header">
         <h1>&#9889; eMoto Database</h1>
-        <p class="subtitle">Electric motorcycle specs, pricing &amp; reviews</p>
-
-        <div class="controls-bar">
-            <input type="text" class="search-box" id="searchBox" placeholder="Search bikes...">
-            <div class="filter-buttons">
-                <button class="filter-btn active" data-filter="all">All</button>
-                <button class="filter-btn" data-filter="budget">Budget</button>
-                <button class="filter-btn" data-filter="mid">Mid-Range</button>
-                <button class="filter-btn" data-filter="premium">Premium</button>
-            </div>
-            <select class="sort-select" id="sortSelect">
-                <option value="name">Sort: Name</option>
-                <option value="price-asc">Price: Low to High</option>
-                <option value="price-desc">Price: High to Low</option>
-                <option value="power-desc">Power: Highest</option>
-                <option value="range-desc">Range: Longest</option>
-                <option value="speed-desc">Speed: Fastest</option>
-            </select>
-        </div>
-
-        <div class="bike-grid" id="bikeGrid"></div>
-        <div class="no-results" id="noResults">No bikes match your search.</div>
-        <div class="bike-count" id="bikeCount"></div>
-
-        <div class="footer">
-            <a href="index.html" class="back-button">&#8592; Back to Hub</a>
+        <p>The ultimate electric motorcycle reference — specs, pricing &amp; reviews</p>
+        <div class="header-stats">
+            <div><strong id="totalBikes">0</strong><br><span>Bikes</span></div>
+            <div><strong id="totalBrands">0</strong><br><span>Brands</span></div>
+            <div><strong>$530–$26K</strong><br><span>Price Range</span></div>
         </div>
     </div>
 
-    <script>
-        const bikes = [
-            {
-                name: "Sur-Ron Light Bee X",
-                brand: "Sur-Ron",
-                emoji: "\uD83D\uDFE2",
-                category: "mid",
-                price: 4400,
-                priceDisplay: "$4,400",
-                motorPower: "8kW peak",
-                motorPowerKw: 8,
-                battery: "60V 40Ah",
-                batteryWh: 2400,
-                range: "Up to 75 mi",
-                rangeMi: 75,
-                topSpeed: "47 mph",
-                topSpeedMph: 47,
-                weight: "125 lbs",
-                weightLbs: 125,
-                chargeTime: "2 hrs (20-80%)",
-                torque: "196 ft-lbs",
-                acceleration: "0-31 mph in 2.7s",
-                rating: 4.2,
-                review: "Excellent beginner-friendly lightweight bike for urban riding and technical trails. Praised for agility and maneuverability. Great entry point into emoots, though may not satisfy larger or more experienced riders seeking high performance."
-            },
-            {
-                name: "Rawrr Mantis X",
-                brand: "Rawrr",
-                emoji: "\uD83D\uDD35",
-                category: "budget",
-                price: 3599,
-                priceDisplay: "$3,599",
-                motorPower: "6.5kW peak",
-                motorPowerKw: 6.5,
-                battery: "72V 30Ah",
-                batteryWh: 2160,
-                range: "Up to 62 mi",
-                rangeMi: 62,
-                topSpeed: "50 mph",
-                topSpeedMph: 50,
-                weight: "139 lbs",
-                weightLbs: 139,
-                chargeTime: "3-4 hrs",
-                torque: "—",
-                acceleration: "0-31 mph in 4s",
-                rating: 4.3,
-                review: "Exceptional off-road performance with excellent tire grip on gravel, mulch, and dirt. Suspension handling is superior to competitors like Sur-Ron, especially for heavier riders. Outstanding value for money."
-            },
-            {
-                name: "Rawrr Mantis X Pro",
-                brand: "Rawrr",
-                emoji: "\uD83D\uDD35",
-                category: "mid",
-                price: 4499,
-                priceDisplay: "$4,499",
-                motorPower: "15kW peak",
-                motorPowerKw: 15,
-                battery: "72V 35Ah",
-                batteryWh: 2520,
-                range: "~65 mi",
-                rangeMi: 65,
-                topSpeed: "~60 mph",
-                topSpeedMph: 60,
-                weight: "139 lbs",
-                weightLbs: 139,
-                chargeTime: "3.3-4.6 hrs",
-                torque: "287 lb-ft",
-                acceleration: "—",
-                rating: 4.5,
-                review: "Significant power upgrade over the standard Mantis X with 15kW motor. Retains the excellent off-road DNA and build quality while delivering much more power. One of the best value-to-performance ratios in the mid-range segment."
-            },
-            {
-                name: "Eride Pro SS 3.0",
-                brand: "Eride",
-                emoji: "\uD83D\uDFE0",
-                category: "mid",
-                price: 5000,
-                priceDisplay: "~$5,000",
-                motorPower: "16kW peak",
-                motorPowerKw: 16,
-                battery: "72V 50Ah",
-                batteryWh: 3600,
-                range: "100+ mi at 15 mph",
-                rangeMi: 100,
-                topSpeed: "62 mph",
-                topSpeedMph: 62,
-                weight: "—",
-                weightLbs: 0,
-                chargeTime: "3.5 hrs (20-90%)",
-                torque: "—",
-                acceleration: "0-30 mph in 2s",
-                rating: 4.6,
-                review: "Described as 'one hell of a bike' by reviewers. Faster and more powerful than Sur-Ron with exceptional range. The SS 3.0 offers outstanding value for the power-to-price ratio and has proven nearly unbreakable in durability testing."
-            },
-            {
-                name: "Heybike Venus",
-                brand: "Heybike",
-                emoji: "\uD83C\uDFE0",
-                category: "budget",
-                price: 1499,
-                priceDisplay: "$1,499",
-                motorPower: "750W",
-                motorPowerKw: 0.75,
-                battery: "48V 680Wh",
-                batteryWh: 680,
-                range: "Up to 85 mi",
-                rangeMi: 85,
-                topSpeed: "28 mph",
-                topSpeedMph: 28,
-                weight: "50 lbs",
-                weightLbs: 50,
-                chargeTime: "4-5 hrs",
-                torque: "70 Nm",
-                acceleration: "—",
-                rating: 4.0,
-                review: "A lightweight commuter eBike designed for city streets and weekend cruising. Features proportional torque assist for a natural ride feel. Class 2/3 switchable modes via smartphone app. Best suited for commuting, not off-road."
-            },
-            {
-                name: "Cake Kalk OR",
-                brand: "Cake",
-                emoji: "\u26AA",
-                category: "premium",
-                price: 15000,
-                priceDisplay: "$15,000",
-                motorPower: "11kW",
-                motorPowerKw: 11,
-                battery: "51.8V 50Ah (2.6kWh)",
-                batteryWh: 2600,
-                range: "~53 mi",
-                rangeMi: 53,
-                topSpeed: "56 mph",
-                topSpeedMph: 56,
-                weight: "—",
-                weightLbs: 0,
-                chargeTime: "1.5 hrs (0-80%)",
-                torque: "277 Nm",
-                acceleration: "—",
-                rating: 4.1,
-                review: "Premium Swedish engineering with focus on minimalist design and quality materials. Unique dual-sport electric motorcycle positioned between eBike and traditional dirt bike. Exceptional build quality but premium pricing limits accessibility."
-            },
-            {
-                name: "Talaria Sting R MX4",
-                brand: "Talaria",
-                emoji: "\uD83D\uDFE1",
-                category: "mid",
-                price: 4500,
-                priceDisplay: "$4,500",
-                motorPower: "8kW peak",
-                motorPowerKw: 8,
-                battery: "60V 45Ah (2.7kWh)",
-                batteryWh: 2700,
-                range: "Up to 53 mi",
-                rangeMi: 53,
-                topSpeed: "55 mph",
-                topSpeedMph: 55,
-                weight: "145 lbs",
-                weightLbs: 145,
-                chargeTime: "3 hrs",
-                torque: "—",
-                acceleration: "—",
-                rating: 4.3,
-                review: "Features a 2-speed gearbox for versatile power delivery. 18% battery capacity increase over previous model with 25% faster charging. Excellent power-to-weight ratio makes it a strong Sur-Ron competitor with better trail performance."
-            },
-            {
-                name: "KTM Freeride E-XC",
-                brand: "KTM",
-                emoji: "\uD83D\uDFE0",
-                category: "premium",
-                price: 12999,
-                priceDisplay: "$12,999",
-                motorPower: "18kW (24 HP)",
-                motorPowerKw: 18,
-                battery: "3.9kWh",
-                batteryWh: 3900,
-                range: "~30 mi",
-                rangeMi: 30,
-                topSpeed: "59 mph",
-                topSpeedMph: 59,
-                weight: "—",
-                weightLbs: 0,
-                chargeTime: "75 min (0-80%)",
-                torque: "42 Nm",
-                acceleration: "—",
-                rating: 4.4,
-                review: "Premium Austrian engineering with a focus on reliability and serious off-road capability. Purpose-built electric dirt bike from a major motorcycle manufacturer. Excellent power and fast charging, but limited range and high price point."
-            },
-            {
-                name: "Stark VARG SM",
-                brand: "Stark Future",
-                emoji: "\uD83D\uDD34",
-                category: "premium",
-                price: 12900,
-                priceDisplay: "$12,900",
-                motorPower: "60-80 HP",
-                motorPowerKw: 60,
-                battery: "7.2kWh",
-                batteryWh: 7200,
-                range: "Up to 73 mi",
-                rangeMi: 73,
-                topSpeed: "—",
-                topSpeedMph: 0,
-                weight: "275 lbs",
-                weightLbs: 275,
-                chargeTime: "Under 2 hrs",
-                torque: "938 Nm",
-                acceleration: "—",
-                rating: 4.7,
-                review: "Redefines the electric motorcycle category with the highest power-to-weight ratio in its class. Exceptional acceleration and torque delivery with fully adjustable power from 10-80 HP. Carbon fiber motor and magnesium battery case represent cutting-edge engineering."
-            }
-        ];
+    <div class="toolbar">
+        <input type="text" class="search-box" id="searchBox" placeholder="Search bikes or brands...">
+        <div class="pill-group" id="priceFilter">
+            <button class="pill active" data-val="all">All Prices</button>
+            <button class="pill" data-val="budget">Under $5K</button>
+            <button class="pill" data-val="mid">$5K–$10K</button>
+            <button class="pill" data-val="premium">$10K+</button>
+        </div>
+        <select id="typeFilter">
+            <option value="all">All Types</option>
+            <option value="off-road">Off-Road / Trail</option>
+            <option value="motocross">Motocross</option>
+            <option value="dual-sport">Dual-Sport</option>
+            <option value="street">Street / Sport</option>
+            <option value="commuter">Commuter</option>
+            <option value="adventure">Adventure</option>
+            <option value="youth">Youth</option>
+        </select>
+        <select id="sortSelect">
+            <option value="name">Sort: Name</option>
+            <option value="price-asc">Price: Low &#8594; High</option>
+            <option value="price-desc">Price: High &#8594; Low</option>
+            <option value="power">Power: Highest</option>
+            <option value="range">Range: Longest</option>
+            <option value="speed">Speed: Fastest</option>
+            <option value="rating">Rating: Best</option>
+        </select>
+        <div class="pill-group" style="margin-left:4px">
+            <button class="pill" id="favFilter" data-val="fav" title="Show favorites only">&#9829; Favs</button>
+        </div>
+        <div class="view-toggle">
+            <button class="view-btn active" id="gridViewBtn" title="Card view">&#9638;</button>
+            <button class="view-btn" id="tableViewBtn" title="Table view">&#9776;</button>
+        </div>
+    </div>
 
-        const bikeGrid = document.getElementById('bikeGrid');
-        const searchBox = document.getElementById('searchBox');
-        const sortSelect = document.getElementById('sortSelect');
-        const noResults = document.getElementById('noResults');
-        const bikeCount = document.getElementById('bikeCount');
-        const filterBtns = document.querySelectorAll('.filter-btn');
+    <div class="compare-bar" id="compareBar">
+        <span>&#9878; Compare: <strong id="compareCount">0</strong> selected</span>
+        <button id="compareBtn">Compare Now</button>
+        <button class="clear-btn" id="compareClear">Clear</button>
+        <span style="margin-left:auto;opacity:0.7;font-size:0.85em">Hold Shift+Click cards to select</span>
+    </div>
 
-        let activeFilter = 'all';
+    <div class="content">
+        <div class="bike-grid" id="bikeGrid"></div>
+        <div class="table-wrap" id="tableWrap" style="display:none">
+            <table class="bike-table" id="bikeTable">
+                <thead><tr>
+                    <th>Bike</th><th>Type</th><th>Power</th><th>Battery</th><th>Range</th><th>Top Speed</th><th>Weight</th><th>Price</th><th>Rating</th>
+                </tr></thead>
+                <tbody id="bikeTableBody"></tbody>
+            </table>
+        </div>
+        <div class="no-results" id="noResults">No bikes match your filters.</div>
+        <div class="bike-count" id="bikeCount"></div>
+    </div>
 
-        function renderStars(rating) {
-            const full = Math.floor(rating);
-            const half = rating % 1 >= 0.5 ? 1 : 0;
-            const empty = 5 - full - half;
-            return '\u2605'.repeat(full) + (half ? '\u00BD' : '') + '\u2606'.repeat(empty) + ' ' + rating.toFixed(1);
+    <div class="footer">
+        <a href="index.html">&#8592; Back to Game Hub</a>
+    </div>
+</div>
+
+<!-- Comparison Modal -->
+<div class="modal-overlay" id="compareModal">
+    <div class="modal">
+        <button class="modal-close" id="modalClose">&times;</button>
+        <h2>&#9878; Side-by-Side Comparison</h2>
+        <div class="compare-grid" id="compareGrid"></div>
+    </div>
+</div>
+
+<script>
+// ============== SVG BIKE ILLUSTRATIONS ==============
+function bikeSVG(type, color1, color2) {
+    const c1 = color1 || '#555';
+    const c2 = color2 || '#333';
+    const svgs = {
+        dirtbike: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="42" cy="82" r="28" fill="none" stroke="${c2}" stroke-width="4"/>
+            <circle cx="42" cy="82" r="5" fill="${c2}"/>
+            <circle cx="158" cy="82" r="28" fill="none" stroke="${c2}" stroke-width="4"/>
+            <circle cx="158" cy="82" r="5" fill="${c2}"/>
+            <path d="M42 82 L70 42 L120 35 L140 45 L158 82" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M70 42 L85 38 L120 35" fill="none" stroke="${c1}" stroke-width="6" stroke-linecap="round"/>
+            <rect x="78" y="30" width="35" height="12" rx="3" fill="${c1}" opacity="0.8"/>
+            <path d="M120 35 L135 28" stroke="${c2}" stroke-width="3" stroke-linecap="round"/>
+            <path d="M86 45 L92 65 L75 70" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
+            <line x1="55" y1="78" x2="42" y2="82" stroke="${c2}" stroke-width="2"/>
+            <ellipse cx="100" cy="52" rx="14" ry="6" fill="${c1}" opacity="0.3"/>
+        </svg>`,
+        street: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="40" cy="85" r="26" fill="none" stroke="${c2}" stroke-width="5"/>
+            <circle cx="40" cy="85" r="5" fill="${c2}"/>
+            <circle cx="160" cy="85" r="26" fill="none" stroke="${c2}" stroke-width="5"/>
+            <circle cx="160" cy="85" r="5" fill="${c2}"/>
+            <path d="M40 85 L60 52 L90 40 L130 38 L150 50 L160 85" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M60 52 L90 40 L130 38 L140 42" fill="${c1}" stroke="${c1}" stroke-width="3" opacity="0.6"/>
+            <rect x="75" y="32" width="50" height="14" rx="5" fill="${c1}" opacity="0.9"/>
+            <path d="M130 38 L148 25" stroke="${c2}" stroke-width="3" stroke-linecap="round"/>
+            <path d="M145 25 L152 23 L148 28" fill="none" stroke="${c2}" stroke-width="2" stroke-linecap="round"/>
+            <path d="M92 48 L100 68 L82 72" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
+            <rect x="85" y="55" width="30" height="8" rx="2" fill="${c1}" opacity="0.2"/>
+        </svg>`,
+        cruiser: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="38" cy="82" r="28" fill="none" stroke="${c2}" stroke-width="4"/>
+            <circle cx="38" cy="82" r="5" fill="${c2}"/>
+            <circle cx="162" cy="82" r="24" fill="none" stroke="${c2}" stroke-width="4"/>
+            <circle cx="162" cy="82" r="5" fill="${c2}"/>
+            <path d="M38 82 L55 55 L80 45 L130 42 L162 82" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
+            <path d="M55 55 L80 45 L130 42 L140 44" fill="${c1}" stroke="${c1}" stroke-width="3" opacity="0.5"/>
+            <rect x="70" y="36" width="55" height="14" rx="6" fill="${c1}" opacity="0.85"/>
+            <path d="M130 42 L150 28" stroke="${c2}" stroke-width="3" stroke-linecap="round"/>
+            <ellipse cx="145" cy="30" rx="8" ry="3" fill="${c2}" opacity="0.5"/>
+            <rect x="52" y="60" width="38" height="6" rx="3" fill="${c1}" opacity="0.3"/>
+            <path d="M80 50 L88 70 L72 75" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
+        </svg>`,
+        moped: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="45" cy="85" r="22" fill="none" stroke="${c2}" stroke-width="4"/>
+            <circle cx="45" cy="85" r="4" fill="${c2}"/>
+            <circle cx="155" cy="85" r="22" fill="none" stroke="${c2}" stroke-width="4"/>
+            <circle cx="155" cy="85" r="4" fill="${c2}"/>
+            <path d="M45 85 L60 55 L85 48 L115 48 L140 55 L155 85" fill="none" stroke="${c1}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="72" y="40" width="40" height="14" rx="5" fill="${c1}" opacity="0.85"/>
+            <path d="M60 55 L75 60 L80 80" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
+            <path d="M115 48 L130 38" stroke="${c2}" stroke-width="3" stroke-linecap="round"/>
+            <rect x="80" y="62" width="25" height="5" rx="2" fill="${c1}" opacity="0.2"/>
+        </svg>`,
+        youth: `<svg viewBox="0 0 200 120" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="48" cy="85" r="22" fill="none" stroke="${c2}" stroke-width="3.5"/>
+            <circle cx="48" cy="85" r="4" fill="${c2}"/>
+            <circle cx="152" cy="85" r="22" fill="none" stroke="${c2}" stroke-width="3.5"/>
+            <circle cx="152" cy="85" r="4" fill="${c2}"/>
+            <path d="M48 85 L68 50 L105 42 L130 48 L152 85" fill="none" stroke="${c1}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
+            <rect x="80" y="35" width="28" height="12" rx="3" fill="${c1}" opacity="0.8"/>
+            <path d="M105 42 L120 32" stroke="${c2}" stroke-width="2.5" stroke-linecap="round"/>
+            <path d="M80 48 L86 64 L74 68" fill="none" stroke="${c1}" stroke-width="2.5" stroke-linecap="round"/>
+        </svg>`
+    };
+    return svgs[type] || svgs.dirtbike;
+}
+
+function bgGradient(type) {
+    const bgs = {
+        'off-road': 'linear-gradient(135deg, #e8f5e9, #c8e6c9)',
+        'motocross': 'linear-gradient(135deg, #fce4ec, #f8bbd0)',
+        'dual-sport': 'linear-gradient(135deg, #f3e5f5, #e1bee7)',
+        'street': 'linear-gradient(135deg, #e3f2fd, #bbdefb)',
+        'commuter': 'linear-gradient(135deg, #fff3e0, #ffe0b2)',
+        'adventure': 'linear-gradient(135deg, #f1f8e9, #dcedc8)',
+        'youth': 'linear-gradient(135deg, #e0f7fa, #b2ebf2)'
+    };
+    return bgs[type] || bgs['off-road'];
+}
+
+// ============== BIKE DATABASE ==============
+const bikes = [
+    {
+        name: "Sur-Ron Light Bee X", brand: "Sur-Ron", type: "off-road", svgType: "dirtbike",
+        color1: "#43a047", color2: "#2e7d32",
+        price: 4400, priceDisplay: "$4,400",
+        motorKw: 8, motor: "8kW peak", battery: "60V 40Ah (2.4kWh)", batteryWh: 2400,
+        rangeMi: 75, range: "Up to 75 mi", speedMph: 47, speed: "47 mph",
+        weightLbs: 125, weight: "125 lbs", charge: "2 hrs (20-80%)",
+        torque: "196 ft-lbs", accel: "0-31 in 2.7s",
+        rating: 4.2,
+        pros: ["Lightweight & agile", "Great for beginners", "Strong community support"],
+        cons: ["Low power for experienced riders", "Aftermarket mods often needed", "Limited top speed"],
+        review: "The quintessential entry-level emoto. Lightweight at 125 lbs, incredibly agile on trails and city streets. Huge aftermarket community. Best starter bike in the segment, though power riders will outgrow it."
+    },
+    {
+        name: "Sur-Ron Ultra Bee", brand: "Sur-Ron", type: "dual-sport", svgType: "dirtbike",
+        color1: "#1976d2", color2: "#0d47a1",
+        price: 5500, priceDisplay: "$5,500",
+        motorKw: 12.5, motor: "12.5kW peak", battery: "74V 55Ah (4kWh)", batteryWh: 4000,
+        rangeMi: 75, range: "Up to 75 mi", speedMph: 56, speed: "56 mph",
+        weightLbs: 165, weight: "165 lbs", charge: "3.5 hrs",
+        torque: "—", accel: "—",
+        rating: 4.4,
+        pros: ["Street legal option", "Big battery upgrade", "Full-size feel"],
+        cons: ["Heavier than Light Bee", "Higher price point", "Limited dealer network"],
+        review: "Sur-Ron's step-up model bridges the gap between light emoto and full motorcycle. With 4kWh battery and 12.5kW motor, it's a serious dual-sport contender. Street-legal version available in many states."
+    },
+    {
+        name: "Sur-Ron Storm Bee", brand: "Sur-Ron", type: "dual-sport", svgType: "street",
+        color1: "#37474f", color2: "#263238",
+        price: 8000, priceDisplay: "$8,000",
+        motorKw: 22.5, motor: "22.5kW (30 HP)", battery: "96V 56Ah (5.4kWh)", batteryWh: 5400,
+        rangeMi: 90, range: "Up to 90 mi", speedMph: 68, speed: "68 mph",
+        weightLbs: 240, weight: "240 lbs", charge: "3-4 hrs",
+        torque: "—", accel: "—",
+        rating: 4.3,
+        pros: ["Real motorcycle power", "Impressive range", "Street legal"],
+        cons: ["Heavy for off-road", "Pricey for Sur-Ron", "Less agile"],
+        review: "Sur-Ron's flagship is a full-size electric motorcycle with 22.5kW of power. Bridges the gap to premium bikes at a fraction of the cost. Excellent for highway-capable commuting with off-road DNA."
+    },
+    {
+        name: "Rawrr Mantis X", brand: "Rawrr", type: "off-road", svgType: "dirtbike",
+        color1: "#1565c0", color2: "#0d47a1",
+        price: 3599, priceDisplay: "$3,599",
+        motorKw: 6.5, motor: "6.5kW peak", battery: "72V 30Ah (2.2kWh)", batteryWh: 2160,
+        rangeMi: 62, range: "Up to 62 mi", speedMph: 50, speed: "50 mph",
+        weightLbs: 139, weight: "139 lbs", charge: "3-4 hrs",
+        torque: "—", accel: "0-31 in 4s",
+        rating: 4.3,
+        pros: ["Excellent value", "Great off-road grip", "IP66 water resistance"],
+        cons: ["Less peak power", "No street-legal option", "Smaller battery"],
+        review: "Exceptional off-road performance with excellent tire grip on gravel, mulch, and dirt. Suspension handling is superior to Sur-Ron, especially for heavier riders. Outstanding value at $3,599."
+    },
+    {
+        name: "Rawrr Mantis X Pro", brand: "Rawrr", type: "off-road", svgType: "dirtbike",
+        color1: "#1565c0", color2: "#0d47a1",
+        price: 4499, priceDisplay: "$4,499",
+        motorKw: 15, motor: "15kW peak", battery: "72V 35Ah (2.5kWh)", batteryWh: 2520,
+        rangeMi: 65, range: "~65 mi", speedMph: 60, speed: "~60 mph",
+        weightLbs: 139, weight: "139 lbs", charge: "3.3-4.6 hrs",
+        torque: "287 lb-ft", accel: "—",
+        rating: 4.5,
+        pros: ["Massive power upgrade", "Best value-to-power ratio", "Same great chassis"],
+        cons: ["Slightly longer charge", "Not street legal", "No ABS"],
+        review: "15kW motor is a massive jump over the standard Mantis X. Retains excellent off-road DNA and build quality while delivering serious power. One of the best value-to-performance ratios in the segment."
+    },
+    {
+        name: "Eride Pro SS 3.0", brand: "Eride", type: "off-road", svgType: "dirtbike",
+        color1: "#e65100", color2: "#bf360c",
+        price: 5000, priceDisplay: "~$5,000",
+        motorKw: 16, motor: "16kW peak", battery: "72V 50Ah (3.6kWh)", batteryWh: 3600,
+        rangeMi: 100, range: "100+ mi", speedMph: 62, speed: "62 mph",
+        weightLbs: 0, weight: "TBD", charge: "3.5 hrs (20-90%)",
+        torque: "—", accel: "0-30 in 2s",
+        rating: 4.6,
+        pros: ["Insane range", "Powerful 16kW motor", "Nearly unbreakable durability"],
+        cons: ["Weight not published", "Limited dealer presence", "Newer brand"],
+        review: "Described as 'one hell of a bike' by reviewers. 100+ mile range is class-leading. Faster and more powerful than Sur-Ron at a similar price. Proven nearly unbreakable in durability testing."
+    },
+    {
+        name: "Talaria Sting R MX4", brand: "Talaria", type: "off-road", svgType: "dirtbike",
+        color1: "#f9a825", color2: "#f57f17",
+        price: 4500, priceDisplay: "$4,500",
+        motorKw: 8, motor: "8kW peak", battery: "60V 45Ah (2.7kWh)", batteryWh: 2700,
+        rangeMi: 53, range: "Up to 53 mi", speedMph: 55, speed: "55 mph",
+        weightLbs: 145, weight: "145 lbs", charge: "3 hrs",
+        torque: "—", accel: "—",
+        rating: 4.3,
+        pros: ["Unique 2-speed gearbox", "Fast charging", "Excellent power-to-weight"],
+        cons: ["Shorter range", "Heavier than Sur-Ron", "Gearbox adds complexity"],
+        review: "Features a unique 2-speed gearbox for versatile power delivery. 18% battery capacity increase and 25% faster charging over predecessor. Excellent power-to-weight ratio. Strong Sur-Ron alternative."
+    },
+    {
+        name: "Talaria Dragon", brand: "Talaria", type: "off-road", svgType: "dirtbike",
+        color1: "#d32f2f", color2: "#b71c1c",
+        price: 5500, priceDisplay: "$5,500",
+        motorKw: 12, motor: "12kW peak", battery: "72V 40Ah (2.9kWh)", batteryWh: 2880,
+        rangeMi: 60, range: "~60 mi", speedMph: 60, speed: "~60 mph",
+        weightLbs: 155, weight: "~155 lbs", charge: "3.5 hrs",
+        torque: "—", accel: "—",
+        rating: 4.2,
+        pros: ["Major power increase", "Aggressive styling", "Full-size geometry"],
+        cons: ["New model, less proven", "Pricier than Sting", "Heavier"],
+        review: "Talaria's flagship model steps up to 12kW for riders wanting more power. Full-size dirt bike geometry and aggressive styling make it stand out. Bridges the gap to premium emoto territory."
+    },
+    {
+        name: "Heybike Venus", brand: "Heybike", type: "commuter", svgType: "moped",
+        color1: "#00897b", color2: "#00695c",
+        price: 1499, priceDisplay: "$1,499",
+        motorKw: 0.75, motor: "750W", battery: "48V 680Wh", batteryWh: 680,
+        rangeMi: 85, range: "Up to 85 mi", speedMph: 28, speed: "28 mph",
+        weightLbs: 50, weight: "50 lbs", charge: "4-5 hrs",
+        torque: "70 Nm", accel: "—",
+        rating: 4.0,
+        pros: ["Ultra lightweight", "Great commuter range", "Affordable"],
+        cons: ["Low speed (28 mph)", "Not for off-road", "eBike class, not motorcycle"],
+        review: "Lightweight city commuter with excellent range for the price. Torque-sensing pedal assist feels natural. Class 2/3 switchable via app. Perfect for urban commuting, not for trails."
+    },
+    {
+        name: "Monday Anza", brand: "Monday Motorbikes", type: "commuter", svgType: "moped",
+        color1: "#5d4037", color2: "#3e2723",
+        price: 2199, priceDisplay: "$2,199",
+        motorKw: 1, motor: "1,000W", battery: "48V 17.5Ah (840Wh)", batteryWh: 840,
+        rangeMi: 50, range: "~50 mi", speedMph: 28, speed: "28+ mph",
+        weightLbs: 75, weight: "~75 lbs", charge: "4-5 hrs",
+        torque: "—", accel: "—",
+        rating: 3.9,
+        pros: ["Retro cafe racer style", "Aircraft-grade aluminum", "Pedal assist option"],
+        cons: ["Low top speed", "Heavy for an eBike", "Limited power"],
+        review: "Classic 1980s cafe racer proportions with modern electric power. T6 aircraft-grade aluminum frame with stainless fasteners. Stylish commuter option but not meant for performance riding."
+    },
+    {
+        name: "Segway X260", brand: "Segway", type: "off-road", svgType: "dirtbike",
+        color1: "#546e7a", color2: "#37474f",
+        price: 4999, priceDisplay: "$4,999",
+        motorKw: 5, motor: "5kW", battery: "74V 32Ah (2.4kWh)", batteryWh: 2370,
+        rangeMi: 74, range: "Up to 74 mi", speedMph: 47, speed: "47 mph",
+        weightLbs: 121, weight: "121 lbs", charge: "4 hrs",
+        torque: "—", accel: "—",
+        rating: 4.0,
+        pros: ["Ultra lightweight (121 lbs)", "Good range", "Known brand reliability"],
+        cons: ["Less power than competitors", "Premium price for specs", "Limited availability"],
+        review: "Segway's entry into emoots brings brand reliability and a featherweight 121 lb chassis. Great range at 74 miles, though 5kW motor is modest compared to similarly priced bikes. Solid beginner option."
+    },
+    {
+        name: "Cake Kalk OR", brand: "Cake", type: "dual-sport", svgType: "dirtbike",
+        color1: "#78909c", color2: "#546e7a",
+        price: 15000, priceDisplay: "$15,000",
+        motorKw: 11, motor: "11kW", battery: "51.8V 50Ah (2.6kWh)", batteryWh: 2600,
+        rangeMi: 53, range: "~53 mi", speedMph: 56, speed: "56 mph",
+        weightLbs: 0, weight: "176 lbs", charge: "1.5 hrs (0-80%)",
+        torque: "277 Nm", accel: "—",
+        rating: 4.1,
+        pros: ["Premium Swedish build", "Fast charging", "Minimalist design icon"],
+        cons: ["Very expensive", "Modest specs for price", "Limited dealer network"],
+        review: "Premium Swedish engineering with minimalist design that's become iconic. Exceptional build quality and fast 1.5-hour charging. The price is hard to justify on specs alone—you're paying for design and craftsmanship."
+    },
+    {
+        name: "KTM Freeride E-XC", brand: "KTM", type: "off-road", svgType: "dirtbike",
+        color1: "#e65100", color2: "#bf360c",
+        price: 12999, priceDisplay: "$12,999",
+        motorKw: 18, motor: "18kW (24 HP)", battery: "3.9kWh", batteryWh: 3900,
+        rangeMi: 30, range: "~30 mi", speedMph: 59, speed: "59 mph",
+        weightLbs: 0, weight: "~250 lbs", charge: "75 min (0-80%)",
+        torque: "42 Nm", accel: "—",
+        rating: 4.4,
+        pros: ["Major manufacturer quality", "Fast charging", "Purpose-built MX geometry"],
+        cons: ["Very short range", "Expensive", "Heavy"],
+        review: "Premium Austrian engineering from a legendary dirt bike maker. Purpose-built electric off-roader with excellent handling. Fast 75-minute charging partially offsets the short 30-mile range. You're paying for KTM's MX pedigree."
+    },
+    {
+        name: "Husqvarna EE 5", brand: "Husqvarna", type: "youth", svgType: "youth",
+        color1: "#1565c0", color2: "#0d47a1",
+        price: 5299, priceDisplay: "$5,299",
+        motorKw: 5, motor: "5kW", battery: "907Wh", batteryWh: 907,
+        rangeMi: 25, range: "~25 min ride", speedMph: 37, speed: "~37 mph",
+        weightLbs: 92, weight: "92 lbs", charge: "45-70 min",
+        torque: "—", accel: "—",
+        rating: 4.2,
+        pros: ["Real MX bike for kids", "Premium components", "Adjustable power modes"],
+        cons: ["Very short run time", "Expensive for youth", "Limited to young riders"],
+        review: "A real motocross bike scaled for young riders. Premium Husqvarna components with adjustable power to grow with the rider. Short battery life means short sessions, but the experience is unmatched."
+    },
+    {
+        name: "GASGAS MC-E 5", brand: "GASGAS", type: "youth", svgType: "youth",
+        color1: "#d32f2f", color2: "#b71c1c",
+        price: 5299, priceDisplay: "$5,299",
+        motorKw: 5, motor: "5kW", battery: "907Wh", batteryWh: 907,
+        rangeMi: 25, range: "~25 min ride", speedMph: 37, speed: "~37 mph",
+        weightLbs: 92, weight: "92 lbs", charge: "45-70 min",
+        torque: "—", accel: "—",
+        rating: 4.2,
+        pros: ["Identical to Husky EE 5 performance", "Bold GASGAS styling", "Real MX geometry"],
+        cons: ["Same short run time", "Premium youth price", "Limited to young riders"],
+        review: "Essentially the Husqvarna EE 5 in GASGAS red livery (same KTM Group platform). Same excellent youth motocross experience with bolder styling. Choose whichever brand you prefer."
+    },
+    {
+        name: "Razor MX650", brand: "Razor", type: "youth", svgType: "youth",
+        color1: "#7cb342", color2: "#558b2f",
+        price: 530, priceDisplay: "$530",
+        motorKw: 0.65, motor: "650W", battery: "36V (SLA)", batteryWh: 360,
+        rangeMi: 10, range: "~40 min / 10 mi", speedMph: 17, speed: "17 mph",
+        weightLbs: 98, weight: "98 lbs", charge: "12 hrs",
+        torque: "—", accel: "—",
+        rating: 3.7,
+        pros: ["Very affordable entry", "Fun for young kids", "Simple and durable"],
+        cons: ["Lead-acid battery (heavy)", "Very slow", "Long charge time"],
+        review: "The gateway drug to emoots for kids. At $530, it's by far the most affordable entry point. Lead-acid battery is heavy and slow to charge, but for backyard fun and learning, it can't be beat."
+    },
+    {
+        name: "Stark VARG SM", brand: "Stark Future", type: "street", svgType: "street",
+        color1: "#d32f2f", color2: "#b71c1c",
+        price: 12900, priceDisplay: "$12,900",
+        motorKw: 60, motor: "60-80 HP", battery: "7.2kWh", batteryWh: 7200,
+        rangeMi: 73, range: "Up to 73 mi", speedMph: 0, speed: "—",
+        weightLbs: 275, weight: "275 lbs", charge: "Under 2 hrs",
+        torque: "938 Nm", accel: "—",
+        rating: 4.7,
+        pros: ["Insane 938 Nm torque", "Variable 10-80 HP", "Carbon fiber motor"],
+        cons: ["Heavy (275 lbs)", "Street-only SM model", "Premium price"],
+        review: "Redefines electric motorcycle performance. 938 Nm of torque and adjustable 10-80 HP from a carbon fiber motor. Magnesium battery case is cutting-edge engineering. The future of electric motorcycles."
+    },
+    {
+        name: "Stark VARG MX", brand: "Stark Future", type: "motocross", svgType: "dirtbike",
+        color1: "#d32f2f", color2: "#b71c1c",
+        price: 11900, priceDisplay: "$11,900",
+        motorKw: 60, motor: "80 HP", battery: "7.2kWh", batteryWh: 7200,
+        rangeMi: 40, range: "~6 hrs trail", speedMph: 0, speed: "—",
+        weightLbs: 242, weight: "242 lbs", charge: "Under 2 hrs",
+        torque: "938 Nm", accel: "—",
+        rating: 4.8,
+        pros: ["Highest power-to-weight in MX", "6-hour trail ride time", "Fully adjustable power"],
+        cons: ["Not street legal", "Heavy vs gas MX", "Premium price"],
+        review: "The most powerful production electric motocross bike. 80 HP with 938 Nm torque in a 242 lb package. Up to 6 hours of trail riding. This is the bike that makes gas MX riders take notice."
+    },
+    {
+        name: "Zero FXE", brand: "Zero Motorcycles", type: "street", svgType: "street",
+        color1: "#fdd835", color2: "#f9a825",
+        price: 11795, priceDisplay: "$11,795",
+        motorKw: 34, motor: "46 HP (34kW)", battery: "7.2kWh", batteryWh: 7200,
+        rangeMi: 100, range: "100 mi city", speedMph: 85, speed: "85 mph",
+        weightLbs: 293, weight: "293 lbs", charge: "2.5 hrs (Level 2)",
+        torque: "78 ft-lbs", accel: "—",
+        rating: 4.3,
+        pros: ["Established brand", "Great city range", "Street legal & highway capable"],
+        cons: ["Modest power for price", "Limited dealer support", "Range drops on highway"],
+        review: "Zero's urban streetfighter offers 100 miles of city range and highway capability at 85 mph. Established brand with years of electric motorcycle experience. Solid all-rounder for street riders."
+    },
+    {
+        name: "Zero SR/F", brand: "Zero Motorcycles", type: "street", svgType: "street",
+        color1: "#fdd835", color2: "#f9a825",
+        price: 19995, priceDisplay: "$19,995",
+        motorKw: 82, motor: "110 HP (82kW)", battery: "14.4kWh", batteryWh: 14400,
+        rangeMi: 161, range: "161 mi city", speedMph: 124, speed: "124 mph",
+        weightLbs: 485, weight: "485 lbs", charge: "2 hrs (Level 2)",
+        torque: "140 ft-lbs", accel: "0-60 in 3.0s",
+        rating: 4.5,
+        pros: ["Incredible range", "124 mph top speed", "Premium sport bike"],
+        cons: ["Very expensive", "Heavy (485 lbs)", "Steep learning curve"],
+        review: "Zero's flagship sport bike is a legitimate premium motorcycle. 161 miles of city range, 124 mph top speed, and 110 HP make it a real sportbike. Heavy at 485 lbs but rides like a proper full-size machine."
+    },
+    {
+        name: "Kollter ES1-S Pro", brand: "Kollter", type: "commuter", svgType: "cruiser",
+        color1: "#455a64", color2: "#37474f",
+        price: 5990, priceDisplay: "$5,990",
+        motorKw: 11, motor: "11kW (15 HP)", battery: "72V 31Ah (2.2kWh)", batteryWh: 2232,
+        rangeMi: 60, range: "35-80 mi", speedMph: 60, speed: "50-60 mph",
+        weightLbs: 0, weight: "~260 lbs", charge: "3-6 hrs",
+        torque: "—", accel: "—",
+        rating: 3.8,
+        pros: ["Most affordable highway bike", "Street legal", "Dual battery option"],
+        cons: ["Modest performance", "Long charge time", "Niche brand"],
+        review: "North America's most affordable highway-capable electric motorcycle. Belt drive is quiet and low-maintenance. Optional second battery extends range. Good commuter but not built for spirited riding."
+    },
+    {
+        name: "LiveWire S2 Del Mar", brand: "LiveWire (Harley)", type: "street", svgType: "street",
+        color1: "#ff6f00", color2: "#e65100",
+        price: 16249, priceDisplay: "$16,249",
+        motorKw: 63, motor: "84 HP (63kW)", battery: "10.5kWh", batteryWh: 10500,
+        rangeMi: 113, range: "113 mi city", speedMph: 103, speed: "103 mph",
+        weightLbs: 436, weight: "436 lbs", charge: "75 min DC fast",
+        torque: "194 ft-lbs", accel: "0-60 in 3.0s",
+        rating: 4.5,
+        pros: ["Harley-Davidson backing", "DC fast charge", "Superb handling"],
+        cons: ["Expensive", "Heavy", "Dealer availability varies"],
+        review: "Harley's electric brand delivers a gorgeous, well-handling street bike. DC fast charging to 100% in 75 minutes is excellent. Four ride modes plus custom. Handling puts electric rivals in the shade."
+    },
+    {
+        name: "Energica Eva Ribelle", brand: "Energica", type: "street", svgType: "street",
+        color1: "#00897b", color2: "#00695c",
+        price: 26000, priceDisplay: "$26,000",
+        motorKw: 126, motor: "171 HP (126kW)", battery: "21.5kWh", batteryWh: 21500,
+        rangeMi: 261, range: "261 mi city", speedMph: 125, speed: "125 mph",
+        weightLbs: 573, weight: "573 lbs", charge: "40 min DC (0-85%)",
+        torque: "215 Nm", accel: "0-60 in 2.6s",
+        rating: 4.6,
+        pros: ["171 HP is incredible", "261 mi city range", "Italian craftsmanship"],
+        cons: ["Very expensive", "Very heavy", "Limited US dealers"],
+        review: "Italian-made electric hyper-naked with 171 HP and 261 miles of city range. The most powerful electric streetfighter money can buy. DC fast charges in 40 minutes. Brutal performance, premium price."
+    },
+    {
+        name: "Electric Motion Epure", brand: "Electric Motion", type: "off-road", svgType: "dirtbike",
+        color1: "#1b5e20", color2: "#0d3d13",
+        price: 11000, priceDisplay: "$11,000",
+        motorKw: 5.5, motor: "5.5kW", battery: "1.9kWh", batteryWh: 1900,
+        rangeMi: 25, range: "~2 hrs ride", speedMph: 50, speed: "50 mph",
+        weightLbs: 165, weight: "165 lbs", charge: "2.5 hrs",
+        torque: "—", accel: "—",
+        rating: 4.1,
+        pros: ["Trials bike pedigree", "Lightweight for class", "Excellent low-speed control"],
+        cons: ["Very expensive for specs", "Short range", "Niche brand"],
+        review: "From a trials bike manufacturer, the Epure brings exceptional low-speed control and precision. Great for technical trails. Limited range and high price, but unmatched in technical terrain handling."
+    }
+];
+
+// ============== STATE ==============
+let favorites = JSON.parse(localStorage.getItem('emotoFavorites') || '[]');
+let compareList = [];
+let currentView = 'grid';
+let activePrice = 'all';
+
+const searchBox = document.getElementById('searchBox');
+const sortSelect = document.getElementById('sortSelect');
+const typeFilter = document.getElementById('typeFilter');
+const bikeGrid = document.getElementById('bikeGrid');
+const bikeTableBody = document.getElementById('bikeTableBody');
+const noResults = document.getElementById('noResults');
+const bikeCount = document.getElementById('bikeCount');
+const compareBar = document.getElementById('compareBar');
+const compareCount = document.getElementById('compareCount');
+const totalBikes = document.getElementById('totalBikes');
+const totalBrands = document.getElementById('totalBrands');
+
+totalBikes.textContent = bikes.length;
+totalBrands.textContent = [...new Set(bikes.map(b => b.brand))].length;
+
+// ============== FILTERING & SORTING ==============
+function getFiltered() {
+    let list = bikes.slice();
+    const q = searchBox.value.toLowerCase().trim();
+    if (q) list = list.filter(b => b.name.toLowerCase().includes(q) || b.brand.toLowerCase().includes(q));
+    if (activePrice === 'budget') list = list.filter(b => b.price < 5000);
+    else if (activePrice === 'mid') list = list.filter(b => b.price >= 5000 && b.price < 10000);
+    else if (activePrice === 'premium') list = list.filter(b => b.price >= 10000);
+    const tp = typeFilter.value;
+    if (tp !== 'all') list = list.filter(b => b.type === tp);
+    if (document.getElementById('favFilter').classList.contains('active')) {
+        list = list.filter(b => favorites.includes(b.name));
+    }
+    const sort = sortSelect.value;
+    list.sort((a, b) => {
+        switch(sort) {
+            case 'name': return a.name.localeCompare(b.name);
+            case 'price-asc': return a.price - b.price;
+            case 'price-desc': return b.price - a.price;
+            case 'power': return b.motorKw - a.motorKw;
+            case 'range': return b.rangeMi - a.rangeMi;
+            case 'speed': return b.speedMph - a.speedMph;
+            case 'rating': return b.rating - a.rating;
+            default: return 0;
         }
+    });
+    return list;
+}
 
-        function getCategoryLabel(cat) {
-            if (cat === 'budget') return '<span class="category-tag cat-budget">Budget</span>';
-            if (cat === 'mid') return '<span class="category-tag cat-mid">Mid-Range</span>';
-            return '<span class="category-tag cat-premium">Premium</span>';
-        }
+// ============== SPEC BAR HELPERS ==============
+const maxPower = Math.max(...bikes.map(b => b.motorKw));
+const maxRange = Math.max(...bikes.map(b => b.rangeMi));
+const maxSpeed = Math.max(...bikes.map(b => b.speedMph));
+const maxBattery = Math.max(...bikes.map(b => b.batteryWh));
 
-        function createBikeCard(bike) {
-            const card = document.createElement('div');
-            card.className = 'bike-card';
-            card.innerHTML = `
-                <div class="bike-card-header">
-                    <div class="bike-emoji">${bike.emoji}</div>
-                    <div class="bike-title-group">
-                        <div class="bike-name">${bike.name}</div>
-                        <div class="bike-brand">${bike.brand}</div>
-                        ${getCategoryLabel(bike.category)}
-                    </div>
-                    <div class="price-badge">${bike.priceDisplay}</div>
+function pct(val, max) { return max > 0 ? Math.min(100, (val / max) * 100) : 0; }
+function stars(r) { return '\u2605'.repeat(Math.floor(r)) + (r % 1 >= 0.5 ? '\u00BD' : '') + '\u2606'.repeat(5 - Math.ceil(r)) + ' ' + r.toFixed(1); }
+
+function priceClass(p) { return p < 5000 ? 'price-budget' : p >= 10000 ? 'price-premium' : ''; }
+function typeClass(t) { return 'type-' + t; }
+function typeLabel(t) { return t.split('-').map(w => w[0].toUpperCase() + w.slice(1)).join('-'); }
+
+// ============== CARD RENDERING ==============
+function createCard(bike) {
+    const isFav = favorites.includes(bike.name);
+    const isSelected = compareList.includes(bike.name);
+    const card = document.createElement('div');
+    card.className = 'bike-card' + (isSelected ? ' selected' : '');
+    card.innerHTML = `
+        <div class="card-image" style="background:${bgGradient(bike.type)}">
+            <button class="card-fav ${isFav ? 'faved' : ''}" data-name="${bike.name}" title="Toggle favorite">${isFav ? '\u2665' : '\u2661'}</button>
+            <span class="type-badge ${typeClass(bike.type)}">${typeLabel(bike.type)}</span>
+            ${bikeSVG(bike.svgType, bike.color1, bike.color2)}
+        </div>
+        <div class="card-body">
+            <div class="card-brand">${bike.brand}</div>
+            <div class="card-name">${bike.name}</div>
+            <span class="card-price ${priceClass(bike.price)}">${bike.priceDisplay}</span>
+            <div class="spec-bars">
+                <div class="spec-bar-row">
+                    <span class="spec-bar-label">Power</span>
+                    <div class="spec-bar-track"><div class="spec-bar-fill bar-power" style="width:${pct(bike.motorKw, maxPower)}%"></div></div>
+                    <span class="spec-bar-value">${bike.motor}</span>
                 </div>
-                <div class="quick-specs">
-                    <div class="spec-pill">
-                        <div class="spec-pill-label">Power</div>
-                        <div class="spec-pill-value">${bike.motorPower}</div>
+                <div class="spec-bar-row">
+                    <span class="spec-bar-label">Range</span>
+                    <div class="spec-bar-track"><div class="spec-bar-fill bar-range" style="width:${pct(bike.rangeMi, maxRange)}%"></div></div>
+                    <span class="spec-bar-value">${bike.rangeMi > 0 ? bike.rangeMi + ' mi' : '—'}</span>
+                </div>
+                <div class="spec-bar-row">
+                    <span class="spec-bar-label">Speed</span>
+                    <div class="spec-bar-track"><div class="spec-bar-fill bar-speed" style="width:${pct(bike.speedMph, maxSpeed)}%"></div></div>
+                    <span class="spec-bar-value">${bike.speedMph > 0 ? bike.speedMph + ' mph' : '—'}</span>
+                </div>
+                <div class="spec-bar-row">
+                    <span class="spec-bar-label">Battery</span>
+                    <div class="spec-bar-track"><div class="spec-bar-fill bar-battery" style="width:${pct(bike.batteryWh, maxBattery)}%"></div></div>
+                    <span class="spec-bar-value">${bike.batteryWh >= 1000 ? (bike.batteryWh/1000).toFixed(1) + 'kWh' : bike.batteryWh + 'Wh'}</span>
+                </div>
+            </div>
+            <div class="card-expand-hint">Click for full specs &amp; review &#9662;</div>
+            <div class="card-detail">
+                <div class="detail-inner">
+                    <div class="detail-grid">
+                        <div class="detail-item"><span class="detail-label">Motor</span><span class="detail-value">${bike.motor}</span></div>
+                        <div class="detail-item"><span class="detail-label">Battery</span><span class="detail-value">${bike.battery}</span></div>
+                        <div class="detail-item"><span class="detail-label">Range</span><span class="detail-value">${bike.range}</span></div>
+                        <div class="detail-item"><span class="detail-label">Top Speed</span><span class="detail-value">${bike.speed}</span></div>
+                        <div class="detail-item"><span class="detail-label">Weight</span><span class="detail-value">${bike.weight}</span></div>
+                        <div class="detail-item"><span class="detail-label">Charge</span><span class="detail-value">${bike.charge}</span></div>
+                        <div class="detail-item"><span class="detail-label">Torque</span><span class="detail-value">${bike.torque}</span></div>
+                        <div class="detail-item"><span class="detail-label">0-Speed</span><span class="detail-value">${bike.accel}</span></div>
                     </div>
-                    <div class="spec-pill">
-                        <div class="spec-pill-label">Range</div>
-                        <div class="spec-pill-value">${bike.range}</div>
+                    <div class="pros-cons">
+                        <div class="pros"><h5>Pros</h5><ul>${bike.pros.map(p => '<li>' + p + '</li>').join('')}</ul></div>
+                        <div class="cons"><h5>Cons</h5><ul>${bike.cons.map(c => '<li>' + c + '</li>').join('')}</ul></div>
                     </div>
-                    <div class="spec-pill">
-                        <div class="spec-pill-label">Top Speed</div>
-                        <div class="spec-pill-value">${bike.topSpeed}</div>
-                    </div>
-                    <div class="spec-pill">
-                        <div class="spec-pill-label">Weight</div>
-                        <div class="spec-pill-value">${bike.weight}</div>
+                    <div class="review-box">
+                        <div class="stars">${stars(bike.rating)}</div>
+                        <p>${bike.review}</p>
                     </div>
                 </div>
-                <div class="expand-hint">Click to see full specs &amp; review</div>
-                <div class="bike-detail">
-                    <div class="detail-divider"></div>
-                    <table class="specs-table">
-                        <tr><td>Motor</td><td>${bike.motorPower}</td></tr>
-                        <tr><td>Battery</td><td>${bike.battery}</td></tr>
-                        <tr><td>Range</td><td>${bike.range}</td></tr>
-                        <tr><td>Top Speed</td><td>${bike.topSpeed}</td></tr>
-                        <tr><td>Weight</td><td>${bike.weight}</td></tr>
-                        <tr><td>Charge Time</td><td>${bike.chargeTime}</td></tr>
-                        <tr><td>Torque</td><td>${bike.torque}</td></tr>
-                        <tr><td>Acceleration</td><td>${bike.acceleration}</td></tr>
-                    </table>
-                    <div class="review-section">
-                        <h4>Review</h4>
-                        <div class="star-rating">${renderStars(bike.rating)}</div>
-                        <div class="review-text">${bike.review}</div>
-                    </div>
-                </div>
-            `;
-            card.addEventListener('click', () => {
-                card.classList.toggle('expanded');
-            });
-            return card;
+            </div>
+        </div>
+    `;
+    // Expand on click
+    card.addEventListener('click', (e) => {
+        if (e.target.closest('.card-fav')) return;
+        if (e.shiftKey) {
+            toggleCompare(bike.name);
+            render();
+            return;
         }
-
-        function getFilteredSortedBikes() {
-            let filtered = bikes.slice();
-
-            // Search filter
-            const query = searchBox.value.toLowerCase().trim();
-            if (query) {
-                filtered = filtered.filter(b =>
-                    b.name.toLowerCase().includes(query) ||
-                    b.brand.toLowerCase().includes(query)
-                );
-            }
-
-            // Category filter
-            if (activeFilter !== 'all') {
-                filtered = filtered.filter(b => b.category === activeFilter);
-            }
-
-            // Sort
-            const sort = sortSelect.value;
-            filtered.sort((a, b) => {
-                switch (sort) {
-                    case 'name': return a.name.localeCompare(b.name);
-                    case 'price-asc': return a.price - b.price;
-                    case 'price-desc': return b.price - a.price;
-                    case 'power-desc': return b.motorPowerKw - a.motorPowerKw;
-                    case 'range-desc': return b.rangeMi - a.rangeMi;
-                    case 'speed-desc': return b.topSpeedMph - a.topSpeedMph;
-                    default: return 0;
-                }
-            });
-
-            return filtered;
-        }
-
-        function render() {
-            const filtered = getFilteredSortedBikes();
-            bikeGrid.innerHTML = '';
-
-            if (filtered.length === 0) {
-                noResults.style.display = 'block';
-                bikeCount.textContent = '';
-            } else {
-                noResults.style.display = 'none';
-                filtered.forEach(bike => {
-                    bikeGrid.appendChild(createBikeCard(bike));
-                });
-                bikeCount.textContent = `Showing ${filtered.length} of ${bikes.length} bikes`;
-            }
-        }
-
-        // Event listeners
-        searchBox.addEventListener('input', render);
-        sortSelect.addEventListener('change', render);
-
-        filterBtns.forEach(btn => {
-            btn.addEventListener('click', () => {
-                filterBtns.forEach(b => b.classList.remove('active'));
-                btn.classList.add('active');
-                activeFilter = btn.dataset.filter;
-                render();
-            });
-        });
-
-        // Initial render
+        card.classList.toggle('expanded');
+    });
+    // Favorite button
+    card.querySelector('.card-fav').addEventListener('click', (e) => {
+        e.stopPropagation();
+        toggleFavorite(bike.name);
         render();
-    </script>
+    });
+    return card;
+}
+
+// ============== TABLE RENDERING ==============
+function renderTable(list) {
+    bikeTableBody.innerHTML = '';
+    list.forEach(b => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+            <td><span class="table-name">${b.name}</span><br><span class="table-brand">${b.brand}</span></td>
+            <td><span class="type-badge ${typeClass(b.type)}" style="position:static">${typeLabel(b.type)}</span></td>
+            <td>${b.motor}</td>
+            <td>${b.battery}</td>
+            <td>${b.range}</td>
+            <td>${b.speed}</td>
+            <td>${b.weight}</td>
+            <td><strong>${b.priceDisplay}</strong></td>
+            <td style="color:#f5a623">${stars(b.rating)}</td>
+        `;
+        bikeTableBody.appendChild(tr);
+    });
+}
+
+// ============== FAVORITES ==============
+function toggleFavorite(name) {
+    const idx = favorites.indexOf(name);
+    if (idx >= 0) favorites.splice(idx, 1);
+    else favorites.push(name);
+    localStorage.setItem('emotoFavorites', JSON.stringify(favorites));
+}
+
+// ============== COMPARE ==============
+function toggleCompare(name) {
+    const idx = compareList.indexOf(name);
+    if (idx >= 0) compareList.splice(idx, 1);
+    else if (compareList.length < 4) compareList.push(name);
+    updateCompareBar();
+}
+
+function updateCompareBar() {
+    compareCount.textContent = compareList.length;
+    compareBar.classList.toggle('visible', compareList.length > 0);
+}
+
+function showComparison() {
+    if (compareList.length < 2) return;
+    const selected = compareList.map(n => bikes.find(b => b.name === n)).filter(Boolean);
+    const cols = selected.length + 1;
+    const grid = document.getElementById('compareGrid');
+    grid.style.gridTemplateColumns = `140px repeat(${selected.length}, 1fr)`;
+
+    const fields = [
+        ['', 'name'], ['Type', 'type'], ['Price', 'priceDisplay'], ['Motor', 'motor'],
+        ['Battery', 'battery'], ['Range', 'range'], ['Top Speed', 'speed'],
+        ['Weight', 'weight'], ['Charge', 'charge'], ['Torque', 'torque'],
+        ['Rating', 'rating']
+    ];
+
+    let html = '';
+    fields.forEach(([label, key], i) => {
+        html += '<div class="compare-row">';
+        html += `<div class="compare-cell">${label}</div>`;
+        selected.forEach(b => {
+            let val = key === 'name' ? `<div class="compare-header">${b.name}</div><div style="font-size:0.8em;color:#999">${b.brand}</div>` :
+                      key === 'rating' ? `<span style="color:#f5a623">${stars(b[key])}</span>` :
+                      key === 'type' ? `<span class="type-badge ${typeClass(b.type)}" style="position:static">${typeLabel(b.type)}</span>` :
+                      b[key];
+            // Highlight best values
+            let cls = '';
+            if (i > 1 && key !== 'name') {
+                const numKey = {priceDisplay: 'price', range: 'rangeMi', speed: 'speedMph', motor: 'motorKw', battery: 'batteryWh', rating: 'rating'}[key];
+                if (numKey) {
+                    const vals = selected.map(s => s[numKey]);
+                    const best = key === 'priceDisplay' ? Math.min(...vals) : Math.max(...vals);
+                    if (b[numKey] === best && vals.filter(v => v === best).length === 1) cls = ' compare-best';
+                }
+            }
+            html += `<div class="compare-cell${cls}">${val}</div>`;
+        });
+        html += '</div>';
+    });
+    grid.innerHTML = html;
+    document.getElementById('compareModal').classList.add('open');
+}
+
+// ============== MAIN RENDER ==============
+function render() {
+    const list = getFiltered();
+    if (currentView === 'grid') {
+        bikeGrid.style.display = '';
+        document.getElementById('tableWrap').style.display = 'none';
+        bikeGrid.innerHTML = '';
+        list.forEach(b => bikeGrid.appendChild(createCard(b)));
+    } else {
+        bikeGrid.style.display = 'none';
+        document.getElementById('tableWrap').style.display = '';
+        renderTable(list);
+    }
+    noResults.style.display = list.length === 0 ? 'block' : 'none';
+    bikeCount.textContent = list.length === bikes.length ? `${bikes.length} bikes` : `Showing ${list.length} of ${bikes.length} bikes`;
+}
+
+// ============== EVENT LISTENERS ==============
+searchBox.addEventListener('input', render);
+sortSelect.addEventListener('change', render);
+typeFilter.addEventListener('change', render);
+
+document.querySelectorAll('#priceFilter .pill').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('#priceFilter .pill').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        activePrice = btn.dataset.val;
+        render();
+    });
+});
+
+document.getElementById('favFilter').addEventListener('click', function() {
+    this.classList.toggle('active');
+    render();
+});
+
+document.getElementById('gridViewBtn').addEventListener('click', () => {
+    currentView = 'grid';
+    document.getElementById('gridViewBtn').classList.add('active');
+    document.getElementById('tableViewBtn').classList.remove('active');
+    render();
+});
+document.getElementById('tableViewBtn').addEventListener('click', () => {
+    currentView = 'table';
+    document.getElementById('tableViewBtn').classList.add('active');
+    document.getElementById('gridViewBtn').classList.remove('active');
+    render();
+});
+
+document.getElementById('compareBtn').addEventListener('click', showComparison);
+document.getElementById('compareClear').addEventListener('click', () => {
+    compareList = [];
+    updateCompareBar();
+    render();
+});
+document.getElementById('modalClose').addEventListener('click', () => {
+    document.getElementById('compareModal').classList.remove('open');
+});
+document.getElementById('compareModal').addEventListener('click', (e) => {
+    if (e.target === document.getElementById('compareModal')) {
+        document.getElementById('compareModal').classList.remove('open');
+    }
+});
+
+render();
+</script>
 </body>
 </html>
