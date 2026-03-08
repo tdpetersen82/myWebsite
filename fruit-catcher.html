@@ -1,0 +1,427 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fruit Catcher - 2 Player</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        canvas {
+            border: 3px solid #333;
+            border-radius: 12px;
+            display: block;
+            margin: 10px auto;
+        }
+        #p1score {
+            color: #3B82F6;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        #p2score {
+            color: #EF4444;
+            font-size: 1.5em;
+            font-weight: bold;
+        }
+        #timer {
+            font-size: 1.5em;
+            font-weight: bold;
+            color: #333;
+        }
+        .controls-row {
+            display: flex;
+            justify-content: center;
+            gap: 60px;
+            margin-top: 12px;
+        }
+        .player-controls {
+            text-align: center;
+            font-size: 1em;
+            color: #555;
+        }
+        .player-controls strong {
+            display: block;
+            margin-bottom: 4px;
+            font-size: 1.05em;
+        }
+        .p1-label { color: #3B82F6; }
+        .p2-label { color: #EF4444; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🍎 Fruit Catcher</h1>
+        <div class="game-info">
+            <span id="p1score">P1: 0</span>
+            <span id="timer">60</span>
+            <span id="p2score">P2: 0</span>
+        </div>
+        <canvas id="gameCanvas" width="800" height="500"></canvas>
+        <div class="controls-row">
+            <div class="player-controls">
+                <strong class="p1-label">Player 1 (Blue)</strong>
+                <span>A = Left &nbsp; D = Right</span>
+            </div>
+            <div class="player-controls">
+                <strong style="color:#333">Space = Start / Restart</strong>
+                <span>Catch fruits! Avoid bombs 💣</span>
+            </div>
+            <div class="player-controls">
+                <strong class="p2-label">Player 2 (Red)</strong>
+                <span>← = Left &nbsp; → = Right</span>
+            </div>
+        </div>
+        <a href="index.html" class="back-button">← Back to Game Hub</a>
+    </div>
+
+    <script>
+        // ── Canvas setup ──────────────────────────────────────────────────────
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const p1ScoreEl = document.getElementById('p1score');
+        const p2ScoreEl = document.getElementById('p2score');
+        const timerEl = document.getElementById('timer');
+
+        // ── Audio ─────────────────────────────────────────────────────────────
+        let audioCtx = null;
+
+        function getAudio() {
+            if (!audioCtx) {
+                audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            }
+            return audioCtx;
+        }
+
+        function playSound(freq, type = 'square', duration = 0.1, vol = 0.3, delay = 0) {
+            const ctx2 = getAudio();
+            const osc = ctx2.createOscillator();
+            const gain = ctx2.createGain();
+            osc.connect(gain);
+            gain.connect(ctx2.destination);
+            osc.type = type;
+            osc.frequency.value = freq;
+            const start = ctx2.currentTime + delay;
+            gain.gain.setValueAtTime(vol, start);
+            gain.gain.exponentialRampToValueAtTime(0.001, start + duration);
+            osc.start(start);
+            osc.stop(start + duration);
+        }
+
+        function playCatchSound()  { playSound(800, 'square', 0.1); }
+        function playStarSound()   { [600, 800, 1000].forEach((f, i) => playSound(f, 'sine', 0.09, 0.3, i * 0.07)); }
+        function playBombSound()   { playSound(100, 'sawtooth', 0.3, 0.4); }
+        function playCountSound()  { playSound(440, 'sine', 0.15); }
+        function playGoSound()     { [523, 659, 784].forEach((f, i) => playSound(f, 'sine', 0.15, 0.3, i * 0.1)); }
+        function playEndSound()    { [784, 659, 523, 392].forEach((f, i) => playSound(f, 'sine', 0.2, 0.3, i * 0.15)); }
+
+        // ── Constants ─────────────────────────────────────────────────────────
+        const BASKET_WIDTH      = 90;
+        const BASKET_HEIGHT     = 20;
+        const BASKET_SPEED      = 5;
+        const ITEM_RADIUS       = 18;
+        const GAME_DURATION     = 60;
+        const FRAME_INTERVAL    = 1000 / 60;
+        const MAX_ITEMS         = 10;
+        const SPAWN_MIN         = 1400;
+        const SPAWN_MAX         = 2000;
+
+        const ITEM_TYPES = [
+            { label: '🍎', color: '#EF4444', points: 1 },
+            { label: '🍌', color: '#FCD34D', points: 1 },
+            { label: '🍒', color: '#F472B6', points: 1 },
+            { label: '🍊', color: '#FB923C', points: 1 },
+            { label: '⭐', color: '#FBBF24', points: 3 },
+            { label: '💣', color: '#1F2937', points: -2 },
+        ];
+
+        // ── Game state ────────────────────────────────────────────────────────
+        let gameState = 'waiting';
+        let p1Score, p2Score, timeLeft;
+        let lastTime = 0, lastSpawn = 0, lastTimerTick = 0;
+        let countdownValue = 3, lastCountdown = 0;
+        let items = [];
+        let nextSpawnDelay = SPAWN_MIN;
+        const keys = {};
+
+        const p1 = { x: 200, y: 465 };
+        const p2 = { x: 600, y: 465 };
+
+        // ── Spawning ──────────────────────────────────────────────────────────
+        function spawnItem(timestamp) {
+            if (items.length >= MAX_ITEMS) return;
+            const type = ITEM_TYPES[Math.floor(Math.random() * ITEM_TYPES.length)];
+            items.push({
+                x: ITEM_RADIUS + Math.random() * (canvas.width - ITEM_RADIUS * 2),
+                y: -ITEM_RADIUS,
+                speed: 1.5 + Math.random() * 1.5,
+                type,
+            });
+            lastSpawn = timestamp;
+            nextSpawnDelay = SPAWN_MIN + Math.random() * (SPAWN_MAX - SPAWN_MIN);
+        }
+
+        // ── Collision ─────────────────────────────────────────────────────────
+        function checkCatch(basket, item) {
+            const left = basket.x - BASKET_WIDTH / 2;
+            const right = basket.x + BASKET_WIDTH / 2;
+            const top = basket.y - BASKET_HEIGHT / 2;
+            return (
+                item.y + ITEM_RADIUS >= top &&
+                item.y + ITEM_RADIUS <= top + BASKET_HEIGHT + 8 &&
+                item.x >= left && item.x <= right
+            );
+        }
+
+        // ── Update ────────────────────────────────────────────────────────────
+        function update(timestamp) {
+            if (gameState === 'countdown') {
+                if (lastCountdown === 0) lastCountdown = timestamp;
+                if (timestamp - lastCountdown >= 1000) {
+                    lastCountdown = timestamp;
+                    countdownValue--;
+                    if (countdownValue > 0) {
+                        playCountSound();
+                    } else {
+                        playGoSound();
+                        gameState = 'playing';
+                        lastTimerTick = timestamp;
+                        lastSpawn = timestamp;
+                    }
+                }
+                return;
+            }
+
+            if (gameState !== 'playing') return;
+
+            // Timer
+            if (timestamp - lastTimerTick >= 1000) {
+                lastTimerTick = timestamp;
+                timeLeft--;
+                timerEl.textContent = timeLeft;
+                if (timeLeft <= 0) {
+                    endGame();
+                    return;
+                }
+            }
+
+            // Move baskets
+            if (keys['a'] || keys['A']) p1.x -= BASKET_SPEED;
+            if (keys['d'] || keys['D']) p1.x += BASKET_SPEED;
+            if (keys['ArrowLeft'])  p2.x -= BASKET_SPEED;
+            if (keys['ArrowRight']) p2.x += BASKET_SPEED;
+
+            // Clamp baskets to canvas
+            const halfW = BASKET_WIDTH / 2;
+            p1.x = Math.max(halfW, Math.min(canvas.width - halfW, p1.x));
+            p2.x = Math.max(halfW, Math.min(canvas.width - halfW, p2.x));
+
+            // Spawn items
+            if (timestamp - lastSpawn >= nextSpawnDelay) {
+                spawnItem(timestamp);
+            }
+
+            // Move items + check catches
+            items = items.filter(item => {
+                item.y += item.speed;
+
+                // Check catches
+                if (checkCatch(p1, item)) {
+                    applyPoints(1, item.type.points);
+                    return false;
+                }
+                if (checkCatch(p2, item)) {
+                    applyPoints(2, item.type.points);
+                    return false;
+                }
+
+                // Remove if off screen
+                return item.y - ITEM_RADIUS <= canvas.height;
+            });
+        }
+
+        function applyPoints(player, pts) {
+            if (player === 1) {
+                p1Score = Math.max(0, p1Score + pts);
+                p1ScoreEl.textContent = 'P1: ' + p1Score;
+                if (pts > 1) playStarSound();
+                else if (pts < 0) playBombSound();
+                else playCatchSound();
+            } else {
+                p2Score = Math.max(0, p2Score + pts);
+                p2ScoreEl.textContent = 'P2: ' + p2Score;
+                if (pts > 1) playStarSound();
+                else if (pts < 0) playBombSound();
+                else playCatchSound();
+            }
+        }
+
+        function endGame() {
+            gameState = 'gameover';
+            playEndSound();
+            items = [];
+        }
+
+        // ── Draw ──────────────────────────────────────────────────────────────
+        function drawBackground() {
+            const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+            grad.addColorStop(0, '#BAE6FD');
+            grad.addColorStop(0.85, '#E0F2FE');
+            grad.addColorStop(1, '#86EFAC');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Ground
+            ctx.fillStyle = '#4ADE80';
+            ctx.fillRect(0, canvas.height - 12, canvas.width, 12);
+        }
+
+        function drawBasket(basket, color) {
+            const x = basket.x - BASKET_WIDTH / 2;
+            const y = basket.y - BASKET_HEIGHT / 2;
+            const r = 8;
+
+            ctx.beginPath();
+            ctx.moveTo(x + r, y);
+            ctx.lineTo(x + BASKET_WIDTH - r, y);
+            ctx.quadraticCurveTo(x + BASKET_WIDTH, y, x + BASKET_WIDTH, y + r);
+            ctx.lineTo(x + BASKET_WIDTH, y + BASKET_HEIGHT - r);
+            ctx.quadraticCurveTo(x + BASKET_WIDTH, y + BASKET_HEIGHT, x + BASKET_WIDTH - r, y + BASKET_HEIGHT);
+            ctx.lineTo(x + r, y + BASKET_HEIGHT);
+            ctx.quadraticCurveTo(x, y + BASKET_HEIGHT, x, y + BASKET_HEIGHT - r);
+            ctx.lineTo(x, y + r);
+            ctx.quadraticCurveTo(x, y, x + r, y);
+            ctx.closePath();
+
+            ctx.fillStyle = color;
+            ctx.fill();
+            ctx.strokeStyle = 'rgba(0,0,0,0.3)';
+            ctx.lineWidth = 2;
+            ctx.stroke();
+
+            // Basket weave lines
+            ctx.strokeStyle = 'rgba(255,255,255,0.4)';
+            ctx.lineWidth = 1.5;
+            for (let i = 1; i < 3; i++) {
+                const lx = x + (BASKET_WIDTH / 3) * i;
+                ctx.beginPath();
+                ctx.moveTo(lx, y + 2);
+                ctx.lineTo(lx, y + BASKET_HEIGHT - 2);
+                ctx.stroke();
+            }
+        }
+
+        function drawItems() {
+            ctx.font = '28px serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            items.forEach(item => {
+                ctx.fillText(item.type.label, item.x, item.y);
+            });
+        }
+
+        function drawOverlay(lines, subColor = '#fff') {
+            ctx.fillStyle = 'rgba(0,0,0,0.6)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            lines.forEach((line, i) => {
+                ctx.fillStyle = i === 0 ? '#fff' : subColor;
+                ctx.font = i === 0 ? 'bold 52px sans-serif' : '26px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                ctx.fillText(line, canvas.width / 2, canvas.height / 2 - 40 + i * 55);
+            });
+        }
+
+        function drawCountdown() {
+            ctx.fillStyle = 'rgba(0,0,0,0.45)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.fillStyle = '#fff';
+            ctx.font = 'bold 100px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.fillText(countdownValue > 0 ? countdownValue : 'GO!', canvas.width / 2, canvas.height / 2);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            drawBackground();
+            drawItems();
+            drawBasket(p1, '#3B82F6');
+            drawBasket(p2, '#EF4444');
+
+            if (gameState === 'waiting') {
+                drawOverlay([
+                    '🍎 Fruit Catcher',
+                    'P1: A / D keys   •   P2: Arrow keys',
+                    'Catch fruits, avoid bombs 💣',
+                    'Press SPACE to start!',
+                ], '#FCD34D');
+            } else if (gameState === 'countdown') {
+                drawCountdown();
+            } else if (gameState === 'gameover') {
+                let winLine;
+                if (p1Score > p2Score)       winLine = '🎉 Player 1 Wins!';
+                else if (p2Score > p1Score)  winLine = '🎉 Player 2 Wins!';
+                else                         winLine = "🤝 It's a Tie!";
+                drawOverlay([
+                    winLine,
+                    `P1: ${p1Score}   •   P2: ${p2Score}`,
+                    'Press SPACE to play again',
+                ], '#FCD34D');
+            }
+        }
+
+        // ── Game loop ─────────────────────────────────────────────────────────
+        function gameLoop(timestamp) {
+            const delta = timestamp - lastTime;
+            if (delta >= FRAME_INTERVAL) {
+                lastTime = timestamp - (delta % FRAME_INTERVAL);
+                update(timestamp);
+                draw();
+            }
+            requestAnimationFrame(gameLoop);
+        }
+
+        // ── Input ─────────────────────────────────────────────────────────────
+        document.addEventListener('keydown', e => {
+            keys[e.key] = true;
+
+            if (e.key === ' ' || e.key === 'Spacebar') {
+                e.preventDefault();
+                if (gameState === 'waiting' || gameState === 'gameover') {
+                    startGame();
+                }
+            }
+
+            // Prevent arrow keys from scrolling page
+            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown'].includes(e.key)) {
+                e.preventDefault();
+            }
+        });
+
+        document.addEventListener('keyup', e => {
+            keys[e.key] = false;
+        });
+
+        // ── Init ──────────────────────────────────────────────────────────────
+        function startGame() {
+            p1Score = 0;
+            p2Score = 0;
+            timeLeft = GAME_DURATION;
+            items = [];
+            p1.x = 200;
+            p2.x = 600;
+            countdownValue = 3;
+            lastCountdown = 0;
+            lastSpawn = 0;
+            lastTimerTick = 0;
+            p1ScoreEl.textContent = 'P1: 0';
+            p2ScoreEl.textContent = 'P2: 0';
+            timerEl.textContent = GAME_DURATION;
+            gameState = 'countdown';
+            playCountSound();
+        }
+
+        requestAnimationFrame(gameLoop);
+    </script>
+</body>
+</html>
