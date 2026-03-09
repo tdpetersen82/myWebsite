@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Fruit Catcher - 2 Player</title>
+    <title>Fruit Catcher</title>
     <link rel="stylesheet" href="styles.css">
     <style>
         canvas {
@@ -38,6 +38,18 @@
         .player-controls strong { display: block; margin-bottom: 3px; font-size: 1em; }
         .p1-label { color: #3B82F6; }
         .p2-label { color: #EF4444; }
+        #muteBtn {
+            background: rgba(30,41,82,0.85);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.25);
+            border-radius: 8px;
+            padding: 4px 12px;
+            cursor: pointer;
+            font-size: 0.82em;
+            margin-top: 4px;
+            transition: background 0.15s;
+        }
+        #muteBtn:hover { background: rgba(59,82,170,0.95); }
     </style>
 </head>
 <body>
@@ -59,8 +71,9 @@
                 <span>A = Left &nbsp; D = Right</span>
             </div>
             <div class="player-controls">
-                <strong style="color:#333">Space = Start / Restart</strong>
-                <span>🧊 Freeze &nbsp;⚡ Speed &nbsp;🧲 Magnet &nbsp;🛡️ Shield &nbsp;📏 Wide</span>
+                <strong style="color:#333">Enter / 1 2 3 = Select mode</strong>
+                <span>🧊 Freeze &nbsp;⚡ Speed &nbsp;🧲 Magnet &nbsp;🛡️ Shield &nbsp;📏 Wide &nbsp;🎁 Mystery &nbsp;⏱️ SlowTime</span>
+                <br><button id="muteBtn">🔊 Music</button>
             </div>
             <div class="player-controls">
                 <strong class="p2-label">Player 2 (Red)</strong>
@@ -116,8 +129,92 @@
         const playWave   = () => [440, 554, 659].forEach((f, i) => playTone(f, 'triangle', 0.15, 0.2, i * 0.1));
         const playGolden = () => [880, 1100, 1320, 1540].forEach((f, i) => playTone(f, 'sine', 0.1, 0.25, i * 0.06));
         const playRainbow = () => [523, 659, 784, 1047, 1319, 1568].forEach((f, i) => playTone(f, 'sine', 0.08, 0.2, i * 0.05));
+        const playCoin     = () => { playTone(880, 'square', 0.05, 0.3); playTone(1100, 'square', 0.05, 0.25, 0.04); };
+        const playMystery  = () => [500, 700, 400, 900, 300].forEach((f, i) => playTone(f, 'sine', 0.08, 0.22, i * 0.06));
+        const playTimeSlow = () => [600, 450, 300, 180].forEach((f, i) => playTone(f, 'sine', 0.18, 0.28, i * 0.1));
+        const playWatermelon = () => [392, 523, 659].forEach((f, i) => playTone(f, 'triangle', 0.1, 0.28, i * 0.07));
+        const playModeConfirm = () => [440, 554, 659, 880].forEach((f, i) => playTone(f, 'sine', 0.12, 0.25, i * 0.07));
+
+        // ── Music ─────────────────────────────────────────────────────────────
+        const MELODY  = [329, 392, 440, 392, 523, 440, 392, 329, 294, 329, 392, 440, 329, 294, 261, 294];
+        const BASS    = [130, 130, 164, 164, 196, 196, 164, 130, 130, 130, 164, 164, 130, 130, 130, 130];
+        let musicGain     = null;
+        let musicMuted    = false;
+        let musicPlaying  = false;
+        let musicTempo    = 480;   // ms per beat
+        let musicTimerId  = null;
+        let musicBeatIdx  = 0;
+        let musicNextNote = 0;     // AudioContext time for next note
+
+        function startMusic() {
+            if (musicPlaying) return;
+            musicPlaying = true;
+            musicBeatIdx = 0;
+            const a = ac();
+            if (a.state === 'suspended') a.resume();
+            musicGain = a.createGain();
+            musicGain.gain.value = musicMuted ? 0 : 0.055;
+            musicGain.connect(a.destination);
+            musicNextNote = a.currentTime + 0.05;
+            scheduleMusic();
+        }
+
+        function scheduleMusic() {
+            const a = ac();
+            const lookahead = 0.22;
+            while (musicNextNote < a.currentTime + lookahead) {
+                const idx  = musicBeatIdx % MELODY.length;
+                const dur  = (musicTempo / 1000) * 0.78;
+                const freq = MELODY[idx];
+                const bass = BASS[idx];
+                const t    = musicNextNote;
+
+                const osc = a.createOscillator(), g = a.createGain();
+                osc.connect(g); g.connect(musicGain);
+                osc.type = 'triangle'; osc.frequency.value = freq;
+                g.gain.setValueAtTime(0.45, t);
+                g.gain.exponentialRampToValueAtTime(0.001, t + dur);
+                osc.start(t); osc.stop(t + dur + 0.02);
+
+                if (musicBeatIdx % 2 === 0) {
+                    const bo = a.createOscillator(), bg = a.createGain();
+                    bo.connect(bg); bg.connect(musicGain);
+                    bo.type = 'sine'; bo.frequency.value = bass;
+                    bg.gain.setValueAtTime(0.55, t);
+                    bg.gain.exponentialRampToValueAtTime(0.001, t + dur * 1.6);
+                    bo.start(t); bo.stop(t + dur * 1.6 + 0.02);
+                }
+
+                if (musicBeatIdx % 4 === 0) {
+                    const ch = a.createOscillator(), cg = a.createGain();
+                    ch.connect(cg); cg.connect(musicGain);
+                    ch.type = 'square'; ch.frequency.value = freq * 2;
+                    cg.gain.setValueAtTime(0.08, t);
+                    cg.gain.exponentialRampToValueAtTime(0.001, t + dur * 0.5);
+                    ch.start(t); ch.stop(t + dur * 0.5 + 0.02);
+                }
+
+                musicNextNote += musicTempo / 1000;
+                musicBeatIdx++;
+            }
+            musicTimerId = setTimeout(scheduleMusic, 80);
+        }
+
+        function stopMusic() {
+            clearTimeout(musicTimerId);
+            musicTimerId = null;
+            musicPlaying = false;
+            if (musicGain) { musicGain.disconnect(); musicGain = null; }
+        }
 
         // ── Constants ─────────────────────────────────────────────────────────
+        const MODES = {
+            classic: { label: 'Classic', icon: '🎮', duration: 60, players: 2, desc: '2 players  •  60 seconds', color: '#3B82F6' },
+            blitz:   { label: 'Blitz',   icon: '⚡', duration: 30, players: 2, desc: '2 players  •  30s turbo!', color: '#F59E0B' },
+            solo:    { label: 'Solo',    icon: '🏆', duration: 60, players: 1, desc: '1 player  •  high score',  color: '#10B981' },
+        };
+        const MODE_KEYS = ['classic', 'blitz', 'solo'];
+
         const BW = 104, BH = 28;         // basket width / height
         const WIDE_BW = 156;             // wide basket width
         const BASE_SPEED = 6;
@@ -153,8 +250,12 @@
             { label: '🧊', color: '#BAE6FD', points: 0,  weight: 4, special: 'freeze' },
             { label: '⚡', color: '#FDE047', points: 0,  weight: 4, special: 'speed'  },
             { label: '🧲', color: '#94A3B8', points: 0,  weight: 3, special: 'magnet' },
-            { label: '🛡️', color: '#60A5FA', points: 0,  weight: 3, special: 'shield' },
-            { label: '📏', color: '#A78BFA', points: 0,  weight: 3, special: 'wide'   },
+            { label: '🛡️', color: '#60A5FA', points: 0,  weight: 3, special: 'shield'   },
+            { label: '📏', color: '#A78BFA', points: 0,  weight: 3, special: 'wide'     },
+            { label: '🍉', color: '#86EFAC', points: 3,  weight: 3                      },
+            { label: '💰', color: '#FCD34D', points: 3,  weight: 5                      },
+            { label: '🎁', color: '#A78BFA', points: 0,  weight: 3, special: 'mystery'  },
+            { label: '⏱️', color: '#67E8F9', points: 0,  weight: 3, special: 'timeslow' },
         ];
 
         // ── Clouds ────────────────────────────────────────────────────────────
@@ -189,9 +290,22 @@
             });
         }
 
+        // ── Stars (for night sky) ─────────────────────────────────────────────
+        const STARS = [];
+        for (let i = 0; i < 42; i++) {
+            STARS.push({
+                x: Math.random() * W,
+                y: 8 + Math.random() * (H * 0.52),
+                r: 0.5 + Math.random() * 1.8,
+                twinkle: Math.random() * Math.PI * 2,
+            });
+        }
+
         // ── State ─────────────────────────────────────────────────────────────
-        let gameState    = 'waiting';
-        let timeLeft     = GAME_DURATION;
+        let gameState    = 'modeselect';
+        let currentMode  = 'classic';
+        let selectedModeIdx = 0;
+        let timeLeft     = 60;
         let lastTime     = 0;
         let lastSpawn    = 0;
         let nextSpawnMs  = 1500;
@@ -203,10 +317,15 @@
         let currentWave   = 1;
         let waveAnnounceTimer = 0;
         let frameCount    = 0;
+        let timeSlow      = 0;     // timestamp when time-slow expires
+        let gameOverTs    = 0;     // timestamp when endGame was called
+        let isNewHighScore = false;
+        let soloHighScore  = parseInt(localStorage.getItem('fruitCatcherSoloHigh') || '0');
 
-        let items     = [];
-        let particles = [];
-        let popups    = [];
+        let items            = [];
+        let particles        = [];
+        let popups           = [];
+        let confettiParticles = [];
 
         const keys = {};
 
@@ -222,6 +341,26 @@
 
         let p1 = makePlayer(165);
         let p2 = makePlayer(635);
+
+        // ── Utility helpers ───────────────────────────────────────────────────
+        function lerpHex(c1, c2, t) {
+            const r1 = parseInt(c1.slice(1,3),16), g1 = parseInt(c1.slice(3,5),16), b1 = parseInt(c1.slice(5,7),16);
+            const r2 = parseInt(c2.slice(1,3),16), g2 = parseInt(c2.slice(3,5),16), b2 = parseInt(c2.slice(5,7),16);
+            return `rgb(${Math.round(r1+(r2-r1)*t)},${Math.round(g1+(g2-g1)*t)},${Math.round(b1+(b2-b1)*t)})`;
+        }
+        function roundRect(ctx2, x, y, w, h, r) {
+            ctx2.beginPath();
+            ctx2.moveTo(x+r, y);
+            ctx2.lineTo(x+w-r, y);
+            ctx2.quadraticCurveTo(x+w, y, x+w, y+r);
+            ctx2.lineTo(x+w, y+h-r);
+            ctx2.quadraticCurveTo(x+w, y+h, x+w-r, y+h);
+            ctx2.lineTo(x+r, y+h);
+            ctx2.quadraticCurveTo(x, y+h, x, y+h-r);
+            ctx2.lineTo(x, y+r);
+            ctx2.quadraticCurveTo(x, y, x+r, y);
+            ctx2.closePath();
+        }
 
         // ── Helpers ───────────────────────────────────────────────────────────
         function pickItem() {
@@ -242,15 +381,17 @@
         }
 
         function getDiff() {
-            const wave = currentWave;
-            if (wave <= 1) return { sMin: 1.5, sMax: 3.0, iMin: 1400, iMax: 2000 };
-            if (wave <= 2) return { sMin: 2.0, sMax: 4.2, iMin: 950,  iMax: 1450 };
+            const wave  = currentWave;
+            const blitz = currentMode === 'blitz';
+            if (wave <= 1) return { sMin: blitz ? 2.5 : 1.5, sMax: blitz ? 4.5 : 3.0, iMin: blitz ? 600 : 1400, iMax: blitz ? 950 : 2000 };
+            if (wave <= 2) return { sMin: blitz ? 3.2 : 2.0, sMax: blitz ? 5.5 : 4.2, iMin: blitz ? 420 : 950,  iMax: blitz ? 680 : 1450 };
             if (wave <= 3) return { sMin: 2.6, sMax: 5.0, iMin: 700,  iMax: 1100 };
             return               { sMin: 3.0, sMax: 5.8, iMin: 550,  iMax: 900  };
         }
 
         function spawnItem(ts) {
-            if (items.length >= MAX_ITEMS) return;
+            const itemCap = gameState === 'modeselect' ? 7 : (currentMode === 'blitz' ? 20 : MAX_ITEMS);
+            if (items.length >= itemCap) return;
             const d = getDiff();
             items.push({
                 x:        ITEM_R + Math.random() * (W - ITEM_R * 2),
@@ -287,6 +428,86 @@
             popups.push({ x, y, vy: -1.8, text, color, life: 1 });
         }
 
+        // ── Power-up helpers ──────────────────────────────────────────────────
+        function applyFreeze(caster, target, ix, iy) {
+            target.frozen = currentTs + 2600;
+            playFreeze();
+            spawnPopup(caster.x, caster.y - 40, '🧊 FREEZE!', '#38BDF8');
+            spawnParticles(ix, iy, '#BAE6FD', 14);
+        }
+        function applySpeed(player, ix, iy) {
+            player.speedBoost = currentTs + 3200;
+            playSpeed();
+            spawnPopup(player.x, player.y - 40, '⚡ SPEED!', '#FDE047');
+            spawnParticles(ix, iy, '#FDE047', 14);
+        }
+        function applyMagnet(player, ix, iy) {
+            player.magnet = currentTs + 4000;
+            playMagnet();
+            spawnPopup(player.x, player.y - 40, '🧲 MAGNET!', '#94A3B8');
+            spawnParticles(ix, iy, '#94A3B8', 14);
+        }
+        function applyShield(player, ix, iy) {
+            player.shield = true;
+            playShield();
+            spawnPopup(player.x, player.y - 40, '🛡️ SHIELD!', '#60A5FA');
+            spawnParticles(ix, iy, '#60A5FA', 14);
+        }
+        function applyWide(player, ix, iy) {
+            player.wide = currentTs + 5000;
+            playWide();
+            spawnPopup(player.x, player.y - 40, '📏 WIDE!', '#A78BFA');
+            spawnParticles(ix, iy, '#A78BFA', 14);
+        }
+
+        // ── Confetti ──────────────────────────────────────────────────────────
+        function spawnConfetti() {
+            confettiParticles = [];
+            const winColor = p1.score > p2.score ? '#3B82F6' : p2.score > p1.score ? '#EF4444' : '#FCD34D';
+            const palette = [winColor, '#FFD700', '#ffffff', '#FCD34D', '#86EFAC', '#F472B6', '#A78BFA'];
+            for (let i = 0; i < 110; i++) {
+                confettiParticles.push({
+                    x: Math.random() * W,
+                    y: -15 - Math.random() * 60,
+                    vx: (Math.random() - 0.5) * 6,
+                    vy: 1.5 + Math.random() * 4,
+                    color: palette[Math.floor(Math.random() * palette.length)],
+                    rot: Math.random() * Math.PI * 2,
+                    rotSpeed: (Math.random() - 0.5) * 0.22,
+                    w: 5 + Math.random() * 8,
+                    h: 3 + Math.random() * 5,
+                    circle: Math.random() < 0.35,
+                });
+            }
+        }
+        function updateConfetti() {
+            confettiParticles = confettiParticles.filter(c => {
+                c.x += c.vx; c.y += c.vy;
+                c.vy += 0.14; c.vx *= 0.99;
+                c.rot += c.rotSpeed;
+                return c.y < H + 20;
+            });
+        }
+        function drawConfetti() {
+            confettiParticles.forEach(c => {
+                const fade = Math.max(0, 1 - Math.max(0, c.y - H * 0.75) / (H * 0.3));
+                ctx.save();
+                ctx.globalAlpha = fade;
+                ctx.translate(c.x, c.y);
+                ctx.rotate(c.rot);
+                ctx.fillStyle = c.color;
+                if (c.circle) {
+                    ctx.beginPath();
+                    ctx.arc(0, 0, c.w / 2, 0, Math.PI * 2);
+                    ctx.fill();
+                } else {
+                    ctx.fillRect(-c.w/2, -c.h/2, c.w, c.h);
+                }
+                ctx.restore();
+            });
+            ctx.globalAlpha = 1;
+        }
+
         // ── Catch & scoring ───────────────────────────────────────────────────
         function getBasketWidth(player) {
             return (player.wide > currentTs) ? WIDE_BW : BW;
@@ -308,43 +529,68 @@
 
             // --- Power-ups ---
             if (type.special === 'freeze') {
-                other.frozen = currentTs + 2600;
-                playFreeze();
-                spawnPopup(player.x, player.y - 40, '🧊 FREEZE!', '#38BDF8');
-                spawnParticles(item.x, item.y, '#BAE6FD', 14);
+                applyFreeze(player, other, item.x, item.y);
                 player.powerUpsCaught++;
                 return;
             }
             if (type.special === 'speed') {
-                player.speedBoost = currentTs + 3200;
-                playSpeed();
-                spawnPopup(player.x, player.y - 40, '⚡ SPEED!', '#FDE047');
-                spawnParticles(item.x, item.y, '#FDE047', 14);
+                applySpeed(player, item.x, item.y);
                 player.powerUpsCaught++;
                 return;
             }
             if (type.special === 'magnet') {
-                player.magnet = currentTs + 4000;
-                playMagnet();
-                spawnPopup(player.x, player.y - 40, '🧲 MAGNET!', '#94A3B8');
-                spawnParticles(item.x, item.y, '#94A3B8', 14);
+                applyMagnet(player, item.x, item.y);
                 player.powerUpsCaught++;
                 return;
             }
             if (type.special === 'shield') {
-                player.shield = true;
-                playShield();
-                spawnPopup(player.x, player.y - 40, '🛡️ SHIELD!', '#60A5FA');
-                spawnParticles(item.x, item.y, '#60A5FA', 14);
+                applyShield(player, item.x, item.y);
                 player.powerUpsCaught++;
                 return;
             }
             if (type.special === 'wide') {
-                player.wide = currentTs + 5000;
-                playWide();
-                spawnPopup(player.x, player.y - 40, '📏 WIDE!', '#A78BFA');
-                spawnParticles(item.x, item.y, '#A78BFA', 14);
+                applyWide(player, item.x, item.y);
                 player.powerUpsCaught++;
+                return;
+            }
+            if (type.special === 'mystery') {
+                const outcomes = ['freeze_opp','speed','magnet','shield','wide','points_bonus','bomb_penalty'];
+                const outcome  = outcomes[Math.floor(Math.random() * outcomes.length)];
+                playMystery();
+                player.catchAnim = 1;
+                player.powerUpsCaught++;
+                if (outcome === 'points_bonus') {
+                    player.score += 5;
+                    spawnPopup(item.x, item.y - 10, '🎁 LUCKY! +5', '#A78BFA');
+                    spawnParticles(item.x, item.y, '#A78BFA', 18);
+                    updateHUD(player); updateScoreBar();
+                } else if (outcome === 'bomb_penalty') {
+                    if (player.shield) {
+                        player.shield = false;
+                        playShieldBlock();
+                        spawnPopup(item.x, item.y - 10, '🛡️ BLOCKED!', '#60A5FA');
+                        spawnParticles(item.x, item.y, '#60A5FA', 12);
+                    } else {
+                        player.score = Math.max(0, player.score - 3);
+                        shakeFrames = 10;
+                        spawnPopup(item.x, item.y - 10, '🎁 OOPS! -3', '#EF4444');
+                        spawnParticles(item.x, item.y, '#6B7280', 12);
+                        updateHUD(player); updateScoreBar();
+                    }
+                } else if (outcome === 'freeze_opp') { applyFreeze(player, other, item.x, item.y); }
+                else if (outcome === 'speed')        { applySpeed(player, item.x, item.y); }
+                else if (outcome === 'magnet')       { applyMagnet(player, item.x, item.y); }
+                else if (outcome === 'shield')       { applyShield(player, item.x, item.y); }
+                else if (outcome === 'wide')         { applyWide(player, item.x, item.y); }
+                return;
+            }
+            if (type.special === 'timeslow') {
+                timeSlow = currentTs + 3200;
+                playTimeSlow();
+                player.catchAnim = 1;
+                player.powerUpsCaught++;
+                spawnPopup(player.x, player.y - 40, '⏱️ TIME SLOW!', '#67E8F9');
+                spawnParticles(item.x, item.y, '#67E8F9', 18);
                 return;
             }
 
@@ -397,6 +643,14 @@
                     playRainbow();
                     spawnPopup(item.x, item.y - 10, `+${pts} 🌈`, '#EC4899');
                     spawnParticles(item.x, item.y, '#EC4899', 16);
+                } else if (type.label === '🍉') {
+                    playWatermelon();
+                    spawnPopup(item.x, item.y - 10, `+${pts} 🍉`, '#86EFAC');
+                    spawnParticles(item.x, item.y, '#86EFAC', 16);
+                } else if (type.label === '💰') {
+                    playCoin();
+                    spawnPopup(item.x, item.y - 10, `+${pts} 💰`, '#FCD34D');
+                    spawnParticles(item.x, item.y, '#FCD34D', 16);
                 } else {
                     playStar();
                     spawnPopup(item.x, item.y - 10, `+${pts} ⭐`, '#FBBF24');
@@ -441,8 +695,11 @@
         }
 
         function updateHUD(player) {
-            if (player === p1) p1ScoreEl.textContent = 'P1: ' + p1.score;
-            else               p2ScoreEl.textContent = 'P2: ' + p2.score;
+            if (player === p1) {
+                p1ScoreEl.textContent = (currentMode === 'solo' ? 'Score: ' : 'P1: ') + p1.score;
+            } else if (currentMode !== 'solo') {
+                p2ScoreEl.textContent = 'P2: ' + p2.score;
+            }
         }
 
         function updateScoreBar() {
@@ -461,6 +718,34 @@
             currentTs = ts;
             frameCount++;
 
+            // Always drift clouds
+            CLOUDS.forEach(c => {
+                c.x += c.speed;
+                if (c.x - c.r * 2.5 > W) c.x = -c.r * 2.5;
+            });
+
+            if (gameState === 'modeselect') {
+                if (ts - lastSpawn >= nextSpawnMs) spawnItem(ts);
+                items = items.filter(item => {
+                    item.wobble += 0.08;
+                    item.x += Math.sin(item.wobble) * (item.wobbleAmp || 0);
+                    item.y += item.speed;
+                    item.rot += item.rotSpeed;
+                    if (frameCount % 3 === 0) {
+                        item.trail.push({ x: item.x, y: item.y, life: 1 });
+                        if (item.trail.length > 5) item.trail.shift();
+                    }
+                    item.trail.forEach(t => t.life -= 0.06);
+                    return item.y - ITEM_R < H;
+                });
+                return;
+            }
+
+            if (gameState === 'gameover') {
+                updateConfetti();
+                return;
+            }
+
             if (gameState === 'countdown') {
                 if (lastCountdown === 0) lastCountdown = ts;
                 if (ts - lastCountdown >= 1000) {
@@ -470,9 +755,10 @@
                         playCount();
                     } else {
                         playGo();
-                        gameState    = 'playing';
+                        gameState     = 'playing';
                         lastTimerTick = ts;
-                        lastSpawn    = ts;
+                        lastSpawn     = ts;
+                        startMusic();
                     }
                 }
                 return;
@@ -489,9 +775,13 @@
                 if (timeLeft <= 0) { endGame(); return; }
             }
 
+            // Speed up music in final 10 seconds
+            if (timeLeft <= 10 && musicTempo > 280) musicTempo = 280;
+
             // Wave system
-            const elapsed = GAME_DURATION - timeLeft;
-            const newWave = Math.floor(elapsed / WAVE_DURATION) + 1;
+            const modeDur = MODES[currentMode].duration;
+            const elapsed = modeDur - timeLeft;
+            const newWave = Math.min(4, Math.floor(elapsed / WAVE_DURATION) + 1);
             if (newWave > currentWave) {
                 currentWave = newWave;
                 waveAnnounceTimer = ts + 2000;
@@ -502,9 +792,7 @@
 
             // Fever mode expiry
             [p1, p2].forEach(p => {
-                if (p.feverActive && ts > p.fever) {
-                    p.feverActive = false;
-                }
+                if (p.feverActive && ts > p.fever) p.feverActive = false;
             });
 
             // Move baskets
@@ -517,12 +805,13 @@
                 if (keys['a'] || keys['A']) p1.x -= p1Spd;
                 if (keys['d'] || keys['D']) p1.x += p1Spd;
             }
-            if (!p2Frozen) {
+            if (currentMode !== 'solo' && !p2Frozen) {
                 if (keys['ArrowLeft'])  p2.x -= p2Spd;
                 if (keys['ArrowRight']) p2.x += p2Spd;
             }
 
-            [p1, p2].forEach(p => {
+            const activePlayers = currentMode === 'solo' ? [p1] : [p1, p2];
+            activePlayers.forEach(p => {
                 const hw = getBasketWidth(p) / 2;
                 p.x = Math.max(hw, Math.min(W - hw, p.x));
             });
@@ -535,7 +824,7 @@
             if (ts - lastSpawn >= nextSpawnMs) spawnItem(ts);
 
             // Magnet attraction
-            [p1, p2].forEach(player => {
+            activePlayers.forEach(player => {
                 if (player.magnet > ts) {
                     items.forEach(item => {
                         if (item.type.points < 0 || item.type.special) return;
@@ -550,11 +839,12 @@
                 }
             });
 
-            // Update items
+            // Update items (with time-slow physics)
+            const speedMult = timeSlow > ts ? 0.38 : 1;
             items = items.filter(item => {
-                item.wobble += item.wobbleSpeed || 0;
+                item.wobble += 0.08;
                 item.x += Math.sin(item.wobble) * (item.wobbleAmp || 0);
-                item.y += item.speed;
+                item.y += item.speed * speedMult;
                 item.rot += item.rotSpeed;
 
                 // Trail
@@ -565,7 +855,7 @@
                 item.trail.forEach(t => t.life -= 0.06);
 
                 if (checkCatch(p1, item)) { handleCatch(p1, p2, item); return false; }
-                if (checkCatch(p2, item)) { handleCatch(p2, p1, item); return false; }
+                if (currentMode !== 'solo' && checkCatch(p2, item)) { handleCatch(p2, p1, item); return false; }
                 return item.y - ITEM_R < H;
             });
 
@@ -585,116 +875,149 @@
                 return p.life > 0;
             });
 
-            // Drift clouds
-            CLOUDS.forEach(c => {
-                c.x += c.speed;
-                if (c.x - c.r * 2.5 > W) c.x = -c.r * 2.5;
-            });
-
             // Screen shake decay
             if (shakeFrames > 0) shakeFrames--;
         }
 
         function endGame() {
-            gameState = 'gameover';
+            gameState  = 'gameover';
+            gameOverTs = currentTs;
             items = [];
-            if (p1.score !== p2.score) playWin(); else playTie();
+            stopMusic();
+            if (currentMode === 'solo') {
+                isNewHighScore = p1.score > soloHighScore;
+                if (isNewHighScore) {
+                    soloHighScore = p1.score;
+                    localStorage.setItem('fruitCatcherSoloHigh', soloHighScore);
+                }
+                playWin();
+            } else {
+                if (p1.score !== p2.score) playWin(); else playTie();
+            }
+            spawnConfetti();
         }
 
         // ── Draw ──────────────────────────────────────────────────────────────
         function drawBackground() {
-            // Sky gradient
+            // Night transition (last 20s of game only)
+            const nightProgress = (gameState === 'playing') ? Math.max(0, Math.min(1, (20 - timeLeft) / 20)) : 0;
+
+            // Sky gradient (day → night)
+            const sky0 = lerpHex('#60A5FA', '#0F0A1E', nightProgress);
+            const sky1 = lerpHex('#93C5FD', '#1E1B4B', nightProgress);
+            const sky2 = lerpHex('#DBEAFE', '#312E81', nightProgress);
             const skyGrad = ctx.createLinearGradient(0, 0, 0, H * 0.8);
-            skyGrad.addColorStop(0, '#60A5FA');
-            skyGrad.addColorStop(0.5, '#93C5FD');
-            skyGrad.addColorStop(1, '#DBEAFE');
+            skyGrad.addColorStop(0,   sky0);
+            skyGrad.addColorStop(0.5, sky1);
+            skyGrad.addColorStop(1,   sky2);
             ctx.fillStyle = skyGrad;
             ctx.fillRect(0, 0, W, H);
 
-            // Sun with rays
-            const sunX = 60, sunY = 60;
-            const sunGrad = ctx.createRadialGradient(sunX, sunY, 5, sunX, sunY, 50);
-            sunGrad.addColorStop(0, '#FEF08A');
-            sunGrad.addColorStop(0.5, '#FDE047');
-            sunGrad.addColorStop(1, 'rgba(253,224,71,0)');
-            ctx.fillStyle = sunGrad;
-            ctx.beginPath();
-            ctx.arc(sunX, sunY, 50, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Sun rays
-            ctx.save();
-            ctx.translate(sunX, sunY);
-            ctx.rotate(frameCount * 0.003);
-            ctx.strokeStyle = 'rgba(253,224,71,0.2)';
-            ctx.lineWidth = 2;
-            for (let i = 0; i < 12; i++) {
-                const angle = (Math.PI * 2 / 12) * i;
-                ctx.beginPath();
-                ctx.moveTo(Math.cos(angle) * 25, Math.sin(angle) * 25);
-                ctx.lineTo(Math.cos(angle) * 55, Math.sin(angle) * 55);
-                ctx.stroke();
+            // Stars (fade in as night progresses)
+            if (nightProgress > 0.25) {
+                const starAlphaBase = Math.min(1, (nightProgress - 0.25) / 0.5);
+                STARS.forEach(s => {
+                    const twinkle = 0.6 + Math.sin(currentTs * 0.003 + s.twinkle) * 0.4;
+                    ctx.globalAlpha = starAlphaBase * twinkle;
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(s.x, s.y, s.r, 0, Math.PI * 2);
+                    ctx.fill();
+                });
+                ctx.globalAlpha = 1;
             }
-            ctx.restore();
 
-            // Clouds
-            CLOUDS.forEach(c => {
-                ctx.fillStyle = 'rgba(255,255,255,0.88)';
+            const sunX = 60, sunY = 60;
+
+            // Sun (fades out in first half of night transition)
+            if (nightProgress < 0.55) {
+                const sunAlpha = 1 - nightProgress / 0.55;
+                ctx.globalAlpha = sunAlpha;
+                const sunGrad = ctx.createRadialGradient(sunX, sunY, 5, sunX, sunY, 50);
+                sunGrad.addColorStop(0, '#FEF08A');
+                sunGrad.addColorStop(0.5, '#FDE047');
+                sunGrad.addColorStop(1, 'rgba(253,224,71,0)');
+                ctx.fillStyle = sunGrad;
                 ctx.beginPath();
-                ctx.ellipse(c.x,           c.y,           c.r * 1.8, c.r * 0.9, 0, 0, Math.PI * 2);
-                ctx.ellipse(c.x - c.r * 0.8, c.y + c.r * 0.3, c.r * 1.1, c.r * 0.75, 0, 0, Math.PI * 2);
-                ctx.ellipse(c.x + c.r * 0.8, c.y + c.r * 0.3, c.r * 1.1, c.r * 0.75, 0, 0, Math.PI * 2);
+                ctx.arc(sunX, sunY, 50, 0, Math.PI * 2);
+                ctx.fill();
+                ctx.save();
+                ctx.translate(sunX, sunY);
+                ctx.rotate(frameCount * 0.003);
+                ctx.strokeStyle = `rgba(253,224,71,${0.2 * sunAlpha})`;
+                ctx.lineWidth = 2;
+                for (let i = 0; i < 12; i++) {
+                    const angle = (Math.PI * 2 / 12) * i;
+                    ctx.beginPath();
+                    ctx.moveTo(Math.cos(angle) * 25, Math.sin(angle) * 25);
+                    ctx.lineTo(Math.cos(angle) * 55, Math.sin(angle) * 55);
+                    ctx.stroke();
+                }
+                ctx.restore();
+                ctx.globalAlpha = 1;
+            }
+
+            // Moon (fades in second half of night transition)
+            if (nightProgress > 0.45) {
+                const moonAlpha = Math.min(1, (nightProgress - 0.45) / 0.35);
+                ctx.globalAlpha = moonAlpha;
+                ctx.fillStyle = '#E8E0C8';
+                ctx.beginPath();
+                ctx.arc(sunX, sunY, 22, 0, Math.PI * 2);
+                ctx.fill();
+                // Craters
+                ctx.fillStyle = 'rgba(0,0,0,0.12)';
+                [[8, -5, 5], [-6, 3, 3.5], [3, 10, 4]].forEach(([cx2, cy2, cr]) => {
+                    ctx.beginPath(); ctx.arc(sunX + cx2, sunY + cy2, cr, 0, Math.PI * 2); ctx.fill();
+                });
+                ctx.globalAlpha = 1;
+            }
+
+            // Clouds (dimmed at night)
+            const cloudAlpha = 0.88 - nightProgress * 0.5;
+            CLOUDS.forEach(c => {
+                ctx.fillStyle = `rgba(255,255,255,${cloudAlpha})`;
+                ctx.beginPath();
+                ctx.ellipse(c.x,               c.y,               c.r * 1.8, c.r * 0.9,  0, 0, Math.PI * 2);
+                ctx.ellipse(c.x - c.r * 0.8,   c.y + c.r * 0.3,   c.r * 1.1, c.r * 0.75, 0, 0, Math.PI * 2);
+                ctx.ellipse(c.x + c.r * 0.8,   c.y + c.r * 0.3,   c.r * 1.1, c.r * 0.75, 0, 0, Math.PI * 2);
                 ctx.fill();
             });
 
             // Ground gradient
             const groundY = H - 55;
             const groundGrad = ctx.createLinearGradient(0, groundY, 0, H);
-            groundGrad.addColorStop(0, '#4ADE80');
+            groundGrad.addColorStop(0,    '#4ADE80');
             groundGrad.addColorStop(0.35, '#22C55E');
-            groundGrad.addColorStop(1, '#15803D');
+            groundGrad.addColorStop(1,    '#15803D');
             ctx.fillStyle = groundGrad;
             ctx.fillRect(0, groundY, W, 55);
 
             // Trees
             TREES.forEach(t => {
-                // Trunk
                 ctx.fillStyle = '#92400E';
                 ctx.fillRect(t.x - 6, groundY - t.trunkH, 12, t.trunkH + 5);
-                // Canopy
                 const canopyY = groundY - t.trunkH - t.canopyR * 0.5;
                 const cGrad = ctx.createRadialGradient(t.x, canopyY, 2, t.x, canopyY, t.canopyR);
-                cGrad.addColorStop(0, '#4ADE80');
+                cGrad.addColorStop(0,   '#4ADE80');
                 cGrad.addColorStop(0.6, '#22C55E');
-                cGrad.addColorStop(1, '#16A34A');
+                cGrad.addColorStop(1,   '#16A34A');
                 ctx.fillStyle = cGrad;
-                ctx.beginPath();
-                ctx.arc(t.x, canopyY, t.canopyR, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(t.x - t.canopyR * 0.6, canopyY + t.canopyR * 0.3, t.canopyR * 0.7, 0, Math.PI * 2);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(t.x + t.canopyR * 0.6, canopyY + t.canopyR * 0.3, t.canopyR * 0.7, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(t.x, canopyY, t.canopyR, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(t.x - t.canopyR * 0.6, canopyY + t.canopyR * 0.3, t.canopyR * 0.7, 0, Math.PI * 2); ctx.fill();
+                ctx.beginPath(); ctx.arc(t.x + t.canopyR * 0.6, canopyY + t.canopyR * 0.3, t.canopyR * 0.7, 0, Math.PI * 2); ctx.fill();
             });
 
             // Bushes
             BUSHES.forEach(b => {
                 ctx.fillStyle = '#16A34A';
-                ctx.beginPath();
-                ctx.arc(b.x, groundY + 2, b.r, Math.PI, 0);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(b.x, groundY + 2, b.r, Math.PI, 0); ctx.fill();
                 ctx.fillStyle = '#22C55E';
-                ctx.beginPath();
-                ctx.arc(b.x - b.r * 0.5, groundY + 2, b.r * 0.7, Math.PI, 0);
-                ctx.fill();
-                ctx.beginPath();
-                ctx.arc(b.x + b.r * 0.5, groundY + 2, b.r * 0.7, Math.PI, 0);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(b.x - b.r * 0.5, groundY + 2, b.r * 0.7, Math.PI, 0); ctx.fill();
+                ctx.beginPath(); ctx.arc(b.x + b.r * 0.5, groundY + 2, b.r * 0.7, Math.PI, 0); ctx.fill();
             });
 
-            // Grass blade strip at top of ground
+            // Grass blades
             ctx.fillStyle = '#4ADE80';
             for (let gx = 0; gx < W; gx += 14) {
                 ctx.beginPath();
@@ -706,31 +1029,40 @@
             // Flowers
             const swayT = currentTs * 0.001;
             FLOWERS.forEach(f => {
-                const sway = Math.sin(swayT + f.swayOffset) * 2;
-                const fx = f.x + sway;
-                const fy = groundY - 2;
-                // Stem
-                ctx.strokeStyle = '#16A34A';
-                ctx.lineWidth = 1.5;
-                ctx.beginPath();
-                ctx.moveTo(fx, fy);
-                ctx.lineTo(fx + sway * 0.5, fy - f.size * 3);
-                ctx.stroke();
-                // Petals
-                ctx.fillStyle = f.color;
+                const sway  = Math.sin(swayT + f.swayOffset) * 2;
+                const fx    = f.x + sway;
+                const fy    = groundY - 2;
                 const petalY = fy - f.size * 3;
+                ctx.strokeStyle = '#16A34A'; ctx.lineWidth = 1.5;
+                ctx.beginPath(); ctx.moveTo(fx, fy); ctx.lineTo(fx + sway * 0.5, petalY); ctx.stroke();
+                ctx.fillStyle = f.color;
                 for (let p = 0; p < 5; p++) {
                     const a = (Math.PI * 2 / 5) * p;
                     ctx.beginPath();
                     ctx.arc(fx + sway * 0.5 + Math.cos(a) * f.size, petalY + Math.sin(a) * f.size, f.size * 0.6, 0, Math.PI * 2);
                     ctx.fill();
                 }
-                // Center
                 ctx.fillStyle = '#FDE047';
-                ctx.beginPath();
-                ctx.arc(fx + sway * 0.5, petalY, f.size * 0.4, 0, Math.PI * 2);
-                ctx.fill();
+                ctx.beginPath(); ctx.arc(fx + sway * 0.5, petalY, f.size * 0.4, 0, Math.PI * 2); ctx.fill();
             });
+
+            // Night overlay tint (drawn last — before items/baskets)
+            if (nightProgress > 0) {
+                ctx.fillStyle = `rgba(10,10,40,${nightProgress * 0.52})`;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            // Time-slow vignette
+            if (timeSlow > currentTs) {
+                const remaining = (timeSlow - currentTs) / 3200;
+                ctx.save();
+                const vig = ctx.createRadialGradient(W/2, H/2, H * 0.3, W/2, H/2, H * 0.75);
+                vig.addColorStop(0, 'rgba(103,232,249,0)');
+                vig.addColorStop(1, `rgba(103,232,249,${0.18 * remaining})`);
+                ctx.fillStyle = vig;
+                ctx.fillRect(0, 0, W, H);
+                ctx.restore();
+            }
         }
 
         function drawItemTrails() {
@@ -902,8 +1234,27 @@
             if (b.combo >= 3) {
                 ctx.font = 'bold 11px sans-serif';
                 ctx.fillStyle = b.feverActive ? '#FF6B35' : '#FFD700';
-                ctx.fillText(`×${b.combo}`, b.x + hw + 12, b.y - 5);
+                ctx.fillText(`×${b.combo}`, b.x + (getBasketWidth(b) / 2) + 12, b.y - 5);
             }
+
+            // Power-up timer bars
+            const barDefs = [
+                { active: boosted,      expiry: b.speedBoost, dur: 3200,  color: '#FDE047' },
+                { active: magnetActive, expiry: b.magnet,     dur: 4000,  color: '#94A3B8' },
+                { active: wideActive,   expiry: b.wide,       dur: 5000,  color: '#A78BFA' },
+                { active: frozen,       expiry: b.frozen,     dur: 2600,  color: '#BAE6FD' },
+            ];
+            const barW = 38, barH = 4;
+            let barY = b.y - BH / 2 - 46;
+            barDefs.forEach(bd => {
+                if (!bd.active) return;
+                const prog = Math.max(0, (bd.expiry - currentTs) / bd.dur);
+                ctx.fillStyle = 'rgba(0,0,0,0.35)';
+                ctx.fillRect(b.x - barW / 2, barY, barW, barH);
+                ctx.fillStyle = bd.color;
+                ctx.fillRect(b.x - barW / 2, barY, barW * prog, barH);
+                barY -= 7;
+            });
         }
 
         function drawItems() {
@@ -921,6 +1272,18 @@
                 if (item.type.points >= 5) {
                     ctx.shadowColor = '#FFD700';
                     ctx.shadowBlur = 12 + Math.sin(currentTs * 0.01) * 4;
+                } else if (item.type.label === '💰') {
+                    ctx.shadowColor = '#FCD34D';
+                    ctx.shadowBlur = 10 + Math.abs(Math.sin(currentTs * 0.015)) * 8;
+                } else if (item.type.label === '🍉') {
+                    ctx.shadowColor = '#86EFAC';
+                    ctx.shadowBlur = 8;
+                } else if (item.type.label === '🎁') {
+                    ctx.shadowColor = '#A78BFA';
+                    ctx.shadowBlur = 6 + Math.abs(Math.sin(currentTs * 0.007)) * 6;
+                } else if (item.type.label === '⏱️') {
+                    ctx.shadowColor = '#67E8F9';
+                    ctx.shadowBlur = 8 + Math.abs(Math.sin(currentTs * 0.006)) * 6;
                 } else if (item.type.points >= 3) {
                     ctx.shadowColor = item.type.color;
                     ctx.shadowBlur = 8;
@@ -960,6 +1323,20 @@
 
         function drawWaveIndicator() {
             if (gameState !== 'playing') return;
+
+            // Wave progress bar at top of canvas
+            const modeDur    = MODES[currentMode].duration;
+            const waveElapsed = (modeDur - timeLeft) % WAVE_DURATION;
+            const waveProg   = Math.min(1, waveElapsed / WAVE_DURATION);
+            const barGrad    = ctx.createLinearGradient(0, 0, W, 0);
+            barGrad.addColorStop(0,   '#FDE047');
+            barGrad.addColorStop(0.6, '#FB923C');
+            barGrad.addColorStop(1,   '#EF4444');
+            ctx.fillStyle = 'rgba(0,0,0,0.2)';
+            ctx.fillRect(0, 0, W, 5);
+            ctx.fillStyle = barGrad;
+            ctx.fillRect(0, 0, W * waveProg, 5);
+
             ctx.font = 'bold 12px sans-serif';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'top';
@@ -1040,76 +1417,236 @@
         }
 
         function drawGameOverStats() {
-            let winLine, winColor;
-            if (p1.score > p2.score)      { winLine = '🎉 Player 1 Wins!'; winColor = '#60A5FA'; }
-            else if (p2.score > p1.score) { winLine = '🎉 Player 2 Wins!'; winColor = '#F87171'; }
-            else                          { winLine = "🤝 It's a Tie!";    winColor = '#FCD34D'; }
+            const elapsed  = currentTs - gameOverTs;
+            const solo     = currentMode === 'solo';
+            const cx       = W / 2;
 
-            ctx.fillStyle = 'rgba(15,23,42,0.80)';
+            // Dark overlay
+            ctx.fillStyle = 'rgba(15,23,42,0.84)';
             ctx.fillRect(0, 0, W, H);
 
-            const cx = W / 2;
+            // Confetti on top of overlay, behind text
+            drawConfetti();
 
-            // Title
-            ctx.font = 'bold 48px sans-serif';
+            // Determine winner/result
+            let winLine, winColor;
+            if (solo) {
+                if (isNewHighScore) { winLine = '🎉 New High Score!'; winColor = '#FCD34D'; }
+                else                { winLine = '🍎 Game Over!';      winColor = '#10B981'; }
+            } else {
+                if (p1.score > p2.score)      { winLine = '🎉 Player 1 Wins!'; winColor = '#60A5FA'; }
+                else if (p2.score > p1.score) { winLine = '🎉 Player 2 Wins!'; winColor = '#F87171'; }
+                else                          { winLine = "🤝 It's a Tie!";    winColor = '#FCD34D'; }
+            }
+
+            // Trophy / stars (appears immediately)
+            const trophyScale = 1 + Math.sin(currentTs * 0.006) * 0.08;
+            ctx.save();
+            ctx.translate(cx, 42);
+            ctx.scale(trophyScale, trophyScale);
+            ctx.font = '44px serif';
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.shadowColor = winColor;
-            ctx.shadowBlur = 20;
-            ctx.fillStyle = winColor;
-            ctx.fillText(winLine, cx, 60);
+            ctx.shadowBlur  = 22;
+            if (solo) {
+                const stars = p1.score >= 50 ? 3 : p1.score >= 25 ? 2 : 1;
+                ctx.fillText('⭐'.repeat(stars), 0, 0);
+            } else {
+                ctx.fillText('🏆', 0, 0);
+            }
+            ctx.restore();
             ctx.shadowBlur = 0;
 
-            // Score
-            ctx.font = 'bold 30px sans-serif';
-            ctx.fillStyle = '#fff';
-            ctx.fillText(`P1: ${p1.score}  •  P2: ${p2.score}`, cx, 110);
+            // Winner headline (appears immediately)
+            ctx.font = 'bold 42px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            ctx.shadowColor = winColor; ctx.shadowBlur = 18;
+            ctx.fillStyle   = winColor;
+            ctx.fillText(winLine, cx, 88);
+            ctx.shadowBlur  = 0;
 
-            // Stats columns
-            const colX1 = cx - 160;
-            const colX2 = cx + 160;
-            const startY = 160;
-            const lineH = 28;
+            // Score line — fades in at 350ms
+            if (elapsed >= 350) {
+                const a = Math.min(1, (elapsed - 350) / 300);
+                ctx.globalAlpha = a;
+                ctx.font = 'bold 26px sans-serif';
+                ctx.fillStyle = '#fff';
+                ctx.fillText(
+                    solo ? `Your Score: ${p1.score}` : `P1: ${p1.score}  •  P2: ${p2.score}`,
+                    cx, 130
+                );
+                if (solo) {
+                    ctx.font = '16px sans-serif';
+                    ctx.fillStyle = '#94A3B8';
+                    ctx.fillText(`Best: ${soloHighScore}`, cx, 154);
+                }
+                ctx.globalAlpha = 1;
+            }
 
-            const stats = [
-                ['Fruits Caught', p1.fruitsOnly, p2.fruitsOnly],
-                ['Total Items', p1.totalCaught, p2.totalCaught],
-                ['Max Combo', p1.maxCombo, p2.maxCombo],
-                ['Power-Ups', p1.powerUpsCaught, p2.powerUpsCaught],
-                ['Stars/Golden', p1.starsGolden, p2.starsGolden],
-                ['Bombs Hit', p1.bombsCaught, p2.bombsCaught],
+            // Stats
+            const stats = solo ? [
+                ['Fruits Caught', p1.fruitsOnly,     null],
+                ['Total Items',   p1.totalCaught,    null],
+                ['Max Combo',     p1.maxCombo,       null],
+                ['Power-Ups',     p1.powerUpsCaught, null],
+                ['Stars/Golden',  p1.starsGolden,    null],
+                ['Bombs Hit',     p1.bombsCaught,    null],
+            ] : [
+                ['Fruits Caught', p1.fruitsOnly,     p2.fruitsOnly    ],
+                ['Total Items',   p1.totalCaught,    p2.totalCaught   ],
+                ['Max Combo',     p1.maxCombo,       p2.maxCombo      ],
+                ['Power-Ups',     p1.powerUpsCaught, p2.powerUpsCaught],
+                ['Stars/Golden',  p1.starsGolden,    p2.starsGolden   ],
+                ['Bombs Hit',     p1.bombsCaught,    p2.bombsCaught   ],
             ];
 
-            // Column headers
-            ctx.font = 'bold 16px sans-serif';
-            ctx.fillStyle = '#3B82F6';
-            ctx.fillText('P1', colX1, startY - 10);
-            ctx.fillStyle = '#94A3B8';
-            ctx.fillText('Stat', cx, startY - 10);
-            ctx.fillStyle = '#EF4444';
-            ctx.fillText('P2', colX2, startY - 10);
+            const colX1 = cx - (solo ? 70 : 170);
+            const colX2 = cx + 170;
+            const startY = 180;
+            const lineH  = 27;
 
-            ctx.font = '16px sans-serif';
+            // Column headers — fade in at 600ms
+            if (!solo && elapsed >= 600) {
+                const a = Math.min(1, (elapsed - 600) / 280);
+                ctx.globalAlpha = a;
+                ctx.font = 'bold 15px sans-serif';
+                ctx.fillStyle = '#3B82F6'; ctx.fillText('P1',   colX1, startY - 12);
+                ctx.fillStyle = '#94A3B8'; ctx.fillText('Stat', cx,    startY - 12);
+                ctx.fillStyle = '#EF4444'; ctx.fillText('P2',   colX2, startY - 12);
+                ctx.globalAlpha = 1;
+            } else if (solo && elapsed >= 600) {
+                const a = Math.min(1, (elapsed - 600) / 280);
+                ctx.globalAlpha = a;
+                ctx.font = 'bold 15px sans-serif';
+                ctx.fillStyle = '#94A3B8'; ctx.fillText('Stat', cx, startY - 12);
+                ctx.globalAlpha = 1;
+            }
+
+            // Stats rows — each fades in 200ms apart, starting at 700ms
+            ctx.font = '15px sans-serif';
             stats.forEach((row, i) => {
-                const y = startY + 18 + i * lineH;
-                // Highlight winner of each stat
-                const p1Win = row[1] > row[2];
-                const p2Win = row[2] > row[1];
+                const fadeStart = 700 + i * 200;
+                const a = Math.min(1, Math.max(0, (elapsed - fadeStart) / 220));
+                if (a <= 0) return;
+                ctx.globalAlpha = a;
+                const y = startY + 16 + i * lineH;
 
-                ctx.fillStyle = p1Win ? '#60A5FA' : '#94A3B8';
-                ctx.fillText(String(row[1]), colX1, y);
-
-                ctx.fillStyle = '#CBD5E1';
-                ctx.fillText(row[0], cx, y);
-
-                ctx.fillStyle = p2Win ? '#F87171' : '#94A3B8';
-                ctx.fillText(String(row[2]), colX2, y);
+                if (solo) {
+                    ctx.fillStyle = '#60A5FA'; ctx.fillText(String(row[1]), colX1, y);
+                    ctx.fillStyle = '#CBD5E1'; ctx.fillText(row[0], cx, y);
+                } else {
+                    const p1w = row[1] > row[2], p2w = row[2] > row[1];
+                    ctx.fillStyle = p1w ? '#60A5FA' : '#94A3B8'; ctx.fillText(String(row[1]), colX1, y);
+                    ctx.fillStyle = '#CBD5E1'; ctx.fillText(row[0], cx, y);
+                    ctx.fillStyle = p2w ? '#F87171' : '#94A3B8'; ctx.fillText(String(row[2]), colX2, y);
+                }
+                ctx.globalAlpha = 1;
             });
 
-            // Restart prompt
-            ctx.font = '20px sans-serif';
+            // Restart prompt — appears after all stats
+            const promptStart = 700 + stats.length * 200 + 350;
+            if (elapsed >= promptStart) {
+                const a = Math.min(1, (elapsed - promptStart) / 400);
+                ctx.globalAlpha = a;
+                ctx.font = '18px sans-serif';
+                ctx.fillStyle = '#94A3B8';
+                ctx.fillText('Press SPACE to choose mode', cx, H - 38);
+                ctx.globalAlpha = 1;
+            }
+        }
+
+        function drawModeSelect() {
+            // Dark overlay behind mode cards (items fall through it)
+            ctx.fillStyle = 'rgba(10,15,42,0.74)';
+            ctx.fillRect(0, 0, W, H);
+
+            // Animated bouncing title
+            const title  = '🍎 FRUIT CATCHER 🍊';
+            const chars  = [...title];
+            ctx.font = 'bold 50px sans-serif';
+            ctx.textAlign = 'left';
+            ctx.textBaseline = 'middle';
+            const totalW = ctx.measureText(title).width;
+            let charX    = W / 2 - totalW / 2;
+            chars.forEach((ch, i) => {
+                const bounce = Math.sin(currentTs * 0.003 + i * 0.55) * 9;
+                const hue    = (i * 22 + currentTs * 0.04) % 360;
+                ctx.shadowColor = `hsl(${hue},90%,60%)`;
+                ctx.shadowBlur  = 14;
+                ctx.fillStyle   = `hsl(${hue},90%,72%)`;
+                ctx.fillText(ch, charX, 70 + bounce);
+                charX += ctx.measureText(ch).width;
+            });
+            ctx.shadowBlur = 0;
+
+            // Subtitle
+            ctx.font = '17px sans-serif';
+            ctx.textAlign = 'center';
             ctx.fillStyle = '#94A3B8';
-            ctx.fillText('Press SPACE to play again', cx, H - 40);
+            ctx.fillText('Choose your game mode', W / 2, 116);
+
+            // Mode cards
+            const cardW = 200, cardH = 148, cardGap = 18;
+            const totalCards = 3 * cardW + 2 * cardGap;
+            const startX     = (W - totalCards) / 2;
+            const cardY      = 140;
+
+            MODE_KEYS.forEach((mk, i) => {
+                const mode = MODES[mk];
+                const cx2  = startX + i * (cardW + cardGap);
+                const sel  = i === selectedModeIdx;
+
+                ctx.save();
+                roundRect(ctx, cx2, cardY, cardW, cardH, 16);
+                ctx.shadowColor = sel ? mode.color : 'transparent';
+                ctx.shadowBlur  = sel ? 26 : 0;
+                ctx.fillStyle   = sel ? 'rgba(28,40,88,0.96)' : 'rgba(18,26,56,0.82)';
+                ctx.fill();
+                ctx.strokeStyle = sel ? mode.color : 'rgba(255,255,255,0.14)';
+                ctx.lineWidth   = sel ? 2.5 : 1;
+                ctx.stroke();
+                ctx.shadowBlur  = 0;
+
+                const cx3 = cx2 + cardW / 2;
+
+                // Icon
+                ctx.font = '38px serif';
+                ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+                ctx.fillStyle = '#fff';
+                ctx.fillText(mode.icon, cx3, cardY + 38);
+
+                // Label
+                ctx.font = `bold 19px sans-serif`;
+                ctx.fillStyle = sel ? mode.color : '#e2e8f0';
+                ctx.fillText(mode.label, cx3, cardY + 76);
+
+                // Description
+                ctx.font = '12.5px sans-serif';
+                ctx.fillStyle = '#94A3B8';
+                ctx.fillText(mode.desc, cx3, cardY + 100);
+
+                // Key hint
+                ctx.font = 'bold 12px sans-serif';
+                ctx.fillStyle = sel ? mode.color : '#475569';
+                ctx.fillText(`Press ${i + 1}`, cx3, cardY + 124);
+
+                ctx.restore();
+            });
+
+            // Solo high score badge
+            if (soloHighScore > 0) {
+                ctx.font = '14.5px sans-serif';
+                ctx.fillStyle = '#10B981';
+                ctx.textAlign = 'center';
+                ctx.fillText(`🏆 Solo Best: ${soloHighScore}`, W / 2, cardY + cardH + 26);
+            }
+
+            // Nav hint
+            ctx.font = '13.5px sans-serif';
+            ctx.fillStyle = '#374151';
+            ctx.fillText('← → or ↑ ↓  navigate    Enter or 1 / 2 / 3  select', W / 2, H - 28);
         }
 
         function draw() {
@@ -1125,23 +1662,31 @@
             ctx.translate(sx, sy);
 
             drawBackground();
+
+            if (gameState === 'modeselect') {
+                drawItemTrails();
+                drawItems();
+                drawModeSelect();
+                ctx.restore();
+                return;
+            }
+
             drawFeverBorder(p1);
-            drawFeverBorder(p2);
+            if (currentMode !== 'solo') drawFeverBorder(p2);
             drawItemShadows();
             drawItemTrails();
             drawItems();
             drawParticles();
-            drawBasket(p1, '#3B82F6', '🔵 P1');
-            drawBasket(p2, '#EF4444', '🔴 P2');
+            if (currentMode === 'solo') {
+                drawBasket(p1, '#10B981', '🟢 YOU');
+            } else {
+                drawBasket(p1, '#3B82F6', '🔵 P1');
+                drawBasket(p2, '#EF4444', '🔴 P2');
+            }
             drawPopups();
             drawWaveIndicator();
 
-            if (gameState === 'waiting') {
-                drawOverlay(
-                    ['🍎 Fruit Catcher', '2 Players — Same Keyboard!', 'P1: A / D  •  P2: ← / →', 'Catch fruits, grab power-ups!', 'Press SPACE to start!'],
-                    ['#FCD34D', '#93C5FD', '#fff', '#86EFAC', '#FCD34D']
-                );
-            } else if (gameState === 'countdown') {
+            if (gameState === 'countdown') {
                 drawCountdown();
             } else if (gameState === 'gameover') {
                 drawGameOverStats();
@@ -1161,38 +1706,79 @@
             requestAnimationFrame(gameLoop);
         }
 
+        // ── Mute button ───────────────────────────────────────────────────────
+        document.getElementById('muteBtn').addEventListener('click', () => {
+            musicMuted = !musicMuted;
+            document.getElementById('muteBtn').textContent = musicMuted ? '🔇 Music' : '🔊 Music';
+            if (musicGain) musicGain.gain.value = musicMuted ? 0 : 0.055;
+        });
+
         // ── Input ─────────────────────────────────────────────────────────────
         document.addEventListener('keydown', e => {
             keys[e.key] = true;
-            if (e.key === ' ' || e.key === 'Spacebar') {
+
+            if (['ArrowLeft','ArrowRight','ArrowUp','ArrowDown',' '].includes(e.key)) {
                 e.preventDefault();
-                if (gameState === 'waiting' || gameState === 'gameover') startGame();
             }
-            if (['ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', ' '].includes(e.key)) {
-                e.preventDefault();
+
+            if (gameState === 'modeselect') {
+                if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { selectedModeIdx = (selectedModeIdx + 2) % 3; }
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  { selectedModeIdx = (selectedModeIdx + 1) % 3; }
+                if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+                    currentMode = MODE_KEYS[selectedModeIdx];
+                    playModeConfirm();
+                    startGame();
+                }
+                if (e.key === '1') { selectedModeIdx = 0; currentMode = 'classic'; playModeConfirm(); startGame(); }
+                if (e.key === '2') { selectedModeIdx = 1; currentMode = 'blitz';   playModeConfirm(); startGame(); }
+                if (e.key === '3') { selectedModeIdx = 2; currentMode = 'solo';    playModeConfirm(); startGame(); }
+                return;
+            }
+
+            if (e.key === ' ' || e.key === 'Spacebar') {
+                if (gameState === 'gameover') resetToModeSelect();
             }
         });
         document.addEventListener('keyup', e => { keys[e.key] = false; });
 
         // ── Start / restart ───────────────────────────────────────────────────
         function startGame() {
+            const mode = MODES[currentMode];
             p1 = makePlayer(165);
             p2 = makePlayer(635);
-            timeLeft = GAME_DURATION;
-            items = []; particles = []; popups = [];
+            timeLeft    = mode.duration;
+            musicTempo  = 480;
+            timeSlow    = 0;
+            isNewHighScore = false;
+            items = []; particles = []; popups = []; confettiParticles = [];
             countdownVal = 3; lastCountdown = 0;
-            lastSpawn = 0; lastTimerTick = 0;
+            lastSpawn = 0; lastTimerTick = 0; nextSpawnMs = 1500;
             shakeFrames = 0;
             currentWave = 1;
             waveAnnounceTimer = 0;
-            p1ScoreEl.textContent = 'P1: 0';
+
+            const solo = mode.players === 1;
+            p1ScoreEl.textContent = (solo ? 'Score: ' : 'P1: ') + '0';
             p2ScoreEl.textContent = 'P2: 0';
-            timerEl.textContent = GAME_DURATION;
+            p2ScoreEl.style.visibility = solo ? 'hidden' : '';
+            document.getElementById('scorebar-wrap').style.display = solo ? 'none' : '';
+            timerEl.textContent = mode.duration;
             timerEl.classList.remove('urgent');
             p1barEl.style.width = '50%';
             p2barEl.style.width = '50%';
             gameState = 'countdown';
             playCount();
+        }
+
+        function resetToModeSelect() {
+            stopMusic();
+            gameState = 'modeselect';
+            items = []; particles = []; popups = []; confettiParticles = [];
+            lastSpawn   = 0;
+            nextSpawnMs = 1500;
+            // Restore HUD visibility
+            p2ScoreEl.style.visibility = '';
+            document.getElementById('scorebar-wrap').style.display = '';
         }
 
         requestAnimationFrame(gameLoop);
