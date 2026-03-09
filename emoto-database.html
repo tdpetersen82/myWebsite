@@ -165,17 +165,11 @@
             height: 200px; display: flex; align-items: center; justify-content: center;
             position: relative; overflow: hidden;
         }
-        .card-image svg {
-            width: 260px; height: 160px; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15));
-            transition: transform 0.3s;
-        }
-        .bike-card:hover .card-image svg { transform: scale(1.05); }
         .card-image img {
             width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s;
         }
         .bike-card:hover .card-image img { transform: scale(1.05); }
-        .img-fallback { display: none; }
-        .card-image .img-loading {
+.card-image .img-loading {
             position: absolute; inset: 0; background: var(--border);
             animation: shimmer 1.5s infinite;
         }
@@ -319,8 +313,7 @@
         @media (max-width: 500px) {
             .header { padding: 28px 16px 20px; }
             .card-image { height: 160px; }
-            .card-image svg { width: 180px; height: 110px; }
-            .bike-grid { gap: 16px; }
+.bike-grid { gap: 16px; }
         }
     </style>
 </head>
@@ -423,285 +416,6 @@ themeToggle.addEventListener('click', () => {
     localStorage.setItem('emotoTheme', isDark ? 'light' : 'dark');
 });
 
-// ============== DETAILED SVG BIKE ILLUSTRATIONS ==============
-function bikeSVG(type, color1, color2) {
-    const c1 = color1 || '#555';
-    const c2 = color2 || '#333';
-    const svgs = {
-        dirtbike: `<svg viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg">
-            <!-- Rear wheel with spokes and knobby tire -->
-            <circle cx="55" cy="115" r="34" fill="none" stroke="#444" stroke-width="5"/>
-            <circle cx="55" cy="115" r="30" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="4 3"/>
-            <circle cx="55" cy="115" r="7" fill="#666" stroke="#444" stroke-width="2"/>
-            <line x1="55" y1="85" x2="55" y2="81" stroke="#555" stroke-width="1.5"/>
-            <line x1="55" y1="145" x2="55" y2="149" stroke="#555" stroke-width="1.5"/>
-            <line x1="25" y1="115" x2="21" y2="115" stroke="#555" stroke-width="1.5"/>
-            <line x1="85" y1="115" x2="89" y2="115" stroke="#555" stroke-width="1.5"/>
-            <line x1="31" y1="91" x2="28" y2="88" stroke="#555" stroke-width="1.5"/>
-            <line x1="79" y1="139" x2="82" y2="142" stroke="#555" stroke-width="1.5"/>
-            <line x1="31" y1="139" x2="28" y2="142" stroke="#555" stroke-width="1.5"/>
-            <line x1="79" y1="91" x2="82" y2="88" stroke="#555" stroke-width="1.5"/>
-            <!-- Front wheel with spokes and knobby tire -->
-            <circle cx="205" cy="115" r="34" fill="none" stroke="#444" stroke-width="5"/>
-            <circle cx="205" cy="115" r="30" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="4 3"/>
-            <circle cx="205" cy="115" r="7" fill="#666" stroke="#444" stroke-width="2"/>
-            <line x1="205" y1="85" x2="205" y2="81" stroke="#555" stroke-width="1.5"/>
-            <line x1="205" y1="145" x2="205" y2="149" stroke="#555" stroke-width="1.5"/>
-            <line x1="175" y1="115" x2="171" y2="115" stroke="#555" stroke-width="1.5"/>
-            <line x1="235" y1="115" x2="239" y2="115" stroke="#555" stroke-width="1.5"/>
-            <line x1="181" y1="91" x2="178" y2="88" stroke="#555" stroke-width="1.5"/>
-            <line x1="229" y1="139" x2="232" y2="142" stroke="#555" stroke-width="1.5"/>
-            <line x1="181" y1="139" x2="178" y2="142" stroke="#555" stroke-width="1.5"/>
-            <line x1="229" y1="91" x2="232" y2="88" stroke="#555" stroke-width="1.5"/>
-            <!-- Swingarm -->
-            <line x1="55" y1="115" x2="115" y2="75" stroke="#888" stroke-width="4" stroke-linecap="round"/>
-            <!-- Rear shock -->
-            <line x1="85" y1="95" x2="100" y2="60" stroke="#aaa" stroke-width="2.5" stroke-linecap="round"/>
-            <rect x="96" y="56" width="8" height="14" rx="2" fill="#bbb" stroke="#999" stroke-width="1"/>
-            <!-- Frame -->
-            <path d="M55 115 L90 70 L110 55 L155 48 L170 60 L205 115" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Down tube -->
-            <line x1="115" y1="75" x2="155" y2="48" stroke="${c1}" stroke-width="4" stroke-linecap="round"/>
-            <!-- Battery/motor housing -->
-            <path d="M95 65 L115 55 L150 50 L155 58 L140 68 L100 72 Z" fill="${c1}" stroke="${c2}" stroke-width="1.5" opacity="0.85"/>
-            <!-- Motor (circle on swingarm pivot) -->
-            <circle cx="115" cy="75" r="12" fill="${c2}" stroke="#333" stroke-width="2"/>
-            <circle cx="115" cy="75" r="5" fill="#555"/>
-            <!-- Seat -->
-            <path d="M90 57 L120 48 L150 46 L145 42 L108 44 L88 52 Z" fill="#333" stroke="#222" stroke-width="1"/>
-            <!-- Tank / upper body -->
-            <rect x="108" y="40" width="38" height="10" rx="4" fill="${c1}" stroke="${c2}" stroke-width="1"/>
-            <!-- Front forks (long travel) -->
-            <line x1="170" y1="55" x2="200" y2="85" stroke="#aaa" stroke-width="4" stroke-linecap="round"/>
-            <line x1="173" y1="55" x2="208" y2="98" stroke="#ccc" stroke-width="3" stroke-linecap="round"/>
-            <!-- Front fender -->
-            <path d="M190 90 Q205 78 220 90" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
-            <!-- Rear fender -->
-            <path d="M40 100 Q55 88 70 100" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
-            <!-- Handlebars -->
-            <line x1="165" y1="38" x2="178" y2="32" stroke="#666" stroke-width="3" stroke-linecap="round"/>
-            <line x1="165" y1="38" x2="155" y2="30" stroke="#666" stroke-width="3" stroke-linecap="round"/>
-            <!-- Headlight -->
-            <circle cx="183" cy="48" r="5" fill="#fffde7" stroke="#888" stroke-width="1.5" opacity="0.9"/>
-            <!-- Number plate -->
-            <rect x="67" y="42" width="18" height="14" rx="2" fill="${c1}" stroke="${c2}" stroke-width="1" opacity="0.7"/>
-            <!-- Footpegs -->
-            <line x1="108" y1="82" x2="118" y2="85" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
-            <!-- Chain/belt -->
-            <path d="M115 82 Q85 105 62 115" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="3 2"/>
-            <!-- Exhaust / heat sink -->
-            <rect x="75" y="80" width="12" height="4" rx="1" fill="#999" opacity="0.6"/>
-        </svg>`,
-        street: `<svg viewBox="0 0 260 160" xmlns="http://www.w3.org/2000/svg">
-            <!-- Rear wheel -->
-            <circle cx="52" cy="115" r="32" fill="none" stroke="#444" stroke-width="6"/>
-            <circle cx="52" cy="115" r="26" fill="none" stroke="#555" stroke-width="2"/>
-            <circle cx="52" cy="115" r="8" fill="#666" stroke="#444" stroke-width="2"/>
-            <line x1="52" y1="87" x2="52" y2="83" stroke="#555" stroke-width="1.5"/>
-            <line x1="52" y1="143" x2="52" y2="147" stroke="#555" stroke-width="1.5"/>
-            <line x1="24" y1="115" x2="20" y2="115" stroke="#555" stroke-width="1.5"/>
-            <line x1="80" y1="115" x2="84" y2="115" stroke="#555" stroke-width="1.5"/>
-            <!-- Front wheel -->
-            <circle cx="208" cy="115" r="32" fill="none" stroke="#444" stroke-width="6"/>
-            <circle cx="208" cy="115" r="26" fill="none" stroke="#555" stroke-width="2"/>
-            <circle cx="208" cy="115" r="8" fill="#666" stroke="#444" stroke-width="2"/>
-            <line x1="208" y1="87" x2="208" y2="83" stroke="#555" stroke-width="1.5"/>
-            <line x1="208" y1="143" x2="208" y2="147" stroke="#555" stroke-width="1.5"/>
-            <line x1="180" y1="115" x2="176" y2="115" stroke="#555" stroke-width="1.5"/>
-            <line x1="236" y1="115" x2="240" y2="115" stroke="#555" stroke-width="1.5"/>
-            <!-- Swingarm -->
-            <path d="M52 115 L120 78" stroke="#888" stroke-width="5" stroke-linecap="round"/>
-            <!-- Frame -->
-            <path d="M52 115 L85 72 L120 55 L170 48 L195 65 L208 115" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Fairing / body panels -->
-            <path d="M100 62 L130 48 L175 44 L190 55 L180 68 L140 72 L105 70 Z" fill="${c1}" stroke="${c2}" stroke-width="1.5" opacity="0.9"/>
-            <!-- Lower fairing -->
-            <path d="M105 70 L140 72 L160 80 L130 85 L105 78 Z" fill="${c1}" stroke="${c2}" stroke-width="1" opacity="0.6"/>
-            <!-- Windscreen -->
-            <path d="M175 44 L185 32 L192 35 L190 48" fill="none" stroke="rgba(150,200,255,0.6)" stroke-width="2.5" stroke-linecap="round"/>
-            <!-- Seat -->
-            <path d="M88 60 L120 50 L160 47 L150 43 L110 45 L85 55 Z" fill="#2a2a2a" stroke="#222" stroke-width="1"/>
-            <!-- Tank -->
-            <path d="M115 48 L155 44 L170 46 L160 52 L120 54 Z" fill="${c1}" stroke="${c2}" stroke-width="1.5"/>
-            <!-- Motor -->
-            <circle cx="120" cy="78" r="14" fill="${c2}" stroke="#333" stroke-width="2"/>
-            <circle cx="120" cy="78" r="6" fill="#555"/>
-            <!-- Front forks -->
-            <line x1="188" y1="56" x2="205" y2="88" stroke="#bbb" stroke-width="4" stroke-linecap="round"/>
-            <line x1="192" y1="58" x2="210" y2="90" stroke="#ccc" stroke-width="3.5" stroke-linecap="round"/>
-            <!-- Clip-on handlebars -->
-            <line x1="180" y1="40" x2="190" y2="34" stroke="#666" stroke-width="3" stroke-linecap="round"/>
-            <line x1="180" y1="40" x2="172" y2="34" stroke="#666" stroke-width="3" stroke-linecap="round"/>
-            <!-- Headlight (aggressive) -->
-            <path d="M195 48 L200 44 L204 48 L200 52 Z" fill="#fffde7" stroke="#888" stroke-width="1.5"/>
-            <!-- Tail section -->
-            <path d="M60 55 L80 48 L88 55" fill="${c1}" stroke="${c2}" stroke-width="1.5" opacity="0.7"/>
-            <!-- Tail light -->
-            <rect x="58" y="52" width="6" height="3" rx="1" fill="#e53935"/>
-            <!-- Rear sets -->
-            <line x1="110" y1="85" x2="120" y2="88" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
-            <!-- Chain -->
-            <path d="M120 88 Q86 108 60 115" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="3 2"/>
-            <!-- Disc brake front -->
-            <circle cx="208" cy="115" r="18" fill="none" stroke="#ddd" stroke-width="1.5"/>
-            <!-- Disc brake rear -->
-            <circle cx="52" cy="115" r="16" fill="none" stroke="#ddd" stroke-width="1.5"/>
-        </svg>`,
-        cruiser: `<svg viewBox="0 0 280 160" xmlns="http://www.w3.org/2000/svg">
-            <!-- Rear wheel (larger) -->
-            <circle cx="48" cy="112" r="36" fill="none" stroke="#444" stroke-width="6"/>
-            <circle cx="48" cy="112" r="30" fill="none" stroke="#555" stroke-width="2"/>
-            <circle cx="48" cy="112" r="8" fill="#777" stroke="#555" stroke-width="2"/>
-            <line x1="48" y1="80" x2="48" y2="76" stroke="#555" stroke-width="1.5"/>
-            <line x1="48" y1="144" x2="48" y2="148" stroke="#555" stroke-width="1.5"/>
-            <line x1="16" y1="112" x2="12" y2="112" stroke="#555" stroke-width="1.5"/>
-            <line x1="80" y1="112" x2="84" y2="112" stroke="#555" stroke-width="1.5"/>
-            <!-- Front wheel (slightly smaller) -->
-            <circle cx="225" cy="112" r="30" fill="none" stroke="#444" stroke-width="5"/>
-            <circle cx="225" cy="112" r="24" fill="none" stroke="#555" stroke-width="2"/>
-            <circle cx="225" cy="112" r="7" fill="#777" stroke="#555" stroke-width="2"/>
-            <line x1="225" y1="86" x2="225" y2="82" stroke="#555" stroke-width="1.5"/>
-            <line x1="225" y1="138" x2="225" y2="142" stroke="#555" stroke-width="1.5"/>
-            <line x1="199" y1="112" x2="195" y2="112" stroke="#555" stroke-width="1.5"/>
-            <line x1="251" y1="112" x2="255" y2="112" stroke="#555" stroke-width="1.5"/>
-            <!-- Long swingarm -->
-            <path d="M48 112 L130 76" stroke="#888" stroke-width="5" stroke-linecap="round"/>
-            <!-- Frame - long and low -->
-            <path d="M48 112 L75 75 L100 62 L160 55 L200 60 L225 112" fill="none" stroke="${c1}" stroke-width="5" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Engine/motor block (V-twin style) -->
-            <rect x="110" y="68" width="30" height="25" rx="4" fill="${c2}" stroke="#333" stroke-width="2"/>
-            <rect x="115" y="62" width="20" height="10" rx="3" fill="${c2}" stroke="#333" stroke-width="1.5" transform="rotate(-15 125 67)"/>
-            <rect x="115" y="88" width="20" height="10" rx="3" fill="${c2}" stroke="#333" stroke-width="1.5" transform="rotate(15 125 93)"/>
-            <!-- Wide tank -->
-            <path d="M105 55 L155 50 L175 53 L165 62 L110 64 Z" fill="${c1}" stroke="${c2}" stroke-width="1.5"/>
-            <ellipse cx="140" cy="55" rx="20" ry="4" fill="rgba(255,255,255,0.15)"/>
-            <!-- Low seat -->
-            <path d="M75 63 L105 56 L150 53 L140 50 L98 52 L72 58 Z" fill="#2a2a2a" stroke="#222" stroke-width="1"/>
-            <!-- Rear fender - swooping -->
-            <path d="M30 95 Q48 78 70 90" fill="none" stroke="${c1}" stroke-width="3.5" stroke-linecap="round"/>
-            <!-- Front forks - raked out -->
-            <line x1="190" y1="50" x2="218" y2="88" stroke="#bbb" stroke-width="5" stroke-linecap="round"/>
-            <line x1="194" y1="50" x2="225" y2="92" stroke="#ccc" stroke-width="4" stroke-linecap="round"/>
-            <!-- Wide handlebars (ape hangers) -->
-            <line x1="185" y1="42" x2="195" y2="28" stroke="#888" stroke-width="3" stroke-linecap="round"/>
-            <line x1="185" y1="42" x2="175" y2="28" stroke="#888" stroke-width="3" stroke-linecap="round"/>
-            <line x1="170" y1="28" x2="200" y2="28" stroke="#888" stroke-width="3" stroke-linecap="round"/>
-            <!-- Headlight (round, classic) -->
-            <circle cx="210" cy="55" r="9" fill="#fffde7" stroke="#888" stroke-width="2"/>
-            <circle cx="210" cy="55" r="5" fill="#fff8c4"/>
-            <!-- Tail light -->
-            <rect x="40" y="72" width="8" height="4" rx="2" fill="#e53935"/>
-            <!-- Forward controls / footpegs -->
-            <line x1="155" y1="90" x2="168" y2="92" stroke="#888" stroke-width="3" stroke-linecap="round"/>
-            <!-- Exhaust pipes (side) -->
-            <path d="M125 93 L110 100 L85 108 L75 108" fill="none" stroke="#ccc" stroke-width="3.5" stroke-linecap="round"/>
-            <ellipse cx="73" cy="108" rx="5" ry="4" fill="#bbb" stroke="#999" stroke-width="1"/>
-            <!-- Belt drive -->
-            <path d="M130 88 Q90 108 55 112" fill="none" stroke="#555" stroke-width="2" stroke-dasharray="4 2"/>
-            <!-- Chrome accents -->
-            <circle cx="48" cy="112" r="20" fill="none" stroke="rgba(200,200,200,0.3)" stroke-width="1.5"/>
-            <circle cx="225" cy="112" r="16" fill="none" stroke="rgba(200,200,200,0.3)" stroke-width="1.5"/>
-        </svg>`,
-        moped: `<svg viewBox="0 0 240 160" xmlns="http://www.w3.org/2000/svg">
-            <!-- Rear wheel (small) -->
-            <circle cx="55" cy="118" r="26" fill="none" stroke="#444" stroke-width="5"/>
-            <circle cx="55" cy="118" r="21" fill="none" stroke="#555" stroke-width="1.5"/>
-            <circle cx="55" cy="118" r="6" fill="#666" stroke="#444" stroke-width="2"/>
-            <!-- Front wheel (small) -->
-            <circle cx="190" cy="118" r="26" fill="none" stroke="#444" stroke-width="5"/>
-            <circle cx="190" cy="118" r="21" fill="none" stroke="#555" stroke-width="1.5"/>
-            <circle cx="190" cy="118" r="6" fill="#666" stroke="#444" stroke-width="2"/>
-            <!-- Step-through frame -->
-            <path d="M55 118 L75 78 L90 68 L110 65 L150 62 L170 65 L190 118" fill="none" stroke="${c1}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Lower frame / step through -->
-            <path d="M75 78 L90 95 L130 95 L150 75" fill="none" stroke="${c1}" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Body panels -->
-            <path d="M88 68 L115 62 L150 60 L165 65 L155 75 L130 78 L95 78 Z" fill="${c1}" stroke="${c2}" stroke-width="1.5" opacity="0.85"/>
-            <!-- Leg shield -->
-            <path d="M148 62 L160 55 L170 58 L165 70" fill="${c1}" stroke="${c2}" stroke-width="1.5" opacity="0.7"/>
-            <!-- Under-seat storage area -->
-            <path d="M80 68 L115 62 L120 58 L90 60 Z" fill="${c2}" stroke="#333" stroke-width="1" opacity="0.5"/>
-            <!-- Seat (wide, flat) -->
-            <path d="M82 63 L125 56 L145 55 L140 52 L118 53 L78 58 Z" fill="#333" stroke="#222" stroke-width="1"/>
-            <!-- Floorboard -->
-            <rect x="92" y="92" width="35" height="5" rx="2" fill="#777" stroke="#555" stroke-width="1"/>
-            <!-- Motor (hub motor in rear) -->
-            <circle cx="55" cy="118" r="14" fill="${c2}" stroke="#333" stroke-width="2"/>
-            <circle cx="55" cy="118" r="5" fill="#555"/>
-            <!-- Front fork -->
-            <line x1="170" y1="60" x2="186" y2="95" stroke="#bbb" stroke-width="4" stroke-linecap="round"/>
-            <line x1="173" y1="62" x2="193" y2="100" stroke="#ccc" stroke-width="3" stroke-linecap="round"/>
-            <!-- Handlebars -->
-            <line x1="167" y1="48" x2="178" y2="42" stroke="#888" stroke-width="3" stroke-linecap="round"/>
-            <line x1="167" y1="48" x2="158" y2="42" stroke="#888" stroke-width="3" stroke-linecap="round"/>
-            <!-- Headlight -->
-            <ellipse cx="180" cy="55" rx="7" ry="6" fill="#fffde7" stroke="#888" stroke-width="1.5"/>
-            <!-- Rear fender -->
-            <path d="M38 105 Q55 90 72 100" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
-            <!-- Front fender -->
-            <path d="M175 105 Q190 92 205 102" fill="none" stroke="${c1}" stroke-width="3" stroke-linecap="round"/>
-            <!-- Tail light -->
-            <rect x="42" y="85" width="6" height="4" rx="1" fill="#e53935"/>
-            <!-- Battery indicator panel -->
-            <rect x="95" y="65" width="25" height="8" rx="3" fill="#333" stroke="#444" stroke-width="1"/>
-            <rect x="98" y="67" width="5" height="4" rx="1" fill="#4caf50"/>
-            <rect x="104" y="67" width="5" height="4" rx="1" fill="#4caf50"/>
-            <rect x="110" y="67" width="5" height="4" rx="1" fill="#ffeb3b"/>
-            <!-- Mirrors -->
-            <line x1="178" y1="42" x2="184" y2="38" stroke="#888" stroke-width="1.5"/>
-            <ellipse cx="186" cy="37" rx="4" ry="3" fill="#aaa" stroke="#888" stroke-width="1"/>
-            <line x1="158" y1="42" x2="152" y2="38" stroke="#888" stroke-width="1.5"/>
-            <ellipse cx="150" cy="37" rx="4" ry="3" fill="#aaa" stroke="#888" stroke-width="1"/>
-        </svg>`,
-        youth: `<svg viewBox="0 0 220 140" xmlns="http://www.w3.org/2000/svg">
-            <!-- Rear wheel (small proportions) -->
-            <circle cx="50" cy="100" r="25" fill="none" stroke="#444" stroke-width="4"/>
-            <circle cx="50" cy="100" r="20" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="3 2"/>
-            <circle cx="50" cy="100" r="5" fill="#666" stroke="#444" stroke-width="1.5"/>
-            <!-- Front wheel -->
-            <circle cx="170" cy="100" r="25" fill="none" stroke="#444" stroke-width="4"/>
-            <circle cx="170" cy="100" r="20" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="3 2"/>
-            <circle cx="170" cy="100" r="5" fill="#666" stroke="#444" stroke-width="1.5"/>
-            <!-- Swingarm -->
-            <line x1="50" y1="100" x2="100" y2="65" stroke="#888" stroke-width="3.5" stroke-linecap="round"/>
-            <!-- Frame (compact) -->
-            <path d="M50 100 L80 62 L100 50 L140 45 L155 55 L170 100" fill="none" stroke="${c1}" stroke-width="4.5" stroke-linecap="round" stroke-linejoin="round"/>
-            <!-- Cross brace -->
-            <line x1="100" y1="65" x2="140" y2="45" stroke="${c1}" stroke-width="3.5" stroke-linecap="round"/>
-            <!-- Body panel -->
-            <path d="M85 56 L108 47 L138 44 L145 50 L130 58 L92 60 Z" fill="${c1}" stroke="${c2}" stroke-width="1.5" opacity="0.85"/>
-            <!-- Motor -->
-            <circle cx="100" cy="65" r="10" fill="${c2}" stroke="#333" stroke-width="2"/>
-            <circle cx="100" cy="65" r="4" fill="#555"/>
-            <!-- Seat (small, simple) -->
-            <path d="M78 52 L108 44 L135 42 L130 39 L102 40 L75 48 Z" fill="#333" stroke="#222" stroke-width="1"/>
-            <!-- Tank (small) -->
-            <rect x="100" y="38" width="30" height="9" rx="4" fill="${c1}" stroke="${c2}" stroke-width="1"/>
-            <!-- Front forks -->
-            <line x1="152" y1="48" x2="168" y2="78" stroke="#bbb" stroke-width="3.5" stroke-linecap="round"/>
-            <line x1="155" y1="50" x2="173" y2="82" stroke="#ccc" stroke-width="3" stroke-linecap="round"/>
-            <!-- Handlebars -->
-            <line x1="148" y1="38" x2="158" y2="32" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
-            <line x1="148" y1="38" x2="140" y2="32" stroke="#888" stroke-width="2.5" stroke-linecap="round"/>
-            <!-- Headlight -->
-            <circle cx="162" cy="45" r="5" fill="#fffde7" stroke="#888" stroke-width="1.5"/>
-            <!-- Rear fender -->
-            <path d="M35 88 Q50 78 65 86" fill="none" stroke="${c1}" stroke-width="2.5" stroke-linecap="round"/>
-            <!-- Front fender -->
-            <path d="M157 86 Q170 76 183 84" fill="none" stroke="${c1}" stroke-width="2.5" stroke-linecap="round"/>
-            <!-- Number plate -->
-            <rect x="60" y="40" width="14" height="10" rx="2" fill="${c1}" stroke="${c2}" stroke-width="1" opacity="0.7"/>
-            <!-- Footpegs -->
-            <line x1="95" y1="72" x2="104" y2="74" stroke="#888" stroke-width="2" stroke-linecap="round"/>
-            <!-- Chain -->
-            <path d="M100 72 Q75 90 55 100" fill="none" stroke="#555" stroke-width="1.5" stroke-dasharray="3 2"/>
-            <!-- Safety flag -->
-            <line x1="56" y1="40" x2="56" y2="18" stroke="#888" stroke-width="1.5"/>
-            <path d="M56 18 L70 22 L56 26" fill="#ff5722" stroke="none"/>
-        </svg>`
-    };
-    return svgs[type] || svgs.dirtbike;
-}
 
 function bgGradient(type) {
     const bgs = {
@@ -1258,18 +972,13 @@ function createCard(bike) {
     const card = document.createElement('div');
     card.className = 'bike-card' + (isSelected ? ' selected' : '');
 
-    // Build image section - real photo or SVG fallback
-    let imageContent;
-    if (bike.imageUrl) {
-        imageContent = `<div class="img-loading"></div>`
-            + `<img src="${bike.imageUrl}" alt="${bike.name}" loading="lazy" onload="this.previousElementSibling.remove()" onerror="this.style.display='none';this.previousElementSibling.remove();this.nextElementSibling.style.display='flex'">`
-            + `<div class="img-fallback" style="width:100%;height:100%;align-items:center;justify-content:center;background:${bgGradient(bike.type)}">${bikeSVG(bike.svgType, bike.color1, bike.color2)}</div>`;
-    } else {
-        imageContent = bikeSVG(bike.svgType, bike.color1, bike.color2);
-    }
+    // Build image section - real photo or gradient background
+    const imageContent = bike.imageUrl
+        ? `<div class="img-loading"></div><img src="${bike.imageUrl}" alt="${bike.name}" loading="lazy" onload="this.previousElementSibling.remove()" onerror="this.previousElementSibling.remove();this.remove()">`
+        : '';
 
     card.innerHTML = `
-        <div class="card-image" style="background:${bike.imageUrl ? '#f5f5f5' : bgGradient(bike.type)}">
+        <div class="card-image" style="background:${bgGradient(bike.type)}">
             <button class="card-fav ${isFav ? 'faved' : ''}" data-name="${bike.name}" title="Toggle favorite">${isFav ? '\u2665' : '\u2661'}</button>
             <span class="type-badge ${typeClass(bike.type)}">${typeLabel(bike.type)}</span>
             ${bike.discontinued ? '<span class="discontinued-badge">Discontinued</span>' : ''}
