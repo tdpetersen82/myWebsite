@@ -1037,6 +1037,7 @@ const bikes = [
         name: "Energica Eva Ribelle", brand: "Energica", type: "street", svgType: "street",
         color1: "#00897b", color2: "#00695c",
         websiteUrl: "https://www.energicamotor.com/us/models/energica-eva-ribelle/",
+        discontinued: true,
         price: 26000, priceDisplay: "$26,000",
         motorKw: 126, motor: "171 HP (126kW)", battery: "21.5kWh", batteryWh: 21500,
         rangeMi: 261, range: "261 mi city / 130 mi combined", speedMph: 125, speed: "125 mph",
@@ -1044,8 +1045,8 @@ const bikes = [
         torque: "215 Nm", accel: "0-60 in 2.6s",
         rating: 4.6,
         pros: ["171 HP — most powerful electric streetfighter", "261-mile city range on 21.5kWh battery", "DC fast charge to 85% in 40 minutes"],
-        cons: ["$26K is top-tier pricing", "573 lbs is extremely heavy", "Very limited US dealer network"],
-        review: "Italian-made electric hyper-naked with 171 HP, 261 miles of city range, and 40-minute DC fast charging. The most powerful electric streetfighter money can buy. EMCE motor is 22 lbs lighter than predecessor. Brutal performance."
+        cons: ["Energica filed bankruptcy Oct 2024", "573 lbs is extremely heavy", "Very limited US dealer network"],
+        review: "Italian-made electric hyper-naked with 171 HP and 261 miles of city range. Energica filed for bankruptcy in Oct 2024 after owner Ideanomics collapsed, but Singapore-based investors are working on a revival. Existing units remain some of the most powerful electric streetfighters ever made."
     },
     {
         name: "Electric Motion Epure", brand: "Electric Motion", type: "off-road", svgType: "dirtbike",
@@ -1117,6 +1118,62 @@ const bikes = [
         pros: ["BMW build quality and 3-year warranty", "Unique eParkourer styling", "Electric reverse gear for parking"],
         cons: ["59 mph limits highway use", "265 lbs for a commuter scooter", "Highline trim adds $875 for Flash mode"],
         review: "BMW's urban electric two-wheeler blends scooter practicality with motorcycle styling. Flow, Surf, and Flash (Highline) ride modes. Single-arm swingarm, belt drive, and BMW Connected app. 200cc-equivalent performance with premium BMW fit and finish."
+    },
+    {
+        name: "Zero XB", brand: "Zero Motorcycles", type: "off-road", svgType: "dirtbike",
+        color1: "#ff9800", color2: "#e65100",
+        websiteUrl: "https://zeromotorcycles.com/model/zero-xb",
+        price: 4395, priceDisplay: "$4,395",
+        motorKw: 7.5, motor: "7.5kW (10 HP)", battery: "2.4kWh (removable)", batteryWh: 2400,
+        rangeMi: 40, range: "~40 mi at 31 mph", speedMph: 50, speed: "50 mph",
+        weightLbs: 139, weight: "139 lbs", charge: "3 hrs",
+        torque: "275 ft-lbs (rear wheel)", accel: "N/A",
+        rating: 4.0,
+        pros: ["Zero's lightest ever at 139 lbs", "Hot-swappable battery — no tools needed", "Traction control + hill hold + regen at $4.4K"],
+        cons: ["Off-road only — not street legal in US", "Modest 10 HP and 50 mph", "40-mile range limits longer rides"],
+        review: "Zero's most affordable and lightest model ever, competing directly with Sur-Ron-class bikes. At 139 lbs with hot-swappable battery, it punches above its weight with advanced electronics: traction control, hill hold, cruise control, and regen braking — features rare at this price."
+    },
+    {
+        name: "Zero XE", brand: "Zero Motorcycles", type: "off-road", svgType: "dirtbike",
+        color1: "#ff9800", color2: "#e65100",
+        websiteUrl: "https://zeromotorcycles.com/model/zero-xe",
+        price: 6495, priceDisplay: "$6,495",
+        motorKw: 15.5, motor: "15.5kW (21 HP)", battery: "4.3kWh (removable)", batteryWh: 4300,
+        rangeMi: 65, range: "~65 mi at 31 mph", speedMph: 53, speed: "53 mph",
+        weightLbs: 223, weight: "223 lbs", charge: "5.5 hrs",
+        torque: "468 ft-lbs (rear wheel)", accel: "N/A",
+        rating: 4.1,
+        pros: ["Largest removable battery in class (4.3kWh)", "Fully adjustable suspension front & rear", "65-mile range is competitive off-road"],
+        cons: ["Off-road only in US (street-legal in EU)", "53 mph top speed is modest", "5.5-hour charge without spare battery"],
+        review: "Zero's proper enduro machine with one of the largest removable batteries in the industry. Fully adjustable suspension with 8.5/9.8 inches of travel, 21/18 wheels, and serious ground clearance. Zero's return to the mid-weight dirt segment that built the brand."
+    },
+    {
+        name: "LiveWire S2 Alpinista", brand: "LiveWire", type: "street", svgType: "street",
+        color1: "#ff6f00", color2: "#e65100",
+        websiteUrl: "https://www.livewire.com/s2-alpinista-electric-motorcycle",
+        price: 15999, priceDisplay: "$15,999",
+        motorKw: 63, motor: "84 HP (63kW)", battery: "10.5kWh", batteryWh: 10500,
+        rangeMi: 120, range: "120 mi city / 71 mi highway", speedMph: 99, speed: "99 mph",
+        weightLbs: 434, weight: "434 lbs", charge: "1.3 hrs L2 (20-80%)",
+        torque: "194 ft-lbs (263 Nm)", accel: "0-60 in 3.0s",
+        rating: 4.2,
+        pros: ["$250 less than Del Mar on same S2 platform", "Cornering ABS + drag-torque slip control", "Five ride modes including fully custom"],
+        cons: ["99 mph top speed may disappoint sport riders", "434 lbs is substantial weight", "Highway range drops to 71 miles"],
+        review: "LiveWire's sport standard joins the S2 family at $15,999 — $250 less than the Del Mar. Same proven 84 HP powertrain, cornering ABS, and drag-torque slip control. Five ride modes including a fully customizable option. 120-mile city range is practical for daily use."
+    },
+    {
+        name: "Verge TS Ultra", brand: "Verge Motorcycles", type: "street", svgType: "street",
+        color1: "#212121", color2: "#000000",
+        websiteUrl: "https://www.vergemotorcycles.com/ts-ultra/",
+        price: 44900, priceDisplay: "$44,900",
+        motorKw: 150, motor: "201 HP (150kW)", battery: "21.8kWh", batteryWh: 21800,
+        rangeMi: 233, range: "Up to 233 mi", speedMph: 124, speed: "124 mph",
+        weightLbs: 550, weight: "~550 lbs", charge: "25 min DC fast (0-80%)",
+        torque: "885 ft-lbs (1,200 Nm)", accel: "0-60 in 2.5s",
+        rating: 4.4,
+        pros: ["Revolutionary hubless rear-wheel motor", "201 HP and 885 ft-lbs — insane power", "Full Ohlins suspension + Starmatter Vision AI"],
+        cons: ["$44,900 is ultra-premium pricing", "~550 lbs is very heavy", "Limited US dealer network (CA only initially)"],
+        review: "The Finnish-made Verge TS Ultra features a revolutionary hubless rear-wheel motor — no chain, belt, or traditional hub. 201 HP, 885 ft-lbs of torque, and Starmatter Vision machine-vision AI safety system. Full Ohlins suspension and Galfer brakes. The most exotic electric motorcycle money can buy."
     }
 ];
 
