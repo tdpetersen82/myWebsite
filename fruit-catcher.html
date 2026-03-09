@@ -11,6 +11,8 @@
             border-radius: 12px;
             display: block;
             margin: 6px auto;
+            max-width: 100%;
+            touch-action: none;
         }
         #p1score { color: #3B82F6; font-size: 1.5em; font-weight: bold; }
         #p2score { color: #EF4444; font-size: 1.5em; font-weight: bold; }
@@ -19,6 +21,7 @@
         @keyframes pulse { from { transform: scale(1); } to { transform: scale(1.2); } }
         #scorebar-wrap {
             width: 800px;
+            max-width: 100%;
             margin: 4px auto;
             height: 10px;
             border-radius: 5px;
@@ -33,12 +36,13 @@
             justify-content: center;
             gap: 50px;
             margin-top: 10px;
+            flex-wrap: wrap;
         }
         .player-controls { text-align: center; font-size: 0.95em; color: #555; }
         .player-controls strong { display: block; margin-bottom: 3px; font-size: 1em; }
         .p1-label { color: #3B82F6; }
         .p2-label { color: #EF4444; }
-        #muteBtn {
+        #muteBtn, #helpBtn {
             background: rgba(30,41,82,0.85);
             color: #fff;
             border: 1px solid rgba(255,255,255,0.25);
@@ -49,7 +53,12 @@
             margin-top: 4px;
             transition: background 0.15s;
         }
-        #muteBtn:hover { background: rgba(59,82,170,0.95); }
+        #muteBtn:hover, #helpBtn:hover { background: rgba(59,82,170,0.95); }
+        #helpBtn { margin-left: 6px; }
+        @media (max-width: 820px) {
+            .controls-row { gap: 20px; }
+            #scorebar-wrap { width: 95%; }
+        }
     </style>
 </head>
 <body>
@@ -72,8 +81,8 @@
             </div>
             <div class="player-controls">
                 <strong style="color:#333">Enter / 1 2 3 = Select mode</strong>
-                <span>🧊 Freeze &nbsp;⚡ Speed &nbsp;🧲 Magnet &nbsp;🛡️ Shield &nbsp;📏 Wide &nbsp;🎁 Mystery &nbsp;⏱️ SlowTime</span>
-                <br><button id="muteBtn">🔊 Music</button>
+                <span>🧊 Freeze &nbsp;⚡ Speed &nbsp;🧲 Magnet &nbsp;🛡️ Shield &nbsp;📏 Wide &nbsp;🎁 Mystery &nbsp;⏱️ Slow &nbsp;🔥 Zap &nbsp;🧺 MegaCatch</span>
+                <br><button id="muteBtn">🔊 Music</button><button id="helpBtn">❓ Help</button>
             </div>
             <div class="player-controls">
                 <strong class="p2-label">Player 2 (Red)</strong>
@@ -209,11 +218,13 @@
 
         // ── Constants ─────────────────────────────────────────────────────────
         const MODES = {
-            classic: { label: 'Classic', icon: '🎮', duration: 60, players: 2, desc: '2 players  •  60 seconds', color: '#3B82F6' },
-            blitz:   { label: 'Blitz',   icon: '⚡', duration: 30, players: 2, desc: '2 players  •  30s turbo!', color: '#F59E0B' },
-            solo:    { label: 'Solo',    icon: '🏆', duration: 60, players: 1, desc: '1 player  •  high score',  color: '#10B981' },
+            classic:  { label: 'Classic',  icon: '🎮', duration: 60, players: 2, desc: '2 players  •  60 seconds',  color: '#3B82F6' },
+            blitz:    { label: 'Blitz',    icon: '⚡', duration: 30, players: 2, desc: '2 players  •  30s turbo!',   color: '#F59E0B' },
+            solo:     { label: 'Solo',     icon: '🏆', duration: 60, players: 1, desc: '1 player  •  vs AI',        color: '#10B981' },
+            zen:      { label: 'Zen',      icon: '🧘', duration: 0,  players: 1, desc: '1 player  •  3 lives',      color: '#8B5CF6' },
+            survival: { label: 'Survival', icon: '💀', duration: 0,  players: 1, desc: '1 player  •  endless rounds', color: '#EF4444' },
         };
-        const MODE_KEYS = ['classic', 'blitz', 'solo'];
+        const MODE_KEYS = ['classic', 'blitz', 'solo', 'zen', 'survival'];
 
         const BW = 104, BH = 28;         // basket width / height
         const WIDE_BW = 156;             // wide basket width
@@ -256,6 +267,8 @@
             { label: '💰', color: '#FCD34D', points: 3,  weight: 5                      },
             { label: '🎁', color: '#A78BFA', points: 0,  weight: 3, special: 'mystery'  },
             { label: '⏱️', color: '#67E8F9', points: 0,  weight: 3, special: 'timeslow' },
+            { label: '🔥', color: '#FF6B35', points: 0,  weight: 2, special: 'lightning' },
+            { label: '🧺', color: '#D97706', points: 0,  weight: 2, special: 'megawide' },
         ];
 
         // ── Clouds ────────────────────────────────────────────────────────────
@@ -321,6 +334,50 @@
         let gameOverTs    = 0;     // timestamp when endGame was called
         let isNewHighScore = false;
         let soloHighScore  = parseInt(localStorage.getItem('fruitCatcherSoloHigh') || '0');
+        let zenHighScore   = parseInt(localStorage.getItem('fruitCatcherZenHigh') || '0');
+        let survivalHighScore = parseInt(localStorage.getItem('fruitCatcherSurvivalHigh') || '0');
+
+        // Zen mode state
+        let zenLives       = 3;
+
+        // Survival mode state
+        let survivalRound  = 1;
+        let survivalMissed = 0;
+        let survivalRoundTimer = 0;
+        const SURVIVAL_ROUND_DURATION = 15;
+        const SURVIVAL_MAX_MISSES = 5;
+
+        // Pause state
+        let pausedTs       = 0;     // timestamp when paused
+
+        // Bomb flash effect
+        let bombFlashTimer = 0;
+
+        // Transition
+        let transitionAlpha = 1;
+        let transitionTarget = 0;
+        let transitionSpeed = 0.04;
+
+        // Lightning zap effect
+        let lightningZaps  = [];    // {from, to, life}
+
+        // Tutorial
+        let showTutorial   = !localStorage.getItem('fruitCatcherTutorialSeen');
+
+        // Settings persistence
+        let savedMode      = localStorage.getItem('fruitCatcherLastMode');
+        let musicMutedSaved = localStorage.getItem('fruitCatcherMusicMuted') === 'true';
+
+        // Touch state
+        let touchActive    = {};    // touchId -> {side}
+        let isTouchDevice  = false;
+
+        // AI state
+        let aiTargetX      = W / 2;
+        let aiReactionTimer = 0;
+        const AI_REACTION_MS = 180;
+        const AI_SPEED       = 5.5;
+        const AI_JITTER      = 12;
 
         let items            = [];
         let particles        = [];
@@ -333,9 +390,12 @@
             return {
                 x, y: BASKET_Y, score: 0, combo: 0, maxCombo: 0,
                 frozen: 0, speedBoost: 0, magnet: 0, shield: false, wide: 0,
+                megaWide: 0,
                 catchAnim: 0, fever: 0, feverActive: false,
                 totalCaught: 0, fruitsOnly: 0, bombsCaught: 0,
                 powerUpsCaught: 0, starsGolden: 0,
+                expression: 'normal', expressionTimer: 0,
+                isAI: false,
             };
         }
 
@@ -383,6 +443,26 @@
         function getDiff() {
             const wave  = currentWave;
             const blitz = currentMode === 'blitz';
+            // Survival mode: escalating difficulty based on round
+            if (currentMode === 'survival') {
+                const r = Math.min(survivalRound, 10);
+                return {
+                    sMin: 1.5 + r * 0.35,
+                    sMax: 3.0 + r * 0.45,
+                    iMin: Math.max(300, 1200 - r * 90),
+                    iMax: Math.max(500, 1800 - r * 120),
+                };
+            }
+            // Zen mode: gradual difficulty increase over time
+            if (currentMode === 'zen') {
+                const t = Math.min(timeLeft / 60, 5); // ramps over 5 minutes
+                return {
+                    sMin: 1.2 + t * 0.4,
+                    sMax: 2.5 + t * 0.6,
+                    iMin: Math.max(400, 1400 - t * 180),
+                    iMax: Math.max(700, 2000 - t * 220),
+                };
+            }
             if (wave <= 1) return { sMin: blitz ? 2.5 : 1.5, sMax: blitz ? 4.5 : 3.0, iMin: blitz ? 600 : 1400, iMax: blitz ? 950 : 2000 };
             if (wave <= 2) return { sMin: blitz ? 3.2 : 2.0, sMax: blitz ? 5.5 : 4.2, iMin: blitz ? 420 : 950,  iMax: blitz ? 680 : 1450 };
             if (wave <= 3) return { sMin: 2.6, sMax: 5.0, iMin: 700,  iMax: 1100 };
@@ -403,6 +483,7 @@
                 wobbleAmp: (Math.random() < 0.4) ? 0.6 + Math.random() * 0.8 : 0,
                 type:     pickItem(),
                 trail:    [],
+                spawnTime: ts || currentTs,
             });
             lastSpawn = ts;
             const d2 = getDiff();
@@ -459,6 +540,48 @@
             spawnPopup(player.x, player.y - 40, '📏 WIDE!', '#A78BFA');
             spawnParticles(ix, iy, '#A78BFA', 14);
         }
+        function applyLightning(player, ix, iy) {
+            playTone(200, 'sawtooth', 0.3, 0.4);
+            playTone(800, 'square', 0.15, 0.3, 0.05);
+            playTone(1200, 'sine', 0.1, 0.25, 0.1);
+            player.catchAnim = 1;
+            spawnPopup(player.x, player.y - 40, '🔥 ZAP!', '#FF6B35');
+            spawnParticles(ix, iy, '#FF6B35', 18);
+            // Zap the 3 nearest non-bomb items, or destroy bombs
+            const sorted = [...items].sort((a, b) => {
+                const da = Math.hypot(a.x - ix, a.y - iy);
+                const db = Math.hypot(b.x - ix, b.y - iy);
+                return da - db;
+            });
+            let zapped = 0;
+            for (const target of sorted) {
+                if (zapped >= 3) break;
+                lightningZaps.push({ fx: ix, fy: iy, tx: target.x, ty: target.y, life: 1 });
+                if (target.type.points > 0) {
+                    player.score += target.type.points;
+                    player.fruitsOnly++;
+                    player.combo++;
+                    spawnPopup(target.x, target.y - 10, `+${target.type.points}`, '#FF6B35');
+                } else if (target.type.points < 0) {
+                    spawnPopup(target.x, target.y - 10, '💥', '#FF6B35');
+                }
+                spawnParticles(target.x, target.y, '#FF6B35', 8);
+                target.zapped = true;
+                zapped++;
+            }
+            items = items.filter(i => !i.zapped);
+            if (player.combo > player.maxCombo) player.maxCombo = player.combo;
+            updateHUD(player); updateScoreBar();
+        }
+        function applyMegaWide(player, ix, iy) {
+            player.megaWide = currentTs + 2000;
+            playTone(300, 'triangle', 0.15, 0.3);
+            playTone(500, 'triangle', 0.15, 0.25, 0.06);
+            playTone(700, 'triangle', 0.15, 0.2, 0.12);
+            player.catchAnim = 1;
+            spawnPopup(player.x, player.y - 40, '🧺 MEGA CATCH!', '#D97706');
+            spawnParticles(ix, iy, '#D97706', 16);
+        }
 
         // ── Confetti ──────────────────────────────────────────────────────────
         function spawnConfetti() {
@@ -510,7 +633,9 @@
 
         // ── Catch & scoring ───────────────────────────────────────────────────
         function getBasketWidth(player) {
-            return (player.wide > currentTs) ? WIDE_BW : BW;
+            if (player.megaWide > currentTs) return W * 0.85;
+            if (player.wide > currentTs) return WIDE_BW;
+            return BW;
         }
 
         function checkCatch(basket, item) {
@@ -554,7 +679,7 @@
                 return;
             }
             if (type.special === 'mystery') {
-                const outcomes = ['freeze_opp','speed','magnet','shield','wide','points_bonus','bomb_penalty'];
+                const outcomes = ['freeze_opp','speed','magnet','shield','wide','points_bonus','bomb_penalty','lightning','megawide'];
                 const outcome  = outcomes[Math.floor(Math.random() * outcomes.length)];
                 playMystery();
                 player.catchAnim = 1;
@@ -582,6 +707,8 @@
                 else if (outcome === 'magnet')       { applyMagnet(player, item.x, item.y); }
                 else if (outcome === 'shield')       { applyShield(player, item.x, item.y); }
                 else if (outcome === 'wide')         { applyWide(player, item.x, item.y); }
+                else if (outcome === 'lightning')    { applyLightning(player, item.x, item.y); }
+                else if (outcome === 'megawide')     { applyMegaWide(player, item.x, item.y); }
                 return;
             }
             if (type.special === 'timeslow') {
@@ -591,6 +718,16 @@
                 player.powerUpsCaught++;
                 spawnPopup(player.x, player.y - 40, '⏱️ TIME SLOW!', '#67E8F9');
                 spawnParticles(item.x, item.y, '#67E8F9', 18);
+                return;
+            }
+            if (type.special === 'lightning') {
+                applyLightning(player, item.x, item.y);
+                player.powerUpsCaught++;
+                return;
+            }
+            if (type.special === 'megawide') {
+                applyMegaWide(player, item.x, item.y);
+                player.powerUpsCaught++;
                 return;
             }
 
@@ -610,11 +747,19 @@
                 player.score = Math.max(0, player.score + type.points);
                 player.catchAnim = 1;
                 player.bombsCaught++;
+                player.expression = 'shocked'; player.expressionTimer = currentTs + 800;
                 playBomb();
                 shakeFrames = 12;
+                bombFlashTimer = currentTs + 250;
                 const txt = type.points === -4 ? '-4 ☠️' : '-2 💣';
                 spawnPopup(item.x, item.y - 10, txt, '#EF4444');
                 spawnParticles(item.x, item.y, '#6B7280', 14);
+                // Zen mode: lose a life
+                if (currentMode === 'zen') {
+                    zenLives--;
+                    spawnPopup(player.x, player.y - 60, `❤️ ${zenLives} left`, '#EF4444');
+                    if (zenLives <= 0) { endGame(); return; }
+                }
                 updateHUD(player);
                 updateScoreBar();
                 return;
@@ -628,6 +773,7 @@
             player.score += pts;
             player.catchAnim = 1;
             player.fruitsOnly++;
+            player.expression = 'happy'; player.expressionTimer = currentTs + 500;
 
             if (type.points >= 5) {
                 // Golden star / rainbow
@@ -680,6 +826,17 @@
                 spawnParticles(player.x, player.y - 30, '#FFD700', 12);
             }
 
+            // Combo milestones
+            const milestones = { 5: ['NICE!', 1, '#4ADE80'], 10: ['AMAZING!', 2, '#60A5FA'], 15: ['INCREDIBLE!', 3, '#A78BFA'], 20: ['LEGENDARY!', 5, '#FFD700'] };
+            const ms = milestones[player.combo];
+            if (ms) {
+                player.score += ms[1];
+                [600, 800, 1000, 1200, 1400].forEach((f, i) => playTone(f, 'sine', 0.12, 0.3, i * 0.06));
+                spawnPopup(player.x, player.y - 100, `🏅 ${ms[0]} +${ms[1]}`, ms[2]);
+                spawnParticles(player.x, player.y - 60, ms[2], 20);
+                updateHUD(player); updateScoreBar();
+            }
+
             // Fever mode trigger
             if (player.combo >= FEVER_COMBO_THRESHOLD && !player.feverActive) {
                 player.feverActive = true;
@@ -695,10 +852,13 @@
         }
 
         function updateHUD(player) {
+            const isOnlyP1Mode = currentMode === 'zen' || currentMode === 'survival';
             if (player === p1) {
-                p1ScoreEl.textContent = (currentMode === 'solo' ? 'Score: ' : 'P1: ') + p1.score;
-            } else if (currentMode !== 'solo') {
-                p2ScoreEl.textContent = 'P2: ' + p2.score;
+                const prefix = isOnlyP1Mode ? 'Score: ' : (currentMode === 'solo' ? 'You: ' : 'P1: ');
+                p1ScoreEl.textContent = prefix + p1.score;
+            } else if (!isOnlyP1Mode) {
+                const prefix = currentMode === 'solo' ? 'AI: ' : 'P2: ';
+                p2ScoreEl.textContent = prefix + p2.score;
             }
         }
 
@@ -718,11 +878,28 @@
             currentTs = ts;
             frameCount++;
 
+            // Transition alpha
+            if (transitionAlpha !== transitionTarget) {
+                if (transitionAlpha < transitionTarget) transitionAlpha = Math.min(transitionTarget, transitionAlpha + transitionSpeed);
+                else transitionAlpha = Math.max(transitionTarget, transitionAlpha - transitionSpeed);
+            }
+
+            // Lightning zaps decay
+            lightningZaps = lightningZaps.filter(z => { z.life -= 0.08; return z.life > 0; });
+
+            // Expression timer decay
+            [p1, p2].forEach(p => {
+                if (p.expressionTimer && ts > p.expressionTimer) p.expression = 'normal';
+            });
+
             // Always drift clouds
             CLOUDS.forEach(c => {
                 c.x += c.speed;
                 if (c.x - c.r * 2.5 > W) c.x = -c.r * 2.5;
             });
+
+            // Pause state — skip all gameplay updates
+            if (gameState === 'paused') return;
 
             if (gameState === 'modeselect') {
                 if (ts - lastSpawn >= nextSpawnMs) spawnItem(ts);
@@ -769,10 +946,29 @@
             // Timer tick
             if (ts - lastTimerTick >= 1000) {
                 lastTimerTick = ts;
-                timeLeft--;
-                timerEl.textContent = timeLeft;
-                timerEl.classList.toggle('urgent', timeLeft <= 10);
-                if (timeLeft <= 0) { endGame(); return; }
+                if (currentMode === 'zen') {
+                    // Zen: count up elapsed time
+                    timeLeft++;
+                    timerEl.textContent = timeLeft + 's';
+                    timerEl.classList.remove('urgent');
+                } else if (currentMode === 'survival') {
+                    // Survival: countdown per round
+                    survivalRoundTimer--;
+                    timerEl.textContent = `R${survivalRound} · ${survivalRoundTimer}`;
+                    if (survivalRoundTimer <= 0) {
+                        survivalRound++;
+                        survivalRoundTimer = SURVIVAL_ROUND_DURATION;
+                        playWave();
+                        spawnPopup(W / 2, H / 3, `💀 ROUND ${survivalRound} 💀`, '#EF4444');
+                        spawnParticles(W / 2, H / 3, '#EF4444', 18);
+                    }
+                    timerEl.classList.toggle('urgent', survivalRoundTimer <= 5);
+                } else {
+                    timeLeft--;
+                    timerEl.textContent = timeLeft;
+                    timerEl.classList.toggle('urgent', timeLeft <= 10);
+                    if (timeLeft <= 0) { endGame(); return; }
+                }
             }
 
             // Speed up music in final 10 seconds
@@ -780,7 +976,7 @@
 
             // Wave system
             const modeDur = MODES[currentMode].duration;
-            const elapsed = modeDur - timeLeft;
+            const elapsed = modeDur > 0 ? (modeDur - timeLeft) : timeLeft;
             const newWave = Math.min(4, Math.floor(elapsed / WAVE_DURATION) + 1);
             if (newWave > currentWave) {
                 currentWave = newWave;
@@ -804,13 +1000,23 @@
             if (!p1Frozen) {
                 if (keys['a'] || keys['A']) p1.x -= p1Spd;
                 if (keys['d'] || keys['D']) p1.x += p1Spd;
+                // Touch controls for P1
+                for (const tid in touchActive) {
+                    const t = touchActive[tid];
+                    if (t.side === 'left') p1.x -= p1Spd;
+                    else p1.x += p1Spd;
+                }
             }
-            if (currentMode !== 'solo' && !p2Frozen) {
+            if (currentMode === 'solo') {
+                // AI controls p2
+                updateAI(ts, p2, p2Frozen, p2Spd);
+            } else if (currentMode !== 'zen' && currentMode !== 'survival' && !p2Frozen) {
                 if (keys['ArrowLeft'])  p2.x -= p2Spd;
                 if (keys['ArrowRight']) p2.x += p2Spd;
             }
 
-            const activePlayers = currentMode === 'solo' ? [p1] : [p1, p2];
+            const isOnlyP1 = currentMode === 'zen' || currentMode === 'survival';
+            const activePlayers = isOnlyP1 ? [p1] : [p1, p2];
             activePlayers.forEach(p => {
                 const hw = getBasketWidth(p) / 2;
                 p.x = Math.max(hw, Math.min(W - hw, p.x));
@@ -854,8 +1060,38 @@
                 }
                 item.trail.forEach(t => t.life -= 0.06);
 
+                // Golden sparkle trails for high-value items
+                if (item.type.points >= 3 && frameCount % 4 === 0) {
+                    const sparkleColor = item.type.label === '💰' ? '#FCD34D' : item.type.label === '🌈' ? '#EC4899' : '#FFD700';
+                    particles.push({
+                        x: item.x + (Math.random() - 0.5) * 14,
+                        y: item.y + (Math.random() - 0.5) * 8,
+                        vx: (Math.random() - 0.5) * 1.5,
+                        vy: -0.5 - Math.random(),
+                        color: sparkleColor,
+                        life: 0.7,
+                        size: 1.5 + Math.random() * 2.5,
+                    });
+                }
+
                 if (checkCatch(p1, item)) { handleCatch(p1, p2, item); return false; }
-                if (currentMode !== 'solo' && checkCatch(p2, item)) { handleCatch(p2, p1, item); return false; }
+                if (!isOnlyP1 && checkCatch(p2, item)) { handleCatch(p2, p1, item); return false; }
+
+                // Near-miss feedback
+                if (item.y - ITEM_R >= H) {
+                    const closeDist = 40;
+                    activePlayers.forEach(ap => {
+                        if (Math.abs(item.x - ap.x) < closeDist + getBasketWidth(ap) / 2) {
+                            spawnPopup(item.x, H - 60, 'CLOSE!', '#F59E0B');
+                        }
+                    });
+                    // Survival: count missed fruits
+                    if (currentMode === 'survival' && item.type.points > 0) {
+                        survivalMissed++;
+                        if (survivalMissed >= SURVIVAL_MAX_MISSES) { endGame(); }
+                    }
+                    return false;
+                }
                 return item.y - ITEM_R < H;
             });
 
@@ -879,9 +1115,41 @@
             if (shakeFrames > 0) shakeFrames--;
         }
 
+        // ── AI Opponent ──────────────────────────────────────────────────────
+        function updateAI(ts, ai, frozen, speed) {
+            if (frozen) return;
+            if (ts - aiReactionTimer < AI_REACTION_MS) {
+                // Move toward last computed target
+                const dx = aiTargetX - ai.x;
+                if (Math.abs(dx) > 4) ai.x += Math.sign(dx) * Math.min(AI_SPEED, Math.abs(dx));
+                return;
+            }
+            aiReactionTimer = ts;
+            // Find best target: prioritize close, high-value items; avoid bombs
+            let bestScore = -Infinity;
+            let bestX = ai.x;
+            items.forEach(item => {
+                if (item.y < -ITEM_R || item.y > H * 0.85) return;
+                const dist = Math.hypot(item.x - ai.x, item.y - ai.y);
+                const timeToReach = dist / AI_SPEED;
+                const timeToFall = (ai.y - item.y) / Math.max(0.5, item.speed);
+                if (timeToFall < 0) return; // already past
+                let value = item.type.points * 10;
+                if (item.type.special) value = 8;
+                if (item.type.points < 0) value = -20; // avoid bombs
+                value -= dist * 0.03; // prefer closer
+                value += (1 - item.y / H) * 5; // prefer items higher up (more time)
+                if (value > bestScore) { bestScore = value; bestX = item.x; }
+            });
+            aiTargetX = bestX + (Math.random() - 0.5) * AI_JITTER;
+            const dx = aiTargetX - ai.x;
+            if (Math.abs(dx) > 4) ai.x += Math.sign(dx) * Math.min(AI_SPEED, Math.abs(dx));
+        }
+
         function endGame() {
             gameState  = 'gameover';
             gameOverTs = currentTs;
+            transitionAlpha = 1; transitionTarget = 0; transitionSpeed = 0.03;
             items = [];
             stopMusic();
             if (currentMode === 'solo') {
@@ -889,6 +1157,21 @@
                 if (isNewHighScore) {
                     soloHighScore = p1.score;
                     localStorage.setItem('fruitCatcherSoloHigh', soloHighScore);
+                }
+                playWin();
+            } else if (currentMode === 'zen') {
+                isNewHighScore = p1.score > zenHighScore;
+                if (isNewHighScore) {
+                    zenHighScore = p1.score;
+                    localStorage.setItem('fruitCatcherZenHigh', zenHighScore);
+                }
+                playWin();
+            } else if (currentMode === 'survival') {
+                const survScore = survivalRound;
+                isNewHighScore = survScore > survivalHighScore;
+                if (isNewHighScore) {
+                    survivalHighScore = survScore;
+                    localStorage.setItem('fruitCatcherSurvivalHigh', survivalHighScore);
                 }
                 playWin();
             } else {
@@ -1178,6 +1461,45 @@
                 ctx.stroke();
             }
 
+            // Character face — eyes and mouth
+            const expr = b.expression || 'normal';
+            const eyeY = -2;
+            const eyeSpacing = bw * 0.18;
+            const eyeSize = 4;
+
+            // Find nearest item for eye tracking
+            let lookX = 0;
+            const nearestItem = items.reduce((best, it) => {
+                const d = Math.hypot(it.x - b.x, it.y - b.y);
+                return (!best || d < best.d) ? { d, x: it.x } : best;
+            }, null);
+            if (nearestItem) lookX = Math.sign(nearestItem.x - b.x) * 1.5;
+
+            // Eyes
+            ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(-eyeSpacing + lookX, eyeY, eyeSize, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(eyeSpacing + lookX, eyeY, eyeSize, 0, Math.PI * 2); ctx.fill();
+            // Pupils
+            ctx.fillStyle = frozen ? '#93C5FD' : '#1a1a2e';
+            const pupilSize = expr === 'shocked' ? 2 : 2.5;
+            ctx.beginPath(); ctx.arc(-eyeSpacing + lookX * 1.3, eyeY + 0.5, pupilSize, 0, Math.PI * 2); ctx.fill();
+            ctx.beginPath(); ctx.arc(eyeSpacing + lookX * 1.3, eyeY + 0.5, pupilSize, 0, Math.PI * 2); ctx.fill();
+
+            // Mouth
+            ctx.strokeStyle = frozen ? '#93C5FD' : '#1a1a2e';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            if (expr === 'happy') {
+                ctx.arc(0, 5, 5, 0.1 * Math.PI, 0.9 * Math.PI);
+            } else if (expr === 'shocked') {
+                ctx.arc(0, 7, 3.5, 0, Math.PI * 2);
+            } else if (frozen) {
+                ctx.moveTo(-5, 7); ctx.lineTo(5, 7); // flat line when frozen
+            } else {
+                ctx.arc(0, 5, 4, 0.15 * Math.PI, 0.85 * Math.PI);
+            }
+            ctx.stroke();
+
             ctx.restore();
             ctx.shadowBlur = 0;
 
@@ -1222,6 +1544,7 @@
             if (magnetActive) icons.push('🧲');
             if (b.shield) icons.push('🛡️');
             if (wideActive) icons.push('📏');
+            if (megaWideActive) icons.push('🧺');
             if (b.feverActive) icons.push('🔥');
 
             if (icons.length > 0) {
@@ -1238,10 +1561,12 @@
             }
 
             // Power-up timer bars
+            const megaWideActive = b.megaWide > currentTs;
             const barDefs = [
                 { active: boosted,      expiry: b.speedBoost, dur: 3200,  color: '#FDE047' },
                 { active: magnetActive, expiry: b.magnet,     dur: 4000,  color: '#94A3B8' },
                 { active: wideActive,   expiry: b.wide,       dur: 5000,  color: '#A78BFA' },
+                { active: megaWideActive, expiry: b.megaWide,  dur: 2000,  color: '#D97706' },
                 { active: frozen,       expiry: b.frozen,     dur: 2600,  color: '#BAE6FD' },
             ];
             const barW = 38, barH = 4;
@@ -1262,6 +1587,13 @@
                 ctx.save();
                 ctx.translate(item.x, item.y);
                 ctx.rotate(item.rot);
+                // Spawn bounce animation (elastic scale-up over 300ms)
+                const age = currentTs - (item.spawnTime || 0);
+                if (age < 300) {
+                    const t = age / 300;
+                    const elastic = 1 + Math.sin(t * Math.PI * 2.5) * (1 - t) * 0.4;
+                    ctx.scale(elastic, elastic);
+                }
                 ctx.font = `${ITEM_FS}px serif`;
                 ctx.textAlign = 'center';
                 ctx.textBaseline = 'middle';
@@ -1418,7 +1750,7 @@
 
         function drawGameOverStats() {
             const elapsed  = currentTs - gameOverTs;
-            const solo     = currentMode === 'solo';
+            const isSoloType = currentMode === 'solo' || currentMode === 'zen' || currentMode === 'survival';
             const cx       = W / 2;
 
             // Dark overlay
@@ -1430,9 +1762,16 @@
 
             // Determine winner/result
             let winLine, winColor;
-            if (solo) {
+            if (currentMode === 'zen') {
                 if (isNewHighScore) { winLine = '🎉 New High Score!'; winColor = '#FCD34D'; }
-                else                { winLine = '🍎 Game Over!';      winColor = '#10B981'; }
+                else                { winLine = '🧘 Zen Over!';       winColor = '#8B5CF6'; }
+            } else if (currentMode === 'survival') {
+                if (isNewHighScore) { winLine = '🎉 New Record!';     winColor = '#FCD34D'; }
+                else                { winLine = '💀 Game Over!';       winColor = '#EF4444'; }
+            } else if (currentMode === 'solo') {
+                if (p1.score > p2.score)       { winLine = '🎉 You Win!';      winColor = '#60A5FA'; }
+                else if (p2.score > p1.score)  { winLine = '🤖 AI Wins!';      winColor = '#F87171'; }
+                else                           { winLine = "🤝 It's a Tie!";   winColor = '#FCD34D'; }
             } else {
                 if (p1.score > p2.score)      { winLine = '🎉 Player 1 Wins!'; winColor = '#60A5FA'; }
                 else if (p2.score > p1.score) { winLine = '🎉 Player 2 Wins!'; winColor = '#F87171'; }
@@ -1449,7 +1788,7 @@
             ctx.textBaseline = 'middle';
             ctx.shadowColor = winColor;
             ctx.shadowBlur  = 22;
-            if (solo) {
+            if (trueSolo) {
                 const stars = p1.score >= 50 ? 3 : p1.score >= 25 ? 2 : 1;
                 ctx.fillText('⭐'.repeat(stars), 0, 0);
             } else {
@@ -1473,20 +1812,30 @@
                 ctx.globalAlpha = a;
                 ctx.font = 'bold 26px sans-serif';
                 ctx.fillStyle = '#fff';
-                ctx.fillText(
-                    solo ? `Your Score: ${p1.score}` : `P1: ${p1.score}  •  P2: ${p2.score}`,
-                    cx, 130
-                );
-                if (solo) {
+                if (currentMode === 'survival') {
+                    ctx.fillText(`Rounds Survived: ${survivalRound}  •  Score: ${p1.score}`, cx, 130);
+                } else if (currentMode === 'solo') {
+                    ctx.fillText(`You: ${p1.score}  •  AI: ${p2.score}`, cx, 130);
+                } else if (isSoloType) {
+                    ctx.fillText(`Your Score: ${p1.score}`, cx, 130);
+                } else {
+                    ctx.fillText(`P1: ${p1.score}  •  P2: ${p2.score}`, cx, 130);
+                }
+                if (currentMode === 'zen') {
                     ctx.font = '16px sans-serif';
                     ctx.fillStyle = '#94A3B8';
-                    ctx.fillText(`Best: ${soloHighScore}`, cx, 154);
+                    ctx.fillText(`Best: ${zenHighScore}`, cx, 154);
+                } else if (currentMode === 'survival') {
+                    ctx.font = '16px sans-serif';
+                    ctx.fillStyle = '#94A3B8';
+                    ctx.fillText(`Best Round: ${survivalHighScore}`, cx, 154);
                 }
                 ctx.globalAlpha = 1;
             }
 
             // Stats
-            const stats = solo ? [
+            const trueSolo = currentMode === 'zen' || currentMode === 'survival';
+            const stats = trueSolo ? [
                 ['Fruits Caught', p1.fruitsOnly,     null],
                 ['Total Items',   p1.totalCaught,    null],
                 ['Max Combo',     p1.maxCombo,       null],
@@ -1502,21 +1851,23 @@
                 ['Bombs Hit',     p1.bombsCaught,    p2.bombsCaught   ],
             ];
 
-            const colX1 = cx - (solo ? 70 : 170);
+            const colX1 = cx - (trueSolo ? 70 : 170);
             const colX2 = cx + 170;
             const startY = 180;
             const lineH  = 27;
 
             // Column headers — fade in at 600ms
-            if (!solo && elapsed >= 600) {
+            if (!trueSolo && elapsed >= 600) {
                 const a = Math.min(1, (elapsed - 600) / 280);
                 ctx.globalAlpha = a;
                 ctx.font = 'bold 15px sans-serif';
-                ctx.fillStyle = '#3B82F6'; ctx.fillText('P1',   colX1, startY - 12);
+                const lbl1 = currentMode === 'solo' ? 'You' : 'P1';
+                const lbl2 = currentMode === 'solo' ? 'AI'  : 'P2';
+                ctx.fillStyle = '#3B82F6'; ctx.fillText(lbl1,   colX1, startY - 12);
                 ctx.fillStyle = '#94A3B8'; ctx.fillText('Stat', cx,    startY - 12);
-                ctx.fillStyle = '#EF4444'; ctx.fillText('P2',   colX2, startY - 12);
+                ctx.fillStyle = '#EF4444'; ctx.fillText(lbl2,   colX2, startY - 12);
                 ctx.globalAlpha = 1;
-            } else if (solo && elapsed >= 600) {
+            } else if (trueSolo && elapsed >= 600) {
                 const a = Math.min(1, (elapsed - 600) / 280);
                 ctx.globalAlpha = a;
                 ctx.font = 'bold 15px sans-serif';
@@ -1533,7 +1884,7 @@
                 ctx.globalAlpha = a;
                 const y = startY + 16 + i * lineH;
 
-                if (solo) {
+                if (trueSolo) {
                     ctx.fillStyle = '#60A5FA'; ctx.fillText(String(row[1]), colX1, y);
                     ctx.fillStyle = '#CBD5E1'; ctx.fillText(row[0], cx, y);
                 } else {
@@ -1550,9 +1901,9 @@
             if (elapsed >= promptStart) {
                 const a = Math.min(1, (elapsed - promptStart) / 400);
                 ctx.globalAlpha = a;
-                ctx.font = '18px sans-serif';
+                ctx.font = '16px sans-serif';
                 ctx.fillStyle = '#94A3B8';
-                ctx.fillText('Press SPACE to choose mode', cx, H - 38);
+                ctx.fillText('ENTER = Play Again    SPACE = Choose Mode', cx, H - 38);
                 ctx.globalAlpha = 1;
             }
         }
@@ -1568,15 +1919,15 @@
             ctx.font = 'bold 50px sans-serif';
             ctx.textAlign = 'left';
             ctx.textBaseline = 'middle';
-            const totalW = ctx.measureText(title).width;
-            let charX    = W / 2 - totalW / 2;
+            const totalW2 = ctx.measureText(title).width;
+            let charX    = W / 2 - totalW2 / 2;
             chars.forEach((ch, i) => {
                 const bounce = Math.sin(currentTs * 0.003 + i * 0.55) * 9;
                 const hue    = (i * 22 + currentTs * 0.04) % 360;
                 ctx.shadowColor = `hsl(${hue},90%,60%)`;
                 ctx.shadowBlur  = 14;
                 ctx.fillStyle   = `hsl(${hue},90%,72%)`;
-                ctx.fillText(ch, charX, 70 + bounce);
+                ctx.fillText(ch, charX, 60 + bounce);
                 charX += ctx.measureText(ch).width;
             });
             ctx.shadowBlur = 0;
@@ -1585,13 +1936,14 @@
             ctx.font = '17px sans-serif';
             ctx.textAlign = 'center';
             ctx.fillStyle = '#94A3B8';
-            ctx.fillText('Choose your game mode', W / 2, 116);
+            ctx.fillText('Choose your game mode', W / 2, 102);
 
-            // Mode cards
-            const cardW = 200, cardH = 148, cardGap = 18;
-            const totalCards = 3 * cardW + 2 * cardGap;
+            // Mode cards — 5 modes, smaller cards
+            const modeCount = MODE_KEYS.length;
+            const cardW = 142, cardH = 132, cardGap = 10;
+            const totalCards = modeCount * cardW + (modeCount - 1) * cardGap;
             const startX     = (W - totalCards) / 2;
-            const cardY      = 140;
+            const cardY      = 118;
 
             MODE_KEYS.forEach((mk, i) => {
                 const mode = MODES[mk];
@@ -1599,9 +1951,9 @@
                 const sel  = i === selectedModeIdx;
 
                 ctx.save();
-                roundRect(ctx, cx2, cardY, cardW, cardH, 16);
+                roundRect(ctx, cx2, cardY, cardW, cardH, 14);
                 ctx.shadowColor = sel ? mode.color : 'transparent';
-                ctx.shadowBlur  = sel ? 26 : 0;
+                ctx.shadowBlur  = sel ? 22 : 0;
                 ctx.fillStyle   = sel ? 'rgba(28,40,88,0.96)' : 'rgba(18,26,56,0.82)';
                 ctx.fill();
                 ctx.strokeStyle = sel ? mode.color : 'rgba(255,255,255,0.14)';
@@ -1612,41 +1964,46 @@
                 const cx3 = cx2 + cardW / 2;
 
                 // Icon
-                ctx.font = '38px serif';
+                ctx.font = '32px serif';
                 ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
                 ctx.fillStyle = '#fff';
-                ctx.fillText(mode.icon, cx3, cardY + 38);
+                ctx.fillText(mode.icon, cx3, cardY + 32);
 
                 // Label
-                ctx.font = `bold 19px sans-serif`;
+                ctx.font = `bold 16px sans-serif`;
                 ctx.fillStyle = sel ? mode.color : '#e2e8f0';
-                ctx.fillText(mode.label, cx3, cardY + 76);
+                ctx.fillText(mode.label, cx3, cardY + 64);
 
                 // Description
-                ctx.font = '12.5px sans-serif';
+                ctx.font = '11px sans-serif';
                 ctx.fillStyle = '#94A3B8';
-                ctx.fillText(mode.desc, cx3, cardY + 100);
+                ctx.fillText(mode.desc, cx3, cardY + 84);
 
                 // Key hint
-                ctx.font = 'bold 12px sans-serif';
+                ctx.font = 'bold 11px sans-serif';
                 ctx.fillStyle = sel ? mode.color : '#475569';
-                ctx.fillText(`Press ${i + 1}`, cx3, cardY + 124);
+                ctx.fillText(`Press ${i + 1}`, cx3, cardY + 108);
 
                 ctx.restore();
             });
 
-            // Solo high score badge
-            if (soloHighScore > 0) {
-                ctx.font = '14.5px sans-serif';
+            // High score badges
+            const badgeY = cardY + cardH + 18;
+            ctx.font = '13px sans-serif';
+            ctx.textAlign = 'center';
+            const badges = [];
+            if (soloHighScore > 0) badges.push(`🏆 Solo: ${soloHighScore}`);
+            if (zenHighScore > 0)  badges.push(`🧘 Zen: ${zenHighScore}`);
+            if (survivalHighScore > 0) badges.push(`💀 Survival: R${survivalHighScore}`);
+            if (badges.length > 0) {
                 ctx.fillStyle = '#10B981';
-                ctx.textAlign = 'center';
-                ctx.fillText(`🏆 Solo Best: ${soloHighScore}`, W / 2, cardY + cardH + 26);
+                ctx.fillText(badges.join('    '), W / 2, badgeY);
             }
 
             // Nav hint
-            ctx.font = '13.5px sans-serif';
+            ctx.font = '13px sans-serif';
             ctx.fillStyle = '#374151';
-            ctx.fillText('← → or ↑ ↓  navigate    Enter or 1 / 2 / 3  select', W / 2, H - 28);
+            ctx.fillText('← →  navigate    Enter or 1-5  select    ❓ Help', W / 2, H - 28);
         }
 
         function draw() {
@@ -1672,27 +2029,157 @@
             }
 
             drawFeverBorder(p1);
-            if (currentMode !== 'solo') drawFeverBorder(p2);
+            if (currentMode !== 'zen' && currentMode !== 'survival') drawFeverBorder(p2);
             drawItemShadows();
             drawItemTrails();
             drawItems();
             drawParticles();
-            if (currentMode === 'solo') {
+            if (currentMode === 'zen' || currentMode === 'survival') {
                 drawBasket(p1, '#10B981', '🟢 YOU');
+            } else if (currentMode === 'solo') {
+                drawBasket(p1, '#3B82F6', '🔵 YOU');
+                drawBasket(p2, '#EF4444', '🤖 AI');
             } else {
                 drawBasket(p1, '#3B82F6', '🔵 P1');
                 drawBasket(p2, '#EF4444', '🔴 P2');
             }
+
+            // Zen lives display
+            if (currentMode === 'zen' && gameState === 'playing') {
+                ctx.font = '18px serif';
+                ctx.textAlign = 'left';
+                ctx.textBaseline = 'top';
+                ctx.fillStyle = '#EF4444';
+                ctx.fillText('❤️'.repeat(zenLives), 10, 22);
+            }
+
+            // Survival missed counter
+            if (currentMode === 'survival' && gameState === 'playing') {
+                ctx.font = '13px sans-serif';
+                ctx.textAlign = 'right';
+                ctx.textBaseline = 'top';
+                ctx.fillStyle = survivalMissed >= 3 ? '#EF4444' : '#94A3B8';
+                ctx.fillText(`Missed: ${survivalMissed}/${SURVIVAL_MAX_MISSES}`, W - 10, 22);
+            }
             drawPopups();
             drawWaveIndicator();
+
+            // Lightning zap effects
+            lightningZaps.forEach(z => {
+                ctx.save();
+                ctx.globalAlpha = z.life;
+                ctx.strokeStyle = '#FF6B35';
+                ctx.lineWidth = 2 + z.life * 3;
+                ctx.shadowColor = '#FF6B35';
+                ctx.shadowBlur = 12;
+                ctx.beginPath();
+                ctx.moveTo(z.fx, z.fy);
+                // Jagged lightning path
+                const midX = (z.fx + z.tx) / 2 + (Math.random() - 0.5) * 30;
+                const midY = (z.fy + z.ty) / 2 + (Math.random() - 0.5) * 20;
+                ctx.lineTo(midX, midY);
+                ctx.lineTo(z.tx, z.ty);
+                ctx.stroke();
+                ctx.shadowBlur = 0;
+                ctx.restore();
+            });
+
+            // Bomb flash overlay
+            if (bombFlashTimer > currentTs) {
+                const flashProgress = (bombFlashTimer - currentTs) / 250;
+                ctx.save();
+                ctx.fillStyle = `rgba(255,60,60,${flashProgress * 0.25})`;
+                ctx.fillRect(0, 0, W, H);
+                // Red vignette
+                const vig = ctx.createRadialGradient(W/2, H/2, H * 0.2, W/2, H/2, H * 0.7);
+                vig.addColorStop(0, 'rgba(255,0,0,0)');
+                vig.addColorStop(1, `rgba(255,0,0,${flashProgress * 0.3})`);
+                ctx.fillStyle = vig;
+                ctx.fillRect(0, 0, W, H);
+                ctx.restore();
+            }
 
             if (gameState === 'countdown') {
                 drawCountdown();
             } else if (gameState === 'gameover') {
                 drawGameOverStats();
+            } else if (gameState === 'paused') {
+                drawPauseOverlay();
+            }
+
+            // Transition fade overlay
+            if (transitionAlpha > 0.01) {
+                ctx.fillStyle = `rgba(0,0,0,${transitionAlpha})`;
+                ctx.fillRect(0, 0, W, H);
+            }
+
+            // Tutorial overlay
+            if (showTutorial && gameState === 'modeselect') {
+                drawTutorial();
             }
 
             ctx.restore();
+        }
+
+        // ── Pause overlay ────────────────────────────────────────────────────
+        function drawPauseOverlay() {
+            ctx.fillStyle = 'rgba(15,23,42,0.72)';
+            ctx.fillRect(0, 0, W, H);
+            ctx.font = 'bold 60px sans-serif';
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+            ctx.shadowColor = '#A78BFA'; ctx.shadowBlur = 20;
+            ctx.fillStyle = '#fff';
+            ctx.fillText('⏸️ PAUSED', W / 2, H / 2 - 25);
+            ctx.shadowBlur = 0;
+            ctx.font = '20px sans-serif';
+            ctx.fillStyle = '#94A3B8';
+            ctx.fillText('Press P or Esc to resume', W / 2, H / 2 + 25);
+        }
+
+        // ── Tutorial overlay ─────────────────────────────────────────────────
+        function drawTutorial() {
+            ctx.fillStyle = 'rgba(15,23,42,0.88)';
+            ctx.fillRect(0, 0, W, H);
+            ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+
+            ctx.font = 'bold 36px sans-serif';
+            ctx.fillStyle = '#FDE047';
+            ctx.shadowColor = '#FDE047'; ctx.shadowBlur = 15;
+            ctx.fillText('🍎 How to Play 🍊', W / 2, 55);
+            ctx.shadowBlur = 0;
+
+            const lines = [
+                ['🧑 Controls', '#60A5FA', 18],
+                ['Player 1: A / D keys    Player 2: ← / → keys', '#CBD5E1', 15],
+                ['On mobile: touch left/right side of screen', '#94A3B8', 13],
+                ['', '', 8],
+                ['🍎🍌🍒 Catch fruits for points!', '#4ADE80', 16],
+                ['⭐🌟💰 Rare items = more points', '#FFD700', 16],
+                ['💣☠️ Avoid bombs! They cost points', '#EF4444', 16],
+                ['', '', 8],
+                ['⚡ Power-ups', '#A78BFA', 18],
+                ['🧊 Freeze  ⚡ Speed  🧲 Magnet  🛡️ Shield', '#CBD5E1', 14],
+                ['📏 Wide  🎁 Mystery  ⏱️ Slow  🔥 Zap  🧺 MegaCatch', '#CBD5E1', 14],
+                ['', '', 8],
+                ['🔥 Get 8+ combo for FEVER MODE (2x points!)', '#FF6B35', 15],
+                ['P or Esc to pause during game', '#94A3B8', 13],
+            ];
+
+            let y = 100;
+            lines.forEach(([text, color, size]) => {
+                if (!text) { y += size; return; }
+                ctx.font = `${size > 16 ? 'bold ' : ''}${size}px sans-serif`;
+                ctx.fillStyle = color;
+                ctx.fillText(text, W / 2, y);
+                y += size + 10;
+            });
+
+            ctx.font = '18px sans-serif';
+            ctx.fillStyle = '#FDE047';
+            const blink = Math.sin(currentTs * 0.005) > 0 ? 1 : 0.4;
+            ctx.globalAlpha = blink;
+            ctx.fillText('Press any key to continue', W / 2, H - 35);
+            ctx.globalAlpha = 1;
         }
 
         // ── Game loop ─────────────────────────────────────────────────────────
@@ -1707,10 +2194,18 @@
         }
 
         // ── Mute button ───────────────────────────────────────────────────────
+        // Load saved settings
+        musicMuted = musicMutedSaved;
+        document.getElementById('muteBtn').textContent = musicMuted ? '🔇 Music' : '🔊 Music';
+        if (savedMode && MODE_KEYS.indexOf(savedMode) >= 0) {
+            selectedModeIdx = MODE_KEYS.indexOf(savedMode);
+        }
+
         document.getElementById('muteBtn').addEventListener('click', () => {
             musicMuted = !musicMuted;
             document.getElementById('muteBtn').textContent = musicMuted ? '🔇 Music' : '🔊 Music';
             if (musicGain) musicGain.gain.value = musicMuted ? 0 : 0.055;
+            localStorage.setItem('fruitCatcherMusicMuted', musicMuted);
         });
 
         // ── Input ─────────────────────────────────────────────────────────────
@@ -1721,48 +2216,161 @@
                 e.preventDefault();
             }
 
+            // Dismiss tutorial on any key
+            if (showTutorial && gameState === 'modeselect') {
+                showTutorial = false;
+                localStorage.setItem('fruitCatcherTutorialSeen', 'true');
+                return;
+            }
+
+            // Pause toggle
+            if ((e.key === 'p' || e.key === 'P' || e.key === 'Escape') && (gameState === 'playing' || gameState === 'paused')) {
+                if (gameState === 'playing') {
+                    gameState = 'paused';
+                    pausedTs = currentTs;
+                    if (musicGain) musicGain.gain.value = 0;
+                } else {
+                    gameState = 'playing';
+                    if (musicGain && !musicMuted) musicGain.gain.value = 0.055;
+                }
+                return;
+            }
+
+            const modeCount = MODE_KEYS.length;
             if (gameState === 'modeselect') {
-                if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { selectedModeIdx = (selectedModeIdx + 2) % 3; }
-                if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  { selectedModeIdx = (selectedModeIdx + 1) % 3; }
+                if (e.key === 'ArrowLeft'  || e.key === 'ArrowUp')   { selectedModeIdx = (selectedModeIdx + modeCount - 1) % modeCount; }
+                if (e.key === 'ArrowRight' || e.key === 'ArrowDown')  { selectedModeIdx = (selectedModeIdx + 1) % modeCount; }
                 if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
                     currentMode = MODE_KEYS[selectedModeIdx];
                     playModeConfirm();
                     startGame();
                 }
-                if (e.key === '1') { selectedModeIdx = 0; currentMode = 'classic'; playModeConfirm(); startGame(); }
-                if (e.key === '2') { selectedModeIdx = 1; currentMode = 'blitz';   playModeConfirm(); startGame(); }
-                if (e.key === '3') { selectedModeIdx = 2; currentMode = 'solo';    playModeConfirm(); startGame(); }
+                for (let i = 0; i < modeCount; i++) {
+                    if (e.key === String(i + 1)) {
+                        selectedModeIdx = i;
+                        currentMode = MODE_KEYS[i];
+                        playModeConfirm();
+                        startGame();
+                    }
+                }
                 return;
             }
 
-            if (e.key === ' ' || e.key === 'Spacebar') {
-                if (gameState === 'gameover') resetToModeSelect();
+            if (gameState === 'gameover') {
+                if (e.key === ' ' || e.key === 'Spacebar') resetToModeSelect();
+                if (e.key === 'Enter') { startGame(); } // quick restart same mode
             }
         });
         document.addEventListener('keyup', e => { keys[e.key] = false; });
+
+        // ── Touch controls ───────────────────────────────────────────────────
+        canvas.addEventListener('touchstart', e => {
+            e.preventDefault();
+            isTouchDevice = true;
+            if (showTutorial && gameState === 'modeselect') {
+                showTutorial = false;
+                localStorage.setItem('fruitCatcherTutorialSeen', 'true');
+                return;
+            }
+            if (gameState === 'modeselect') {
+                // Tap to select mode: check if tap is on a card
+                const rect = canvas.getBoundingClientRect();
+                const scaleX = W / rect.width;
+                for (const touch of e.changedTouches) {
+                    const tx = (touch.clientX - rect.left) * scaleX;
+                    const ty = (touch.clientY - rect.top) * (H / rect.height);
+                    const cardW2 = 142, cardGap2 = 10;
+                    const totalCards2 = MODE_KEYS.length * cardW2 + (MODE_KEYS.length - 1) * cardGap2;
+                    const startX2 = (W - totalCards2) / 2;
+                    for (let i = 0; i < MODE_KEYS.length; i++) {
+                        const cx = startX2 + i * (cardW2 + cardGap2);
+                        if (tx >= cx && tx <= cx + cardW2 && ty >= 118 && ty <= 118 + 132) {
+                            selectedModeIdx = i;
+                            currentMode = MODE_KEYS[i];
+                            playModeConfirm();
+                            startGame();
+                            return;
+                        }
+                    }
+                }
+                return;
+            }
+            if (gameState === 'gameover') {
+                resetToModeSelect();
+                return;
+            }
+            for (const touch of e.changedTouches) {
+                const rect = canvas.getBoundingClientRect();
+                const tx = (touch.clientX - rect.left) / rect.width;
+                touchActive[touch.identifier] = { side: tx < 0.5 ? 'left' : 'right' };
+            }
+        }, { passive: false });
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            for (const touch of e.changedTouches) {
+                const rect = canvas.getBoundingClientRect();
+                const tx = (touch.clientX - rect.left) / rect.width;
+                if (touchActive[touch.identifier]) {
+                    touchActive[touch.identifier].side = tx < 0.5 ? 'left' : 'right';
+                }
+            }
+        }, { passive: false });
+        canvas.addEventListener('touchend', e => {
+            for (const touch of e.changedTouches) {
+                delete touchActive[touch.identifier];
+            }
+        });
+        canvas.addEventListener('touchcancel', e => {
+            for (const touch of e.changedTouches) {
+                delete touchActive[touch.identifier];
+            }
+        });
+
+        // ── Help & Mute button handlers ──────────────────────────────────────
+        document.getElementById('helpBtn').addEventListener('click', () => {
+            showTutorial = true;
+        });
 
         // ── Start / restart ───────────────────────────────────────────────────
         function startGame() {
             const mode = MODES[currentMode];
             p1 = makePlayer(165);
             p2 = makePlayer(635);
-            timeLeft    = mode.duration;
+            if (currentMode === 'solo') p2.isAI = true;
+            timeLeft    = currentMode === 'zen' ? 0 : (currentMode === 'survival' ? 0 : mode.duration);
             musicTempo  = 480;
             timeSlow    = 0;
             isNewHighScore = false;
+            bombFlashTimer = 0;
+            lightningZaps = [];
+            zenLives = 3;
+            survivalRound = 1;
+            survivalMissed = 0;
+            survivalRoundTimer = SURVIVAL_ROUND_DURATION;
             items = []; particles = []; popups = []; confettiParticles = [];
             countdownVal = 3; lastCountdown = 0;
             lastSpawn = 0; lastTimerTick = 0; nextSpawnMs = 1500;
             shakeFrames = 0;
             currentWave = 1;
             waveAnnounceTimer = 0;
+            transitionAlpha = 0.6; transitionTarget = 0; transitionSpeed = 0.03;
 
-            const solo = mode.players === 1;
-            p1ScoreEl.textContent = (solo ? 'Score: ' : 'P1: ') + '0';
-            p2ScoreEl.textContent = 'P2: 0';
-            p2ScoreEl.style.visibility = solo ? 'hidden' : '';
-            document.getElementById('scorebar-wrap').style.display = solo ? 'none' : '';
-            timerEl.textContent = mode.duration;
+            // Save last mode preference
+            localStorage.setItem('fruitCatcherLastMode', currentMode);
+
+            const isOnlyP1Mode = currentMode === 'zen' || currentMode === 'survival';
+            const showP2 = !isOnlyP1Mode;
+            p1ScoreEl.textContent = (!showP2 ? 'Score: ' : (currentMode === 'solo' ? 'You: ' : 'P1: ')) + '0';
+            p2ScoreEl.textContent = currentMode === 'solo' ? 'AI: 0' : 'P2: 0';
+            p2ScoreEl.style.visibility = showP2 ? '' : 'hidden';
+            document.getElementById('scorebar-wrap').style.display = showP2 ? '' : 'none';
+            if (currentMode === 'zen') {
+                timerEl.textContent = '0s';
+            } else if (currentMode === 'survival') {
+                timerEl.textContent = `R1 · ${SURVIVAL_ROUND_DURATION}`;
+            } else {
+                timerEl.textContent = mode.duration;
+            }
             timerEl.classList.remove('urgent');
             p1barEl.style.width = '50%';
             p2barEl.style.width = '50%';
