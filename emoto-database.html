@@ -174,6 +174,30 @@
             width: 100%; height: 100%; object-fit: cover; transition: transform 0.4s;
         }
         .bike-card:hover .card-image img { transform: scale(1.05); }
+        .img-fallback { display: none; }
+        .card-image .img-loading {
+            position: absolute; inset: 0; background: var(--border);
+            animation: shimmer 1.5s infinite;
+        }
+        @keyframes shimmer {
+            0% { opacity: 0.6; }
+            50% { opacity: 1; }
+            100% { opacity: 0.6; }
+        }
+        .discontinued-badge {
+            position: absolute; bottom: 12px; left: 12px;
+            padding: 3px 10px; border-radius: 6px; font-size: 0.65em;
+            font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px;
+            z-index: 2; background: rgba(214,48,49,0.15); color: #d63031;
+            backdrop-filter: blur(10px);
+        }
+        .card-website {
+            display: inline-block; margin-top: 10px; padding: 6px 14px;
+            border-radius: 8px; font-size: 0.8em; font-weight: 600;
+            background: var(--accent); color: #fff; text-decoration: none;
+            transition: all 0.2s;
+        }
+        .card-website:hover { background: var(--accent-dark); transform: translateY(-1px); }
         .card-fav {
             position: absolute; top: 12px; left: 12px;
             background: var(--glass); backdrop-filter: blur(10px);
@@ -308,7 +332,7 @@
         <div class="header-stats">
             <div class="header-stat"><strong id="totalBikes">0</strong><span>Bikes</span></div>
             <div class="header-stat"><strong id="totalBrands">0</strong><span>Brands</span></div>
-            <div class="header-stat"><strong>$530&ndash;$26K</strong><span>Price Range</span></div>
+            <div class="header-stat"><strong id="priceRange">$530&ndash;$26K</strong><span>Price Range</span></div>
         </div>
     </div>
 
@@ -696,321 +720,403 @@ const bikes = [
         name: "Sur-Ron Light Bee X", brand: "Sur-Ron", type: "off-road", svgType: "dirtbike",
         color1: "#43a047", color2: "#2e7d32",
         imageUrl: "https://www.surronusa.com/cdn/shop/files/E4A0753_540x.jpg",
-        price: 4400, priceDisplay: "$4,400",
+        websiteUrl: "https://us.sur-ron.com/lightbee/x",
+        price: 3899, priceDisplay: "$3,899",
         motorKw: 8, motor: "8kW peak", battery: "60V 40Ah (2.4kWh)", batteryWh: 2400,
-        rangeMi: 75, range: "Up to 75 mi", speedMph: 47, speed: "47 mph",
-        weightLbs: 125, weight: "125 lbs", charge: "2 hrs (20-80%)",
-        torque: "196 ft-lbs", accel: "0-31 in 2.7s",
-        rating: 4.2,
-        pros: ["Lightweight & agile", "Great for beginners", "Strong community support"],
-        cons: ["Low power for experienced riders", "Aftermarket mods often needed", "Limited top speed"],
-        review: "The quintessential entry-level emoto. Lightweight at 125 lbs, incredibly agile on trails and city streets. Huge aftermarket community. Best starter bike in the segment, though power riders will outgrow it."
+        rangeMi: 50, range: "Up to 50 mi", speedMph: 47, speed: "47 mph",
+        weightLbs: 125, weight: "125 lbs (57 kg)", charge: "2 hrs (20-80%)",
+        torque: "196 ft-lbs", accel: "0-31 in 2.75s",
+        rating: 4.3,
+        pros: ["Lightweight at 125 lbs — incredibly agile", "Massive aftermarket community & parts", "2025 upgraded PMSM motor and Samsung 50S cells"],
+        cons: ["Power riders will outgrow 8kW quickly", "Not street legal out of the box", "Range drops fast at full throttle"],
+        review: "The quintessential entry-level emoto, now with 2025 upgrades: enhanced PMSM motor, FOC sinewave controller, and Samsung 50S 21700 cells. Upgraded KKE suspension and 30% stronger gold fork. Still the best-selling electric dirt bike for a reason."
     },
     {
         name: "Sur-Ron Ultra Bee", brand: "Sur-Ron", type: "dual-sport", svgType: "dirtbike",
         color1: "#1976d2", color2: "#0d47a1",
         imageUrl: "https://www.surronusa.com/cdn/shop/files/Ultra-Bee-1_540x.jpg",
+        websiteUrl: "https://us.sur-ron.com/ultrabee",
         price: 5500, priceDisplay: "$5,500",
         motorKw: 12.5, motor: "12.5kW peak", battery: "74V 55Ah (4kWh)", batteryWh: 4000,
         rangeMi: 75, range: "Up to 75 mi", speedMph: 56, speed: "56 mph",
         weightLbs: 165, weight: "165 lbs", charge: "3.5 hrs",
         torque: "230 ft-lbs", accel: "0-30 in 2.5s",
         rating: 4.4,
-        pros: ["Street legal option", "Big battery upgrade", "Full-size feel"],
-        cons: ["Heavier than Light Bee", "Higher price point", "Limited dealer network"],
-        review: "Sur-Ron's step-up model bridges the gap between light emoto and full motorcycle. With 4kWh battery and 12.5kW motor, it's a serious dual-sport contender. Street-legal version available in many states."
+        pros: ["Street-legal version available", "Big 4kWh battery for real range", "Full-size dirt bike feel"],
+        cons: ["40 lbs heavier than Light Bee", "Higher price point", "Limited dealer network in some states"],
+        review: "Sur-Ron's step-up model bridges the gap between light emoto and full motorcycle. The 4kWh battery and 12.5kW motor make it a serious dual-sport contender with street-legal variants available in many states."
     },
     {
         name: "Sur-Ron Storm Bee", brand: "Sur-Ron", type: "dual-sport", svgType: "street",
         color1: "#37474f", color2: "#263238",
         imageUrl: "https://www.surronusa.com/cdn/shop/files/Storm-Bee-1_540x.jpg",
+        websiteUrl: "https://us.sur-ron.com/stormbee",
         price: 8000, priceDisplay: "$8,000",
         motorKw: 22.5, motor: "22.5kW (30 HP)", battery: "96V 56Ah (5.4kWh)", batteryWh: 5400,
         rangeMi: 90, range: "Up to 90 mi", speedMph: 68, speed: "68 mph",
         weightLbs: 240, weight: "240 lbs", charge: "3-4 hrs",
         torque: "280 ft-lbs", accel: "0-60 in 3.5s",
         rating: 4.3,
-        pros: ["Real motorcycle power", "Impressive range", "Street legal"],
-        cons: ["Heavy for off-road", "Pricey for Sur-Ron", "Less agile"],
-        review: "Sur-Ron's flagship is a full-size electric motorcycle with 22.5kW of power. Bridges the gap to premium bikes at a fraction of the cost. Excellent for highway-capable commuting with off-road DNA."
+        pros: ["Real motorcycle-class 22.5kW power", "90-mile range is impressive", "Street legal and highway capable"],
+        cons: ["240 lbs limits off-road agility", "Pricey for Sur-Ron brand", "Less aftermarket than Light Bee"],
+        review: "Sur-Ron's flagship is a genuine full-size electric motorcycle with 30 HP. Bridges the gap to premium bikes at a fraction of the cost. Highway-capable commuting with off-road DNA — a serious all-rounder."
     },
     {
         name: "Rawrr Mantis X", brand: "Rawrr", type: "off-road", svgType: "dirtbike",
         color1: "#1565c0", color2: "#0d47a1",
         imageUrl: "https://rawrr.com/cdn/shop/files/mantis-hero_540x.png",
+        websiteUrl: "https://rawrr.com/products/mantis-x",
         price: 3599, priceDisplay: "$3,599",
         motorKw: 6.5, motor: "6.5kW peak", battery: "72V 30Ah (2.2kWh)", batteryWh: 2160,
         rangeMi: 62, range: "Up to 62 mi", speedMph: 50, speed: "50 mph",
         weightLbs: 139, weight: "139 lbs", charge: "3-4 hrs",
         torque: "185 ft-lbs", accel: "0-31 in 4s",
         rating: 4.3,
-        pros: ["Excellent value", "Great off-road grip", "IP66 water resistance"],
-        cons: ["Less peak power", "No street-legal option", "Smaller battery"],
-        review: "Exceptional off-road performance with excellent tire grip on gravel, mulch, and dirt. Suspension handling is superior to Sur-Ron, especially for heavier riders. Outstanding value at $3,599."
+        pros: ["Outstanding value at $3,599", "IP66 water-resistant build", "Superior suspension for heavier riders"],
+        cons: ["6.5kW is modest peak power", "No street-legal option available", "Smaller 2.2kWh battery"],
+        review: "Exceptional off-road performer with excellent tire grip on gravel, mulch, and dirt. Suspension handles heavier riders better than Sur-Ron. IP66 water resistance and outstanding value make it a top pick for trail riding."
     },
     {
         name: "Rawrr Mantis X Pro", brand: "Rawrr", type: "off-road", svgType: "dirtbike",
         color1: "#1565c0", color2: "#0d47a1",
         imageUrl: "https://rawrr.com/cdn/shop/files/mantis-x-pro-hero_540x.png",
+        websiteUrl: "https://rawrr.com/products/mantis-x-pro",
         price: 4499, priceDisplay: "$4,499",
         motorKw: 15, motor: "15kW peak", battery: "72V 35Ah (2.5kWh)", batteryWh: 2520,
         rangeMi: 65, range: "~65 mi", speedMph: 60, speed: "~60 mph",
         weightLbs: 139, weight: "139 lbs", charge: "3.3-4.6 hrs",
         torque: "287 lb-ft", accel: "0-30 in 2.5s",
         rating: 4.5,
-        pros: ["Massive power upgrade", "Best value-to-power ratio", "Same great chassis"],
-        cons: ["Slightly longer charge", "Not street legal", "No ABS"],
-        review: "15kW motor is a massive jump over the standard Mantis X. Retains excellent off-road DNA and build quality while delivering serious power. One of the best value-to-performance ratios in the segment."
+        pros: ["15kW motor is a massive power upgrade", "Best value-to-power ratio in segment", "Same proven 139 lb chassis"],
+        cons: ["Longer charge time than base model", "Not street legal", "No ABS"],
+        review: "The 15kW motor is a massive jump over the standard Mantis X while keeping the same excellent 139 lb chassis. One of the best value-to-performance ratios in the entire emoto segment. A serious off-road weapon."
     },
     {
-        name: "Eride Pro SS 3.0", brand: "Eride", type: "off-road", svgType: "dirtbike",
+        name: "E Ride Pro SS 3.0", brand: "E Ride Pro", type: "off-road", svgType: "dirtbike",
         color1: "#e65100", color2: "#bf360c",
-        price: 5000, priceDisplay: "~$5,000",
-        motorKw: 16, motor: "16kW peak", battery: "72V 50Ah (3.6kWh)", batteryWh: 3600,
-        rangeMi: 100, range: "100+ mi", speedMph: 62, speed: "62 mph",
-        weightLbs: 154, weight: "~154 lbs", charge: "3.5 hrs (20-90%)",
+        websiteUrl: "https://www.eridepro.com/products/pro-ss-3-0",
+        price: 4999, priceDisplay: "$4,999",
+        motorKw: 15.8, motor: "15.8kW peak (6kW rated)", battery: "72V 50Ah (3.6kWh)", batteryWh: 3600,
+        rangeMi: 64, range: "64+ mi at 25 mph", speedMph: 62, speed: "62 mph",
+        weightLbs: 167, weight: "167 lbs (76 kg)", charge: "3.5 hrs (20-90%)",
         torque: "295 ft-lbs", accel: "0-30 in 2s",
         rating: 4.6,
-        pros: ["Insane range", "Powerful 16kW motor", "Nearly unbreakable durability"],
-        cons: ["Limited dealer presence", "Newer brand", "Heavier than some"],
-        review: "Described as 'one hell of a bike' by reviewers. 100+ mile range is class-leading. Faster and more powerful than Sur-Ron at a similar price. Proven nearly unbreakable in durability testing."
+        pros: ["Class-leading 3.6kWh swappable battery", "Blistering 0-30 in 2 seconds", "DOT4 moto brakes and FastAce suspension"],
+        cons: ["Limited dealer presence — mostly online", "Newer brand, less proven track record", "167 lbs is heavier than rivals"],
+        review: "Reviewers call it 'one hell of a bike.' The 3.6kWh swappable battery delivers class-leading range, while 15.8kW peak power rockets to 30 mph in 2 seconds flat. 2025 upgrades include DOT4 brakes, thicker axles, and reinforced frame."
     },
     {
         name: "Talaria Sting R MX4", brand: "Talaria", type: "off-road", svgType: "dirtbike",
         color1: "#f9a825", color2: "#f57f17",
         imageUrl: "https://talaria.bike/cdn/shop/files/sting-r-mx4_540x.jpg",
+        websiteUrl: "https://talaria.bike/products/sting-r-mx4",
         price: 4500, priceDisplay: "$4,500",
         motorKw: 8, motor: "8kW peak", battery: "60V 45Ah (2.7kWh)", batteryWh: 2700,
         rangeMi: 53, range: "Up to 53 mi", speedMph: 55, speed: "55 mph",
         weightLbs: 145, weight: "145 lbs", charge: "3 hrs",
         torque: "210 ft-lbs", accel: "0-30 in 3s",
         rating: 4.3,
-        pros: ["Unique 2-speed gearbox", "Fast charging", "Excellent power-to-weight"],
-        cons: ["Shorter range", "Heavier than Sur-Ron", "Gearbox adds complexity"],
-        review: "Features a unique 2-speed gearbox for versatile power delivery. 18% battery capacity increase and 25% faster charging over predecessor. Excellent power-to-weight ratio. Strong Sur-Ron alternative."
+        pros: ["Unique 2-speed gearbox for versatility", "25% faster charging than predecessor", "Excellent power-to-weight ratio"],
+        cons: ["53-mile range is below average", "145 lbs — heavier than Sur-Ron", "Gearbox adds mechanical complexity"],
+        review: "The Sting R MX4's unique 2-speed gearbox sets it apart — low gear for torque, high for speed. 18% larger battery and 25% faster charging over the MX3. Strong alternative to Sur-Ron with a different riding personality."
     },
     {
         name: "Talaria Dragon", brand: "Talaria", type: "off-road", svgType: "dirtbike",
         color1: "#d32f2f", color2: "#b71c1c",
-        price: 5500, priceDisplay: "$5,500",
-        motorKw: 12, motor: "12kW peak", battery: "72V 40Ah (2.9kWh)", batteryWh: 2880,
-        rangeMi: 60, range: "~60 mi", speedMph: 60, speed: "~60 mph",
-        weightLbs: 155, weight: "~155 lbs", charge: "3.5 hrs",
-        torque: "250 ft-lbs", accel: "0-30 in 2.8s",
-        rating: 4.2,
-        pros: ["Major power increase", "Aggressive styling", "Full-size geometry"],
-        cons: ["New model, less proven", "Pricier than Sting", "Heavier"],
-        review: "Talaria's flagship model steps up to 12kW for riders wanting more power. Full-size dirt bike geometry and aggressive styling make it stand out. Bridges the gap to premium emoto territory."
+        websiteUrl: "https://talaria.cn.com/product/talaria-dragon/",
+        price: 7500, priceDisplay: "$7,500",
+        motorKw: 28, motor: "28kW peak (10kW rated)", battery: "88V 58.5Ah (5.2kWh)", batteryWh: 5200,
+        rangeMi: 93, range: "Up to 93 mi", speedMph: 70, speed: "70 mph",
+        weightLbs: 220, weight: "220 lbs (100 kg)", charge: "3-4 hrs",
+        torque: "630 Nm", accel: "0-60 in under 5s",
+        rating: 4.4,
+        pros: ["Massive 28kW peak — true motorcycle power", "93-mile max range on 5.2kWh battery", "Street-legal variant with lights and signals"],
+        cons: ["220 lbs is heavy for off-road", "Limited availability — high demand", "Premium price for Talaria brand"],
+        review: "Talaria's flagship beast with 28kW peak power and 630 Nm of torque. The 5.2kWh battery delivers up to 93 miles of range. Available in MX (green) and street-legal L1e (blue) variants. Eco, Sport, and Hyper drive modes."
     },
     {
         name: "Heybike Venus", brand: "Heybike", type: "commuter", svgType: "moped",
         color1: "#00897b", color2: "#00695c",
+        websiteUrl: "https://www.heybike.com/products/venus",
         price: 1499, priceDisplay: "$1,499",
         motorKw: 0.75, motor: "750W", battery: "48V 680Wh", batteryWh: 680,
         rangeMi: 85, range: "Up to 85 mi", speedMph: 28, speed: "28 mph",
         weightLbs: 50, weight: "50 lbs", charge: "4-5 hrs",
         torque: "70 Nm", accel: "N/A",
         rating: 4.0,
-        pros: ["Ultra lightweight", "Great commuter range", "Affordable"],
-        cons: ["Low speed (28 mph)", "Not for off-road", "eBike class, not motorcycle"],
-        review: "Lightweight city commuter with excellent range for the price. Torque-sensing pedal assist feels natural. Class 2/3 switchable via app. Perfect for urban commuting, not for trails."
+        pros: ["Ultra lightweight at 50 lbs", "85-mile range for daily commuting", "Affordable at $1,499"],
+        cons: ["28 mph top speed — no highway use", "Not for off-road or hills", "Classified as eBike, not motorcycle"],
+        review: "Lightweight city commuter with excellent range for the price. Torque-sensing pedal assist feels natural. Class 2/3 switchable via app. Perfect for urban commuting and errands, not for trails or speed."
     },
     {
         name: "Monday Anza", brand: "Monday Motorbikes", type: "commuter", svgType: "moped",
         color1: "#5d4037", color2: "#3e2723",
+        websiteUrl: "https://mondaymotorbikes.com/products/anza",
         price: 2199, priceDisplay: "$2,199",
         motorKw: 1, motor: "1,000W", battery: "48V 17.5Ah (840Wh)", batteryWh: 840,
         rangeMi: 50, range: "~50 mi", speedMph: 28, speed: "28+ mph",
         weightLbs: 75, weight: "~75 lbs", charge: "4-5 hrs",
         torque: "80 Nm", accel: "N/A",
         rating: 3.9,
-        pros: ["Retro cafe racer style", "Aircraft-grade aluminum", "Pedal assist option"],
-        cons: ["Low top speed", "Heavy for an eBike", "Limited power"],
-        review: "Classic 1980s cafe racer proportions with modern electric power. T6 aircraft-grade aluminum frame with stainless fasteners. Stylish commuter option but not meant for performance riding."
+        pros: ["Retro cafe racer styling is gorgeous", "T6 aircraft-grade aluminum frame", "Pedal assist + throttle modes"],
+        cons: ["28 mph limits usefulness", "75 lbs is heavy for an eBike class", "Modest 1kW motor power"],
+        review: "Classic 1980s cafe racer proportions meet modern electric power. T6 aircraft-grade aluminum frame with stainless fasteners. Turns heads as a stylish commuter, but not meant for performance riding."
     },
     {
         name: "Segway X260", brand: "Segway", type: "off-road", svgType: "dirtbike",
         color1: "#546e7a", color2: "#37474f",
+        discontinued: true,
         price: 4999, priceDisplay: "$4,999",
         motorKw: 5, motor: "5kW", battery: "74V 32Ah (2.4kWh)", batteryWh: 2370,
         rangeMi: 74, range: "Up to 74 mi", speedMph: 47, speed: "47 mph",
-        weightLbs: 121, weight: "121 lbs", charge: "4 hrs",
-        torque: "170 ft-lbs", accel: "0-30 in 4.5s",
+        weightLbs: 121, weight: "121 lbs (97 lbs w/o battery)", charge: "4 hrs",
+        torque: "184 ft-lbs (250 Nm)", accel: "0-31 in 4s",
         rating: 4.0,
-        pros: ["Ultra lightweight (121 lbs)", "Good range", "Known brand reliability"],
-        cons: ["Less power than competitors", "Premium price for specs", "Limited availability"],
-        review: "Segway's entry into emotos brings brand reliability and a featherweight 121 lb chassis. Great range at 74 miles, though 5kW motor is modest compared to similarly priced bikes. Solid beginner option."
+        pros: ["Featherweight 121 lbs with battery", "Excellent 74-mile range", "IP67 waterproof rating"],
+        cons: ["Discontinued — no longer manufactured", "5kW is underpowered vs competitors", "No replacement model announced"],
+        review: "Segway's emoto entry brought brand reliability and an ultra-light 121 lb chassis with IP67 waterproofing. Good range at 74 miles but 5kW was always modest. Now discontinued — the Sur-Ron Light Bee X is the closest successor."
     },
     {
         name: "Cake Kalk OR", brand: "Cake", type: "dual-sport", svgType: "dirtbike",
         color1: "#78909c", color2: "#546e7a",
+        websiteUrl: "https://www.ridecake.com/en/kalk-or",
+        discontinued: true,
         price: 15000, priceDisplay: "$15,000",
         motorKw: 11, motor: "11kW", battery: "51.8V 50Ah (2.6kWh)", batteryWh: 2600,
         rangeMi: 53, range: "~53 mi", speedMph: 56, speed: "56 mph",
         weightLbs: 176, weight: "176 lbs", charge: "1.5 hrs (0-80%)",
         torque: "277 Nm", accel: "0-30 in 3.2s",
         rating: 4.1,
-        pros: ["Premium Swedish build", "Fast charging", "Minimalist design icon"],
-        cons: ["Very expensive", "Modest specs for price", "Limited dealer network"],
-        review: "Premium Swedish engineering with minimalist design that's become iconic. Exceptional build quality and fast 1.5-hour charging. The price is hard to justify on specs alone - you're paying for design and craftsmanship."
+        pros: ["Iconic minimalist Scandinavian design", "Fast 1.5-hour charging to 80%", "Premium build quality"],
+        cons: ["Cake went bankrupt in Feb 2024", "Overpriced on specs — $15K for 11kW", "Very limited parts/support now"],
+        review: "Iconic Swedish engineering with minimalist design that became a cult classic. Cake filed for bankruptcy in Feb 2024 but was acquired by Norwegian Brages Holding and is working on a comeback. Existing units are collectors' items."
     },
     {
-        name: "KTM Freeride E-XC", brand: "KTM", type: "off-road", svgType: "dirtbike",
+        name: "KTM Freeride E", brand: "KTM", type: "off-road", svgType: "dirtbike",
         color1: "#e65100", color2: "#bf360c",
-        price: 12999, priceDisplay: "$12,999",
-        motorKw: 18, motor: "18kW (24 HP)", battery: "3.9kWh", batteryWh: 3900,
-        rangeMi: 30, range: "~30 mi", speedMph: 59, speed: "59 mph",
-        weightLbs: 250, weight: "~250 lbs", charge: "75 min (0-80%)",
-        torque: "42 Nm", accel: "0-30 in 2.8s",
-        rating: 4.4,
-        pros: ["Major manufacturer quality", "Fast charging", "Purpose-built MX geometry"],
-        cons: ["Very short range", "Expensive", "Heavy"],
-        review: "Premium Austrian engineering from a legendary dirt bike maker. Purpose-built electric off-roader with excellent handling. Fast 75-minute charging partially offsets the short 30-mile range."
+        websiteUrl: "https://www.ktm.com/en-us/models/electric/freeride/2025-ktm-freeridee.html",
+        price: 11500, priceDisplay: "$11,500",
+        motorKw: 19.2, motor: "19.2kW peak (11kW nominal)", battery: "5.5kWh Li-Ion", batteryWh: 5500,
+        rangeMi: 45, range: "2-3 hrs riding", speedMph: 59, speed: "59 mph",
+        weightLbs: 247, weight: "247 lbs (112 kg)", charge: "1.5 hrs (fast) / 8 hrs (standard)",
+        torque: "37 Nm", accel: "0-30 in 2.5s",
+        rating: 4.5,
+        pros: ["99% new 2025 design — in-house KTM drivetrain", "Now street legal with road homologation", "Swappable battery in under 10 minutes"],
+        cons: ["247 lbs is heavy for off-road", "$11.5K is premium pricing", "2-3 hour ride time at best"],
+        review: "Completely redesigned for 2025 — KTM calls it '99% new.' In-house PMSM motor, 5.5kWh swappable battery, WP XACT suspension, and now street legal. Three ride modes (Eco/Normal/Sport) plus adjustable traction control and regen."
     },
     {
         name: "Husqvarna EE 5", brand: "Husqvarna", type: "youth", svgType: "youth",
         color1: "#1565c0", color2: "#0d47a1",
-        price: 5299, priceDisplay: "$5,299",
-        motorKw: 5, motor: "5kW", battery: "907Wh", batteryWh: 907,
-        rangeMi: 25, range: "~25 min ride", speedMph: 37, speed: "~37 mph",
-        weightLbs: 92, weight: "92 lbs", charge: "45-70 min",
-        torque: "35 Nm", accel: "N/A",
-        rating: 4.2,
-        pros: ["Real MX bike for kids", "Premium components", "Adjustable power modes"],
-        cons: ["Very short run time", "Expensive for youth", "Limited to young riders"],
-        review: "A real motocross bike scaled for young riders. Premium Husqvarna components with adjustable power to grow with the rider. Short battery life means short sessions, but the experience is unmatched."
+        websiteUrl: "https://www.husqvarna-motorcycles.com/en-us/models/electric.html",
+        price: 5699, priceDisplay: "$5,699",
+        motorKw: 5, motor: "5kW peak", battery: "907Wh Li-Ion", batteryWh: 907,
+        rangeMi: 25, range: "~2 hrs general / 30 min fast", speedMph: 42, speed: "~42 mph",
+        weightLbs: 89, weight: "89 lbs (40.5 kg)", charge: "45 min (0-80%) / 70 min full",
+        torque: "13.8 Nm", accel: "N/A",
+        rating: 4.3,
+        pros: ["Water-cooled for 2025 — 30% longer battery life", "Real MX components (WP XACT suspension)", "Six ride modes grow with the rider"],
+        cons: ["$5,699 is expensive for a youth bike", "30-min run time at full pace", "For young riders only — min age 6"],
+        review: "The gold standard for youth electric MX. New for 2025: water-cooled motor extends battery life 30% and provides more consistent power delivery. Chromoly steel frame, WP XACT forks, and six ride modes. Fast 45-minute charging to 80%."
     },
     {
         name: "GASGAS MC-E 5", brand: "GASGAS", type: "youth", svgType: "youth",
         color1: "#d32f2f", color2: "#b71c1c",
-        price: 5299, priceDisplay: "$5,299",
-        motorKw: 5, motor: "5kW", battery: "907Wh", batteryWh: 907,
-        rangeMi: 25, range: "~25 min ride", speedMph: 37, speed: "~37 mph",
-        weightLbs: 92, weight: "92 lbs", charge: "45-70 min",
-        torque: "35 Nm", accel: "N/A",
-        rating: 4.2,
-        pros: ["Identical to Husky EE 5 performance", "Bold GASGAS styling", "Real MX geometry"],
-        cons: ["Same short run time", "Premium youth price", "Limited to young riders"],
-        review: "Essentially the Husqvarna EE 5 in GASGAS red livery (same KTM Group platform). Same excellent youth motocross experience with bolder styling. Choose whichever brand you prefer."
+        websiteUrl: "https://www.gasgas.com/en-us/models/electric.html",
+        price: 5699, priceDisplay: "$5,699",
+        motorKw: 5, motor: "5kW peak", battery: "907Wh Li-Ion", batteryWh: 907,
+        rangeMi: 25, range: "~2 hrs general / 30 min fast", speedMph: 42, speed: "~42 mph",
+        weightLbs: 89, weight: "89 lbs (40.5 kg)", charge: "45 min (0-80%) / 70 min full",
+        torque: "13.8 Nm", accel: "N/A",
+        rating: 4.3,
+        pros: ["Same KTM Group platform as Husqvarna EE 5", "Bold GASGAS red styling", "Real MX geometry and components"],
+        cons: ["Identical specs to EE 5 at same price", "Same 30-min run time limitation", "Premium youth pricing"],
+        review: "The Husqvarna EE 5 in GASGAS red livery — same KTM Group platform, same water-cooled 2025 upgrade, same excellent youth MX experience. Choose whichever brand livery your young rider prefers."
     },
     {
         name: "Razor MX650", brand: "Razor", type: "youth", svgType: "youth",
         color1: "#7cb342", color2: "#558b2f",
+        websiteUrl: "https://www.razor.com/rides/dirt-bikes/mx650/",
         price: 530, priceDisplay: "$530",
         motorKw: 0.65, motor: "650W", battery: "36V (SLA)", batteryWh: 360,
         rangeMi: 10, range: "~40 min / 10 mi", speedMph: 17, speed: "17 mph",
         weightLbs: 98, weight: "98 lbs", charge: "12 hrs",
         torque: "15 Nm", accel: "N/A",
         rating: 3.7,
-        pros: ["Very affordable entry", "Fun for young kids", "Simple and durable"],
-        cons: ["Lead-acid battery (heavy)", "Very slow", "Long charge time"],
-        review: "The gateway drug to emotos for kids. At $530, it's by far the most affordable entry point. Lead-acid battery is heavy and slow to charge, but for backyard fun and learning, it can't be beat."
+        pros: ["Cheapest entry at $530", "Simple, durable construction", "Great for kids learning to ride"],
+        cons: ["Lead-acid battery — heavy and slow charge", "17 mph top speed is very slow", "12-hour charge time is painful"],
+        review: "The gateway to emotos for kids. At $530 it's the most affordable entry point by far. Lead-acid battery is dated (heavy, 12-hour charge), but for backyard fun and learning throttle control, it can't be beat on price."
     },
     {
         name: "Stark VARG SM", brand: "Stark Future", type: "street", svgType: "street",
         color1: "#d32f2f", color2: "#b71c1c",
         imageUrl: "https://starkfuture.com/cdn/shop/files/VARG-SM-Hero_540x.jpg",
+        websiteUrl: "https://starkfuture.com/en/varg-sm",
         price: 12900, priceDisplay: "$12,900",
         motorKw: 60, motor: "60-80 HP", battery: "7.2kWh", batteryWh: 7200,
         rangeMi: 73, range: "Up to 73 mi", speedMph: 95, speed: "95+ mph",
         weightLbs: 275, weight: "275 lbs", charge: "Under 2 hrs",
         torque: "938 Nm", accel: "0-60 in 2.8s",
         rating: 4.7,
-        pros: ["Insane 938 Nm torque", "Variable 10-80 HP", "Carbon fiber motor"],
-        cons: ["Heavy (275 lbs)", "Street-only SM model", "Premium price"],
-        review: "Redefines electric motorcycle performance. 938 Nm of torque and adjustable 10-80 HP from a carbon fiber motor. Magnesium battery case is cutting-edge engineering. The future of electric motorcycles."
+        pros: ["Insane 938 Nm torque output", "Adjustable 10-80 HP via software", "Carbon fiber motor — cutting-edge tech"],
+        cons: ["275 lbs is heavy for the class", "Street-only supermoto variant", "Premium $12.9K price tag"],
+        review: "Redefines what electric motorcycles can do. 938 Nm of torque and software-adjustable 10-80 HP from a carbon fiber motor in a magnesium battery case. The supermoto variant brings VARG performance to the street."
     },
     {
         name: "Stark VARG MX", brand: "Stark Future", type: "motocross", svgType: "dirtbike",
         color1: "#d32f2f", color2: "#b71c1c",
         imageUrl: "https://starkfuture.com/cdn/shop/files/VARG-MX-Hero_540x.jpg",
+        websiteUrl: "https://starkfuture.com/en/varg-mx",
         price: 11900, priceDisplay: "$11,900",
-        motorKw: 60, motor: "80 HP", battery: "7.2kWh", batteryWh: 7200,
-        rangeMi: 40, range: "~6 hrs trail", speedMph: 85, speed: "85+ mph",
+        motorKw: 60, motor: "80 HP peak", battery: "7.2kWh", batteryWh: 7200,
+        rangeMi: 40, range: "~6 hrs trail riding", speedMph: 85, speed: "85+ mph",
         weightLbs: 242, weight: "242 lbs", charge: "Under 2 hrs",
         torque: "938 Nm", accel: "0-60 in 2.5s",
         rating: 4.8,
-        pros: ["Highest power-to-weight in MX", "6-hour trail ride time", "Fully adjustable power"],
-        cons: ["Not street legal", "Heavy vs gas MX", "Premium price"],
-        review: "The most powerful production electric motocross bike. 80 HP with 938 Nm torque in a 242 lb package. Up to 6 hours of trail riding. This is the bike that makes gas MX riders take notice."
+        pros: ["Highest power-to-weight ratio in electric MX", "Up to 6 hours of trail ride time", "Fully software-adjustable power curve"],
+        cons: ["Not street legal", "Heavier than gas 450cc MX bikes", "Premium $11.9K price"],
+        review: "The most powerful production electric motocross bike ever made. 80 HP and 938 Nm of torque in a 242 lb package with up to 6 hours of trail riding. This is the bike that makes gas MX riders seriously consider switching."
     },
     {
         name: "Zero FXE", brand: "Zero Motorcycles", type: "street", svgType: "street",
         color1: "#fdd835", color2: "#f9a825",
-        price: 11795, priceDisplay: "$11,795",
-        motorKw: 34, motor: "46 HP (34kW)", battery: "7.2kWh", batteryWh: 7200,
-        rangeMi: 100, range: "100 mi city", speedMph: 85, speed: "85 mph",
-        weightLbs: 293, weight: "293 lbs", charge: "2.5 hrs (Level 2)",
-        torque: "78 ft-lbs", accel: "0-60 in 3.8s",
+        websiteUrl: "https://zeromotorcycles.com/model/zero-fxe",
+        price: 12495, priceDisplay: "$12,495",
+        motorKw: 34, motor: "46 HP (34kW)", battery: "7.2kWh Z-Force Li-Ion", batteryWh: 7200,
+        rangeMi: 100, range: "100 mi city / 40 mi highway", speedMph: 85, speed: "85 mph",
+        weightLbs: 298, weight: "298 lbs (135 kg)", charge: "1.5 hrs (Level 2)",
+        torque: "78 ft-lbs (106 Nm)", accel: "0-60 in 3.8s",
         rating: 4.3,
-        pros: ["Established brand", "Great city range", "Street legal & highway capable"],
-        cons: ["Modest power for price", "Limited dealer support", "Range drops on highway"],
-        review: "Zero's urban streetfighter offers 100 miles of city range and highway capability at 85 mph. Established brand with years of electric motorcycle experience. Solid all-rounder for street riders."
+        pros: ["Established brand with years of EV experience", "100-mile city range", "5-inch TFT display with smartphone app"],
+        cons: ["Range drops to 40 mi on highway", "$12.5K for 46 HP feels steep", "Showa suspension is decent, not premium"],
+        review: "Zero's urban streetfighter with Huge Design styling. 100-mile city range, 85 mph top speed, and Bosch ABS. The 5-inch TFT dash with Cypher II OS supports OTA updates. Solid daily rider with the most EV motorcycle experience behind it."
     },
     {
         name: "Zero SR/F", brand: "Zero Motorcycles", type: "street", svgType: "street",
         color1: "#fdd835", color2: "#f9a825",
+        websiteUrl: "https://zeromotorcycles.com/model/zero-srf",
         price: 19995, priceDisplay: "$19,995",
         motorKw: 82, motor: "110 HP (82kW)", battery: "14.4kWh", batteryWh: 14400,
-        rangeMi: 161, range: "161 mi city", speedMph: 124, speed: "124 mph",
+        rangeMi: 161, range: "161 mi city / 99 mi highway", speedMph: 124, speed: "124 mph",
         weightLbs: 485, weight: "485 lbs", charge: "2 hrs (Level 2)",
-        torque: "140 ft-lbs", accel: "0-60 in 3.0s",
+        torque: "140 ft-lbs (190 Nm)", accel: "0-60 in 3.0s",
         rating: 4.5,
-        pros: ["Incredible range", "124 mph top speed", "Premium sport bike"],
-        cons: ["Very expensive", "Heavy (485 lbs)", "Steep learning curve"],
-        review: "Zero's flagship sport bike is a legitimate premium motorcycle. 161 miles of city range, 124 mph top speed, and 110 HP make it a real sportbike. Heavy at 485 lbs but rides like a proper full-size machine."
+        pros: ["161-mile city range is class-leading", "124 mph top speed — real sportbike", "110 HP rivals gas liter-bikes"],
+        cons: ["$20K is serious money", "485 lbs is very heavy", "Range halves on highway at speed"],
+        review: "Zero's flagship is a legitimate premium sport motorcycle. 161 miles city range, 124 mph top speed, and 110 HP rival gas sportbikes. The 14.4kWh battery is massive. Heavy at 485 lbs but rides with confidence at any speed."
     },
     {
         name: "Kollter ES1-S Pro", brand: "Kollter", type: "commuter", svgType: "cruiser",
         color1: "#455a64", color2: "#37474f",
-        price: 5990, priceDisplay: "$5,990",
-        motorKw: 11, motor: "11kW (15 HP)", battery: "72V 31Ah (2.2kWh)", batteryWh: 2232,
-        rangeMi: 60, range: "35-80 mi", speedMph: 60, speed: "50-60 mph",
-        weightLbs: 260, weight: "~260 lbs", charge: "3-6 hrs",
-        torque: "120 Nm", accel: "0-30 in 4s",
-        rating: 3.8,
-        pros: ["Most affordable highway bike", "Street legal", "Dual battery option"],
-        cons: ["Modest performance", "Long charge time", "Niche brand"],
-        review: "North America's most affordable highway-capable electric motorcycle. Belt drive is quiet and low-maintenance. Optional second battery extends range. Good commuter but not built for spirited riding."
+        websiteUrl: "https://www.kollterelectricmotorcycles.com/es1-spro",
+        price: 6995, priceDisplay: "$6,995",
+        motorKw: 11, motor: "11kW peak (5kW continuous)", battery: "72V 31Ah x2 (4.5kWh dual)", batteryWh: 4464,
+        rangeMi: 70, range: "43-80 mi (dual battery)", speedMph: 70, speed: "60-70 mph",
+        weightLbs: 298, weight: "298 lbs (w/ 2 batteries)", charge: "3.5 hrs per battery",
+        torque: "220 Nm", accel: "0-30 in 4s",
+        rating: 3.9,
+        pros: ["Most affordable highway-capable electric MC", "EPA/DOT street legal in all 50 states", "Dual swappable Samsung batteries"],
+        cons: ["Modest 11kW peak power", "298 lbs with both batteries", "Belt drive limits top-end speed"],
+        review: "North America's most affordable highway-capable electric motorcycle. EPA/DOT approved and street legal in all 50 states. Dual swappable Samsung 18650 batteries deliver up to 80 miles of range. Quiet belt drive is low-maintenance."
     },
     {
-        name: "LiveWire S2 Del Mar", brand: "LiveWire (Harley)", type: "street", svgType: "street",
+        name: "LiveWire S2 Del Mar", brand: "LiveWire", type: "street", svgType: "street",
         color1: "#ff6f00", color2: "#e65100",
+        websiteUrl: "https://www.livewire.com/s2-del-mar-electric-motorcycle",
         price: 16249, priceDisplay: "$16,249",
         motorKw: 63, motor: "84 HP (63kW)", battery: "10.5kWh", batteryWh: 10500,
         rangeMi: 113, range: "113 mi city", speedMph: 103, speed: "103 mph",
-        weightLbs: 436, weight: "436 lbs", charge: "75 min DC fast",
-        torque: "194 ft-lbs", accel: "0-60 in 3.0s",
+        weightLbs: 436, weight: "436 lbs", charge: "1.3 hrs L2 (20-80%)",
+        torque: "194 ft-lbs (263 Nm)", accel: "0-60 in 3.0s",
         rating: 4.5,
-        pros: ["Harley-Davidson backing", "DC fast charge", "Superb handling"],
-        cons: ["Expensive", "Heavy", "Dealer availability varies"],
-        review: "Harley's electric brand delivers a gorgeous, well-handling street bike. DC fast charging to 100% in 75 minutes is excellent. Four ride modes plus custom. Handling puts electric rivals in the shade."
+        pros: ["Harley-Davidson engineering and dealer network", "Brembo Monobloc brakes + Showa suspension", "OTA updates and LiveWire app"],
+        cons: ["$16.2K is expensive for the class", "436 lbs is heavy", "No Level 3 DC fast charging"],
+        review: "Harley's electric brand delivers premium build quality — Brembo Monobloc brakes, Showa fully adjustable suspension, and cast aluminum ARROW chassis. First LiveWire with OTA updates. Four ride modes plus IMU-based cornering ABS. 5-year battery warranty."
     },
     {
         name: "Energica Eva Ribelle", brand: "Energica", type: "street", svgType: "street",
         color1: "#00897b", color2: "#00695c",
+        websiteUrl: "https://www.energicamotor.com/us/models/energica-eva-ribelle/",
         price: 26000, priceDisplay: "$26,000",
         motorKw: 126, motor: "171 HP (126kW)", battery: "21.5kWh", batteryWh: 21500,
-        rangeMi: 261, range: "261 mi city", speedMph: 125, speed: "125 mph",
-        weightLbs: 573, weight: "573 lbs", charge: "40 min DC (0-85%)",
+        rangeMi: 261, range: "261 mi city / 130 mi combined", speedMph: 125, speed: "125 mph",
+        weightLbs: 573, weight: "573 lbs", charge: "40 min DC fast (0-85%)",
         torque: "215 Nm", accel: "0-60 in 2.6s",
         rating: 4.6,
-        pros: ["171 HP is incredible", "261 mi city range", "Italian craftsmanship"],
-        cons: ["Very expensive", "Very heavy", "Limited US dealers"],
-        review: "Italian-made electric hyper-naked with 171 HP and 261 miles of city range. The most powerful electric streetfighter money can buy. DC fast charges in 40 minutes. Brutal performance, premium price."
+        pros: ["171 HP — most powerful electric streetfighter", "261-mile city range on 21.5kWh battery", "DC fast charge to 85% in 40 minutes"],
+        cons: ["$26K is top-tier pricing", "573 lbs is extremely heavy", "Very limited US dealer network"],
+        review: "Italian-made electric hyper-naked with 171 HP, 261 miles of city range, and 40-minute DC fast charging. The most powerful electric streetfighter money can buy. EMCE motor is 22 lbs lighter than predecessor. Brutal performance."
     },
     {
         name: "Electric Motion Epure", brand: "Electric Motion", type: "off-road", svgType: "dirtbike",
         color1: "#1b5e20", color2: "#0d3d13",
+        websiteUrl: "https://www.electricmotion.fr/en/epure",
         price: 11000, priceDisplay: "$11,000",
         motorKw: 5.5, motor: "5.5kW", battery: "1.9kWh", batteryWh: 1900,
-        rangeMi: 25, range: "~2 hrs ride", speedMph: 50, speed: "50 mph",
+        rangeMi: 25, range: "~2 hrs ride time", speedMph: 50, speed: "50 mph",
         weightLbs: 165, weight: "165 lbs", charge: "2.5 hrs",
         torque: "180 Nm", accel: "0-30 in 4s",
         rating: 4.1,
-        pros: ["Trials bike pedigree", "Lightweight for class", "Excellent low-speed control"],
-        cons: ["Very expensive for specs", "Short range", "Niche brand"],
-        review: "From a trials bike manufacturer, the Epure brings exceptional low-speed control and precision. Great for technical trails. Limited range and high price, but unmatched in technical terrain handling."
+        pros: ["Trials bike DNA — unmatched low-speed control", "165 lbs is light for the class", "French engineering and build quality"],
+        cons: ["$11K for 5.5kW is very expensive", "1.9kWh battery gives short range", "Extremely niche brand"],
+        review: "Built by a trials motorcycle manufacturer, the Epure has unmatched low-speed control and precision for technical terrain. Great for rocky trails where finesse matters more than speed. Niche and pricey, but nothing else rides like it."
+    },
+    // ===== NEW ADDITIONS 2025 =====
+    {
+        name: "Can-Am Pulse", brand: "Can-Am", type: "street", svgType: "street",
+        color1: "#1a237e", color2: "#0d1b5e",
+        websiteUrl: "https://can-am.brp.com/on-road/us/en/models/motorcycles/pulse.html",
+        price: 13999, priceDisplay: "$13,999",
+        motorKw: 35, motor: "47 HP (35kW) Rotax E-Power", battery: "8.9kWh", batteryWh: 8900,
+        rangeMi: 100, range: "100 mi city / 80 mi combined", speedMph: 80, speed: "80 mph (limited)",
+        weightLbs: 390, weight: "390 lbs", charge: "1.5 hrs L2 (0-100%)",
+        torque: "53 ft-lbs (72 Nm)", accel: "0-60 in 3.8s",
+        rating: 4.2,
+        pros: ["10.25-inch touchscreen with Apple CarPlay", "1.5-hour full charge on Level 2", "Four ride modes + reverse function"],
+        cons: ["80 mph electronic speed limit", "390 lbs is heavy for 47 HP", "$14K is steep for the specs"],
+        review: "Can-Am's electric street comeback features a Rotax E-Power motor, 8.9kWh battery, and the best tech in the segment — a 10.25-inch touchscreen with Apple CarPlay and OTA updates. 1.5-hour full charge is impressive. Speed-limited to 80 mph."
+    },
+    {
+        name: "Can-Am Origin", brand: "Can-Am", type: "adventure", svgType: "dirtbike",
+        color1: "#1a237e", color2: "#0d1b5e",
+        websiteUrl: "https://can-am.brp.com/on-road/us/en/models/motorcycles/origin.html",
+        price: 14499, priceDisplay: "$14,499",
+        motorKw: 35, motor: "47 HP (35kW) Rotax E-Power", battery: "8.9kWh", batteryWh: 8900,
+        rangeMi: 90, range: "90 mi city / 71 mi combined", speedMph: 80, speed: "80 mph (limited)",
+        weightLbs: 412, weight: "412 lbs", charge: "1.5 hrs L2 (0-100%)",
+        torque: "53 ft-lbs (72 Nm)", accel: "0-60 in 4.3s",
+        rating: 4.1,
+        pros: ["Six ride modes including two off-road", "10-inch suspension travel front & rear", "Same great 10.25-inch touchscreen"],
+        cons: ["412 lbs is very heavy for adventure", "80 mph speed limit constrains touring", "$14.5K for 47 HP is a lot"],
+        review: "Can-Am's electric adventure bike shares the Pulse powertrain but adds 10 inches of KYB suspension travel, 21/18 spoked wheels, and six ride modes including two dedicated off-road settings. Same amazing CarPlay touchscreen and fast charging."
+    },
+    {
+        name: "Kawasaki Ninja e-1", brand: "Kawasaki", type: "street", svgType: "street",
+        color1: "#4caf50", color2: "#2e7d32",
+        websiteUrl: "https://www.kawasaki.com/en-us/motorcycle/ninja/sport/ninja-e-1/2024-ninja-e-1-abs",
+        price: 7599, priceDisplay: "$7,599",
+        motorKw: 9, motor: "9kW peak (5kW rated)", battery: "3kWh (2x removable)", batteryWh: 3000,
+        rangeMi: 41, range: "~41 mi (Road mode)", speedMph: 62, speed: "62 mph",
+        weightLbs: 309, weight: "309 lbs", charge: "3.7 hrs per battery",
+        torque: "40.5 Nm", accel: "0-30 in 3s",
+        rating: 3.8,
+        pros: ["Major manufacturer backing (Kawasaki)", "Two removable batteries — charge anywhere", "e-Boost button for 15-sec power surge"],
+        cons: ["41-mile range is very limited", "125cc-class performance at $7.6K", "Level 1 charging only (no L2)"],
+        review: "Kawasaki's first electric motorcycle brings Ninja styling to a 125cc-equivalent EV. Dual removable batteries let you charge indoors. The e-Boost button unleashes extra power for 15-second bursts. Urban-focused — limited range and speed prevent highway use."
+    },
+    {
+        name: "BMW CE 02", brand: "BMW", type: "commuter", svgType: "moped",
+        color1: "#1565c0", color2: "#0d47a1",
+        websiteUrl: "https://www.bmwmotorcycles.com/en/models/urban_mobility/ce02.html",
+        price: 7599, priceDisplay: "$7,599",
+        motorKw: 11, motor: "11kW (15 HP)", battery: "3.92kWh", batteryWh: 3920,
+        rangeMi: 59, range: "Up to 59 mi", speedMph: 59, speed: "59 mph",
+        weightLbs: 265, weight: "265 lbs", charge: "3 hrs (0-80%)",
+        torque: "55 Nm", accel: "N/A",
+        rating: 4.0,
+        pros: ["BMW build quality and 3-year warranty", "Unique eParkourer styling", "Electric reverse gear for parking"],
+        cons: ["59 mph limits highway use", "265 lbs for a commuter scooter", "Highline trim adds $875 for Flash mode"],
+        review: "BMW's urban electric two-wheeler blends scooter practicality with motorcycle styling. Flow, Surf, and Flash (Highline) ride modes. Single-arm swingarm, belt drive, and BMW Connected app. 200cc-equivalent performance with premium BMW fit and finish."
     }
 ];
 
@@ -1034,6 +1140,9 @@ const totalBrands = document.getElementById('totalBrands');
 
 totalBikes.textContent = bikes.length;
 totalBrands.textContent = [...new Set(bikes.map(b => b.brand))].length;
+const minPrice = Math.min(...bikes.map(b => b.price));
+const maxPrice = Math.max(...bikes.map(b => b.price));
+document.getElementById('priceRange').innerHTML = '$' + (minPrice >= 1000 ? (minPrice/1000).toFixed(0) + 'K' : minPrice) + '&ndash;$' + (maxPrice/1000).toFixed(0) + 'K';
 
 // ============== FILTERING & SORTING ==============
 function getFiltered() {
@@ -1087,7 +1196,8 @@ function createCard(bike) {
     // Build image section - real photo or SVG fallback
     let imageContent;
     if (bike.imageUrl) {
-        imageContent = `<img src="${bike.imageUrl}" alt="${bike.name}" onerror="this.style.display='none';this.nextElementSibling.style.display='flex'">`
+        imageContent = `<div class="img-loading"></div>`
+            + `<img src="${bike.imageUrl}" alt="${bike.name}" loading="lazy" onload="this.previousElementSibling.remove()" onerror="this.style.display='none';this.previousElementSibling.remove();this.nextElementSibling.style.display='flex'">`
             + `<div class="img-fallback" style="width:100%;height:100%;align-items:center;justify-content:center;background:${bgGradient(bike.type)}">${bikeSVG(bike.svgType, bike.color1, bike.color2)}</div>`;
     } else {
         imageContent = bikeSVG(bike.svgType, bike.color1, bike.color2);
@@ -1097,6 +1207,7 @@ function createCard(bike) {
         <div class="card-image" style="background:${bike.imageUrl ? '#f5f5f5' : bgGradient(bike.type)}">
             <button class="card-fav ${isFav ? 'faved' : ''}" data-name="${bike.name}" title="Toggle favorite">${isFav ? '\u2665' : '\u2661'}</button>
             <span class="type-badge ${typeClass(bike.type)}">${typeLabel(bike.type)}</span>
+            ${bike.discontinued ? '<span class="discontinued-badge">Discontinued</span>' : ''}
             ${imageContent}
         </div>
         <div class="card-body">
@@ -1146,6 +1257,7 @@ function createCard(bike) {
                         <div class="stars">${stars(bike.rating)}</div>
                         <p>${bike.review}</p>
                     </div>
+                    ${bike.websiteUrl ? `<a href="${bike.websiteUrl}" target="_blank" rel="noopener" class="card-website">View on ${bike.brand} &rarr;</a>` : ''}
                 </div>
             </div>
         </div>
@@ -1173,7 +1285,7 @@ function renderTable(list) {
     list.forEach(b => {
         const tr = document.createElement('tr');
         tr.innerHTML = `
-            <td><span class="table-name">${b.name}</span><br><span class="table-brand">${b.brand}</span></td>
+            <td><span class="table-name">${b.name}</span>${b.discontinued ? ' <span style="color:#d63031;font-size:0.7em;font-weight:700">DISC.</span>' : ''}<br><span class="table-brand">${b.brand}</span></td>
             <td><span class="type-badge ${typeClass(b.type)}" style="position:static">${typeLabel(b.type)}</span></td>
             <td>${b.motor}</td>
             <td>${b.battery}</td>
