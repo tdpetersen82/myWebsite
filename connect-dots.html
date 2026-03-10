@@ -1,0 +1,681 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dots & Boxes</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 600px;
+            width: 95%;
+        }
+        h1 {
+            font-size: 2.2em;
+            color: #333;
+            margin-bottom: 10px;
+        }
+        .game-info {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+            margin: 10px 0;
+            font-size: 1.1em;
+            font-weight: bold;
+        }
+        .game-info span { color: #667eea; }
+        .player-score { color: #2196F3 !important; }
+        .computer-score { color: #f44336 !important; }
+        .turn-indicator {
+            font-size: 1em;
+            margin: 5px 0 10px;
+            font-weight: bold;
+            min-height: 24px;
+        }
+        .turn-player { color: #2196F3; }
+        .turn-computer { color: #f44336; }
+        canvas {
+            display: block;
+            margin: 0 auto;
+            border-radius: 10px;
+            background: #1a1a2e;
+            cursor: pointer;
+        }
+        .controls {
+            margin-top: 15px;
+        }
+        .btn {
+            padding: 10px 25px;
+            font-size: 1em;
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            margin: 5px;
+            color: white;
+            font-weight: bold;
+            transition: transform 0.2s, box-shadow 0.2s;
+        }
+        .btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
+        .btn:active { transform: scale(0.98); }
+        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .btn-easy { background: linear-gradient(135deg, #4CAF50, #45a049); }
+        .btn-medium { background: linear-gradient(135deg, #FF9800, #F57C00); }
+        .btn-hard { background: linear-gradient(135deg, #f44336, #d32f2f); }
+        .difficulty-screen {
+            margin: 20px 0;
+        }
+        .difficulty-screen p {
+            font-size: 1.1em;
+            color: #555;
+            margin-bottom: 15px;
+        }
+        .difficulty-info {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 5px;
+        }
+        .back-button {
+            display: inline-block;
+            margin-top: 15px;
+            color: #667eea;
+            text-decoration: none;
+            font-weight: bold;
+            font-size: 1em;
+        }
+        .back-button:hover { color: #764ba2; }
+        .game-over-msg {
+            font-size: 1.3em;
+            font-weight: bold;
+            margin: 10px 0;
+            min-height: 30px;
+        }
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔵 Dots & Boxes</h1>
+
+        <div id="difficultyScreen" class="difficulty-screen">
+            <p>Choose your difficulty:</p>
+            <button class="btn btn-easy" onclick="startGame('easy')">Easy</button>
+            <div class="difficulty-info">3×3 grid — Random AI</div>
+            <br><br>
+            <button class="btn btn-medium" onclick="startGame('medium')">Medium</button>
+            <div class="difficulty-info">4×4 grid — Smarter AI</div>
+            <br><br>
+            <button class="btn btn-hard" onclick="startGame('hard')">Hard</button>
+            <div class="difficulty-info">5×5 grid — Strategic AI</div>
+        </div>
+
+        <div id="gameArea" class="hidden">
+            <div class="game-info">
+                <div>You: <span id="playerScore" class="player-score">0</span></div>
+                <div>Computer: <span id="computerScore" class="computer-score">0</span></div>
+            </div>
+            <div id="turnIndicator" class="turn-indicator turn-player">Your turn</div>
+            <canvas id="gameCanvas" width="500" height="500"></canvas>
+            <div id="gameOverMsg" class="game-over-msg"></div>
+            <div class="controls">
+                <button class="btn btn-primary" onclick="showDifficulty()">New Game</button>
+            </div>
+        </div>
+
+        <a href="index.html" class="back-button">← Back to Game Hub</a>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('gameCanvas');
+        const ctx = canvas.getContext('2d');
+        const playerScoreEl = document.getElementById('playerScore');
+        const computerScoreEl = document.getElementById('computerScore');
+        const turnIndicatorEl = document.getElementById('turnIndicator');
+        const gameOverMsgEl = document.getElementById('gameOverMsg');
+        const difficultyScreen = document.getElementById('difficultyScreen');
+        const gameArea = document.getElementById('gameArea');
+
+        // Audio
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+
+        function playSound(freq, duration = 0.1, type = 'square') {
+            const osc = audioContext.createOscillator();
+            const gain = audioContext.createGain();
+            osc.connect(gain);
+            gain.connect(audioContext.destination);
+            osc.type = type;
+            osc.frequency.value = freq;
+            gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
+            osc.start();
+            osc.stop(audioContext.currentTime + duration);
+        }
+
+        function playLineSound() { playSound(600, 0.05, 'sine'); }
+        function playBoxPlayerSound() { playSound(800, 0.15, 'sine'); setTimeout(() => playSound(1000, 0.15, 'sine'), 100); }
+        function playBoxComputerSound() { playSound(400, 0.1, 'triangle'); }
+        function playWinSound() { playSound(523, 0.15, 'sine'); setTimeout(() => playSound(659, 0.15, 'sine'), 150); setTimeout(() => playSound(784, 0.3, 'sine'), 300); }
+        function playLoseSound() { playSound(400, 0.15, 'sine'); setTimeout(() => playSound(300, 0.15, 'sine'), 150); setTimeout(() => playSound(200, 0.3, 'sine'), 300); }
+
+        // Game state
+        let rows, cols, difficulty;
+        let horizontalLines, verticalLines, boxes;
+        let playerScore, computerScore;
+        let currentTurn; // 'player' or 'computer'
+        let hoveredLine; // { type: 'h'|'v', row, col } or null
+        let gameOver;
+        let computerThinking;
+
+        // Layout constants
+        const PADDING = 40;
+        let dotSpacing;
+        const DOT_RADIUS = 6;
+        const LINE_THICKNESS = 5;
+        const HOVER_THICKNESS = 7;
+        const CLICK_THRESHOLD = 18;
+
+        const PLAYER_COLOR = '#42A5F5';
+        const PLAYER_COLOR_LIGHT = 'rgba(66, 165, 245, 0.25)';
+        const COMPUTER_COLOR = '#EF5350';
+        const COMPUTER_COLOR_LIGHT = 'rgba(239, 83, 80, 0.25)';
+        const EMPTY_LINE_COLOR = 'rgba(255, 255, 255, 0.15)';
+        const HOVER_COLOR = 'rgba(66, 165, 245, 0.5)';
+        const DOT_COLOR = '#e0e0e0';
+
+        function showDifficulty() {
+            difficultyScreen.classList.remove('hidden');
+            gameArea.classList.add('hidden');
+        }
+
+        function startGame(diff) {
+            difficulty = diff;
+            if (diff === 'easy') { rows = 3; cols = 3; }
+            else if (diff === 'medium') { rows = 4; cols = 4; }
+            else { rows = 5; cols = 5; }
+
+            dotSpacing = (canvas.width - 2 * PADDING) / cols;
+
+            horizontalLines = [];
+            for (let r = 0; r <= rows; r++) {
+                horizontalLines[r] = [];
+                for (let c = 0; c < cols; c++) horizontalLines[r][c] = 0;
+            }
+
+            verticalLines = [];
+            for (let r = 0; r < rows; r++) {
+                verticalLines[r] = [];
+                for (let c = 0; c <= cols; c++) verticalLines[r][c] = 0;
+            }
+
+            boxes = [];
+            for (let r = 0; r < rows; r++) {
+                boxes[r] = [];
+                for (let c = 0; c < cols; c++) boxes[r][c] = 0;
+            }
+
+            playerScore = 0;
+            computerScore = 0;
+            currentTurn = 'player';
+            hoveredLine = null;
+            gameOver = false;
+            computerThinking = false;
+
+            difficultyScreen.classList.add('hidden');
+            gameArea.classList.remove('hidden');
+            gameOverMsgEl.textContent = '';
+            updateUI();
+            draw();
+        }
+
+        function updateUI() {
+            playerScoreEl.textContent = playerScore;
+            computerScoreEl.textContent = computerScore;
+            if (gameOver) {
+                turnIndicatorEl.textContent = '';
+                turnIndicatorEl.className = 'turn-indicator';
+            } else if (currentTurn === 'player') {
+                turnIndicatorEl.textContent = 'Your turn';
+                turnIndicatorEl.className = 'turn-indicator turn-player';
+            } else {
+                turnIndicatorEl.textContent = 'Computer thinking...';
+                turnIndicatorEl.className = 'turn-indicator turn-computer';
+            }
+        }
+
+        // Coordinate helpers
+        function dotX(col) { return PADDING + col * dotSpacing; }
+        function dotY(row) { return PADDING + row * dotSpacing; }
+
+        // Drawing
+        function draw() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+            // Draw claimed boxes
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (boxes[r][c] !== 0) {
+                        const x = dotX(c);
+                        const y = dotY(r);
+                        ctx.fillStyle = boxes[r][c] === 1 ? PLAYER_COLOR_LIGHT : COMPUTER_COLOR_LIGHT;
+                        ctx.fillRect(x + 2, y + 2, dotSpacing - 4, dotSpacing - 4);
+                        ctx.fillStyle = boxes[r][c] === 1 ? PLAYER_COLOR : COMPUTER_COLOR;
+                        ctx.font = `bold ${Math.floor(dotSpacing * 0.35)}px sans-serif`;
+                        ctx.textAlign = 'center';
+                        ctx.textBaseline = 'middle';
+                        ctx.fillText(boxes[r][c] === 1 ? 'P' : 'C', x + dotSpacing / 2, y + dotSpacing / 2);
+                    }
+                }
+            }
+
+            // Draw empty line guides
+            ctx.strokeStyle = EMPTY_LINE_COLOR;
+            ctx.lineWidth = 2;
+            for (let r = 0; r <= rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (horizontalLines[r][c] === 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(dotX(c), dotY(r));
+                        ctx.lineTo(dotX(c + 1), dotY(r));
+                        ctx.stroke();
+                    }
+                }
+            }
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c <= cols; c++) {
+                    if (verticalLines[r][c] === 0) {
+                        ctx.beginPath();
+                        ctx.moveTo(dotX(c), dotY(r));
+                        ctx.lineTo(dotX(c), dotY(r + 1));
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw claimed lines
+            for (let r = 0; r <= rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (horizontalLines[r][c] !== 0) {
+                        ctx.strokeStyle = horizontalLines[r][c] === 1 ? PLAYER_COLOR : COMPUTER_COLOR;
+                        ctx.lineWidth = LINE_THICKNESS;
+                        ctx.lineCap = 'round';
+                        ctx.beginPath();
+                        ctx.moveTo(dotX(c), dotY(r));
+                        ctx.lineTo(dotX(c + 1), dotY(r));
+                        ctx.stroke();
+                    }
+                }
+            }
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c <= cols; c++) {
+                    if (verticalLines[r][c] !== 0) {
+                        ctx.strokeStyle = verticalLines[r][c] === 1 ? PLAYER_COLOR : COMPUTER_COLOR;
+                        ctx.lineWidth = LINE_THICKNESS;
+                        ctx.lineCap = 'round';
+                        ctx.beginPath();
+                        ctx.moveTo(dotX(c), dotY(r));
+                        ctx.lineTo(dotX(c), dotY(r + 1));
+                        ctx.stroke();
+                    }
+                }
+            }
+
+            // Draw hover line
+            if (hoveredLine && !gameOver && currentTurn === 'player' && !computerThinking) {
+                ctx.strokeStyle = HOVER_COLOR;
+                ctx.lineWidth = HOVER_THICKNESS;
+                ctx.lineCap = 'round';
+                ctx.beginPath();
+                if (hoveredLine.type === 'h') {
+                    ctx.moveTo(dotX(hoveredLine.col), dotY(hoveredLine.row));
+                    ctx.lineTo(dotX(hoveredLine.col + 1), dotY(hoveredLine.row));
+                } else {
+                    ctx.moveTo(dotX(hoveredLine.col), dotY(hoveredLine.row));
+                    ctx.lineTo(dotX(hoveredLine.col), dotY(hoveredLine.row + 1));
+                }
+                ctx.stroke();
+            }
+
+            // Draw dots on top
+            for (let r = 0; r <= rows; r++) {
+                for (let c = 0; c <= cols; c++) {
+                    ctx.fillStyle = DOT_COLOR;
+                    ctx.beginPath();
+                    ctx.arc(dotX(c), dotY(r), DOT_RADIUS, 0, Math.PI * 2);
+                    ctx.fill();
+                }
+            }
+        }
+
+        // Find nearest line to mouse position
+        function getNearestLine(mx, my) {
+            let best = null;
+            let bestDist = CLICK_THRESHOLD;
+
+            // Check horizontal lines
+            for (let r = 0; r <= rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (horizontalLines[r][c] !== 0) continue;
+                    const x1 = dotX(c), x2 = dotX(c + 1), y = dotY(r);
+                    // Distance from point to line segment
+                    const t = Math.max(0, Math.min(1, (mx - x1) / (x2 - x1)));
+                    const px = x1 + t * (x2 - x1);
+                    const py = y;
+                    const dist = Math.sqrt((mx - px) ** 2 + (my - py) ** 2);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        best = { type: 'h', row: r, col: c };
+                    }
+                }
+            }
+
+            // Check vertical lines
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c <= cols; c++) {
+                    if (verticalLines[r][c] !== 0) continue;
+                    const x = dotX(c), y1 = dotY(r), y2 = dotY(r + 1);
+                    const t = Math.max(0, Math.min(1, (my - y1) / (y2 - y1)));
+                    const px = x;
+                    const py = y1 + t * (y2 - y1);
+                    const dist = Math.sqrt((mx - px) ** 2 + (my - py) ** 2);
+                    if (dist < bestDist) {
+                        bestDist = dist;
+                        best = { type: 'v', row: r, col: c };
+                    }
+                }
+            }
+
+            return best;
+        }
+
+        // Count sides of a box
+        function countBoxSides(r, c) {
+            let count = 0;
+            if (horizontalLines[r][c] !== 0) count++;     // top
+            if (horizontalLines[r + 1][c] !== 0) count++;  // bottom
+            if (verticalLines[r][c] !== 0) count++;         // left
+            if (verticalLines[r][c + 1] !== 0) count++;     // right
+            return count;
+        }
+
+        // Place a line and check for completed boxes
+        function placeLine(type, row, col, owner) {
+            if (type === 'h') horizontalLines[row][col] = owner;
+            else verticalLines[row][col] = owner;
+
+            let completedBoxes = 0;
+
+            // Check which boxes this line borders
+            if (type === 'h') {
+                // Horizontal line at (row, col): borders box above (row-1, col) and box below (row, col)
+                if (row > 0 && boxes[row - 1][col] === 0 && countBoxSides(row - 1, col) === 4) {
+                    boxes[row - 1][col] = owner;
+                    completedBoxes++;
+                }
+                if (row < rows && boxes[row][col] === 0 && countBoxSides(row, col) === 4) {
+                    boxes[row][col] = owner;
+                    completedBoxes++;
+                }
+            } else {
+                // Vertical line at (row, col): borders box left (row, col-1) and box right (row, col)
+                if (col > 0 && boxes[row][col - 1] === 0 && countBoxSides(row, col - 1) === 4) {
+                    boxes[row][col - 1] = owner;
+                    completedBoxes++;
+                }
+                if (col < cols && boxes[row][col] === 0 && countBoxSides(row, col) === 4) {
+                    boxes[row][col] = owner;
+                    completedBoxes++;
+                }
+            }
+
+            return completedBoxes;
+        }
+
+        // Get all available moves
+        function getAvailableMoves() {
+            const moves = [];
+            for (let r = 0; r <= rows; r++)
+                for (let c = 0; c < cols; c++)
+                    if (horizontalLines[r][c] === 0) moves.push({ type: 'h', row: r, col: c });
+            for (let r = 0; r < rows; r++)
+                for (let c = 0; c <= cols; c++)
+                    if (verticalLines[r][c] === 0) moves.push({ type: 'v', row: r, col: c });
+            return moves;
+        }
+
+        // Check if a move would complete a box (without placing it)
+        function wouldCompleteBox(type, row, col) {
+            if (type === 'h') {
+                if (row > 0 && boxes[row - 1][col] === 0 && countBoxSides(row - 1, col) === 3) return true;
+                if (row < rows && boxes[row][col] === 0 && countBoxSides(row, col) === 3) return true;
+            } else {
+                if (col > 0 && boxes[row][col - 1] === 0 && countBoxSides(row, col - 1) === 3) return true;
+                if (col < cols && boxes[row][col] === 0 && countBoxSides(row, col) === 3) return true;
+            }
+            return false;
+        }
+
+        // Check if a move would create a 3-sided box (setting up opponent)
+        function wouldCreateThreeSided(type, row, col) {
+            if (type === 'h') {
+                if (row > 0 && boxes[row - 1][col] === 0 && countBoxSides(row - 1, col) === 2) return true;
+                if (row < rows && boxes[row][col] === 0 && countBoxSides(row, col) === 2) return true;
+            } else {
+                if (col > 0 && boxes[row][col - 1] === 0 && countBoxSides(row, col - 1) === 2) return true;
+                if (col < cols && boxes[row][col] === 0 && countBoxSides(row, col) === 2) return true;
+            }
+            return false;
+        }
+
+        // Count how many boxes a move gives away (for chain analysis)
+        function countChainLength(type, row, col) {
+            // Simulate placing the line and count how many boxes opponent could chain
+            // Temporarily place
+            if (type === 'h') horizontalLines[row][col] = 2;
+            else verticalLines[row][col] = 2;
+
+            let chainBoxes = 0;
+            // Find all 3-sided boxes this creates and simulate the chain
+            const toCheck = [];
+            if (type === 'h') {
+                if (row > 0 && boxes[row - 1][col] === 0 && countBoxSides(row - 1, col) === 3)
+                    toCheck.push({ r: row - 1, c: col });
+                if (row < rows && boxes[row][col] === 0 && countBoxSides(row, col) === 3)
+                    toCheck.push({ r: row, c: col });
+            } else {
+                if (col > 0 && boxes[row][col - 1] === 0 && countBoxSides(row, col - 1) === 3)
+                    toCheck.push({ r: row, c: col - 1 });
+                if (col < cols && boxes[row][col] === 0 && countBoxSides(row, col) === 3)
+                    toCheck.push({ r: row, c: col });
+            }
+            chainBoxes = toCheck.length;
+
+            // Undo
+            if (type === 'h') horizontalLines[row][col] = 0;
+            else verticalLines[row][col] = 0;
+
+            return chainBoxes;
+        }
+
+        // AI move selection
+        function getComputerMove() {
+            const moves = getAvailableMoves();
+            if (moves.length === 0) return null;
+
+            // All difficulties: complete boxes first
+            const completingMoves = moves.filter(m => wouldCompleteBox(m.type, m.row, m.col));
+            if (completingMoves.length > 0 && difficulty !== 'easy') {
+                return completingMoves[Math.floor(Math.random() * completingMoves.length)];
+            }
+
+            if (difficulty === 'easy') {
+                // Easy: just pick randomly (even if it could complete a box, 50% chance to miss it)
+                if (completingMoves.length > 0 && Math.random() < 0.5) {
+                    return completingMoves[Math.floor(Math.random() * completingMoves.length)];
+                }
+                return moves[Math.floor(Math.random() * moves.length)];
+            }
+
+            if (difficulty === 'medium') {
+                // Medium: avoid creating 3-sided boxes 60% of the time
+                const safeMoves = moves.filter(m => !wouldCreateThreeSided(m.type, m.row, m.col));
+                if (safeMoves.length > 0 && Math.random() < 0.6) {
+                    return safeMoves[Math.floor(Math.random() * safeMoves.length)];
+                }
+                return moves[Math.floor(Math.random() * moves.length)];
+            }
+
+            // Hard: strategic play
+            const safeMoves = moves.filter(m => !wouldCreateThreeSided(m.type, m.row, m.col));
+            if (safeMoves.length > 0) {
+                return safeMoves[Math.floor(Math.random() * safeMoves.length)];
+            }
+
+            // All moves are risky — pick the one that gives away fewest boxes
+            let bestMove = moves[0];
+            let bestChain = Infinity;
+            for (const m of moves) {
+                const chain = countChainLength(m.type, m.row, m.col);
+                if (chain < bestChain) {
+                    bestChain = chain;
+                    bestMove = m;
+                }
+            }
+            return bestMove;
+        }
+
+        // Handle a move (for either player)
+        function makeMove(type, row, col, owner) {
+            const ownerVal = owner === 'player' ? 1 : 2;
+            const completed = placeLine(type, row, col, ownerVal);
+
+            if (owner === 'player') {
+                playLineSound();
+                if (completed > 0) {
+                    playerScore += completed;
+                    playBoxPlayerSound();
+                }
+            } else {
+                playLineSound();
+                if (completed > 0) {
+                    computerScore += completed;
+                    playBoxComputerSound();
+                }
+            }
+
+            updateUI();
+            draw();
+
+            // Check game over
+            if (isGameOver()) {
+                endGame();
+                return;
+            }
+
+            // If completed a box, same player goes again
+            if (completed > 0) {
+                if (owner === 'computer') {
+                    setTimeout(computerTurn, 400);
+                }
+                // Player just gets to click again
+            } else {
+                // Switch turns
+                if (owner === 'player') {
+                    currentTurn = 'computer';
+                    updateUI();
+                    setTimeout(computerTurn, 400);
+                } else {
+                    currentTurn = 'player';
+                    updateUI();
+                }
+            }
+        }
+
+        function computerTurn() {
+            if (gameOver) return;
+            computerThinking = true;
+            const move = getComputerMove();
+            if (move) {
+                makeMove(move.type, move.row, move.col, 'computer');
+            }
+            computerThinking = false;
+        }
+
+        function isGameOver() {
+            return playerScore + computerScore === rows * cols;
+        }
+
+        function endGame() {
+            gameOver = true;
+            currentTurn = null;
+            updateUI();
+
+            const totalBoxes = rows * cols;
+            if (playerScore > computerScore) {
+                gameOverMsgEl.style.color = PLAYER_COLOR;
+                gameOverMsgEl.textContent = `You win! ${playerScore}–${computerScore}`;
+                playWinSound();
+                // Track wins
+                const wins = parseInt(localStorage.getItem('connectDotsWins') || '0');
+                localStorage.setItem('connectDotsWins', wins + 1);
+            } else if (computerScore > playerScore) {
+                gameOverMsgEl.style.color = COMPUTER_COLOR;
+                gameOverMsgEl.textContent = `Computer wins! ${computerScore}–${playerScore}`;
+                playLoseSound();
+            } else {
+                gameOverMsgEl.style.color = '#666';
+                gameOverMsgEl.textContent = `It's a tie! ${playerScore}–${computerScore}`;
+            }
+        }
+
+        // Mouse events
+        canvas.addEventListener('mousemove', (e) => {
+            if (gameOver || currentTurn !== 'player' || computerThinking) {
+                hoveredLine = null;
+                draw();
+                return;
+            }
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mx = (e.clientX - rect.left) * scaleX;
+            const my = (e.clientY - rect.top) * scaleY;
+            hoveredLine = getNearestLine(mx, my);
+            draw();
+        });
+
+        canvas.addEventListener('mouseleave', () => {
+            hoveredLine = null;
+            draw();
+        });
+
+        canvas.addEventListener('click', (e) => {
+            if (gameOver || currentTurn !== 'player' || computerThinking) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mx = (e.clientX - rect.left) * scaleX;
+            const my = (e.clientY - rect.top) * scaleY;
+            const line = getNearestLine(mx, my);
+            if (line) {
+                hoveredLine = null;
+                makeMove(line.type, line.row, line.col, 'player');
+            }
+        });
+
+        // Initial draw
+        draw();
+    </script>
+</body>
+</html>
