@@ -3,79 +3,163 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Game Hub</title>
+    <title>Arcade Game Hub</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-    <div class="container">
-        <h1>🎮 Game Hub</h1>
-        <p class="subtitle">Choose your game and have fun!</p>
-        
-        <div class="game-grid">
-            <div class="game-card">
-                <h2>🐍 Snake</h2>
-                <p>Classic snake game. Eat food, grow longer, don't hit the walls or yourself!</p>
-                <a href="snake.html" class="play-button">Play Snake</a>
-            </div>
-            
-            <div class="game-card">
-                <h2>🏓 Pong</h2>
-                <p>Classic pong game. Use arrow keys to move the paddle and keep the ball in play!</p>
-                <a href="pong.html" class="play-button">Play Pong</a>
-            </div>
-            
-            <div class="game-card">
-                <h2>🟦 Block Puzzle</h2>
-                <p>Stack falling blocks to complete lines. Rotate and move pieces to score big!</p>
-                <a href="block-puzzle.html" class="play-button">Play Block Puzzle</a>
-            </div>
-            
-            <div class="game-card">
-                <h2>🧱 Breakout</h2>
-                <p>Break all the bricks with your paddle and ball. Don't let the ball fall!</p>
-                <a href="breakout.html" class="play-button">Play Breakout</a>
-            </div>
-            
-            <div class="game-card">
-                <h2>👾 Space Invaders</h2>
-                <p>Defend Earth from alien invaders! Shoot them down before they reach you!</p>
-                <a href="space-invaders.html" class="play-button">Play Space Invaders</a>
-            </div>
-            
-            <div class="game-card">
-                <h2>🐦 Flappy Bird</h2>
-                <p>Tap spacebar to flap and navigate through pipes. How far can you go?</p>
-                <a href="flappy-bird.html" class="play-button">Play Flappy Bird</a>
-            </div>
+    <div class="hub-container">
+        <div class="hub-header">
+            <h1>Arcade Game Hub</h1>
+            <p class="subtitle">Classic arcade games right in your browser — no downloads, no installs.</p>
+            <span class="game-count">17 Games</span>
+        </div>
 
-            <div class="game-card">
-                <h2>🔴 Connect 4</h2>
-                <p>Drop colored pieces and connect four in a row — horizontally, vertically, or diagonally!</p>
-                <a href="connect-4.html" class="play-button">Play Connect 4</a>
-            </div>
+        <!-- Classic Arcade -->
+        <div class="category">
+            <h2 class="category-title"><span class="cat-icon">👾</span> Classic Arcade</h2>
+            <div class="game-grid">
+                <div class="game-card">
+                    <div class="game-icon-wrap">🐍</div>
+                    <h2>Snake</h2>
+                    <p>Eat food, grow longer, don't hit the walls or yourself!</p>
+                    <a href="snake.html" class="play-button">Play</a>
+                </div>
 
-            <div class="game-card">
-                <h2>🍎 Fruit Catcher</h2>
-                <p>5 game modes! Catch fruits, dodge bombs, grab power-ups. Play vs AI, friends, or solo in Zen & Survival modes. Touch & mobile supported!</p>
-                <a href="fruit-catcher.html" class="play-button">Play Fruit Catcher</a>
-            </div>
+                <div class="game-card">
+                    <div class="game-icon-wrap">🏓</div>
+                    <h2>Pong</h2>
+                    <p>Move the paddle and keep the ball in play against the AI!</p>
+                    <a href="pong.html" class="play-button">Play</a>
+                </div>
 
-            <div class="game-card">
-                <h2>🏍️ Motorcycle Trail Rider</h2>
-                <p>Physics-based side-scroller! Race over hills, launch off ramps, land flips, and set distance records!</p>
-                <a href="motorcycle-game.html" class="play-button">Play Motorcycle</a>
-            </div>
+                <div class="game-card">
+                    <div class="game-icon-wrap">🧱</div>
+                    <h2>Breakout</h2>
+                    <p>Break all the bricks with your paddle and ball!</p>
+                    <a href="breakout.html" class="play-button">Play</a>
+                </div>
 
-            <div class="game-card">
-                <h2>🔵 Dots & Boxes</h2>
-                <p>Draw lines between dots to complete boxes. Outsmart the computer in this classic strategy game!</p>
-                <a href="connect-dots.html" class="play-button">Play Dots & Boxes</a>
-            </div>
+                <div class="game-card">
+                    <div class="game-icon-wrap">👾</div>
+                    <h2>Space Invaders</h2>
+                    <p>Defend Earth from waves of alien invaders!</p>
+                    <a href="space-invaders.html" class="play-button">Play</a>
+                </div>
 
-            <div class="game-card">
-                <h2>&#9889; eMoto Database</h2>
-                <p>32 electric motorcycles from 22 brands — specs, pricing &amp; reviews. Sur-Ron, Stark, Zero, KTM, Can-Am &amp; more!</p>
-                <a href="emoto-database.html" class="play-button">Browse Bikes</a>
+                <div class="game-card">
+                    <div class="game-icon-wrap">🐦</div>
+                    <h2>Flappy Bird</h2>
+                    <p>Tap to flap through pipes. How far can you go?</p>
+                    <a href="flappy-bird.html" class="play-button">Play</a>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-icon-wrap">🟦</div>
+                    <h2>Block Puzzle</h2>
+                    <p>Stack falling blocks to complete lines and score big!</p>
+                    <a href="block-puzzle.html" class="play-button">Play</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- New Retro Arcade (Phaser) -->
+        <div class="category">
+            <h2 class="category-title"><span class="cat-icon">🕹️</span> Retro Arcade</h2>
+            <div class="game-grid">
+                <div class="game-card">
+                    <span class="badge-new">NEW</span>
+                    <div class="game-icon-wrap">☄️</div>
+                    <h2>Asteroids</h2>
+                    <p>Pilot your ship through an asteroid field. Shoot and survive!</p>
+                    <a href="asteroids.html" class="play-button">Play</a>
+                </div>
+
+                <div class="game-card">
+                    <span class="badge-new">NEW</span>
+                    <div class="game-icon-wrap">🟡</div>
+                    <h2>Pac-Man</h2>
+                    <p>Navigate the maze, eat dots, and outsmart four ghosts!</p>
+                    <a href="pac-man.html" class="play-button">Play</a>
+                </div>
+
+                <div class="game-card">
+                    <span class="badge-new">NEW</span>
+                    <div class="game-icon-wrap">🐸</div>
+                    <h2>Frogger</h2>
+                    <p>Cross busy roads and rivers to reach home safely!</p>
+                    <a href="frogger.html" class="play-button">Play</a>
+                </div>
+
+                <div class="game-card">
+                    <span class="badge-new">NEW</span>
+                    <div class="game-icon-wrap">🚀</div>
+                    <h2>Missile Command</h2>
+                    <p>Defend your cities from incoming missiles with counter-strikes!</p>
+                    <a href="missile-command.html" class="play-button">Play</a>
+                </div>
+
+                <div class="game-card">
+                    <span class="badge-new">NEW</span>
+                    <div class="game-icon-wrap">🛸</div>
+                    <h2>Galaga</h2>
+                    <p>Battle waves of alien formations in this classic space shooter!</p>
+                    <a href="galaga.html" class="play-button">Play</a>
+                </div>
+
+                <div class="game-card">
+                    <span class="badge-new">NEW</span>
+                    <div class="game-icon-wrap">🐛</div>
+                    <h2>Centipede</h2>
+                    <p>Blast the centipede as it weaves through a mushroom field!</p>
+                    <a href="centipede.html" class="play-button">Play</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Strategy & Puzzles -->
+        <div class="category">
+            <h2 class="category-title"><span class="cat-icon">🧩</span> Strategy & Puzzles</h2>
+            <div class="game-grid">
+                <div class="game-card">
+                    <div class="game-icon-wrap">🔴</div>
+                    <h2>Connect 4</h2>
+                    <p>Drop pieces and connect four in a row to win!</p>
+                    <a href="connect-4.html" class="play-button">Play</a>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-icon-wrap">🔵</div>
+                    <h2>Dots & Boxes</h2>
+                    <p>Draw lines between dots to complete boxes and outsmart the AI!</p>
+                    <a href="connect-dots.html" class="play-button">Play</a>
+                </div>
+            </div>
+        </div>
+
+        <!-- Action & Other -->
+        <div class="category">
+            <h2 class="category-title"><span class="cat-icon">🎯</span> Action & More</h2>
+            <div class="game-grid">
+                <div class="game-card">
+                    <div class="game-icon-wrap">🍎</div>
+                    <h2>Fruit Catcher</h2>
+                    <p>5 modes! Catch fruits, dodge bombs, grab power-ups. Touch supported!</p>
+                    <a href="fruit-catcher.html" class="play-button">Play</a>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-icon-wrap">🏍️</div>
+                    <h2>Motorcycle Trail Rider</h2>
+                    <p>Physics-based side-scroller! Race over hills and launch off ramps!</p>
+                    <a href="motorcycle-game.html" class="play-button">Play</a>
+                </div>
+
+                <div class="game-card">
+                    <div class="game-icon-wrap">⚡</div>
+                    <h2>eMoto Database</h2>
+                    <p>Browse 32 electric motorcycles — specs, pricing & reviews.</p>
+                    <a href="emoto-database.html" class="play-button">Browse</a>
+                </div>
             </div>
         </div>
     </div>

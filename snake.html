@@ -208,6 +208,22 @@
 
         // Draw initial state
         drawGame();
+
+        // Auto-scale canvas to fit viewport
+        (function() {
+            const c = document.getElementById('gameCanvas');
+            const bw = c.width, bh = c.height;
+            function sc() {
+                const mw = Math.min(window.innerWidth - 40, 900);
+                const mh = window.innerHeight * 0.65;
+                const s = Math.min(mw / bw, mh / bh, 1);
+                c.style.transformOrigin = 'top center';
+                c.style.transform = 'scale(' + s + ')';
+                c.style.marginBottom = (-(bh * (1 - s))) + 'px';
+            }
+            window.addEventListener('resize', sc);
+            sc();
+        })();
     </script>
 </body>
 </html>

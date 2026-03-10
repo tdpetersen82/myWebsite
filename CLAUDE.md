@@ -2,7 +2,7 @@
 
 ## Project Overview
 
-This is a **static game hub website** featuring 6 browser-based arcade games implemented in vanilla HTML5, CSS3, and JavaScript. No build tools, frameworks, or external dependencies exist. Each game is fully self-contained in a single HTML file.
+This is a **static game hub website** featuring 17 browser-based arcade games. Original games use vanilla HTML5, CSS3, and JavaScript. Newer games use **Phaser 3** (loaded via CDN). Each game is fully self-contained in a single HTML file. All game canvases auto-scale to fit the browser viewport.
 
 **Live games:**
 - Snake (`snake.html`)
@@ -11,6 +11,17 @@ This is a **static game hub website** featuring 6 browser-based arcade games imp
 - Breakout / Brick Breaker (`breakout.html`)
 - Space Invaders (`space-invaders.html`)
 - Flappy Bird (`flappy-bird.html`)
+- Connect 4 (`connect-4.html`)
+- Fruit Catcher (`fruit-catcher.html`)
+- Motorcycle Trail Rider (`motorcycle-game.html`)
+- Dots & Boxes (`connect-dots.html`)
+- eMoto Database (`emoto-database.html`)
+- Asteroids (`asteroids.html`) — Phaser 3
+- Pac-Man (`pac-man.html`) — Phaser 3
+- Frogger (`frogger.html`) — Phaser 3
+- Missile Command (`missile-command.html`) — Phaser 3
+- Galaga (`galaga.html`) — Phaser 3
+- Centipede (`centipede.html`) — Phaser 3
 
 ---
 
@@ -18,32 +29,45 @@ This is a **static game hub website** featuring 6 browser-based arcade games imp
 
 ```
 myWebsite/
-├── index.html          # Landing page — game hub with cards linking to all games
-├── styles.css          # Shared stylesheet used only by index.html
-├── snake.html          # Self-contained Snake game
-├── pong.html           # Self-contained Pong game
-├── block-puzzle.html   # Self-contained Block Puzzle game
-├── breakout.html       # Self-contained Breakout game
-├── space-invaders.html # Self-contained Space Invaders game
-├── flappy-bird.html    # Self-contained Flappy Bird game
+├── index.html              # Landing page — game hub with categorized cards
+├── styles.css              # Shared stylesheet (index.html + game page chrome)
+├── snake.html              # Self-contained Snake game
+├── pong.html               # Self-contained Pong game
+├── block-puzzle.html       # Self-contained Block Puzzle game
+├── breakout.html           # Self-contained Breakout game
+├── space-invaders.html     # Self-contained Space Invaders game
+├── flappy-bird.html        # Self-contained Flappy Bird game
+├── connect-4.html          # Self-contained Connect 4 game
+├── fruit-catcher.html      # Self-contained Fruit Catcher game
+├── motorcycle-game.html    # Self-contained Motorcycle Trail Rider game
+├── connect-dots.html       # Self-contained Dots & Boxes game
+├── emoto-database.html     # Electric motorcycle database/browser
+├── asteroids.html          # Phaser 3 — Asteroids game
+├── pac-man.html            # Phaser 3 — Pac-Man game
+├── frogger.html            # Phaser 3 — Frogger game
+├── missile-command.html    # Phaser 3 — Missile Command game
+├── galaga.html             # Phaser 3 — Galaga game
+├── centipede.html          # Phaser 3 — Centipede game
 └── .vscode/
-    └── launch.json     # VS Code debug config (Chrome + Live Server on port 5500)
+    └── launch.json         # VS Code debug config (Chrome + Live Server on port 5500)
 ```
 
 ---
 
 ## Technology Stack
 
-| Layer      | Technology                                  |
-|------------|---------------------------------------------|
-| Markup     | HTML5 (semantic, single-page per game)      |
-| Styling    | CSS3 (inline `<style>` blocks per game)     |
-| Logic      | Vanilla JavaScript (ES6+, no frameworks)    |
-| Rendering  | HTML5 Canvas 2D API                         |
-| Audio      | Web Audio API (synthesized sounds, no files)|
-| Storage    | LocalStorage (high score persistence)       |
-| Build      | None — zero-dependency static site          |
-| Deployment | Static hosting (e.g., GitHub Pages)         |
+| Layer       | Technology                                              |
+|-------------|---------------------------------------------------------|
+| Markup      | HTML5 (semantic, single-page per game)                  |
+| Styling     | CSS3 (inline `<style>` blocks per game)                 |
+| Logic       | Vanilla JavaScript (ES6+) or Phaser 3 (newer games)    |
+| Rendering   | HTML5 Canvas 2D API / Phaser 3 renderer                 |
+| Game Engine | Phaser 3 via CDN (newer games only)                     |
+| Physics     | Matter.js via CDN (motorcycle game), Phaser Arcade Physics |
+| Audio       | Web Audio API (synthesized sounds, no files)            |
+| Storage     | LocalStorage (high score persistence)                   |
+| Build       | None — zero-dependency static site                      |
+| Deployment  | Static hosting (e.g., GitHub Pages)                     |
 
 ---
 
@@ -75,13 +99,14 @@ There is no `package.json`, no `npm install`, and no compile step. Editing a fil
 
 ## Code Conventions
 
-### File Structure (per game)
+### Vanilla Game File Structure
 
-Each game HTML file follows this consistent layout:
+Each vanilla game HTML file follows this consistent layout:
 
 1. `<!DOCTYPE html>` + `<head>` with title and inline `<style>`
 2. `<body>` with `<canvas>` element + score/control UI
-3. `<script>` block containing:
+3. Auto-scaling IIFE at end of `<script>` block
+4. `<script>` block containing:
    - Canvas setup + DOM element references
    - **Sound effects** (Web Audio API oscillators)
    - **Game configuration constants** (UPPER_CASE)
@@ -93,6 +118,15 @@ Each game HTML file follows this consistent layout:
    - **Game loop** with `requestAnimationFrame`
    - **Initialization call**
 
+### Phaser Game File Structure
+
+Phaser games follow this layout:
+
+1. `<!DOCTYPE html>` + `<head>` with Phaser CDN script tag
+2. `<body>` with `<div id="phaser-container">` + score/control UI
+3. `<script>` block with Phaser config using `Phaser.Scale.FIT` and scene classes
+4. Scenes: typically MenuScene, GameScene, GameOverScene
+
 ### Naming Conventions
 
 | Context              | Convention        | Example                        |
@@ -101,9 +135,13 @@ Each game HTML file follows this consistent layout:
 | Game constants       | UPPER_SNAKE_CASE  | `COLS`, `BLOCK_SIZE`, `ROWS`   |
 | DOM references       | camelCase + type  | `canvas`, `scoreDisplay`       |
 
+### Canvas Auto-Scaling
+
+All vanilla games include a scaling IIFE that uses CSS `transform: scale()` to fit the viewport while preserving the internal coordinate system. Phaser games use the built-in `Phaser.Scale.FIT` mode.
+
 ### Frame Rate Control
 
-All games use timestamp-based frame limiting to prevent speed issues on high-refresh-rate displays. Do not use `setInterval` for game loops. The pattern is:
+All vanilla games use timestamp-based frame limiting. Phaser handles this internally.
 
 ```js
 let lastTime = 0;
@@ -148,27 +186,23 @@ localStorage.setItem('snakeHighScore', score);
 const best = localStorage.getItem('snakeHighScore') || 0;
 ```
 
-### Responsive Design (`styles.css` / `index.html` only)
-
-- Max container width: `800px`
-- Game card grid: `repeat(auto-fit, minmax(200px, 1fr))`
-- Mobile breakpoint: `@media (max-width: 768px)` → single-column layout
-
 ---
 
 ## Adding a New Game
 
+### Vanilla JS Game
 1. Copy an existing game file as a starting template (e.g., `cp snake.html my-game.html`).
-2. Follow the file structure pattern above.
-3. Add a card to `index.html` in the games grid:
-   ```html
-   <a href="my-game.html" class="game-card">
-       <div class="game-icon">🎮</div>
-       <h3>My Game</h3>
-       <p>Short description</p>
-   </a>
-   ```
-4. No build step needed — the new file is immediately accessible.
+2. Follow the vanilla game file structure pattern above.
+3. Include the auto-scaling IIFE at the end of the script block.
+4. Add a card to `index.html` in the appropriate category section.
+
+### Phaser 3 Game
+1. Use the Phaser template with CDN script tag: `<script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>`
+2. Configure `Phaser.Scale.FIT` with `autoCenter: Phaser.Scale.CENTER_HORIZONTALLY`.
+3. Implement as scene classes (MenuScene, GameScene, GameOverScene).
+4. Add a card to `index.html` in the appropriate category section.
+
+No build step needed — new files are immediately accessible.
 
 ---
 
@@ -176,8 +210,8 @@ const best = localStorage.getItem('snakeHighScore') || 0;
 
 - Each game is entirely self-contained. Changes to one file do not affect others.
 - Shared visual styles for `index.html` only live in `styles.css`. Game-specific styles are inline.
-- Do not introduce external libraries or CDN scripts — keep all games dependency-free.
-- Preserve the frame rate limiting pattern (`requestAnimationFrame` + timestamp delta) to avoid speed bugs on high-refresh displays.
+- Preserve the frame rate limiting pattern (`requestAnimationFrame` + timestamp delta) for vanilla games.
+- Preserve the auto-scaling behavior in all games.
 
 ---
 
@@ -198,10 +232,11 @@ The site is suitable for **GitHub Pages** (static, no server-side rendering need
 
 ## Key Constraints for AI Assistants
 
-1. **No dependencies**: Do not add npm packages, CDN scripts, or external imports.
+1. **CDN-only external libraries**: Phaser.js, Matter.js via CDN are acceptable. Do not add npm packages or build-time dependencies.
 2. **No build tools**: Do not introduce webpack, Vite, Rollup, TypeScript compilation, or similar tooling unless explicitly requested.
-3. **No frameworks**: No React, Vue, Angular, etc. Keep everything vanilla.
+3. **No frameworks**: No React, Vue, Angular, etc. Keep page chrome vanilla.
 4. **Self-contained files**: Each game must remain a single HTML file with inline CSS and JS.
 5. **Preserve audio pattern**: Use Web Audio API synthesis — do not add audio file assets.
-6. **Preserve frame limiting**: Always use `requestAnimationFrame` with timestamp-based delta for game loops.
+6. **Preserve frame limiting**: Always use `requestAnimationFrame` with timestamp-based delta for vanilla game loops.
 7. **LocalStorage only**: No backend, no cookies beyond localStorage for score persistence.
+8. **Auto-scaling**: All games must scale to fit the viewport. Vanilla games use the CSS transform IIFE; Phaser games use Scale.FIT.
