@@ -1,0 +1,797 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Centipede</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        #game-container canvas {
+            border: 2px solid #333;
+            background-color: #000;
+            display: block;
+            margin: 0 auto;
+            border-radius: 10px;
+        }
+        #game-container {
+            margin: 10px auto;
+            max-width: 604px;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+</head>
+<body>
+    <div class="container" style="max-width:100%">
+        <h1>🐛 Centipede</h1>
+        <a href="index.html" class="back-button">← Back to Game Hub</a>
+        <div class="game-info">
+            <p>Score: <span id="score">0</span></p>
+            <p>High Score: <span id="highScore">0</span></p>
+            <p>Lives: <span id="lives">3</span></p>
+            <p>Level: <span id="level">1</span></p>
+        </div>
+        <div id="game-container"></div>
+        <div class="controls">
+            <p>Arrow Keys to move | Spacebar or auto-fire to shoot</p>
+            <button id="restartBtn" class="play-button" onclick="restartGame()">Restart Game</button>
+        </div>
+    </div>
+
+    <script>
+    // ── Web Audio API Sound Effects ──
+    const SFX = {
+        _ctx: null,
+        _getCtx() {
+            if (!this._ctx) this._ctx = new (window.AudioContext || window.webkitAudioContext)();
+            return this._ctx;
+        },
+        play(freq, type, duration, vol) {
+            try {
+                const ctx = this._getCtx();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = type || 'square';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(vol || 0.15, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + duration);
+                osc.start();
+                osc.stop(ctx.currentTime + duration);
+            } catch(e) {}
+        },
+        shoot()       { this.play(880, 'square', 0.05, 0.1); },
+        mushroomHit() { this.play(120, 'triangle', 0.1, 0.15); },
+        mushroomDestroy() { this.play(80, 'triangle', 0.15, 0.2); },
+        centipedeHit(){ this.play(220, 'sawtooth', 0.12, 0.15); },
+        centipedePulse() { this.play(100, 'square', 0.04, 0.06); },
+        spiderBuzz()  { this.play(150, 'sawtooth', 0.08, 0.08); },
+        fleaChirp()   { this.play(600, 'sine', 0.06, 0.1); },
+        scorpionRattle() { this.play(90, 'sawtooth', 0.1, 0.1); },
+        playerDeath() { this.play(200, 'sawtooth', 0.4, 0.2); this.play(100, 'square', 0.5, 0.15); },
+        levelUp()     { this.play(440, 'sine', 0.15, 0.15); setTimeout(() => this.play(660, 'sine', 0.15, 0.15), 150); setTimeout(() => this.play(880, 'sine', 0.2, 0.15), 300); }
+    };
+
+    // ── DOM refs ──
+    const scoreEl = document.getElementById('score');
+    const highScoreEl = document.getElementById('highScore');
+    const livesEl = document.getElementById('lives');
+    const levelEl = document.getElementById('level');
+
+    let game;
+
+    // ── Constants ──
+    const GAME_W = 600;
+    const GAME_H = 800;
+    const CELL = 20;
+    const COLS = GAME_W / CELL;      // 30
+    const ROWS = GAME_H / CELL;      // 40
+    const PLAYER_ZONE_TOP = ROWS - Math.floor(ROWS / 5); // top row of player zone
+
+    // ── GameScene ──
+    class GameScene extends Phaser.Scene {
+        constructor() { super({ key: 'GameScene' }); }
+
+        create() {
+            // State
+            this.score = 0;
+            this.lives = 3;
+            this.level = 1;
+            this.highScore = parseInt(localStorage.getItem('centipedeHighScore')) || 0;
+            this.gameOver = false;
+            this.paused = false;
+
+            // Mushroom grid: 0=empty, 1-4=health, negative=poisoned health
+            this.mushrooms = Array.from({ length: ROWS }, () => new Array(COLS).fill(0));
+            this.initMushrooms();
+
+            // Player
+            this.player = { x: GAME_W / 2, y: GAME_H - CELL * 1.5, speed: 200 };
+
+            // Bullet
+            this.bullet = null; // { x, y }
+
+            // Centipede chains
+            this.centipedes = [];
+            this.spawnCentipede();
+
+            // Enemies
+            this.spider = null;
+            this.flea = null;
+            this.scorpion = null;
+            this.spiderTimer = 0;
+            this.fleaTimer = 0;
+            this.scorpionTimer = 0;
+            this.spiderDir = { x: 1, y: 1 };
+
+            // Timing
+            this.centipedeMoveTimer = 0;
+            this.centipedeMoveInterval = Math.max(30, 80 - this.level * 5);
+            this.pulseTimer = 0;
+            this.autoFireTimer = 0;
+
+            // Input
+            this.cursors = this.input.keyboard.createCursorKeys();
+            this.spaceKey = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+
+            // Graphics
+            this.gfx = this.add.graphics();
+
+            // Game over text (hidden)
+            this.gameOverText = this.add.text(GAME_W / 2, GAME_H / 2, '', {
+                fontSize: '48px', fontFamily: 'Arial', color: '#ff0000', align: 'center'
+            }).setOrigin(0.5).setDepth(10);
+
+            this.updateHUD();
+        }
+
+        initMushrooms() {
+            const count = 30 + this.level * 3;
+            let placed = 0;
+            while (placed < count) {
+                const c = Phaser.Math.Between(0, COLS - 1);
+                const r = Phaser.Math.Between(2, ROWS - 3);
+                if (this.mushrooms[r][c] === 0) {
+                    this.mushrooms[r][c] = 4;
+                    placed++;
+                }
+            }
+        }
+
+        spawnCentipede() {
+            const segCount = 12;
+            const startRow = Math.min(1 + Math.floor(this.level / 3), PLAYER_ZONE_TOP - 5);
+            const chain = [];
+            for (let i = 0; i < segCount; i++) {
+                chain.push({
+                    col: COLS - 1 - i,
+                    row: startRow,
+                    dir: -1, // -1 = left, 1 = right
+                    isHead: i === 0,
+                    moveAccum: 0
+                });
+            }
+            this.centipedes = [chain];
+        }
+
+        updateHUD() {
+            scoreEl.textContent = this.score;
+            highScoreEl.textContent = this.highScore;
+            livesEl.textContent = this.lives;
+            levelEl.textContent = this.level;
+        }
+
+        addScore(pts) {
+            this.score += pts;
+            if (this.score > this.highScore) {
+                this.highScore = this.score;
+                localStorage.setItem('centipedeHighScore', this.highScore);
+            }
+            this.updateHUD();
+        }
+
+        getMushroom(r, c) {
+            if (r < 0 || r >= ROWS || c < 0 || c >= COLS) return 0;
+            return this.mushrooms[r][c];
+        }
+
+        setMushroom(r, c, val) {
+            if (r >= 0 && r < ROWS && c >= 0 && c < COLS) this.mushrooms[r][c] = val;
+        }
+
+        isMushroomAt(r, c) {
+            return this.getMushroom(r, c) !== 0;
+        }
+
+        // ── Centipede movement ──
+        moveCentipedes() {
+            for (let ci = 0; ci < this.centipedes.length; ci++) {
+                const chain = this.centipedes[ci];
+                if (!chain || chain.length === 0) continue;
+
+                // Move head first, then each segment follows the one ahead
+                const head = chain[0];
+                const prevPositions = chain.map(s => ({ col: s.col, row: s.row, dir: s.dir }));
+
+                // Check if poisoned mushroom ahead — dive straight down
+                let diving = false;
+                const aheadCol = head.col + head.dir;
+                if (aheadCol >= 0 && aheadCol < COLS && head.row >= 0 && head.row < ROWS) {
+                    const m = this.getMushroom(head.row, aheadCol);
+                    if (m < 0) diving = true;
+                }
+
+                if (diving) {
+                    // Dive straight down
+                    head.row++;
+                    if (head.row >= ROWS) {
+                        head.row = 0;
+                        head.dir = -head.dir;
+                    }
+                } else {
+                    // Normal movement
+                    const nextCol = head.col + head.dir;
+                    if (nextCol < 0 || nextCol >= COLS || this.isMushroomAt(head.row, nextCol)) {
+                        // Hit wall or mushroom: move down one row, reverse direction
+                        head.row++;
+                        head.dir = -head.dir;
+                        if (head.row >= ROWS) {
+                            head.row = 0; // wrap to top
+                        }
+                    } else {
+                        head.col = nextCol;
+                    }
+                }
+
+                // Body follows
+                for (let i = 1; i < chain.length; i++) {
+                    chain[i].col = prevPositions[i - 1].col;
+                    chain[i].row = prevPositions[i - 1].row;
+                    chain[i].dir = prevPositions[i - 1].dir;
+                }
+            }
+        }
+
+        // ── Bullet collision ──
+        checkBulletCollisions() {
+            if (!this.bullet) return;
+            const bCol = Math.floor(this.bullet.x / CELL);
+            const bRow = Math.floor(this.bullet.y / CELL);
+
+            // Mushroom collision
+            if (bRow >= 0 && bRow < ROWS && bCol >= 0 && bCol < COLS) {
+                const m = this.mushrooms[bRow][bCol];
+                if (m !== 0) {
+                    const absM = Math.abs(m);
+                    const poisoned = m < 0;
+                    if (absM <= 1) {
+                        this.mushrooms[bRow][bCol] = 0;
+                        this.addScore(1);
+                        SFX.mushroomDestroy();
+                    } else {
+                        this.mushrooms[bRow][bCol] = poisoned ? -(absM - 1) : absM - 1;
+                        SFX.mushroomHit();
+                    }
+                    this.bullet = null;
+                    return;
+                }
+            }
+
+            // Centipede collision
+            for (let ci = 0; ci < this.centipedes.length; ci++) {
+                const chain = this.centipedes[ci];
+                for (let si = 0; si < chain.length; si++) {
+                    const seg = chain[si];
+                    const sx = seg.col * CELL + CELL / 2;
+                    const sy = seg.row * CELL + CELL / 2;
+                    const dist = Phaser.Math.Distance.Between(this.bullet.x, this.bullet.y, sx, sy);
+                    if (dist < CELL * 0.8) {
+                        // Hit! Place mushroom, score, split chain
+                        this.setMushroom(seg.row, seg.col, 4);
+                        this.addScore(seg.isHead ? 100 : 10);
+                        SFX.centipedeHit();
+
+                        // Split: segments before become one chain, segments after become another
+                        const before = chain.slice(0, si);
+                        const after = chain.slice(si + 1);
+                        if (after.length > 0) after[0].isHead = true;
+
+                        this.centipedes.splice(ci, 1);
+                        if (before.length > 0) this.centipedes.push(before);
+                        if (after.length > 0) this.centipedes.push(after);
+
+                        this.bullet = null;
+                        return;
+                    }
+                }
+            }
+
+            // Spider collision
+            if (this.spider) {
+                const dist = Phaser.Math.Distance.Between(this.bullet.x, this.bullet.y, this.spider.x, this.spider.y);
+                if (dist < CELL) {
+                    const pDist = Phaser.Math.Distance.Between(this.player.x, this.player.y, this.spider.x, this.spider.y);
+                    let pts = pDist < 80 ? 900 : pDist < 160 ? 600 : 300;
+                    this.addScore(pts);
+                    this.spider = null;
+                    this.bullet = null;
+                    SFX.centipedeHit();
+                    return;
+                }
+            }
+
+            // Flea collision
+            if (this.flea) {
+                const dist = Phaser.Math.Distance.Between(this.bullet.x, this.bullet.y, this.flea.x, this.flea.y);
+                if (dist < CELL) {
+                    this.flea.hp--;
+                    if (this.flea.hp <= 0) {
+                        this.addScore(200);
+                        this.flea = null;
+                    }
+                    this.bullet = null;
+                    SFX.centipedeHit();
+                    return;
+                }
+            }
+
+            // Scorpion collision
+            if (this.scorpion) {
+                const dist = Phaser.Math.Distance.Between(this.bullet.x, this.bullet.y, this.scorpion.x, this.scorpion.y);
+                if (dist < CELL) {
+                    this.addScore(1000);
+                    this.scorpion = null;
+                    this.bullet = null;
+                    SFX.centipedeHit();
+                    return;
+                }
+            }
+        }
+
+        // ── Enemy spawning ──
+        maybeSpawnSpider(dt) {
+            if (this.spider) return;
+            this.spiderTimer += dt;
+            const interval = Math.max(2000, 6000 - this.level * 400);
+            if (this.spiderTimer > interval) {
+                this.spiderTimer = 0;
+                const fromLeft = Math.random() < 0.5;
+                this.spider = {
+                    x: fromLeft ? -CELL : GAME_W + CELL,
+                    y: Phaser.Math.Between(PLAYER_ZONE_TOP * CELL, GAME_H - CELL * 2),
+                    alive: true
+                };
+                this.spiderDir = { x: fromLeft ? 2.5 : -2.5, y: (Math.random() < 0.5 ? 2 : -2) };
+            }
+        }
+
+        updateSpider(dt) {
+            if (!this.spider) return;
+            const sp = this.spider;
+            sp.x += this.spiderDir.x * dt * 0.15;
+            sp.y += this.spiderDir.y * dt * 0.15;
+
+            // Bounce vertically in lower portion
+            if (sp.y < PLAYER_ZONE_TOP * CELL - CELL * 4) this.spiderDir.y = Math.abs(this.spiderDir.y);
+            if (sp.y > GAME_H - CELL) this.spiderDir.y = -Math.abs(this.spiderDir.y);
+
+            // Random y direction changes
+            if (Math.random() < 0.02) this.spiderDir.y = -this.spiderDir.y;
+
+            // Destroy mushrooms it touches
+            const sc = Math.floor(sp.x / CELL);
+            const sr = Math.floor(sp.y / CELL);
+            if (sc >= 0 && sc < COLS && sr >= 0 && sr < ROWS && this.mushrooms[sr][sc] !== 0) {
+                this.mushrooms[sr][sc] = 0;
+            }
+
+            // Off screen? Remove
+            if (sp.x < -CELL * 3 || sp.x > GAME_W + CELL * 3) this.spider = null;
+
+            // Collision with player
+            if (sp && this.checkEnemyPlayerCollision(sp.x, sp.y)) {
+                this.spider = null;
+                this.playerDeath();
+            }
+
+            if (this.spider && Math.random() < 0.1) SFX.spiderBuzz();
+        }
+
+        maybeSpawnFlea(dt) {
+            if (this.flea) return;
+            // Count mushrooms in lower half
+            let count = 0;
+            for (let r = Math.floor(ROWS / 2); r < ROWS; r++)
+                for (let c = 0; c < COLS; c++) if (this.mushrooms[r][c] !== 0) count++;
+            if (count >= 5) { this.fleaTimer = 0; return; }
+
+            this.fleaTimer += dt;
+            if (this.fleaTimer > 3000) {
+                this.fleaTimer = 0;
+                this.flea = {
+                    x: Phaser.Math.Between(CELL, GAME_W - CELL),
+                    y: -CELL,
+                    hp: 2,
+                    speed: 3
+                };
+            }
+        }
+
+        updateFlea(dt) {
+            if (!this.flea) return;
+            this.flea.y += this.flea.speed * dt * 0.12;
+
+            // Drop mushrooms
+            const fc = Math.floor(this.flea.x / CELL);
+            const fr = Math.floor(this.flea.y / CELL);
+            if (fr >= 0 && fr < ROWS && fc >= 0 && fc < COLS && this.mushrooms[fr][fc] === 0) {
+                if (Math.random() < 0.15) this.mushrooms[fr][fc] = 4;
+            }
+
+            if (this.flea.y > GAME_H + CELL) this.flea = null;
+
+            if (this.flea && this.checkEnemyPlayerCollision(this.flea.x, this.flea.y)) {
+                this.flea = null;
+                this.playerDeath();
+            }
+
+            if (this.flea && Math.random() < 0.08) SFX.fleaChirp();
+        }
+
+        maybeSpawnScorpion(dt) {
+            if (this.scorpion) return;
+            this.scorpionTimer += dt;
+            const interval = Math.max(5000, 15000 - this.level * 1000);
+            if (this.scorpionTimer > interval) {
+                this.scorpionTimer = 0;
+                const fromLeft = Math.random() < 0.5;
+                const row = Phaser.Math.Between(3, PLAYER_ZONE_TOP - 2);
+                this.scorpion = {
+                    x: fromLeft ? -CELL : GAME_W + CELL,
+                    y: row * CELL + CELL / 2,
+                    dir: fromLeft ? 1 : -1,
+                    row: row
+                };
+            }
+        }
+
+        updateScorpion(dt) {
+            if (!this.scorpion) return;
+            this.scorpion.x += this.scorpion.dir * dt * 0.1;
+
+            // Poison mushrooms it touches
+            const sc = Math.floor(this.scorpion.x / CELL);
+            const sr = this.scorpion.row;
+            if (sc >= 0 && sc < COLS && sr >= 0 && sr < ROWS) {
+                const m = this.mushrooms[sr][sc];
+                if (m > 0) this.mushrooms[sr][sc] = -m; // poison
+            }
+
+            if (this.scorpion.x < -CELL * 3 || this.scorpion.x > GAME_W + CELL * 3) this.scorpion = null;
+
+            if (this.scorpion && Math.random() < 0.06) SFX.scorpionRattle();
+        }
+
+        checkEnemyPlayerCollision(ex, ey) {
+            return Phaser.Math.Distance.Between(this.player.x, this.player.y, ex, ey) < CELL * 0.9;
+        }
+
+        // ── Player death ──
+        playerDeath() {
+            SFX.playerDeath();
+            this.lives--;
+            this.bullet = null;
+
+            // Restore partially destroyed mushrooms
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const m = this.mushrooms[r][c];
+                    if (m !== 0 && Math.abs(m) < 4) {
+                        const restored = m < 0 ? 4 : 4;
+                        this.addScore(5);
+                        this.mushrooms[r][c] = restored;
+                    }
+                }
+            }
+
+            // Clear enemies
+            this.spider = null;
+            this.flea = null;
+            this.scorpion = null;
+
+            if (this.lives <= 0) {
+                this.gameOver = true;
+                this.gameOverText.setText('GAME OVER\nScore: ' + this.score);
+            } else {
+                // Reset player and centipede
+                this.player.x = GAME_W / 2;
+                this.player.y = GAME_H - CELL * 1.5;
+                // Rebuild centipede from remaining segments
+                if (this.totalCentipedeSegments() === 0) {
+                    this.spawnCentipede();
+                }
+            }
+            this.updateHUD();
+        }
+
+        totalCentipedeSegments() {
+            let total = 0;
+            for (const chain of this.centipedes) total += chain.length;
+            return total;
+        }
+
+        // ── Check centipede-player collision ──
+        checkCentipedePlayerCollision() {
+            for (const chain of this.centipedes) {
+                for (const seg of chain) {
+                    const sx = seg.col * CELL + CELL / 2;
+                    const sy = seg.row * CELL + CELL / 2;
+                    if (Phaser.Math.Distance.Between(this.player.x, this.player.y, sx, sy) < CELL * 0.9) {
+                        this.playerDeath();
+                        return;
+                    }
+                }
+            }
+        }
+
+        // ── Level completion ──
+        checkWaveComplete() {
+            if (this.totalCentipedeSegments() === 0 && !this.gameOver) {
+                this.level++;
+                this.centipedeMoveInterval = Math.max(25, 80 - this.level * 5);
+                SFX.levelUp();
+                this.spider = null;
+                this.flea = null;
+                this.scorpion = null;
+                this.bullet = null;
+                this.spawnCentipede();
+                // Add a few more mushrooms
+                let added = 0;
+                while (added < 5 + this.level) {
+                    const c = Phaser.Math.Between(0, COLS - 1);
+                    const r = Phaser.Math.Between(2, ROWS - 3);
+                    if (this.mushrooms[r][c] === 0) {
+                        this.mushrooms[r][c] = 4;
+                        added++;
+                    }
+                }
+                this.updateHUD();
+            }
+        }
+
+        // ── Main update ──
+        update(time, delta) {
+            if (this.gameOver) return;
+
+            const dt = delta;
+
+            // Player movement
+            const spd = this.player.speed * (dt / 1000);
+            if (this.cursors.left.isDown) this.player.x -= spd;
+            if (this.cursors.right.isDown) this.player.x += spd;
+            if (this.cursors.up.isDown) this.player.y -= spd;
+            if (this.cursors.down.isDown) this.player.y += spd;
+
+            // Clamp to player zone
+            this.player.x = Phaser.Math.Clamp(this.player.x, CELL / 2, GAME_W - CELL / 2);
+            this.player.y = Phaser.Math.Clamp(this.player.y, PLAYER_ZONE_TOP * CELL, GAME_H - CELL / 2);
+
+            // Shooting (auto-fire or spacebar)
+            this.autoFireTimer += dt;
+            if (!this.bullet && (this.spaceKey.isDown || this.autoFireTimer > 150)) {
+                this.bullet = { x: this.player.x, y: this.player.y - CELL / 2 };
+                this.autoFireTimer = 0;
+                SFX.shoot();
+            }
+
+            // Bullet movement
+            if (this.bullet) {
+                this.bullet.y -= dt * 0.6;
+                if (this.bullet.y < -CELL) this.bullet = null;
+                this.checkBulletCollisions();
+            }
+
+            // Centipede movement
+            this.centipedeMoveTimer += dt;
+            if (this.centipedeMoveTimer >= this.centipedeMoveInterval) {
+                this.centipedeMoveTimer = 0;
+                this.moveCentipedes();
+                this.pulseTimer++;
+                if (this.pulseTimer % 4 === 0) SFX.centipedePulse();
+            }
+
+            // Enemy spawning
+            this.maybeSpawnSpider(dt);
+            this.updateSpider(dt);
+            this.maybeSpawnFlea(dt);
+            this.updateFlea(dt);
+            this.maybeSpawnScorpion(dt);
+            this.updateScorpion(dt);
+
+            // Collision checks
+            this.checkCentipedePlayerCollision();
+            this.checkWaveComplete();
+
+            // ── Draw everything ──
+            this.draw();
+        }
+
+        draw() {
+            const g = this.gfx;
+            g.clear();
+
+            // Background
+            g.fillStyle(0x000000);
+            g.fillRect(0, 0, GAME_W, GAME_H);
+
+            // Player zone line (subtle)
+            g.lineStyle(1, 0x222222);
+            g.lineBetween(0, PLAYER_ZONE_TOP * CELL, GAME_W, PLAYER_ZONE_TOP * CELL);
+
+            // Mushrooms
+            for (let r = 0; r < ROWS; r++) {
+                for (let c = 0; c < COLS; c++) {
+                    const m = this.mushrooms[r][c];
+                    if (m === 0) continue;
+                    const absM = Math.abs(m);
+                    const poisoned = m < 0;
+                    const cx = c * CELL + CELL / 2;
+                    const cy = r * CELL + CELL / 2;
+                    const radius = (CELL / 2 - 1) * (0.5 + absM * 0.125);
+
+                    if (poisoned) {
+                        // Poisoned: cyan/teal colors
+                        const colors = [0x004444, 0x006666, 0x009999, 0x00cccc];
+                        g.fillStyle(colors[absM - 1] || 0x00cccc);
+                    } else {
+                        // Normal: green shades by health
+                        const colors = [0x334400, 0x557700, 0x77aa00, 0x99dd00];
+                        g.fillStyle(colors[absM - 1] || 0x99dd00);
+                    }
+                    g.fillCircle(cx, cy, radius);
+
+                    // Cap on top
+                    if (poisoned) {
+                        g.fillStyle(0x00ffff, 0.4);
+                    } else {
+                        g.fillStyle(0xccff44, 0.4);
+                    }
+                    g.fillCircle(cx, cy - 1, radius * 0.5);
+                }
+            }
+
+            // Centipede
+            for (const chain of this.centipedes) {
+                for (let i = chain.length - 1; i >= 0; i--) {
+                    const seg = chain[i];
+                    const sx = seg.col * CELL + CELL / 2;
+                    const sy = seg.row * CELL + CELL / 2;
+
+                    // Body connection line
+                    if (i < chain.length - 1) {
+                        const next = chain[i + 1];
+                        const nx = next.col * CELL + CELL / 2;
+                        const ny = next.row * CELL + CELL / 2;
+                        g.lineStyle(4, 0xcc3300);
+                        g.lineBetween(sx, sy, nx, ny);
+                    }
+
+                    // Segment body
+                    if (seg.isHead) {
+                        g.fillStyle(0xff4400);
+                        g.fillCircle(sx, sy, CELL / 2);
+                        // Eyes
+                        g.fillStyle(0xffffff);
+                        g.fillCircle(sx - 3, sy - 3, 2);
+                        g.fillCircle(sx + 3, sy - 3, 2);
+                        g.fillStyle(0x000000);
+                        g.fillCircle(sx - 3 + seg.dir, sy - 3, 1);
+                        g.fillCircle(sx + 3 + seg.dir, sy - 3, 1);
+                    } else {
+                        g.fillStyle(0xee5500);
+                        g.fillCircle(sx, sy, CELL / 2 - 1);
+                        // Segment detail
+                        g.fillStyle(0xff8833, 0.5);
+                        g.fillCircle(sx, sy, CELL / 4);
+                    }
+
+                    // Legs
+                    g.lineStyle(1, 0xff6600);
+                    g.lineBetween(sx - 5, sy, sx - 8, sy + 5);
+                    g.lineBetween(sx + 5, sy, sx + 8, sy + 5);
+                }
+            }
+
+            // Spider
+            if (this.spider) {
+                const sp = this.spider;
+                // Body
+                g.fillStyle(0xff00ff);
+                g.fillCircle(sp.x, sp.y, CELL / 2 + 2);
+                g.fillStyle(0xcc00cc);
+                g.fillCircle(sp.x, sp.y - 2, CELL / 3);
+                // Legs
+                g.lineStyle(1, 0xff44ff);
+                for (let a = 0; a < 4; a++) {
+                    const angle = (a * 0.7) - 1;
+                    g.lineBetween(sp.x, sp.y, sp.x + Math.cos(angle) * 14, sp.y + Math.sin(angle) * 14);
+                    g.lineBetween(sp.x, sp.y, sp.x - Math.cos(angle) * 14, sp.y + Math.sin(angle) * 14);
+                }
+            }
+
+            // Flea
+            if (this.flea) {
+                const fl = this.flea;
+                g.fillStyle(0xffff00);
+                g.fillCircle(fl.x, fl.y, CELL / 2);
+                g.fillStyle(0xcccc00);
+                g.fillCircle(fl.x, fl.y + 4, CELL / 3);
+                // Antennae
+                g.lineStyle(1, 0xffff88);
+                g.lineBetween(fl.x - 3, fl.y - 6, fl.x - 7, fl.y - 12);
+                g.lineBetween(fl.x + 3, fl.y - 6, fl.x + 7, fl.y - 12);
+            }
+
+            // Scorpion
+            if (this.scorpion) {
+                const sc = this.scorpion;
+                g.fillStyle(0x00aaff);
+                g.fillRoundedRect(sc.x - CELL / 2, sc.y - CELL / 3, CELL, CELL * 0.66, 3);
+                // Tail
+                g.lineStyle(2, 0x0088dd);
+                const tailDir = -sc.dir;
+                g.lineBetween(sc.x + tailDir * CELL / 2, sc.y, sc.x + tailDir * CELL, sc.y - 6);
+                g.lineBetween(sc.x + tailDir * CELL, sc.y - 6, sc.x + tailDir * CELL * 0.8, sc.y - 12);
+                // Pincers
+                g.lineStyle(1, 0x44ccff);
+                g.lineBetween(sc.x + sc.dir * CELL / 2, sc.y - 2, sc.x + sc.dir * CELL * 0.7, sc.y - 6);
+                g.lineBetween(sc.x + sc.dir * CELL / 2, sc.y + 2, sc.x + sc.dir * CELL * 0.7, sc.y + 6);
+            }
+
+            // Bullet
+            if (this.bullet) {
+                g.fillStyle(0xffffff);
+                g.fillRect(this.bullet.x - 1.5, this.bullet.y - 4, 3, 8);
+            }
+
+            // Player
+            const px = this.player.x;
+            const py = this.player.y;
+            // Ship body
+            g.fillStyle(0x44aaff);
+            g.fillTriangle(px, py - CELL / 2, px - CELL / 2, py + CELL / 2, px + CELL / 2, py + CELL / 2);
+            // Cockpit
+            g.fillStyle(0x88ddff);
+            g.fillCircle(px, py + 1, 4);
+        }
+    }
+
+    // ── Phaser config ──
+    const config = {
+        type: Phaser.AUTO,
+        width: GAME_W,
+        height: GAME_H,
+        parent: 'game-container',
+        backgroundColor: '#000000',
+        scale: {
+            mode: Phaser.Scale.FIT,
+            autoCenter: Phaser.Scale.CENTER_HORIZONTALLY
+        },
+        scene: [GameScene],
+        input: {
+            keyboard: true
+        }
+    };
+
+    game = new Phaser.Game(config);
+
+    function restartGame() {
+        game.scene.stop('GameScene');
+        game.scene.start('GameScene');
+    }
+
+    // Load high score on init
+    highScoreEl.textContent = localStorage.getItem('centipedeHighScore') || 0;
+    </script>
+</body>
+</html>

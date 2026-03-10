@@ -1,0 +1,813 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Frogger</title>
+    <link rel="stylesheet" href="styles.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a472a 0%, #2d1b69 100%);
+            align-items: flex-start;
+            padding-top: 20px;
+        }
+        .container {
+            background: rgba(20, 20, 30, 0.95);
+            max-width: 100%;
+        }
+        h1 { color: #4caf50; }
+        .game-info {
+            color: #ccc;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        .game-info span { color: #4caf50; }
+        .game-info .lives-display { color: #ff5252; }
+        .timer-bar-container {
+            width: 300px;
+            max-width: 80%;
+            height: 16px;
+            background: #333;
+            border-radius: 8px;
+            margin: 8px auto 12px;
+            overflow: hidden;
+            border: 1px solid #555;
+        }
+        .timer-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #ff5252, #ffeb3b, #4caf50);
+            border-radius: 8px;
+            transition: width 0.25s linear;
+        }
+        #game-container {
+            margin: 10px auto;
+            border-radius: 10px;
+            overflow: hidden;
+            display: inline-block;
+            border: 2px solid #4caf50;
+        }
+        #game-container canvas {
+            display: block;
+        }
+        .controls { margin-top: 15px; }
+        .controls p { color: #aaa; margin: 8px 0; font-size: 1em; }
+        .back-button { color: #4caf50; }
+        .back-button:hover { color: #81c784; }
+        .play-button {
+            background: linear-gradient(135deg, #388e3c, #1b5e20);
+        }
+        .play-button:hover {
+            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="container" style="max-width:100%">
+        <h1>🐸 Frogger</h1>
+        <div class="game-info">
+            <p>Score: <span id="score">0</span></p>
+            <p>High Score: <span id="highScore">0</span></p>
+            <p>Level: <span id="level">1</span></p>
+            <p>Lives: <span id="lives" class="lives-display">❤️❤️❤️</span></p>
+        </div>
+        <div class="timer-bar-container">
+            <div class="timer-bar" id="timerBar" style="width:100%"></div>
+        </div>
+        <div id="game-container"></div>
+        <div class="controls">
+            <p>Arrow Keys to hop</p>
+            <button id="restartBtn" class="play-button">Restart Game</button>
+        </div>
+        <a href="index.html" class="back-button">← Back to Game Hub</a>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <script>
+    (function() {
+        // ─── DOM refs ───
+        const scoreEl = document.getElementById('score');
+        const highScoreEl = document.getElementById('highScore');
+        const levelEl = document.getElementById('level');
+        const livesEl = document.getElementById('lives');
+        const timerBarEl = document.getElementById('timerBar');
+        const restartBtn = document.getElementById('restartBtn');
+
+        let highScore = parseInt(localStorage.getItem('froggerHighScore')) || 0;
+        highScoreEl.textContent = highScore;
+
+        // ─── Web Audio API sounds ───
+        function playSound(freq, type, duration) {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                osc.type = type || 'square';
+                osc.frequency.value = freq;
+                gain.gain.setValueAtTime(0.25, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + (duration || 0.1));
+                osc.start();
+                osc.stop(ctx.currentTime + (duration || 0.1));
+            } catch(e) {}
+        }
+        function hopSound()   { playSound(500, 'sine', 0.08); setTimeout(() => playSound(700, 'sine', 0.06), 40); }
+        function splashSound(){ playSound(150, 'sawtooth', 0.3); setTimeout(() => playSound(100, 'sawtooth', 0.25), 80); }
+        function squishSound(){ playSound(80, 'square', 0.15); setTimeout(() => playSound(60, 'sawtooth', 0.2), 60); }
+        function homeSound()  {
+            [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playSound(f, 'sine', 0.15), i * 80));
+        }
+        function levelSound() {
+            [523, 659, 784, 1047, 1319].forEach((f, i) => setTimeout(() => playSound(f, 'triangle', 0.18), i * 100));
+        }
+        function gameOverSound() {
+            [400, 350, 300, 200].forEach((f, i) => setTimeout(() => playSound(f, 'square', 0.2), i * 120));
+        }
+
+        // ─── Constants ───
+        const GAME_W = 800;
+        const GAME_H = 700;
+        const COLS = 16;
+        const ROWS = 13;
+        const CELL_W = GAME_W / COLS;   // 50
+        const CELL_H = GAME_H / ROWS;   // ~53.85
+        const HOME_SLOTS = 5;
+        const MAX_LIVES = 3;
+        const TIMER_SECONDS = 30;
+
+        // Row layout (bottom=0, top=12):
+        // 0: start safe zone
+        // 1-5: road
+        // 6: median
+        // 7-11: river
+        // 12: home row (slots)
+
+        // ─── Phaser Scene ───
+        class GameScene extends Phaser.Scene {
+            constructor() { super({ key: 'GameScene' }); }
+
+            create() {
+                this.score = 0;
+                this.lives = MAX_LIVES;
+                this.level = 1;
+                this.gameState = 'start'; // start | playing | dead | gameover
+                this.homeFilled = [false, false, false, false, false];
+                this.timerLeft = TIMER_SECONDS;
+                this.farthestRow = 0;
+                this.frogRiding = null;
+                this.inputLocked = false;
+
+                // Groups
+                this.vehicles = [];
+                this.riverObjects = [];
+                this.homeGraphics = [];
+
+                this.drawBackground();
+                this.createHomeSlots();
+                this.createLaneObjects();
+                this.createFrog();
+                this.setupInput();
+                this.createOverlay('start');
+
+                this.updateHUD();
+
+                // Timer event
+                this.timerEvent = null;
+            }
+
+            // ─── Background ───
+            drawBackground() {
+                const g = this.add.graphics();
+
+                // Row colours (from bottom row 0 up to row 12)
+                for (let r = 0; r < ROWS; r++) {
+                    const y = GAME_H - (r + 1) * CELL_H;
+                    let color;
+                    if (r === 0)       color = 0x2e7d32; // safe start
+                    else if (r <= 5)   color = 0x37474f; // road
+                    else if (r === 6)  color = 0x2e7d32; // median
+                    else if (r <= 11)  color = 0x1565c0; // river
+                    else               color = 0x1b5e20; // home row
+                    g.fillStyle(color, 1);
+                    g.fillRect(0, y, GAME_W, CELL_H);
+                }
+
+                // Road lane lines
+                g.lineStyle(1, 0xffffff, 0.25);
+                for (let r = 1; r <= 5; r++) {
+                    const y = GAME_H - r * CELL_H;
+                    for (let x = 0; x < GAME_W; x += 40) {
+                        g.strokeLineShape(new Phaser.Geom.Line(x, y, x + 20, y));
+                    }
+                }
+
+                // River-bank edges
+                g.lineStyle(2, 0x4e342e, 0.6);
+                const riverBottom = GAME_H - 7 * CELL_H;
+                const riverTop = GAME_H - 12 * CELL_H;
+                g.strokeLineShape(new Phaser.Geom.Line(0, riverBottom, GAME_W, riverBottom));
+                g.strokeLineShape(new Phaser.Geom.Line(0, riverTop, GAME_W, riverTop));
+            }
+
+            // ─── Home Slots ───
+            createHomeSlots() {
+                this.homeGraphics.forEach(h => h.destroy());
+                this.homeGraphics = [];
+                const y = GAME_H - 12.5 * CELL_H;
+                const slotPositions = this.getHomeSlotPositions();
+                for (let i = 0; i < HOME_SLOTS; i++) {
+                    const g = this.add.graphics();
+                    const sx = slotPositions[i];
+                    g.lineStyle(2, 0x81c784, 0.8);
+                    g.strokeRoundedRect(sx - CELL_W * 0.45, y - CELL_H * 0.4, CELL_W * 0.9, CELL_H * 0.8, 6);
+                    if (this.homeFilled[i]) {
+                        this.drawMiniFrog(g, sx, y, 0.55);
+                    }
+                    g.setDepth(1);
+                    this.homeGraphics.push(g);
+                }
+            }
+
+            getHomeSlotPositions() {
+                // 5 evenly spaced slots
+                const margin = CELL_W * 1.5;
+                const spacing = (GAME_W - 2 * margin) / (HOME_SLOTS - 1);
+                const positions = [];
+                for (let i = 0; i < HOME_SLOTS; i++) {
+                    positions.push(margin + i * spacing);
+                }
+                return positions;
+            }
+
+            // ─── Lane Objects ───
+            createLaneObjects() {
+                // Destroy old
+                this.vehicles.forEach(v => v.graphics.destroy());
+                this.riverObjects.forEach(r => r.graphics.destroy());
+                this.vehicles = [];
+                this.riverObjects = [];
+
+                const speedMult = 1 + (this.level - 1) * 0.18;
+                const logShrink = Math.max(0, (this.level - 1) * 0.15);
+
+                // Road rows 1-5
+                const roadConfig = [
+                    { row: 1, dir: -1, speed: 1.2, types: ['car','car','car'],          gap: 220 },
+                    { row: 2, dir:  1, speed: 1.6, types: ['truck','car','truck'],       gap: 260 },
+                    { row: 3, dir: -1, speed: 2.0, types: ['car','car','car','car'],     gap: 190 },
+                    { row: 4, dir:  1, speed: 1.0, types: ['truck','truck'],             gap: 330 },
+                    { row: 5, dir: -1, speed: 2.5, types: ['car','car','car','car','car'], gap: 170 },
+                ];
+
+                roadConfig.forEach(cfg => {
+                    const baseY = this.rowToY(cfg.row);
+                    cfg.types.forEach((type, i) => {
+                        const w = type === 'truck' ? CELL_W * 2.5 : CELL_W * 1.5;
+                        const x = i * cfg.gap + Math.random() * 40;
+                        const color = type === 'truck'
+                            ? Phaser.Display.Color.RandomRGB(100, 200).color
+                            : Phaser.Display.Color.RandomRGB(150, 255).color;
+                        const g = this.add.graphics();
+                        g.setDepth(2);
+                        this.drawVehicle(g, type, w, color);
+                        g.x = x;
+                        g.y = baseY;
+                        this.vehicles.push({
+                            graphics: g,
+                            dir: cfg.dir,
+                            speed: cfg.speed * speedMult,
+                            w: w,
+                            h: CELL_H * 0.7,
+                            row: cfg.row,
+                            type: type
+                        });
+                    });
+                });
+
+                // River rows 7-11
+                const riverConfig = [
+                    { row: 7,  dir:  1, speed: 1.0, items: [{type:'log',len:3},{type:'log',len:3},{type:'log',len:3}], gap: 280 },
+                    { row: 8,  dir: -1, speed: 1.4, items: [{type:'turtle',len:3},{type:'turtle',len:2},{type:'turtle',len:3}], gap: 230, dive: true },
+                    { row: 9,  dir:  1, speed: 1.8, items: [{type:'log',len:4},{type:'log',len:2},{type:'log',len:3}], gap: 300 },
+                    { row: 10, dir: -1, speed: 1.2, items: [{type:'turtle',len:2},{type:'turtle',len:3},{type:'turtle',len:2}], gap: 240 },
+                    { row: 11, dir:  1, speed: 2.2, items: [{type:'log',len:2},{type:'log',len:2},{type:'log',len:2},{type:'log',len:2}], gap: 230 },
+                ];
+
+                riverConfig.forEach(cfg => {
+                    const baseY = this.rowToY(cfg.row);
+                    cfg.items.forEach((item, i) => {
+                        let cellLen = item.len - logShrink * 0.5;
+                        if (cellLen < 1.5) cellLen = 1.5;
+                        const w = cellLen * CELL_W;
+                        const x = i * cfg.gap + Math.random() * 30;
+                        const g = this.add.graphics();
+                        g.setDepth(2);
+
+                        const divePhase = cfg.dive ? Math.random() * Math.PI * 2 : -1;
+                        const obj = {
+                            graphics: g,
+                            dir: cfg.dir,
+                            speed: cfg.speed * speedMult,
+                            w: w,
+                            h: CELL_H * 0.6,
+                            row: cfg.row,
+                            type: item.type,
+                            len: cellLen,
+                            divePhase: divePhase,
+                            submerged: false,
+                        };
+                        this.drawRiverObject(g, obj);
+                        g.x = x;
+                        g.y = baseY;
+                        this.riverObjects.push(obj);
+                    });
+                });
+            }
+
+            drawVehicle(g, type, w, color) {
+                const h = CELL_H * 0.7;
+                g.fillStyle(color, 1);
+                g.fillRoundedRect(-w / 2, -h / 2, w, h, 5);
+                // Windshield
+                g.fillStyle(0xbbdefb, 0.7);
+                if (type === 'car') {
+                    g.fillRoundedRect(-w / 2 + 6, -h / 2 + 4, w * 0.3, h - 8, 3);
+                } else {
+                    g.fillRoundedRect(-w / 2 + 6, -h / 2 + 4, w * 0.15, h - 8, 3);
+                }
+                // Wheels
+                g.fillStyle(0x212121, 1);
+                g.fillCircle(-w / 2 + 8, -h / 2 - 1, 4);
+                g.fillCircle(w / 2 - 8, -h / 2 - 1, 4);
+                g.fillCircle(-w / 2 + 8, h / 2 + 1, 4);
+                g.fillCircle(w / 2 - 8, h / 2 + 1, 4);
+            }
+
+            drawRiverObject(g, obj) {
+                g.clear();
+                const w = obj.w;
+                const h = obj.h;
+                if (obj.type === 'log') {
+                    g.fillStyle(0x6d4c41, 1);
+                    g.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
+                    // Bark lines
+                    g.lineStyle(1, 0x4e342e, 0.5);
+                    for (let lx = -w / 2 + 15; lx < w / 2 - 10; lx += 18) {
+                        g.strokeLineShape(new Phaser.Geom.Line(lx, -h / 2 + 4, lx + 5, h / 2 - 4));
+                    }
+                    // Highlight
+                    g.fillStyle(0x8d6e63, 0.4);
+                    g.fillRoundedRect(-w / 2 + 3, -h / 2 + 3, w - 6, h * 0.3, 4);
+                } else {
+                    // Turtles
+                    const alpha = obj.submerged ? 0.3 : 1;
+                    const count = Math.round(obj.len);
+                    const turtleSpacing = w / count;
+                    for (let t = 0; t < count; t++) {
+                        const tx = -w / 2 + turtleSpacing * (t + 0.5);
+                        const tr = Math.min(turtleSpacing * 0.38, h * 0.42);
+                        // Shell
+                        g.fillStyle(0x2e7d32, alpha);
+                        g.fillCircle(tx, 0, tr);
+                        // Shell pattern
+                        g.lineStyle(1, 0x1b5e20, alpha * 0.6);
+                        g.strokeCircle(tx, 0, tr * 0.6);
+                        // Head
+                        g.fillStyle(0x388e3c, alpha);
+                        g.fillCircle(tx + tr * 0.7, 0, tr * 0.35);
+                    }
+                }
+            }
+
+            // ─── Frog ───
+            createFrog() {
+                if (this.frogGraphics) this.frogGraphics.destroy();
+                this.frogGraphics = this.add.graphics();
+                this.frogGraphics.setDepth(10);
+                this.drawFrog(this.frogGraphics);
+
+                this.frogCol = Math.floor(COLS / 2);
+                this.frogRow = 0;
+                this.farthestRow = 0;
+                this.frogRiding = null;
+                this.positionFrog(false);
+            }
+
+            drawFrog(g, scale) {
+                g.clear();
+                const s = scale || 1;
+                const w = CELL_W * 0.75 * s;
+                const h = CELL_H * 0.7 * s;
+                // Body
+                g.fillStyle(0x4caf50, 1);
+                g.fillRoundedRect(-w / 2, -h / 2, w, h, 8 * s);
+                // Belly
+                g.fillStyle(0xa5d6a7, 0.6);
+                g.fillEllipse(0, h * 0.05, w * 0.55, h * 0.55);
+                // Eyes
+                g.fillStyle(0xffffff, 1);
+                g.fillCircle(-w * 0.28, -h * 0.3, 6 * s);
+                g.fillCircle(w * 0.28, -h * 0.3, 6 * s);
+                g.fillStyle(0x212121, 1);
+                g.fillCircle(-w * 0.28, -h * 0.3, 3 * s);
+                g.fillCircle(w * 0.28, -h * 0.3, 3 * s);
+                // Legs
+                g.fillStyle(0x388e3c, 1);
+                g.fillEllipse(-w * 0.45, h * 0.3, w * 0.25, h * 0.35);
+                g.fillEllipse(w * 0.45, h * 0.3, w * 0.25, h * 0.35);
+            }
+
+            drawMiniFrog(g, cx, cy, scale) {
+                const s = scale || 0.5;
+                const w = CELL_W * 0.75 * s;
+                const h = CELL_H * 0.7 * s;
+                g.fillStyle(0x4caf50, 1);
+                g.fillRoundedRect(cx - w / 2, cy - h / 2, w, h, 6 * s);
+                g.fillStyle(0xffffff, 1);
+                g.fillCircle(cx - w * 0.28, cy - h * 0.3, 4 * s);
+                g.fillCircle(cx + w * 0.28, cy - h * 0.3, 4 * s);
+                g.fillStyle(0x212121, 1);
+                g.fillCircle(cx - w * 0.28, cy - h * 0.3, 2 * s);
+                g.fillCircle(cx + w * 0.28, cy - h * 0.3, 2 * s);
+            }
+
+            positionFrog(animate) {
+                const tx = this.frogCol * CELL_W + CELL_W / 2;
+                const ty = this.rowToY(this.frogRow);
+                if (animate && this.frogGraphics) {
+                    this.inputLocked = true;
+                    // Hop squish
+                    this.tweens.add({
+                        targets: this.frogGraphics,
+                        scaleY: 0.7,
+                        scaleX: 1.2,
+                        duration: 60,
+                        yoyo: true,
+                        ease: 'Sine.easeOut'
+                    });
+                    this.tweens.add({
+                        targets: this.frogGraphics,
+                        x: tx,
+                        y: ty,
+                        duration: 110,
+                        ease: 'Quad.easeOut',
+                        onComplete: () => { this.inputLocked = false; }
+                    });
+                } else {
+                    this.frogGraphics.x = tx;
+                    this.frogGraphics.y = ty;
+                }
+            }
+
+            rowToY(row) {
+                return GAME_H - (row + 0.5) * CELL_H;
+            }
+
+            // ─── Input ───
+            setupInput() {
+                this.cursors = this.input.keyboard.createCursorKeys();
+                this.keyJustPressed = { up: false, down: false, left: false, right: false };
+
+                this.input.keyboard.on('keydown-UP', () => { if (!this.keyJustPressed.up) { this.keyJustPressed.up = true; this.moveFrog(0, 1); } });
+                this.input.keyboard.on('keyup-UP', () => { this.keyJustPressed.up = false; });
+                this.input.keyboard.on('keydown-DOWN', () => { if (!this.keyJustPressed.down) { this.keyJustPressed.down = true; this.moveFrog(0, -1); } });
+                this.input.keyboard.on('keyup-DOWN', () => { this.keyJustPressed.down = false; });
+                this.input.keyboard.on('keydown-LEFT', () => { if (!this.keyJustPressed.left) { this.keyJustPressed.left = true; this.moveFrog(-1, 0); } });
+                this.input.keyboard.on('keyup-LEFT', () => { this.keyJustPressed.left = false; });
+                this.input.keyboard.on('keydown-RIGHT', () => { if (!this.keyJustPressed.right) { this.keyJustPressed.right = true; this.moveFrog(1, 0); } });
+                this.input.keyboard.on('keyup-RIGHT', () => { this.keyJustPressed.right = false; });
+            }
+
+            moveFrog(dx, dy) {
+                if (this.gameState === 'start') {
+                    this.startGame();
+                    return;
+                }
+                if (this.gameState !== 'playing' || this.inputLocked) return;
+
+                const newCol = this.frogCol + dx;
+                const newRow = this.frogRow + dy;
+                if (newCol < 0 || newCol >= COLS || newRow < 0 || newRow > 12) return;
+
+                this.frogCol = newCol;
+                this.frogRow = newRow;
+                hopSound();
+                this.positionFrog(true);
+
+                // Score for forward progress
+                if (newRow > this.farthestRow) {
+                    this.score += 10 * (newRow - this.farthestRow);
+                    this.farthestRow = newRow;
+                    this.updateHUD();
+                }
+
+                // Check home row
+                if (newRow === 12) {
+                    this.checkHomeSlot();
+                }
+            }
+
+            startGame() {
+                if (this.overlay) { this.overlay.destroy(); this.overlay = null; }
+                if (this.overlayText) { this.overlayText.destroy(); this.overlayText = null; }
+                if (this.overlaySubText) { this.overlaySubText.destroy(); this.overlaySubText = null; }
+                this.gameState = 'playing';
+                this.startTimer();
+            }
+
+            startTimer() {
+                this.timerLeft = TIMER_SECONDS;
+                if (this.timerEvent) this.timerEvent.remove();
+                this.timerEvent = this.time.addEvent({
+                    delay: 250,
+                    loop: true,
+                    callback: () => {
+                        if (this.gameState !== 'playing') return;
+                        this.timerLeft -= 0.25;
+                        const pct = Math.max(0, this.timerLeft / TIMER_SECONDS) * 100;
+                        timerBarEl.style.width = pct + '%';
+                        if (this.timerLeft <= 0) {
+                            this.frogDeath('time');
+                        }
+                    }
+                });
+            }
+
+            // ─── Home Slot ───
+            checkHomeSlot() {
+                const fx = this.frogCol * CELL_W + CELL_W / 2;
+                const positions = this.getHomeSlotPositions();
+                let landed = -1;
+                for (let i = 0; i < HOME_SLOTS; i++) {
+                    if (Math.abs(fx - positions[i]) < CELL_W * 0.8 && !this.homeFilled[i]) {
+                        landed = i;
+                        break;
+                    }
+                }
+                if (landed >= 0) {
+                    this.homeFilled[landed] = true;
+                    this.score += 50;
+                    // Time bonus
+                    this.score += Math.floor(this.timerLeft) * 2;
+                    homeSound();
+                    this.createHomeSlots();
+                    this.updateHUD();
+                    // Check level complete
+                    if (this.homeFilled.every(f => f)) {
+                        this.levelComplete();
+                        return;
+                    }
+                    this.resetFrogPosition();
+                } else {
+                    // Missed slot or already filled
+                    this.frogDeath('water');
+                }
+            }
+
+            levelComplete() {
+                this.level++;
+                this.score += 200;
+                levelSound();
+                this.homeFilled = [false, false, false, false, false];
+                this.createHomeSlots();
+                this.createLaneObjects();
+                this.resetFrogPosition();
+                this.updateHUD();
+            }
+
+            // ─── Death ───
+            frogDeath(cause) {
+                if (this.gameState !== 'playing') return;
+                this.gameState = 'dead';
+                this.inputLocked = true;
+
+                if (cause === 'water' || cause === 'time') splashSound();
+                else squishSound();
+
+                // Death animation
+                this.tweens.add({
+                    targets: this.frogGraphics,
+                    scaleX: 1.5,
+                    scaleY: 0.2,
+                    alpha: 0,
+                    angle: 180,
+                    duration: 400,
+                    ease: 'Back.easeIn',
+                    onComplete: () => {
+                        this.lives--;
+                        this.updateHUD();
+                        if (this.lives <= 0) {
+                            this.gameOver();
+                        } else {
+                            this.frogGraphics.alpha = 1;
+                            this.frogGraphics.scaleX = 1;
+                            this.frogGraphics.scaleY = 1;
+                            this.frogGraphics.angle = 0;
+                            this.resetFrogPosition();
+                            this.gameState = 'playing';
+                            this.inputLocked = false;
+                            this.startTimer();
+                        }
+                    }
+                });
+            }
+
+            resetFrogPosition() {
+                this.frogCol = Math.floor(COLS / 2);
+                this.frogRow = 0;
+                this.farthestRow = 0;
+                this.frogRiding = null;
+                this.positionFrog(false);
+                this.startTimer();
+            }
+
+            gameOver() {
+                this.gameState = 'gameover';
+                gameOverSound();
+                if (this.score > highScore) {
+                    highScore = this.score;
+                    localStorage.setItem('froggerHighScore', highScore);
+                    highScoreEl.textContent = highScore;
+                }
+                this.frogGraphics.alpha = 1;
+                this.frogGraphics.scaleX = 1;
+                this.frogGraphics.scaleY = 1;
+                this.frogGraphics.angle = 0;
+                this.createOverlay('gameover');
+            }
+
+            // ─── Overlays ───
+            createOverlay(type) {
+                if (this.overlay) this.overlay.destroy();
+                if (this.overlayText) this.overlayText.destroy();
+                if (this.overlaySubText) this.overlaySubText.destroy();
+
+                this.overlay = this.add.graphics();
+                this.overlay.setDepth(100);
+                this.overlay.fillStyle(0x000000, 0.7);
+                this.overlay.fillRect(0, 0, GAME_W, GAME_H);
+
+                const style = { fontFamily: 'Segoe UI, sans-serif', fontSize: '48px', color: '#4caf50', fontStyle: 'bold', align: 'center' };
+                const subStyle = { fontFamily: 'Segoe UI, sans-serif', fontSize: '22px', color: '#ccc', align: 'center' };
+
+                if (type === 'start') {
+                    this.overlayText = this.add.text(GAME_W / 2, GAME_H / 2 - 50, 'FROGGER', style).setOrigin(0.5).setDepth(101);
+                    this.overlaySubText = this.add.text(GAME_W / 2, GAME_H / 2 + 20, 'Press any arrow key to start', subStyle).setOrigin(0.5).setDepth(101);
+                } else {
+                    style.color = '#ff5252';
+                    this.overlayText = this.add.text(GAME_W / 2, GAME_H / 2 - 50, 'GAME OVER', style).setOrigin(0.5).setDepth(101);
+                    this.overlaySubText = this.add.text(GAME_W / 2, GAME_H / 2 + 20, 'Score: ' + this.score + '\nPress any arrow key to retry', subStyle).setOrigin(0.5).setDepth(101);
+                }
+
+                this.gameState = type === 'start' ? 'start' : 'gameover';
+            }
+
+            restartGame() {
+                if (this.timerEvent) this.timerEvent.remove();
+                this.scene.restart();
+            }
+
+            // ─── Update Loop ───
+            update(time, delta) {
+                if (this.gameState === 'gameover') {
+                    // Allow restart via arrow key
+                    if (this.cursors.up.isDown || this.cursors.down.isDown || this.cursors.left.isDown || this.cursors.right.isDown) {
+                        this.restartGame();
+                        return;
+                    }
+                }
+                if (this.gameState !== 'playing') return;
+
+                const dt = delta / 16.67; // normalize to ~60fps
+
+                // Move vehicles
+                this.vehicles.forEach(v => {
+                    v.graphics.x += v.dir * v.speed * dt;
+                    // Wrap
+                    if (v.dir > 0 && v.graphics.x - v.w / 2 > GAME_W) v.graphics.x = -v.w / 2;
+                    if (v.dir < 0 && v.graphics.x + v.w / 2 < 0) v.graphics.x = GAME_W + v.w / 2;
+                });
+
+                // Move river objects + dive
+                this.riverObjects.forEach(r => {
+                    r.graphics.x += r.dir * r.speed * dt;
+                    if (r.dir > 0 && r.graphics.x - r.w / 2 > GAME_W) r.graphics.x = -r.w / 2;
+                    if (r.dir < 0 && r.graphics.x + r.w / 2 < 0) r.graphics.x = GAME_W + r.w / 2;
+
+                    // Turtle diving
+                    if (r.divePhase >= 0) {
+                        r.divePhase += 0.008 * dt;
+                        const wasSubmerged = r.submerged;
+                        r.submerged = Math.sin(r.divePhase) > 0.85;
+                        if (r.submerged !== wasSubmerged) {
+                            this.drawRiverObject(r.graphics, r);
+                        }
+                    }
+                });
+
+                // Frog riding
+                if (this.frogRow >= 7 && this.frogRow <= 11 && !this.inputLocked) {
+                    const riding = this.getRiverObjectUnderFrog();
+                    if (riding && !riding.submerged) {
+                        this.frogGraphics.x += riding.dir * riding.speed * dt;
+                        // Clamp to screen
+                        if (this.frogGraphics.x < CELL_W / 2) {
+                            this.frogDeath('water');
+                            return;
+                        }
+                        if (this.frogGraphics.x > GAME_W - CELL_W / 2) {
+                            this.frogDeath('water');
+                            return;
+                        }
+                        // Update frogCol to match position
+                        this.frogCol = Math.round((this.frogGraphics.x - CELL_W / 2) / CELL_W);
+                        this.frogCol = Phaser.Math.Clamp(this.frogCol, 0, COLS - 1);
+                    } else {
+                        // In water!
+                        this.frogDeath('water');
+                        return;
+                    }
+                }
+
+                // Vehicle collision
+                if (this.frogRow >= 1 && this.frogRow <= 5 && !this.inputLocked) {
+                    const hit = this.checkVehicleCollision();
+                    if (hit) {
+                        this.frogDeath('car');
+                        return;
+                    }
+                }
+            }
+
+            getRiverObjectUnderFrog() {
+                const fx = this.frogGraphics.x;
+                const fy = this.frogGraphics.y;
+                for (const r of this.riverObjects) {
+                    if (r.row !== this.frogRow) continue;
+                    const rx = r.graphics.x;
+                    const ry = r.graphics.y;
+                    if (Math.abs(fy - ry) < CELL_H * 0.5 &&
+                        fx > rx - r.w / 2 - CELL_W * 0.2 &&
+                        fx < rx + r.w / 2 + CELL_W * 0.2) {
+                        return r;
+                    }
+                }
+                return null;
+            }
+
+            checkVehicleCollision() {
+                const fx = this.frogGraphics.x;
+                const fy = this.frogGraphics.y;
+                const frogW = CELL_W * 0.5;
+                const frogH = CELL_H * 0.4;
+                for (const v of this.vehicles) {
+                    if (v.row !== this.frogRow) continue;
+                    const vx = v.graphics.x;
+                    const vy = v.graphics.y;
+                    if (Math.abs(fx - vx) < (frogW + v.w / 2) * 0.75 &&
+                        Math.abs(fy - vy) < (frogH + v.h / 2)) {
+                        return true;
+                    }
+                }
+                return false;
+            }
+
+            // ─── HUD ───
+            updateHUD() {
+                scoreEl.textContent = this.score;
+                levelEl.textContent = this.level;
+                let hearts = '';
+                for (let i = 0; i < this.lives; i++) hearts += '❤️';
+                livesEl.textContent = hearts || '💀';
+                if (this.score > highScore) {
+                    highScore = this.score;
+                    localStorage.setItem('froggerHighScore', highScore);
+                    highScoreEl.textContent = highScore;
+                }
+            }
+        }
+
+        // ─── Phaser Config ───
+        const config = {
+            type: Phaser.AUTO,
+            width: GAME_W,
+            height: GAME_H,
+            parent: 'game-container',
+            backgroundColor: '#111',
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_HORIZONTALLY,
+            },
+            scene: [GameScene],
+        };
+
+        const game = new Phaser.Game(config);
+
+        // Restart button
+        restartBtn.addEventListener('click', () => {
+            game.scene.getScene('GameScene').restartGame();
+        });
+    })();
+    </script>
+</body>
+</html>
