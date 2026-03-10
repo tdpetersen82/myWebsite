@@ -469,9 +469,17 @@
         }
 
         update(time, delta) {
-            if (this.gameOver || this.gameWon) return;
-
             const dt = delta / 1000;
+
+            // Always animate mouth
+            this.mouthAngle += this.mouthDir * dt * 8;
+            if (this.mouthAngle > 0.35) { this.mouthAngle = 0.35; this.mouthDir = -1; }
+            if (this.mouthAngle < 0.02) { this.mouthAngle = 0.02; this.mouthDir = 1; }
+
+            // Always draw
+            this.drawGame();
+
+            if (this.gameOver || this.gameWon) return;
 
             // Ready timer
             if (this.readyTimer > 0) {
@@ -515,13 +523,6 @@
             if (this.dotsEaten >= this.totalDots) {
                 this.winLevel();
             }
-
-            // Animate mouth
-            this.mouthAngle += this.mouthDir * dt * 8;
-            if (this.mouthAngle > 0.35) { this.mouthAngle = 0.35; this.mouthDir = -1; }
-            if (this.mouthAngle < 0.02) { this.mouthAngle = 0.02; this.mouthDir = 1; }
-
-            this.drawGame();
         }
 
         handleInput() {
@@ -1124,18 +1125,15 @@
 
             // Ready text
             if (this.showReady) {
-                g.fillStyle(0xFFFF00, 1);
-                // Simple "READY!" text using shapes
                 const textX = OFFSET_X + GAME_WIDTH / 2;
                 const textY = OFFSET_Y + 17 * TILE_SIZE + TILE_SIZE / 2;
-                this.drawText(g, 'READY!', textX, textY, 0xFFFF00);
-            }
-
-            // Game over text
-            if (this.gameOver) {
+                this.showTextLabel('READY!', textX, textY, 0xFFFF00);
+            } else if (this.gameOver) {
                 const textX = OFFSET_X + GAME_WIDTH / 2;
                 const textY = OFFSET_Y + 17 * TILE_SIZE + TILE_SIZE / 2;
-                this.drawText(g, 'GAME OVER', textX, textY, 0xFF0000);
+                this.showTextLabel('GAME OVER', textX, textY, 0xFF0000);
+            } else {
+                this.hideTextLabel();
             }
 
             // Win flash
@@ -1161,15 +1159,27 @@
             g.fillCircle(x + 4 + pupilOffX, y - 3 + pupilOffY, 2);
         }
 
-        drawText(g, text, x, y, color) {
-            // Use Phaser text since we can't easily draw text with Graphics
-            if (this._textObj) this._textObj.destroy();
-            this._textObj = this.add.text(x, y, text, {
-                fontSize: '16px',
-                fontFamily: 'monospace',
-                color: '#' + color.toString(16).padStart(6, '0'),
-                fontStyle: 'bold'
-            }).setOrigin(0.5);
+        showTextLabel(text, x, y, color) {
+            const colorStr = '#' + color.toString(16).padStart(6, '0');
+            if (this._textObj) {
+                this._textObj.setText(text);
+                this._textObj.setPosition(x, y);
+                this._textObj.setColor(colorStr);
+                this._textObj.setVisible(true);
+            } else {
+                this._textObj = this.add.text(x, y, text, {
+                    fontSize: '16px',
+                    fontFamily: 'monospace',
+                    color: colorStr,
+                    fontStyle: 'bold'
+                }).setOrigin(0.5).setDepth(10);
+            }
+        }
+
+        hideTextLabel() {
+            if (this._textObj) {
+                this._textObj.setVisible(false);
+            }
         }
 
         restart() {
