@@ -988,7 +988,7 @@
         }
 
         drawGame() {
-            const g = this.add.graphics();
+            const g = this.gfx;
             g.clear();
 
             // Black background
@@ -1146,11 +1146,6 @@
                 }
             }
 
-            // Destroy previous graphics
-            if (this._prevGraphics) {
-                this._prevGraphics.destroy();
-            }
-            this._prevGraphics = g;
         }
 
         drawGhostEyes(g, x, y, dir) {
@@ -1179,7 +1174,7 @@
 
         restart() {
             sound.stopSiren();
-            if (this._prevGraphics) this._prevGraphics.destroy();
+            if (this.gfx) this.gfx.destroy();
             if (this._textObj) this._textObj.destroy();
             this.scene.restart();
         }
