@@ -291,6 +291,7 @@
             this.tractorBeamActive = false;
             this.tractorBeamBoss = null;
             this.playerBeingCaptured = false;
+            this.stageClearPending = false;
 
             this.isChallengingStage = (this.stage % 3 === 0);
             this.challengeKills = 0;
@@ -621,11 +622,17 @@
                 enemy.diveT += enemy.diveSpeed;
 
                 if (enemy.diveT >= 1) {
-                    // Enemy went off screen, loop back to formation
-                    enemy.diving = false;
-                    enemy.inFormation = true;
-                    enemy.x = enemy.formX;
-                    enemy.y = enemy.formY;
+                    // Enemy went off screen
+                    if (this.isChallengingStage) {
+                        // In challenging stage, enemies that escape are gone
+                        enemy.alive = false;
+                    } else {
+                        // Normal stage: loop back to formation
+                        enemy.diving = false;
+                        enemy.inFormation = true;
+                        enemy.x = enemy.formX;
+                        enemy.y = enemy.formY;
+                    }
                     this.divingEnemies.splice(i, 1);
                 } else {
                     const pos = this.cubicBezier(enemy.divePathPoints, enemy.diveT);

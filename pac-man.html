@@ -66,11 +66,11 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <script>
     // ========== CONSTANTS ==========
-    const TILE_SIZE = 20;
+    const TILE_SIZE = 19;
     const MAZE_COLS = 28;
     const MAZE_ROWS = 31;
-    const GAME_WIDTH = MAZE_COLS * TILE_SIZE;   // 560
-    const GAME_HEIGHT = MAZE_ROWS * TILE_SIZE;  // 620
+    const GAME_WIDTH = MAZE_COLS * TILE_SIZE;   // 532
+    const GAME_HEIGHT = MAZE_ROWS * TILE_SIZE;  // 589
     const CANVAS_WIDTH = 800;
     const CANVAS_HEIGHT = 600;
 
@@ -333,6 +333,10 @@
 
             // Create ghosts
             this.createGhosts();
+
+            // Persistent graphics object
+            this.gfx = this.add.graphics();
+            this._textObj = null;
 
             // Input
             this.cursors = this.input.keyboard.createCursorKeys();
