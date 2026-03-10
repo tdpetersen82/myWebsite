@@ -129,9 +129,9 @@
         const WHEEL_RADIUS = 18;
         const CHASSIS_WIDTH = 70;
         const CHASSIS_HEIGHT = 14;
-        const MAX_SPEED = 18;
-        const ACCELERATION = 0.0045;
-        const BRAKE_FORCE = 0.003;
+        const MAX_SPEED = 22;
+        const ACCELERATION = 0.014;
+        const BRAKE_FORCE = 0.004;
         const LEAN_TORQUE = 0.04;
         const TERRAIN_SEGMENT_WIDTH = 40;
         const TERRAIN_AHEAD = 80;
@@ -187,18 +187,18 @@
             let height = GROUND_Y;
 
             // Gentle rolling hills
-            height -= smoothNoise(x, scale1) * 120;
+            height -= smoothNoise(x, scale1) * 80;
             // Medium bumps
-            height -= smoothNoise(x + 5000, scale2) * 60;
+            height -= smoothNoise(x + 5000, scale2) * 35;
             // Small features
-            height -= smoothNoise(x + 10000, scale3) * 25;
+            height -= smoothNoise(x + 10000, scale3) * 20;
 
             // Ramps / jumps at intervals
             const jumpInterval = 800 + Math.floor(noise(Math.floor(x / 1000)) * 600);
             const jumpPos = x % jumpInterval;
             if (jumpPos < 120 && x > 300) {
                 const rampProgress = jumpPos / 120;
-                const rampHeight = 50 + noise(Math.floor(x / jumpInterval)) * 40;
+                const rampHeight = 35 + noise(Math.floor(x / jumpInterval)) * 30;
                 if (rampProgress < 0.5) {
                     // Going up
                     height -= Math.sin(rampProgress * Math.PI) * rampHeight;
@@ -216,8 +216,8 @@
             height = Math.max(100, Math.min(H - 30, height));
 
             // Flat starting area
-            if (x < 400) {
-                const blend = Math.min(1, x / 400);
+            if (x < 600) {
+                const blend = Math.min(1, x / 600);
                 height = GROUND_Y * (1 - blend) + height * blend;
             }
 
@@ -289,21 +289,21 @@
             const rearWheel = Bodies.circle(x - 22, y, WHEEL_RADIUS, {
                 friction: 0.9,
                 restitution: 0.1,
-                density: 0.004,
+                density: 0.002,
                 label: 'rearWheel'
             });
 
             const frontWheel = Bodies.circle(x + 28, y, WHEEL_RADIUS, {
                 friction: 0.9,
                 restitution: 0.1,
-                density: 0.003,
+                density: 0.0015,
                 label: 'frontWheel'
             });
 
             const chassis = Bodies.rectangle(x, y - 25, CHASSIS_WIDTH, CHASSIS_HEIGHT, {
                 friction: 0.5,
                 restitution: 0.05,
-                density: 0.005,
+                density: 0.003,
                 label: 'chassis',
                 chamfer: { radius: 4 }
             });
@@ -480,42 +480,95 @@
             }
         }
 
-        function drawWheel(wheel) {
+        function drawWheel(wheel, isFront) {
             const pos = wheel.position;
             const sx = pos.x - cameraX;
             const sy = pos.y - cameraY;
+            const R = WHEEL_RADIUS;
+            const angle = wheel.angle;
 
-            // Tire
+            // Outer tire with knobby tread
             ctx.beginPath();
-            ctx.arc(sx, sy, WHEEL_RADIUS, 0, Math.PI * 2);
+            ctx.arc(sx, sy, R + 2, 0, Math.PI * 2);
+            ctx.fillStyle = '#111';
+            ctx.fill();
+
+            // Tire body
+            ctx.beginPath();
+            ctx.arc(sx, sy, R, 0, Math.PI * 2);
             ctx.fillStyle = '#1a1a1a';
             ctx.fill();
+
+            // Knobby tread pattern
             ctx.strokeStyle = '#333';
-            ctx.lineWidth = 3;
-            ctx.stroke();
+            ctx.lineWidth = 2;
+            for (let i = 0; i < 12; i++) {
+                const a = angle + (i * Math.PI / 6);
+                const innerR = R - 3;
+                const outerR = R + 1;
+                ctx.beginPath();
+                ctx.moveTo(sx + Math.cos(a) * innerR, sy + Math.sin(a) * innerR);
+                ctx.lineTo(sx + Math.cos(a + 0.12) * outerR, sy + Math.sin(a + 0.12) * outerR);
+                ctx.stroke();
+            }
 
             // Rim
             ctx.beginPath();
-            ctx.arc(sx, sy, WHEEL_RADIUS * 0.55, 0, Math.PI * 2);
-            ctx.fillStyle = '#888';
+            ctx.arc(sx, sy, R * 0.58, 0, Math.PI * 2);
+            ctx.fillStyle = '#B0B0B0';
             ctx.fill();
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 1.5;
+            ctx.stroke();
+
+            // Inner rim detail
+            ctx.beginPath();
+            ctx.arc(sx, sy, R * 0.48, 0, Math.PI * 2);
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Spokes (rotating)
+            ctx.strokeStyle = '#C0C0C0';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 8; i++) {
+                const a = angle + (i * Math.PI / 4);
+                ctx.beginPath();
+                ctx.moveTo(sx + Math.cos(a) * 4, sy + Math.sin(a) * 4);
+                ctx.lineTo(sx + Math.cos(a) * R * 0.52, sy + Math.sin(a) * R * 0.52);
+                ctx.stroke();
+            }
 
             // Hub
             ctx.beginPath();
-            ctx.arc(sx, sy, 3, 0, Math.PI * 2);
-            ctx.fillStyle = '#ccc';
+            ctx.arc(sx, sy, 4, 0, Math.PI * 2);
+            ctx.fillStyle = '#DDD';
+            ctx.fill();
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Axle bolt
+            ctx.beginPath();
+            ctx.arc(sx, sy, 2, 0, Math.PI * 2);
+            ctx.fillStyle = '#777';
             ctx.fill();
 
-            // Spokes (rotating)
-            ctx.strokeStyle = '#aaa';
-            ctx.lineWidth = 1.5;
-            const angle = wheel.angle;
-            for (let i = 0; i < 6; i++) {
-                const a = angle + (i * Math.PI / 3);
+            // Disc brake (front wheel)
+            if (isFront) {
                 ctx.beginPath();
-                ctx.moveTo(sx + Math.cos(a) * 3, sy + Math.sin(a) * 3);
-                ctx.lineTo(sx + Math.cos(a) * WHEEL_RADIUS * 0.5, sy + Math.sin(a) * WHEEL_RADIUS * 0.5);
+                ctx.arc(sx, sy, R * 0.38, 0, Math.PI * 2);
+                ctx.strokeStyle = '#AAA';
+                ctx.lineWidth = 2;
                 ctx.stroke();
+                // Brake holes
+                for (let i = 0; i < 4; i++) {
+                    const a = angle + (i * Math.PI / 2) + 0.3;
+                    ctx.beginPath();
+                    ctx.arc(sx + Math.cos(a) * R * 0.3, sy + Math.sin(a) * R * 0.3, 1.5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#888';
+                    ctx.fill();
+                }
             }
         }
 
@@ -523,153 +576,502 @@
             if (!motorcycle) return;
 
             const chassis = motorcycle.chassis;
+            const rw = motorcycle.rearWheel.position;
+            const fw = motorcycle.frontWheel.position;
+            const rwScreen = { x: rw.x - cameraX, y: rw.y - cameraY };
+            const fwScreen = { x: fw.x - cameraX, y: fw.y - cameraY };
             const cx = chassis.position.x - cameraX;
             const cy = chassis.position.y - cameraY;
             const angle = chassis.angle;
 
-            // Draw wheels
-            drawWheel(motorcycle.rearWheel);
-            drawWheel(motorcycle.frontWheel);
+            // Helper to transform chassis-local to screen coords
+            function local(lx, ly) {
+                return {
+                    x: cx + Math.cos(angle) * lx - Math.sin(angle) * ly,
+                    y: cy + Math.sin(angle) * lx + Math.cos(angle) * ly
+                };
+            }
 
-            // Suspension forks (lines from chassis to wheels)
-            ctx.strokeStyle = '#666';
+            // Draw wheels first (behind frame)
+            drawWheel(motorcycle.rearWheel, false);
+            drawWheel(motorcycle.frontWheel, true);
+
+            // === Rear sprocket (small circle near rear axle) ===
+            ctx.beginPath();
+            ctx.arc(rwScreen.x, rwScreen.y, 7, 0, Math.PI * 2);
+            ctx.fillStyle = '#666';
+            ctx.fill();
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // === Chain (rear sprocket to engine area) ===
+            const engineBottom = local(-2, 10);
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 2;
+            ctx.setLineDash([3, 2]);
+            ctx.beginPath();
+            ctx.moveTo(rwScreen.x - 2, rwScreen.y - 5);
+            ctx.lineTo(engineBottom.x, engineBottom.y);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(rwScreen.x + 2, rwScreen.y + 5);
+            ctx.lineTo(engineBottom.x + 3, engineBottom.y + 3);
+            ctx.stroke();
+            ctx.setLineDash([]);
+
+            // === Swingarm (rear axle to chassis pivot) ===
+            const swingPivot = local(-10, 5);
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(swingPivot.x, swingPivot.y);
+            ctx.lineTo(rwScreen.x, rwScreen.y);
+            ctx.stroke();
+            // Swingarm highlight
+            ctx.strokeStyle = '#777';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(swingPivot.x, swingPivot.y);
+            ctx.lineTo(rwScreen.x, rwScreen.y);
+            ctx.stroke();
+
+            // === Front fork tubes (twin tubes with rake) ===
+            const headstock = local(24, -8);
+            const forkOffset1 = 3;
+            const forkOffset2 = -3;
+            // Calculate perpendicular direction for fork spread
+            const forkDx = fwScreen.x - headstock.x;
+            const forkDy = fwScreen.y - headstock.y;
+            const forkLen = Math.sqrt(forkDx * forkDx + forkDy * forkDy);
+            const perpX = -forkDy / forkLen * forkOffset1;
+            const perpY = forkDx / forkLen * forkOffset1;
+
+            // Fork outer tubes (chrome)
+            ctx.strokeStyle = '#AAA';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(headstock.x + perpX, headstock.y + perpY);
+            ctx.lineTo(fwScreen.x + perpX * 0.5, fwScreen.y + perpY * 0.5);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(headstock.x - perpX, headstock.y - perpY);
+            ctx.lineTo(fwScreen.x - perpX * 0.5, fwScreen.y - perpY * 0.5);
+            ctx.stroke();
+
+            // Fork inner tubes (gold - like inverted forks)
+            ctx.strokeStyle = '#DAA520';
             ctx.lineWidth = 3;
-
-            // Rear suspension
-            const rw = motorcycle.rearWheel.position;
+            const forkMidX = (headstock.x + fwScreen.x) / 2;
+            const forkMidY = (headstock.y + fwScreen.y) / 2;
             ctx.beginPath();
-            ctx.moveTo(cx + Math.cos(angle) * -22 - Math.sin(angle) * -12,
-                       cy + Math.sin(angle) * -22 + Math.cos(angle) * -12);
-            ctx.lineTo(rw.x - cameraX, rw.y - cameraY);
+            ctx.moveTo(headstock.x + perpX, headstock.y + perpY);
+            ctx.lineTo(forkMidX + perpX * 0.7, forkMidY + perpY * 0.7);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(headstock.x - perpX, headstock.y - perpY);
+            ctx.lineTo(forkMidX - perpX * 0.7, forkMidY - perpY * 0.7);
             ctx.stroke();
 
-            // Front fork
-            const fw = motorcycle.frontWheel.position;
+            // === Rear shock absorber ===
+            const shockTop = local(-8, -4);
+            const shockBottom = local(-18, 8);
+            ctx.strokeStyle = '#DAA520';
+            ctx.lineWidth = 3;
             ctx.beginPath();
-            ctx.moveTo(cx + Math.cos(angle) * 28 - Math.sin(angle) * -12,
-                       cy + Math.sin(angle) * 28 + Math.cos(angle) * -12);
-            ctx.lineTo(fw.x - cameraX, fw.y - cameraY);
+            ctx.moveTo(shockTop.x, shockTop.y);
+            ctx.lineTo(shockBottom.x, shockBottom.y);
             ctx.stroke();
+            // Spring coil
+            ctx.strokeStyle = '#999';
+            ctx.lineWidth = 1.5;
+            const shockSteps = 6;
+            for (let i = 0; i < shockSteps; i++) {
+                const t1 = i / shockSteps;
+                const t2 = (i + 0.5) / shockSteps;
+                const x1 = shockTop.x + (shockBottom.x - shockTop.x) * t1;
+                const y1 = shockTop.y + (shockBottom.y - shockTop.y) * t1;
+                const x2 = shockTop.x + (shockBottom.x - shockTop.x) * t2;
+                const y2 = shockTop.y + (shockBottom.y - shockTop.y) * t2;
+                const offset = (i % 2 === 0 ? 3 : -3);
+                ctx.beginPath();
+                ctx.moveTo(x1 + perpX * offset * 0.3, y1 + perpY * offset * 0.3);
+                ctx.lineTo(x2 - perpX * offset * 0.3, y2 - perpY * offset * 0.3);
+                ctx.stroke();
+            }
 
+            // Now draw chassis-relative parts
             ctx.save();
             ctx.translate(cx, cy);
             ctx.rotate(angle);
 
-            // Frame / body
-            ctx.fillStyle = '#CC2200';
+            // === Main frame tubes ===
+            ctx.strokeStyle = '#444';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            // Downtube
             ctx.beginPath();
-            ctx.moveTo(-30, -4);
-            ctx.lineTo(30, -4);
-            ctx.lineTo(35, 2);
-            ctx.lineTo(25, 8);
-            ctx.lineTo(-25, 8);
-            ctx.lineTo(-35, 2);
+            ctx.moveTo(24, -8);   // headstock
+            ctx.lineTo(5, 8);    // bottom bracket
+            ctx.lineTo(-10, 5);  // swing pivot
+            ctx.stroke();
+            // Top tube
+            ctx.beginPath();
+            ctx.moveTo(24, -8);
+            ctx.lineTo(5, -12);
+            ctx.lineTo(-12, -6);
+            ctx.stroke();
+            // Subframe (seat support)
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 3;
+            ctx.beginPath();
+            ctx.moveTo(-12, -6);
+            ctx.lineTo(-28, -2);
+            ctx.lineTo(-32, 4);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(-10, 5);
+            ctx.lineTo(-28, -2);
+            ctx.stroke();
+
+            // === Engine block ===
+            ctx.fillStyle = '#3a3a3a';
+            ctx.beginPath();
+            ctx.moveTo(-4, 2);
+            ctx.lineTo(12, 2);
+            ctx.lineTo(14, 14);
+            ctx.lineTo(-6, 14);
             ctx.closePath();
             ctx.fill();
-            ctx.strokeStyle = '#991100';
+            ctx.strokeStyle = '#2a2a2a';
             ctx.lineWidth = 1;
             ctx.stroke();
 
-            // Engine block
+            // Cylinder fins
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 1;
+            for (let i = 0; i < 4; i++) {
+                const fy = 4 + i * 2.5;
+                ctx.beginPath();
+                ctx.moveTo(-5, fy);
+                ctx.lineTo(14, fy);
+                ctx.stroke();
+            }
+
+            // Cylinder head
             ctx.fillStyle = '#444';
-            ctx.fillRect(-12, 2, 20, 10);
-            ctx.fillStyle = '#555';
-            ctx.fillRect(-10, 4, 8, 6);
-
-            // Seat
-            ctx.fillStyle = '#222';
             ctx.beginPath();
-            ctx.moveTo(-20, -4);
-            ctx.quadraticCurveTo(-10, -14, 5, -10);
-            ctx.quadraticCurveTo(10, -8, 10, -4);
-            ctx.lineTo(-20, -4);
+            ctx.moveTo(2, -1);
+            ctx.lineTo(10, -1);
+            ctx.lineTo(12, 3);
+            ctx.lineTo(0, 3);
+            ctx.closePath();
             ctx.fill();
 
-            // Fuel tank
-            ctx.fillStyle = '#DD3300';
+            // Front sprocket
             ctx.beginPath();
-            ctx.ellipse(0, -6, 12, 6, 0, Math.PI, 0);
-            ctx.fill();
-            ctx.strokeStyle = '#FFaa00';
-            ctx.lineWidth = 1;
-            ctx.beginPath();
-            ctx.moveTo(-8, -8);
-            ctx.quadraticCurveTo(0, -13, 8, -8);
-            ctx.stroke();
-
-            // Headlight
-            ctx.fillStyle = '#FFEE88';
-            ctx.beginPath();
-            ctx.arc(32, 0, 4, 0, Math.PI * 2);
-            ctx.fill();
-            ctx.fillStyle = '#FFF';
-            ctx.beginPath();
-            ctx.arc(32, 0, 2, 0, Math.PI * 2);
-            ctx.fill();
-
-            // Exhaust pipe
-            ctx.strokeStyle = '#888';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(-20, 8);
-            ctx.quadraticCurveTo(-30, 12, -38, 8);
-            ctx.stroke();
+            ctx.arc(2, 12, 4, 0, Math.PI * 2);
             ctx.fillStyle = '#666';
-            ctx.beginPath();
-            ctx.arc(-38, 8, 3, 0, Math.PI * 2);
             ctx.fill();
 
-            // Handlebar
+            // === Exhaust pipe ===
+            ctx.strokeStyle = '#888';
+            ctx.lineWidth = 4;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(8, 12);
+            ctx.quadraticCurveTo(2, 18, -12, 16);
+            ctx.quadraticCurveTo(-24, 14, -34, 10);
+            ctx.stroke();
+            // Chrome pipe highlight
+            ctx.strokeStyle = '#BBB';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(8, 11);
+            ctx.quadraticCurveTo(2, 16, -12, 14);
+            ctx.stroke();
+            // Silencer end
+            ctx.fillStyle = '#777';
+            ctx.beginPath();
+            ctx.ellipse(-34, 10, 5, 3, angle, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#555';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // === Fuel tank ===
+            const tankGrad = ctx.createLinearGradient(-2, -16, -2, -6);
+            tankGrad.addColorStop(0, '#E83020');
+            tankGrad.addColorStop(0.4, '#CC2200');
+            tankGrad.addColorStop(1, '#991800');
+            ctx.fillStyle = tankGrad;
+            ctx.beginPath();
+            ctx.moveTo(18, -10);
+            ctx.quadraticCurveTo(14, -18, 4, -18);
+            ctx.quadraticCurveTo(-6, -18, -8, -12);
+            ctx.lineTo(-8, -8);
+            ctx.quadraticCurveTo(-4, -6, 8, -6);
+            ctx.quadraticCurveTo(16, -6, 18, -10);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#881400';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            // Tank highlight stripe
+            ctx.strokeStyle = 'rgba(255,255,255,0.25)';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(14, -15);
+            ctx.quadraticCurveTo(6, -17, -4, -15);
+            ctx.stroke();
+            // Tank graphic stripe
+            ctx.strokeStyle = '#FFaa00';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.moveTo(16, -12);
+            ctx.quadraticCurveTo(6, -14, -6, -12);
+            ctx.stroke();
+
+            // === Seat ===
+            ctx.fillStyle = '#1a1a1a';
+            ctx.beginPath();
+            ctx.moveTo(-8, -10);
+            ctx.quadraticCurveTo(-12, -16, -20, -12);
+            ctx.quadraticCurveTo(-28, -10, -30, -6);
+            ctx.lineTo(-28, -4);
+            ctx.quadraticCurveTo(-16, -5, -8, -7);
+            ctx.closePath();
+            ctx.fill();
+            // Seat stitch line
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 0.5;
+            ctx.beginPath();
+            ctx.moveTo(-10, -9);
+            ctx.quadraticCurveTo(-18, -11, -26, -7);
+            ctx.stroke();
+
+            // === Rear fender ===
+            ctx.fillStyle = '#CC2200';
+            ctx.beginPath();
+            ctx.moveTo(-30, -2);
+            ctx.quadraticCurveTo(-34, 2, -32, 8);
+            ctx.quadraticCurveTo(-28, 6, -24, 2);
+            ctx.closePath();
+            ctx.fill();
+
+            // === Front fender ===
+            ctx.fillStyle = '#CC2200';
+            ctx.beginPath();
+            ctx.moveTo(30, -4);
+            ctx.quadraticCurveTo(36, 2, 34, 8);
+            ctx.quadraticCurveTo(30, 6, 28, 0);
+            ctx.closePath();
+            ctx.fill();
+
+            // === Number plate (front) ===
+            ctx.fillStyle = '#F5F5F5';
+            ctx.beginPath();
+            ctx.moveTo(26, -14);
+            ctx.lineTo(32, -14);
+            ctx.lineTo(33, -6);
+            ctx.lineTo(25, -6);
+            ctx.closePath();
+            ctx.fill();
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+            // Number
+            ctx.fillStyle = '#222';
+            ctx.font = 'bold 6px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('7', 29, -8);
+            ctx.textAlign = 'left';
+
+            // === Headlight ===
+            ctx.fillStyle = '#FFF8CC';
+            ctx.beginPath();
+            ctx.arc(30, -2, 3, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.fillStyle = '#FFFFFF';
+            ctx.beginPath();
+            ctx.arc(30, -2, 1.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // === Handlebars ===
             ctx.strokeStyle = '#333';
             ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
             ctx.beginPath();
-            ctx.moveTo(22, -8);
-            ctx.lineTo(26, -18);
-            ctx.lineTo(30, -16);
+            ctx.moveTo(22, -12);
+            ctx.lineTo(20, -22);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(20, -22);
+            ctx.lineTo(16, -24);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(20, -22);
+            ctx.lineTo(24, -24);
+            ctx.stroke();
+            // Grips
+            ctx.fillStyle = '#222';
+            ctx.beginPath();
+            ctx.arc(16, -24, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.beginPath();
+            ctx.arc(24, -24, 2.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // === Foot pegs ===
+            ctx.strokeStyle = '#777';
+            ctx.lineWidth = 2;
+            ctx.beginPath();
+            ctx.moveTo(-6, 12);
+            ctx.lineTo(-10, 15);
+            ctx.stroke();
+            ctx.beginPath();
+            ctx.moveTo(4, 12);
+            ctx.lineTo(0, 15);
             ctx.stroke();
 
-            // Rider
+            // === Rider ===
             drawRider();
 
             ctx.restore();
         }
 
         function drawRider() {
-            // Simple stick-figure rider on the motorcycle
-            ctx.fillStyle = '#333';
-            ctx.strokeStyle = '#333';
-            ctx.lineWidth = 3;
-
-            // Body
+            // === Boots ===
+            ctx.fillStyle = '#1a1a1a';
+            // Rear foot on peg
             ctx.beginPath();
-            ctx.moveTo(-5, -12);
-            ctx.lineTo(8, -22);
-            ctx.stroke();
-
-            // Head with helmet
-            ctx.fillStyle = '#CC2200';
-            ctx.beginPath();
-            ctx.arc(10, -26, 7, 0, Math.PI * 2);
-            ctx.fill();
-            // Visor
-            ctx.fillStyle = '#333';
-            ctx.beginPath();
-            ctx.arc(12, -25, 4, -0.5, 0.8);
-            ctx.fill();
-
-            // Arms to handlebar
-            ctx.strokeStyle = '#555';
-            ctx.lineWidth = 3;
-            ctx.beginPath();
-            ctx.moveTo(5, -18);
-            ctx.lineTo(22, -14);
-            ctx.stroke();
-
-            // Leg
-            ctx.beginPath();
-            ctx.moveTo(-5, -12);
-            ctx.lineTo(-15, 0);
+            ctx.moveTo(-12, 8);
+            ctx.lineTo(-8, 14);
+            ctx.lineTo(-4, 14);
+            ctx.lineTo(-4, 10);
             ctx.lineTo(-10, 6);
+            ctx.closePath();
+            ctx.fill();
+
+            // === Legs (thick, with knee bend) ===
+            ctx.strokeStyle = '#2B4F8C';
+            ctx.lineWidth = 6;
+            ctx.lineCap = 'round';
+            ctx.lineJoin = 'round';
+            // Shin
+            ctx.beginPath();
+            ctx.moveTo(-8, 12);
+            ctx.lineTo(-14, 2);
+            ctx.stroke();
+            // Thigh
+            ctx.beginPath();
+            ctx.moveTo(-14, 2);
+            ctx.lineTo(-6, -8);
+            ctx.stroke();
+
+            // Knee pad
+            ctx.fillStyle = '#222';
+            ctx.beginPath();
+            ctx.arc(-14, 2, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+
+            // === Torso ===
+            ctx.fillStyle = '#D43030';
+            ctx.beginPath();
+            ctx.moveTo(-6, -8);
+            ctx.lineTo(2, -8);
+            ctx.quadraticCurveTo(8, -10, 10, -16);
+            ctx.lineTo(6, -18);
+            ctx.quadraticCurveTo(0, -14, -6, -10);
+            ctx.closePath();
+            ctx.fill();
+            // Jersey detail - chest stripe
+            ctx.strokeStyle = '#FFF';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(-2, -9);
+            ctx.quadraticCurveTo(4, -12, 8, -16);
+            ctx.stroke();
+
+            // === Arms (bent to handlebars) ===
+            ctx.strokeStyle = '#D43030';
+            ctx.lineWidth = 5;
+            ctx.lineCap = 'round';
+            // Upper arm
+            ctx.beginPath();
+            ctx.moveTo(8, -16);
+            ctx.lineTo(14, -20);
+            ctx.stroke();
+            // Forearm
+            ctx.strokeStyle = '#C02828';
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.moveTo(14, -20);
+            ctx.lineTo(20, -22);
+            ctx.stroke();
+
+            // Glove
+            ctx.fillStyle = '#222';
+            ctx.beginPath();
+            ctx.arc(20, -22, 3, 0, Math.PI * 2);
+            ctx.fill();
+
+            // === Helmet ===
+            // Main helmet shell
+            const helmetGrad = ctx.createRadialGradient(11, -24, 2, 11, -24, 9);
+            helmetGrad.addColorStop(0, '#E83020');
+            helmetGrad.addColorStop(0.7, '#CC2200');
+            helmetGrad.addColorStop(1, '#991800');
+            ctx.fillStyle = helmetGrad;
+            ctx.beginPath();
+            ctx.arc(11, -24, 8, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.strokeStyle = '#881400';
+            ctx.lineWidth = 1;
+            ctx.stroke();
+
+            // Helmet chin guard
+            ctx.fillStyle = '#AA1C00';
+            ctx.beginPath();
+            ctx.moveTo(16, -20);
+            ctx.quadraticCurveTo(20, -22, 18, -26);
+            ctx.lineTo(16, -24);
+            ctx.quadraticCurveTo(18, -22, 16, -20);
+            ctx.closePath();
+            ctx.fill();
+
+            // Visor
+            ctx.fillStyle = 'rgba(50, 50, 50, 0.8)';
+            ctx.beginPath();
+            ctx.moveTo(14, -28);
+            ctx.quadraticCurveTo(20, -26, 19, -22);
+            ctx.quadraticCurveTo(17, -22, 15, -24);
+            ctx.quadraticCurveTo(13, -26, 14, -28);
+            ctx.closePath();
+            ctx.fill();
+            // Visor glare
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)';
+            ctx.lineWidth = 1;
+            ctx.beginPath();
+            ctx.moveTo(15, -27);
+            ctx.quadraticCurveTo(18, -26, 18, -24);
+            ctx.stroke();
+
+            // Helmet stripe
+            ctx.strokeStyle = '#FFaa00';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(11, -24, 7, -2.5, -0.8);
+            ctx.stroke();
+
+            // Goggle strap
+            ctx.strokeStyle = '#333';
+            ctx.lineWidth = 1.5;
+            ctx.beginPath();
+            ctx.arc(11, -24, 8.5, -1.0, 0.5);
             ctx.stroke();
         }
 
@@ -771,12 +1173,16 @@
             const frontWheel = motorcycle.frontWheel;
             const angle = chassis.angle;
 
-            // Acceleration
+            // Acceleration (both wheels for hill climbing power)
             if (keys['ArrowRight'] || keys['KeyW'] || keys['KeyD']) {
                 const force = ACCELERATION;
                 Body.applyForce(rearWheel, rearWheel.position, {
                     x: Math.cos(angle) * force,
                     y: Math.sin(angle) * force
+                });
+                Body.applyForce(frontWheel, frontWheel.position, {
+                    x: Math.cos(angle) * force * 0.6,
+                    y: Math.sin(angle) * force * 0.6
                 });
                 engineSoundTimer++;
                 if (engineSoundTimer % 8 === 0) playEngineSound();
@@ -936,7 +1342,7 @@
             }
 
             engine = Engine.create({
-                gravity: { x: 0, y: 1.2 }
+                gravity: { x: 0, y: 0.9 }
             });
 
             terrainBodies = [];
@@ -1003,7 +1409,7 @@
         // ============================
         // Initial Draw
         // ============================
-        engine = Engine.create({ gravity: { x: 0, y: 1.2 } });
+        engine = Engine.create({ gravity: { x: 0, y: 0.9 } });
         terrainBodies = [];
         terrainPoints = [];
         buildTerrainSegments(-200, TERRAIN_AHEAD * TERRAIN_SEGMENT_WIDTH);
