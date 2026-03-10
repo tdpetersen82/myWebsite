@@ -46,7 +46,7 @@
             cursor: pointer;
         }
         .p1-label { color: #e74c3c; }
-        .p2-label { color: #4a9eff; }
+        .p2-label { color: #aaaaaa; }
         .auto-controls {
             display: flex;
             justify-content: center;
@@ -231,7 +231,7 @@
                 </select>
             </div>
             <div class="player-selector">
-                <label class="p2-label">&#x1F535; Blue (Player 2)</label>
+                <label class="p2-label">⚫ Black (Player 2)</label>
                 <select id="p2Select">
                     <option value="human">Human</option>
                     <option value="random">Lv1: Random</option>
@@ -246,7 +246,7 @@
 
         <div class="game-info">
             <p>&#x1F534; <span id="p1WinLabel">Red</span> Wins: <span id="redWins">0</span></p>
-            <p>&#x1F535; <span id="p2WinLabel">Blue</span> Wins: <span id="blueWins">0</span></p>
+            <p>⚫ <span id="p2WinLabel">Black</span> Wins: <span id="blueWins">0</span></p>
         </div>
 
         <p class="turn-indicator" id="turnIndicator">Red's turn</p>
@@ -385,7 +385,7 @@
         const RED   = 1;
         const BLUE  = 2;
 
-        const COLORS = { [EMPTY]: '#111', [RED]: '#e74c3c', [BLUE]: '#2563eb' };
+        const COLORS = { [EMPTY]: '#111', [RED]: '#e74c3c', [BLUE]: '#222222' };
 
         const PLAYER_NAMES = {
             human: 'Human', random: 'Random', greedy: 'Greedy',
@@ -1141,7 +1141,7 @@
                     } else {
                         blueWins++;
                         blueWinsEl.textContent = blueWins;
-                        turnIndicator.textContent = `Blue (${PLAYER_NAMES[p2Type]}) wins!`;
+                        turnIndicator.textContent = `Black (${PLAYER_NAMES[p2Type]}) wins!`;
                     }
                     playWin();
                     draw();
@@ -1230,7 +1230,7 @@
             const name = PLAYER_NAMES[currentType()];
             turnIndicator.textContent = currentPlayer === RED
                 ? `Red (${name})'s turn`
-                : `Blue (${name})'s turn`;
+                : `Black (${name})'s turn`;
         }
 
         function showStats(ms, type) {
@@ -1260,7 +1260,7 @@
 
         function updateWinLabels() {
             p1WinLabel.textContent = `Red (${PLAYER_NAMES[p1Type]})`;
-            p2WinLabel.textContent = `Blue (${PLAYER_NAMES[p2Type]})`;
+            p2WinLabel.textContent = `Black (${PLAYER_NAMES[p2Type]})`;
         }
 
         // =============================================
