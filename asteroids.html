@@ -33,7 +33,7 @@
         </div>
         <div id="game-container"></div>
         <div class="controls">
-            <p>Arrow Keys or WASD to move &amp; rotate · Spacebar to shoot</p>
+            <p>Arrow Keys or WASD to move &amp; rotate · Spacebar to shoot · Shift for Hyperspace</p>
             <button id="restartBtn" class="play-button">Restart Game</button>
         </div>
         <a href="index.html" class="back-button">← Back to Game Hub</a>
@@ -69,7 +69,6 @@
         const ctx = ensureAudioCtx();
         const duration = size === 'large' ? 0.4 : size === 'medium' ? 0.25 : 0.15;
         const freq = size === 'large' ? 80 : size === 'medium' ? 120 : 200;
-        // Noise-like explosion using multiple detuned oscillators
         for (let i = 0; i < 3; i++) {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -134,6 +133,79 @@
         });
     }
 
+    function playNewWave() {
+        const ctx = ensureAudioCtx();
+        [220, 330, 440, 550, 660].forEach((f, i) => {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sine';
+            const t = ctx.currentTime + i * 0.08;
+            osc.frequency.setValueAtTime(f, t);
+            gain.gain.setValueAtTime(0.15, t);
+            gain.gain.exponentialRampToValueAtTime(0.001, t + 0.12);
+            osc.start(t);
+            osc.stop(t + 0.12);
+        });
+    }
+
+    let ufoHumOscillators = [];
+    function startUFOHum() {
+        stopUFOHum();
+        const ctx = ensureAudioCtx();
+        const gain = ctx.createGain();
+        gain.connect(ctx.destination);
+        gain.gain.setValueAtTime(0.06, ctx.currentTime);
+        // Two detuned oscillators for warble
+        [120, 123].forEach(freq => {
+            const osc = ctx.createOscillator();
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(freq, ctx.currentTime);
+            osc.connect(gain);
+            osc.start(ctx.currentTime);
+            ufoHumOscillators.push({ osc, gain });
+        });
+    }
+
+    function stopUFOHum() {
+        ufoHumOscillators.forEach(({ osc, gain }) => {
+            try { osc.stop(); } catch(e) {}
+        });
+        ufoHumOscillators = [];
+    }
+
+    function playUFOShoot() {
+        const ctx = ensureAudioCtx();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(200, ctx.currentTime + 0.15);
+        gain.gain.setValueAtTime(0.15, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
+        osc.start(ctx.currentTime);
+        osc.stop(ctx.currentTime + 0.15);
+    }
+
+    function playHyperspace() {
+        const ctx = ensureAudioCtx();
+        for (let i = 0; i < 5; i++) {
+            const osc = ctx.createOscillator();
+            const gain = ctx.createGain();
+            osc.connect(gain);
+            gain.connect(ctx.destination);
+            osc.type = 'sawtooth';
+            osc.frequency.setValueAtTime(200 + Math.random() * 1800, ctx.currentTime);
+            gain.gain.setValueAtTime(0.06, ctx.currentTime);
+            gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.2);
+            osc.start(ctx.currentTime);
+            osc.stop(ctx.currentTime + 0.2);
+        }
+    }
+
     // ===================== DOM References =====================
     const scoreEl = document.getElementById('score');
     const highScoreEl = document.getElementById('highScore');
@@ -142,6 +214,10 @@
 
     let storedHigh = parseInt(localStorage.getItem('asteroidsHighScore')) || 0;
     highScoreEl.textContent = storedHigh;
+
+    // ===================== Constants =====================
+    const GAME_W = 800;
+    const GAME_H = 600;
 
     // ===================== Phaser Game Scene =====================
     class GameScene extends Phaser.Scene {
@@ -153,17 +229,42 @@
             // State
             this.score = 0;
             this.lives = 3;
-            this.wave = 1;
+            this.wave = 0;
             this.gameState = 'start'; // 'start', 'playing', 'gameover'
             this.invulnerable = false;
             this.invulnerableTimer = null;
             this.thrustSoundTimer = 0;
             this.bulletCount = 0;
 
+            // Progressive difficulty
+            this.speedMultiplier = 1.0;
+
+            // Extra life tracking
+            this.nextExtraLifeScore = 10000;
+
+            // Hyperspace
+            this.hyperspaceCooldown = 0;
+
+            // Screen shake
+            this.shakeIntensity = 0;
+
+            // UFO state
+            this.ufo = null;
+            this.ufoTimer = null;
+            this.ufoShootTimer = null;
+
+            // Starfield
+            this.stars = [];
+            this.createStarfield();
+
             // Groups
             this.bullets = this.add.group();
             this.asteroids = this.add.group();
             this.particles = this.add.group();
+            this.ufoBullets = this.add.group();
+
+            // Life icons graphics
+            this.lifeIconsGraphics = this.add.graphics().setDepth(5);
 
             // Create ship
             this.createShip();
@@ -174,6 +275,7 @@
             this.keyA = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.A);
             this.keyD = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D);
             this.keySpace = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+            this.keyShift = this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SHIFT);
 
             this.lastShot = 0;
 
@@ -183,7 +285,7 @@
             // Update DOM
             this.updateDOM();
 
-            // Prevent space scrolling
+            // Prevent space/arrow scrolling
             this.input.keyboard.disableGlobalCapture();
             window.addEventListener('keydown', (e) => {
                 if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
@@ -192,6 +294,55 @@
             });
         }
 
+        // ===================== Starfield =====================
+        createStarfield() {
+            this.starfieldGraphics = this.add.graphics().setDepth(-1);
+            // Layer 1: far/dim
+            for (let i = 0; i < 60; i++) {
+                this.stars.push({
+                    x: Math.random() * GAME_W,
+                    y: Math.random() * GAME_H,
+                    size: 0.8,
+                    speed: 0.1,
+                    alpha: 0.25 + Math.random() * 0.15
+                });
+            }
+            // Layer 2: mid
+            for (let i = 0; i < 30; i++) {
+                this.stars.push({
+                    x: Math.random() * GAME_W,
+                    y: Math.random() * GAME_H,
+                    size: 1.2,
+                    speed: 0.3,
+                    alpha: 0.4 + Math.random() * 0.2
+                });
+            }
+            // Layer 3: near/bright
+            for (let i = 0; i < 15; i++) {
+                this.stars.push({
+                    x: Math.random() * GAME_W,
+                    y: Math.random() * GAME_H,
+                    size: 1.8,
+                    speed: 0.6,
+                    alpha: 0.6 + Math.random() * 0.2
+                });
+            }
+        }
+
+        updateStarfield() {
+            this.starfieldGraphics.clear();
+            for (const star of this.stars) {
+                star.y += star.speed;
+                if (star.y > GAME_H) {
+                    star.y = 0;
+                    star.x = Math.random() * GAME_W;
+                }
+                this.starfieldGraphics.fillStyle(0xffffff, star.alpha);
+                this.starfieldGraphics.fillCircle(star.x, star.y, star.size);
+            }
+        }
+
+        // ===================== Ship =====================
         createShip() {
             this.ship = this.add.graphics();
             this.drawShip(this.ship, false);
@@ -200,12 +351,22 @@
             this.ship.rotation = -Math.PI / 2;
             this.ship.velX = 0;
             this.ship.velY = 0;
+            this.ship.rotVel = 0;
             this.ship.visible = true;
         }
 
         drawShip(graphics, thrusting) {
             graphics.clear();
-            // Ship body
+            // Glow pass
+            graphics.lineStyle(5, 0x3344ff, 0.15);
+            graphics.beginPath();
+            graphics.moveTo(20, 0);
+            graphics.lineTo(-12, -12);
+            graphics.lineTo(-6, 0);
+            graphics.lineTo(-12, 12);
+            graphics.closePath();
+            graphics.strokePath();
+            // Main ship body
             graphics.lineStyle(2, 0xffffff);
             graphics.beginPath();
             graphics.moveTo(20, 0);
@@ -226,11 +387,30 @@
             }
         }
 
+        // ===================== Life Icons =====================
+        drawLifeIcons() {
+            this.lifeIconsGraphics.clear();
+            const count = Math.max(0, this.lives - 1);
+            for (let i = 0; i < count; i++) {
+                const cx = 30 + i * 25;
+                const cy = 30;
+                this.lifeIconsGraphics.lineStyle(1.5, 0xffffff);
+                this.lifeIconsGraphics.beginPath();
+                this.lifeIconsGraphics.moveTo(cx + 10, cy);
+                this.lifeIconsGraphics.lineTo(cx - 6, cy - 6);
+                this.lifeIconsGraphics.lineTo(cx - 3, cy);
+                this.lifeIconsGraphics.lineTo(cx - 6, cy + 6);
+                this.lifeIconsGraphics.closePath();
+                this.lifeIconsGraphics.strokePath();
+            }
+        }
+
+        // ===================== Overlays =====================
         createOverlays() {
             // Start overlay
             this.startOverlay = this.add.graphics();
             this.startOverlay.fillStyle(0x000000, 0.7);
-            this.startOverlay.fillRect(0, 0, 800, 600);
+            this.startOverlay.fillRect(0, 0, GAME_W, GAME_H);
             this.startOverlay.setDepth(10);
 
             this.startText = this.add.text(400, 250, 'ASTEROIDS', {
@@ -246,7 +426,7 @@
             // Game over overlay
             this.gameOverOverlay = this.add.graphics();
             this.gameOverOverlay.fillStyle(0x000000, 0.7);
-            this.gameOverOverlay.fillRect(0, 0, 800, 600);
+            this.gameOverOverlay.fillRect(0, 0, GAME_W, GAME_H);
             this.gameOverOverlay.setDepth(10);
             this.gameOverOverlay.setVisible(false);
 
@@ -286,11 +466,19 @@
             this.bullets.clear(true, true);
             this.asteroids.clear(true, true);
             this.particles.clear(true, true);
+            this.ufoBullets.clear(true, true);
             this.bulletCount = 0;
+
+            // Destroy UFO
+            this.destroyUFO();
 
             this.score = 0;
             this.lives = 3;
-            this.wave = 1;
+            this.wave = 0;
+            this.speedMultiplier = 1.0;
+            this.nextExtraLifeScore = 10000;
+            this.hyperspaceCooldown = 0;
+            this.shakeIntensity = 0;
             this.invulnerable = false;
             if (this.invulnerableTimer) {
                 this.invulnerableTimer.remove();
@@ -302,6 +490,7 @@
             this.ship.rotation = -Math.PI / 2;
             this.ship.velX = 0;
             this.ship.velY = 0;
+            this.ship.rotVel = 0;
             this.ship.visible = true;
             this.drawShip(this.ship, false);
 
@@ -310,22 +499,47 @@
             this.finalScoreText.setVisible(false);
             this.restartText.setVisible(false);
 
+            this.cameras.main.setScroll(0, 0);
+
             this.gameState = 'playing';
             this.updateDOM();
             this.spawnWave();
         }
 
+        // ===================== Wave Spawning =====================
         spawnWave() {
-            const count = 3 + this.wave;
+            this.wave++;
+            this.speedMultiplier = Math.min(2.5, 1.0 + (this.wave - 1) * 0.1);
+
+            const count = Math.min(12, 3 + this.wave);
             for (let i = 0; i < count; i++) {
-                // Spawn away from the ship
                 let x, y;
                 do {
-                    x = Phaser.Math.Between(0, 800);
-                    y = Phaser.Math.Between(0, 600);
+                    x = Phaser.Math.Between(0, GAME_W);
+                    y = Phaser.Math.Between(0, GAME_H);
                 } while (Phaser.Math.Distance.Between(x, y, this.ship.x, this.ship.y) < 150);
                 this.spawnAsteroid(x, y, 'large');
             }
+
+            // Wave announcement (skip wave 1 on fresh game start)
+            if (this.wave > 1) {
+                playNewWave();
+                const wt = this.add.text(400, 300, 'WAVE ' + this.wave, {
+                    fontSize: '48px', fontFamily: 'monospace', color: '#ffffff',
+                    align: 'center'
+                }).setOrigin(0.5).setDepth(5).setAlpha(1);
+                this.tweens.add({
+                    targets: wt,
+                    alpha: 0,
+                    y: 260,
+                    duration: 2000,
+                    ease: 'Power2',
+                    onComplete: () => wt.destroy()
+                });
+            }
+
+            // Schedule UFO
+            this.scheduleUFO();
         }
 
         spawnAsteroid(x, y, size) {
@@ -357,8 +571,9 @@
             g.closePath();
             g.strokePath();
 
-            // Physics
-            const speed = size === 'large' ? 1.2 : size === 'medium' ? 1.8 : 2.5;
+            // Physics with progressive speed
+            const baseSpeed = size === 'large' ? 1.2 : size === 'medium' ? 1.8 : 2.5;
+            const speed = baseSpeed * this.speedMultiplier;
             const angle = Math.random() * Math.PI * 2;
             g.velX = Math.cos(angle) * speed * (0.8 + Math.random() * 0.4);
             g.velY = Math.sin(angle) * speed * (0.8 + Math.random() * 0.4);
@@ -368,6 +583,7 @@
             this.asteroids.add(g);
         }
 
+        // ===================== Bullets =====================
         shootBullet() {
             if (this.bulletCount >= 4) return;
             const now = this.time.now;
@@ -377,6 +593,10 @@
             playShoot();
 
             const g = this.add.graphics();
+            // Glow halo
+            g.fillStyle(0x4444ff, 0.15);
+            g.fillCircle(0, 0, 8);
+            // Bullet core
             g.fillStyle(0xffffff);
             g.fillCircle(0, 0, 2.5);
             g.x = this.ship.x + Math.cos(this.ship.rotation) * 22;
@@ -389,9 +609,163 @@
             this.bulletCount++;
         }
 
+        // ===================== UFO System =====================
+        scheduleUFO() {
+            if (this.ufoTimer) this.ufoTimer.remove();
+            const delay = Math.max(5000, 15000 - (this.wave - 1) * 1000);
+            this.ufoTimer = this.time.delayedCall(delay, () => {
+                if (this.gameState === 'playing' && !this.ufo) {
+                    this.spawnUFO();
+                }
+            });
+        }
+
+        spawnUFO() {
+            const g = this.add.graphics();
+            // Decide large or small UFO
+            const isLarge = Math.random() < 0.3;
+            g.ufoSize = isLarge ? 'large' : 'small';
+            g.points = isLarge ? 200 : 1000;
+            g.radius = isLarge ? 20 : 12;
+            const scale = isLarge ? 1.0 : 0.6;
+
+            // Draw UFO
+            g.lineStyle(2, 0x00ff00);
+            // Saucer body
+            g.beginPath();
+            g.ellipse(0, 0, 22 * scale, 8 * scale, 0, 0, Math.PI * 2);
+            g.strokePath();
+            // Dome
+            g.beginPath();
+            g.arc(0, -4 * scale, 10 * scale, Math.PI, 0, false);
+            g.strokePath();
+            // Bottom
+            g.lineStyle(1.5, 0x00ff00);
+            g.strokeRect(-8 * scale, 5 * scale, 16 * scale, 3 * scale);
+
+            // Spawn from left or right
+            const fromLeft = Math.random() < 0.5;
+            g.x = fromLeft ? -25 : GAME_W + 25;
+            g.y = Phaser.Math.Between(80, GAME_H - 80);
+            g.velX = (fromLeft ? 1 : -1) * (1.2 + Math.random() * 0.8);
+            g.startTime = this.time.now;
+            g.baseY = g.y;
+
+            this.ufo = g;
+            startUFOHum();
+
+            // UFO shooting timer
+            const shootInterval = Math.max(1000, 2000 - (this.wave - 1) * 100);
+            this.ufoShootTimer = this.time.addEvent({
+                delay: shootInterval,
+                callback: () => this.ufoShoot(),
+                loop: true
+            });
+        }
+
+        ufoShoot() {
+            if (!this.ufo || this.gameState !== 'playing') return;
+            playUFOShoot();
+
+            const g = this.add.graphics();
+            g.fillStyle(0xff4444);
+            g.fillCircle(0, 0, 2.5);
+            g.x = this.ufo.x;
+            g.y = this.ufo.y;
+
+            // Aim at player (small UFO) or random (large UFO)
+            let angle;
+            if (this.ufo.ufoSize === 'small') {
+                angle = Phaser.Math.Angle.Between(this.ufo.x, this.ufo.y, this.ship.x, this.ship.y);
+                // Add some inaccuracy
+                angle += (Math.random() - 0.5) * 0.3;
+            } else {
+                angle = Math.random() * Math.PI * 2;
+            }
+            g.velX = Math.cos(angle) * 5;
+            g.velY = Math.sin(angle) * 5;
+            g.life = 80;
+
+            this.ufoBullets.add(g);
+        }
+
+        updateUFO() {
+            if (!this.ufo) return;
+            const ufo = this.ufo;
+
+            ufo.x += ufo.velX;
+            ufo.y = ufo.baseY + Math.sin((this.time.now - ufo.startTime) * 0.003) * 30;
+
+            // Check if UFO left the screen
+            if ((ufo.velX > 0 && ufo.x > GAME_W + 30) || (ufo.velX < 0 && ufo.x < -30)) {
+                this.destroyUFO();
+                this.scheduleUFO();
+            }
+        }
+
+        destroyUFO() {
+            if (this.ufo) {
+                this.ufo.destroy();
+                this.ufo = null;
+            }
+            stopUFOHum();
+            if (this.ufoShootTimer) {
+                this.ufoShootTimer.remove();
+                this.ufoShootTimer = null;
+            }
+            if (this.ufoTimer) {
+                this.ufoTimer.remove();
+                this.ufoTimer = null;
+            }
+        }
+
+        // ===================== Hyperspace =====================
+        activateHyperspace() {
+            playHyperspace();
+            this.hyperspaceCooldown = 3000;
+
+            // Spawn disappear particles
+            for (let i = 0; i < 10; i++) {
+                const p = this.add.graphics();
+                p.fillStyle(0x6666ff);
+                p.fillCircle(0, 0, 1.5);
+                p.x = this.ship.x;
+                p.y = this.ship.y;
+                const angle = Math.random() * Math.PI * 2;
+                const speed = 2 + Math.random() * 3;
+                p.velX = Math.cos(angle) * speed;
+                p.velY = Math.sin(angle) * speed;
+                p.life = 20 + Math.random() * 10;
+                this.particles.add(p);
+            }
+
+            this.ship.visible = false;
+            this.ship.velX = 0;
+            this.ship.velY = 0;
+
+            this.time.delayedCall(200, () => {
+                if (this.gameState !== 'playing') return;
+                this.ship.x = Phaser.Math.Between(50, 750);
+                this.ship.y = Phaser.Math.Between(50, 550);
+                this.ship.visible = true;
+
+                // Check if landed on an asteroid
+                for (const a of this.asteroids.getChildren()) {
+                    if (Phaser.Math.Distance.Between(this.ship.x, this.ship.y, a.x, a.y) < a.asteroidRadius + 15) {
+                        this.shipHit();
+                        return;
+                    }
+                }
+            });
+        }
+
+        // ===================== Collisions =====================
         shipHit() {
             if (this.invulnerable) return;
             playDeath();
+
+            // Screen shake
+            this.shakeIntensity = 10;
 
             // Spawn death particles
             for (let i = 0; i < 15; i++) {
@@ -420,6 +794,7 @@
             this.ship.visible = false;
             this.ship.velX = 0;
             this.ship.velY = 0;
+            this.ship.rotVel = 0;
 
             this.time.delayedCall(1000, () => {
                 this.ship.x = 400;
@@ -449,6 +824,7 @@
         gameOver() {
             this.gameState = 'gameover';
             this.ship.visible = false;
+            this.destroyUFO();
 
             // High score
             if (this.score > storedHigh) {
@@ -463,19 +839,82 @@
             this.restartText.setVisible(true);
         }
 
-        wrapPosition(obj) {
-            if (obj.x > 820) obj.x = -20;
-            else if (obj.x < -20) obj.x = 820;
-            if (obj.y > 620) obj.y = -20;
-            else if (obj.y < -20) obj.y = 620;
+        // ===================== Wrapping =====================
+        wrapPosition(obj, radius) {
+            radius = radius || 0;
+            if (obj.x > GAME_W + radius) obj.x = -radius;
+            else if (obj.x < -radius) obj.x = GAME_W + radius;
+            if (obj.y > GAME_H + radius) obj.y = -radius;
+            else if (obj.y < -radius) obj.y = GAME_H + radius;
         }
 
         updateDOM() {
             scoreEl.textContent = this.score;
             livesEl.textContent = this.lives;
+            this.drawLifeIcons();
         }
 
+        // ===================== Score & Extra Life =====================
+        addScore(points, x, y) {
+            this.score += points;
+            this.updateDOM();
+
+            // Score popup
+            const popup = this.add.text(x, y, '+' + points, {
+                fontSize: '16px', fontFamily: 'monospace', color: '#ffff00'
+            }).setOrigin(0.5).setDepth(5);
+            this.tweens.add({
+                targets: popup,
+                y: y - 40,
+                alpha: 0,
+                duration: 800,
+                ease: 'Power2',
+                onComplete: () => popup.destroy()
+            });
+
+            // High score live update
+            if (this.score > storedHigh) {
+                storedHigh = this.score;
+                localStorage.setItem('asteroidsHighScore', storedHigh);
+                highScoreEl.textContent = storedHigh;
+            }
+
+            // Extra life check
+            if (this.score >= this.nextExtraLifeScore) {
+                this.lives++;
+                this.nextExtraLifeScore += 10000;
+                playExtraLife();
+                this.updateDOM();
+                const lifeText = this.add.text(400, 300, '+1 LIFE', {
+                    fontSize: '32px', fontFamily: 'monospace', color: '#00ff00'
+                }).setOrigin(0.5).setDepth(5);
+                this.tweens.add({
+                    targets: lifeText,
+                    alpha: 0,
+                    y: 260,
+                    duration: 1500,
+                    onComplete: () => lifeText.destroy()
+                });
+            }
+        }
+
+        // ===================== Main Update =====================
         update(time, delta) {
+            // Starfield always updates
+            this.updateStarfield();
+
+            // Screen shake
+            if (this.shakeIntensity > 0.5) {
+                this.cameras.main.setScroll(
+                    (Math.random() - 0.5) * this.shakeIntensity,
+                    (Math.random() - 0.5) * this.shakeIntensity
+                );
+                this.shakeIntensity *= 0.9;
+            } else if (this.shakeIntensity > 0) {
+                this.cameras.main.setScroll(0, 0);
+                this.shakeIntensity = 0;
+            }
+
             // Check start/gameover for space key
             if (this.gameState === 'start') {
                 if (Phaser.Input.Keyboard.JustDown(this.keySpace)) {
@@ -488,7 +927,6 @@
                 if (Phaser.Input.Keyboard.JustDown(this.keySpace)) {
                     this.restartGame();
                 }
-                // Still update particles
                 this.updateParticles();
                 return;
             }
@@ -496,19 +934,25 @@
             // ---- Playing state ----
             const ship = this.ship;
 
-            // Rotation
-            const rotSpeed = 0.05;
+            // Rotation with acceleration
+            const ROT_ACCEL = 0.004;
+            const ROT_MAX = 0.07;
+            const ROT_FRICTION = 0.85;
+
             if (this.cursors.left.isDown || this.keyA.isDown) {
-                ship.rotation -= rotSpeed;
+                ship.rotVel -= ROT_ACCEL;
+            } else if (this.cursors.right.isDown || this.keyD.isDown) {
+                ship.rotVel += ROT_ACCEL;
+            } else {
+                ship.rotVel *= ROT_FRICTION;
             }
-            if (this.cursors.right.isDown || this.keyD.isDown) {
-                ship.rotation += rotSpeed;
-            }
+            ship.rotVel = Phaser.Math.Clamp(ship.rotVel, -ROT_MAX, ROT_MAX);
+            ship.rotation += ship.rotVel;
 
             // Thrust
             const thrusting = (this.cursors.up.isDown || this.keyW.isDown) && ship.visible;
             if (thrusting) {
-                const thrust = 0.12;
+                const thrust = 0.14;
                 ship.velX += Math.cos(ship.rotation) * thrust;
                 ship.velY += Math.sin(ship.rotation) * thrust;
 
@@ -542,12 +986,18 @@
             // Move ship
             ship.x += ship.velX;
             ship.y += ship.velY;
-            this.wrapPosition(ship);
+            this.wrapPosition(ship, 15);
 
             // Shoot
             if (Phaser.Input.Keyboard.JustDown(this.keySpace)) {
                 if (ship.visible) this.shootBullet();
             }
+
+            // Hyperspace
+            if (Phaser.Input.Keyboard.JustDown(this.keyShift) && ship.visible && this.hyperspaceCooldown <= 0) {
+                this.activateHyperspace();
+            }
+            if (this.hyperspaceCooldown > 0) this.hyperspaceCooldown -= delta;
 
             // Update bullets
             const bulletsToRemove = [];
@@ -555,7 +1005,7 @@
                 b.x += b.velX;
                 b.y += b.velY;
                 b.life--;
-                this.wrapPosition(b);
+                this.wrapPosition(b, 3);
                 if (b.life <= 0) bulletsToRemove.push(b);
             });
             bulletsToRemove.forEach(b => {
@@ -568,8 +1018,23 @@
                 a.x += a.velX;
                 a.y += a.velY;
                 a.rotation += a.rotSpeed;
-                this.wrapPosition(a);
+                this.wrapPosition(a, a.asteroidRadius);
             });
+
+            // Update UFO
+            this.updateUFO();
+
+            // Update UFO bullets
+            const ufoBulletsToRemove = [];
+            this.ufoBullets.getChildren().forEach(b => {
+                b.x += b.velX;
+                b.y += b.velY;
+                b.life--;
+                if (b.life <= 0 || b.x < -10 || b.x > GAME_W + 10 || b.y < -10 || b.y > GAME_H + 10) {
+                    ufoBulletsToRemove.push(b);
+                }
+            });
+            ufoBulletsToRemove.forEach(b => b.destroy());
 
             // Update particles
             this.updateParticles();
@@ -583,8 +1048,19 @@
                     if (!bullet.active || !asteroid.active) continue;
                     const dist = Phaser.Math.Distance.Between(bullet.x, bullet.y, asteroid.x, asteroid.y);
                     if (dist < asteroid.asteroidRadius) {
-                        // Hit!
                         this.bulletHitAsteroid(bullet, asteroid);
+                        break;
+                    }
+                }
+            }
+
+            // Collision: bullets vs UFO
+            if (this.ufo) {
+                for (const bullet of this.bullets.getChildren().slice()) {
+                    if (!bullet.active) continue;
+                    const dist = Phaser.Math.Distance.Between(bullet.x, bullet.y, this.ufo.x, this.ufo.y);
+                    if (dist < this.ufo.radius) {
+                        this.bulletHitUFO(bullet);
                         break;
                     }
                 }
@@ -602,9 +1078,19 @@
                 }
             }
 
+            // Collision: UFO bullets vs ship
+            if (ship.visible && !this.invulnerable) {
+                for (const b of this.ufoBullets.getChildren()) {
+                    const dist = Phaser.Math.Distance.Between(b.x, b.y, ship.x, ship.y);
+                    if (dist < 12) {
+                        this.shipHit();
+                        break;
+                    }
+                }
+            }
+
             // Check wave clear
             if (this.asteroids.getChildren().length === 0) {
-                this.wave++;
                 this.spawnWave();
             }
         }
@@ -616,15 +1102,7 @@
 
             // Score
             const points = { large: 20, medium: 50, small: 100 };
-            this.score += points[size];
-            this.updateDOM();
-
-            // High score live update
-            if (this.score > storedHigh) {
-                storedHigh = this.score;
-                localStorage.setItem('asteroidsHighScore', storedHigh);
-                highScoreEl.textContent = storedHigh;
-            }
+            this.addScore(points[size], x, y);
 
             playExplosion(size);
 
@@ -659,6 +1137,36 @@
             asteroid.destroy();
         }
 
+        bulletHitUFO(bullet) {
+            if (!this.ufo) return;
+            const x = this.ufo.x;
+            const y = this.ufo.y;
+            const pts = this.ufo.points;
+
+            this.addScore(pts, x, y);
+            playExplosion('medium');
+
+            // Explosion particles (green tint)
+            for (let i = 0; i < 10; i++) {
+                const p = this.add.graphics();
+                p.fillStyle(0x00ff00);
+                p.fillCircle(0, 0, 1.5);
+                p.x = x;
+                p.y = y;
+                const angle = Math.random() * Math.PI * 2;
+                const spd = 1 + Math.random() * 3;
+                p.velX = Math.cos(angle) * spd;
+                p.velY = Math.sin(angle) * spd;
+                p.life = 25 + Math.random() * 15;
+                this.particles.add(p);
+            }
+
+            bullet.destroy();
+            this.bulletCount--;
+            this.destroyUFO();
+            this.scheduleUFO();
+        }
+
         updateParticles() {
             const toRemove = [];
             this.particles.getChildren().forEach(p => {
@@ -675,8 +1183,8 @@
     // ===================== Phaser Config =====================
     const config = {
         type: Phaser.AUTO,
-        width: 800,
-        height: 600,
+        width: GAME_W,
+        height: GAME_H,
         parent: 'game-container',
         backgroundColor: '#000000',
         scale: {
