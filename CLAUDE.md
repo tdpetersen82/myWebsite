@@ -230,13 +230,11 @@ The site is suitable for **GitHub Pages** (static, no server-side rendering need
 
 ---
 
-## Key Constraints for AI Assistants
+## Guidelines for AI Assistants
 
-1. **CDN-only external libraries**: Phaser.js, Matter.js via CDN are acceptable. Do not add npm packages or build-time dependencies.
-2. **No build tools**: Do not introduce webpack, Vite, Rollup, TypeScript compilation, or similar tooling unless explicitly requested.
-3. **No frameworks**: No React, Vue, Angular, etc. Keep page chrome vanilla.
-4. **Self-contained files**: Each game must remain a single HTML file with inline CSS and JS.
-5. **Preserve audio pattern**: Use Web Audio API synthesis — do not add audio file assets.
-6. **Preserve frame limiting**: Always use `requestAnimationFrame` with timestamp-based delta for vanilla game loops.
-7. **LocalStorage only**: No backend, no cookies beyond localStorage for score persistence.
-8. **Auto-scaling**: All games must scale to fit the viewport. Vanilla games use the CSS transform IIFE; Phaser games use Scale.FIT.
+- **Tech stack is flexible**: Use whatever libraries, engines, frameworks, build tools, or asset pipelines best fit each game. CDN, npm, bundlers, TypeScript — all fair game.
+- **Multi-file games are fine**: Games can span multiple files (JS modules, asset folders, etc.) when it makes sense.
+- **Assets are welcome**: Audio files, spritesheets, images, fonts — use real assets when they improve quality.
+- **Preserve auto-scaling**: All games should still scale to fit the viewport.
+- **Preserve high-score persistence**: Continue using localStorage for score storage.
+- **Existing games**: When modifying an existing game, match its current tech stack unless the user explicitly asks to migrate it.
