@@ -82,9 +82,28 @@ class GameScene extends Phaser.Scene {
             stroke: '#000000', strokeThickness: 2,
         }).setOrigin(0.5, 0);
 
-        this.waveProgressText = this.add.text(CONFIG.WIDTH / 2, 26, '', {
-            fontSize: '10px', fontFamily: 'monospace', color: '#666666',
-        }).setOrigin(0.5, 0);
+        // Combo HUD label (persistent, near combo meter)
+        this.comboHudText = this.add.text(CONFIG.WIDTH / 2, 28, '', {
+            fontSize: '11px', fontFamily: 'monospace', color: '#ffdd57', fontStyle: 'bold',
+            stroke: '#000000', strokeThickness: 2,
+        }).setOrigin(0.5, 0).setAlpha(0);
+
+        // Power-up label texts (up to 3 active at once)
+        this.powerUpLabels = [];
+        for (let i = 0; i < 3; i++) {
+            this.powerUpLabels.push(this.add.text(0, 0, '', {
+                fontSize: '9px', fontFamily: 'monospace', color: '#ffffff',
+                stroke: '#000000', strokeThickness: 1,
+            }).setOrigin(1, 0.5).setAlpha(0));
+        }
+
+        // Base ammo count texts
+        this.baseAmmoTexts = this.bases.map(base => {
+            return this.add.text(base.x, base.y - 28, '', {
+                fontSize: '12px', fontFamily: 'monospace', color: '#44ff44', fontStyle: 'bold',
+                stroke: '#000000', strokeThickness: 2,
+            }).setOrigin(0.5);
+        });
 
         // Combo display text
         this.comboText = this.add.text(0, 0, '', {
@@ -498,61 +517,82 @@ class GameScene extends Phaser.Scene {
         this.highScoreText.setText('HI: ' + Helpers.formatNumber(this.highScore));
         this.waveText.setText('WAVE ' + this.waveManager.wave);
 
-        // Wave progress
-        const progress = this.waveManager.getProgress();
-        const pctStr = Math.floor(progress * 100) + '%';
-        this.waveProgressText.setText(pctStr);
+        // Combo HUD label
+        if (this.comboSystem.count > 0) {
+            const cs = this.comboSystem;
+            const label = cs.multiplier > 1
+                ? 'x' + cs.multiplier + ' COMBO'
+                : cs.count + ' HIT' + (cs.count > 1 ? 'S' : '');
+            this.comboHudText.setText(label);
+            this.comboHudText.setAlpha(1);
+        } else {
+            this.comboHudText.setAlpha(0);
+        }
 
-        // Active power-ups display
-        // (drawn in drawHUD)
+        // Base ammo counts
+        for (let i = 0; i < this.bases.length; i++) {
+            const base = this.bases[i];
+            if (base.alive && base.ammo > 0) {
+                this.baseAmmoTexts[i].setText(base.ammo);
+                this.baseAmmoTexts[i].setAlpha(0.9);
+                this.baseAmmoTexts[i].setColor(base.ammo <= 3 ? '#ff4444' : '#44ff44');
+            } else if (base.alive && base.ammo === 0) {
+                this.baseAmmoTexts[i].setText('EMPTY');
+                this.baseAmmoTexts[i].setAlpha(0.6);
+                this.baseAmmoTexts[i].setColor('#ff4444');
+            } else {
+                this.baseAmmoTexts[i].setAlpha(0);
+            }
+        }
     }
 
     _drawHUD() {
         this.hudGfx.clear();
 
-        // Wave progress bar
-        const barX = CONFIG.WIDTH / 2 - 50;
-        const barY = 36;
-        const barW = 100;
-        const barH = 4;
-        const progress = this.waveManager.getProgress();
-        this.hudGfx.fillStyle(0x333333, 0.5);
-        this.hudGfx.fillRect(barX, barY, barW, barH);
-        this.hudGfx.fillStyle(0x4488ff, 0.7);
-        this.hudGfx.fillRect(barX, barY, barW * progress, barH);
-
-        // Active power-up indicators
-        let puX = CONFIG.WIDTH - 15;
-        const puY = 30;
+        // Active power-up indicators with text labels
+        let puIdx = 0;
+        let puX = CONFIG.WIDTH - 10;
+        const puY = 28;
         const activeEffects = this.powerUpSystem.activeEffects;
         for (const type in activeEffects) {
             const remaining = activeEffects[type];
             const config = CONFIG.POWERUP.TYPES[type];
             if (!config || !config.duration) continue;
             const pct = remaining / config.duration;
+            const secs = Math.ceil(remaining / 1000);
+
+            const barW = 60;
+            const barH = 14;
+            const bx = puX - barW;
 
             // Background
-            this.hudGfx.fillStyle(config.color, 0.3);
-            this.hudGfx.fillRect(puX - 50, puY, 50, 14);
+            this.hudGfx.fillStyle(config.color, 0.2);
+            this.hudGfx.fillRect(bx, puY, barW, barH);
             // Fill
-            this.hudGfx.fillStyle(config.color, 0.7);
-            this.hudGfx.fillRect(puX - 50, puY, 50 * pct, 14);
-            // Label (drawn as simple dots since we can't use text in graphics)
-            this.hudGfx.fillStyle(0xffffff, 0.8);
-            this.hudGfx.fillRect(puX - 48, puY + 5, 4, 4);
+            this.hudGfx.fillStyle(config.color, 0.6);
+            this.hudGfx.fillRect(bx, puY, barW * pct, barH);
+            // Border
+            this.hudGfx.lineStyle(1, config.color, 0.5);
+            this.hudGfx.strokeRect(bx, puY, barW, barH);
 
-            puX -= 56;
+            // Text label via Phaser text objects
+            if (puIdx < this.powerUpLabels.length) {
+                this.powerUpLabels[puIdx].setText(config.label + ' ' + secs + 's');
+                this.powerUpLabels[puIdx].setPosition(puX - 3, puY + barH / 2);
+                this.powerUpLabels[puIdx].setAlpha(0.9);
+            }
+
+            puX -= barW + 6;
+            puIdx++;
+        }
+        // Hide unused power-up labels
+        for (let i = puIdx; i < this.powerUpLabels.length; i++) {
+            this.powerUpLabels[i].setAlpha(0);
         }
 
-        // Combo meter
+        // Combo meter (only when active)
         if (this.comboSystem.count > 0) {
-            this.comboSystem.drawMeter(this.hudGfx, CONFIG.WIDTH / 2 - 40, 44, 80);
-
-            // Combo multiplier text
-            if (this.comboSystem.multiplier > 1) {
-                this.hudGfx.fillStyle(0xffdd57, 0.8);
-                // Small indicator near the bar
-            }
+            this.comboSystem.drawMeter(this.hudGfx, CONFIG.WIDTH / 2 - 40, 42, 80);
         }
 
         // Base selection indicator
