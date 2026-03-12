@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Missile Command — Enhanced Edition</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #0a0a2e;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+        }
+        #game-container {
+            position: relative;
+            width: 800px;
+            max-width: 100vw;
+        }
+        #game-container canvas {
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container"></div>
+
+    <!-- Utilities (no dependencies) -->
+    <script src="js/config.js"></script>
+    <script src="js/utils/helpers.js"></script>
+
+    <!-- Audio -->
+    <script src="js/AudioManager.js"></script>
+
+    <!-- Systems -->
+    <script src="js/systems/ParticleSystem.js"></script>
+    <script src="js/systems/ScreenEffects.js"></script>
+    <script src="js/systems/ComboSystem.js"></script>
+    <script src="js/systems/PowerUpSystem.js"></script>
+    <script src="js/systems/WaveManager.js"></script>
+
+    <!-- Entities -->
+    <script src="js/entities/Explosion.js"></script>
+    <script src="js/entities/Base.js"></script>
+    <script src="js/entities/City.js"></script>
+    <script src="js/entities/CounterMissile.js"></script>
+    <script src="js/entities/EnemyMissile.js"></script>
+    <script src="js/entities/Bomber.js"></script>
+    <script src="js/entities/Satellite.js"></script>
+
+    <!-- Scenes -->
+    <script src="js/scenes/BootScene.js"></script>
+    <script src="js/scenes/MenuScene.js"></script>
+    <script src="js/scenes/GameScene.js"></script>
+    <script src="js/scenes/GameOverScene.js"></script>
+
+    <!-- Game initialization -->
+    <script>
+        const game = new Phaser.Game({
+            type: Phaser.AUTO,
+            width: CONFIG.WIDTH,
+            height: CONFIG.HEIGHT,
+            parent: 'game-container',
+            backgroundColor: CONFIG.COLORS.SKY,
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+            },
+            scene: [BootScene, MenuScene, GameScene, GameOverScene],
+            audio: {
+                disableWebAudio: false,
+            },
+            render: {
+                antialias: true,
+                pixelArt: false,
+            },
+        });
+    </script>
+
+    <script src="../nav.js"></script>
+</body>
+</html>
