@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Joust</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style>
+        #game-container canvas {
+            display: block;
+            margin: 0 auto;
+            border: 2px solid #333;
+        }
+        #game-container {
+            margin: 20px auto;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#x2694;&#xFE0F; Joust</h1>
+        <div class="game-info">
+            <p>Score: <span id="score">0</span></p>
+            <p>High: <span id="highScore">0</span></p>
+            <p>Lives: <span id="lives">3</span></p>
+            <p>Wave: <span id="wave">1</span></p>
+        </div>
+        <div id="game-container"></div>
+        <div class="controls">
+            <p>Space/Up: Flap | &larr; &rarr;: Move | P/ESC: Pause | M: Mute</p>
+            <button id="restartBtn" class="play-button" style="margin-top:10px;">Restart Game</button>
+        </div>
+    </div>
+
+    <!-- Game scripts (order matters: config first, then utilities, entities, scenes) -->
+    <script src="js/config.js"></script>
+    <script src="js/AudioManager.js"></script>
+    <script src="js/entities/Platform.js"></script>
+    <script src="js/entities/LavaPit.js"></script>
+    <script src="js/entities/Player.js"></script>
+    <script src="js/entities/BuzzardRider.js"></script>
+    <script src="js/entities/Egg.js"></script>
+    <script src="js/entities/Pterodactyl.js"></script>
+    <script src="js/scenes/MenuScene.js"></script>
+    <script src="js/scenes/GameScene.js"></script>
+    <script src="js/scenes/GameOverScene.js"></script>
+
+    <script>
+    // ==================== Phaser Game Configuration ====================
+    const game = new Phaser.Game({
+        type: Phaser.AUTO,
+        width: CONFIG.WIDTH,
+        height: CONFIG.HEIGHT,
+        parent: 'game-container',
+        backgroundColor: CONFIG.BG_COLOR,
+        scale: {
+            mode: Phaser.Scale.FIT,
+            autoCenter: Phaser.Scale.CENTER_BOTH
+        },
+        scene: [MenuScene, GameScene, GameOverScene]
+    });
+
+    // ==================== External UI Integration ====================
+    // Update the HTML score/lives/wave display from the game
+    function updateExternalUI() {
+        const scene = game.scene.getScene('GameScene');
+        if (scene && scene.scene.isActive()) {
+            const scoreEl = document.getElementById('score');
+            const livesEl = document.getElementById('lives');
+            const waveEl = document.getElementById('wave');
+            if (scoreEl) scoreEl.textContent = scene.score || 0;
+            if (livesEl) livesEl.textContent = scene.lives || 0;
+            if (waveEl) waveEl.textContent = scene.wave || 1;
+        }
+
+        const highScoreEl = document.getElementById('highScore');
+        if (highScoreEl) {
+            highScoreEl.textContent = localStorage.getItem(CONFIG.HIGH_SCORE_KEY) || 0;
+        }
+
+        requestAnimationFrame(updateExternalUI);
+    }
+    requestAnimationFrame(updateExternalUI);
+
+    // Restart button
+    document.getElementById('restartBtn').addEventListener('click', () => {
+        // Stop all scenes and restart GameScene
+        game.scene.getScenes(true).forEach(s => game.scene.stop(s.scene.key));
+        game.scene.start('GameScene');
+    });
+    </script>
+
+    <script src="../nav.js"></script>
+</body>
+</html>
