@@ -45,6 +45,7 @@
             games: [
                 { name: 'Connect 4', icon: '\u{1F534}', url: 'connect-4/' },
                 { name: 'Dots & Boxes', icon: '\u{1F535}', url: 'connect-dots/' },
+                { name: 'Hex Defense', icon: '\u{1F6E1}\uFE0F', url: 'hex-defense/' },
             ]
         },
         {
