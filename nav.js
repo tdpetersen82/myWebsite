@@ -11,44 +11,51 @@
         {
             name: 'Classic Arcade', icon: '\u{1F47E}',
             games: [
-                { name: 'Snake', icon: '\u{1F40D}', url: 'snake.html' },
-                { name: 'Pong', icon: '\u{1F3D3}', url: 'pong.html' },
-                { name: 'Breakout', icon: '\u{1F9F1}', url: 'breakout.html' },
-                { name: 'Space Invaders', icon: '\u{1F47E}', url: 'space-invaders.html' },
-                { name: 'Flappy Bird', icon: '\u{1F426}', url: 'flappy-bird.html' },
-                { name: 'Block Puzzle', icon: '\u{1F7E6}', url: 'block-puzzle.html' },
+                { name: 'Snake', icon: '\u{1F40D}', url: 'snake/' },
+                { name: 'Pong', icon: '\u{1F3D3}', url: 'pong/' },
+                { name: 'Breakout', icon: '\u{1F9F1}', url: 'breakout/' },
+                { name: 'Space Invaders', icon: '\u{1F47E}', url: 'space-invaders/' },
+                { name: 'Flappy Bird', icon: '\u{1F426}', url: 'flappy-bird/' },
+                { name: 'Block Puzzle', icon: '\u{1F7E6}', url: 'block-puzzle/' },
             ]
         },
         {
             name: 'Retro Arcade', icon: '\u{1F579}\uFE0F',
             games: [
-                { name: 'Asteroids', icon: '\u2604\uFE0F', url: 'asteroids.html' },
-                { name: 'Pac-Man', icon: '\u{1F7E1}', url: 'pac-man.html' },
-                { name: 'Frogger', icon: '\u{1F438}', url: 'frogger.html' },
-                { name: 'Missile Command', icon: '\u{1F680}', url: 'missile-command.html' },
-                { name: 'Galaga', icon: '\u{1F6F8}', url: 'galaga.html' },
-                { name: 'Centipede', icon: '\u{1F41B}', url: 'centipede.html' },
+                { name: 'Asteroids', icon: '\u2604\uFE0F', url: 'asteroids/' },
+                { name: 'Pac-Man', icon: '\u{1F7E1}', url: 'pac-man/' },
+                { name: 'Frogger', icon: '\u{1F438}', url: 'frogger/' },
+                { name: 'Missile Command', icon: '\u{1F680}', url: 'missile-command/' },
+                { name: 'Galaga', icon: '\u{1F6F8}', url: 'galaga/' },
+                { name: 'Centipede', icon: '\u{1F41B}', url: 'centipede/' },
             ]
         },
         {
             name: 'Strategy & Puzzles', icon: '\u{1F9E9}',
             games: [
-                { name: 'Connect 4', icon: '\u{1F534}', url: 'connect-4.html' },
-                { name: 'Dots & Boxes', icon: '\u{1F535}', url: 'connect-dots.html' },
+                { name: 'Connect 4', icon: '\u{1F534}', url: 'connect-4/' },
+                { name: 'Dots & Boxes', icon: '\u{1F535}', url: 'connect-dots/' },
             ]
         },
         {
             name: 'Action & More', icon: '\u{1F3AF}',
             games: [
-                { name: 'Fruit Catcher', icon: '\u{1F34E}', url: 'fruit-catcher.html' },
-                { name: 'Motorcycle Trail Rider', icon: '\u{1F3CD}\uFE0F', url: 'motorcycle-game.html' },
-                { name: 'eMoto Database', icon: '\u26A1', url: 'emoto-database.html' },
+                { name: 'Fruit Catcher', icon: '\u{1F34E}', url: 'fruit-catcher/' },
+                { name: 'Motorcycle Trail Rider', icon: '\u{1F3CD}\uFE0F', url: 'motorcycle-game/' },
+                { name: 'eMoto Database', icon: '\u26A1', url: 'emoto-database/' },
             ]
         }
     ];
 
     var totalGames = GAME_CATALOG.reduce(function (sum, cat) { return sum + cat.games.length; }, 0);
-    var currentPage = location.pathname.split('/').pop() || 'index.html';
+    // Extract folder name for games in subdirectories (e.g., /snake/ or /snake/index.html)
+    var pathParts = location.pathname.replace(/\/index\.html$/, '/').split('/').filter(Boolean);
+    var lastPart = pathParts.length > 0 ? pathParts[pathParts.length - 1] : '';
+    // Check if we're inside a game subfolder (not root index)
+    var allGameFolders = GAME_CATALOG.reduce(function (arr, cat) { return arr.concat(cat.games.map(function (g) { return g.url.replace(/\/$/, ''); })); }, []);
+    var inSubfolder = allGameFolders.indexOf(lastPart) !== -1;
+    var basePath = inSubfolder ? '../' : '';
+    var currentPage = inSubfolder ? lastPart + '/' : 'index.html';
 
     // ── Inject CSS ──────────────────────────────────────────
     var style = document.createElement('style');
@@ -150,7 +157,7 @@ body.nav-open{overflow:hidden}\
     var header = document.createElement('div');
     header.className = 'nav-drawer-header';
     header.innerHTML = '\
-<a href="index.html" class="nav-drawer-brand">\
+<a href="' + basePath + 'index.html" class="nav-drawer-brand">\
 <div class="nav-drawer-brand-icon">\u{1F3AE}</div>\
 <div><h2>Arcade Game Hub</h2><small>' + totalGames + ' Games</small></div>\
 </a>\
@@ -165,7 +172,7 @@ body.nav-open{overflow:hidden}\
 
     // Home link
     var homeLink = document.createElement('a');
-    homeLink.href = 'index.html';
+    homeLink.href = basePath + 'index.html';
     homeLink.className = 'nav-home-link' + (currentPage === 'index.html' ? ' active' : '');
     homeLink.innerHTML = '<span>\u{1F3E0}</span> Home';
     body.appendChild(homeLink);
@@ -192,7 +199,7 @@ body.nav-open{overflow:hidden}\
             var li = document.createElement('li');
             li.className = 'nav-game-item';
             var isActive = currentPage === game.url;
-            li.innerHTML = '<a href="' + game.url + '"' + (isActive ? ' class="active"' : '') + '><span class="game-icon">' + game.icon + '</span> ' + game.name + '</a>';
+            li.innerHTML = '<a href="' + basePath + game.url + '"' + (isActive ? ' class="active"' : '') + '><span class="game-icon">' + game.icon + '</span> ' + game.name + '</a>';
             list.appendChild(li);
         });
 

@@ -743,11 +743,11 @@ function initApp(data) {
     render();
 }
 
-fetch('bikes.json')
+fetch('../bikes.json')
     .then(r => r.json())
     .then(initApp)
     .catch(() => { bikeGrid.innerHTML = '<p style="padding:40px;text-align:center;color:var(--red)">Failed to load bike data. Make sure bikes.json is in the same folder.</p>'; });
 </script>
-<script src="nav.js"></script>
+<script src="../nav.js"></script>
 </body>
 </html>
