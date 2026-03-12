@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Donkey Kong — Arcade Game Hub</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            background: #0a0a2e;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: monospace;
+        }
+        #phaser-container {
+            position: relative;
+        }
+        #phaser-container canvas {
+            display: block;
+        }
+    </style>
+    <!-- Phaser 3 CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+</head>
+<body>
+    <div id="phaser-container"></div>
+
+    <!-- Game scripts (order matters: config → audio → entities → scenes) -->
+    <script src="js/config.js"></script>
+    <script src="js/AudioManager.js"></script>
+    <script src="js/entities/Platform.js"></script>
+    <script src="js/entities/Ladder.js"></script>
+    <script src="js/entities/Hammer.js"></script>
+    <script src="js/entities/Barrel.js"></script>
+    <script src="js/entities/DonkeyKong.js"></script>
+    <script src="js/entities/Player.js"></script>
+    <script src="js/scenes/MenuScene.js"></script>
+    <script src="js/scenes/GameScene.js"></script>
+    <script src="js/scenes/GameOverScene.js"></script>
+
+    <!-- Phaser Game Bootstrap -->
+    <script>
+        const game = new Phaser.Game({
+            type: Phaser.AUTO,
+            width: DK_CONFIG.WIDTH,
+            height: DK_CONFIG.HEIGHT,
+            parent: 'phaser-container',
+            backgroundColor: '#000000',
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+            },
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },   // Per-object gravity used instead
+                    debug: false,
+                },
+            },
+            scene: [MenuScene, GameScene, GameOverScene],
+        });
+    </script>
+
+    <!-- Navigation drawer -->
+    <script src="../nav.js"></script>
+</body>
+</html>

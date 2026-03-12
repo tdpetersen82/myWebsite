@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lunar Lander</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style>
+        #game-container {
+            margin: 20px auto;
+            max-width: 100%;
+        }
+        #game-container canvas {
+            border: 2px solid #333;
+            background-color: #000;
+            display: block;
+            margin: 0 auto;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🚀 Lunar Lander</h1>
+        <div class="game-info">
+            <p>Score: <span id="score">0</span></p>
+            <p>High Score: <span id="highScore">0</span></p>
+        </div>
+        <div id="game-container"></div>
+        <div class="game-instructions">
+            <p><strong>Controls:</strong> UP/W = Thrust | LEFT/RIGHT or A/D = Rotate | P/ESC = Pause | M = Mute</p>
+            <p>Land gently on the landing pads! Smaller pads = more points. Watch your fuel!</p>
+        </div>
+    </div>
+
+    <!-- Game Scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/AudioManager.js"></script>
+    <script src="js/entities/Particle.js"></script>
+    <script src="js/entities/LandingPad.js"></script>
+    <script src="js/entities/Terrain.js"></script>
+    <script src="js/entities/Lander.js"></script>
+    <script src="js/scenes/MenuScene.js"></script>
+    <script src="js/scenes/GameScene.js"></script>
+    <script src="js/scenes/GameOverScene.js"></script>
+
+    <script>
+        // Initialize audio manager globally
+        window.audioManager = new AudioManager();
+
+        // Update high score display
+        const highScoreEl = document.getElementById('highScore');
+        if (highScoreEl) {
+            const hs = localStorage.getItem(CONFIG.HIGH_SCORE_KEY) || '0';
+            highScoreEl.textContent = hs;
+        }
+
+        // Phaser game configuration
+        const phaserConfig = {
+            type: Phaser.AUTO,
+            width: CONFIG.WIDTH,
+            height: CONFIG.HEIGHT,
+            parent: 'game-container',
+            backgroundColor: '#000011',
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
+            scene: [MenuScene, GameScene, GameOverScene],
+            physics: {
+                default: 'arcade',
+                arcade: {
+                    gravity: { y: 0 },
+                    debug: false
+                }
+            },
+            input: {
+                keyboard: {
+                    capture: [
+                        Phaser.Input.Keyboard.KeyCodes.UP,
+                        Phaser.Input.Keyboard.KeyCodes.DOWN,
+                        Phaser.Input.Keyboard.KeyCodes.LEFT,
+                        Phaser.Input.Keyboard.KeyCodes.RIGHT,
+                        Phaser.Input.Keyboard.KeyCodes.SPACE,
+                        Phaser.Input.Keyboard.KeyCodes.W,
+                        Phaser.Input.Keyboard.KeyCodes.A,
+                        Phaser.Input.Keyboard.KeyCodes.D,
+                        Phaser.Input.Keyboard.KeyCodes.P,
+                        Phaser.Input.Keyboard.KeyCodes.M,
+                        Phaser.Input.Keyboard.KeyCodes.ESC
+                    ]
+                }
+            }
+        };
+
+        const game = new Phaser.Game(phaserConfig);
+
+        // Update score display periodically
+        setInterval(() => {
+            const scoreEl = document.getElementById('score');
+            const hsEl = document.getElementById('highScore');
+            if (scoreEl && game.scene.isActive('GameScene')) {
+                const scene = game.scene.getScene('GameScene');
+                if (scene) {
+                    scoreEl.textContent = scene.score || 0;
+                }
+            }
+            if (hsEl) {
+                hsEl.textContent = localStorage.getItem(CONFIG.HIGH_SCORE_KEY) || '0';
+            }
+        }, 500);
+    </script>
+    <script src="../nav.js"></script>
+</body>
+</html>

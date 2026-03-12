@@ -28,6 +28,16 @@
                 { name: 'Missile Command', icon: '\u{1F680}', url: 'missile-command/' },
                 { name: 'Galaga', icon: '\u{1F6F8}', url: 'galaga/' },
                 { name: 'Centipede', icon: '\u{1F41B}', url: 'centipede/' },
+                { name: 'Lunar Lander', icon: '\u{1F315}', url: 'lunar-lander/' },
+                { name: 'Joust', icon: '\u2694\uFE0F', url: 'joust/' },
+                { name: 'Bomberman', icon: '\u{1F4A3}', url: 'bomberman/' },
+                { name: 'Q*bert', icon: '\u{1F536}', url: 'qbert/' },
+                { name: 'Donkey Kong', icon: '\u{1F412}', url: 'donkey-kong/' },
+                { name: 'Dig Dug', icon: '\u26CF\uFE0F', url: 'dig-dug/' },
+                { name: 'Tempest', icon: '\u{1F300}', url: 'tempest/' },
+                { name: 'Defender', icon: '\u{1F6E1}\uFE0F', url: 'defender/' },
+                { name: 'Tron Light Cycles', icon: '\u{1F3CD}\uFE0F', url: 'tron/' },
+                { name: 'Simon', icon: '\u{1F534}', url: 'simon/' },
             ]
         },
         {

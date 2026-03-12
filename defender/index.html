@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Defender — Arcade Game Hub</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        body {
+            margin: 0;
+            padding: 0;
+            background: #000;
+            overflow: hidden;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+        #phaser-container {
+            position: relative;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+</head>
+<body>
+    <div id="phaser-container"></div>
+
+    <!-- Config and Audio -->
+    <script src="js/config.js"></script>
+    <script src="js/AudioManager.js"></script>
+
+    <!-- Entities -->
+    <script src="js/entities/Ship.js"></script>
+    <script src="js/entities/Bullet.js"></script>
+    <script src="js/entities/Lander.js"></script>
+    <script src="js/entities/Mutant.js"></script>
+    <script src="js/entities/Bomber.js"></script>
+    <script src="js/entities/Pod.js"></script>
+    <script src="js/entities/Humanoid.js"></script>
+    <script src="js/entities/Terrain.js"></script>
+
+    <!-- Scenes -->
+    <script src="js/scenes/MenuScene.js"></script>
+    <script src="js/scenes/GameScene.js"></script>
+    <script src="js/scenes/GameOverScene.js"></script>
+
+    <!-- Game initialization -->
+    <script>
+        const game = new Phaser.Game({
+            type: Phaser.AUTO,
+            width: CONFIG.WIDTH,
+            height: CONFIG.HEIGHT,
+            parent: 'phaser-container',
+            backgroundColor: CONFIG.COLORS.BLACK,
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH,
+            },
+            scene: [MenuScene, GameScene, GameOverScene],
+        });
+    </script>
+
+    <!-- Navigation drawer -->
+    <script src="../nav.js"></script>
+</body>
+</html>
