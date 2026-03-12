@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hex Defense — Arcade Game Hub</title>
+    <link rel="stylesheet" href="../styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/pixi.js@7.3.3/dist/pixi.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.5/dist/gsap.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/howler@2.2.4/dist/howler.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #0a0a1a;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        #game-wrapper {
+            position: relative;
+            width: 960px;
+            height: 680px;
+            transform-origin: top left;
+        }
+
+        #game-container {
+            width: 960px;
+            height: 680px;
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        #game-container canvas {
+            display: block;
+            border-radius: 12px;
+        }
+
+        .back-link {
+            position: fixed;
+            top: 12px;
+            left: 16px;
+            color: rgba(150, 130, 255, 0.7);
+            text-decoration: none;
+            font-size: 14px;
+            font-weight: 600;
+            z-index: 100;
+            transition: color 0.2s;
+        }
+
+        .back-link:hover {
+            color: rgba(200, 180, 255, 1);
+        }
+    </style>
+</head>
+<body>
+    <a href="../" class="back-link">&larr; Back to Hub</a>
+    <div id="game-wrapper">
+        <div id="game-container"></div>
+    </div>
+
+    <script src="../nav.js"></script>
+    <script type="module" src="js/main.js"></script>
+    <script>
+        // Auto-scale game to fit viewport
+        (function autoScale() {
+            const wrapper = document.getElementById('game-wrapper');
+            function resize() {
+                const W = 960, H = 680;
+                const scaleX = window.innerWidth / W;
+                const scaleY = window.innerHeight / H;
+                const scale = Math.min(scaleX, scaleY, 1.0);
+                wrapper.style.transform = `scale(${scale})`;
+                wrapper.style.marginLeft = ((window.innerWidth - W * scale) / 2) + 'px';
+                wrapper.style.marginTop = ((window.innerHeight - H * scale) / 2) + 'px';
+            }
+            window.addEventListener('resize', resize);
+            resize();
+        })();
+    </script>
+</body>
+</html>
