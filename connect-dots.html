@@ -682,8 +682,10 @@
             const c = document.getElementById('gameCanvas');
             const bw = c.width, bh = c.height;
             function sc() {
-                const mw = Math.min(window.innerWidth - 40, 900);
-                const mh = window.innerHeight * 0.65;
+                const par = c.parentElement;
+                const ps = getComputedStyle(par);
+                const mw = par.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
+                const mh = window.innerHeight * 0.75;
                 const s = Math.min(mw / bw, mh / bh, 1);
                 c.style.transformOrigin = 'top center';
                 c.style.transform = 'scale(' + s + ')';

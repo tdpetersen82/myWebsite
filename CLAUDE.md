@@ -237,4 +237,4 @@ The site is suitable for **GitHub Pages** (static, no server-side rendering need
 - **Assets are welcome**: Audio files, spritesheets, images, fonts — use real assets when they improve quality.
 - **Preserve auto-scaling**: All games should still scale to fit the viewport.
 - **Preserve high-score persistence**: Continue using localStorage for score storage.
-- **Existing games**: When modifying an existing game, match its current tech stack unless the user explicitly asks to migrate it.
+- **Existing games**: Use the best tech for the job — no requirement to match the current tech stack.
