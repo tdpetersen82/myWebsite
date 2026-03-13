@@ -18,7 +18,7 @@ const WAVE_DEFS = [
     // Wave 11-15: Challenge
     { enemies: [{ type: 'splitter', count: 8 }, { type: 'soldier', count: 8 }], interval: 0.5 },
     { enemies: [{ type: 'tank', count: 6 }, { type: 'splitter', count: 6 }], interval: 0.5 },
-    { enemies: [{ type: 'scout', count: 20 }], interval: 0.25 },
+    { enemies: [{ type: 'scout', count: 25 }], interval: 0.2 },
     { enemies: [{ type: 'tank', count: 8 }, { type: 'soldier', count: 10 }], interval: 0.4 },
     { enemies: [{ type: 'boss', count: 3 }, { type: 'splitter', count: 6 }], interval: 0.6 },
 
@@ -26,12 +26,12 @@ const WAVE_DEFS = [
     { enemies: [{ type: 'tank', count: 10 }, { type: 'splitter', count: 8 }], interval: 0.35 },
     { enemies: [{ type: 'soldier', count: 15 }, { type: 'tank', count: 6 }, { type: 'scout', count: 12 }], interval: 0.3 },
     { enemies: [{ type: 'splitter', count: 12 }, { type: 'tank', count: 8 }], interval: 0.3 },
-    { enemies: [{ type: 'boss', count: 3 }, { type: 'tank', count: 10 }, { type: 'soldier', count: 10 }], interval: 0.35 },
-    { enemies: [{ type: 'boss', count: 5 }, { type: 'tank', count: 8 }, { type: 'splitter', count: 10 }], interval: 0.3 },
+    { enemies: [{ type: 'boss', count: 3 }, { type: 'tank', count: 12 }, { type: 'soldier', count: 10 }], interval: 0.35 },
+    { enemies: [{ type: 'boss', count: 6 }, { type: 'tank', count: 8 }, { type: 'splitter', count: 12 }], interval: 0.3 },
 ];
 
 export const TOTAL_WAVES = WAVE_DEFS.length;
-export const BUILD_PHASE_DURATION = 15; // seconds
+export const BUILD_PHASE_DURATION = 12; // seconds
 
 export class WaveManager {
     constructor() {

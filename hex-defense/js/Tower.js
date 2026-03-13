@@ -33,7 +33,7 @@ export const TOWER_TYPES = {
         fireRate: 2,
         color: 0x4488ff,
         description: 'Slows enemies',
-        slowFactor: 0.4,
+        slowFactor: 0.45,
         slowDuration: 1.5,
     },
     sniper: {
@@ -52,7 +52,7 @@ export const TOWER_TYPES = {
 const UPGRADE_MULTS = [
     { damage: 1, range: 1, fireRate: 1, cost: 0 },       // Level 1
     { damage: 1.5, range: 1.1, fireRate: 1.2, cost: 1.5 }, // Level 2
-    { damage: 2.2, range: 1.2, fireRate: 1.4, cost: 2.5 }, // Level 3
+    { damage: 2.0, range: 1.2, fireRate: 1.4, cost: 2.5 }, // Level 3
 ];
 
 export class Tower {

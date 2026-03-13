@@ -12,11 +12,11 @@ const HEX_DIRECTIONS = [
     { q: 0, r: 1 },   // SE
 ];
 
-export const HEX_SIZE = 30;
+export const HEX_SIZE = 40;
 export const GRID_COLS = 15;
 export const GRID_ROWS = 10;
-export const GRID_OFFSET_X = 128;
-export const GRID_OFFSET_Y = 68;
+export const GRID_OFFSET_X = 180;
+export const GRID_OFFSET_Y = 115;
 
 // Convert axial (q, r) to pixel center
 export function hexToPixel(q, r) {
@@ -104,20 +104,28 @@ export class HexGridRenderer {
         this.container = new PIXI.Container();
         this.pathGraphics = new PIXI.Graphics();
         this.gridGraphics = new PIXI.Graphics();
+        this.pathPulseGraphics = new PIXI.Graphics();
         this.hoverGraphics = new PIXI.Graphics();
         this.rangeGraphics = new PIXI.Graphics();
 
         this.container.addChild(this.pathGraphics);
         this.container.addChild(this.gridGraphics);
+        this.container.addChild(this.pathPulseGraphics);
         this.container.addChild(this.rangeGraphics);
         this.container.addChild(this.hoverGraphics);
         stage.addChild(this.container);
+
+        // Animated path pulse
+        this.pathAnimTime = 0;
+        this.pathSegmentLengths = [];
+        this.totalPathLength = 0;
 
         // Grid cell states: 'empty', 'path', 'tower'
         this.cells = new Map();
         this.initGrid();
         this.drawGrid();
         this.drawPath();
+        this.computePathLengths();
     }
 
     initGrid() {
@@ -150,21 +158,21 @@ export class HexGridRenderer {
                 const state = this.cells.get(key);
 
                 if (state === 'path') {
-                    // Path hexes: warm brown road tiles
-                    g.lineStyle(1.5, 0x8B7355, 0.25);
-                    g.beginFill(0x5C4A32, 0.18);
+                    // Path hexes: dark teal energy conduit tiles
+                    g.lineStyle(1.5, 0x00ccaa, 0.2);
+                    g.beginFill(0x0a2a3a, 0.25);
                     this.drawHexShape(g, corners);
                     g.endFill();
                 } else if (state === 'tower') {
-                    // Tower hexes: dark platform
-                    g.lineStyle(1.5, 0x4488aa, 0.4);
-                    g.beginFill(0x1a2a3a, 0.3);
+                    // Tower hexes: strong contrast platform
+                    g.lineStyle(1.5, 0x5599cc, 0.5);
+                    g.beginFill(0x1a1a3a, 0.4);
                     this.drawHexShape(g, corners);
                     g.endFill();
                 } else {
-                    // Buildable hexes: green-tinted grassland
-                    g.lineStyle(1, 0x3a7744, 0.3);
-                    g.beginFill(0x2a5530, 0.12);
+                    // Buildable hexes: slightly visible green
+                    g.lineStyle(1, 0x44885a, 0.35);
+                    g.beginFill(0x1a3a20, 0.15);
                     this.drawHexShape(g, corners);
                     g.endFill();
                 }
@@ -176,102 +184,131 @@ export class HexGridRenderer {
         const g = this.pathGraphics;
         g.clear();
 
-        // 1. Draw thick road surface along center line
-        const roadWidth = 18;
+        // Layer 1: Outer glow — wide translucent dark teal
         for (let i = 0; i < ENEMY_PATH.length - 1; i++) {
             const a = hexToPixel(ENEMY_PATH[i].q, ENEMY_PATH[i].r);
             const b = hexToPixel(ENEMY_PATH[i + 1].q, ENEMY_PATH[i + 1].r);
-
-            // Road fill - warm brown
-            g.lineStyle(roadWidth, 0x6B5B45, 0.35);
+            g.lineStyle(28, 0x004455, 0.18);
             g.moveTo(a.x, a.y);
             g.lineTo(b.x, b.y);
         }
 
-        // 2. Draw road edge lines for definition
+        // Layer 2: Main conduit surface
         for (let i = 0; i < ENEMY_PATH.length - 1; i++) {
             const a = hexToPixel(ENEMY_PATH[i].q, ENEMY_PATH[i].r);
             const b = hexToPixel(ENEMY_PATH[i + 1].q, ENEMY_PATH[i + 1].r);
-
-            const dx = b.x - a.x;
-            const dy = b.y - a.y;
-            const len = Math.sqrt(dx * dx + dy * dy);
-            const nx = (-dy / len) * (roadWidth / 2);
-            const ny = (dx / len) * (roadWidth / 2);
-
-            g.lineStyle(1, 0x9B8B6B, 0.3);
-            g.moveTo(a.x + nx, a.y + ny);
-            g.lineTo(b.x + nx, b.y + ny);
-            g.moveTo(a.x - nx, a.y - ny);
-            g.lineTo(b.x - nx, b.y - ny);
+            g.lineStyle(14, 0x006677, 0.3);
+            g.moveTo(a.x, a.y);
+            g.lineTo(b.x, b.y);
         }
 
-        // 3. Draw center dashes (direction indicators)
-        g.lineStyle(1.5, 0xAA9970, 0.25);
+        // Layer 3: Inner energy core — bright thin line
         for (let i = 0; i < ENEMY_PATH.length - 1; i++) {
             const a = hexToPixel(ENEMY_PATH[i].q, ENEMY_PATH[i].r);
             const b = hexToPixel(ENEMY_PATH[i + 1].q, ENEMY_PATH[i + 1].r);
-            // Draw a short dash in the middle third
-            const mx1 = a.x + (b.x - a.x) * 0.35;
-            const my1 = a.y + (b.y - a.y) * 0.35;
-            const mx2 = a.x + (b.x - a.x) * 0.65;
-            const my2 = a.y + (b.y - a.y) * 0.65;
-            g.moveTo(mx1, my1);
-            g.lineTo(mx2, my2);
+            g.lineStyle(4, 0x00ffcc, 0.35);
+            g.moveTo(a.x, a.y);
+            g.lineTo(b.x, b.y);
         }
 
-        // 4. Draw directional chevrons every 3 path segments
-        for (let i = 2; i < ENEMY_PATH.length - 1; i += 3) {
-            const a = hexToPixel(ENEMY_PATH[i].q, ENEMY_PATH[i].r);
-            const b = hexToPixel(ENEMY_PATH[i + 1].q, ENEMY_PATH[i + 1].r);
-            const mx = (a.x + b.x) / 2;
-            const my = (a.y + b.y) / 2;
-            const dx = b.x - a.x;
-            const dy = b.y - a.y;
-            const angle = Math.atan2(dy, dx);
-            const chevSize = 6;
-
-            g.lineStyle(2, 0xCCBB88, 0.35);
-            g.moveTo(
-                mx - Math.cos(angle - 0.6) * chevSize,
-                my - Math.sin(angle - 0.6) * chevSize
-            );
-            g.lineTo(mx, my);
-            g.lineTo(
-                mx - Math.cos(angle + 0.6) * chevSize,
-                my - Math.sin(angle + 0.6) * chevSize
-            );
+        // Joint smoothing — circles at each path node
+        for (let i = 0; i < ENEMY_PATH.length; i++) {
+            const p = hexToPixel(ENEMY_PATH[i].q, ENEMY_PATH[i].r);
+            g.beginFill(0x006677, 0.3);
+            g.drawCircle(p.x, p.y, 7);
+            g.endFill();
+            g.beginFill(0x00ffcc, 0.15);
+            g.drawCircle(p.x, p.y, 4);
+            g.endFill();
         }
 
-        // 5. Entry marker (left side - green arrow)
+        // Entry marker — green arrow with glow
         const entry = hexToPixel(ENEMY_PATH[1].q, ENEMY_PATH[1].r);
         const entryPrev = hexToPixel(ENEMY_PATH[0].q, ENEMY_PATH[0].r);
         const entryAngle = Math.atan2(entry.y - entryPrev.y, entry.x - entryPrev.x);
         const entryX = entryPrev.x;
         const entryY = entryPrev.y;
 
-        // Green arrow
-        g.lineStyle(3, 0x44ff88, 0.7);
+        // Glow behind arrow
+        g.beginFill(0x00ff88, 0.12);
+        g.drawCircle(entryX, entryY, 20);
+        g.endFill();
+        // Arrow
+        g.lineStyle(3.5, 0x00ff88, 0.9);
         g.moveTo(
-            entryX - Math.cos(entryAngle - 0.5) * 12,
-            entryY - Math.sin(entryAngle - 0.5) * 12
+            entryX - Math.cos(entryAngle - 0.5) * 14,
+            entryY - Math.sin(entryAngle - 0.5) * 14
         );
-        g.lineTo(entryX + Math.cos(entryAngle) * 6, entryY + Math.sin(entryAngle) * 6);
+        g.lineTo(entryX + Math.cos(entryAngle) * 8, entryY + Math.sin(entryAngle) * 8);
         g.lineTo(
-            entryX - Math.cos(entryAngle + 0.5) * 12,
-            entryY - Math.sin(entryAngle + 0.5) * 12
+            entryX - Math.cos(entryAngle + 0.5) * 14,
+            entryY - Math.sin(entryAngle + 0.5) * 14
         );
 
-        // 6. Exit marker (right side - red X)
+        // Exit marker — red X with glow
         const exit = hexToPixel(
             ENEMY_PATH[ENEMY_PATH.length - 1].q,
             ENEMY_PATH[ENEMY_PATH.length - 1].r
         );
-        g.lineStyle(3, 0xff4466, 0.7);
-        g.moveTo(exit.x - 6, exit.y - 6);
-        g.lineTo(exit.x + 6, exit.y + 6);
-        g.moveTo(exit.x + 6, exit.y - 6);
-        g.lineTo(exit.x - 6, exit.y + 6);
+        g.beginFill(0xff3355, 0.12);
+        g.drawCircle(exit.x, exit.y, 20);
+        g.endFill();
+        g.lineStyle(3.5, 0xff3355, 0.9);
+        g.moveTo(exit.x - 8, exit.y - 8);
+        g.lineTo(exit.x + 8, exit.y + 8);
+        g.moveTo(exit.x + 8, exit.y - 8);
+        g.lineTo(exit.x - 8, exit.y + 8);
+    }
+
+    computePathLengths() {
+        this.pathSegmentLengths = [];
+        this.totalPathLength = 0;
+        for (let i = 0; i < ENEMY_PATH.length - 1; i++) {
+            const a = hexToPixel(ENEMY_PATH[i].q, ENEMY_PATH[i].r);
+            const b = hexToPixel(ENEMY_PATH[i + 1].q, ENEMY_PATH[i + 1].r);
+            const dx = b.x - a.x;
+            const dy = b.y - a.y;
+            const len = Math.sqrt(dx * dx + dy * dy);
+            this.pathSegmentLengths.push(len);
+            this.totalPathLength += len;
+        }
+    }
+
+    getPointAlongPath(distance) {
+        let remaining = distance % this.totalPathLength;
+        for (let i = 0; i < this.pathSegmentLengths.length; i++) {
+            if (remaining <= this.pathSegmentLengths[i]) {
+                const t = remaining / this.pathSegmentLengths[i];
+                const a = hexToPixel(ENEMY_PATH[i].q, ENEMY_PATH[i].r);
+                const b = hexToPixel(ENEMY_PATH[i + 1].q, ENEMY_PATH[i + 1].r);
+                return { x: a.x + (b.x - a.x) * t, y: a.y + (b.y - a.y) * t };
+            }
+            remaining -= this.pathSegmentLengths[i];
+        }
+        const last = ENEMY_PATH[ENEMY_PATH.length - 1];
+        return hexToPixel(last.q, last.r);
+    }
+
+    updatePathAnim(dt) {
+        this.pathAnimTime += dt * 60; // pixels per second
+        const g = this.pathPulseGraphics;
+        g.clear();
+
+        const dotCount = 5;
+        const spacing = this.totalPathLength / dotCount;
+
+        for (let i = 0; i < dotCount; i++) {
+            const dist = (this.pathAnimTime + i * spacing) % this.totalPathLength;
+            const pt = this.getPointAlongPath(dist);
+            // Outer glow
+            g.beginFill(0x00ffcc, 0.15);
+            g.drawCircle(pt.x, pt.y, 8);
+            g.endFill();
+            // Core dot
+            g.beginFill(0x00ffcc, 0.6);
+            g.drawCircle(pt.x, pt.y, 3.5);
+            g.endFill();
+        }
     }
 
     showHover(q, r, canBuild) {

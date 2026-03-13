@@ -9,7 +9,8 @@ export class ParticleSystem {
 
     // Creature death explosion - burst of body parts
     enemyDeath(x, y, color) {
-        const count = 10;
+        // Main body chunks
+        const count = 14;
         for (let i = 0; i < count; i++) {
             const angle = (Math.PI * 2 / count) * i + (Math.random() - 0.5) * 0.5;
             const speed = 60 + Math.random() * 140;
@@ -48,7 +49,7 @@ export class ParticleSystem {
             this.particles.push({
                 graphic: g,
                 vx: Math.cos(angle) * speed,
-                vy: Math.sin(angle) * speed - 20, // slight upward bias
+                vy: Math.sin(angle) * speed - 20,
                 life: 1.0,
                 decay: 1.3 + Math.random() * 0.5,
                 rotation: (Math.random() - 0.5) * 10,
@@ -56,13 +57,35 @@ export class ParticleSystem {
             });
         }
 
-        // Central flash
+        // Fast tiny sparks for snappier feel
+        for (let i = 0; i < 4; i++) {
+            const angle = Math.random() * Math.PI * 2;
+            const speed = 200 + Math.random() * 100;
+            const g = new PIXI.Graphics();
+            g.beginFill(0xffffff, 0.9);
+            g.drawCircle(0, 0, 1.5);
+            g.endFill();
+            g.x = x;
+            g.y = y;
+            this.container.addChild(g);
+
+            this.particles.push({
+                graphic: g,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 1.0,
+                decay: 3.0,
+                rotation: 0,
+            });
+        }
+
+        // Central flash — larger
         const flash = new PIXI.Graphics();
-        flash.beginFill(0xffffff, 0.6);
-        flash.drawCircle(0, 0, 12);
+        flash.beginFill(0xffffff, 0.7);
+        flash.drawCircle(0, 0, 16);
         flash.endFill();
-        flash.beginFill(color, 0.3);
-        flash.drawCircle(0, 0, 20);
+        flash.beginFill(color, 0.35);
+        flash.drawCircle(0, 0, 28);
         flash.endFill();
         flash.x = x;
         flash.y = y;
@@ -104,10 +127,6 @@ export class ParticleSystem {
         g.drawCircle(0, 0, 15);
         g.endFill();
 
-        // Outer ring
-        g.lineStyle(2, 0x44ff88, 0.4);
-        g.drawCircle(0, 0, 22);
-
         g.x = x;
         g.y = y;
         this.container.addChild(g);
@@ -119,6 +138,31 @@ export class ParticleSystem {
             decay: 3.0,
             rotation: 0,
         });
+
+        // Expanding ring effect
+        this.pulseRing(x, y, 35, 0x44ff88);
+
+        // Outward-shooting sparks
+        for (let i = 0; i < 6; i++) {
+            const angle = (Math.PI * 2 / 6) * i;
+            const speed = 80;
+            const spark = new PIXI.Graphics();
+            spark.beginFill(0x44ff88, 0.8);
+            spark.drawCircle(0, 0, 2);
+            spark.endFill();
+            spark.x = x;
+            spark.y = y;
+            this.container.addChild(spark);
+
+            this.particles.push({
+                graphic: spark,
+                vx: Math.cos(angle) * speed,
+                vy: Math.sin(angle) * speed,
+                life: 1.0,
+                decay: 2.5,
+                rotation: 0,
+            });
+        }
     }
 
     // Sniper tracer line - thick bright beam
