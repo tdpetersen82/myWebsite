@@ -129,23 +129,36 @@ export class Tower {
     drawBase() {
         const g = this.baseGraphic;
         g.clear();
-
-        const s = HEX_SIZE * 0.55;
         const color = this.def.color;
-        const alpha = 0.15 + this.level * 0.08;
+        const level = this.level;
 
-        // Hexagonal base
-        g.lineStyle(1.5 + this.level * 0.5, color, 0.6 + this.level * 0.15);
-        g.beginFill(color, alpha);
-        for (let i = 0; i < 6; i++) {
-            const angle = (Math.PI / 3) * i;
-            const px = s * Math.cos(angle);
-            const py = s * Math.sin(angle);
+        // Platform/foundation - octagonal base
+        const baseSize = HEX_SIZE * 0.5 + level * 2;
+
+        // Dark filled platform
+        g.beginFill(0x1a2a3a, 0.8);
+        g.lineStyle(1.5 + level * 0.5, color, 0.4 + level * 0.1);
+        for (let i = 0; i < 8; i++) {
+            const angle = (Math.PI / 4) * i;
+            const px = baseSize * Math.cos(angle);
+            const py = baseSize * Math.sin(angle);
             if (i === 0) g.moveTo(px, py);
             else g.lineTo(px, py);
         }
         g.closePath();
         g.endFill();
+
+        // Level indicators - small dots around base
+        if (level > 0) {
+            for (let i = 0; i < level + 1; i++) {
+                const angle = (Math.PI * 2 / (level + 1)) * i - Math.PI / 2;
+                const dotX = (baseSize + 4) * Math.cos(angle);
+                const dotY = (baseSize + 4) * Math.sin(angle);
+                g.beginFill(color, 0.6);
+                g.drawCircle(dotX, dotY, 1.5);
+                g.endFill();
+            }
+        }
     }
 
     drawTurret() {
@@ -156,52 +169,146 @@ export class Tower {
 
         switch (this.type) {
             case 'laser': {
-                // Central circle + barrel
-                g.beginFill(color, 0.7);
-                g.drawCircle(0, 0, 4 + level);
+                // Machine gun turret - central housing + barrel(s)
+                // Turret housing
+                g.beginFill(color, 0.5);
+                g.drawCircle(0, 0, 5 + level);
                 g.endFill();
-                g.lineStyle(2 + level * 0.5, color, 0.9);
-                g.moveTo(0, 0);
-                g.lineTo(10 + level * 2, 0);
+                g.lineStyle(1, color, 0.7);
+                g.drawCircle(0, 0, 5 + level);
+
+                // Main barrel
+                const barrelLen = 14 + level * 3;
+                const barrelW = 2 + level * 0.5;
+                g.beginFill(color, 0.7);
+                g.drawRect(2, -barrelW, barrelLen, barrelW * 2);
+                g.endFill();
+
+                // Muzzle tip
+                g.beginFill(color, 0.9);
+                g.drawCircle(barrelLen + 2, 0, 2 + level * 0.3);
+                g.endFill();
+
+                // Extra barrel at level 2
+                if (level >= 2) {
+                    g.beginFill(color, 0.5);
+                    g.drawRect(2, -barrelW - 3, barrelLen - 3, barrelW);
+                    g.endFill();
+                    g.beginFill(color, 0.5);
+                    g.drawRect(2, 3, barrelLen - 3, barrelW);
+                    g.endFill();
+                }
                 break;
             }
             case 'pulse': {
-                // Concentric rings
-                g.lineStyle(2, color, 0.7);
-                g.drawCircle(0, 0, 5 + level * 2);
-                g.lineStyle(1, color, 0.4);
-                g.drawCircle(0, 0, 9 + level * 2);
-                g.beginFill(color, 0.5);
-                g.drawCircle(0, 0, 3);
+                // Satellite dish / emitter dome
+                // Dish base
+                g.beginFill(color, 0.3);
+                g.drawCircle(0, 0, 8 + level * 2);
                 g.endFill();
+
+                // Dish arc (concave shape)
+                g.lineStyle(2 + level * 0.5, color, 0.7);
+                g.arc(4, 0, 10 + level * 2, Math.PI * 0.65, Math.PI * 1.35);
+
+                // Emitter core
+                g.beginFill(color, 0.8);
+                g.drawCircle(0, 0, 3 + level);
+                g.endFill();
+
+                // Energy ring
+                g.lineStyle(1, color, 0.3);
+                g.drawCircle(0, 0, 12 + level * 2);
+
+                // Level 2+: outer ring
+                if (level >= 1) {
+                    g.lineStyle(0.5, color, 0.2);
+                    g.drawCircle(0, 0, 15 + level * 2);
+                }
                 break;
             }
             case 'slow': {
-                // Snowflake-like pattern
+                // Cryo emitter - crystal/ice spikes
+                // Central crystal
                 g.beginFill(color, 0.6);
-                g.drawCircle(0, 0, 3 + level);
+                g.drawCircle(0, 0, 4 + level);
                 g.endFill();
-                g.lineStyle(1.5, color, 0.6);
-                for (let i = 0; i < 6; i++) {
-                    const angle = (Math.PI / 3) * i;
-                    g.moveTo(0, 0);
-                    g.lineTo(Math.cos(angle) * (8 + level * 2), Math.sin(angle) * (8 + level * 2));
+
+                // Ice crystal spikes
+                const spikeCount = 4 + level * 2;
+                const spikeLen = 10 + level * 3;
+                for (let i = 0; i < spikeCount; i++) {
+                    const angle = (Math.PI * 2 / spikeCount) * i;
+                    const tipX = Math.cos(angle) * spikeLen;
+                    const tipY = Math.sin(angle) * spikeLen;
+                    const perpX = Math.cos(angle + Math.PI / 2) * 2;
+                    const perpY = Math.sin(angle + Math.PI / 2) * 2;
+
+                    g.beginFill(color, 0.4);
+                    g.moveTo(perpX, perpY);
+                    g.lineTo(tipX, tipY);
+                    g.lineTo(-perpX, -perpY);
+                    g.closePath();
+                    g.endFill();
+                }
+
+                // Glow ring
+                g.lineStyle(1.5, color, 0.25);
+                g.drawCircle(0, 0, spikeLen + 2);
+
+                // Inner frost ring
+                if (level >= 1) {
+                    g.lineStyle(1, 0xaaddff, 0.3);
+                    g.drawCircle(0, 0, 6 + level);
                 }
                 break;
             }
             case 'sniper': {
-                // Long barrel with crosshair
-                g.beginFill(color, 0.7);
-                g.drawCircle(0, 0, 3 + level);
+                // Long cannon with scope
+                // Cannon body - long thick barrel
+                const barrelLen = 18 + level * 4;
+                const barrelW = 2.5 + level * 0.5;
+
+                // Barrel mount/breech
+                g.beginFill(color, 0.5);
+                g.drawRect(-4, -barrelW - 1, 8, (barrelW + 1) * 2);
                 g.endFill();
-                g.lineStyle(2.5 + level * 0.5, color, 0.9);
-                g.moveTo(0, 0);
-                g.lineTo(14 + level * 3, 0);
-                // Crosshair at tip
-                const tipX = 14 + level * 3;
-                g.lineStyle(1, color, 0.5);
-                g.moveTo(tipX, -3);
-                g.lineTo(tipX, 3);
+
+                // Main barrel
+                g.beginFill(color, 0.6);
+                g.drawRect(0, -barrelW, barrelLen, barrelW * 2);
+                g.endFill();
+                g.lineStyle(1, color, 0.8);
+                g.drawRect(0, -barrelW, barrelLen, barrelW * 2);
+
+                // Scope on top
+                g.beginFill(color, 0.7);
+                g.drawRect(barrelLen * 0.3, -barrelW - 3, 6 + level, 2.5);
+                g.endFill();
+
+                // Scope lens
+                g.beginFill(0xff4444, 0.6);
+                g.drawCircle(barrelLen * 0.3 + 3 + level * 0.5, -barrelW - 4.5, 1.5);
+                g.endFill();
+
+                // Muzzle brake
+                g.lineStyle(1.5, color, 0.8);
+                const muzzleX = barrelLen;
+                g.moveTo(muzzleX, -barrelW - 2);
+                g.lineTo(muzzleX + 3, -barrelW - 2);
+                g.moveTo(muzzleX, barrelW + 2);
+                g.lineTo(muzzleX + 3, barrelW + 2);
+
+                // Crosshair at muzzle
+                if (level >= 1) {
+                    g.lineStyle(0.5, 0xff4444, 0.4);
+                    const chX = muzzleX + 6;
+                    g.drawCircle(chX, 0, 3);
+                    g.moveTo(chX - 4, 0);
+                    g.lineTo(chX + 4, 0);
+                    g.moveTo(chX, -4);
+                    g.lineTo(chX, 4);
+                }
                 break;
             }
         }
@@ -213,8 +320,10 @@ export class Tower {
 
         // Level 3 gets a particle aura
         if (this.level >= 2) {
-            g.lineStyle(1, this.def.color, 0.15);
-            g.drawCircle(0, 0, HEX_SIZE * 0.7);
+            g.lineStyle(1.5, this.def.color, 0.15);
+            g.drawCircle(0, 0, HEX_SIZE * 0.75);
+            g.lineStyle(0.5, this.def.color, 0.08);
+            g.drawCircle(0, 0, HEX_SIZE * 0.9);
         }
     }
 
