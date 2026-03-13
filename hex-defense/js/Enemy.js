@@ -6,7 +6,7 @@ import { hexToPixel, ENEMY_PATH } from './HexGrid.js';
 export const ENEMY_TYPES = {
     scout: {
         name: 'Scout',
-        shape: 'triangle',
+        shape: 'bug',
         color: 0x44ffaa,
         hp: 30,
         speed: 90,
@@ -15,7 +15,7 @@ export const ENEMY_TYPES = {
     },
     soldier: {
         name: 'Soldier',
-        shape: 'diamond',
+        shape: 'beetle',
         color: 0xffaa44,
         hp: 60,
         speed: 60,
@@ -24,7 +24,7 @@ export const ENEMY_TYPES = {
     },
     tank: {
         name: 'Tank',
-        shape: 'hexagon',
+        shape: 'crab',
         color: 0xff4466,
         hp: 150,
         speed: 35,
@@ -33,7 +33,7 @@ export const ENEMY_TYPES = {
     },
     splitter: {
         name: 'Splitter',
-        shape: 'splitter',
+        shape: 'blob',
         color: 0xaa66ff,
         hp: 40,
         speed: 55,
@@ -42,7 +42,7 @@ export const ENEMY_TYPES = {
     },
     boss: {
         name: 'Boss',
-        shape: 'pentagon',
+        shape: 'spider',
         color: 0xff2244,
         hp: 500,
         speed: 28,
@@ -80,10 +80,14 @@ export class Enemy {
         this.y = start.y;
         this.alive = true;
         this.reachedEnd = false;
+        this.facingAngle = 0;
 
         // Slow effect
         this.slowTimer = 0;
         this.slowFactor = 1;
+
+        // Animation
+        this.animTime = Math.random() * Math.PI * 2;
 
         // Graphics
         this.container = new PIXI.Container();
@@ -103,58 +107,239 @@ export class Enemy {
         const g = this.graphic;
         g.clear();
         const s = this.size;
-
-        g.lineStyle(1.5, this.color, 0.9);
-        g.beginFill(this.color, 0.3);
+        const c = this.color;
 
         switch (this.shape) {
-            case 'triangle':
-                g.moveTo(0, -s);
-                g.lineTo(s * 0.87, s * 0.5);
-                g.lineTo(-s * 0.87, s * 0.5);
-                g.closePath();
+            case 'bug': {
+                // Small ant/bug - oval body with legs and antennae
+                // Body (oval)
+                g.beginFill(c, 0.6);
+                g.drawEllipse(0, 0, s * 0.9, s * 0.55);
+                g.endFill();
+                g.lineStyle(1, c, 0.8);
+                g.drawEllipse(0, 0, s * 0.9, s * 0.55);
+
+                // Head
+                g.beginFill(c, 0.7);
+                g.drawCircle(s * 0.7, 0, s * 0.35);
+                g.endFill();
+
+                // Eyes
+                g.beginFill(0xffffff, 0.9);
+                g.drawCircle(s * 0.85, -s * 0.15, 1.5);
+                g.drawCircle(s * 0.85, s * 0.15, 1.5);
+                g.endFill();
+
+                // Legs (3 per side)
+                g.lineStyle(1, c, 0.6);
+                for (let i = 0; i < 3; i++) {
+                    const lx = -s * 0.3 + i * s * 0.4;
+                    const legLen = s * 0.5;
+                    g.moveTo(lx, -s * 0.4);
+                    g.lineTo(lx - 2, -s * 0.4 - legLen);
+                    g.moveTo(lx, s * 0.4);
+                    g.lineTo(lx - 2, s * 0.4 + legLen);
+                }
+
+                // Antennae
+                g.lineStyle(0.8, c, 0.5);
+                g.moveTo(s * 0.9, -s * 0.2);
+                g.lineTo(s * 1.3, -s * 0.5);
+                g.moveTo(s * 0.9, s * 0.2);
+                g.lineTo(s * 1.3, s * 0.5);
                 break;
-            case 'diamond':
-                g.moveTo(0, -s);
-                g.lineTo(s * 0.7, 0);
-                g.lineTo(0, s);
-                g.lineTo(-s * 0.7, 0);
-                g.closePath();
+            }
+            case 'beetle': {
+                // Armored beetle - rounded body with shell segments
+                // Shell (main body)
+                g.beginFill(c, 0.5);
+                g.drawEllipse(0, 0, s * 1.0, s * 0.7);
+                g.endFill();
+                g.lineStyle(1.5, c, 0.8);
+                g.drawEllipse(0, 0, s * 1.0, s * 0.7);
+
+                // Shell segments (horizontal lines)
+                g.lineStyle(1, c, 0.4);
+                g.moveTo(-s * 0.3, -s * 0.15);
+                g.lineTo(s * 0.5, -s * 0.15);
+                g.moveTo(-s * 0.3, s * 0.15);
+                g.lineTo(s * 0.5, s * 0.15);
+
+                // Shell center line
+                g.lineStyle(1, c, 0.3);
+                g.moveTo(-s * 0.6, 0);
+                g.lineTo(s * 0.6, 0);
+
+                // Head
+                g.beginFill(c, 0.65);
+                g.drawCircle(s * 0.8, 0, s * 0.35);
+                g.endFill();
+
+                // Mandibles
+                g.lineStyle(1.5, c, 0.7);
+                g.moveTo(s * 1.0, -s * 0.1);
+                g.lineTo(s * 1.3, -s * 0.25);
+                g.moveTo(s * 1.0, s * 0.1);
+                g.lineTo(s * 1.3, s * 0.25);
+
+                // Eyes
+                g.beginFill(0xffffff, 0.9);
+                g.drawCircle(s * 0.9, -s * 0.2, 1.5);
+                g.drawCircle(s * 0.9, s * 0.2, 1.5);
+                g.endFill();
+
+                // Legs (3 pairs, thicker)
+                g.lineStyle(1.2, c, 0.5);
+                for (let i = 0; i < 3; i++) {
+                    const lx = -s * 0.4 + i * s * 0.4;
+                    g.moveTo(lx, -s * 0.6);
+                    g.lineTo(lx - 3, -s * 0.6 - s * 0.4);
+                    g.moveTo(lx, s * 0.6);
+                    g.lineTo(lx - 3, s * 0.6 + s * 0.4);
+                }
                 break;
-            case 'hexagon':
-                for (let i = 0; i < 6; i++) {
-                    const angle = (Math.PI / 3) * i - Math.PI / 6;
-                    const px = s * Math.cos(angle);
-                    const py = s * Math.sin(angle);
+            }
+            case 'crab': {
+                // Heavy armored crab - wide body with claws
+                // Main shell
+                g.beginFill(c, 0.5);
+                g.drawEllipse(0, 0, s * 0.9, s * 0.8);
+                g.endFill();
+                g.lineStyle(2, c, 0.8);
+                g.drawEllipse(0, 0, s * 0.9, s * 0.8);
+
+                // Armor plates
+                g.lineStyle(1.5, c, 0.4);
+                g.drawEllipse(0, 0, s * 0.6, s * 0.5);
+
+                // Eyes on stalks
+                g.lineStyle(1, c, 0.6);
+                g.moveTo(s * 0.5, -s * 0.3);
+                g.lineTo(s * 0.8, -s * 0.5);
+                g.moveTo(s * 0.5, s * 0.3);
+                g.lineTo(s * 0.8, s * 0.5);
+                g.beginFill(0xffffff, 0.9);
+                g.drawCircle(s * 0.8, -s * 0.5, 2);
+                g.drawCircle(s * 0.8, s * 0.5, 2);
+                g.endFill();
+
+                // Claws (big)
+                g.lineStyle(2, c, 0.7);
+                // Top claw
+                g.moveTo(s * 0.6, -s * 0.6);
+                g.lineTo(s * 1.2, -s * 0.7);
+                g.lineTo(s * 1.0, -s * 0.4);
+                // Bottom claw
+                g.moveTo(s * 0.6, s * 0.6);
+                g.lineTo(s * 1.2, s * 0.7);
+                g.lineTo(s * 1.0, s * 0.4);
+
+                // Legs (4 pairs, stumpy)
+                g.lineStyle(1.5, c, 0.5);
+                for (let i = 0; i < 4; i++) {
+                    const lx = -s * 0.5 + i * s * 0.3;
+                    g.moveTo(lx, -s * 0.7);
+                    g.lineTo(lx - 2, -s * 0.7 - s * 0.3);
+                    g.moveTo(lx, s * 0.7);
+                    g.lineTo(lx - 2, s * 0.7 + s * 0.3);
+                }
+                break;
+            }
+            case 'blob': {
+                // Amoeba/blob - wobbly circle with nucleus
+                // Outer membrane (irregular circle via sine wave)
+                g.beginFill(c, 0.35);
+                g.lineStyle(1.5, c, 0.7);
+                const points = 12;
+                for (let i = 0; i <= points; i++) {
+                    const angle = (Math.PI * 2 / points) * i;
+                    const wobble = 1 + Math.sin(angle * 3) * 0.15 + Math.cos(angle * 2) * 0.1;
+                    const px = s * wobble * Math.cos(angle);
+                    const py = s * wobble * Math.sin(angle);
                     if (i === 0) g.moveTo(px, py);
                     else g.lineTo(px, py);
                 }
-                g.closePath();
-                break;
-            case 'pentagon':
-                for (let i = 0; i < 5; i++) {
-                    const angle = (Math.PI * 2 / 5) * i - Math.PI / 2;
-                    const px = s * Math.cos(angle);
-                    const py = s * Math.sin(angle);
-                    if (i === 0) g.moveTo(px, py);
-                    else g.lineTo(px, py);
-                }
-                g.closePath();
-                break;
-            case 'splitter':
-                // Diamond with a line through it
-                g.moveTo(0, -s);
-                g.lineTo(s * 0.7, 0);
-                g.lineTo(0, s);
-                g.lineTo(-s * 0.7, 0);
                 g.closePath();
                 g.endFill();
-                g.lineStyle(1, this.color, 0.6);
-                g.moveTo(-s * 0.5, 0);
-                g.lineTo(s * 0.5, 0);
-                return;
+
+                // Nucleus dots
+                g.beginFill(c, 0.7);
+                g.drawCircle(-s * 0.15, -s * 0.1, s * 0.25);
+                g.endFill();
+                g.beginFill(c, 0.5);
+                g.drawCircle(s * 0.2, s * 0.15, s * 0.18);
+                g.endFill();
+
+                // Division line hint
+                g.lineStyle(1, c, 0.3);
+                g.moveTo(0, -s * 0.7);
+                g.lineTo(0, s * 0.7);
+                break;
+            }
+            case 'spider': {
+                // Large spider/scorpion boss
+                // Abdomen (rear)
+                g.beginFill(c, 0.5);
+                g.drawEllipse(-s * 0.3, 0, s * 0.6, s * 0.55);
+                g.endFill();
+                g.lineStyle(1.5, c, 0.7);
+                g.drawEllipse(-s * 0.3, 0, s * 0.6, s * 0.55);
+
+                // Cephalothorax (front)
+                g.beginFill(c, 0.6);
+                g.drawEllipse(s * 0.35, 0, s * 0.45, s * 0.4);
+                g.endFill();
+                g.lineStyle(1.5, c, 0.8);
+                g.drawEllipse(s * 0.35, 0, s * 0.45, s * 0.4);
+
+                // Glowing eyes (4 pairs)
+                g.beginFill(0xffff44, 0.9);
+                g.drawCircle(s * 0.55, -s * 0.12, 2);
+                g.drawCircle(s * 0.55, s * 0.12, 2);
+                g.endFill();
+                g.beginFill(0xff4444, 0.7);
+                g.drawCircle(s * 0.65, -s * 0.06, 1.5);
+                g.drawCircle(s * 0.65, s * 0.06, 1.5);
+                g.endFill();
+
+                // Fangs
+                g.lineStyle(2, c, 0.9);
+                g.moveTo(s * 0.7, -s * 0.15);
+                g.lineTo(s * 1.0, -s * 0.3);
+                g.lineTo(s * 0.95, 0);
+                g.moveTo(s * 0.7, s * 0.15);
+                g.lineTo(s * 1.0, s * 0.3);
+                g.lineTo(s * 0.95, 0);
+
+                // 4 pairs of legs
+                g.lineStyle(1.5, c, 0.6);
+                const legAngles = [-0.6, -0.3, 0.3, 0.6];
+                for (const la of legAngles) {
+                    const baseX = s * 0.1;
+                    // Top leg
+                    const knee1X = baseX + Math.cos(-Math.PI / 2 + la) * s * 0.6;
+                    const knee1Y = -s * 0.35 + Math.sin(-Math.PI / 2 + la) * s * 0.3;
+                    g.moveTo(baseX, -s * 0.35);
+                    g.lineTo(knee1X, knee1Y);
+                    g.lineTo(knee1X - 3, knee1Y - s * 0.4);
+                    // Bottom leg
+                    const knee2X = baseX + Math.cos(Math.PI / 2 - la) * s * 0.6;
+                    const knee2Y = s * 0.35 + Math.sin(Math.PI / 2 - la) * s * 0.3;
+                    g.moveTo(baseX, s * 0.35);
+                    g.lineTo(knee2X, knee2Y);
+                    g.lineTo(knee2X - 3, knee2Y + s * 0.4);
+                }
+
+                // Tail/stinger
+                g.lineStyle(1.5, c, 0.6);
+                g.moveTo(-s * 0.8, 0);
+                g.quadraticCurveTo(-s * 1.2, -s * 0.4, -s * 1.0, -s * 0.7);
+                g.beginFill(0xffaa00, 0.8);
+                g.drawCircle(-s * 1.0, -s * 0.7, 2.5);
+                g.endFill();
+                break;
+            }
         }
-        g.endFill();
     }
 
     applySlow(factor, duration) {
@@ -205,6 +390,9 @@ export class Enemy {
 
             this.pathProgress += moveAmount / dist;
 
+            // Update facing angle toward next waypoint
+            this.facingAngle = Math.atan2(dy, dx);
+
             while (this.pathProgress >= 1 && this.pathIndex < this.pathPixels.length - 2) {
                 this.pathProgress -= 1;
                 this.pathIndex++;
@@ -221,16 +409,34 @@ export class Enemy {
             const nxt = this.pathPixels[this.pathIndex + 1];
             this.x = cur.x + (nxt.x - cur.x) * this.pathProgress;
             this.y = cur.y + (nxt.y - cur.y) * this.pathProgress;
+
+            // Update facing for current segment
+            const sdx = nxt.x - cur.x;
+            const sdy = nxt.y - cur.y;
+            this.facingAngle = Math.atan2(sdy, sdx);
         }
 
         // Update visuals
         this.container.x = this.x;
         this.container.y = this.y;
 
-        // Pulse animation
+        // Rotate creature to face movement direction
+        this.graphic.rotation = this.facingAngle;
+
+        // Animate
+        this.animTime += dt * 4;
         this.pulseTime += dt * 3;
-        const pulse = 1 + Math.sin(this.pulseTime) * 0.05;
-        this.graphic.scale.set(pulse);
+
+        // Subtle walking bob for non-blob enemies
+        if (this.shape !== 'blob') {
+            const bob = Math.sin(this.animTime * 2) * 0.8;
+            this.graphic.y = bob;
+        } else {
+            // Blob wobble
+            const wobbleX = 1 + Math.sin(this.animTime) * 0.06;
+            const wobbleY = 1 + Math.cos(this.animTime * 1.3) * 0.06;
+            this.graphic.scale.set(wobbleX, wobbleY);
+        }
 
         // Slow tint
         if (this.slowTimer > 0) {
@@ -251,12 +457,12 @@ export class Enemy {
         g.clear();
         if (this.hp >= this.maxHp) return;
 
-        const w = this.size * 2;
+        const w = this.size * 2.2;
         const h = 3;
-        const yOff = -this.size - 6;
+        const yOff = -this.size - 8;
 
         // Background
-        g.beginFill(0x333333, 0.6);
+        g.beginFill(0x333333, 0.7);
         g.drawRect(-w / 2, yOff, w, h);
         g.endFill();
 
@@ -273,8 +479,11 @@ export class Enemy {
         g.clear();
         if (this.shield <= 0) return;
 
-        g.lineStyle(1.5, 0x44aaff, 0.5);
-        g.drawCircle(0, 0, this.size + 4);
+        // Energy shield barrier
+        g.lineStyle(2, 0x44aaff, 0.4);
+        g.drawCircle(0, 0, this.size + 5);
+        g.lineStyle(0.5, 0x88ccff, 0.2);
+        g.drawCircle(0, 0, this.size + 8);
     }
 
     destroy() {

@@ -52,6 +52,7 @@ class Game {
 
         // HUD (on top of everything)
         this.hud = new HUD(this.app.stage, this.state);
+        this.hud.waveManager = this.waveManager;
 
         // Game collections
         this.enemies = [];
