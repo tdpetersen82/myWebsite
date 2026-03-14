@@ -10,8 +10,8 @@ import { Projectile } from './Projectile.js';
 import { WaveManager, TOTAL_WAVES, BUILD_PHASE_DURATION } from './WaveManager.js';
 import { HUD } from './HUD.js';
 
-const GAME_W = 960;
-const GAME_H = 680;
+const GAME_W = 1400;
+const GAME_H = 960;
 
 class Game {
     constructor() {
@@ -74,24 +74,74 @@ class Game {
         this.app.ticker.add((delta) => this.update(delta));
     }
 
+    screenShake(intensity = 4, duration = 0.15) {
+        const layer = this.gameLayer;
+        gsap.to(layer, {
+            x: intensity, y: -intensity,
+            duration: duration / 4,
+            yoyo: true,
+            repeat: 3,
+            ease: 'power2.inOut',
+            onComplete: () => { layer.x = 0; layer.y = 0; }
+        });
+    }
+
+    screenFlash(color = 0x44ff88, alpha = 0.08) {
+        const flash = new PIXI.Graphics();
+        flash.beginFill(color, alpha);
+        flash.drawRect(0, 0, GAME_W, GAME_H);
+        flash.endFill();
+        this.gameLayer.addChild(flash);
+        gsap.to(flash, { alpha: 0, duration: 0.6, onComplete: () => {
+            this.gameLayer.removeChild(flash);
+            flash.destroy();
+        }});
+    }
+
     drawBackground() {
-        // Subtle vignette / atmosphere
         const bg = new PIXI.Graphics();
 
-        // Subtle grid glow at edges
-        bg.beginFill(0x0f0c29, 0.3);
+        // Base fill — deep space
+        bg.beginFill(0x050510, 1);
         bg.drawRect(0, 0, GAME_W, GAME_H);
         bg.endFill();
 
-        // Corner decorations
-        const cornerSize = 60;
-        const corners = [
-            [0, 0], [GAME_W, 0], [0, GAME_H], [GAME_W, GAME_H]
-        ];
-        corners.forEach(([cx, cy]) => {
-            bg.lineStyle(1, 0x667eea, 0.1);
-            bg.drawCircle(cx, cy, cornerSize);
-        });
+        // Subtle center nebula glow
+        bg.beginFill(0x0f1028, 0.4);
+        bg.drawEllipse(GAME_W / 2, GAME_H / 2, GAME_W * 0.4, GAME_H * 0.35);
+        bg.endFill();
+
+        // Scatter star dots — static, drawn once
+        const starColors = [0xffffff, 0xccddff, 0xaabbee, 0xddccff];
+        for (let i = 0; i < 80; i++) {
+            const sx = Math.random() * GAME_W;
+            const sy = Math.random() * GAME_H;
+            const alpha = 0.1 + Math.random() * 0.3;
+            const size = 0.5 + Math.random() * 1.5;
+            const color = starColors[Math.floor(Math.random() * starColors.length)];
+            bg.beginFill(color, alpha);
+            bg.drawCircle(sx, sy, size);
+            bg.endFill();
+        }
+
+        // Edge vignette — darker at borders
+        const vignetteAlpha = 0.35;
+        // Top edge
+        bg.beginFill(0x000005, vignetteAlpha);
+        bg.drawRect(0, 0, GAME_W, 80);
+        bg.endFill();
+        // Bottom edge
+        bg.beginFill(0x000005, vignetteAlpha);
+        bg.drawRect(0, GAME_H - 80, GAME_W, 80);
+        bg.endFill();
+        // Left edge
+        bg.beginFill(0x000005, vignetteAlpha * 0.6);
+        bg.drawRect(0, 0, 60, GAME_H);
+        bg.endFill();
+        // Right edge
+        bg.beginFill(0x000005, vignetteAlpha * 0.6);
+        bg.drawRect(GAME_W - 60, 0, 60, GAME_H);
+        bg.endFill();
 
         this.gameLayer.addChildAt(bg, 0);
     }
@@ -317,6 +367,10 @@ class Game {
         this.hud.showWaveAnnouncement(this.state.wave, isBoss);
         this.audio.waveStart();
 
+        if (isBoss) {
+            this.screenFlash(0xff4466, 0.06);
+        }
+
         this.deselectPlacedTower();
     }
 
@@ -373,6 +427,10 @@ class Game {
         this.particles.floatText(enemy.x, enemy.y - 15, `+${enemy.reward}`);
         this.audio.enemyDeath();
 
+        if (enemy.type === 'boss') {
+            this.screenShake(6, 0.2);
+        }
+
         // Splitter spawns 2 scouts
         if (enemy.type === 'splitter') {
             for (let i = 0; i < 2; i++) {
@@ -420,6 +478,7 @@ class Game {
                     this.state.loseLife();
                     this.audio.enemyReachEnd();
                     this.particles.floatText(enemy.x, enemy.y, '-1', 0xff4444);
+                    this.screenShake(3, 0.12);
                 }
                 enemy.destroy();
                 this.enemies.splice(i, 1);
@@ -461,6 +520,9 @@ class Game {
         // Update particles
         this.particles.update(dt);
 
+        // Animate path pulse dots
+        this.hexGrid.updatePathAnim(dt);
+
         // Check wave complete
         if (this.state.phase === 'wave' && this.waveManager.isWaveComplete(this.enemies.length)) {
             this.onWaveComplete();
@@ -478,6 +540,7 @@ class Game {
 
     onWaveComplete() {
         this.audio.waveComplete();
+        this.screenFlash(0x44ff88, 0.08);
 
         // Apply interest
         const interest = this.state.applyInterest();

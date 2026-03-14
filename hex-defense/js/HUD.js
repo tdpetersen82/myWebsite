@@ -4,8 +4,8 @@ import { TOWER_TYPES } from './Tower.js';
 import { TOTAL_WAVES } from './WaveManager.js';
 import { ENEMY_TYPES } from './Enemy.js';
 
-const GAME_W = 960;
-const GAME_H = 680;
+const GAME_W = 1400;
+const GAME_H = 960;
 
 // Draw a mini tower icon for UI buttons
 function drawMiniTower(g, type, x, y, scale = 1) {
@@ -170,56 +170,56 @@ export class HUD {
         bg.drawRoundedRect(10, 6, GAME_W - 20, 40, 8);
         this.topBar.addChild(bg);
 
-        const style = { fontFamily: 'Segoe UI', fontSize: 15, fill: '#ffffff', fontWeight: 'bold' };
-        const valStyle = { fontFamily: 'Segoe UI', fontSize: 15, fill: '#ffcc44', fontWeight: 'bold' };
+        const style = { fontFamily: 'Segoe UI', fontSize: 16, fill: '#ffffff', fontWeight: 'bold' };
+        const valStyle = { fontFamily: 'Segoe UI', fontSize: 16, fill: '#ffcc44', fontWeight: 'bold' };
 
         // Currency
         this.currencyLabel = new PIXI.Text('Gold: ', style);
-        this.currencyLabel.x = 30;
+        this.currencyLabel.x = 40;
         this.currencyLabel.y = 14;
         this.topBar.addChild(this.currencyLabel);
 
-        this.currencyValue = new PIXI.Text('150', valStyle);
-        this.currencyValue.x = 80;
+        this.currencyValue = new PIXI.Text('125', valStyle);
+        this.currencyValue.x = 95;
         this.currencyValue.y = 14;
         this.topBar.addChild(this.currencyValue);
 
         // Lives
         this.livesLabel = new PIXI.Text('Lives: ', style);
-        this.livesLabel.x = 190;
+        this.livesLabel.x = 270;
         this.livesLabel.y = 14;
         this.topBar.addChild(this.livesLabel);
 
-        this.livesValue = new PIXI.Text('20', { ...valStyle, fill: '#ff6688' });
-        this.livesValue.x = 243;
+        this.livesValue = new PIXI.Text('15', { ...valStyle, fill: '#ff6688' });
+        this.livesValue.x = 330;
         this.livesValue.y = 14;
         this.topBar.addChild(this.livesValue);
 
         // Wave
         this.waveLabel = new PIXI.Text('Wave: ', style);
-        this.waveLabel.x = 370;
+        this.waveLabel.x = 530;
         this.waveLabel.y = 14;
         this.topBar.addChild(this.waveLabel);
 
         this.waveValue = new PIXI.Text(`0/${TOTAL_WAVES}`, { ...valStyle, fill: '#88aaff' });
-        this.waveValue.x = 420;
+        this.waveValue.x = 590;
         this.waveValue.y = 14;
         this.topBar.addChild(this.waveValue);
 
         // Score
         this.scoreLabel = new PIXI.Text('Score: ', style);
-        this.scoreLabel.x = 560;
+        this.scoreLabel.x = 790;
         this.scoreLabel.y = 14;
         this.topBar.addChild(this.scoreLabel);
 
         this.scoreValue = new PIXI.Text('0', valStyle);
-        this.scoreValue.x = 615;
+        this.scoreValue.x = 855;
         this.scoreValue.y = 14;
         this.topBar.addChild(this.scoreValue);
 
         // High score
-        this.hiScoreText = new PIXI.Text(`Best: ${this.state.highScore}`, { ...style, fontSize: 12, fill: '#999999' });
-        this.hiScoreText.x = 780;
+        this.hiScoreText = new PIXI.Text(`Best: ${this.state.highScore}`, { ...style, fontSize: 13, fill: '#999999' });
+        this.hiScoreText.x = 1150;
         this.hiScoreText.y = 17;
         this.topBar.addChild(this.hiScoreText);
     }
@@ -237,8 +237,8 @@ export class HUD {
         // Tower buttons with mini icons
         const towerTypes = ['laser', 'pulse', 'slow', 'sniper'];
         const startX = 30;
-        const btnW = 130;
-        const btnH = 34;
+        const btnW = 160;
+        const btnH = 36;
         const y = GAME_H - 50;
 
         towerTypes.forEach((type, i) => {
@@ -246,7 +246,7 @@ export class HUD {
             const btn = this.createTowerButton(
                 type,
                 def,
-                startX + i * (btnW + 10),
+                startX + i * (btnW + 12),
                 y,
                 btnW,
                 btnH
@@ -265,9 +265,9 @@ export class HUD {
         // Start Wave button
         this.startWaveBtn = this.createButton(
             'Start Wave',
-            startX + 4 * (btnW + 10) + 20,
+            startX + 4 * (btnW + 12) + 30,
             y,
-            120,
+            130,
             btnH,
             0x44ff88
         );
@@ -279,7 +279,7 @@ export class HUD {
         this.bottomBar.addChild(this.startWaveBtn);
 
         // Sell button (hidden by default)
-        this.sellBtn = this.createButton('Sell', 750, y, 70, btnH, 0xff6644);
+        this.sellBtn = this.createButton('Sell', 1100, y, 80, btnH, 0xff6644);
         this.sellBtn.interactive = true;
         this.sellBtn.cursor = 'pointer';
         this.sellBtn.visible = false;
@@ -289,7 +289,7 @@ export class HUD {
         this.bottomBar.addChild(this.sellBtn);
 
         // Upgrade button (hidden by default)
-        this.upgradeBtn = this.createButton('Upgrade', 830, y, 100, btnH, 0x44aaff);
+        this.upgradeBtn = this.createButton('Upgrade', 1195, y, 110, btnH, 0x44aaff);
         this.upgradeBtn.interactive = true;
         this.upgradeBtn.cursor = 'pointer';
         this.upgradeBtn.visible = false;
@@ -302,7 +302,7 @@ export class HUD {
         this.buildTimerText = new PIXI.Text('', {
             fontFamily: 'Segoe UI', fontSize: 13, fill: '#88ffaa', fontWeight: 'bold',
         });
-        this.buildTimerText.x = startX + 4 * (btnW + 10) + 20;
+        this.buildTimerText.x = startX + 4 * (btnW + 12) + 30;
         this.buildTimerText.y = y - 18;
         this.buildTimerText.visible = false;
         this.bottomBar.addChild(this.buildTimerText);
@@ -384,10 +384,10 @@ export class HUD {
             const isSelected = btn.towerType === type;
             btn._bg.clear();
             btn._bg.beginFill(isSelected ? 0x2a2a5a : 0x1a1a3a, 0.9);
-            btn._bg.drawRoundedRect(0, 0, 130, 34, 6);
+            btn._bg.drawRoundedRect(0, 0, 160, 36, 6);
             btn._bg.endFill();
             btn._bg.lineStyle(isSelected ? 2.5 : 1.5, btn._accentColor, isSelected ? 0.9 : 0.6);
-            btn._bg.drawRoundedRect(0, 0, 130, 34, 6);
+            btn._bg.drawRoundedRect(0, 0, 160, 36, 6);
         });
     }
 
@@ -396,10 +396,10 @@ export class HUD {
         this.towerButtons.forEach(btn => {
             btn._bg.clear();
             btn._bg.beginFill(0x1a1a3a, 0.9);
-            btn._bg.drawRoundedRect(0, 0, 130, 34, 6);
+            btn._bg.drawRoundedRect(0, 0, 160, 36, 6);
             btn._bg.endFill();
             btn._bg.lineStyle(1.5, btn._accentColor, 0.6);
-            btn._bg.drawRoundedRect(0, 0, 130, 34, 6);
+            btn._bg.drawRoundedRect(0, 0, 160, 36, 6);
         });
     }
 
@@ -437,9 +437,9 @@ export class HUD {
         if (!preview || preview.length === 0) return;
 
         // Background panel
-        const panelX = GAME_W - 220;
-        const panelY = 52;
-        const panelW = 200;
+        const panelX = GAME_W - 250;
+        const panelY = 56;
+        const panelW = 220;
         const panelH = 20 + preview.length * 22;
 
         const bg = new PIXI.Graphics();
@@ -520,47 +520,47 @@ export class HUD {
         // Title
         const title = new PIXI.Text('HEX DEFENSE', {
             fontFamily: 'Segoe UI',
-            fontSize: 52,
+            fontSize: 60,
             fill: '#667eea',
             fontWeight: 'bold',
-            letterSpacing: 6,
+            letterSpacing: 8,
         });
         title.anchor.set(0.5);
         title.x = GAME_W / 2;
-        title.y = 140;
+        title.y = 200;
         this.menuLayer.addChild(title);
 
         // Subtitle
         const sub = new PIXI.Text('Tower Defense', {
             fontFamily: 'Segoe UI',
-            fontSize: 18,
+            fontSize: 22,
             fill: '#764ba2',
             fontWeight: '600',
-            letterSpacing: 3,
+            letterSpacing: 4,
         });
         sub.anchor.set(0.5);
         sub.x = GAME_W / 2;
-        sub.y = 195;
+        sub.y = 265;
         this.menuLayer.addChild(sub);
 
         // Instructions
         const instr = new PIXI.Text(
             'Select a tower from the bottom bar, then click green hexes to place.\nDefend the path against 20 waves of creatures!',
-            { fontFamily: 'Segoe UI', fontSize: 14, fill: '#888888', align: 'center', lineHeight: 22 }
+            { fontFamily: 'Segoe UI', fontSize: 15, fill: '#888888', align: 'center', lineHeight: 24 }
         );
         instr.anchor.set(0.5);
         instr.x = GAME_W / 2;
-        instr.y = 250;
+        instr.y = 320;
         this.menuLayer.addChild(instr);
 
         // Tower guide
-        const guideY = 290;
+        const guideY = 370;
         const towerTypes = ['laser', 'pulse', 'slow', 'sniper'];
-        const guideStartX = GAME_W / 2 - 180;
+        const guideStartX = GAME_W / 2 - 220;
 
         towerTypes.forEach((type, i) => {
             const def = TOWER_TYPES[type];
-            const tx = guideStartX + i * 95;
+            const tx = guideStartX + i * 115;
             const ty = guideY + 10;
 
             // Icon
@@ -586,7 +586,7 @@ export class HUD {
         });
 
         // Legend
-        const legendY = 340;
+        const legendY = 430;
         const legendG = new PIXI.Graphics();
 
         // Green hex = buildable
@@ -621,16 +621,16 @@ export class HUD {
         // High score
         if (this.state.highScore > 0) {
             const hs = new PIXI.Text(`High Score: ${this.state.highScore}  |  Best Wave: ${this.state.bestWave}`, {
-                fontFamily: 'Segoe UI', fontSize: 14, fill: '#ffcc44',
+                fontFamily: 'Segoe UI', fontSize: 15, fill: '#ffcc44',
             });
             hs.anchor.set(0.5);
             hs.x = GAME_W / 2;
-            hs.y = 385;
+            hs.y = 480;
             this.menuLayer.addChild(hs);
         }
 
         // Start button
-        const startBtn = this.createMenuButton('START GAME', GAME_W / 2 - 80, 420, 160, 44, 0x44ff88);
+        const startBtn = this.createMenuButton('START GAME', GAME_W / 2 - 90, 530, 180, 48, 0x44ff88);
         startBtn.on('pointerdown', () => {
             this.menuLayer.removeChildren();
             if (this.onStartGame) this.onStartGame();
@@ -640,11 +640,11 @@ export class HUD {
         // Controls info
         const ctrl = new PIXI.Text(
             'Click: Place/Select  |  Tower Buttons: Choose Type  |  Sell/Upgrade: Manage Towers',
-            { fontFamily: 'Segoe UI', fontSize: 11, fill: '#555555' }
+            { fontFamily: 'Segoe UI', fontSize: 12, fill: '#555555' }
         );
         ctrl.anchor.set(0.5);
         ctrl.x = GAME_W / 2;
-        ctrl.y = 500;
+        ctrl.y = 610;
         this.menuLayer.addChild(ctrl);
     }
 
@@ -658,23 +658,23 @@ export class HUD {
         this.menuLayer.addChild(overlay);
 
         const title = new PIXI.Text('GAME OVER', {
-            fontFamily: 'Segoe UI', fontSize: 48, fill: '#ff4466', fontWeight: 'bold',
+            fontFamily: 'Segoe UI', fontSize: 56, fill: '#ff4466', fontWeight: 'bold',
         });
         title.anchor.set(0.5);
         title.x = GAME_W / 2;
-        title.y = 200;
+        title.y = 300;
         this.menuLayer.addChild(title);
 
         const stats = new PIXI.Text(
             `Wave Reached: ${this.state.wave}\nScore: ${this.state.score}\nHigh Score: ${this.state.highScore}`,
-            { fontFamily: 'Segoe UI', fontSize: 20, fill: '#cccccc', align: 'center', lineHeight: 30 }
+            { fontFamily: 'Segoe UI', fontSize: 22, fill: '#cccccc', align: 'center', lineHeight: 34 }
         );
         stats.anchor.set(0.5);
         stats.x = GAME_W / 2;
-        stats.y = 310;
+        stats.y = 420;
         this.menuLayer.addChild(stats);
 
-        const restartBtn = this.createMenuButton('PLAY AGAIN', GAME_W / 2 - 80, 400, 160, 44, 0x44ff88);
+        const restartBtn = this.createMenuButton('PLAY AGAIN', GAME_W / 2 - 90, 510, 180, 48, 0x44ff88);
         restartBtn.on('pointerdown', () => {
             this.menuLayer.removeChildren();
             if (this.onRestart) this.onRestart();
@@ -692,23 +692,23 @@ export class HUD {
         this.menuLayer.addChild(overlay);
 
         const title = new PIXI.Text('VICTORY!', {
-            fontFamily: 'Segoe UI', fontSize: 52, fill: '#44ff88', fontWeight: 'bold',
+            fontFamily: 'Segoe UI', fontSize: 60, fill: '#44ff88', fontWeight: 'bold',
         });
         title.anchor.set(0.5);
         title.x = GAME_W / 2;
-        title.y = 200;
+        title.y = 300;
         this.menuLayer.addChild(title);
 
         const stats = new PIXI.Text(
             `All ${TOTAL_WAVES} waves defeated!\nFinal Score: ${this.state.score}\nHigh Score: ${this.state.highScore}`,
-            { fontFamily: 'Segoe UI', fontSize: 20, fill: '#cccccc', align: 'center', lineHeight: 30 }
+            { fontFamily: 'Segoe UI', fontSize: 22, fill: '#cccccc', align: 'center', lineHeight: 34 }
         );
         stats.anchor.set(0.5);
         stats.x = GAME_W / 2;
-        stats.y = 310;
+        stats.y = 420;
         this.menuLayer.addChild(stats);
 
-        const restartBtn = this.createMenuButton('PLAY AGAIN', GAME_W / 2 - 80, 400, 160, 44, 0x667eea);
+        const restartBtn = this.createMenuButton('PLAY AGAIN', GAME_W / 2 - 90, 510, 180, 48, 0x667eea);
         restartBtn.on('pointerdown', () => {
             this.menuLayer.removeChildren();
             if (this.onRestart) this.onRestart();
@@ -766,7 +766,7 @@ export class HUD {
 
         const padding = 8;
         const lineHeight = 16;
-        const w = 160;
+        const w = 190;
         const h = lines.length * lineHeight + padding * 2;
 
         // Clamp position to screen

@@ -8,8 +8,8 @@ export class GameState {
     }
 
     reset() {
-        this.currency = 150;
-        this.lives = 20;
+        this.currency = 125;
+        this.lives = 15;
         this.score = 0;
         this.wave = 0;
         this.phase = 'menu'; // menu, build, wave, gameover, victory
@@ -41,7 +41,7 @@ export class GameState {
     }
 
     applyInterest() {
-        const interest = Math.floor(this.currency * 0.05);
+        const interest = Math.floor(this.currency * 0.03);
         this.currency += interest;
         return interest;
     }

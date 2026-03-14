@@ -9,9 +9,9 @@ export const ENEMY_TYPES = {
         shape: 'bug',
         color: 0x44ffaa,
         hp: 30,
-        speed: 90,
+        speed: 105,
         reward: 10,
-        size: 8,
+        size: 10,
     },
     soldier: {
         name: 'Soldier',
@@ -20,16 +20,16 @@ export const ENEMY_TYPES = {
         hp: 60,
         speed: 60,
         reward: 15,
-        size: 10,
+        size: 13,
     },
     tank: {
         name: 'Tank',
         shape: 'crab',
         color: 0xff4466,
-        hp: 150,
+        hp: 175,
         speed: 35,
         reward: 25,
-        size: 13,
+        size: 17,
     },
     splitter: {
         name: 'Splitter',
@@ -38,16 +38,16 @@ export const ENEMY_TYPES = {
         hp: 40,
         speed: 55,
         reward: 20,
-        size: 10,
+        size: 13,
     },
     boss: {
         name: 'Boss',
         shape: 'spider',
         color: 0xff2244,
-        hp: 500,
-        speed: 28,
+        hp: 600,
+        speed: 32,
         reward: 100,
-        size: 16,
+        size: 21,
         shield: 5,
     },
 };
@@ -56,7 +56,7 @@ export class Enemy {
     constructor(type, container, waveNum = 1) {
         const def = ENEMY_TYPES[type];
         this.type = type;
-        this.maxHp = Math.floor(def.hp * (1 + (waveNum - 1) * 0.15));
+        this.maxHp = Math.floor(def.hp * (1 + (waveNum - 1) * 0.20));
         this.hp = this.maxHp;
         this.speed = def.speed;
         this.baseSpeed = def.speed;
@@ -94,8 +94,10 @@ export class Enemy {
         this.graphic = new PIXI.Graphics();
         this.hpBar = new PIXI.Graphics();
         this.shieldGraphic = new PIXI.Graphics();
+        this.slowGraphic = new PIXI.Graphics();
         this.container.addChild(this.graphic);
         this.container.addChild(this.shieldGraphic);
+        this.container.addChild(this.slowGraphic);
         this.container.addChild(this.hpBar);
         container.addChild(this.container);
 
@@ -438,11 +440,13 @@ export class Enemy {
             this.graphic.scale.set(wobbleX, wobbleY);
         }
 
-        // Slow tint
+        // Slow tint + frost ring
         if (this.slowTimer > 0) {
             this.graphic.tint = 0x6688ff;
+            this.drawFrostRing();
         } else {
             this.graphic.tint = 0xffffff;
+            this.slowGraphic.clear();
         }
 
         // HP bar
@@ -450,6 +454,30 @@ export class Enemy {
 
         // Shield visual
         this.drawShield();
+    }
+
+    drawFrostRing() {
+        const g = this.slowGraphic;
+        g.clear();
+        const orbRadius = this.size + 5;
+        const crystalCount = 3;
+        for (let i = 0; i < crystalCount; i++) {
+            const angle = (Math.PI * 2 / crystalCount) * i + this.animTime * 0.8;
+            const cx = Math.cos(angle) * orbRadius;
+            const cy = Math.sin(angle) * orbRadius;
+            const cSize = 3.5;
+            // Diamond shape
+            g.beginFill(0x88ccff, 0.5);
+            g.moveTo(cx, cy - cSize);
+            g.lineTo(cx + cSize * 0.6, cy);
+            g.lineTo(cx, cy + cSize);
+            g.lineTo(cx - cSize * 0.6, cy);
+            g.closePath();
+            g.endFill();
+        }
+        // Subtle orbit ring
+        g.lineStyle(0.8, 0x88ccff, 0.2);
+        g.drawCircle(0, 0, orbRadius);
     }
 
     drawHpBar() {
