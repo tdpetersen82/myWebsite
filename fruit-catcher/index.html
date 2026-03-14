@@ -452,9 +452,9 @@
                     iMax: Math.max(500, 1800 - r * 120),
                 };
             }
-            // Zen mode: gradual difficulty increase over time
+            // Zen mode: gradual difficulty increase based on score
             if (currentMode === 'zen') {
-                const t = Math.min(timeLeft / 60, 5); // ramps over 5 minutes
+                const t = Math.min(p1.score / 500, 5); // ramps with score
                 return {
                     sMin: 1.2 + t * 0.4,
                     sMax: 2.5 + t * 0.6,

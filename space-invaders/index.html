@@ -241,8 +241,9 @@
                 return bullet.y < canvas.height;
             });
 
-            // Alien shooting
-            if (timestamp - lastAlienShot > 1000) {
+            // Alien shooting (scales with level)
+            const alienFireInterval = Math.max(400, 1000 - level * 100);
+            if (timestamp - lastAlienShot > alienFireInterval) {
                 const aliveAliens = aliens.filter(a => a.alive);
                 if (aliveAliens.length > 0) {
                     const shooter = aliveAliens[Math.floor(Math.random() * aliveAliens.length)];
@@ -292,6 +293,7 @@
         }
 
         function shoot() {
+            if (bullets.length >= 2) return;
             bullets.push({
                 x: player.x + player.width / 2,
                 y: player.y

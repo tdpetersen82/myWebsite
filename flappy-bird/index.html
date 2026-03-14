@@ -80,7 +80,7 @@
 
         const pipes = [];
         const pipeWidth = 60;
-        const pipeGap = 150;
+        let pipeGap = 150;
         const pipeSpeed = 2;
         let frameCount = 0;
         let score = 0;
@@ -217,16 +217,17 @@
             bird.velocity += bird.gravity;
             bird.y += bird.velocity;
 
-            // Create new pipes
+            // Create new pipes with varying gap
             if (frameCount % 100 === 0) {
+                const thisGap = 130 + Math.floor(Math.random() * 41); // 130-170
                 const minTop = 50;
-                const maxTop = canvas.height - pipeGap - 100;
+                const maxTop = canvas.height - thisGap - 100;
                 const top = Math.floor(Math.random() * (maxTop - minTop + 1)) + minTop;
-                
+
                 pipes.push({
                     x: canvas.width,
                     top: top,
-                    bottom: top + pipeGap,
+                    bottom: top + thisGap,
                     scored: false
                 });
             }
