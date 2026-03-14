@@ -190,7 +190,7 @@
                 const sa = spawnAnims[i];
                 const elapsed = now - sa.start;
                 const t = Math.min(elapsed / 150, 1);
-                if (!animating || true) {
+                if (!animating) {
                     const scale = t < 1 ? 0.2 + 0.8 * t : 1;
                     if (t < 1) drawTile(tileX(sa.c), tileY(sa.r), grid[sa.r][sa.c], scale);
                 }
