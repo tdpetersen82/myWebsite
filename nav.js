@@ -54,6 +54,11 @@
                 { name: '2048', icon: '\u{1F522}', url: '2048/' },
                 { name: 'Stack Tower', icon: '\u{1F3D7}\uFE0F', url: 'stack-tower/' },
                 { name: 'Color Switch', icon: '\u{1F3A8}', url: 'color-switch/' },
+                { name: 'Fruit Ninja', icon: '\u{1F349}', url: 'fruit-ninja/' },
+                { name: 'Whack-a-Mole', icon: '\u{1F528}', url: 'whack-a-mole/' },
+                { name: 'Endless Runner', icon: '\u{1F3C3}', url: 'endless-runner/' },
+                { name: 'Knife Hit', icon: '\u{1F52A}', url: 'knife-hit/' },
+                { name: 'Bubble Shooter', icon: '\u{1FAE7}', url: 'bubble-shooter/' },
             ]
         },
         {
