@@ -49,10 +49,23 @@
             ]
         },
         {
+            name: 'Mobile Games', icon: '\u{1F4F1}',
+            games: [
+                { name: '2048', icon: '\u{1F522}', url: '2048/' },
+                { name: 'Stack Tower', icon: '\u{1F3D7}\uFE0F', url: 'stack-tower/' },
+                { name: 'Color Switch', icon: '\u{1F3A8}', url: 'color-switch/' },
+            ]
+        },
+        {
             name: 'Action & More', icon: '\u{1F3AF}',
             games: [
                 { name: 'Fruit Catcher', icon: '\u{1F34E}', url: 'fruit-catcher/' },
                 { name: 'Motorcycle Trail Rider', icon: '\u{1F3CD}\uFE0F', url: 'motorcycle-game/' },
+            ]
+        },
+        {
+            name: 'Experimental', icon: '\u{1F9EA}',
+            games: [
                 { name: 'eMoto Database', icon: '\u26A1', url: 'emoto-database/' },
             ]
         }
