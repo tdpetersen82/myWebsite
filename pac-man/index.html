@@ -316,6 +316,9 @@
             // Initialize maze
             this.initMaze();
 
+            // Pre-compute BFS return paths for eaten ghosts
+            this.computeReturnPaths();
+
             // Create Pac-Man
             this.pacman = {
                 tileX: 14, tileY: 23,
@@ -369,6 +372,46 @@
                     if (this.maze[r][c] === 2 || this.maze[r][c] === 3) {
                         this.totalDots++;
                     }
+                }
+            }
+        }
+
+        computeReturnPaths() {
+            // BFS from ghost house entrance to compute optimal direction at each tile
+            // Target: tile (14, 14) inside the ghost house
+            const target = { x: 14, y: 14 };
+            this.returnDir = [];
+            for (let r = 0; r < MAZE_ROWS; r++) {
+                this.returnDir[r] = new Array(MAZE_COLS).fill(null);
+            }
+
+            // BFS from target outward
+            const visited = [];
+            for (let r = 0; r < MAZE_ROWS; r++) {
+                visited[r] = new Array(MAZE_COLS).fill(false);
+            }
+
+            const queue = [{ x: target.x, y: target.y }];
+            visited[target.y][target.x] = true;
+
+            while (queue.length > 0) {
+                const cur = queue.shift();
+                for (const d of ALL_DIRS) {
+                    const nx = cur.x + d.x;
+                    const ny = cur.y + d.y;
+                    // Handle tunnel wrap
+                    let wx = nx;
+                    if (wx < 0) wx = MAZE_COLS - 1;
+                    if (wx >= MAZE_COLS) wx = 0;
+                    if (ny < 0 || ny >= MAZE_ROWS) continue;
+                    if (visited[ny][wx]) continue;
+                    const t = this.maze[ny][wx];
+                    // Eaten ghosts can pass through doors (6) but not walls (1, 5)
+                    if (t === 1 || t === 5) continue;
+                    visited[ny][wx] = true;
+                    // The direction to go FROM (nx, ny) TO reach target is the REVERSE of d
+                    this.returnDir[ny][wx] = { x: -d.x, y: -d.y };
+                    queue.push({ x: wx, y: ny });
                 }
             }
         }
@@ -732,7 +775,7 @@
                         ghost.pixelX = this.tileCenter(14);
                         ghost.pixelY = this.tileCenter(11);
                         ghost.dir = DIR.LEFT;
-                        ghost.mode = this.globalMode;
+                        ghost.mode = this.frightenedTimer > 0 ? MODE_FRIGHTENED : this.globalMode;
                     }
                 }
             }
@@ -821,48 +864,58 @@
                 // Check if eaten ghost reached house
                 if (ghost.mode === MODE_EATEN) {
                     if (ghost.tileX === 14 && ghost.tileY === 14) {
+                        // Ghost enters house — regenerate briefly then exit via updateGhostRelease
                         ghost.mode = this.frightenedTimer > 0 ? MODE_FRIGHTENED : this.globalMode;
+                        ghost.inHouse = true;
+                        ghost.releaseTimer = 500; // brief regeneration delay
                         ghost.tileX = 14;
-                        ghost.tileY = 11;
+                        ghost.tileY = 14;
                         ghost.pixelX = this.tileCenter(14);
-                        ghost.pixelY = this.tileCenter(11);
-                        ghost.dir = DIR.LEFT;
+                        ghost.pixelY = this.tileCenter(14);
                         return;
                     }
                 }
 
                 // Choose direction at intersection
-                const target = ghost.mode === MODE_FRIGHTENED ?
-                    { x: Math.floor(Math.random() * MAZE_COLS), y: Math.floor(Math.random() * MAZE_ROWS) } :
-                    this.getGhostTarget(ghost);
+                if (ghost.mode === MODE_EATEN) {
+                    // Use pre-computed BFS path for reliable return to ghost house
+                    const rd = this.returnDir[ghost.tileY] && this.returnDir[ghost.tileY][ghost.tileX];
+                    if (rd) {
+                        ghost.dir = rd;
+                    }
+                } else {
+                    const target = ghost.mode === MODE_FRIGHTENED ?
+                        { x: Math.floor(Math.random() * MAZE_COLS), y: Math.floor(Math.random() * MAZE_ROWS) } :
+                        this.getGhostTarget(ghost);
 
-                let bestDir = ghost.dir;
-                let bestDist = Infinity;
-                const reverseDir = { x: -ghost.dir.x, y: -ghost.dir.y };
+                    let bestDir = ghost.dir;
+                    let bestDist = Infinity;
+                    const reverseDir = { x: -ghost.dir.x, y: -ghost.dir.y };
 
-                for (const d of ALL_DIRS) {
-                    // No reversals (unless eaten)
-                    if (d.x === reverseDir.x && d.y === reverseDir.y && ghost.mode !== MODE_EATEN) continue;
+                    for (const d of ALL_DIRS) {
+                        // No reversals
+                        if (d.x === reverseDir.x && d.y === reverseDir.y) continue;
 
-                    const ntx = ghost.tileX + d.x;
-                    const nty = ghost.tileY + d.y;
+                        const ntx = ghost.tileX + d.x;
+                        const nty = ghost.tileY + d.y;
 
-                    if (this.isWallForGhost(ntx, nty, ghost)) continue;
+                        if (this.isWallForGhost(ntx, nty, ghost)) continue;
 
-                    // Ghosts can't go up at certain tiles (classic restriction)
-                    if (d.y === -1 && ghost.mode !== MODE_EATEN) {
-                        if ((ghost.tileY === 14 || ghost.tileY === 26) &&
-                            (ghost.tileX === 12 || ghost.tileX === 15)) continue;
+                        // Ghosts can't go up at certain tiles (classic restriction)
+                        if (d.y === -1) {
+                            if ((ghost.tileY === 14 || ghost.tileY === 26) &&
+                                (ghost.tileX === 12 || ghost.tileX === 15)) continue;
+                        }
+
+                        const dist = Math.pow(ntx - target.x, 2) + Math.pow(nty - target.y, 2);
+                        if (dist < bestDist) {
+                            bestDist = dist;
+                            bestDir = d;
+                        }
                     }
 
-                    const dist = Math.pow(ntx - target.x, 2) + Math.pow(nty - target.y, 2);
-                    if (dist < bestDist) {
-                        bestDist = dist;
-                        bestDir = d;
-                    }
+                    ghost.dir = bestDir;
                 }
-
-                ghost.dir = bestDir;
             }
 
             // Move ghost
