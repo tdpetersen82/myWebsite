@@ -757,9 +757,10 @@
                 case 'pinky': {
                     let tx = pac.tileX + pac.dir.x * 4;
                     let ty = pac.tileY + pac.dir.y * 4;
-                    // Classic overflow bug when facing up
+                    // Classic overflow bug when facing up: target 4 up AND 4 left
                     if (pac.dir === DIR.UP) {
                         tx -= 4;
+                        ty -= 4;
                     }
                     return { x: tx, y: ty };
                 }

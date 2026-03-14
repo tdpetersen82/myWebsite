@@ -413,7 +413,7 @@
 
             // Boss tractor beam chance (only in non-challenging stages)
             if (enemy.type === ENEMY_BOSS && !this.isChallengingStage && !this.isDualFighter
-                && Math.random() < 0.2 && !this.tractorBeamActive && this.playerAlive) {
+                && Math.random() < 0.07 && !this.tractorBeamActive && this.playerAlive) {
                 this.startTractorBeam(enemy);
             }
         }
@@ -579,6 +579,7 @@
                                 this.isDualFighter = true;
                                 this.capturedShip = null;
                                 enemy.hasCapturedShip = false;
+                                this.score += 5000; // Classic bonus for recovering captured ship
                                 playChallengeComplete();
                             }
 
@@ -787,10 +788,8 @@
             this.addExplosion(this.player.x, this.player.y);
             this.playerAlive = false;
             if (this.isDualFighter) {
+                // Classic Galaga: losing dual-fighter costs both ships and a life
                 this.isDualFighter = false;
-                this.respawnTimer = 60;
-                this.playerAlive = true; // keep one ship
-                return;
             }
             this.lives--;
             this.updateHUD();

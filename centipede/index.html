@@ -158,7 +158,7 @@
         }
 
         spawnCentipede() {
-            const segCount = 12;
+            const segCount = Math.min(10 + this.level * 2, 20);
             const startRow = Math.min(1 + Math.floor(this.level / 3), PLAYER_ZONE_TOP - 5);
             const chain = [];
             for (let i = 0; i < segCount; i++) {
@@ -224,7 +224,8 @@
                     // Dive straight down
                     head.row++;
                     if (head.row >= ROWS) {
-                        head.row = 0;
+                        // Reached bottom - clamp and reverse to move back up in player zone
+                        head.row = ROWS - 1;
                         head.dir = -head.dir;
                     }
                 } else {
@@ -235,7 +236,9 @@
                         head.row++;
                         head.dir = -head.dir;
                         if (head.row >= ROWS) {
-                            head.row = 0; // wrap to top
+                            // Reached bottom - stay at bottom and reverse up
+                            head.row = ROWS - 1;
+                            head.dir = -head.dir;
                         }
                     } else {
                         head.col = nextCol;
@@ -377,12 +380,7 @@
             // Random y direction changes
             if (Math.random() < 0.02) this.spiderDir.y = -this.spiderDir.y;
 
-            // Destroy mushrooms it touches
-            const sc = Math.floor(sp.x / CELL);
-            const sr = Math.floor(sp.y / CELL);
-            if (sc >= 0 && sc < COLS && sr >= 0 && sr < ROWS && this.mushrooms[sr][sc] !== 0) {
-                this.mushrooms[sr][sc] = 0;
-            }
+            // Spider passes through mushrooms (does not destroy them)
 
             // Off screen? Remove
             if (sp.x < -CELL * 3 || sp.x > GAME_W + CELL * 3) this.spider = null;
@@ -486,8 +484,8 @@
                 for (let c = 0; c < COLS; c++) {
                     const m = this.mushrooms[r][c];
                     if (m !== 0 && Math.abs(m) < 4) {
-                        const restored = m < 0 ? 4 : 4;
-                        this.addScore(5);
+                        const restored = 4;
+                        this.addScore(1);
                         this.mushrooms[r][c] = restored;
                     }
                 }
@@ -577,7 +575,7 @@
 
             // Shooting (auto-fire or spacebar)
             this.autoFireTimer += dt;
-            if (!this.bullet && (this.spaceKey.isDown || this.autoFireTimer > 150)) {
+            if (!this.bullet && (this.spaceKey.isDown || this.autoFireTimer > 250)) {
                 this.bullet = { x: this.player.x, y: this.player.y - CELL / 2 };
                 this.autoFireTimer = 0;
                 SFX.shoot();

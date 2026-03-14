@@ -1235,8 +1235,8 @@
                     airborneRotation = 0;
                 }
             } else {
-                if (wasAirborne && Math.abs(airborneRotation) >= Math.PI * 1.8) {
-                    const flips = Math.floor(Math.abs(airborneRotation) / (Math.PI * 1.8));
+                if (wasAirborne && Math.abs(airborneRotation) >= Math.PI * 1.5) {
+                    const flips = Math.floor(Math.abs(airborneRotation) / (Math.PI * 1.5));
                     flipCount += flips;
                     flipsDisplay.textContent = flipCount;
                     playFlipSound();

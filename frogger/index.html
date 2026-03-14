@@ -610,7 +610,8 @@
             resetFrogPosition() {
                 this.frogCol = Math.floor(COLS / 2);
                 this.frogRow = 0;
-                this.farthestRow = 0;
+                // Don't reset farthestRow on death - only reset on level complete
+                // to prevent re-scoring the same rows
                 this.frogRiding = null;
                 this.positionFrog(false);
                 this.startTimer();
