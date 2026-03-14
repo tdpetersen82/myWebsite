@@ -71,6 +71,18 @@
         }
     ];
 
+    // ── Viewport Size Presets ─────────────────────────────
+    var SIZE_PRESETS = {
+        compact:  { label: 'Compact',  vhFactor: 0.50, containerMax: 600 },
+        medium:   { label: 'Medium',   vhFactor: 0.65, containerMax: 750 },
+        standard: { label: 'Standard', vhFactor: 0.75, containerMax: 900 },
+        large:    { label: 'Large',    vhFactor: 0.90, containerMax: 1100 }
+    };
+    var SIZE_ORDER = ['compact', 'medium', 'standard', 'large'];
+    var DEFAULT_SIZE = 'medium';
+    var currentSize = localStorage.getItem('arcadeViewportSize') || DEFAULT_SIZE;
+    if (!SIZE_PRESETS[currentSize]) currentSize = DEFAULT_SIZE;
+
     var totalGames = GAME_CATALOG.reduce(function (sum, cat) { return sum + cat.games.length; }, 0);
     // Extract folder name for games in subdirectories (e.g., /snake/ or /snake/index.html)
     var pathParts = location.pathname.replace(/\/index\.html$/, '/').split('/').filter(Boolean);
@@ -157,6 +169,14 @@ body.nav-open{overflow:hidden}\
 \
 /* Ensure game content does not overlap nav button */\
 .container,.hub-container{position:relative}\
+\
+/* Game Size Selector */\
+.nav-size-selector{padding:12px 0 0;margin-top:12px;border-top:1px solid rgba(255,255,255,0.08)}\
+.nav-size-label{display:block;color:rgba(255,255,255,0.5);font-size:0.75em;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}\
+.nav-size-buttons{display:flex;gap:6px}\
+.nav-size-btn{flex:1;padding:6px 4px;border:1px solid rgba(255,255,255,0.15);border-radius:8px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);font-size:0.78em;cursor:pointer;transition:all .2s}\
+.nav-size-btn:hover{background:rgba(255,255,255,0.1);color:#fff}\
+.nav-size-btn.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-color:transparent;font-weight:600}\
 ';
     document.head.appendChild(style);
 
@@ -189,6 +209,22 @@ body.nav-open{overflow:hidden}\
 <span class="nav-search-icon">\u{1F50D}</span>\
 <input type="text" id="navSearchInput" placeholder="Search ' + totalGames + ' games\u2026" autocomplete="off">\
 </div>';
+
+    // Size selector in drawer header
+    var sizeSelector = document.createElement('div');
+    sizeSelector.className = 'nav-size-selector';
+    sizeSelector.innerHTML = '<label class="nav-size-label">Game Size</label><div class="nav-size-buttons"></div>';
+    var btnGroup = sizeSelector.querySelector('.nav-size-buttons');
+    SIZE_ORDER.forEach(function (key) {
+        var preset = SIZE_PRESETS[key];
+        var sBtn = document.createElement('button');
+        sBtn.className = 'nav-size-btn' + (key === currentSize ? ' active' : '');
+        sBtn.dataset.size = key;
+        sBtn.textContent = preset.label;
+        sBtn.addEventListener('click', function () { setViewportSize(key); });
+        btnGroup.appendChild(sBtn);
+    });
+    header.appendChild(sizeSelector);
 
     // Body (scrollable game list)
     var body = document.createElement('div');
@@ -327,5 +363,61 @@ body.nav-open{overflow:hidden}\
     if (countBadge) {
         countBadge.textContent = totalGames + ' Games';
     }
+
+    // ── Viewport Size Control ─────────────────────────────
+    function applyViewportSize(sizeKey) {
+        var preset = SIZE_PRESETS[sizeKey];
+        if (!preset) return;
+
+        // Vanilla canvas games (use #gameCanvas with CSS transform scaling)
+        var canvas = document.getElementById('gameCanvas');
+        if (canvas) {
+            var bw = canvas.width, bh = canvas.height;
+            var par = canvas.parentElement;
+            var ps = getComputedStyle(par);
+            var mw = par.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
+            var mh = window.innerHeight * preset.vhFactor;
+            var s = Math.min(mw / bw, mh / bh, 1);
+            canvas.style.transformOrigin = 'top center';
+            canvas.style.transform = 'scale(' + s + ')';
+            canvas.style.marginBottom = (-(bh * (1 - s))) + 'px';
+        }
+
+        // Phaser games (use #game-container with Phaser.Scale.FIT)
+        var gameContainer = document.getElementById('game-container');
+        if (gameContainer) {
+            var container = gameContainer.closest('.container');
+            if (container) {
+                container.style.maxWidth = preset.containerMax + 'px';
+            }
+            gameContainer.style.maxHeight = (window.innerHeight * preset.vhFactor) + 'px';
+            gameContainer.style.overflow = 'hidden';
+        }
+
+        // Hex-defense uses #game-wrapper with its own scaling
+        var wrapper = document.getElementById('game-wrapper');
+        if (wrapper && !canvas && !gameContainer) {
+            wrapper.style.maxHeight = (window.innerHeight * preset.vhFactor) + 'px';
+            wrapper.style.overflow = 'hidden';
+        }
+    }
+
+    function setViewportSize(sizeKey) {
+        currentSize = sizeKey;
+        localStorage.setItem('arcadeViewportSize', sizeKey);
+        var allBtns = document.querySelectorAll('.nav-size-btn');
+        allBtns.forEach(function (b) {
+            b.classList.toggle('active', b.dataset.size === sizeKey);
+        });
+        applyViewportSize(sizeKey);
+        // Trigger resize so Phaser Scale Manager recalculates
+        window.dispatchEvent(new Event('resize'));
+    }
+
+    // Apply on load and on every resize
+    applyViewportSize(currentSize);
+    window.addEventListener('resize', function () {
+        applyViewportSize(currentSize);
+    });
 
 })();
