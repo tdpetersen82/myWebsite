@@ -1,4 +1,4 @@
-// HexGrid.js — Flat-top hexagonal grid math and rendering
+// HexGrid.js — Flat-top hexagonal grid math and rendering (hex-shaped map)
 
 const SQRT3 = Math.sqrt(3);
 
@@ -12,11 +12,16 @@ const HEX_DIRECTIONS = [
     { q: 0, r: 1 },   // SE
 ];
 
-export const HEX_SIZE = 40;
-export const GRID_COLS = 15;
-export const GRID_ROWS = 10;
-export const GRID_OFFSET_X = 180;
-export const GRID_OFFSET_Y = 115;
+export const HEX_SIZE = 32;
+export const HEX_RADIUS = 7; // map radius in hex cells
+export const GRID_OFFSET_X = 700;
+export const GRID_OFFSET_Y = 450;
+
+// Check if a hex coordinate is within the hexagonal map
+export function isValidHex(q, r) {
+    const s = -q - r;
+    return Math.max(Math.abs(q), Math.abs(r), Math.abs(s)) <= HEX_RADIUS;
+}
 
 // Convert axial (q, r) to pixel center
 export function hexToPixel(q, r) {
@@ -74,30 +79,60 @@ export function hexCorners(cx, cy) {
     return corners;
 }
 
-// Enemy path through the grid (winding S-curve)
+// Enemy path through the hex-shaped grid (winding S-curve)
 export const ENEMY_PATH = [
-    // Enter from left, row ~4
-    { q: -1, r: 5 },
-    { q: 0, r: 4 }, { q: 1, r: 4 }, { q: 2, r: 3 }, { q: 3, r: 3 },
-    { q: 4, r: 2 }, { q: 5, r: 2 }, { q: 6, r: 1 }, { q: 7, r: 1 },
-    { q: 8, r: 1 }, { q: 9, r: 1 }, { q: 10, r: 1 },
-    // Turn down
-    { q: 10, r: 2 }, { q: 10, r: 3 }, { q: 11, r: 3 },
-    { q: 11, r: 4 }, { q: 11, r: 5 },
-    // Go left
-    { q: 10, r: 5 }, { q: 9, r: 6 }, { q: 8, r: 6 },
-    { q: 7, r: 6 }, { q: 6, r: 7 }, { q: 5, r: 7 },
-    { q: 4, r: 7 }, { q: 3, r: 8 }, { q: 2, r: 8 },
-    // Turn down and exit right
-    { q: 2, r: 9 }, { q: 3, r: 9 }, { q: 4, r: 8 },
-    { q: 5, r: 8 }, { q: 6, r: 8 }, { q: 7, r: 8 },
-    { q: 8, r: 7 }, { q: 9, r: 7 }, { q: 10, r: 7 },
-    { q: 11, r: 7 }, { q: 12, r: 6 }, { q: 13, r: 6 },
-    { q: 14, r: 6 }, { q: 15, r: 5 },
+    // Enter from left edge
+    { q: -8, r: 4 },
+    { q: -7, r: 4 },
+    // Sweep northeast
+    { q: -6, r: 3 }, { q: -5, r: 3 }, { q: -4, r: 2 }, { q: -3, r: 2 },
+    { q: -2, r: 1 }, { q: -1, r: 1 }, { q: 0, r: 0 }, { q: 1, r: 0 },
+    { q: 2, r: -1 }, { q: 3, r: -1 }, { q: 4, r: -2 },
+    // Turn south
+    { q: 4, r: -1 }, { q: 4, r: 0 }, { q: 5, r: 0 },
+    { q: 5, r: 1 }, { q: 5, r: 2 },
+    // Sweep southwest
+    { q: 4, r: 2 }, { q: 3, r: 3 }, { q: 2, r: 3 },
+    { q: 1, r: 4 }, { q: 0, r: 4 }, { q: -1, r: 4 },
+    { q: -2, r: 5 }, { q: -3, r: 5 }, { q: -4, r: 6 },
+    // Turn northeast toward exit
+    { q: -3, r: 6 }, { q: -2, r: 5 },
+    { q: -1, r: 5 }, { q: 0, r: 5 }, { q: 1, r: 4 },
+    { q: 2, r: 4 }, { q: 3, r: 3 }, { q: 4, r: 3 },
+    { q: 5, r: 2 }, { q: 6, r: 1 }, { q: 7, r: 0 },
+    // Exit right
+    { q: 8, r: -1 },
 ];
+
+// Deduplicate path (remove consecutive duplicates that might occur)
+function deduplicatePath(path) {
+    const result = [path[0]];
+    for (let i = 1; i < path.length; i++) {
+        if (path[i].q !== path[i - 1].q || path[i].r !== path[i - 1].r) {
+            result.push(path[i]);
+        }
+    }
+    return result;
+}
+
+const CLEAN_PATH = deduplicatePath(ENEMY_PATH);
+// Replace ENEMY_PATH contents
+ENEMY_PATH.length = 0;
+CLEAN_PATH.forEach(p => ENEMY_PATH.push(p));
 
 // Set of path hex keys for quick lookup
 export const PATH_HEXES = new Set(ENEMY_PATH.map(h => hexKey(h.q, h.r)));
+
+// Iterate over all valid hexes in the map
+export function forEachHex(callback) {
+    for (let q = -HEX_RADIUS; q <= HEX_RADIUS; q++) {
+        const r1 = Math.max(-HEX_RADIUS, -q - HEX_RADIUS);
+        const r2 = Math.min(HEX_RADIUS, -q + HEX_RADIUS);
+        for (let r = r1; r <= r2; r++) {
+            callback(q, r);
+        }
+    }
+}
 
 export class HexGridRenderer {
     constructor(stage) {
@@ -107,8 +142,10 @@ export class HexGridRenderer {
         this.pathPulseGraphics = new PIXI.Graphics();
         this.hoverGraphics = new PIXI.Graphics();
         this.rangeGraphics = new PIXI.Graphics();
+        this.borderGraphics = new PIXI.Graphics();
 
         this.container.addChild(this.pathGraphics);
+        this.container.addChild(this.borderGraphics);
         this.container.addChild(this.gridGraphics);
         this.container.addChild(this.pathPulseGraphics);
         this.container.addChild(this.rangeGraphics);
@@ -125,17 +162,17 @@ export class HexGridRenderer {
         this.initGrid();
         this.drawGrid();
         this.drawPath();
+        this.drawBorder();
         this.computePathLengths();
     }
 
     initGrid() {
-        for (let q = 0; q < GRID_COLS; q++) {
-            for (let r = 0; r < GRID_ROWS; r++) {
-                const key = hexKey(q, r);
-                const state = PATH_HEXES.has(key) ? 'path' : 'empty';
-                this.cells.set(key, state);
-            }
-        }
+        this.cells.clear();
+        forEachHex((q, r) => {
+            const key = hexKey(q, r);
+            const state = PATH_HEXES.has(key) ? 'path' : 'empty';
+            this.cells.set(key, state);
+        });
     }
 
     drawHexShape(g, corners) {
@@ -150,34 +187,76 @@ export class HexGridRenderer {
         const g = this.gridGraphics;
         g.clear();
 
-        for (let q = 0; q < GRID_COLS; q++) {
-            for (let r = 0; r < GRID_ROWS; r++) {
-                const { x, y } = hexToPixel(q, r);
-                const corners = hexCorners(x, y);
-                const key = hexKey(q, r);
-                const state = this.cells.get(key);
+        forEachHex((q, r) => {
+            const { x, y } = hexToPixel(q, r);
+            const corners = hexCorners(x, y);
+            const key = hexKey(q, r);
+            const state = this.cells.get(key);
 
-                if (state === 'path') {
-                    // Path hexes: dark teal energy conduit tiles
-                    g.lineStyle(1.5, 0x00ccaa, 0.2);
-                    g.beginFill(0x0a2a3a, 0.25);
-                    this.drawHexShape(g, corners);
-                    g.endFill();
-                } else if (state === 'tower') {
-                    // Tower hexes: strong contrast platform
-                    g.lineStyle(1.5, 0x5599cc, 0.5);
-                    g.beginFill(0x1a1a3a, 0.4);
-                    this.drawHexShape(g, corners);
-                    g.endFill();
-                } else {
-                    // Buildable hexes: slightly visible green
-                    g.lineStyle(1, 0x44885a, 0.35);
-                    g.beginFill(0x1a3a20, 0.15);
-                    this.drawHexShape(g, corners);
-                    g.endFill();
+            if (state === 'path') {
+                // Path hexes: dark teal energy conduit tiles
+                g.lineStyle(1.5, 0x00ccaa, 0.2);
+                g.beginFill(0x0a2a3a, 0.25);
+                this.drawHexShape(g, corners);
+                g.endFill();
+            } else if (state === 'tower') {
+                // Tower hexes: strong contrast platform
+                g.lineStyle(1.5, 0x5599cc, 0.5);
+                g.beginFill(0x1a1a3a, 0.4);
+                this.drawHexShape(g, corners);
+                g.endFill();
+            } else {
+                // Buildable hexes: slightly visible green with circuit pattern
+                g.lineStyle(1, 0x44885a, 0.35);
+                g.beginFill(0x1a3a20, 0.15);
+                this.drawHexShape(g, corners);
+                g.endFill();
+
+                // Subtle circuit-board inner lines
+                g.lineStyle(0.5, 0x44885a, 0.1);
+                const innerR = HEX_SIZE * 0.5;
+                const angle1 = Math.random() * Math.PI * 2;
+                g.moveTo(x + innerR * 0.3 * Math.cos(angle1), y + innerR * 0.3 * Math.sin(angle1));
+                g.lineTo(x + innerR * Math.cos(angle1 + 0.5), y + innerR * Math.sin(angle1 + 0.5));
+            }
+        });
+    }
+
+    drawBorder() {
+        const g = this.borderGraphics;
+        g.clear();
+
+        // Find edge hexes and draw glowing border
+        forEachHex((q, r) => {
+            let isEdge = false;
+            for (const dir of HEX_DIRECTIONS) {
+                if (!isValidHex(q + dir.q, r + dir.r)) {
+                    isEdge = true;
+                    break;
                 }
             }
-        }
+            if (isEdge) {
+                const { x, y } = hexToPixel(q, r);
+                const corners = hexCorners(x, y);
+
+                // Check each edge: if neighbor doesn't exist, draw that edge with glow
+                for (let i = 0; i < 6; i++) {
+                    const dir = HEX_DIRECTIONS[i];
+                    if (!isValidHex(q + dir.q, r + dir.r)) {
+                        const c1 = corners[i];
+                        const c2 = corners[(i + 1) % 6];
+                        // Outer glow
+                        g.lineStyle(4, 0x00ffcc, 0.08);
+                        g.moveTo(c1.x, c1.y);
+                        g.lineTo(c2.x, c2.y);
+                        // Inner bright edge
+                        g.lineStyle(1.5, 0x00ffcc, 0.25);
+                        g.moveTo(c1.x, c1.y);
+                        g.lineTo(c2.x, c2.y);
+                    }
+                }
+            }
+        });
     }
 
     drawPath() {
@@ -188,7 +267,7 @@ export class HexGridRenderer {
         for (let i = 0; i < ENEMY_PATH.length - 1; i++) {
             const a = hexToPixel(ENEMY_PATH[i].q, ENEMY_PATH[i].r);
             const b = hexToPixel(ENEMY_PATH[i + 1].q, ENEMY_PATH[i + 1].r);
-            g.lineStyle(28, 0x004455, 0.18);
+            g.lineStyle(24, 0x004455, 0.18);
             g.moveTo(a.x, a.y);
             g.lineTo(b.x, b.y);
         }
@@ -197,7 +276,7 @@ export class HexGridRenderer {
         for (let i = 0; i < ENEMY_PATH.length - 1; i++) {
             const a = hexToPixel(ENEMY_PATH[i].q, ENEMY_PATH[i].r);
             const b = hexToPixel(ENEMY_PATH[i + 1].q, ENEMY_PATH[i + 1].r);
-            g.lineStyle(14, 0x006677, 0.3);
+            g.lineStyle(12, 0x006677, 0.3);
             g.moveTo(a.x, a.y);
             g.lineTo(b.x, b.y);
         }
@@ -206,7 +285,7 @@ export class HexGridRenderer {
         for (let i = 0; i < ENEMY_PATH.length - 1; i++) {
             const a = hexToPixel(ENEMY_PATH[i].q, ENEMY_PATH[i].r);
             const b = hexToPixel(ENEMY_PATH[i + 1].q, ENEMY_PATH[i + 1].r);
-            g.lineStyle(4, 0x00ffcc, 0.35);
+            g.lineStyle(3, 0x00ffcc, 0.35);
             g.moveTo(a.x, a.y);
             g.lineTo(b.x, b.y);
         }
@@ -215,10 +294,10 @@ export class HexGridRenderer {
         for (let i = 0; i < ENEMY_PATH.length; i++) {
             const p = hexToPixel(ENEMY_PATH[i].q, ENEMY_PATH[i].r);
             g.beginFill(0x006677, 0.3);
-            g.drawCircle(p.x, p.y, 7);
+            g.drawCircle(p.x, p.y, 6);
             g.endFill();
             g.beginFill(0x00ffcc, 0.15);
-            g.drawCircle(p.x, p.y, 4);
+            g.drawCircle(p.x, p.y, 3);
             g.endFill();
         }
 
@@ -231,18 +310,18 @@ export class HexGridRenderer {
 
         // Glow behind arrow
         g.beginFill(0x00ff88, 0.12);
-        g.drawCircle(entryX, entryY, 20);
+        g.drawCircle(entryX, entryY, 18);
         g.endFill();
         // Arrow
-        g.lineStyle(3.5, 0x00ff88, 0.9);
+        g.lineStyle(3, 0x00ff88, 0.9);
         g.moveTo(
-            entryX - Math.cos(entryAngle - 0.5) * 14,
-            entryY - Math.sin(entryAngle - 0.5) * 14
+            entryX - Math.cos(entryAngle - 0.5) * 12,
+            entryY - Math.sin(entryAngle - 0.5) * 12
         );
-        g.lineTo(entryX + Math.cos(entryAngle) * 8, entryY + Math.sin(entryAngle) * 8);
+        g.lineTo(entryX + Math.cos(entryAngle) * 7, entryY + Math.sin(entryAngle) * 7);
         g.lineTo(
-            entryX - Math.cos(entryAngle + 0.5) * 14,
-            entryY - Math.sin(entryAngle + 0.5) * 14
+            entryX - Math.cos(entryAngle + 0.5) * 12,
+            entryY - Math.sin(entryAngle + 0.5) * 12
         );
 
         // Exit marker — red X with glow
@@ -251,13 +330,13 @@ export class HexGridRenderer {
             ENEMY_PATH[ENEMY_PATH.length - 1].r
         );
         g.beginFill(0xff3355, 0.12);
-        g.drawCircle(exit.x, exit.y, 20);
+        g.drawCircle(exit.x, exit.y, 18);
         g.endFill();
-        g.lineStyle(3.5, 0xff3355, 0.9);
-        g.moveTo(exit.x - 8, exit.y - 8);
-        g.lineTo(exit.x + 8, exit.y + 8);
-        g.moveTo(exit.x + 8, exit.y - 8);
-        g.lineTo(exit.x - 8, exit.y + 8);
+        g.lineStyle(3, 0xff3355, 0.9);
+        g.moveTo(exit.x - 7, exit.y - 7);
+        g.lineTo(exit.x + 7, exit.y + 7);
+        g.moveTo(exit.x + 7, exit.y - 7);
+        g.lineTo(exit.x - 7, exit.y + 7);
     }
 
     computePathLengths() {
@@ -294,7 +373,7 @@ export class HexGridRenderer {
         const g = this.pathPulseGraphics;
         g.clear();
 
-        const dotCount = 5;
+        const dotCount = 6;
         const spacing = this.totalPathLength / dotCount;
 
         for (let i = 0; i < dotCount; i++) {
@@ -302,11 +381,11 @@ export class HexGridRenderer {
             const pt = this.getPointAlongPath(dist);
             // Outer glow
             g.beginFill(0x00ffcc, 0.15);
-            g.drawCircle(pt.x, pt.y, 8);
+            g.drawCircle(pt.x, pt.y, 7);
             g.endFill();
             // Core dot
             g.beginFill(0x00ffcc, 0.6);
-            g.drawCircle(pt.x, pt.y, 3.5);
+            g.drawCircle(pt.x, pt.y, 3);
             g.endFill();
         }
     }
@@ -315,7 +394,7 @@ export class HexGridRenderer {
         const g = this.hoverGraphics;
         g.clear();
 
-        if (q < 0 || q >= GRID_COLS || r < 0 || r >= GRID_ROWS) return;
+        if (!isValidHex(q, r)) return;
 
         const { x, y } = hexToPixel(q, r);
         const corners = hexCorners(x, y);
@@ -357,19 +436,17 @@ export class HexGridRenderer {
         const g = this.rangeGraphics;
         g.clear();
 
-        for (let cq = 0; cq < GRID_COLS; cq++) {
-            for (let cr = 0; cr < GRID_ROWS; cr++) {
-                if (hexDistance({ q, r }, { q: cq, r: cr }) <= range) {
-                    const { x, y } = hexToPixel(cq, cr);
-                    const corners = hexCorners(x, y);
+        forEachHex((cq, cr) => {
+            if (hexDistance({ q, r }, { q: cq, r: cr }) <= range) {
+                const { x, y } = hexToPixel(cq, cr);
+                const corners = hexCorners(x, y);
 
-                    g.lineStyle(1, 0x667eea, 0.2);
-                    g.beginFill(0x667eea, 0.1);
-                    this.drawHexShape(g, corners);
-                    g.endFill();
-                }
+                g.lineStyle(1, 0x667eea, 0.2);
+                g.beginFill(0x667eea, 0.1);
+                this.drawHexShape(g, corners);
+                g.endFill();
             }
-        }
+        });
     }
 
     clearRange() {

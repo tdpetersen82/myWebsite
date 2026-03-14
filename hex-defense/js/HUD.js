@@ -121,6 +121,30 @@ function drawMiniEnemy(g, type, x, y, scale = 1) {
             g.endFill();
             break;
         }
+        case 'wasp': {
+            // Small triangular wasp
+            g.beginFill(color, 0.7);
+            g.moveTo(x + 4 * s, y);
+            g.lineTo(x - 3 * s, y - 3 * s);
+            g.lineTo(x - 3 * s, y + 3 * s);
+            g.closePath();
+            g.endFill();
+            g.beginFill(0xff0000, 0.8);
+            g.drawCircle(x + 2 * s, y, 0.8 * s);
+            g.endFill();
+            break;
+        }
+        case 'medic': {
+            // Healer with cross
+            g.beginFill(color, 0.6);
+            g.drawCircle(x, y, 4 * s);
+            g.endFill();
+            g.beginFill(0xffffff, 0.7);
+            g.drawRect(x - 1 * s, y - 3 * s, 2 * s, 6 * s);
+            g.drawRect(x - 3 * s, y - 1 * s, 6 * s, 2 * s);
+            g.endFill();
+            break;
+        }
     }
 }
 
@@ -545,7 +569,7 @@ export class HUD {
 
         // Instructions
         const instr = new PIXI.Text(
-            'Select a tower from the bottom bar, then click green hexes to place.\nDefend the path against 20 waves of creatures!',
+            `Select a tower from the bottom bar, then click green hexes to place.\nDefend the path against ${TOTAL_WAVES} waves of creatures!`,
             { fontFamily: 'Segoe UI', fontSize: 15, fill: '#888888', align: 'center', lineHeight: 24 }
         );
         instr.anchor.set(0.5);
