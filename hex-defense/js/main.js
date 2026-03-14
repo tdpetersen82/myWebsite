@@ -1,6 +1,6 @@
 // main.js — Game initialization, loop, and orchestration
 
-import { HexGridRenderer, hexToPixel, pixelToHex, hexKey, hexDistance, ENEMY_PATH, HEX_SIZE, GRID_COLS, GRID_ROWS } from './HexGrid.js';
+import { HexGridRenderer, hexToPixel, pixelToHex, hexKey, hexDistance, ENEMY_PATH, HEX_SIZE, isValidHex } from './HexGrid.js';
 import { GameState } from './GameState.js';
 import { AudioManager } from './AudioManager.js';
 import { ParticleSystem } from './ParticleSystem.js';
@@ -67,6 +67,10 @@ class Game {
         // Draw background decoration
         this.drawBackground();
 
+        // Animated stars
+        this.stars = [];
+        this.initStars();
+
         // Start with menu
         this.showMenu();
 
@@ -98,6 +102,50 @@ class Game {
         }});
     }
 
+    initStars() {
+        this.starContainer = new PIXI.Container();
+        this.gameLayer.addChildAt(this.starContainer, 1);
+
+        const starColors = [0xffffff, 0xccddff, 0xaabbee, 0xddccff, 0xffeedd];
+        for (let i = 0; i < 120; i++) {
+            const star = {
+                x: Math.random() * GAME_W,
+                y: Math.random() * GAME_H,
+                size: 0.3 + Math.random() * 1.8,
+                baseAlpha: 0.08 + Math.random() * 0.25,
+                color: starColors[Math.floor(Math.random() * starColors.length)],
+                speed: 0.5 + Math.random() * 1.5,
+                twinkleSpeed: 1 + Math.random() * 3,
+                twinklePhase: Math.random() * Math.PI * 2,
+            };
+            this.stars.push(star);
+        }
+        this.starGraphics = new PIXI.Graphics();
+        this.starContainer.addChild(this.starGraphics);
+        this.starTime = 0;
+    }
+
+    updateStars(dt) {
+        this.starTime += dt;
+        const g = this.starGraphics;
+        g.clear();
+        for (const star of this.stars) {
+            star.x -= star.speed * dt * 8;
+            if (star.x < -5) star.x = GAME_W + 5;
+            const twinkle = Math.sin(this.starTime * star.twinkleSpeed + star.twinklePhase);
+            const alpha = star.baseAlpha + twinkle * 0.1;
+            g.beginFill(star.color, Math.max(0.02, alpha));
+            g.drawCircle(star.x, star.y, star.size);
+            g.endFill();
+            // Glow on brighter stars
+            if (star.size > 1.2) {
+                g.beginFill(star.color, alpha * 0.15);
+                g.drawCircle(star.x, star.y, star.size * 2.5);
+                g.endFill();
+            }
+        }
+    }
+
     drawBackground() {
         const bg = new PIXI.Graphics();
 
@@ -106,41 +154,30 @@ class Game {
         bg.drawRect(0, 0, GAME_W, GAME_H);
         bg.endFill();
 
-        // Subtle center nebula glow
-        bg.beginFill(0x0f1028, 0.4);
-        bg.drawEllipse(GAME_W / 2, GAME_H / 2, GAME_W * 0.4, GAME_H * 0.35);
+        // Multiple nebula glows for depth
+        bg.beginFill(0x0f1028, 0.3);
+        bg.drawEllipse(GAME_W * 0.35, GAME_H * 0.4, GAME_W * 0.3, GAME_H * 0.25);
         bg.endFill();
-
-        // Scatter star dots — static, drawn once
-        const starColors = [0xffffff, 0xccddff, 0xaabbee, 0xddccff];
-        for (let i = 0; i < 80; i++) {
-            const sx = Math.random() * GAME_W;
-            const sy = Math.random() * GAME_H;
-            const alpha = 0.1 + Math.random() * 0.3;
-            const size = 0.5 + Math.random() * 1.5;
-            const color = starColors[Math.floor(Math.random() * starColors.length)];
-            bg.beginFill(color, alpha);
-            bg.drawCircle(sx, sy, size);
-            bg.endFill();
-        }
+        bg.beginFill(0x1a0820, 0.2);
+        bg.drawEllipse(GAME_W * 0.65, GAME_H * 0.55, GAME_W * 0.25, GAME_H * 0.3);
+        bg.endFill();
+        bg.beginFill(0x081a20, 0.15);
+        bg.drawEllipse(GAME_W * 0.5, GAME_H * 0.3, GAME_W * 0.4, GAME_H * 0.2);
+        bg.endFill();
 
         // Edge vignette — darker at borders
-        const vignetteAlpha = 0.35;
-        // Top edge
+        const vignetteAlpha = 0.4;
         bg.beginFill(0x000005, vignetteAlpha);
-        bg.drawRect(0, 0, GAME_W, 80);
+        bg.drawRect(0, 0, GAME_W, 90);
         bg.endFill();
-        // Bottom edge
         bg.beginFill(0x000005, vignetteAlpha);
-        bg.drawRect(0, GAME_H - 80, GAME_W, 80);
+        bg.drawRect(0, GAME_H - 90, GAME_W, 90);
         bg.endFill();
-        // Left edge
         bg.beginFill(0x000005, vignetteAlpha * 0.6);
-        bg.drawRect(0, 0, 60, GAME_H);
+        bg.drawRect(0, 0, 70, GAME_H);
         bg.endFill();
-        // Right edge
         bg.beginFill(0x000005, vignetteAlpha * 0.6);
-        bg.drawRect(GAME_W - 60, 0, 60, GAME_H);
+        bg.drawRect(GAME_W - 70, 0, 70, GAME_H);
         bg.endFill();
 
         this.gameLayer.addChildAt(bg, 0);
@@ -157,7 +194,7 @@ class Game {
             const pos = e.data.getLocalPosition(this.gameLayer);
             const hex = pixelToHex(pos.x, pos.y);
 
-            if (hex.q >= 0 && hex.q < GRID_COLS && hex.r >= 0 && hex.r < GRID_ROWS) {
+            if (isValidHex(hex.q, hex.r)) {
                 const canBuild = this.hexGrid.canBuild(hex.q, hex.r);
                 this.hexGrid.showHover(hex.q, hex.r, canBuild && this.hud.selectedType !== null);
 
@@ -204,7 +241,7 @@ class Game {
             if (pos.y > GAME_H - 65) return;
 
             const hex = pixelToHex(pos.x, pos.y);
-            if (hex.q < 0 || hex.q >= GRID_COLS || hex.r < 0 || hex.r >= GRID_ROWS) return;
+            if (!isValidHex(hex.q, hex.r)) return;
 
             const key = hexKey(hex.q, hex.r);
 
@@ -447,6 +484,9 @@ class Game {
     update(delta) {
         const dt = delta / 60; // Convert to seconds (Pixi ticker delta is in frames at 60fps)
 
+        // Always update stars
+        this.updateStars(dt);
+
         if (this.state.phase === 'menu' || this.state.phase === 'gameover' || this.state.phase === 'victory') {
             this.particles.update(dt);
             return;
@@ -482,6 +522,20 @@ class Game {
                 }
                 enemy.destroy();
                 this.enemies.splice(i, 1);
+            }
+        }
+
+        // Healer update pass — healers restore HP to nearby allies
+        for (const enemy of this.enemies) {
+            if (enemy.type === 'healer' && enemy.alive && enemy.healRadius) {
+                for (const other of this.enemies) {
+                    if (other === enemy || !other.alive) continue;
+                    const dx = other.x - enemy.x;
+                    const dy = other.y - enemy.y;
+                    if (Math.sqrt(dx * dx + dy * dy) <= enemy.healRadius) {
+                        other.hp = Math.min(other.maxHp, other.hp + enemy.healRate * dt);
+                    }
+                }
             }
         }
 
@@ -541,6 +595,7 @@ class Game {
     onWaveComplete() {
         this.audio.waveComplete();
         this.screenFlash(0x44ff88, 0.08);
+        this.particles.celebrationBurst();
 
         // Apply interest
         const interest = this.state.applyInterest();
