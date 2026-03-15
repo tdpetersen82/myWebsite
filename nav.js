@@ -38,6 +38,7 @@
                 { name: 'Defender', icon: '\u{1F6E1}\uFE0F', url: 'defender/' },
                 { name: 'Tron Light Cycles', icon: '\u{1F3CD}\uFE0F', url: 'tron/' },
                 { name: 'Simon', icon: '\u{1F534}', url: 'simon/' },
+                { name: 'Lemmings', icon: '\u{1F42D}', url: 'lemmings/' },
             ]
         },
         {
