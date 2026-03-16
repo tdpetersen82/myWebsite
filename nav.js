@@ -62,6 +62,7 @@
             games: [
                 { name: 'Fruit Catcher', icon: '\u{1F34E}', url: 'fruit-catcher/' },
                 { name: 'Motorcycle Trail Rider', icon: '\u{1F3CD}\uFE0F', url: 'motorcycle-game/' },
+                { name: 'Street Brawl', icon: '\u{1F44A}', url: 'beat-em-up/' },
             ]
         },
         {
