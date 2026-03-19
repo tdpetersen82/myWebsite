@@ -268,8 +268,9 @@
 
                 // Paddle collision
                 if (ball.y + ball.radius > paddle.y &&
-                    ball.x > paddle.x &&
-                    ball.x < paddle.x + paddle.width) {
+                    ball.y - ball.radius < paddle.y + paddle.height &&
+                    ball.x + ball.radius > paddle.x &&
+                    ball.x - ball.radius < paddle.x + paddle.width) {
                     
                     // Add angle based on where ball hits paddle
                     let hitPos = (ball.x - paddle.x) / paddle.width;
