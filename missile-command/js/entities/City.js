@@ -11,7 +11,8 @@ class City {
         this.shielded = false;
         this.shieldTimer = 0;
         this.buildings = this._generateBuildings();
-        this.damageLevel = 0; // 0 = full, 1 = damaged, 2 = heavy damage
+        this.damageLevel = 0; // 0 = full, increments on each hit
+        this.maxDamage = 3;   // hits before destruction (upgradeable)
     }
 
     _generateBuildings() {
@@ -42,7 +43,7 @@ class City {
 
     takeDamage() {
         this.damageLevel++;
-        if (this.damageLevel >= 3) {
+        if (this.damageLevel >= this.maxDamage) {
             this.alive = false;
         }
         // Randomly destroy some buildings
@@ -56,7 +57,13 @@ class City {
 
     destroy() {
         this.alive = false;
-        this.damageLevel = 3;
+        this.damageLevel = this.maxDamage;
+    }
+
+    rebuild() {
+        this.alive = true;
+        this.damageLevel = 0;
+        this.buildings = this._generateBuildings();
     }
 
     setShield(duration) {

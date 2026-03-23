@@ -3,14 +3,14 @@
 // ============================================================
 
 class CounterMissile {
-    constructor(startX, startY, targetX, targetY) {
+    constructor(startX, startY, targetX, targetY, speed) {
         this.startX = startX;
         this.startY = startY;
         this.x = startX;
         this.y = startY;
         this.targetX = targetX;
         this.targetY = targetY;
-        this.speed = CONFIG.COUNTER_MISSILE_SPEED;
+        this.speed = speed || CONFIG.COUNTER_MISSILE_SPEED;
         this.dead = false;
         this.detonated = false;
 

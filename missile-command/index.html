@@ -42,7 +42,6 @@
     <script src="js/systems/ParticleSystem.js"></script>
     <script src="js/systems/ScreenEffects.js"></script>
     <script src="js/systems/ComboSystem.js"></script>
-    <script src="js/systems/PowerUpSystem.js"></script>
     <script src="js/systems/WaveManager.js"></script>
 
     <!-- Entities -->
@@ -58,6 +57,7 @@
     <script src="js/scenes/BootScene.js"></script>
     <script src="js/scenes/MenuScene.js"></script>
     <script src="js/scenes/GameScene.js"></script>
+    <script src="js/scenes/UpgradeScene.js"></script>
     <script src="js/scenes/GameOverScene.js"></script>
 
     <!-- Game initialization -->
@@ -72,7 +72,7 @@
                 mode: Phaser.Scale.FIT,
                 autoCenter: Phaser.Scale.CENTER_BOTH,
             },
-            scene: [BootScene, MenuScene, GameScene, GameOverScene],
+            scene: [BootScene, MenuScene, GameScene, UpgradeScene, GameOverScene],
             audio: {
                 disableWebAudio: false,
             },

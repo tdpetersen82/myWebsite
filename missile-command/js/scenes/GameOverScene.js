@@ -16,6 +16,8 @@ class GameOverScene extends Phaser.Scene {
         this.highestCombo = data.highestCombo || 0;
         this.difficulty = data.difficulty || 'NORMAL';
         this.isNewHighScore = data.isNewHighScore || false;
+        this.totalMoneyEarned = data.totalMoneyEarned || 0;
+        this.upgradesPurchased = data.upgradesPurchased || 0;
     }
 
     create() {
@@ -112,6 +114,7 @@ class GameOverScene extends Phaser.Scene {
             ['Accuracy', this.missilesFired > 0 ?
                 Math.round((this.enemiesDestroyed / this.missilesFired) * 100) + '%' : 'N/A'],
             ['Cities Saved', this.citiesSaved + ' / 6'],
+            ['Money Earned', '$' + Helpers.formatNumber(this.totalMoneyEarned)],
             ['Highest Combo', this.highestCombo + 'x'],
             ['Difficulty', CONFIG.DIFFICULTY[this.difficulty].label],
         ];

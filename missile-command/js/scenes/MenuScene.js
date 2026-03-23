@@ -153,14 +153,14 @@ class MenuScene extends Phaser.Scene {
             color: '#555555',
         }).setOrigin(0.5);
 
-        this.add.text(cx, 545, 'Power-ups drop from bombers — click to collect!', {
+        this.add.text(cx, 545, 'Earn money from kills — upgrade between waves!', {
             fontSize: '11px',
             fontFamily: 'monospace',
             color: '#444455',
         }).setOrigin(0.5);
 
         // Version
-        this.add.text(CONFIG.WIDTH - 10, CONFIG.HEIGHT - 10, 'v2.0', {
+        this.add.text(CONFIG.WIDTH - 10, CONFIG.HEIGHT - 10, 'v3.0', {
             fontSize: '10px',
             fontFamily: 'monospace',
             color: '#333333',

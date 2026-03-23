@@ -83,16 +83,51 @@ const CONFIG = {
         POINTS: 250,
     },
 
-    // Power-up settings
-    POWERUP: {
-        DROP_CHANCE: 0.3,
-        FALL_SPEED: 60,
+    // Upgrade settings
+    UPGRADE: {
+        NEW_CITY_POSITIONS: [50, 362, 750],
+        CITY_REBUILD_COST: 500,
+        BASE_REPAIR_COST: 500,
         TYPES: {
-            SHIELD:    { color: 0x4488ff, duration: 8000, label: 'SHIELD' },
-            AMMO:      { color: 0x44ff44, duration: 0, label: 'AMMO' },
-            SLOWMO:    { color: 0xffff44, duration: 6000, label: 'SLOW-MO' },
-            RAPID:     { color: 0xff4444, duration: 5000, label: 'RAPID' },
-            EMP:       { color: 0xcc44ff, duration: 0, label: 'EMP' },
+            EXPLOSION_SIZE: {
+                name: 'Bigger Warheads',
+                description: '+20% explosion radius',
+                costs: [400, 700, 1100],
+                maxLevel: 3,
+                category: 'WEAPONS',
+            },
+            MISSILE_SPEED: {
+                name: 'Faster Missiles',
+                description: '+25% missile speed',
+                costs: [350, 600, 900],
+                maxLevel: 3,
+                category: 'WEAPONS',
+            },
+            AMMO: {
+                name: 'Ammo Reserves',
+                description: '+3 ammo per base',
+                costs: [300, 500, 800, 1200],
+                maxLevel: 4,
+                category: 'WEAPONS',
+            },
+            FORTIFY: {
+                name: 'Fortify Cities',
+                description: '+1 city hit points',
+                costs: [800, 1500, 2500],
+                maxLevel: 3,
+                category: 'DEFENSE',
+            },
+            NEW_CITY: {
+                name: 'Build District',
+                description: 'Expand with a new city',
+                costs: [1000, 1500, 2000],
+                maxLevel: 3,
+                category: 'DEFENSE',
+            },
+        },
+        MONEY: {
+            PER_CITY_SURVIVING: 50,
+            PER_AMMO_REMAINING: 5,
         },
     },
 
