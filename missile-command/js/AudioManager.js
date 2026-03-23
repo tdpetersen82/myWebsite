@@ -136,6 +136,18 @@ class AudioManager {
         this._playTone(550, 'sine', 0.15, 0.2, 0.2);
     }
 
+    playUpgradeBuy() {
+        this._playTone(440, 'sine', 0.08, 0.2);
+        this._playTone(554, 'sine', 0.08, 0.2, 0.06);
+        this._playTone(659, 'sine', 0.1, 0.25, 0.12);
+        this._playTone(880, 'sine', 0.15, 0.2, 0.18);
+    }
+
+    playEarnMoney() {
+        this._playTone(800, 'sine', 0.05, 0.1);
+        this._playTone(1000, 'sine', 0.05, 0.1, 0.03);
+    }
+
     playGameOver() {
         for (let i = 0; i < 4; i++) {
             this._playTone(300 - i * 50, 'sawtooth', 0.3, 0.2, i * 0.25);

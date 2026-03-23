@@ -23,7 +23,6 @@ class GameScene extends Phaser.Scene {
         this.explosionGfx = this.add.graphics();
         this.cityGfx = this.add.graphics();
         this.baseGfx = this.add.graphics();
-        this.powerUpGfx = this.add.graphics();
         this.particleGfx = this.add.graphics();
         this.hudGfx = this.add.graphics();
         this.flashGfx = this.add.graphics();
@@ -32,8 +31,18 @@ class GameScene extends Phaser.Scene {
         this.particleSystem = new ParticleSystem();
         this.screenEffects = new ScreenEffects(this);
         this.waveManager = new WaveManager(this.diffConfig);
-        this.powerUpSystem = new PowerUpSystem();
         this.comboSystem = new ComboSystem();
+
+        // Upgrade state
+        this.upgradeState = {
+            explosionLevel: 0,
+            missileSpeedLevel: 0,
+            ammoLevel: 0,
+            fortifyLevel: 0,
+            newCityLevel: 0,
+        };
+        this.explosionRadiusMultiplier = 1;
+        this.missileSpeedMultiplier = 1;
 
         // Stars
         this.stars = [];
@@ -62,9 +71,12 @@ class GameScene extends Phaser.Scene {
 
         // Game state
         this.score = 0;
+        this.money = 0;
+        this.waveMoneyEarned = 0;
         this.highScore = parseInt(localStorage.getItem('missileCommandHighScore')) || 0;
         this.gameOver = false;
         this.paused = false;
+        this.upgradeScreenActive = false;
         this.missilesFired = 0;
         this.enemiesDestroyed = 0;
         this.forcedBaseIndex = -1; // For keyboard base selection
@@ -88,14 +100,11 @@ class GameScene extends Phaser.Scene {
             stroke: '#000000', strokeThickness: 2,
         }).setOrigin(0.5, 0).setAlpha(0);
 
-        // Power-up label texts (up to 3 active at once)
-        this.powerUpLabels = [];
-        for (let i = 0; i < 3; i++) {
-            this.powerUpLabels.push(this.add.text(0, 0, '', {
-                fontSize: '9px', fontFamily: 'monospace', color: '#ffffff',
-                stroke: '#000000', strokeThickness: 1,
-            }).setOrigin(1, 0.5).setAlpha(0));
-        }
+        // Money display
+        this.moneyText = this.add.text(CONFIG.WIDTH - 10, 8, '', {
+            fontSize: '16px', fontFamily: 'monospace', color: '#44ff44', fontStyle: 'bold',
+            stroke: '#000000', strokeThickness: 2,
+        }).setOrigin(1, 0);
 
         // Base ammo count texts
         this.baseAmmoTexts = this.bases.map(base => {
@@ -137,7 +146,7 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5).setAlpha(0).setDepth(100);
 
         // Mute indicator
-        this.muteText = this.add.text(CONFIG.WIDTH - 10, 8, '', {
+        this.muteText = this.add.text(CONFIG.WIDTH - 10, 28, '', {
             fontSize: '12px', fontFamily: 'monospace', color: '#666666',
         }).setOrigin(1, 0);
 
@@ -174,31 +183,13 @@ class GameScene extends Phaser.Scene {
         if (this.paused || this.gameOver) return;
         if (pointer.y >= CONFIG.GROUND_Y) return;
 
-        // Check for power-up click first
-        const collectedPowerUp = this.powerUpSystem.checkClick(pointer.x, pointer.y);
-        if (collectedPowerUp) {
-            this._activatePowerUp(collectedPowerUp);
-            return;
-        }
-
         // Fire missile
-        const isRapid = this.powerUpSystem.isActive('RAPID');
         let baseIdx;
 
         if (this.forcedBaseIndex >= 0 && this.bases[this.forcedBaseIndex] &&
             this.bases[this.forcedBaseIndex].alive &&
-            (isRapid || this.bases[this.forcedBaseIndex].ammo > 0)) {
+            this.bases[this.forcedBaseIndex].ammo > 0) {
             baseIdx = this.forcedBaseIndex;
-        } else if (isRapid) {
-            // During rapid fire, pick nearest alive base regardless of ammo
-            let best = -1, bestDist = Infinity;
-            for (let i = 0; i < this.bases.length; i++) {
-                if (this.bases[i].alive) {
-                    const d = Math.abs(pointer.x - this.bases[i].x);
-                    if (d < bestDist) { bestDist = d; best = i; }
-                }
-            }
-            baseIdx = best;
         } else {
             baseIdx = Helpers.nearestBase(pointer.x, this.bases);
         }
@@ -206,38 +197,14 @@ class GameScene extends Phaser.Scene {
         if (baseIdx < 0) return;
 
         const base = this.bases[baseIdx];
-        if (isRapid || base.fire()) {
+        if (base.fire()) {
             base.aimAt(pointer.x, pointer.y);
-            const missile = new CounterMissile(base.x, base.y - 15, pointer.x, pointer.y);
+            const speed = CONFIG.COUNTER_MISSILE_SPEED * this.missileSpeedMultiplier;
+            const missile = new CounterMissile(base.x, base.y - 15, pointer.x, pointer.y, speed);
             this.counterMissiles.push(missile);
             this.missilesFired++;
             audioManager.playLaunch();
             base.launchFlash = 150;
-        }
-    }
-
-    _activatePowerUp(powerUp) {
-        audioManager.playPowerUpCollect();
-        this.particleSystem.emitSparks(powerUp.x, powerUp.y, powerUp.config.color);
-        this.screenEffects.flash(powerUp.config.color, 100, 0.2);
-
-        const gameState = {
-            cities: this.cities,
-            bases: this.bases,
-            enemyMissiles: this.enemyMissiles,
-            screenEffects: this.screenEffects,
-            particleSystem: this.particleSystem,
-            onEnemyKilled: (m) => {
-                this.score += this.comboSystem.getPoints(m.points);
-                this.comboSystem.registerKill(m.x, m.y);
-                this.enemiesDestroyed++;
-            },
-        };
-
-        this.powerUpSystem.activate(powerUp.type, gameState);
-
-        if (powerUp.type === 'EMP') {
-            audioManager.playEMP();
         }
     }
 
@@ -283,14 +250,11 @@ class GameScene extends Phaser.Scene {
                     if (killed) {
                         const points = this.comboSystem.getPoints(em.points);
                         this.score += points;
+                        this.money += em.points; // Base points as money
+                        this.waveMoneyEarned += em.points;
                         this.comboSystem.registerKill(em.x, em.y);
                         this.enemiesDestroyed++;
                         this.particleSystem.emitSparks(em.x, em.y, em.color);
-
-                        // Drop power-up from certain kills
-                        if (Math.random() < 0.05) {
-                            this.powerUpSystem.forceSpawn(em.x, em.y);
-                        }
                     }
                 }
             }
@@ -303,13 +267,13 @@ class GameScene extends Phaser.Scene {
                     if (killed) {
                         const points = this.comboSystem.getPoints(bomber.points);
                         this.score += points;
+                        this.money += bomber.points;
+                        this.waveMoneyEarned += bomber.points;
                         this.comboSystem.registerKill(bomber.x, bomber.y);
                         this.enemiesDestroyed++;
                         audioManager.playBomberDestroyed();
                         this.particleSystem.emitExplosion(bomber.x, bomber.y, 30);
                         this.screenEffects.shake(3, 150);
-                        // Bombers always try to drop power-up
-                        this.powerUpSystem.spawnPowerUp(bomber.x, bomber.y);
                     }
                 }
             }
@@ -322,12 +286,13 @@ class GameScene extends Phaser.Scene {
                     if (killed) {
                         const points = this.comboSystem.getPoints(sat.points);
                         this.score += points;
+                        this.money += sat.points;
+                        this.waveMoneyEarned += sat.points;
                         this.comboSystem.registerKill(sat.x, sat.y);
                         this.enemiesDestroyed++;
                         audioManager.playBomberDestroyed();
                         this.particleSystem.emitExplosion(sat.x, sat.y, 40);
                         this.screenEffects.shake(5, 200);
-                        this.powerUpSystem.spawnPowerUp(sat.x, sat.y);
                     }
                 }
             }
@@ -434,6 +399,7 @@ class GameScene extends Phaser.Scene {
                         highestCombo: this.comboSystem.highestCombo,
                         difficulty: this.difficultyKey,
                         isNewHighScore: this.score >= this.highScore,
+                        totalMoneyEarned: this.money + this.waveMoneyEarned,
                     });
                 });
             });
@@ -474,12 +440,13 @@ class GameScene extends Phaser.Scene {
         if (wm.state === 'spawning' && wm.enemyMissilesRemaining <= 0 &&
             this.enemyMissiles.filter(m => !m.dead).length === 0 &&
             this.bombers.filter(b => !b.dead).length === 0 &&
-            this.satellites.filter(s => !s.dead).length === 0) {
+            this.satellites.filter(s => !s.dead).length === 0 &&
+            !this.upgradeScreenActive) {
 
             // Wave complete!
             audioManager.playWaveComplete();
 
-            // Calculate bonuses
+            // Calculate score bonuses
             const aliveBases = this.bases.filter(b => b.alive);
             const aliveCities = this.cities.filter(c => c.alive);
             let ammoBonus = 0;
@@ -487,35 +454,112 @@ class GameScene extends Phaser.Scene {
             const cityBonus = aliveCities.length * this.diffConfig.bonusCityPoints;
             this.score += ammoBonus + cityBonus;
 
+            // Calculate money bonuses
+            const moneyCityBonus = aliveCities.length * CONFIG.UPGRADE.MONEY.PER_CITY_SURVIVING;
+            let moneyAmmoBonus = 0;
+            aliveBases.forEach(b => { moneyAmmoBonus += b.ammo * CONFIG.UPGRADE.MONEY.PER_AMMO_REMAINING; });
+            this.money += moneyCityBonus + moneyAmmoBonus;
+            this.waveMoneyEarned += moneyCityBonus + moneyAmmoBonus;
+
             // Show bonus
-            const bonusStr = `AMMO BONUS: ${ammoBonus}  |  CITY BONUS: ${cityBonus}`;
+            const bonusStr = `SCORE BONUS: +${ammoBonus + cityBonus}  |  MONEY: +$${moneyCityBonus + moneyAmmoBonus}`;
             this.bonusText.setText(bonusStr);
             this.bonusText.setAlpha(1);
             this.tweens.add({
                 targets: this.bonusText,
                 alpha: 0,
-                duration: 3000,
-                delay: 1000,
+                duration: 2500,
+                delay: 800,
             });
 
-            // Refill bases
-            this.bases.forEach(b => {
-                if (b.alive) b.refillAmmo();
+            // Launch upgrade screen after brief delay
+            this.upgradeScreenActive = true;
+            this.time.delayedCall(2000, () => {
+                this._launchUpgradeScreen();
             });
+        }
+    }
 
-            wm.startIntermission();
+    _launchUpgradeScreen() {
+        this.scene.pause();
+        this.scene.launch('UpgradeScene', {
+            money: this.money,
+            wave: this.waveManager.wave,
+            waveEarnings: this.waveMoneyEarned,
+            score: this.score,
+            difficultyKey: this.difficultyKey,
+            upgradeState: Object.assign({}, this.upgradeState),
+            cityStates: this.cities.map(c => ({ alive: c.alive, damageLevel: c.damageLevel })),
+            baseStates: this.bases.map(b => ({ alive: b.alive, damaged: b.damaged })),
+        });
+    }
+
+    applyUpgradeResults(results) {
+        this.money = results.money;
+        const prevState = Object.assign({}, this.upgradeState);
+        Object.assign(this.upgradeState, results.upgradeState);
+
+        // Apply explosion size upgrade
+        this.explosionRadiusMultiplier = 1 + this.upgradeState.explosionLevel * 0.2;
+
+        // Apply missile speed upgrade
+        this.missileSpeedMultiplier = 1 + this.upgradeState.missileSpeedLevel * 0.25;
+
+        // Apply ammo upgrade
+        const extraAmmo = this.upgradeState.ammoLevel * 3;
+        this.bases.forEach(b => {
+            if (b.alive) {
+                b.maxAmmo = this.diffConfig.baseAmmo + extraAmmo;
+                b.refillAmmo();
+            }
+        });
+
+        // Apply fortification to all cities
+        const maxDmg = 3 + this.upgradeState.fortifyLevel;
+        this.cities.forEach(c => { c.maxDamage = maxDmg; });
+
+        // Rebuild cities
+        for (const idx of results.rebuiltCities) {
+            if (idx < this.cities.length) {
+                this.cities[idx].rebuild();
+                this.cities[idx].maxDamage = maxDmg;
+            }
         }
 
-        // Intermission complete → next wave
-        if (wm.isIntermissionComplete()) {
-            wm.startNextWave();
+        // Repair bases
+        for (const idx of results.repairedBases) {
+            if (idx < this.bases.length) {
+                this.bases[idx].repair();
+                this.bases[idx].maxAmmo = this.diffConfig.baseAmmo + extraAmmo;
+                this.bases[idx].refillAmmo();
+            }
         }
+
+        // Build new cities
+        const newCitiesToBuild = this.upgradeState.newCityLevel - prevState.newCityLevel;
+        for (let i = 0; i < newCitiesToBuild; i++) {
+            const posIdx = prevState.newCityLevel + i;
+            if (posIdx < CONFIG.UPGRADE.NEW_CITY_POSITIONS.length) {
+                const pos = CONFIG.UPGRADE.NEW_CITY_POSITIONS[posIdx];
+                const city = new City(pos, this.cities.length);
+                city.maxDamage = maxDmg;
+                this.cities.push(city);
+
+                // Add ammo text for visual consistency (won't be used for cities)
+            }
+        }
+
+        // Reset wave money tracking and start next wave
+        this.waveMoneyEarned = 0;
+        this.upgradeScreenActive = false;
+        this.waveManager.startNextWave();
     }
 
     _updateHUD() {
         this.scoreText.setText(Helpers.formatNumber(this.score));
         this.highScoreText.setText('HI: ' + Helpers.formatNumber(this.highScore));
         this.waveText.setText('WAVE ' + this.waveManager.wave);
+        this.moneyText.setText('$' + Helpers.formatNumber(this.money));
 
         // Combo HUD label
         if (this.comboSystem.count > 0) {
@@ -548,47 +592,6 @@ class GameScene extends Phaser.Scene {
 
     _drawHUD() {
         this.hudGfx.clear();
-
-        // Active power-up indicators with text labels
-        let puIdx = 0;
-        let puX = CONFIG.WIDTH - 10;
-        const puY = 28;
-        const activeEffects = this.powerUpSystem.activeEffects;
-        for (const type in activeEffects) {
-            const remaining = activeEffects[type];
-            const config = CONFIG.POWERUP.TYPES[type];
-            if (!config || !config.duration) continue;
-            const pct = remaining / config.duration;
-            const secs = Math.ceil(remaining / 1000);
-
-            const barW = 60;
-            const barH = 14;
-            const bx = puX - barW;
-
-            // Background
-            this.hudGfx.fillStyle(config.color, 0.2);
-            this.hudGfx.fillRect(bx, puY, barW, barH);
-            // Fill
-            this.hudGfx.fillStyle(config.color, 0.6);
-            this.hudGfx.fillRect(bx, puY, barW * pct, barH);
-            // Border
-            this.hudGfx.lineStyle(1, config.color, 0.5);
-            this.hudGfx.strokeRect(bx, puY, barW, barH);
-
-            // Text label via Phaser text objects
-            if (puIdx < this.powerUpLabels.length) {
-                this.powerUpLabels[puIdx].setText(config.label + ' ' + secs + 's');
-                this.powerUpLabels[puIdx].setPosition(puX - 3, puY + barH / 2);
-                this.powerUpLabels[puIdx].setAlpha(0.9);
-            }
-
-            puX -= barW + 6;
-            puIdx++;
-        }
-        // Hide unused power-up labels
-        for (let i = puIdx; i < this.powerUpLabels.length; i++) {
-            this.powerUpLabels[i].setAlpha(0);
-        }
 
         // Combo meter (only when active)
         if (this.comboSystem.count > 0) {
@@ -629,9 +632,8 @@ class GameScene extends Phaser.Scene {
             this.satellites.push(new Satellite(this.waveManager.wave));
         }
 
-        // Speed multiplier (affected by slow-mo power-up)
-        const speedMult = this.waveManager.getSpeedMultiplier() *
-                         (this.powerUpSystem.isActive('SLOWMO') ? 0.5 : 1);
+        // Speed multiplier
+        const speedMult = this.waveManager.getSpeedMultiplier();
 
         // Update entities
         this.bases.forEach(b => b.update(dt));
@@ -640,7 +642,8 @@ class GameScene extends Phaser.Scene {
         for (const cm of this.counterMissiles) {
             cm.update(dt, this.particleSystem);
             if (cm.detonated) {
-                this.explosions.push(new Explosion(cm.x, cm.y, CONFIG.EXPLOSION.COUNTER_RADIUS, true));
+                const expRadius = CONFIG.EXPLOSION.COUNTER_RADIUS * this.explosionRadiusMultiplier;
+                this.explosions.push(new Explosion(cm.x, cm.y, expRadius, true));
                 audioManager.playExplosion('medium');
                 this.screenEffects.shake(2, 100);
             }
@@ -669,8 +672,7 @@ class GameScene extends Phaser.Scene {
         // Collisions
         this._checkCollisions();
 
-        // Power-ups
-        this.powerUpSystem.update(dt);
+        // Systems
         this.comboSystem.update(dt);
         this.particleSystem.update(dt);
         this.screenEffects.update(dt);
@@ -692,7 +694,8 @@ class GameScene extends Phaser.Scene {
             audioManager.playComboMilestone();
         }
 
-        // Clean up dead entities
+        // Clean up dead entities (include newly built cities in draw)
+        // Remove only truly dead entities
         this.counterMissiles = this.counterMissiles.filter(m => !m.dead);
         this.enemyMissiles = this.enemyMissiles.filter(m => !m.dead);
         this.explosions = this.explosions.filter(e => !e.dead);
@@ -726,7 +729,6 @@ class GameScene extends Phaser.Scene {
         this.explosionGfx.clear();
         this.cityGfx.clear();
         this.baseGfx.clear();
-        this.powerUpGfx.clear();
         this.particleGfx.clear();
         this.flashGfx.clear();
 
@@ -777,9 +779,6 @@ class GameScene extends Phaser.Scene {
         for (const base of this.bases) {
             base.draw(this.baseGfx);
         }
-
-        // Power-ups
-        this.powerUpSystem.draw(this.powerUpGfx);
 
         // Particles
         this.particleSystem.draw(this.particleGfx);
