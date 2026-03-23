@@ -71,6 +71,16 @@
             ]
         },
         {
+            name: 'Web Games', icon: '\u{1F310}',
+            games: [
+                { name: 'Moto X3M', icon: '\u{1F3CD}\uFE0F', url: 'moto-x3m/' },
+                { name: 'Bubble Shooter HD', icon: '\u{1FAE7}', url: 'bubble-shooter-hd/' },
+                { name: 'Merge Fruit', icon: '\u{1F349}', url: 'merge-fruit/' },
+                { name: 'Drift Boss', icon: '\u{1F697}', url: 'drift-boss/' },
+                { name: 'Slope Run', icon: '\u{1F3D4}\uFE0F', url: 'slope-run/' },
+            ]
+        },
+        {
             name: 'Experimental', icon: '\u{1F9EA}',
             games: [
                 { name: 'eMoto Database', icon: '\u26A1', url: 'emoto-database/' },
@@ -399,6 +409,12 @@ body.nav-open{overflow:hidden}\
             }
             gameContainer.style.maxHeight = (window.innerHeight * preset.vhFactor) + 'px';
             gameContainer.style.overflow = 'hidden';
+        }
+
+        // Embedded iframe games (GameDistribution etc.)
+        var embedFrame = document.querySelector('.embed-game-frame');
+        if (embedFrame) {
+            embedFrame.style.height = (window.innerHeight * preset.vhFactor) + 'px';
         }
 
         // Hex-defense uses #game-wrapper with its own scaling
