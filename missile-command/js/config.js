@@ -15,8 +15,13 @@ const CONFIG = {
     // Colors
     COLORS: {
         SKY: '#0a0a2e',
+        SKY_TOP: '#050520',
+        SKY_MID: '#0a0a3e',
+        SKY_HORIZON: '#1a1050',
+        HORIZON_GLOW: '#2a1848',
         GROUND: '#1a472a',
         GROUND_DARK: '#0d2e1a',
+        GROUND_DEEP: '#0a1f12',
         HUD_TEXT: '#ffffff',
         SCORE: '#ffdd57',
         COMBO_COLORS: ['#ffffff', '#ffdd57', '#ff9500', '#ff3b30', '#ff2d95'],
@@ -48,6 +53,7 @@ const CONFIG = {
         WIDTH: 40,
         HEIGHT: 20,
         REPAIR_COST: 500,
+        STARTING_UNLOCKED: [1], // Only center base (index 1) starts unlocked
     },
 
     // City settings
@@ -57,6 +63,9 @@ const CONFIG = {
         WIDTH: 50,
         BUILDING_COUNT_MIN: 3,
         BUILDING_COUNT_MAX: 6,
+        MAX_BUILDINGS: 10,
+        BASE_INCOME: 15,         // Income per building per wave
+        GROWTH_CHANCE: 0.7,      // Chance to grow a building between waves
     },
 
     // Enemy types
@@ -83,12 +92,58 @@ const CONFIG = {
         POINTS: 250,
     },
 
+    // Tracking missile settings
+    TRACKING: {
+        LEVELS: [
+            { turnRate: 1.5, detectRadius: 150, trailColor: 0x44ffaa },  // Level 1
+            { turnRate: 3.0, detectRadius: 250, trailColor: 0x44ffcc },  // Level 2
+            { turnRate: 5.0, detectRadius: 400, trailColor: 0x00ffdd },  // Level 3
+        ],
+    },
+
+    // Point Defense settings
+    POINT_DEFENSE: {
+        LEVELS: [
+            { fireRate: 3000, range: 120, accuracy: 0.6, projectileSpeed: 600, damage: 15 },
+            { fireRate: 2000, range: 160, accuracy: 0.75, projectileSpeed: 700, damage: 15 },
+            { fireRate: 1500, range: 200, accuracy: 0.9, projectileSpeed: 800, damage: 20 },
+        ],
+        TURRETS_PER_LEVEL: [1, 2, 3],
+        PROJECTILE_RADIUS: 15,
+    },
+
+    // Shield settings
+    SHIELD: {
+        LEVELS: [
+            { maxHP: 1, regenWaves: 3 },
+            { maxHP: 2, regenWaves: 2 },
+            { maxHP: 3, regenWaves: 1 },
+        ],
+    },
+
     // Upgrade settings
     UPGRADE: {
         NEW_CITY_POSITIONS: [50, 362, 750],
         CITY_REBUILD_COST: 500,
         BASE_REPAIR_COST: 500,
         TYPES: {
+            // COMMAND category
+            UNLOCK_LEFT_BASE: {
+                name: 'West Battery',
+                description: 'Unlock the left missile base',
+                costs: [1500],
+                maxLevel: 1,
+                category: 'COMMAND',
+            },
+            UNLOCK_RIGHT_BASE: {
+                name: 'East Battery',
+                description: 'Unlock the right missile base',
+                costs: [1500],
+                maxLevel: 1,
+                category: 'COMMAND',
+            },
+
+            // WEAPONS category
             EXPLOSION_SIZE: {
                 name: 'Bigger Warheads',
                 description: '+20% explosion radius',
@@ -110,6 +165,15 @@ const CONFIG = {
                 maxLevel: 4,
                 category: 'WEAPONS',
             },
+            TRACKING: {
+                name: 'Tracking Missiles',
+                description: 'Missiles home toward enemies',
+                costs: [800, 1400, 2200],
+                maxLevel: 3,
+                category: 'WEAPONS',
+            },
+
+            // DEFENSE category
             FORTIFY: {
                 name: 'Fortify Cities',
                 description: '+1 city hit points',
@@ -124,9 +188,23 @@ const CONFIG = {
                 maxLevel: 3,
                 category: 'DEFENSE',
             },
+            POINT_DEFENSE: {
+                name: 'Point Defense',
+                description: 'Auto-turrets protect cities',
+                costs: [1000, 1800, 3000],
+                maxLevel: 3,
+                category: 'DEFENSE',
+            },
+            SHIELD: {
+                name: 'Shield Generator',
+                description: 'Energy shields for cities',
+                costs: [1200, 2000, 3500],
+                maxLevel: 3,
+                category: 'DEFENSE',
+            },
         },
         MONEY: {
-            PER_CITY_SURVIVING: 50,
+            PER_CITY_SURVIVING: 50,  // Base rate, modified by city income
             PER_AMMO_REMAINING: 5,
         },
     },
@@ -175,9 +253,17 @@ const CONFIG = {
 
     // Star field
     STARS: {
-        COUNT: 150,
+        COUNT: 200,
         FLICKER_SPEED: 0.003,
     },
+
+    // Mountains (horizon silhouettes)
+    MOUNTAINS: [
+        { x: 0, peaks: [{ x: 40, h: 35 }, { x: 100, h: 55 }, { x: 160, h: 30 }] },
+        { x: 200, peaks: [{ x: 60, h: 40 }, { x: 120, h: 65 }, { x: 180, h: 45 }, { x: 230, h: 25 }] },
+        { x: 500, peaks: [{ x: 50, h: 50 }, { x: 110, h: 70 }, { x: 170, h: 35 }] },
+        { x: 680, peaks: [{ x: 40, h: 30 }, { x: 90, h: 45 }, { x: 140, h: 55 }] },
+    ],
 
     // Keyboard
     KEYS: {

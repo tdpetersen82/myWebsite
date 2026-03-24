@@ -16,7 +16,13 @@ class GameScene extends Phaser.Scene {
         this.cameras.main.fadeIn(400, 0, 0, 0);
 
         // Graphics layers
+        this.skyGfx = this.add.graphics();
+        this._drawSkyBackground();
+        this.moonGfx = this.add.graphics();
+        this._drawMoon();
         this.starGfx = this.add.graphics();
+        this.mountainGfx = this.add.graphics();
+        this._drawMountains();
         this.groundGfx = this.add.graphics();
         this.trailGfx = this.add.graphics();
         this.entityGfx = this.add.graphics();
@@ -40,6 +46,11 @@ class GameScene extends Phaser.Scene {
             ammoLevel: 0,
             fortifyLevel: 0,
             newCityLevel: 0,
+            trackingLevel: 0,
+            pointDefenseLevel: 0,
+            shieldLevel: 0,
+            leftBaseUnlocked: 0,
+            rightBaseUnlocked: 0,
         };
         this.explosionRadiusMultiplier = 1;
         this.missileSpeedMultiplier = 1;
@@ -54,10 +65,13 @@ class GameScene extends Phaser.Scene {
             });
         }
 
-        // Game entities
+        // Game entities — only center base starts unlocked
         this.bases = CONFIG.BASE.POSITIONS.map((x, i) => {
             const b = new Base(x, i);
             b.setDifficulty(this.diffConfig);
+            if (!CONFIG.BASE.STARTING_UNLOCKED.includes(i)) {
+                b.locked = true;
+            }
             return b;
         });
 
@@ -68,6 +82,8 @@ class GameScene extends Phaser.Scene {
         this.explosions = [];
         this.bombers = [];
         this.satellites = [];
+        this.pointDefenses = [];
+        this.craters = [];
 
         // Game state
         this.score = 0;
@@ -200,11 +216,15 @@ class GameScene extends Phaser.Scene {
         if (base.fire()) {
             base.aimAt(pointer.x, pointer.y);
             const speed = CONFIG.COUNTER_MISSILE_SPEED * this.missileSpeedMultiplier;
-            const missile = new CounterMissile(base.x, base.y - 15, pointer.x, pointer.y, speed);
+            let missile;
+            if (this.upgradeState.trackingLevel > 0) {
+                missile = new TrackingMissile(base.x, base.y - 15, pointer.x, pointer.y, speed, this.upgradeState.trackingLevel);
+            } else {
+                missile = new CounterMissile(base.x, base.y - 15, pointer.x, pointer.y, speed);
+            }
             this.counterMissiles.push(missile);
             this.missilesFired++;
             audioManager.playLaunch();
-            base.launchFlash = 150;
         }
     }
 
@@ -307,13 +327,20 @@ class GameScene extends Phaser.Scene {
             this.explosions.push(new Explosion(em.x, CONFIG.GROUND_Y, CONFIG.EXPLOSION.ENEMY_RADIUS, false));
             audioManager.playExplosion('small');
 
-            // Check city hits
+            // Add crater
+            this.craters.push({ x: em.x, radius: Helpers.randomRange(4, 8) });
+            if (this.craters.length > 30) this.craters.shift();
+
+            // Check city hits (shields absorb first via city.takeDamage)
             for (const city of this.cities) {
                 if (!city.alive) continue;
-                if (city.shielded) continue;
                 if (Math.abs(em.targetX - city.x) < 30) {
+                    const hadShield = city.shieldHP > 0;
                     city.takeDamage();
-                    if (!city.alive) {
+                    if (hadShield && city.shieldHP >= 0 && city.alive) {
+                        audioManager.playShieldAbsorb();
+                        if (city.shieldHP <= 0) audioManager.playShieldBreak();
+                    } else if (!city.alive) {
                         audioManager.playCityHit();
                         this.particleSystem.emitDebris(city.x, city.y);
                         this.screenEffects.shake(8, 300);
@@ -454,8 +481,21 @@ class GameScene extends Phaser.Scene {
             const cityBonus = aliveCities.length * this.diffConfig.bonusCityPoints;
             this.score += ammoBonus + cityBonus;
 
-            // Calculate money bonuses
-            const moneyCityBonus = aliveCities.length * CONFIG.UPGRADE.MONEY.PER_CITY_SURVIVING;
+            // Grow surviving cities
+            for (const city of aliveCities) {
+                city.grow();
+            }
+
+            // Regen shields
+            for (const city of this.cities) {
+                city.regenShield(this.waveManager.wave);
+            }
+
+            // Calculate money bonuses (city income scales with buildings)
+            let moneyCityBonus = 0;
+            for (const city of aliveCities) {
+                moneyCityBonus += city.getValue();
+            }
             let moneyAmmoBonus = 0;
             aliveBases.forEach(b => { moneyAmmoBonus += b.ammo * CONFIG.UPGRADE.MONEY.PER_AMMO_REMAINING; });
             this.money += moneyCityBonus + moneyAmmoBonus;
@@ -489,8 +529,8 @@ class GameScene extends Phaser.Scene {
             score: this.score,
             difficultyKey: this.difficultyKey,
             upgradeState: Object.assign({}, this.upgradeState),
-            cityStates: this.cities.map(c => ({ alive: c.alive, damageLevel: c.damageLevel })),
-            baseStates: this.bases.map(b => ({ alive: b.alive, damaged: b.damaged })),
+            cityStates: this.cities.map(c => ({ alive: c.alive, damageLevel: c.damageLevel, income: c.income })),
+            baseStates: this.bases.map(b => ({ alive: b.alive, damaged: b.damaged, locked: b.locked })),
         });
     }
 
@@ -535,6 +575,22 @@ class GameScene extends Phaser.Scene {
             }
         }
 
+        // Unlock bases
+        if (this.upgradeState.leftBaseUnlocked && this.bases[0].locked) {
+            this.bases[0].unlock();
+            this.bases[0].setDifficulty(this.diffConfig);
+            this.bases[0].maxAmmo = this.diffConfig.baseAmmo + extraAmmo;
+            this.bases[0].refillAmmo();
+            audioManager.playBaseUnlock();
+        }
+        if (this.upgradeState.rightBaseUnlocked && this.bases[2].locked) {
+            this.bases[2].unlock();
+            this.bases[2].setDifficulty(this.diffConfig);
+            this.bases[2].maxAmmo = this.diffConfig.baseAmmo + extraAmmo;
+            this.bases[2].refillAmmo();
+            audioManager.playBaseUnlock();
+        }
+
         // Build new cities
         const newCitiesToBuild = this.upgradeState.newCityLevel - prevState.newCityLevel;
         for (let i = 0; i < newCitiesToBuild; i++) {
@@ -544,8 +600,26 @@ class GameScene extends Phaser.Scene {
                 const city = new City(pos, this.cities.length);
                 city.maxDamage = maxDmg;
                 this.cities.push(city);
+            }
+        }
 
-                // Add ammo text for visual consistency (won't be used for cities)
+        // Apply shield level to all cities
+        if (this.upgradeState.shieldLevel > 0) {
+            for (const city of this.cities) {
+                if (city.alive) {
+                    city.applyShieldLevel(this.upgradeState.shieldLevel);
+                }
+            }
+        }
+
+        // Point defense turrets
+        if (this.upgradeState.pointDefenseLevel > 0) {
+            const level = this.upgradeState.pointDefenseLevel;
+            const turretCount = CONFIG.POINT_DEFENSE.TURRETS_PER_LEVEL[level - 1];
+            this.pointDefenses = [];
+            const aliveCities = this.cities.filter(c => c.alive);
+            for (let i = 0; i < Math.min(turretCount, aliveCities.length); i++) {
+                this.pointDefenses.push(new PointDefense(aliveCities[i].x, aliveCities[i].y, level));
             }
         }
 
@@ -598,6 +672,18 @@ class GameScene extends Phaser.Scene {
             this.comboSystem.drawMeter(this.hudGfx, CONFIG.WIDTH / 2 - 40, 42, 80);
         }
 
+        // Wave progress bar
+        if (this.waveManager.state === 'spawning') {
+            const progress = this.waveManager.getProgress();
+            const barW = 100, barH = 4;
+            const barX = CONFIG.WIDTH / 2 - barW / 2;
+            const barY = 55;
+            this.hudGfx.fillStyle(0x222244, 0.5);
+            this.hudGfx.fillRect(barX, barY, barW, barH);
+            this.hudGfx.fillStyle(0xff6644, 0.7);
+            this.hudGfx.fillRect(barX, barY, barW * progress, barH);
+        }
+
         // Base selection indicator
         if (this.forcedBaseIndex >= 0 && this.bases[this.forcedBaseIndex] && this.bases[this.forcedBaseIndex].alive) {
             const b = this.bases[this.forcedBaseIndex];
@@ -640,7 +726,11 @@ class GameScene extends Phaser.Scene {
         this.cities.forEach(c => c.update(dt));
 
         for (const cm of this.counterMissiles) {
-            cm.update(dt, this.particleSystem);
+            if (cm.update.length >= 3) {
+                cm.update(dt, this.particleSystem, this.enemyMissiles);
+            } else {
+                cm.update(dt, this.particleSystem);
+            }
             if (cm.detonated) {
                 const expRadius = CONFIG.EXPLOSION.COUNTER_RADIUS * this.explosionRadiusMultiplier;
                 this.explosions.push(new Explosion(cm.x, cm.y, expRadius, true));
@@ -667,6 +757,24 @@ class GameScene extends Phaser.Scene {
 
         for (const exp of this.explosions) {
             exp.update(dt, this.particleSystem);
+        }
+
+        // Point defenses
+        for (const pd of this.pointDefenses) {
+            pd.update(dt, this.enemyMissiles);
+            const hits = pd.checkHits(this.enemyMissiles);
+            for (const em of hits) {
+                const killed = em.hit();
+                if (killed) {
+                    const points = this.comboSystem.getPoints(em.points);
+                    this.score += points;
+                    this.money += em.points;
+                    this.waveMoneyEarned += em.points;
+                    this.comboSystem.registerKill(em.x, em.y);
+                    this.enemiesDestroyed++;
+                    this.particleSystem.emitSparks(em.x, em.y, em.color);
+                }
+            }
         }
 
         // Collisions
@@ -732,18 +840,29 @@ class GameScene extends Phaser.Scene {
         this.particleGfx.clear();
         this.flashGfx.clear();
 
-        // Stars
+        // Stars (varied sizes)
         for (const star of this.stars) {
             const flicker = Math.sin(time * CONFIG.STARS.FLICKER_SPEED + star.brightness * 10) * 0.3 + 0.7;
-            this.starGfx.fillStyle(0xffffff, star.brightness * flicker * 0.5);
-            this.starGfx.fillCircle(star.x, star.y, star.brightness * 1.5);
+            const alpha = star.brightness * flicker * 0.55;
+            const size = star.brightness < 0.3 ? 0.8 : star.brightness < 0.8 ? 1.2 : 2.0;
+            this.starGfx.fillStyle(0xffffff, alpha);
+            this.starGfx.fillCircle(star.x, star.y, size);
         }
 
-        // Ground
+        // Ground with gradient
         this.groundGfx.fillStyle(0x1a472a, 1);
         this.groundGfx.fillRect(0, CONFIG.GROUND_Y, CONFIG.WIDTH, CONFIG.HEIGHT - CONFIG.GROUND_Y);
         this.groundGfx.fillStyle(0x0d2e1a, 1);
         this.groundGfx.fillRect(0, CONFIG.GROUND_Y, CONFIG.WIDTH, 3);
+        // Atmospheric haze
+        this.groundGfx.fillStyle(0x1a1848, 0.12);
+        this.groundGfx.fillRect(0, CONFIG.GROUND_Y - 15, CONFIG.WIDTH, 15);
+
+        // Craters
+        for (const c of this.craters) {
+            this.groundGfx.fillStyle(0x0a1a0a, 0.4);
+            this.groundGfx.fillEllipse(c.x, CONFIG.GROUND_Y + 2, c.radius * 2, 3);
+        }
 
         // Counter missiles
         for (const cm of this.counterMissiles) {
@@ -780,6 +899,11 @@ class GameScene extends Phaser.Scene {
             base.draw(this.baseGfx);
         }
 
+        // Point defenses
+        for (const pd of this.pointDefenses) {
+            pd.draw(this.baseGfx);
+        }
+
         // Particles
         this.particleSystem.draw(this.particleGfx);
 
@@ -788,6 +912,58 @@ class GameScene extends Phaser.Scene {
 
         // Screen flash
         this.screenEffects.drawFlash(this.flashGfx);
+    }
+
+    _drawSkyBackground() {
+        const g = this.skyGfx;
+        const bands = [
+            { y: 0, h: CONFIG.HEIGHT * 0.25, color: 0x050520 },
+            { y: CONFIG.HEIGHT * 0.25, h: CONFIG.HEIGHT * 0.25, color: 0x0a0a3e },
+            { y: CONFIG.HEIGHT * 0.5, h: CONFIG.HEIGHT * 0.25, color: 0x1a1050 },
+            { y: CONFIG.HEIGHT * 0.75, h: CONFIG.HEIGHT * 0.25, color: 0x2a1848 },
+        ];
+        for (const band of bands) {
+            g.fillStyle(band.color, 1);
+            g.fillRect(0, band.y, CONFIG.WIDTH, band.h + 1);
+        }
+        const blendPairs = [
+            { y: CONFIG.HEIGHT * 0.25, color: 0x080830 },
+            { y: CONFIG.HEIGHT * 0.5, color: 0x120d44 },
+            { y: CONFIG.HEIGHT * 0.75, color: 0x221440 },
+        ];
+        for (const bp of blendPairs) {
+            g.fillStyle(bp.color, 0.5);
+            g.fillRect(0, bp.y - 10, CONFIG.WIDTH, 20);
+        }
+    }
+
+    _drawMoon() {
+        const g = this.moonGfx;
+        const mx = 680, my = 55, r = 22;
+        g.fillStyle(0xccccff, 0.04);
+        g.fillCircle(mx, my, r * 2.5);
+        g.fillStyle(0xccccff, 0.07);
+        g.fillCircle(mx, my, r * 1.8);
+        g.fillStyle(0xddddee, 0.85);
+        g.fillCircle(mx, my, r);
+        g.fillStyle(0x050520, 0.3);
+        g.fillCircle(mx + r * 0.3, my - r * 0.1, r * 0.85);
+    }
+
+    _drawMountains() {
+        const g = this.mountainGfx;
+        for (const range of CONFIG.MOUNTAINS) {
+            g.fillStyle(0x0d1a2a, 0.7);
+            g.beginPath();
+            g.moveTo(range.x, CONFIG.GROUND_Y);
+            for (const peak of range.peaks) {
+                g.lineTo(range.x + peak.x, CONFIG.GROUND_Y - peak.h);
+            }
+            const lastPeak = range.peaks[range.peaks.length - 1];
+            g.lineTo(range.x + lastPeak.x + 40, CONFIG.GROUND_Y);
+            g.closePath();
+            g.fillPath();
+        }
     }
 
     shutdown() {
