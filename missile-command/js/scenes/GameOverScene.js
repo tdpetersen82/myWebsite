@@ -222,10 +222,10 @@ class GameOverScene extends Phaser.Scene {
     _drawGradientSky() {
         const g = this.skyGraphics;
         const bands = [
-            { y: 0, h: CONFIG.HEIGHT * 0.25, color: 0x050520 },
-            { y: CONFIG.HEIGHT * 0.25, h: CONFIG.HEIGHT * 0.25, color: 0x0a0a3e },
-            { y: CONFIG.HEIGHT * 0.5, h: CONFIG.HEIGHT * 0.25, color: 0x1a1050 },
-            { y: CONFIG.HEIGHT * 0.75, h: CONFIG.HEIGHT * 0.25, color: 0x2a1848 },
+            { y: 0, h: CONFIG.HEIGHT * 0.25, color: 0x0a0a30 },
+            { y: CONFIG.HEIGHT * 0.25, h: CONFIG.HEIGHT * 0.25, color: 0x141450 },
+            { y: CONFIG.HEIGHT * 0.5, h: CONFIG.HEIGHT * 0.25, color: 0x251868 },
+            { y: CONFIG.HEIGHT * 0.75, h: CONFIG.HEIGHT * 0.25, color: 0x3a2260 },
         ];
         for (const band of bands) {
             g.fillStyle(band.color, 1);

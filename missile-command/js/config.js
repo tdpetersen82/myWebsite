@@ -14,14 +14,14 @@ const CONFIG = {
 
     // Colors
     COLORS: {
-        SKY: '#0a0a2e',
-        SKY_TOP: '#050520',
-        SKY_MID: '#0a0a3e',
-        SKY_HORIZON: '#1a1050',
-        HORIZON_GLOW: '#2a1848',
-        GROUND: '#1a472a',
-        GROUND_DARK: '#0d2e1a',
-        GROUND_DEEP: '#0a1f12',
+        SKY: '#101040',
+        SKY_TOP: '#0a0a30',
+        SKY_MID: '#141450',
+        SKY_HORIZON: '#251868',
+        HORIZON_GLOW: '#3a2260',
+        GROUND: '#1e5530',
+        GROUND_DARK: '#123820',
+        GROUND_DEEP: '#0e2818',
         HUD_TEXT: '#ffffff',
         SCORE: '#ffdd57',
         COMBO_COLORS: ['#ffffff', '#ffdd57', '#ff9500', '#ff3b30', '#ff2d95'],
@@ -96,8 +96,8 @@ const CONFIG = {
     TRACKING: {
         LEVELS: [
             { turnRate: 1.5, detectRadius: 150, trailColor: 0x44ffaa },  // Level 1
-            { turnRate: 3.0, detectRadius: 250, trailColor: 0x44ffcc },  // Level 2
-            { turnRate: 5.0, detectRadius: 400, trailColor: 0x00ffdd },  // Level 3
+            { turnRate: 2.0, detectRadius: 180, trailColor: 0x44ffcc },  // Level 2 (nerfed)
+            { turnRate: 3.0, detectRadius: 300, trailColor: 0x00ffdd },  // Level 3 (nerfed)
         ],
     },
 

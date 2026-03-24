@@ -15,7 +15,9 @@ class Base {
         this.aimAngle = -Math.PI / 2; // pointing up
         this.launchFlash = 0;
         this.recoilTimer = 0;
+        this.fireCooldown = 0;
         this.statusPulse = 0;
+        this.bonusAmmo = false; // Set true during bonus waves for unlimited ammo
     }
 
     setDifficulty(diff) {
@@ -28,10 +30,12 @@ class Base {
     }
 
     fire() {
-        if (!this.alive || this.locked || this.ammo <= 0) return false;
-        this.ammo--;
+        if (!this.alive || this.locked || this.fireCooldown > 0) return false;
+        if (!this.bonusAmmo && this.ammo <= 0) return false;
+        if (!this.bonusAmmo) this.ammo--;
         this.launchFlash = 200; // ms
         this.recoilTimer = 150; // ms
+        this.fireCooldown = 300; // ms cooldown between shots
         return true;
     }
 
@@ -75,6 +79,9 @@ class Base {
         }
         if (this.recoilTimer > 0) {
             this.recoilTimer -= dt * 1000;
+        }
+        if (this.fireCooldown > 0) {
+            this.fireCooldown -= dt * 1000;
         }
         this.statusPulse += dt * 3;
     }

@@ -35,6 +35,8 @@ class TrackingMissile {
         // Lock-on state
         this.lockedTarget = null;
         this.lockOnTimer = 0;
+        this.lifetime = 0;
+        this.maxLifetime = 5; // seconds — detonate after this if still alive
 
         // Visual
         this.flamePhase = Math.random() * Math.PI * 2;
@@ -46,6 +48,7 @@ class TrackingMissile {
 
         this.flamePhase += dt * 20;
         this.seekerPulse += dt * 10;
+        this.lifetime += dt;
 
         // Find nearest enemy to track
         let nearestEnemy = null;
@@ -118,9 +121,16 @@ class TrackingMissile {
             this.dead = true;
         }
 
-        // Out of bounds
+        // Max lifetime — detonate at current position
+        if (this.lifetime >= this.maxLifetime) {
+            this.detonated = true;
+            this.dead = true;
+        }
+
+        // Out of bounds — still detonate so the shot isn't wasted
         if (this.y < -30 || this.y > CONFIG.HEIGHT + 30 ||
             this.x < -30 || this.x > CONFIG.WIDTH + 30) {
+            this.detonated = true;
             this.dead = true;
         }
     }

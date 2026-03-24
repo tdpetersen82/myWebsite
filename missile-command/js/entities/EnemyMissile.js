@@ -122,7 +122,7 @@ class EnemyMissile {
 
         // Trail glow (outer)
         for (let i = 1; i < this.trail.length; i++) {
-            const trailAlpha = (i / this.trail.length) * 0.12 * alpha;
+            const trailAlpha = (i / this.trail.length) * 0.3 * alpha;
             graphics.lineStyle(5, this.trailColor, trailAlpha);
             graphics.lineBetween(
                 this.trail[i - 1].x, this.trail[i - 1].y,
@@ -197,10 +197,10 @@ class EnemyMissile {
 
         // Ground target indicator
         if (!this.isStealth) {
-            graphics.fillStyle(this.color, 0.12 * alpha);
+            graphics.fillStyle(this.color, 0.25 * alpha);
             graphics.fillCircle(this.targetX, CONFIG.GROUND_Y, 4);
             // Small crosshair
-            graphics.lineStyle(0.5, this.color, 0.1 * alpha);
+            graphics.lineStyle(0.5, this.color, 0.2 * alpha);
             graphics.lineBetween(this.targetX - 5, CONFIG.GROUND_Y, this.targetX + 5, CONFIG.GROUND_Y);
         }
     }
