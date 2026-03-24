@@ -77,19 +77,27 @@ class UpgradeScene extends Phaser.Scene {
         const cx = CONFIG.WIDTH / 2;
 
         // ---------- background ----------
-        this.add.graphics()
-            .fillStyle(0x0a0a2e, 1)
-            .fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
+        // Gradient from deep blue top to brighter blue-purple bottom
+        const bgGfx = this.add.graphics();
+        const bgSteps = 20;
+        for (let i = 0; i < bgSteps; i++) {
+            const t = i / bgSteps;
+            const r = Math.floor(0x10 + t * 0x18);
+            const g = Math.floor(0x12 + t * 0x14);
+            const b = Math.floor(0x40 + t * 0x30);
+            bgGfx.fillStyle((r << 16) | (g << 8) | b, 1);
+            bgGfx.fillRect(0, (CONFIG.HEIGHT / bgSteps) * i, CONFIG.WIDTH, CONFIG.HEIGHT / bgSteps + 1);
+        }
 
-        // Stars
+        // Stars (brighter)
         const starGfx = this.add.graphics();
-        for (let i = 0; i < 80; i++) {
-            const brightness = Math.random();
-            starGfx.fillStyle(0xffffff, brightness * 0.4);
+        for (let i = 0; i < 60; i++) {
+            const brightness = 0.3 + Math.random() * 0.7;
+            starGfx.fillStyle(0xffffff, brightness * 0.5);
             starGfx.fillCircle(
                 Math.random() * CONFIG.WIDTH,
                 Math.random() * CONFIG.HEIGHT,
-                brightness * 1.2
+                brightness * 1.5
             );
         }
 
@@ -100,7 +108,7 @@ class UpgradeScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         this.add.text(cx, 48, 'Wave earnings: $' + Helpers.formatNumber(this.waveEarnings), {
-            fontSize: '12px', fontFamily: 'monospace', color: '#888888',
+            fontSize: '12px', fontFamily: 'monospace', color: '#aabbcc',
         }).setOrigin(0.5);
 
         // Money display
@@ -112,7 +120,7 @@ class UpgradeScene extends Phaser.Scene {
 
         // Score (right-aligned)
         this.add.text(CONFIG.WIDTH - 15, 72, 'Score: ' + Helpers.formatNumber(this.score), {
-            fontSize: '11px', fontFamily: 'monospace', color: '#666666',
+            fontSize: '11px', fontFamily: 'monospace', color: '#99aabb',
         }).setOrigin(1, 0.5);
 
         // ---------- tabs ----------
@@ -179,18 +187,18 @@ class UpgradeScene extends Phaser.Scene {
 
             // Tab background
             if (isActive) {
-                gfx.fillStyle(cat.accentHex, 0.25);
+                gfx.fillStyle(cat.accentHex, 0.35);
                 gfx.fillRoundedRect(tx, tabY, tabW, tabH, { tl: 5, tr: 5, bl: 0, br: 0 });
-                gfx.lineStyle(2, cat.accentHex, 0.8);
+                gfx.lineStyle(2, cat.accentHex, 0.9);
                 gfx.strokeRoundedRect(tx, tabY, tabW, tabH, { tl: 5, tr: 5, bl: 0, br: 0 });
             } else {
-                gfx.fillStyle(0x111128, 0.6);
+                gfx.fillStyle(0x1a1a40, 0.7);
                 gfx.fillRoundedRect(tx, tabY, tabW, tabH, { tl: 5, tr: 5, bl: 0, br: 0 });
-                gfx.lineStyle(1, 0x333355, 0.5);
+                gfx.lineStyle(1, 0x445577, 0.5);
                 gfx.strokeRoundedRect(tx, tabY, tabW, tabH, { tl: 5, tr: 5, bl: 0, br: 0 });
             }
 
-            const labelColor = isActive ? cat.accent : '#666666';
+            const labelColor = isActive ? cat.accent : '#99aabb';
             const label = this.add.text(tx + tabW / 2, tabY + tabH / 2, cat.label, {
                 fontSize: '13px', fontFamily: 'monospace', color: labelColor,
                 fontStyle: 'bold',
@@ -208,14 +216,14 @@ class UpgradeScene extends Phaser.Scene {
                 if (this.activeTab !== cat.key) label.setColor(cat.accent);
             });
             label.on('pointerout', () => {
-                if (this.activeTab !== cat.key) label.setColor('#666666');
+                if (this.activeTab !== cat.key) label.setColor('#99aabb');
             });
 
             this.tabObjects.push(label);
         });
 
         // Bottom line under tabs
-        gfx.lineStyle(1, 0x333355, 0.4);
+        gfx.lineStyle(1, 0x445577, 0.5);
         gfx.lineBetween(0, tabY + tabH, CONFIG.WIDTH, tabY + tabH);
     }
 
@@ -280,18 +288,16 @@ class UpgradeScene extends Phaser.Scene {
         const gfx = this.contentGfx;
 
         // Card background
-        gfx.fillStyle(0x1a1a3e, canAfford ? 0.9 : 0.7);
+        gfx.fillStyle(canAfford ? 0x222255 : 0x1a1a40, canAfford ? 0.95 : 0.8);
         gfx.fillRoundedRect(x, y, w, h, 6);
 
         // Left accent bar
-        gfx.fillStyle(accentHex, canAfford ? 0.8 : 0.3);
+        gfx.fillStyle(accentHex, canAfford ? 0.9 : 0.4);
         gfx.fillRect(x, y + 4, 4, h - 8);
 
-        // Border when affordable
-        if (canAfford) {
-            gfx.lineStyle(1, accentHex, 0.5);
-            gfx.strokeRoundedRect(x, y, w, h, 6);
-        }
+        // Border
+        gfx.lineStyle(1, canAfford ? accentHex : 0x445577, canAfford ? 0.6 : 0.3);
+        gfx.strokeRoundedRect(x, y, w, h, 6);
 
         // Category tag
         const catTag = this.add.text(x + 14, y + 8, config.category, {
@@ -301,7 +307,7 @@ class UpgradeScene extends Phaser.Scene {
         this.contentObjects.push(catTag);
 
         // Name
-        const nameColor = isMaxed ? '#888888' : canAfford ? '#ffffff' : '#666666';
+        const nameColor = isMaxed ? '#99aaaa' : canAfford ? '#ffffff' : '#8899aa';
         const nameText = this.add.text(x + 14, y + 22, config.name, {
             fontSize: '16px', fontFamily: 'monospace', color: nameColor,
             fontStyle: 'bold',
@@ -310,7 +316,7 @@ class UpgradeScene extends Phaser.Scene {
 
         // Description
         const descText = this.add.text(x + 14, y + 44, config.description, {
-            fontSize: '11px', fontFamily: 'monospace', color: '#777777',
+            fontSize: '11px', fontFamily: 'monospace', color: '#aabbcc',
         });
         this.contentObjects.push(descText);
 
@@ -319,20 +325,20 @@ class UpgradeScene extends Phaser.Scene {
         for (let i = 0; i < maxLevel; i++) {
             const dx = x + 14 + i * 20;
             const filled = i < currentLevel;
-            gfx.fillStyle(filled ? accentHex : 0x333355, filled ? 0.9 : 0.5);
+            gfx.fillStyle(filled ? accentHex : 0x3a3a60, filled ? 1 : 0.6);
             gfx.fillRoundedRect(dx, dotY, 16, 8, 3);
         }
 
         const levelLabel = this.add.text(x + 14 + maxLevel * 20 + 6, dotY - 1, currentLevel + '/' + maxLevel, {
             fontSize: '10px', fontFamily: 'monospace',
-            color: isMaxed ? '#888888' : '#aaaaaa',
+            color: isMaxed ? '#99aaaa' : '#ccddee',
         });
         this.contentObjects.push(levelLabel);
 
         // Cost / status line
         if (isMaxed) {
             const maxText = this.add.text(x + w - 14, y + h - 22, 'MAXED', {
-                fontSize: '14px', fontFamily: 'monospace', color: '#888855',
+                fontSize: '14px', fontFamily: 'monospace', color: '#aabb66',
                 fontStyle: 'bold',
             }).setOrigin(1, 0);
             this.contentObjects.push(maxText);
@@ -347,7 +353,7 @@ class UpgradeScene extends Phaser.Scene {
 
             if (canAfford) {
                 const buyHint = this.add.text(x + 14, y + h - 22, 'Click to buy', {
-                    fontSize: '10px', fontFamily: 'monospace', color: '#448844',
+                    fontSize: '10px', fontFamily: 'monospace', color: '#66bb66',
                 });
                 this.contentObjects.push(buyHint);
             }
@@ -373,10 +379,12 @@ class UpgradeScene extends Phaser.Scene {
         const accentColor = '#44aa44';
 
         // Panel background
-        gfx.fillStyle(0x1a1a3e, 0.7);
+        gfx.fillStyle(0x222255, 0.85);
         gfx.fillRoundedRect(startX, startY, panelW, 370, 6);
-        gfx.fillStyle(accentHex, 0.4);
+        gfx.fillStyle(accentHex, 0.5);
         gfx.fillRect(startX, startY + 4, 4, 362);
+        gfx.lineStyle(1, 0x445577, 0.4);
+        gfx.strokeRoundedRect(startX, startY, panelW, 370, 6);
 
         const titleText = this.add.text(startX + 20, startY + 12, 'REPAIRS & REBUILDING', {
             fontSize: '16px', fontFamily: 'monospace', color: accentColor,
@@ -385,12 +393,12 @@ class UpgradeScene extends Phaser.Scene {
         this.contentObjects.push(titleText);
 
         const subtitleText = this.add.text(startX + 20, startY + 34, 'Restore destroyed cities and bases', {
-            fontSize: '11px', fontFamily: 'monospace', color: '#777777',
+            fontSize: '11px', fontFamily: 'monospace', color: '#aabbcc',
         });
         this.contentObjects.push(subtitleText);
 
         // Separator
-        gfx.lineStyle(1, 0x333355, 0.5);
+        gfx.lineStyle(1, 0x445577, 0.5);
         gfx.lineBetween(startX + 14, startY + 55, startX + panelW - 14, startY + 55);
 
         let itemY = startY + 70;
@@ -425,7 +433,7 @@ class UpgradeScene extends Phaser.Scene {
                 const rowY = itemY;
 
                 // Row background
-                gfx.fillStyle(0x111128, 0.6);
+                gfx.fillStyle(0x1a1a44, 0.7);
                 gfx.fillRoundedRect(startX + 14, rowY - 2, panelW - 28, 28, 4);
 
                 const labelText = this.add.text(startX + 24, rowY + 3, 'City #' + (cityIdx + 1) + ' — Destroyed', {
@@ -455,7 +463,7 @@ class UpgradeScene extends Phaser.Scene {
         itemY += 10;
 
         // Separator
-        gfx.lineStyle(1, 0x333355, 0.3);
+        gfx.lineStyle(1, 0x445577, 0.4);
         gfx.lineBetween(startX + 14, itemY, startX + panelW - 14, itemY);
         itemY += 14;
 
@@ -489,7 +497,7 @@ class UpgradeScene extends Phaser.Scene {
                 const baseIdx = destroyedBaseIndices[bi];
                 const rowY = itemY;
 
-                gfx.fillStyle(0x111128, 0.6);
+                gfx.fillStyle(0x1a1a44, 0.7);
                 gfx.fillRoundedRect(startX + 14, rowY - 2, panelW - 28, 28, 4);
 
                 const labelText = this.add.text(startX + 24, rowY + 3,
@@ -535,11 +543,11 @@ class UpgradeScene extends Phaser.Scene {
         const barH = 24;
 
         this.statusGfx = this.add.graphics();
-        this.statusGfx.fillStyle(0x111128, 0.6);
+        this.statusGfx.fillStyle(0x1a1a44, 0.7);
         this.statusGfx.fillRoundedRect(0, barY, CONFIG.WIDTH, barH, 0);
 
         this.statusText = this.add.text(CONFIG.WIDTH / 2, barY + barH / 2, '', {
-            fontSize: '12px', fontFamily: 'monospace', color: '#888888',
+            fontSize: '12px', fontFamily: 'monospace', color: '#aabbcc',
         }).setOrigin(0.5);
 
         this._updateStatus();

@@ -463,6 +463,36 @@ class GameScene extends Phaser.Scene {
             }
         }
 
+        // Bonus wave intermission complete → transition to upgrade screen
+        if (wm.isIntermissionComplete() && !this.upgradeScreenActive) {
+            audioManager.playWaveComplete();
+
+            const aliveBases = this.bases.filter(b => b.alive);
+            const aliveCities = this.cities.filter(c => c.alive);
+            let ammoBonus = 0;
+            aliveBases.forEach(b => { ammoBonus += b.ammo * 5; });
+            const cityBonus = aliveCities.length * this.diffConfig.bonusCityPoints;
+            this.score += ammoBonus + cityBonus;
+
+            for (const city of aliveCities) { city.grow(); }
+            for (const city of this.cities) { city.regenShield(this.waveManager.wave); }
+
+            let moneyCityBonus = 0;
+            for (const city of aliveCities) { moneyCityBonus += city.getValue(); }
+            let moneyAmmoBonus = 0;
+            aliveBases.forEach(b => { moneyAmmoBonus += b.ammo * CONFIG.UPGRADE.MONEY.PER_AMMO_REMAINING; });
+            this.money += moneyCityBonus + moneyAmmoBonus;
+            this.waveMoneyEarned += moneyCityBonus + moneyAmmoBonus;
+
+            const bonusStr = `BONUS COMPLETE!  |  MONEY: +$${moneyCityBonus + moneyAmmoBonus}`;
+            this.bonusText.setText(bonusStr);
+            this.bonusText.setAlpha(1);
+            this.tweens.add({ targets: this.bonusText, alpha: 0, duration: 2500, delay: 800 });
+
+            this.upgradeScreenActive = true;
+            this.time.delayedCall(2000, () => { this._launchUpgradeScreen(); });
+        }
+
         // Check if all enemies are done and no missiles on screen
         if (wm.state === 'spawning' && wm.enemyMissilesRemaining <= 0 &&
             this.enemyMissiles.filter(m => !m.dead).length === 0 &&
@@ -627,6 +657,20 @@ class GameScene extends Phaser.Scene {
         this.waveMoneyEarned = 0;
         this.upgradeScreenActive = false;
         this.waveManager.startNextWave();
+
+        // Ammo floor: ensure total ammo across alive bases >= wave enemy count
+        const aliveBases = this.bases.filter(b => b.alive && !b.locked);
+        const totalAmmo = aliveBases.reduce((sum, b) => sum + b.ammo, 0);
+        const enemyCount = this.waveManager.enemyMissilesTotal;
+        if (totalAmmo < enemyCount && aliveBases.length > 0) {
+            const minPerBase = Math.ceil(enemyCount / aliveBases.length);
+            aliveBases.forEach(b => {
+                if (b.ammo < minPerBase) {
+                    b.maxAmmo = Math.max(b.maxAmmo, minPerBase);
+                    b.ammo = minPerBase;
+                }
+            });
+        }
     }
 
     _updateHUD() {
@@ -675,12 +719,12 @@ class GameScene extends Phaser.Scene {
         // Wave progress bar
         if (this.waveManager.state === 'spawning') {
             const progress = this.waveManager.getProgress();
-            const barW = 100, barH = 4;
+            const barW = 100, barH = 3;
             const barX = CONFIG.WIDTH / 2 - barW / 2;
             const barY = 55;
-            this.hudGfx.fillStyle(0x222244, 0.5);
+            this.hudGfx.fillStyle(0x222244, 0.3);
             this.hudGfx.fillRect(barX, barY, barW, barH);
-            this.hudGfx.fillStyle(0xff6644, 0.7);
+            this.hudGfx.fillStyle(0x4488aa, 0.4);
             this.hudGfx.fillRect(barX, barY, barW * progress, barH);
         }
 
@@ -705,6 +749,10 @@ class GameScene extends Phaser.Scene {
 
         // Wave manager
         this.waveManager.update(dt);
+
+        // Bonus wave: unlimited ammo
+        const isBonusActive = this.waveManager.state === 'bonus';
+        this.bases.forEach(b => { b.bonusAmmo = isBonusActive; });
 
         // Spawn enemies
         if (this.waveManager.shouldSpawnMissile()) {
@@ -850,9 +898,9 @@ class GameScene extends Phaser.Scene {
         }
 
         // Ground with gradient
-        this.groundGfx.fillStyle(0x1a472a, 1);
+        this.groundGfx.fillStyle(0x1e5530, 1);
         this.groundGfx.fillRect(0, CONFIG.GROUND_Y, CONFIG.WIDTH, CONFIG.HEIGHT - CONFIG.GROUND_Y);
-        this.groundGfx.fillStyle(0x0d2e1a, 1);
+        this.groundGfx.fillStyle(0x123820, 1);
         this.groundGfx.fillRect(0, CONFIG.GROUND_Y, CONFIG.WIDTH, 3);
         // Atmospheric haze
         this.groundGfx.fillStyle(0x1a1848, 0.12);
@@ -917,10 +965,10 @@ class GameScene extends Phaser.Scene {
     _drawSkyBackground() {
         const g = this.skyGfx;
         const bands = [
-            { y: 0, h: CONFIG.HEIGHT * 0.25, color: 0x050520 },
-            { y: CONFIG.HEIGHT * 0.25, h: CONFIG.HEIGHT * 0.25, color: 0x0a0a3e },
-            { y: CONFIG.HEIGHT * 0.5, h: CONFIG.HEIGHT * 0.25, color: 0x1a1050 },
-            { y: CONFIG.HEIGHT * 0.75, h: CONFIG.HEIGHT * 0.25, color: 0x2a1848 },
+            { y: 0, h: CONFIG.HEIGHT * 0.25, color: 0x0a0a30 },
+            { y: CONFIG.HEIGHT * 0.25, h: CONFIG.HEIGHT * 0.25, color: 0x141450 },
+            { y: CONFIG.HEIGHT * 0.5, h: CONFIG.HEIGHT * 0.25, color: 0x251868 },
+            { y: CONFIG.HEIGHT * 0.75, h: CONFIG.HEIGHT * 0.25, color: 0x3a2260 },
         ];
         for (const band of bands) {
             g.fillStyle(band.color, 1);
@@ -946,7 +994,7 @@ class GameScene extends Phaser.Scene {
         g.fillCircle(mx, my, r * 1.8);
         g.fillStyle(0xddddee, 0.85);
         g.fillCircle(mx, my, r);
-        g.fillStyle(0x050520, 0.3);
+        g.fillStyle(0x0a0a30, 0.3);
         g.fillCircle(mx + r * 0.3, my - r * 0.1, r * 0.85);
     }
 
