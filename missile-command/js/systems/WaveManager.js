@@ -33,6 +33,10 @@ class WaveManager {
             d.missileCountBase + this.wave * d.missileCountPerWave,
             d.missileCountMax
         );
+        // Reduce early wave counts since player starts with only 1 base
+        if (this.wave <= 3) {
+            this.enemyMissilesTotal = Math.floor(this.enemyMissilesTotal * 0.7);
+        }
         this.enemyMissilesRemaining = this.enemyMissilesTotal;
         this.spawnInterval = Math.max(300, 1500 - this.wave * 60);
         this.spawnTimer = 500; // Brief delay before first spawn

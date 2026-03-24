@@ -60,7 +60,7 @@ const Helpers = {
         let bestIdx = -1;
         let bestDist = Infinity;
         for (let i = 0; i < bases.length; i++) {
-            if (bases[i].alive && bases[i].ammo > 0) {
+            if (bases[i].alive && bases[i].ammo > 0 && !bases[i].locked) {
                 const d = Math.abs(x - bases[i].x);
                 if (d < bestDist) {
                     bestDist = d;

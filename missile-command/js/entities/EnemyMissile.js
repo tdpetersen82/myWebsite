@@ -39,6 +39,9 @@ class EnemyMissile {
         // Trail
         this.trail = [{ x: startX, y: startY }];
         this.trailTimer = 0;
+
+        // Warhead glow animation
+        this.glowPhase = Math.random() * Math.PI * 2;
     }
 
     update(dt, speedMultiplier = 1) {
@@ -47,12 +50,13 @@ class EnemyMissile {
         const speed = this.baseSpeed * speedMultiplier;
         this.x += this.dx * speed * dt;
         this.y += this.dy * speed * dt;
+        this.glowPhase += dt * 8;
 
         // Trail
         this.trailTimer += dt * 1000;
-        if (this.trailTimer > 30) {
+        if (this.trailTimer > 25) {
             this.trail.push({ x: this.x, y: this.y });
-            if (this.trail.length > 25) this.trail.shift();
+            if (this.trail.length > 28) this.trail.shift();
             this.trailTimer = 0;
         }
 
@@ -116,9 +120,19 @@ class EnemyMissile {
 
         const alpha = this.isStealth ? this.stealthFlicker : 1;
 
-        // Trail
+        // Trail glow (outer)
         for (let i = 1; i < this.trail.length; i++) {
-            const trailAlpha = (i / this.trail.length) * 0.5 * alpha;
+            const trailAlpha = (i / this.trail.length) * 0.12 * alpha;
+            graphics.lineStyle(5, this.trailColor, trailAlpha);
+            graphics.lineBetween(
+                this.trail[i - 1].x, this.trail[i - 1].y,
+                this.trail[i].x, this.trail[i].y
+            );
+        }
+
+        // Trail core
+        for (let i = 1; i < this.trail.length; i++) {
+            const trailAlpha = (i / this.trail.length) * 0.55 * alpha;
             const width = this.type === 'FAST' ? 1 : 1.5;
             graphics.lineStyle(width, this.trailColor, trailAlpha);
             graphics.lineBetween(
@@ -129,36 +143,65 @@ class EnemyMissile {
 
         // Line from last trail to current
         if (this.trail.length > 0) {
-            graphics.lineStyle(this.type === 'FAST' ? 1 : 1.5, this.color, 0.7 * alpha);
+            graphics.lineStyle(this.type === 'FAST' ? 1 : 1.5, this.color, 0.75 * alpha);
             const last = this.trail[this.trail.length - 1];
             graphics.lineBetween(last.x, last.y, this.x, this.y);
         }
 
-        // Missile head
+        // Warhead glow
+        const glowSize = 6 + Math.sin(this.glowPhase) * 1.5;
+        graphics.fillStyle(this.color, 0.15 * alpha);
+        graphics.fillCircle(this.x, this.y, glowSize);
+
+        // Warhead shape (diamond/triangle instead of circle)
+        const headSize = this.type === 'ARMORED' ? 4.5 : 3.5;
         graphics.fillStyle(this.color, alpha);
-        const headSize = this.type === 'ARMORED' ? 4 : 3;
-        graphics.fillCircle(this.x, this.y, headSize);
+
+        // Draw diamond warhead pointing in travel direction
+        const angle = Math.atan2(this.dy, this.dx);
+        const tipX = this.x + Math.cos(angle) * headSize;
+        const tipY = this.y + Math.sin(angle) * headSize;
+        const backX = this.x - Math.cos(angle) * headSize * 0.6;
+        const backY = this.y - Math.sin(angle) * headSize * 0.6;
+        const perpX = Math.cos(angle + Math.PI / 2) * headSize * 0.5;
+        const perpY = Math.sin(angle + Math.PI / 2) * headSize * 0.5;
+
+        graphics.fillTriangle(
+            tipX, tipY,
+            backX + perpX, backY + perpY,
+            backX - perpX, backY - perpY
+        );
+
+        // Bright core
+        graphics.fillStyle(0xffffff, 0.6 * alpha);
+        graphics.fillCircle(this.x, this.y, 1.5);
 
         // Armored ring
         if (this.type === 'ARMORED' && this.health > 1) {
-            graphics.lineStyle(1.5, 0xccddee, 0.6);
+            graphics.lineStyle(1.5, 0xccddee, 0.6 * alpha);
             graphics.strokeCircle(this.x, this.y, headSize + 2);
             if (this.health > 2) {
-                graphics.lineStyle(1, 0xeeeeff, 0.4);
-                graphics.strokeCircle(this.x, this.y, headSize + 4);
+                graphics.lineStyle(1, 0xeeeeff, 0.35 * alpha);
+                graphics.strokeCircle(this.x, this.y, headSize + 4.5);
             }
         }
 
         // MIRV indicator
         if (this.isMIRV && !this.mirvSplit) {
-            graphics.fillStyle(0xff00ff, 0.5 + Math.sin(Date.now() * 0.01) * 0.3);
-            graphics.fillCircle(this.x, this.y, 5);
+            const mirvPulse = 0.5 + Math.sin(this.glowPhase * 0.8) * 0.3;
+            graphics.fillStyle(0xff00ff, mirvPulse * alpha);
+            graphics.fillCircle(this.x, this.y, 5.5);
+            graphics.lineStyle(1, 0xff44ff, mirvPulse * 0.5 * alpha);
+            graphics.strokeCircle(this.x, this.y, 7);
         }
 
         // Ground target indicator
         if (!this.isStealth) {
-            graphics.fillStyle(this.color, 0.15 * alpha);
-            graphics.fillCircle(this.targetX, CONFIG.GROUND_Y, 3);
+            graphics.fillStyle(this.color, 0.12 * alpha);
+            graphics.fillCircle(this.targetX, CONFIG.GROUND_Y, 4);
+            // Small crosshair
+            graphics.lineStyle(0.5, this.color, 0.1 * alpha);
+            graphics.lineBetween(this.targetX - 5, CONFIG.GROUND_Y, this.targetX + 5, CONFIG.GROUND_Y);
         }
     }
 }

@@ -155,6 +155,63 @@ class AudioManager {
         this._playNoise(1.0, 0.15, 0.3);
     }
 
+    // --- New sound effects ---
+
+    playTrackingLock() {
+        if (this.muted) return;
+        const ctx = this._ensureContext();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(900, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.25 * this.masterVolume, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.08);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.08);
+    }
+
+    playPointDefenseFire() {
+        this._playTone(1200, 'square', 0.04, 0.12);
+    }
+
+    playShieldAbsorb() {
+        this._playTone(400, 'sine', 0.2, 0.2);
+        this._playTone(800, 'sine', 0.2, 0.15);
+    }
+
+    playShieldBreak() {
+        if (this.muted) return;
+        const ctx = this._ensureContext();
+        // Noise burst
+        this._playNoise(0.3, 0.3);
+        // Descending sawtooth sweep
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.type = 'sawtooth';
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.linearRampToValueAtTime(200, ctx.currentTime + 0.3);
+        gain.gain.setValueAtTime(0.25 * this.masterVolume, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.3);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.3);
+    }
+
+    playBaseUnlock() {
+        const notes = [440, 554, 659, 880];
+        for (let i = 0; i < notes.length; i++) {
+            this._playTone(notes[i], 'sine', 0.12, 0.25, i * 0.12);
+        }
+    }
+
+    playCityGrow() {
+        this._playTone(660, 'triangle', 0.1, 0.1);
+    }
+
     // Background music - ambient drone with arpeggios
     startMusic() {
         if (this.muted || this.musicPlaying) return;

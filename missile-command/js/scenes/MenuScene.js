@@ -13,6 +13,10 @@ class MenuScene extends Phaser.Scene {
         const cx = CONFIG.WIDTH / 2;
         const cy = CONFIG.HEIGHT / 2;
 
+        // Gradient sky background
+        this.skyGraphics = this.add.graphics();
+        this._drawGradientSky();
+
         // Starfield background
         this.starGraphics = this.add.graphics();
         this.stars = [];
@@ -24,6 +28,14 @@ class MenuScene extends Phaser.Scene {
                 speed: 0.2 + Math.random() * 0.5,
             });
         }
+
+        // Moon
+        this.moonGraphics = this.add.graphics();
+        this._drawMoon(680, 60, 25);
+
+        // Mountain silhouettes
+        this.mountainGraphics = this.add.graphics();
+        this._drawMountains();
 
         // Ground
         this.groundGraphics = this.add.graphics();
@@ -160,11 +172,68 @@ class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Version
-        this.add.text(CONFIG.WIDTH - 10, CONFIG.HEIGHT - 10, 'v3.0', {
+        this.add.text(CONFIG.WIDTH - 10, CONFIG.HEIGHT - 10, 'v4.0', {
             fontSize: '10px',
             fontFamily: 'monospace',
             color: '#333333',
         }).setOrigin(1, 1);
+    }
+
+    _drawGradientSky() {
+        const g = this.skyGraphics;
+        const bands = [
+            { y: 0, h: CONFIG.HEIGHT * 0.25, color: 0x050520 },
+            { y: CONFIG.HEIGHT * 0.25, h: CONFIG.HEIGHT * 0.25, color: 0x0a0a3e },
+            { y: CONFIG.HEIGHT * 0.5, h: CONFIG.HEIGHT * 0.25, color: 0x1a1050 },
+            { y: CONFIG.HEIGHT * 0.75, h: CONFIG.HEIGHT * 0.25, color: 0x2a1848 },
+        ];
+        for (const band of bands) {
+            g.fillStyle(band.color, 1);
+            g.fillRect(0, band.y, CONFIG.WIDTH, band.h + 1);
+        }
+        // Smooth blending between bands with semi-transparent intermediate strips
+        const blendPairs = [
+            { y: CONFIG.HEIGHT * 0.25, color: 0x080830 },
+            { y: CONFIG.HEIGHT * 0.5, color: 0x120d44 },
+            { y: CONFIG.HEIGHT * 0.75, color: 0x221440 },
+        ];
+        for (const bp of blendPairs) {
+            g.fillStyle(bp.color, 0.5);
+            g.fillRect(0, bp.y - 10, CONFIG.WIDTH, 20);
+        }
+    }
+
+    _drawMoon(mx, my, radius) {
+        const g = this.moonGraphics;
+        // Outer glow
+        g.fillStyle(0xccccff, 0.05);
+        g.fillCircle(mx, my, radius * 2.5);
+        g.fillStyle(0xccccff, 0.08);
+        g.fillCircle(mx, my, radius * 1.8);
+        // Moon body
+        g.fillStyle(0xddddee, 0.9);
+        g.fillCircle(mx, my, radius);
+        // Slight shadow for crescent effect
+        g.fillStyle(0x050520, 0.3);
+        g.fillCircle(mx + radius * 0.3, my - radius * 0.1, radius * 0.85);
+    }
+
+    _drawMountains() {
+        const g = this.mountainGraphics;
+        const baseY = CONFIG.GROUND_Y;
+
+        for (const range of CONFIG.MOUNTAINS) {
+            g.fillStyle(0x0d1a2a, 0.8);
+            g.beginPath();
+            g.moveTo(range.x, baseY);
+            for (const peak of range.peaks) {
+                g.lineTo(range.x + peak.x, baseY - peak.h);
+            }
+            const lastPeak = range.peaks[range.peaks.length - 1];
+            g.lineTo(range.x + lastPeak.x + 40, baseY);
+            g.closePath();
+            g.fillPath();
+        }
     }
 
     _updateDiffButtons() {
