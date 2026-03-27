@@ -84,10 +84,7 @@ class GameScene extends Phaser.Scene {
         // Draw terrain once
         this.terrain.draw(this.terrainGraphics);
 
-        // --- CAMERA POST-FX ---
-        try {
-            this.cameras.main.postFX.addVignette(0.5, 0.5, vfx.VIGNETTE_STRENGTH);
-        } catch (e) {}
+        // --- CAMERA POST-FX (vignette removed for visibility) ---
 
         // --- PAUSE OVERLAY ---
         this.pauseOverlay = this.add.graphics();
@@ -106,7 +103,7 @@ class GameScene extends Phaser.Scene {
             fontSize: '12px',
             fontFamily: 'Courier New, monospace',
             color: '#ff4444'
-        }).setOrigin(1, 0).setDepth(15);
+        }).setOrigin(1, 0).setDepth(15).setScrollFactor(0);
         this._updateMuteIndicator();
 
         // Cleanup on scene shutdown
@@ -120,9 +117,6 @@ class GameScene extends Phaser.Scene {
             fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(15).setAlpha(1);
 
-        try {
-            levelText.postFX.addGlow(0xffffff, 6, 0, false);
-        } catch (e) {}
 
         const windInfo = this.wind !== 0
             ? `Wind: ${this.wind > 0 ? 'RIGHT' : 'LEFT'} ${Math.abs(this.wind).toFixed(1)}`
@@ -134,9 +128,6 @@ class GameScene extends Phaser.Scene {
             color: '#88aaff'
         }).setOrigin(0.5).setDepth(15).setAlpha(1);
 
-        try {
-            subText.postFX.addGlow(0x4488ff, 3, 0, false);
-        } catch (e) {}
 
         this.tweens.add({
             targets: [levelText, subText],
@@ -151,42 +142,43 @@ class GameScene extends Phaser.Scene {
         this._landingCooldown = 0;
         this.proximityWarning = null;
         this._baseZoom = 1;
+        this._fuelGlowActive = false;
+        this._vyDangerActive = false;
+        this._vxDangerActive = false;
+        this._angDangerActive = false;
     }
 
     // --- STARFIELD ---
     _createStarfield() {
+        // Draw stars as simple graphics (no individual game objects with blend modes)
+        this._starGraphics = this.add.graphics();
+        this._starGraphics.setDepth(0);
+
         const vfx = CONFIG.VFX;
-        this.starLayers = [];
+        this._starData = [];
 
-        vfx.STAR_LAYERS.forEach((layerConfig, layerIdx) => {
-            const stars = [];
+        vfx.STAR_LAYERS.forEach((layerConfig) => {
             for (let i = 0; i < layerConfig.count; i++) {
-                const x = Math.random() * CONFIG.WIDTH;
-                const y = Math.random() * CONFIG.HEIGHT;
-                const size = layerConfig.sizeMin + Math.random() * (layerConfig.sizeMax - layerConfig.sizeMin);
-                const baseAlpha = layerConfig.alphaMin + Math.random() * (layerConfig.alphaMax - layerConfig.alphaMin);
-
-                const star = this.add.circle(x, y, size, CONFIG.COLORS.STAR, baseAlpha);
-                star.setDepth(0);
-                star.setBlendMode(Phaser.BlendModes.ADD);
-                star._baseAlpha = baseAlpha;
-                star._driftSpeed = layerConfig.speed;
-
-                // Twinkling
-                this.tweens.add({
-                    targets: star,
-                    alpha: { from: baseAlpha, to: baseAlpha * 0.2 },
-                    duration: vfx.STAR_TWINKLE_MIN + Math.random() * (vfx.STAR_TWINKLE_MAX - vfx.STAR_TWINKLE_MIN),
-                    yoyo: true,
-                    repeat: -1,
-                    delay: Math.random() * 3000,
-                    ease: 'Sine.easeInOut'
+                this._starData.push({
+                    x: Math.random() * CONFIG.WIDTH,
+                    y: Math.random() * CONFIG.HEIGHT,
+                    size: layerConfig.sizeMin + Math.random() * (layerConfig.sizeMax - layerConfig.sizeMin),
+                    alpha: layerConfig.alphaMin + Math.random() * (layerConfig.alphaMax - layerConfig.alphaMin),
+                    speed: layerConfig.speed
                 });
-
-                stars.push(star);
             }
-            this.starLayers.push(stars);
         });
+
+        this._drawStars();
+    }
+
+    _drawStars() {
+        const g = this._starGraphics;
+        g.clear();
+        for (const s of this._starData) {
+            g.fillStyle(0xffffff, s.alpha);
+            g.fillCircle(s.x, s.y, s.size);
+        }
     }
 
     // --- NEBULAE ---
@@ -247,10 +239,9 @@ class GameScene extends Phaser.Scene {
         earthDetail.fillEllipse(ex + 12, ey + 8, 14, 10);
         earthDetail.fillEllipse(ex - 2, ey + 14, 10, 8);
 
-        // Atmospheric glow
-        try {
-            this._earth.postFX.addGlow(CONFIG.COLORS.EARTH_GLOW, 10, 0, false);
-        } catch (e) {}
+        // Atmospheric glow (soft circle behind earth)
+        const earthGlow = this.add.circle(vfx.EARTH_X, vfx.EARTH_Y, r + 8, CONFIG.COLORS.EARTH_GLOW, 0.15);
+        earthGlow.setDepth(0);
 
         // Crescent shadow (dark circle offset to simulate lighting)
         const shadow = this.add.circle(ex + r * 0.35, ey - r * 0.1, r * 0.95, 0x000011, 0.6);
@@ -401,44 +392,16 @@ class GameScene extends Phaser.Scene {
             // Update landing pad proximity
             terrain.landingPads.forEach(pad => pad.updateProximity(alt));
 
-            // Proximity warning
-            if (alt < 80) {
-                if (!this.proximityWarning) {
-                    this.proximityWarning = this.add.text(CONFIG.WIDTH / 2, 50, 'PROXIMITY WARNING', {
-                        fontSize: '16px',
-                        fontFamily: 'Courier New, monospace',
-                        color: '#ff4444'
-                    }).setOrigin(0.5).setDepth(15);
-                    try {
-                        this.proximityWarning.postFX.addGlow(0xff0000, 4, 0, false);
-                    } catch (e) {}
-                    this.tweens.add({
-                        targets: this.proximityWarning,
-                        alpha: { from: 1, to: 0.2 },
-                        duration: 300,
-                        yoyo: true,
-                        repeat: -1
-                    });
-                }
-            } else if (this.proximityWarning) {
-                this.proximityWarning.destroy();
-                this.proximityWarning = null;
-            }
 
-            // Descent zoom
-            const altNorm = Phaser.Math.Clamp(alt / 300, 0, 1);
-            const targetZoom = 1 + (1 - altNorm) * CONFIG.VFX.DESCENT_ZOOM_MAX;
-            this.cameras.main.zoom = Phaser.Math.Linear(this.cameras.main.zoom, targetZoom, 0.02);
         }
 
         // --- STAR DRIFT ---
-        if (this.starLayers) {
-            this.starLayers.forEach((layer) => {
-                layer.forEach(star => {
-                    star.x -= star._driftSpeed;
-                    if (star.x < -5) star.x = CONFIG.WIDTH + 5;
-                });
-            });
+        if (this._starData) {
+            for (const s of this._starData) {
+                s.x -= s.speed;
+                if (s.x < -5) s.x = CONFIG.WIDTH + 5;
+            }
+            this._drawStars();
         }
     }
 
@@ -492,13 +455,6 @@ class GameScene extends Phaser.Scene {
         // Celebration effects
         this.time.delayedCall(300, () => {
             this.vfx.emitFireworks(lander.x, lander.y - 50);
-            this.cameras.main.flash(200, 255, 255, 255, true);
-            this.tweens.add({
-                targets: this.cameras.main,
-                zoom: 1.25,
-                duration: 1500,
-                ease: 'Sine.easeInOut'
-            });
         });
 
         // Calculate score
@@ -564,10 +520,6 @@ class GameScene extends Phaser.Scene {
         // Epic explosion
         this.vfx.emitExplosion(lander.x, lander.y);
 
-        // Enhanced camera effects
-        const vfxCfg = CONFIG.VFX;
-        this.cameras.main.shake(vfxCfg.EXPLOSION_SHAKE_DURATION, vfxCfg.EXPLOSION_SHAKE_INTENSITY);
-        this.cameras.main.flash(150, 255, 120, 0, true); // orange flash
 
         const highScore = parseInt(localStorage.getItem(CONFIG.HIGH_SCORE_KEY) || '0');
         if (this.score > highScore) {
@@ -611,16 +563,16 @@ class GameScene extends Phaser.Scene {
 
         this.hudTexts = {};
 
-        // Left panel
-        this.hudTexts.altitude = this.add.text(10, 10, 'ALT: 0', style).setDepth(10);
-        this.hudTexts.vSpeed = this.add.text(10, 28, 'V-SPD: 0', style).setDepth(10);
-        this.hudTexts.hSpeed = this.add.text(10, 46, 'H-SPD: 0', style).setDepth(10);
-        this.hudTexts.angle = this.add.text(10, 64, 'ANG: 0', style).setDepth(10);
+        // Left panel — setScrollFactor(0) keeps HUD fixed during camera zoom
+        this.hudTexts.altitude = this.add.text(10, 10, 'ALT: 0', style).setDepth(10).setScrollFactor(0);
+        this.hudTexts.vSpeed = this.add.text(10, 28, 'V-SPD: 0', style).setDepth(10).setScrollFactor(0);
+        this.hudTexts.hSpeed = this.add.text(10, 46, 'H-SPD: 0', style).setDepth(10).setScrollFactor(0);
+        this.hudTexts.angle = this.add.text(10, 64, 'ANG: 0', style).setDepth(10).setScrollFactor(0);
 
         // Fuel gauge label
-        this.hudTexts.fuelLabel = this.add.text(10, 90, 'FUEL', style).setDepth(10);
+        this.hudTexts.fuelLabel = this.add.text(10, 90, 'FUEL', style).setDepth(10).setScrollFactor(0);
 
-        // Fuel bar as persistent rectangle (for postFX glow)
+        // Fuel bar
         const barX = 10;
         const barY = 108;
         const barW = 120;
@@ -628,20 +580,20 @@ class GameScene extends Phaser.Scene {
 
         this.fuelBarBg = this.add.rectangle(barX + barW / 2, barY + barH / 2, barW, barH, 0x333333, 1);
         this.fuelBarBg.setStrokeStyle(1, 0x666666, 1);
-        this.fuelBarBg.setDepth(10);
+        this.fuelBarBg.setDepth(10).setScrollFactor(0);
 
         this.fuelBarFg = this.add.rectangle(barX + 1, barY + 1, barW - 2, barH - 2, CONFIG.COLORS.FUEL_FULL, 1);
         this.fuelBarFg.setOrigin(0, 0);
-        this.fuelBarFg.setDepth(11);
+        this.fuelBarFg.setDepth(11).setScrollFactor(0);
 
         // Right panel
         const rightStyle = { ...style, align: 'right' };
         this.hudTexts.score = this.add.text(CONFIG.WIDTH - 10, 10, 'SCORE: 0', rightStyle)
-            .setOrigin(1, 0).setDepth(10);
+            .setOrigin(1, 0).setDepth(10).setScrollFactor(0);
         this.hudTexts.level = this.add.text(CONFIG.WIDTH - 10, 28, 'LEVEL: 1', rightStyle)
-            .setOrigin(1, 0).setDepth(10);
+            .setOrigin(1, 0).setDepth(10).setScrollFactor(0);
         this.hudTexts.lives = this.add.text(CONFIG.WIDTH - 10, 46, 'LIVES: 3', rightStyle)
-            .setOrigin(1, 0).setDepth(10);
+            .setOrigin(1, 0).setDepth(10).setScrollFactor(0);
     }
 
     _updateHUD() {
@@ -672,38 +624,6 @@ class GameScene extends Phaser.Scene {
         this.fuelBarFg.width = Math.max(0, (barW - 2) * fuelPct);
         this.fuelBarFg.setFillStyle(fuelColor, 1);
 
-        // Pulsing glow on fuel bar when low
-        if (fuelPct < 0.3 && fuelPct > 0) {
-            try {
-                this.fuelBarFg.postFX.clear();
-                const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 200);
-                this.fuelBarFg.postFX.addGlow(0xff3300, 3 * pulse, 0, false);
-            } catch (e) {}
-        } else {
-            try { this.fuelBarFg.postFX.clear(); } catch (e) {}
-        }
-
-        // Glow on danger HUD texts
-        try {
-            if (vyDanger) {
-                this.hudTexts.vSpeed.postFX.clear();
-                this.hudTexts.vSpeed.postFX.addGlow(0xff0000, 3, 0, false);
-            } else {
-                this.hudTexts.vSpeed.postFX.clear();
-            }
-            if (vxDanger) {
-                this.hudTexts.hSpeed.postFX.clear();
-                this.hudTexts.hSpeed.postFX.addGlow(0xff0000, 3, 0, false);
-            } else {
-                this.hudTexts.hSpeed.postFX.clear();
-            }
-            if (angDanger) {
-                this.hudTexts.angle.postFX.clear();
-                this.hudTexts.angle.postFX.addGlow(0xff0000, 3, 0, false);
-            } else {
-                this.hudTexts.angle.postFX.clear();
-            }
-        } catch (e) {}
     }
 
     _drawWind() {
@@ -724,12 +644,12 @@ class GameScene extends Phaser.Scene {
         this.windGraphics.lineTo(cx + len * dir / 2 - 8 * dir, y + 5);
         this.windGraphics.strokePath();
 
-        if (!this._windLabel) {
+        if (!this._windLabel || this._windLabel.scene !== this) {
             this._windLabel = this.add.text(cx, y + 12, '', {
                 fontSize: '10px',
                 fontFamily: 'Courier New, monospace',
                 color: '#4488ff'
-            }).setOrigin(0.5, 0).setDepth(10);
+            }).setOrigin(0.5, 0).setDepth(10).setScrollFactor(0);
         }
         this._windLabel.setText(`WIND ${Math.abs(this.wind).toFixed(1)}`);
     }

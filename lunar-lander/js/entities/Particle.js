@@ -218,18 +218,20 @@ class VFXManager {
     // --- THRUST CONTROL ---
     startThrust(x, y, angleDeg) {
         const emitAngle = angleDeg + 90; // opposite of thrust direction
-        const rad = Phaser.Math.DegToRad(emitAngle);
 
-        // Position all thrust emitters at nozzle
-        [this.thrustCore, this.thrustFlame, this.thrustSmoke].forEach(emitter => {
+        // Position all thrust emitters at nozzle and update emission angle range
+        [this.thrustCore, this.thrustFlame].forEach(emitter => {
             emitter.setPosition(x, y);
-            // Set emission angle based on lander rotation
-            emitter.setParticleAngle({ min: emitAngle - 15, max: emitAngle + 15 });
+            emitter.ops.angle.start = emitAngle - 15;
+            emitter.ops.angle.end = emitAngle + 15;
             if (!emitter.emitting) emitter.start();
         });
 
         // Wider smoke spread
-        this.thrustSmoke.setParticleAngle({ min: emitAngle - 30, max: emitAngle + 30 });
+        this.thrustSmoke.setPosition(x, y);
+        this.thrustSmoke.ops.angle.start = emitAngle - 30;
+        this.thrustSmoke.ops.angle.end = emitAngle + 30;
+        if (!this.thrustSmoke.emitting) this.thrustSmoke.start();
     }
 
     stopThrust() {

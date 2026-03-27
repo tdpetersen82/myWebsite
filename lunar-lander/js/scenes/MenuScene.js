@@ -1,4 +1,4 @@
-// Lunar Lander - Menu Scene (Enhanced with full VFX)
+// Lunar Lander - Menu Scene
 
 class MenuScene extends Phaser.Scene {
     constructor() {
@@ -9,68 +9,70 @@ class MenuScene extends Phaser.Scene {
         const w = CONFIG.WIDTH;
         const h = CONFIG.HEIGHT;
 
-        // Background
+        // Gradient background — deep blue to purple
         const bg = this.add.graphics();
-        bg.fillStyle(CONFIG.COLORS.SKY, 1);
-        bg.fillRect(0, 0, w, h);
+        for (let i = 0; i < h; i++) {
+            const t = i / h;
+            const r = Math.floor(10 + t * 20);
+            const g = Math.floor(10 + t * 15);
+            const b = Math.floor(40 + t * 30);
+            bg.fillStyle(Phaser.Display.Color.GetColor(r, g, b), 1);
+            bg.fillRect(0, i, w, 1);
+        }
 
-        // Animated twinkling starfield
-        this._createStarfield();
+        // Starfield
+        const starG = this.add.graphics();
+        const vfx = CONFIG.VFX;
+        vfx.STAR_LAYERS.forEach((layerConfig) => {
+            for (let i = 0; i < layerConfig.count; i++) {
+                const x = Math.random() * w;
+                const y = Math.random() * h;
+                const size = layerConfig.sizeMin + Math.random() * (layerConfig.sizeMax - layerConfig.sizeMin);
+                const alpha = layerConfig.alphaMin + Math.random() * (layerConfig.alphaMax - layerConfig.alphaMin);
+                starG.fillStyle(0xffffff, alpha);
+                starG.fillCircle(x, y, size);
+            }
+        });
 
-        // Nebula clouds
-        this._createNebulae();
-
-        // Camera vignette
-        // Camera post-FX
-        try {
-            this.cameras.main.postFX.addVignette(0.5, 0.5, 0.5);
-        } catch (e) {}
-
-        // Title with glow
-        const title = this.add.text(w / 2, 80, 'LUNAR LANDER', {
-            fontSize: '48px',
+        // Title
+        this.add.text(w / 2, 70, 'LUNAR LANDER', {
+            fontSize: '52px',
             fontFamily: 'Courier New, monospace',
             color: '#ffffff',
             fontStyle: 'bold'
         }).setOrigin(0.5);
 
-        try {
-            title.postFX.addGlow(0xffffff, 6, 0, false);
-        } catch (e) {}
-
         // Subtitle
-        const subtitle = this.add.text(w / 2, 130, 'A Classic Arcade Game', {
+        this.add.text(w / 2, 120, 'A Classic Arcade Game', {
             fontSize: '16px',
             fontFamily: 'Courier New, monospace',
-            color: '#888888'
+            color: '#99bbdd'
         }).setOrigin(0.5);
 
         // Animated lander with flame
-        this._drawMenuLander(w / 2, 220);
+        this._drawMenuLander(w / 2, 210);
 
-        // Difficulty selection
-        const selLabel = this.add.text(w / 2, 310, 'SELECT DIFFICULTY', {
+        // Difficulty selection header
+        this.add.text(w / 2, 300, 'SELECT DIFFICULTY', {
             fontSize: '18px',
             fontFamily: 'Courier New, monospace',
-            color: '#00ff00'
+            color: '#66ddff'
         }).setOrigin(0.5);
 
-        try { selLabel.postFX.addGlow(0x00ff00, 2, 0, false); } catch (e) {}
-
         const difficulties = [
-            { label: '[ CADET ]', gravity: 0.7, fuel: 1.2, key: 'easy' },
-            { label: '[ PILOT ]', gravity: 1.0, fuel: 1.0, key: 'normal' },
-            { label: '[ COMMANDER ]', gravity: 1.3, fuel: 0.8, key: 'hard' }
+            { label: 'CADET', gravity: 0.7, fuel: 1.2, key: 'easy' },
+            { label: 'PILOT', gravity: 1.0, fuel: 1.0, key: 'normal' },
+            { label: 'COMMANDER', gravity: 1.3, fuel: 0.8, key: 'hard' }
         ];
 
         this.selectedDifficulty = 1;
         this.diffButtons = [];
 
         difficulties.forEach((diff, i) => {
-            const btn = this.add.text(w / 2, 350 + i * 35, diff.label, {
-                fontSize: '20px',
+            const btn = this.add.text(w / 2, 340 + i * 38, diff.label, {
+                fontSize: '22px',
                 fontFamily: 'Courier New, monospace',
-                color: i === 1 ? '#ffff00' : '#aaaaaa'
+                color: '#bbccdd'
             }).setOrigin(0.5).setInteractive({ useHandCursor: true });
 
             btn.on('pointerover', () => {
@@ -88,37 +90,49 @@ class MenuScene extends Phaser.Scene {
 
         this._updateDifficultySelection();
 
-        // Controls info
-        const controlsY = 470;
-        this.add.text(w / 2, controlsY, 'CONTROLS', {
-            fontSize: '16px',
+        // Controls
+        this.add.text(w / 2, 465, 'CONTROLS', {
+            fontSize: '14px',
             fontFamily: 'Courier New, monospace',
-            color: '#00ff00'
+            color: '#66ddff'
         }).setOrigin(0.5);
 
         const controls = [
-            'UP / W - Thrust',
-            'LEFT / RIGHT / A / D - Rotate',
-            'P / ESC - Pause    M - Mute'
+            'UP / W = Thrust    LEFT / RIGHT / A / D = Rotate',
+            'P / ESC = Pause    M = Mute'
         ];
 
         controls.forEach((line, i) => {
-            this.add.text(w / 2, controlsY + 25 + i * 20, line, {
-                fontSize: '13px',
+            this.add.text(w / 2, 488 + i * 18, line, {
+                fontSize: '12px',
                 fontFamily: 'Courier New, monospace',
-                color: '#888888'
+                color: '#99aabb'
             }).setOrigin(0.5);
         });
 
-        // High score with glow
+        // High score
         const highScore = localStorage.getItem(CONFIG.HIGH_SCORE_KEY) || 0;
-        const hsText = this.add.text(w / 2, h - 30, `HIGH SCORE: ${highScore}`, {
-            fontSize: '14px',
+        this.add.text(w / 2, h - 25, `HIGH SCORE: ${highScore}`, {
+            fontSize: '15px',
             fontFamily: 'Courier New, monospace',
-            color: '#ffff00'
+            color: '#ffdd44',
+            fontStyle: 'bold'
         }).setOrigin(0.5);
 
-        try { hsText.postFX.addGlow(0xffff00, 2, 0, false); } catch (e) {}
+        // Blinking prompt
+        const prompt = this.add.text(w / 2, h - 50, 'PRESS ENTER OR CLICK TO START', {
+            fontSize: '14px',
+            fontFamily: 'Courier New, monospace',
+            color: '#66ffaa'
+        }).setOrigin(0.5);
+
+        this.tweens.add({
+            targets: prompt,
+            alpha: { from: 1, to: 0.3 },
+            duration: 800,
+            yoyo: true,
+            repeat: -1
+        });
 
         // Keyboard navigation
         this.input.keyboard.on('keydown-UP', () => {
@@ -135,77 +149,9 @@ class MenuScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-SPACE', () => {
             this._startGame(difficulties[this.selectedDifficulty]);
         });
-
-        // Blinking prompt with neon glow
-        const prompt = this.add.text(w / 2, h - 60, 'PRESS ENTER OR CLICK TO START', {
-            fontSize: '14px',
-            fontFamily: 'Courier New, monospace',
-            color: '#00ff00'
-        }).setOrigin(0.5);
-
-        try { prompt.postFX.addGlow(0x00ff00, 3, 0, false); } catch (e) {}
-
-        this.tweens.add({
-            targets: prompt,
-            alpha: 0.2,
-            duration: 600,
-            yoyo: true,
-            repeat: -1
-        });
-    }
-
-    _createStarfield() {
-        const vfx = CONFIG.VFX;
-        vfx.STAR_LAYERS.forEach((layerConfig) => {
-            for (let i = 0; i < layerConfig.count; i++) {
-                const x = Math.random() * CONFIG.WIDTH;
-                const y = Math.random() * CONFIG.HEIGHT;
-                const size = layerConfig.sizeMin + Math.random() * (layerConfig.sizeMax - layerConfig.sizeMin);
-                const baseAlpha = layerConfig.alphaMin + Math.random() * (layerConfig.alphaMax - layerConfig.alphaMin);
-
-                const star = this.add.circle(x, y, size, CONFIG.COLORS.STAR, baseAlpha);
-                star.setDepth(0);
-                star.setBlendMode(Phaser.BlendModes.ADD);
-
-                this.tweens.add({
-                    targets: star,
-                    alpha: { from: baseAlpha, to: baseAlpha * 0.15 },
-                    duration: vfx.STAR_TWINKLE_MIN + Math.random() * (vfx.STAR_TWINKLE_MAX - vfx.STAR_TWINKLE_MIN),
-                    yoyo: true,
-                    repeat: -1,
-                    delay: Math.random() * 3000,
-                    ease: 'Sine.easeInOut'
-                });
-            }
-        });
-    }
-
-    _createNebulae() {
-        const colors = CONFIG.COLORS.NEBULA;
-        for (let i = 0; i < 3; i++) {
-            const g = this.add.graphics();
-            g.setDepth(0);
-            g.setBlendMode(Phaser.BlendModes.ADD);
-            const cx = 100 + Math.random() * (CONFIG.WIDTH - 200);
-            const cy = 50 + Math.random() * (CONFIG.HEIGHT * 0.3);
-            const color = colors[i % colors.length];
-            for (let j = 0; j < 4; j++) {
-                g.fillStyle(color, 0.02 + Math.random() * 0.015);
-                g.fillCircle(cx + (Math.random() - 0.5) * 50, cy + (Math.random() - 0.5) * 30, 25 + Math.random() * 40);
-            }
-            this.tweens.add({
-                targets: g,
-                x: { from: -5, to: 5 },
-                duration: 18000 + Math.random() * 12000,
-                yoyo: true,
-                repeat: -1,
-                ease: 'Sine.easeInOut'
-            });
-        }
     }
 
     _drawMenuLander(cx, cy) {
-        // Lander body graphics (with hover animation)
         const g = this.add.graphics();
         g.setDepth(2);
 
@@ -224,7 +170,7 @@ class MenuScene extends Phaser.Scene {
         g.strokePath();
 
         // Specular highlight
-        g.lineStyle(1, 0xffffff, 0.3);
+        g.lineStyle(1, 0xffffff, 0.4);
         g.beginPath();
         g.moveTo(cx, cy - 25);
         g.lineTo(cx - 15, cy - 5);
@@ -247,17 +193,15 @@ class MenuScene extends Phaser.Scene {
         g.lineTo(cx + 30, cy + 22);
         g.strokePath();
 
-        // Window with glow
-        g.fillStyle(CONFIG.COLORS.LANDER_WINDOW_GLOW, 0.1);
-        g.fillCircle(cx, cy - 3, 9);
-        g.fillStyle(CONFIG.COLORS.LANDER_WINDOW_GLOW, 0.15);
-        g.fillCircle(cx, cy - 3, 7);
-        g.fillStyle(0x4488cc, 0.8);
+        // Window
+        g.fillStyle(0x66bbff, 0.3);
+        g.fillCircle(cx, cy - 3, 8);
+        g.fillStyle(0x88ccff, 0.6);
         g.fillCircle(cx, cy - 3, 5);
-        g.lineStyle(1, 0x66aaff, 1);
+        g.lineStyle(1, 0xaaddff, 1);
         g.strokeCircle(cx, cy - 3, 5);
 
-        // Hover animation on the whole lander
+        // Hover animation
         this.tweens.add({
             targets: g,
             y: { from: -5, to: 5 },
@@ -267,7 +211,7 @@ class MenuScene extends Phaser.Scene {
             ease: 'Sine.easeInOut'
         });
 
-        // Generate particle texture if needed
+        // Flame particle emitter
         if (!this.textures.exists('vfx_circle')) {
             const pg = this.make.graphics({ add: false });
             pg.fillStyle(0xffffff, 1);
@@ -280,7 +224,6 @@ class MenuScene extends Phaser.Scene {
             pg.destroy();
         }
 
-        // Flame particle emitter below the lander
         const flameEmitter = this.add.particles(cx, cy + 18, 'vfx_circle', {
             speed: { min: 40, max: 100 },
             lifespan: 350,
@@ -294,7 +237,6 @@ class MenuScene extends Phaser.Scene {
         });
         flameEmitter.setDepth(1);
 
-        // Sync flame with hover
         this.tweens.add({
             targets: flameEmitter,
             y: { from: cy + 18 - 5, to: cy + 18 + 5 },
@@ -308,14 +250,8 @@ class MenuScene extends Phaser.Scene {
     _updateDifficultySelection() {
         this.diffButtons.forEach((btn, i) => {
             const selected = i === this.selectedDifficulty;
-            btn.setColor(selected ? '#ffff00' : '#aaaaaa');
-            btn.setScale(selected ? 1.1 : 1.0);
-            try {
-                btn.postFX.clear();
-                if (selected) {
-                    btn.postFX.addGlow(0xffff00, 3, 0, false);
-                }
-            } catch (e) {}
+            btn.setColor(selected ? '#ffff66' : '#bbccdd');
+            btn.setScale(selected ? 1.15 : 1.0);
         });
     }
 

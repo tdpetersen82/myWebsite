@@ -59,19 +59,19 @@ const CONFIG = {
 
     // Colors
     COLORS: {
-        SKY: 0x000011,
-        TERRAIN: 0x666666,
-        TERRAIN_DARK: 0x333333,
-        TERRAIN_LIGHT: 0x888888,
-        TERRAIN_STROKE: 0x999999,
-        TERRAIN_EDGE_GLOW: 0x888888,
-        LANDER_BODY: 0xcccccc,
+        SKY: 0x0a0a2e,
+        TERRAIN: 0x8888aa,
+        TERRAIN_DARK: 0x555577,
+        TERRAIN_LIGHT: 0xaaaacc,
+        TERRAIN_STROKE: 0xccccdd,
+        TERRAIN_EDGE_GLOW: 0xaaaacc,
+        LANDER_BODY: 0xdddddd,
         LANDER_STROKE: 0xffffff,
         THRUST_FLAME: 0xff6600,
         PAD_1X: 0x00ff00,
         PAD_2X: 0xffff00,
         PAD_3X: 0xff4444,
-        HUD_TEXT: '#00ff00',
+        HUD_TEXT: '#44ff88',
         FUEL_FULL: 0x00ff00,
         FUEL_LOW: 0xff3300,
         STAR: 0xffffff,
@@ -80,7 +80,7 @@ const CONFIG = {
         EARTH: 0x4488cc,
         EARTH_GLOW: 0x2266aa,
         EARTH_LAND: 0x228844,
-        NEBULA: [0x330066, 0x220044, 0x110055, 0x001144],
+        NEBULA: [0x553399, 0x443377, 0x334488, 0x225577],
         LANDER_WINDOW_GLOW: 0x66bbff,
         SHOCKWAVE: 0xffffff,
         RCS_PUFF: 0xaaddff
@@ -136,7 +136,7 @@ const CONFIG = {
         FIREWORK_COLORS: [0xff2244, 0x22ff44, 0x4466ff, 0xffff22, 0xff44ff, 0x44ffff],
 
         // Camera FX
-        VIGNETTE_STRENGTH: 0.5,
+        VIGNETTE_STRENGTH: 0.15,
         BLOOM_STRENGTH: 0.6,
         BLOOM_BLUR: 1.5,
         BLOOM_STEPS: 4,

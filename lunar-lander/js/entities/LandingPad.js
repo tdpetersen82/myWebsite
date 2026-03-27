@@ -15,6 +15,8 @@ class LandingPad {
                      CONFIG.COLORS.PAD_3X;
 
         this._proximityIntensity = 0;
+        this._lastGlowSize = -1;
+        this._lastGuideAlpha = -1;
         this._createBeacons();
     }
 
@@ -35,11 +37,13 @@ class LandingPad {
         this.beaconRight.setBlendMode(Phaser.BlendModes.ADD);
         this._gameObjects.push(this.beaconRight);
 
-        // Glow on beacons
-        try {
-            this.beaconLeft.postFX.addGlow(this.color, 4, 0, false);
-            this.beaconRight.postFX.addGlow(this.color, 4, 0, false);
-        } catch (e) { /* fallback if postFX not available */ }
+        // Soft glow circles behind beacons (no postFX)
+        const glowL = scene.add.circle(leftX, this.y - 2, 8, this.color, 0.15);
+        glowL.setDepth(2).setBlendMode(Phaser.BlendModes.ADD);
+        this._gameObjects.push(glowL);
+        const glowR = scene.add.circle(rightX, this.y - 2, 8, this.color, 0.15);
+        glowR.setDepth(2).setBlendMode(Phaser.BlendModes.ADD);
+        this._gameObjects.push(glowR);
 
         // Pulsing tween on beacons
         scene.tweens.add({
@@ -69,9 +73,6 @@ class LandingPad {
         }).setOrigin(0.5, 0).setDepth(3);
         this._gameObjects.push(this.label);
 
-        try {
-            this.label.postFX.addGlow(this.color, 2, 0, false);
-        } catch (e) { /* fallback */ }
     }
 
     _drawGuideLights(alpha) {
@@ -129,23 +130,15 @@ class LandingPad {
         // Intensity increases as lander gets closer (0 at 300+, 1 at 0)
         this._proximityIntensity = Phaser.Math.Clamp(1 - altitude / 300, 0, 1);
 
-        // Scale guide light alpha with proximity
+        // Scale guide light alpha with proximity — only redraw if meaningfully changed
         const baseAlpha = 0.3 + this._proximityIntensity * 0.5;
-        this._drawGuideLights(baseAlpha);
+        const quantizedAlpha = Math.round(baseAlpha * 10) / 10;
+        if (quantizedAlpha !== this._lastGuideAlpha) {
+            this._lastGuideAlpha = quantizedAlpha;
+            this._drawGuideLights(baseAlpha);
+        }
 
-        // Scale beacon glow intensity
-        const glowSize = 4 + this._proximityIntensity * 8;
-        try {
-            // Update glow - remove old, add new
-            if (this.beaconLeft.postFX) {
-                this.beaconLeft.postFX.clear();
-                this.beaconLeft.postFX.addGlow(this.color, glowSize, 0, false);
-            }
-            if (this.beaconRight.postFX) {
-                this.beaconRight.postFX.clear();
-                this.beaconRight.postFX.addGlow(this.color, glowSize, 0, false);
-            }
-        } catch (e) { /* fallback */ }
+        // Beacon glow is set once in _createBeacons — no dynamic updates needed
     }
 
     containsX(x) {
