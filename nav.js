@@ -79,11 +79,24 @@
     if (!SIZE_PRESETS[currentSize]) currentSize = DEFAULT_SIZE;
 
     var totalGames = GAME_CATALOG.reduce(function (sum, cat) { return sum + cat.games.length; }, 0);
+
+    // Detect basePath from how the script tag references nav.js
+    // Game pages use src="../nav.js", hub uses src="nav.js"
+    var basePath = '';
+    var inSubfolder = false;
+    var scripts = document.getElementsByTagName('script');
+    for (var i = 0; i < scripts.length; i++) {
+        var src = scripts[i].getAttribute('src') || '';
+        if (src === '../nav.js' || src.endsWith('/../nav.js')) {
+            basePath = '../';
+            inSubfolder = true;
+            break;
+        }
+    }
+
+    // Determine current page for active highlighting
     var pathParts = location.pathname.replace(/\/index\.html$/, '/').split('/').filter(Boolean);
     var lastPart = pathParts.length > 0 ? pathParts[pathParts.length - 1] : '';
-    var allGameFolders = GAME_CATALOG.reduce(function (arr, cat) { return arr.concat(cat.games.map(function (g) { return g.url.replace(/\/$/, ''); })); }, []);
-    var inSubfolder = allGameFolders.indexOf(lastPart) !== -1;
-    var basePath = inSubfolder ? '../' : '';
     var currentPage = inSubfolder ? lastPart + '/' : 'index.html';
 
     // ── Inject CSS ──────────────────────────────────────────
