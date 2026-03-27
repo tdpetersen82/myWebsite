@@ -33,8 +33,8 @@ const CONFIG = {
     LEG_DEPLOY_ALTITUDE: 600,
 
     // Starting conditions
-    START_VY: 120,                  // Initial downward velocity (manageable re-entry)
-    START_Y: -600,                  // Start very high for long, generous descent
+    START_VY: 100,                  // Initial downward velocity (gentle re-entry, builds with gravity)
+    START_Y: -900,                  // Start extremely high for long generous descent (~11,000m)
     ALTITUDE_SCALE: 8,              // Pixel-to-altitude unit scale
     STARTING_LIVES: 3,
     HANDOVER_COUNTDOWN: 2,          // Seconds of auto-descent before human control

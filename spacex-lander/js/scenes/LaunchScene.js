@@ -123,37 +123,81 @@ class LaunchScene extends Phaser.Scene {
     }
 
     _startCountdown() {
-        const counts = [3, 2, 1];
-        counts.forEach((num, i) => {
-            this.time.delayedCall(i * 800, () => {
+        const w = CONFIG.WIDTH;
+        const h = CONFIG.HEIGHT;
+
+        // Mission callout text (bottom-left, mission controller style)
+        this._callout = this.add.text(15, h - 60, '', {
+            fontSize: '11px',
+            fontFamily: 'Courier New, monospace',
+            color: '#88ff88',
+            letterSpacing: 1
+        }).setDepth(10);
+
+        // Speed/altitude readout (bottom-right)
+        this._telemetry = this.add.text(w - 15, h - 60, '', {
+            fontSize: '11px',
+            fontFamily: 'Courier New, monospace',
+            color: '#aabbcc',
+            align: 'right'
+        }).setOrigin(1, 0).setDepth(10);
+
+        // T-minus countdown (longer, more dramatic)
+        const sequence = [
+            { t: 0,    text: 'T-10', callout: 'FLIGHT COMPUTER ACTIVE', beep: false },
+            { t: 600,  text: 'T-9',  callout: '', beep: false },
+            { t: 1200, text: 'T-8',  callout: '', beep: false },
+            { t: 1800, text: 'T-7',  callout: 'FUEL PRESSURIZATION', beep: false },
+            { t: 2400, text: 'T-6',  callout: '', beep: false },
+            { t: 3000, text: 'T-5',  callout: '', beep: true },
+            { t: 3600, text: 'T-4',  callout: '', beep: true },
+            { t: 4200, text: 'T-3',  callout: 'STARTUP', beep: true },
+            { t: 4800, text: 'T-2',  callout: '', beep: true },
+            { t: 5400, text: 'T-1',  callout: 'MAIN ENGINE START', beep: true },
+        ];
+
+        sequence.forEach(s => {
+            this.time.delayedCall(s.t, () => {
                 if (this._skipped) return;
-                this.countdownText.setText(num.toString());
-                this.countdownText.setFontSize('72px');
+                this.countdownText.setText(s.text);
+                this.countdownText.setFontSize('64px');
                 this.countdownText.setColor('#ffffff');
-                if (this.audio) this.audio.playCountdownBeep(false);
+                if (s.callout) this._callout.setText(`> ${s.callout}`);
+                if (s.beep && this.audio) this.audio.playCountdownBeep(s.t >= 4200);
 
                 this.tweens.add({
                     targets: this.countdownText,
-                    scale: { from: 1.2, to: 1.0 },
-                    alpha: { from: 1, to: 0.9 },
-                    duration: 300,
+                    scale: { from: 1.15, to: 1.0 },
+                    duration: 250,
                     ease: 'Cubic.easeOut'
                 });
             });
         });
 
-        this.time.delayedCall(2400, () => {
+        // LIFTOFF
+        this.time.delayedCall(6000, () => {
             if (this._skipped) return;
             this.countdownText.setText('LIFTOFF');
-            this.countdownText.setFontSize('36px');
-            this.countdownText.setColor('#ffffff');
+            this.countdownText.setFontSize('42px');
+            this.countdownText.setColor('#ffcc44');
+            this._callout.setText('> LIFTOFF — ALL ENGINES NOMINAL');
+
             if (this.audio) {
                 this.audio.playCountdownBeep(true);
                 this.audio.playIgnition();
             }
+
+            // Screen shake on ignition
+            this.cameras.main.shake(1000, 0.012);
+
+            // Screen flash
+            this.cameras.main.flash(200, 255, 200, 100);
+
             this.phase = 'liftoff';
             this.exhaust.start();
             this.elapsed = 0;
+            this._launchSpeed = 0;
+            this._launchAlt = 0;
         });
     }
 
@@ -166,6 +210,15 @@ class LaunchScene extends Phaser.Scene {
 
         this._drawBackground();
 
+        // Update telemetry during flight
+        if (this._launchSpeed !== undefined && this.phase !== 'countdown') {
+            this._launchSpeed = Math.min(this._launchSpeed + dt * 200, 2200);
+            this._launchAlt = Math.min(this._launchAlt + this._launchSpeed * dt * 0.3, 120);
+            if (this._telemetry) {
+                this._telemetry.setText(`SPD: ${Math.floor(this._launchSpeed)} m/s\nALT: ${this._launchAlt.toFixed(1)} km`);
+            }
+        }
+
         switch (this.phase) {
             case 'countdown':
                 this._drawFullRocket();
@@ -174,10 +227,16 @@ class LaunchScene extends Phaser.Scene {
             case 'liftoff':
                 this.rocketY -= dt * 80;
                 this.bgOffset += dt * 40;
+                // Camera shake fades
+                if (this.elapsed > 800 && !this._supersonicCalled) {
+                    this._callout.setText('> VEHICLE IS SUPERSONIC');
+                    this._supersonicCalled = true;
+                }
                 if (this.elapsed > 1500) {
                     this.phase = 'ascent';
                     this.elapsed = 0;
                     this.countdownText.setText('');
+                    this._callout.setText('> THROTTLE UP — MAX-Q');
                 }
                 this._drawFullRocket();
                 this._updateExhaust();
@@ -197,8 +256,11 @@ class LaunchScene extends Phaser.Scene {
                     this.countdownText.setText('MECO');
                     this.countdownText.setFontSize('28px');
                     this.countdownText.setColor('#ff8844');
+                    this._callout.setText('> MAIN ENGINE CUTOFF');
                     this.exhaust.stop();
                     if (this.audio) this.audio.playSeparation();
+                    // Separation flash
+                    this.cameras.main.flash(100, 255, 255, 200);
                 }
                 this._drawFullRocket();
                 this._updateExhaust();
@@ -206,6 +268,10 @@ class LaunchScene extends Phaser.Scene {
 
             case 'separation':
                 this.stage2Y -= dt * 60;
+                if (this.elapsed > 400 && !this._sepCalled) {
+                    this._callout.setText('> STAGE SEPARATION CONFIRMED');
+                    this._sepCalled = true;
+                }
                 if (this.elapsed > 1200) {
                     this.phase = 'flip';
                     this.elapsed = 0;
@@ -213,28 +279,32 @@ class LaunchScene extends Phaser.Scene {
                     this.flipProgress = 0;
                     this.countdownText.setText('BOOSTBACK');
                     this.countdownText.setColor('#4488ff');
+                    this._callout.setText('> FLIP MANEUVER — GRID FINS DEPLOY');
                     if (this.audio) this.audio.playGridFinClick();
                 }
                 this._drawSeparatedRocket();
                 break;
 
             case 'flip':
-                this.flipProgress = Math.min(1, this.flipProgress + dt * 1.2);
+                this.flipProgress = Math.min(1, this.flipProgress + dt * 1.0);
                 this.rocketAngle = this.flipProgress * 180;
                 this.stage2Y -= dt * 40;
 
-                if (this.flipProgress >= 1 && this.elapsed > 1500) {
+                if (this.flipProgress >= 1 && this.elapsed > 1800) {
                     this.phase = 'handoff';
                     this.elapsed = 0;
                     this.countdownText.setText('ENTRY BURN');
                     this.countdownText.setColor('#ff4422');
                     this.countdownText.setFontSize('26px');
+                    this._callout.setText('> ENTRY BURN START — GOOD LUCK');
+                    // Rumble on entry burn
+                    this.cameras.main.shake(500, 0.006);
                 }
                 this._drawSeparatedRocket();
                 break;
 
             case 'handoff':
-                if (this.elapsed > 1000) {
+                if (this.elapsed > 1200) {
                     this._transitionToGame();
                 }
                 this._drawSeparatedRocket();

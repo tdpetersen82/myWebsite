@@ -128,6 +128,7 @@ class GameScene extends Phaser.Scene {
         this._hudObjects = [
             ...Object.values(this.hudTexts),
             this.fuelBarBg, this.fuelBarFg,
+            this._altBarBg, this._altBarFg,
             this.pauseOverlay, this.pauseText,
             this.muteText, this.windGraphics,
             this._handoverText, this._handoverLabel
@@ -617,6 +618,8 @@ class GameScene extends Phaser.Scene {
     }
 
     _createHUD() {
+        const w = CONFIG.WIDTH;
+        const h = CONFIG.HEIGHT;
         const style = {
             fontSize: '13px',
             fontFamily: 'Courier New, monospace',
@@ -652,6 +655,27 @@ class GameScene extends Phaser.Scene {
         this.hudTexts.shipDist = this.add.text(CONFIG.WIDTH - 10, 86, '', {
             ...rStyle, fontSize: '11px', color: '#88aacc'
         }).setOrigin(1, 0).setDepth(10);
+
+        // --- PROMINENT ALTITUDE DISPLAY (top center) ---
+        this.hudTexts.altBig = this.add.text(w / 2, 8, 'ALT 0m', {
+            fontSize: '22px',
+            fontFamily: 'Courier New, monospace',
+            color: '#ffffff',
+            fontStyle: 'bold'
+        }).setOrigin(0.5, 0).setDepth(12);
+
+        this.hudTexts.vSpeedBig = this.add.text(w / 2, 34, '0 m/s', {
+            fontSize: '12px',
+            fontFamily: 'Courier New, monospace',
+            color: '#88aacc'
+        }).setOrigin(0.5, 0).setDepth(12);
+
+        // Altitude bar (right edge, vertical)
+        this._altBarBg = this.add.rectangle(w - 6, h / 2, 8, h - 20, 0x222233, 0.6)
+            .setStrokeStyle(1, 0x444466, 0.5).setDepth(10);
+        this._altBarFg = this.add.rectangle(w - 6, h - 10, 6, 0, 0x44ff88, 0.8)
+            .setOrigin(0.5, 1).setDepth(11);
+        this._altBarMax = h - 20; // max bar height in pixels
     }
 
     _updateHUD() {
@@ -659,6 +683,36 @@ class GameScene extends Phaser.Scene {
         const alt = Math.max(0, rocket.getAltitude(this.ocean, this.droneShip));
 
         this.hudTexts.altitude.setText(`ALT: ${Math.floor(alt)}`);
+
+        // Big altitude display (top center)
+        const altFormatted = alt >= 1000 ? `${(alt / 1000).toFixed(1)}km` : `${Math.floor(alt)}m`;
+        this.hudTexts.altBig.setText(`ALT ${altFormatted}`);
+        // Color: white > yellow < 1500 > red < 500 > pulsing < 200
+        let altColor = '#ffffff';
+        if (alt < 200) {
+            altColor = Math.sin(Date.now() / 100) > 0 ? '#ff2222' : '#ff6644';
+        } else if (alt < 500) {
+            altColor = '#ff4444';
+        } else if (alt < 1500) {
+            altColor = '#ffcc44';
+        }
+        this.hudTexts.altBig.setColor(altColor);
+
+        // V-speed under altitude
+        this.hudTexts.vSpeedBig.setText(`${rocket.vy.toFixed(0)} m/s`);
+        this.hudTexts.vSpeedBig.setColor(Math.abs(rocket.vy) > CONFIG.LAND_MAX_VY ? '#ff4444' : '#88aacc');
+
+        // Altitude bar
+        const startAlt = (CONFIG.OCEAN.WATER_LEVEL - (CONFIG.START_Y || -900)) * CONFIG.ALTITUDE_SCALE;
+        const altPct = Phaser.Math.Clamp(alt / startAlt, 0, 1);
+        const barH = this._altBarMax * altPct;
+        this._altBarFg.height = barH;
+        // Color gradient: green > yellow > red
+        let barColor = 0x44ff88;
+        if (altPct < 0.15) barColor = 0xff3333;
+        else if (altPct < 0.3) barColor = 0xffaa33;
+        else if (altPct < 0.5) barColor = 0xffff44;
+        this._altBarFg.setFillStyle(barColor, 0.8);
 
         const vyDanger = Math.abs(rocket.vy) > CONFIG.LAND_MAX_VY;
         this.hudTexts.vSpeed.setText(`V-SPD: ${rocket.vy.toFixed(1)}`).setColor(vyDanger ? CONFIG.COLORS.HUD_WARNING : CONFIG.COLORS.HUD_TEXT);
