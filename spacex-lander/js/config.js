@@ -8,7 +8,7 @@ const CONFIG = {
     // Physics
     GRAVITY: 50,                    // Earth gravity (px/sec^2)
     ENTRY_THRUST_POWER: 120,        // Multi-engine entry burn
-    LANDING_THRUST_POWER: 70,       // Single-engine precision
+    LANDING_THRUST_POWER: 85,       // Single-engine precision
     GRID_FIN_ROTATION_RATE: 90,     // Degrees/sec at max effectiveness
     GRID_FIN_LATERAL_FORCE: 30,     // Lateral push from fins
     FIN_MAX_SPEED_REF: 200,         // Speed where fins are 100% effective
@@ -17,7 +17,7 @@ const CONFIG = {
     MAX_VELOCITY: 400,
 
     // Fuel (single pool)
-    FUEL_MAX: 1200,
+    FUEL_MAX: 1500,
     ENTRY_BURN_RATE: 2.0,
     LANDING_BURN_RATE: 0.8,
     LOW_FUEL_THRESHOLD: 200,
@@ -28,13 +28,13 @@ const CONFIG = {
     LAND_MAX_ANGLE: 10,
 
     // Phase altitude thresholds
-    PHASE_2_ALTITUDE: 2500,
-    PHASE_3_ALTITUDE: 400,
-    LEG_DEPLOY_ALTITUDE: 350,
+    PHASE_2_ALTITUDE: 3000,
+    PHASE_3_ALTITUDE: 500,
+    LEG_DEPLOY_ALTITUDE: 400,
 
     // Starting conditions
-    START_VY: 260,                  // Initial downward velocity (fast re-entry)
-    START_Y: -120,                  // Start above visible area for more distance
+    START_VY: 200,                  // Initial downward velocity
+    START_Y: -300,                  // Start well above visible area for long descent
     ALTITUDE_SCALE: 8,              // Pixel-to-altitude unit scale
     STARTING_LIVES: 3,
     HANDOVER_COUNTDOWN: 3,          // Seconds of auto-descent before human control

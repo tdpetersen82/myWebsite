@@ -102,24 +102,21 @@ class GameScene extends Phaser.Scene {
         this._legsAutoDeployed = false;
         this._phaseTextTimer = null;
 
-        // Handover countdown text (center screen)
-        this._handoverText = this.add.text(w / 2, h / 2 + 20, '', {
-            fontSize: '48px',
+        // Handover countdown text (upper area, clear of rocket)
+        this._handoverText = this.add.text(w / 2, h * 0.28 + 30, '', {
+            fontSize: '52px',
             fontFamily: 'Courier New, monospace',
             color: '#ffffff',
             fontStyle: 'bold',
             align: 'center'
         }).setOrigin(0.5).setDepth(16);
 
-        this._handoverLabel = this.add.text(w / 2, h / 2 - 20, 'CONTROL IN', {
+        this._handoverLabel = this.add.text(w / 2, h * 0.28 - 10, 'CONTROL IN', {
             fontSize: '14px',
             fontFamily: 'Courier New, monospace',
             color: '#88aacc',
             letterSpacing: 4
         }).setOrigin(0.5).setDepth(16);
-
-        // Phase overlay text
-        this._showPhaseText('RE-ENTRY', CONFIG.COLORS.HUD_PHASE_1);
 
         // --- DUAL CAMERA SETUP ---
         // HUD camera: never zooms/scrolls, renders only HUD elements
@@ -165,6 +162,9 @@ class GameScene extends Phaser.Scene {
             w / 2, h / 2, w, h, 0xff6600, 0
         ).setDepth(25);
         this.cameras.main.ignore(this._screenFlash);
+
+        // Phase overlay text (must be after camera setup)
+        this._showPhaseText('RE-ENTRY', CONFIG.COLORS.HUD_PHASE_1);
     }
 
     // --- UPDATE LOOP ---
@@ -199,8 +199,8 @@ class GameScene extends Phaser.Scene {
         // --- DYNAMIC CAMERA ZOOM ---
         const cam = this.cameras.main;
         const targetZoom = Phaser.Math.Clamp(
-            Phaser.Math.Linear(1.35, 0.55, altitude / 5000),
-            0.55, 1.35
+            Phaser.Math.Linear(1.35, 0.5, altitude / 6000),
+            0.5, 1.35
         );
         const newZoom = cam.zoom + (targetZoom - cam.zoom) * 0.025;
         cam.setZoom(newZoom);
