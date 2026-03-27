@@ -147,7 +147,9 @@
 .nav-ad-slot{min-height:100px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.15);font-size:0.75em;letter-spacing:1px;text-transform:uppercase}\
 \
 /* Ad slots for page content */\
-.ad-slot{margin:20px auto;text-align:center;min-height:90px;background:rgba(0,0,0,0.03);border:1px dashed rgba(0,0,0,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:rgba(0,0,0,0.15);font-size:0.75em;letter-spacing:1px;text-transform:uppercase;max-width:728px;overflow:hidden}\
+.ad-slot{margin:20px auto;text-align:center;min-height:90px;background:rgba(0,0,0,0.02);border-radius:8px;overflow:hidden;width:100%}\
+.ad-slot-responsive{width:100%;min-height:90px}\
+.ad-slot .adsbygoogle{display:block}\
 .ad-slot-leaderboard{width:100%;max-width:728px;min-height:90px}\
 .ad-slot-rectangle{width:300px;min-height:250px}\
 .ad-slot-banner{width:100%;max-width:320px;min-height:50px}\
@@ -272,7 +274,8 @@ body.nav-open{overflow:hidden}\
     // Footer with ad slot
     var footer = document.createElement('div');
     footer.className = 'nav-drawer-footer';
-    footer.innerHTML = '<div class="nav-ad-slot"><!-- Google AdSense: 300x250 medium rectangle -->\nAd Space</div>';
+    footer.innerHTML = '<div class="nav-ad-slot"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="rectangle" data-full-width-responsive="false"></ins></div>';
+    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
 
     // Assemble drawer
     drawer.appendChild(header);
