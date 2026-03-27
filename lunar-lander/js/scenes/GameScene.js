@@ -1,4 +1,4 @@
-// Lunar Lander - Game Scene (Main gameplay)
+// Lunar Lander - Game Scene (Main gameplay — Enhanced with full VFX)
 
 class GameScene extends Phaser.Scene {
     constructor() {
@@ -20,32 +20,43 @@ class GameScene extends Phaser.Scene {
     create() {
         const w = CONFIG.WIDTH;
         const h = CONFIG.HEIGHT;
+        const vfx = CONFIG.VFX;
 
         // Audio
         this.audio = window.audioManager;
         if (this.audio) this.audio.init();
 
-        // Background - starfield
+        // --- STARFIELD (multi-layer parallax with twinkling) ---
         this.bgGraphics = this.add.graphics();
         this.bgGraphics.setDepth(0);
-        this._drawStarfield();
+        this.bgGraphics.fillStyle(CONFIG.COLORS.SKY, 1);
+        this.bgGraphics.fillRect(0, 0, w, h);
 
-        // Terrain
+        this._createStarfield();
+        this._createNebulae();
+        this._createEarth();
+        this._createDustMotes();
+        this._scheduleShootingStars();
+
+        // --- TERRAIN ---
         this.terrain = new Terrain(this, this.level);
         this.terrainGraphics = this.add.graphics();
         this.terrainGraphics.setDepth(1);
 
-        // Lander
+        // --- LANDER ---
         const startX = 100 + Math.random() * (w - 200);
         this.lander = new Lander(this, startX, 40);
         this.lander.fuel = CONFIG.FUEL_MAX * this.fuelMod;
         this.landerGraphics = this.add.graphics();
         this.landerGraphics.setDepth(4);
 
-        // Particles
-        this.particles = new ParticleSystem(this);
+        // --- VFX MANAGER (replaces old ParticleSystem) ---
+        this.vfx = new VFXManager(this);
 
-        // Wind
+        // backward compat reference
+        this.particles = this.vfx;
+
+        // --- WIND ---
         this.wind = 0;
         if (this.level >= CONFIG.DIFFICULTY.windStartLevel) {
             const maxWind = CONFIG.WIND_MAX_FORCE +
@@ -55,7 +66,7 @@ class GameScene extends Phaser.Scene {
         this.windGraphics = this.add.graphics();
         this.windGraphics.setDepth(6);
 
-        // Input
+        // --- INPUT ---
         this.cursors = this.input.keyboard.createCursorKeys();
         this.wasd = {
             up: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.W),
@@ -63,18 +74,22 @@ class GameScene extends Phaser.Scene {
             right: this.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.D)
         };
 
-        // Pause / Mute keys
         this.input.keyboard.on('keydown-P', () => this._togglePause());
         this.input.keyboard.on('keydown-ESC', () => this._togglePause());
         this.input.keyboard.on('keydown-M', () => this._toggleMute());
 
-        // HUD
+        // --- HUD ---
         this._createHUD();
 
         // Draw terrain once
         this.terrain.draw(this.terrainGraphics);
 
-        // Pause overlay (hidden initially)
+        // --- CAMERA POST-FX ---
+        try {
+            this.cameras.main.postFX.addVignette(0.5, 0.5, vfx.VIGNETTE_STRENGTH);
+        } catch (e) {}
+
+        // --- PAUSE OVERLAY ---
         this.pauseOverlay = this.add.graphics();
         this.pauseOverlay.setDepth(20);
         this.pauseOverlay.setVisible(false);
@@ -97,13 +112,17 @@ class GameScene extends Phaser.Scene {
         // Cleanup on scene shutdown
         this.events.on('shutdown', this.shutdown, this);
 
-        // Level start text
+        // --- LEVEL START TEXT with glow ---
         const levelText = this.add.text(w / 2, h / 2 - 50, `LEVEL ${this.level}`, {
             fontSize: '36px',
             fontFamily: 'Courier New, monospace',
             color: '#ffffff',
             fontStyle: 'bold'
         }).setOrigin(0.5).setDepth(15).setAlpha(1);
+
+        try {
+            levelText.postFX.addGlow(0xffffff, 6, 0, false);
+        } catch (e) {}
 
         const windInfo = this.wind !== 0
             ? `Wind: ${this.wind > 0 ? 'RIGHT' : 'LEFT'} ${Math.abs(this.wind).toFixed(1)}`
@@ -115,6 +134,10 @@ class GameScene extends Phaser.Scene {
             color: '#88aaff'
         }).setOrigin(0.5).setDepth(15).setAlpha(1);
 
+        try {
+            subText.postFX.addGlow(0x4488ff, 3, 0, false);
+        } catch (e) {}
+
         this.tweens.add({
             targets: [levelText, subText],
             alpha: 0,
@@ -123,17 +146,199 @@ class GameScene extends Phaser.Scene {
             onComplete: () => { levelText.destroy(); subText.destroy(); }
         });
 
-        // Low fuel warning state
+        // Tracking state
         this._lowFuelWarning = false;
-
-        // Landing detection cooldown
         this._landingCooldown = 0;
+        this.proximityWarning = null;
+        this._baseZoom = 1;
     }
 
+    // --- STARFIELD ---
+    _createStarfield() {
+        const vfx = CONFIG.VFX;
+        this.starLayers = [];
+
+        vfx.STAR_LAYERS.forEach((layerConfig, layerIdx) => {
+            const stars = [];
+            for (let i = 0; i < layerConfig.count; i++) {
+                const x = Math.random() * CONFIG.WIDTH;
+                const y = Math.random() * CONFIG.HEIGHT;
+                const size = layerConfig.sizeMin + Math.random() * (layerConfig.sizeMax - layerConfig.sizeMin);
+                const baseAlpha = layerConfig.alphaMin + Math.random() * (layerConfig.alphaMax - layerConfig.alphaMin);
+
+                const star = this.add.circle(x, y, size, CONFIG.COLORS.STAR, baseAlpha);
+                star.setDepth(0);
+                star.setBlendMode(Phaser.BlendModes.ADD);
+                star._baseAlpha = baseAlpha;
+                star._driftSpeed = layerConfig.speed;
+
+                // Twinkling
+                this.tweens.add({
+                    targets: star,
+                    alpha: { from: baseAlpha, to: baseAlpha * 0.2 },
+                    duration: vfx.STAR_TWINKLE_MIN + Math.random() * (vfx.STAR_TWINKLE_MAX - vfx.STAR_TWINKLE_MIN),
+                    yoyo: true,
+                    repeat: -1,
+                    delay: Math.random() * 3000,
+                    ease: 'Sine.easeInOut'
+                });
+
+                stars.push(star);
+            }
+            this.starLayers.push(stars);
+        });
+    }
+
+    // --- NEBULAE ---
+    _createNebulae() {
+        const vfx = CONFIG.VFX;
+        const colors = CONFIG.COLORS.NEBULA;
+        this._nebulae = [];
+
+        for (let i = 0; i < vfx.NEBULA_COUNT; i++) {
+            const g = this.add.graphics();
+            g.setDepth(0);
+            g.setBlendMode(Phaser.BlendModes.ADD);
+
+            const cx = 80 + Math.random() * (CONFIG.WIDTH - 160);
+            const cy = 40 + Math.random() * (CONFIG.HEIGHT * 0.4);
+            const color = colors[i % colors.length];
+
+            // Multiple overlapping soft circles
+            for (let j = 0; j < 5; j++) {
+                const ox = (Math.random() - 0.5) * 60;
+                const oy = (Math.random() - 0.5) * 40;
+                const radius = 30 + Math.random() * 50;
+                g.fillStyle(color, 0.015 + Math.random() * 0.02);
+                g.fillCircle(cx + ox, cy + oy, radius);
+            }
+
+            // Slow drift tween
+            this.tweens.add({
+                targets: g,
+                x: { from: -8, to: 8 },
+                duration: 20000 + Math.random() * 15000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+
+            this._nebulae.push(g);
+        }
+    }
+
+    // --- EARTH ---
+    _createEarth() {
+        const vfx = CONFIG.VFX;
+        const ex = vfx.EARTH_X;
+        const ey = vfx.EARTH_Y;
+        const r = vfx.EARTH_RADIUS;
+
+        // Earth body
+        this._earth = this.add.circle(ex, ey, r, CONFIG.COLORS.EARTH, 0.8);
+        this._earth.setDepth(0);
+
+        // Simple land mass overlay
+        const earthDetail = this.add.graphics();
+        earthDetail.setDepth(0);
+        earthDetail.fillStyle(CONFIG.COLORS.EARTH_LAND, 0.3);
+        // A few irregular "continent" patches
+        earthDetail.fillEllipse(ex - 8, ey - 5, 18, 14);
+        earthDetail.fillEllipse(ex + 12, ey + 8, 14, 10);
+        earthDetail.fillEllipse(ex - 2, ey + 14, 10, 8);
+
+        // Atmospheric glow
+        try {
+            this._earth.postFX.addGlow(CONFIG.COLORS.EARTH_GLOW, 10, 0, false);
+        } catch (e) {}
+
+        // Crescent shadow (dark circle offset to simulate lighting)
+        const shadow = this.add.circle(ex + r * 0.35, ey - r * 0.1, r * 0.95, 0x000011, 0.6);
+        shadow.setDepth(0);
+    }
+
+    // --- DUST MOTES ---
+    _createDustMotes() {
+        const vfx = CONFIG.VFX;
+        this._dustMotes = [];
+
+        for (let i = 0; i < vfx.DUST_MOTE_COUNT; i++) {
+            const mote = this.add.circle(
+                Math.random() * CONFIG.WIDTH,
+                Math.random() * CONFIG.HEIGHT,
+                0.5 + Math.random() * 0.8,
+                0xffffff,
+                0.04 + Math.random() * 0.06
+            );
+            mote.setDepth(0);
+
+            // Slow random drift
+            this.tweens.add({
+                targets: mote,
+                x: mote.x + (Math.random() - 0.5) * 80,
+                y: mote.y + (Math.random() - 0.5) * 60,
+                alpha: { from: mote.alpha, to: mote.alpha * 0.3 },
+                duration: 12000 + Math.random() * 10000,
+                yoyo: true,
+                repeat: -1,
+                ease: 'Sine.easeInOut'
+            });
+
+            this._dustMotes.push(mote);
+        }
+    }
+
+    // --- SHOOTING STARS ---
+    _scheduleShootingStars() {
+        const vfx = CONFIG.VFX;
+        const delay = vfx.SHOOTING_STAR_MIN_INTERVAL +
+            Math.random() * (vfx.SHOOTING_STAR_MAX_INTERVAL - vfx.SHOOTING_STAR_MIN_INTERVAL);
+
+        this._shootingStarTimer = this.time.delayedCall(delay, () => {
+            this._createShootingStar();
+            this._scheduleShootingStars();
+        });
+    }
+
+    _createShootingStar() {
+        const startX = 50 + Math.random() * (CONFIG.WIDTH - 100);
+        const startY = 10 + Math.random() * 80;
+        const angle = 20 + Math.random() * 30; // degrees
+        const length = 60 + Math.random() * 100;
+        const rad = Phaser.Math.DegToRad(angle);
+
+        const endX = startX + Math.cos(rad) * length;
+        const endY = startY + Math.sin(rad) * length;
+
+        const line = this.add.line(0, 0, startX, startY, startX, startY, 0xffffff, 0.8);
+        line.setOrigin(0, 0);
+        line.setDepth(0);
+        line.setBlendMode(Phaser.BlendModes.ADD);
+        line.setLineWidth(1.5);
+
+        this.tweens.add({
+            targets: line,
+            x2: endX,
+            y2: endY,
+            duration: 300,
+            ease: 'Quad.easeIn',
+            onComplete: () => {
+                this.tweens.add({
+                    targets: line,
+                    alpha: 0,
+                    x1: endX,
+                    y1: endY,
+                    duration: 200,
+                    onComplete: () => line.destroy()
+                });
+            }
+        });
+    }
+
+    // --- UPDATE LOOP ---
     update(time, delta) {
         if (this.paused || this.gameOver) return;
 
-        // Cap delta to prevent huge jumps
         delta = Math.min(delta, 50);
 
         const lander = this.lander;
@@ -143,16 +348,27 @@ class GameScene extends Phaser.Scene {
         const gravity = CONFIG.GRAVITY * this.gravityMod;
         lander.update(delta, gravity, this.wind);
 
-        // Thrust audio + particles
+        // --- THRUST VFX ---
         if (lander.thrusting) {
             if (this.audio) this.audio.startThrust();
             const nozzle = lander.getNozzlePosition();
-            this.particles.emitThrust(nozzle.x, nozzle.y, lander.angle);
+            this.vfx.startThrust(nozzle.x, nozzle.y, lander.angle);
         } else {
             if (this.audio) this.audio.stopThrust();
+            this.vfx.stopThrust();
         }
 
-        // Low fuel warning
+        // --- RCS PUFFS ---
+        if (lander.rotatingLeft && lander.alive && !lander.landed) {
+            const rcsPos = lander.getRCSPositions().left;
+            rcsPos.forEach(p => this.vfx.emitRCS(p.x, p.y, 'left'));
+        }
+        if (lander.rotatingRight && lander.alive && !lander.landed) {
+            const rcsPos = lander.getRCSPositions().right;
+            rcsPos.forEach(p => this.vfx.emitRCS(p.x, p.y, 'right'));
+        }
+
+        // --- LOW FUEL WARNING ---
         if (lander.fuel > 0 && lander.fuel < CONFIG.LOW_FUEL_THRESHOLD && !this._lowFuelWarning) {
             this._lowFuelWarning = true;
             if (this.audio) this.audio.startLowFuelWarning();
@@ -161,25 +377,69 @@ class GameScene extends Phaser.Scene {
             if (this.audio) this.audio.stopLowFuelWarning();
         }
 
-        // Collision detection
+        // --- COLLISION ---
         if (this._landingCooldown > 0) {
             this._landingCooldown -= delta;
         } else {
             this._checkCollision();
         }
 
-        // Update particles
-        this.particles.update(delta);
-
-        // Draw lander
+        // --- DRAW LANDER ---
         this.landerGraphics.clear();
         lander.draw(this.landerGraphics);
 
-        // Draw wind indicator
+        // --- WIND ---
         this._drawWind();
 
-        // Update HUD
+        // --- HUD ---
         this._updateHUD();
+
+        // --- PROXIMITY & DESCENT ZOOM ---
+        if (lander.alive && !lander.landed) {
+            const alt = Math.max(0, lander.getAltitude(terrain));
+
+            // Update landing pad proximity
+            terrain.landingPads.forEach(pad => pad.updateProximity(alt));
+
+            // Proximity warning
+            if (alt < 80) {
+                if (!this.proximityWarning) {
+                    this.proximityWarning = this.add.text(CONFIG.WIDTH / 2, 50, 'PROXIMITY WARNING', {
+                        fontSize: '16px',
+                        fontFamily: 'Courier New, monospace',
+                        color: '#ff4444'
+                    }).setOrigin(0.5).setDepth(15);
+                    try {
+                        this.proximityWarning.postFX.addGlow(0xff0000, 4, 0, false);
+                    } catch (e) {}
+                    this.tweens.add({
+                        targets: this.proximityWarning,
+                        alpha: { from: 1, to: 0.2 },
+                        duration: 300,
+                        yoyo: true,
+                        repeat: -1
+                    });
+                }
+            } else if (this.proximityWarning) {
+                this.proximityWarning.destroy();
+                this.proximityWarning = null;
+            }
+
+            // Descent zoom
+            const altNorm = Phaser.Math.Clamp(alt / 300, 0, 1);
+            const targetZoom = 1 + (1 - altNorm) * CONFIG.VFX.DESCENT_ZOOM_MAX;
+            this.cameras.main.zoom = Phaser.Math.Linear(this.cameras.main.zoom, targetZoom, 0.02);
+        }
+
+        // --- STAR DRIFT ---
+        if (this.starLayers) {
+            this.starLayers.forEach((layer) => {
+                layer.forEach(star => {
+                    star.x -= star._driftSpeed;
+                    if (star.x < -5) star.x = CONFIG.WIDTH + 5;
+                });
+            });
+        }
     }
 
     _checkCollision() {
@@ -193,7 +453,6 @@ class GameScene extends Phaser.Scene {
             const groundY = terrain.getHeightAt(pt.x);
 
             if (pt.y >= groundY) {
-                // Collision detected - check if on landing pad
                 const pad = terrain.getPadAt(lander.x);
                 const absAngle = Math.abs(lander.angle);
                 const vy = Math.abs(lander.vy);
@@ -203,10 +462,8 @@ class GameScene extends Phaser.Scene {
                     vy < CONFIG.LAND_MAX_VY &&
                     vx < CONFIG.LAND_MAX_VX &&
                     absAngle < CONFIG.LAND_MAX_ANGLE) {
-                    // Successful landing
                     this._onLanding(pad);
                 } else {
-                    // Crash
                     this._onCrash();
                 }
                 return;
@@ -227,8 +484,22 @@ class GameScene extends Phaser.Scene {
             this.audio.playLanding();
         }
 
+        this.vfx.stopThrust();
+
         // Dust effect
-        this.particles.emitLandingDust(lander.x, lander.getBottomY());
+        this.vfx.emitLandingDust(lander.x, lander.getBottomY());
+
+        // Celebration effects
+        this.time.delayedCall(300, () => {
+            this.vfx.emitFireworks(lander.x, lander.y - 50);
+            this.cameras.main.flash(200, 255, 255, 255, true);
+            this.tweens.add({
+                targets: this.cameras.main,
+                zoom: 1.25,
+                duration: 1500,
+                ease: 'Sine.easeInOut'
+            });
+        });
 
         // Calculate score
         const landingScore = CONFIG.BASE_LANDING_SCORE * pad.multiplier;
@@ -238,7 +509,6 @@ class GameScene extends Phaser.Scene {
 
         this.score += totalScore;
 
-        // Update high score
         const highScore = parseInt(localStorage.getItem(CONFIG.HIGH_SCORE_KEY) || '0');
         if (this.score > highScore) {
             localStorage.setItem(CONFIG.HIGH_SCORE_KEY, this.score);
@@ -258,8 +528,13 @@ class GameScene extends Phaser.Scene {
             totalGameScore: this.score
         };
 
-        // Transition after delay
-        this.time.delayedCall(2000, () => {
+        // Destroy proximity warning if active
+        if (this.proximityWarning) {
+            this.proximityWarning.destroy();
+            this.proximityWarning = null;
+        }
+
+        this.time.delayedCall(2500, () => {
             this.scene.start('GameOverScene', {
                 result: this.landingResult,
                 level: this.level,
@@ -284,15 +559,25 @@ class GameScene extends Phaser.Scene {
             this.audio.playCrash();
         }
 
-        // Explosion particles
-        this.particles.emitExplosion(lander.x, lander.y);
+        this.vfx.stopThrust();
 
-        // Screen shake
-        this.cameras.main.shake(300, 0.015);
+        // Epic explosion
+        this.vfx.emitExplosion(lander.x, lander.y);
+
+        // Enhanced camera effects
+        const vfxCfg = CONFIG.VFX;
+        this.cameras.main.shake(vfxCfg.EXPLOSION_SHAKE_DURATION, vfxCfg.EXPLOSION_SHAKE_INTENSITY);
+        this.cameras.main.flash(150, 255, 120, 0, true); // orange flash
 
         const highScore = parseInt(localStorage.getItem(CONFIG.HIGH_SCORE_KEY) || '0');
         if (this.score > highScore) {
             localStorage.setItem(CONFIG.HIGH_SCORE_KEY, this.score);
+        }
+
+        // Destroy proximity warning
+        if (this.proximityWarning) {
+            this.proximityWarning.destroy();
+            this.proximityWarning = null;
         }
 
         this.landingResult = {
@@ -332,10 +617,22 @@ class GameScene extends Phaser.Scene {
         this.hudTexts.hSpeed = this.add.text(10, 46, 'H-SPD: 0', style).setDepth(10);
         this.hudTexts.angle = this.add.text(10, 64, 'ANG: 0', style).setDepth(10);
 
-        // Fuel gauge
+        // Fuel gauge label
         this.hudTexts.fuelLabel = this.add.text(10, 90, 'FUEL', style).setDepth(10);
-        this.fuelBarBg = this.add.graphics().setDepth(10);
-        this.fuelBarFg = this.add.graphics().setDepth(11);
+
+        // Fuel bar as persistent rectangle (for postFX glow)
+        const barX = 10;
+        const barY = 108;
+        const barW = 120;
+        const barH = 10;
+
+        this.fuelBarBg = this.add.rectangle(barX + barW / 2, barY + barH / 2, barW, barH, 0x333333, 1);
+        this.fuelBarBg.setStrokeStyle(1, 0x666666, 1);
+        this.fuelBarBg.setDepth(10);
+
+        this.fuelBarFg = this.add.rectangle(barX + 1, barY + 1, barW - 2, barH - 2, CONFIG.COLORS.FUEL_FULL, 1);
+        this.fuelBarFg.setOrigin(0, 0);
+        this.fuelBarFg.setDepth(11);
 
         // Right panel
         const rightStyle = { ...style, align: 'right' };
@@ -353,14 +650,14 @@ class GameScene extends Phaser.Scene {
 
         this.hudTexts.altitude.setText(`ALT: ${Math.floor(alt)}`);
 
-        const vyColor = Math.abs(lander.vy) > CONFIG.LAND_MAX_VY ? '#ff4444' : CONFIG.COLORS.HUD_TEXT;
-        this.hudTexts.vSpeed.setText(`V-SPD: ${lander.vy.toFixed(1)}`).setColor(vyColor);
+        const vyDanger = Math.abs(lander.vy) > CONFIG.LAND_MAX_VY;
+        this.hudTexts.vSpeed.setText(`V-SPD: ${lander.vy.toFixed(1)}`).setColor(vyDanger ? '#ff4444' : CONFIG.COLORS.HUD_TEXT);
 
-        const vxColor = Math.abs(lander.vx) > CONFIG.LAND_MAX_VX ? '#ff4444' : CONFIG.COLORS.HUD_TEXT;
-        this.hudTexts.hSpeed.setText(`H-SPD: ${lander.vx.toFixed(1)}`).setColor(vxColor);
+        const vxDanger = Math.abs(lander.vx) > CONFIG.LAND_MAX_VX;
+        this.hudTexts.hSpeed.setText(`H-SPD: ${lander.vx.toFixed(1)}`).setColor(vxDanger ? '#ff4444' : CONFIG.COLORS.HUD_TEXT);
 
-        const angColor = Math.abs(lander.angle) > CONFIG.LAND_MAX_ANGLE ? '#ff4444' : CONFIG.COLORS.HUD_TEXT;
-        this.hudTexts.angle.setText(`ANG: ${lander.angle.toFixed(1)}`).setColor(angColor);
+        const angDanger = Math.abs(lander.angle) > CONFIG.LAND_MAX_ANGLE;
+        this.hudTexts.angle.setText(`ANG: ${lander.angle.toFixed(1)}`).setColor(angDanger ? '#ff4444' : CONFIG.COLORS.HUD_TEXT);
 
         this.hudTexts.score.setText(`SCORE: ${this.score}`);
         this.hudTexts.level.setText(`LEVEL: ${this.level}`);
@@ -369,21 +666,44 @@ class GameScene extends Phaser.Scene {
         // Fuel bar
         const fuelMax = CONFIG.FUEL_MAX * this.fuelMod;
         const fuelPct = lander.fuel / fuelMax;
-        const barX = 10;
-        const barY = 108;
         const barW = 120;
-        const barH = 10;
 
-        this.fuelBarBg.clear();
-        this.fuelBarBg.fillStyle(0x333333, 1);
-        this.fuelBarBg.fillRect(barX, barY, barW, barH);
-        this.fuelBarBg.lineStyle(1, 0x666666, 1);
-        this.fuelBarBg.strokeRect(barX, barY, barW, barH);
-
-        this.fuelBarFg.clear();
         const fuelColor = fuelPct > 0.3 ? CONFIG.COLORS.FUEL_FULL : CONFIG.COLORS.FUEL_LOW;
-        this.fuelBarFg.fillStyle(fuelColor, 1);
-        this.fuelBarFg.fillRect(barX + 1, barY + 1, (barW - 2) * fuelPct, barH - 2);
+        this.fuelBarFg.width = Math.max(0, (barW - 2) * fuelPct);
+        this.fuelBarFg.setFillStyle(fuelColor, 1);
+
+        // Pulsing glow on fuel bar when low
+        if (fuelPct < 0.3 && fuelPct > 0) {
+            try {
+                this.fuelBarFg.postFX.clear();
+                const pulse = 0.5 + 0.5 * Math.sin(Date.now() / 200);
+                this.fuelBarFg.postFX.addGlow(0xff3300, 3 * pulse, 0, false);
+            } catch (e) {}
+        } else {
+            try { this.fuelBarFg.postFX.clear(); } catch (e) {}
+        }
+
+        // Glow on danger HUD texts
+        try {
+            if (vyDanger) {
+                this.hudTexts.vSpeed.postFX.clear();
+                this.hudTexts.vSpeed.postFX.addGlow(0xff0000, 3, 0, false);
+            } else {
+                this.hudTexts.vSpeed.postFX.clear();
+            }
+            if (vxDanger) {
+                this.hudTexts.hSpeed.postFX.clear();
+                this.hudTexts.hSpeed.postFX.addGlow(0xff0000, 3, 0, false);
+            } else {
+                this.hudTexts.hSpeed.postFX.clear();
+            }
+            if (angDanger) {
+                this.hudTexts.angle.postFX.clear();
+                this.hudTexts.angle.postFX.addGlow(0xff0000, 3, 0, false);
+            } else {
+                this.hudTexts.angle.postFX.clear();
+            }
+        } catch (e) {}
     }
 
     _drawWind() {
@@ -399,13 +719,11 @@ class GameScene extends Phaser.Scene {
         this.windGraphics.beginPath();
         this.windGraphics.moveTo(cx - len * dir / 2, y);
         this.windGraphics.lineTo(cx + len * dir / 2, y);
-        // Arrowhead
         this.windGraphics.lineTo(cx + len * dir / 2 - 8 * dir, y - 5);
         this.windGraphics.moveTo(cx + len * dir / 2, y);
         this.windGraphics.lineTo(cx + len * dir / 2 - 8 * dir, y + 5);
         this.windGraphics.strokePath();
 
-        // Label
         if (!this._windLabel) {
             this._windLabel = this.add.text(cx, y + 12, '', {
                 fontSize: '10px',
@@ -414,20 +732,6 @@ class GameScene extends Phaser.Scene {
             }).setOrigin(0.5, 0).setDepth(10);
         }
         this._windLabel.setText(`WIND ${Math.abs(this.wind).toFixed(1)}`);
-    }
-
-    _drawStarfield() {
-        this.bgGraphics.fillStyle(CONFIG.COLORS.SKY, 1);
-        this.bgGraphics.fillRect(0, 0, CONFIG.WIDTH, CONFIG.HEIGHT);
-
-        for (let i = 0; i < 100; i++) {
-            const x = Math.random() * CONFIG.WIDTH;
-            const y = Math.random() * CONFIG.HEIGHT;
-            const size = Math.random() * 1.5 + 0.3;
-            const alpha = Math.random() * 0.6 + 0.2;
-            this.bgGraphics.fillStyle(CONFIG.COLORS.STAR, alpha);
-            this.bgGraphics.fillCircle(x, y, size);
-        }
     }
 
     _togglePause() {
@@ -467,6 +771,10 @@ class GameScene extends Phaser.Scene {
             this.audio.stopLowFuelWarning();
         }
         if (this.terrain) this.terrain.destroy();
-        if (this.particles) this.particles.destroy();
+        if (this.vfx) this.vfx.destroy();
+        if (this.proximityWarning) {
+            this.proximityWarning.destroy();
+            this.proximityWarning = null;
+        }
     }
 }

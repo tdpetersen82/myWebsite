@@ -1,11 +1,11 @@
-// Lunar Lander - Procedural Terrain Generator
+// Lunar Lander - Procedural Terrain Generator (Enhanced with surface detail)
 
 class Terrain {
     constructor(scene, level) {
         this.scene = scene;
         this.level = level;
-        this.points = [];       // Array of {x, y}
-        this.landingPads = [];  // Array of LandingPad instances
+        this.points = [];
+        this.landingPads = [];
         this.graphics = null;
 
         this.generate();
@@ -18,14 +18,9 @@ class Terrain {
         const segWidth = w / segments;
         const roughness = Math.min(CONFIG.TERRAIN_ROUGHNESS + (this.level - 1) * CONFIG.DIFFICULTY.terrainRoughnessIncrease, 0.95);
 
-        // Determine number and sizes of landing pads
         const padConfigs = this._getPadConfigs();
-
-        // Choose random segment positions for pads (spread them out)
         const padPositions = this._choosePadPositions(segments, padConfigs.length);
-
-        // Create a set of segments that are part of pads
-        const padSegments = new Map(); // segIndex -> padConfig index
+        const padSegments = new Map();
 
         padConfigs.forEach((pc, i) => {
             const centerSeg = padPositions[i];
@@ -39,19 +34,16 @@ class Terrain {
             pc.endSeg = endSeg;
         });
 
-        // Generate terrain heights using midpoint displacement
         const heights = new Array(segments + 1);
         heights[0] = h - CONFIG.TERRAIN_MIN_HEIGHT - Math.random() * (CONFIG.TERRAIN_MAX_HEIGHT - CONFIG.TERRAIN_MIN_HEIGHT) * 0.3;
         heights[segments] = h - CONFIG.TERRAIN_MIN_HEIGHT - Math.random() * (CONFIG.TERRAIN_MAX_HEIGHT - CONFIG.TERRAIN_MIN_HEIGHT) * 0.3;
 
-        // Fill random heights
         for (let i = 1; i < segments; i++) {
             const baseHeight = h - CONFIG.TERRAIN_MIN_HEIGHT -
                 Math.random() * (CONFIG.TERRAIN_MAX_HEIGHT - CONFIG.TERRAIN_MIN_HEIGHT);
             heights[i] = baseHeight;
         }
 
-        // Smooth the terrain
         for (let pass = 0; pass < 3; pass++) {
             for (let i = 1; i < segments; i++) {
                 if (!padSegments.has(i)) {
@@ -61,9 +53,7 @@ class Terrain {
             }
         }
 
-        // Flatten pad areas and create LandingPad objects
         padConfigs.forEach((pc, i) => {
-            // Find the average height in the pad zone
             let avgH = 0;
             let count = 0;
             for (let s = pc.startSeg; s <= pc.endSeg; s++) {
@@ -71,17 +61,13 @@ class Terrain {
                 count++;
             }
             avgH /= count;
-
-            // Ensure pad isn't too high (must be landable)
             avgH = Math.max(avgH, h - CONFIG.TERRAIN_MAX_HEIGHT + 40);
             avgH = Math.min(avgH, h - CONFIG.TERRAIN_MIN_HEIGHT - 20);
 
-            // Flatten
             for (let s = pc.startSeg; s <= pc.endSeg; s++) {
                 heights[s] = avgH;
             }
 
-            // Smooth transition to neighbors
             if (pc.startSeg > 0) {
                 heights[pc.startSeg - 1] = (heights[pc.startSeg - 1] + avgH) / 2;
             }
@@ -89,13 +75,11 @@ class Terrain {
                 heights[pc.endSeg + 1] = (heights[pc.endSeg + 1] + avgH) / 2;
             }
 
-            // Create LandingPad object
             const padCenterX = ((pc.startSeg + pc.endSeg) / 2) * segWidth;
             const pad = new LandingPad(this.scene, padCenterX, avgH, pc.width, pc.multiplier);
             this.landingPads.push(pad);
         });
 
-        // Build points array
         this.points = [];
         for (let i = 0; i <= segments; i++) {
             this.points.push({
@@ -104,9 +88,44 @@ class Terrain {
             });
         }
 
-        // Ensure edges go to bottom
         this.points[0].y = Math.min(this.points[0].y, h - 50);
         this.points[segments].y = Math.min(this.points[segments].y, h - 50);
+
+        // Pre-generate crater positions for surface detail
+        this._craters = [];
+        const vfx = CONFIG.VFX;
+        for (let i = 0; i < vfx.CRATER_COUNT; i++) {
+            const segIdx = 2 + Math.floor(Math.random() * (this.points.length - 4));
+            const px = this.points[segIdx].x;
+            const py = this.points[segIdx].y;
+            // Don't place craters on landing pads
+            let onPad = false;
+            for (const pad of this.landingPads) {
+                if (Math.abs(px - pad.x) < pad.width) { onPad = true; break; }
+            }
+            if (!onPad) {
+                this._craters.push({
+                    x: px,
+                    y: py,
+                    radius: 5 + Math.random() * 12,
+                    depth: 2 + Math.random() * 4
+                });
+            }
+        }
+
+        // Pre-generate regolith dot positions
+        this._regolithDots = [];
+        for (let i = 0; i < vfx.REGOLITH_DOT_COUNT; i++) {
+            const rx = Math.random() * w;
+            const surfY = this.getHeightAt(rx);
+            this._regolithDots.push({
+                x: rx,
+                y: surfY + 1 + Math.random() * 20,
+                size: 0.5 + Math.random() * 1.5,
+                alpha: 0.1 + Math.random() * 0.3,
+                shade: Math.random() > 0.5 ? 0x888888 : 0x555555
+            });
+        }
     }
 
     _getPadConfigs() {
@@ -114,19 +133,14 @@ class Terrain {
         const shrink = Math.pow(CONFIG.DIFFICULTY.padShrinkFactor, level - 1);
         const configs = [];
 
-        // Always have at least one large pad
         configs.push({
             width: Math.max(30, CONFIG.PAD_SIZES.LARGE * shrink),
             multiplier: 1
         });
-
-        // Add medium pad
         configs.push({
             width: Math.max(25, CONFIG.PAD_SIZES.MEDIUM * shrink),
             multiplier: 2
         });
-
-        // Level 2+ gets a small/3x pad
         if (level >= 2) {
             configs.push({
                 width: Math.max(20, CONFIG.PAD_SIZES.SMALL * shrink),
@@ -152,20 +166,106 @@ class Terrain {
     }
 
     draw(graphics) {
-        // Draw filled terrain
-        graphics.fillStyle(CONFIG.COLORS.TERRAIN, 1);
-        graphics.beginPath();
-        graphics.moveTo(0, CONFIG.HEIGHT);
+        const h = CONFIG.HEIGHT;
+        const w = CONFIG.WIDTH;
 
+        // --- Gradient terrain fill (two-pass: dark base + lighter top overlay) ---
+
+        // Dark base fill
+        graphics.fillStyle(CONFIG.COLORS.TERRAIN_DARK, 1);
+        graphics.beginPath();
+        graphics.moveTo(0, h);
         for (const p of this.points) {
             graphics.lineTo(p.x, p.y);
         }
-
-        graphics.lineTo(CONFIG.WIDTH, CONFIG.HEIGHT);
+        graphics.lineTo(w, h);
         graphics.closePath();
         graphics.fillPath();
 
-        // Draw terrain outline
+        // Lighter overlay on upper portion of terrain
+        graphics.fillStyle(CONFIG.COLORS.TERRAIN, 0.6);
+        graphics.beginPath();
+        graphics.moveTo(0, h);
+        for (const p of this.points) {
+            graphics.lineTo(p.x, p.y);
+        }
+        graphics.lineTo(w, h);
+        graphics.closePath();
+        graphics.fillPath();
+
+        // Even lighter strip near the surface
+        for (let band = 0; band < 4; band++) {
+            const offset = band * 6;
+            const alpha = 0.12 - band * 0.025;
+            graphics.fillStyle(CONFIG.COLORS.TERRAIN_LIGHT, Math.max(0.02, alpha));
+            graphics.beginPath();
+            graphics.moveTo(0, h);
+            for (const p of this.points) {
+                graphics.lineTo(p.x, p.y + offset);
+            }
+            graphics.lineTo(w, h);
+            graphics.closePath();
+            graphics.fillPath();
+        }
+
+        // --- Subsurface strata lines ---
+        const vfx = CONFIG.VFX;
+        for (let s = 0; s < vfx.STRATA_LINES; s++) {
+            const strataOffset = 25 + s * 30;
+            const alpha = 0.06 - s * 0.015;
+            graphics.lineStyle(1, CONFIG.COLORS.TERRAIN_LIGHT, Math.max(0.01, alpha));
+            graphics.beginPath();
+            let started = false;
+            for (const p of this.points) {
+                const sy = p.y + strataOffset;
+                if (sy < h) {
+                    if (!started) { graphics.moveTo(p.x, sy); started = true; }
+                    else graphics.lineTo(p.x, sy);
+                }
+            }
+            if (started) graphics.strokePath();
+        }
+
+        // --- Craters ---
+        for (const crater of this._craters) {
+            // Dark crater depression
+            graphics.fillStyle(0x222222, 0.4);
+            graphics.fillEllipse(crater.x, crater.y + crater.depth * 0.3, crater.radius * 2, crater.depth * 2);
+
+            // Highlight rim on top edge
+            graphics.lineStyle(1, CONFIG.COLORS.TERRAIN_LIGHT, 0.2);
+            graphics.beginPath();
+            const rimX1 = crater.x - crater.radius * 0.8;
+            const rimX2 = crater.x + crater.radius * 0.8;
+            const rimY = crater.y - crater.depth * 0.2;
+            // Simple arc approximation
+            const steps = 8;
+            for (let i = 0; i <= steps; i++) {
+                const t = i / steps;
+                const ax = rimX1 + (rimX2 - rimX1) * t;
+                const ay = rimY - Math.sin(t * Math.PI) * crater.depth * 0.4;
+                if (i === 0) graphics.moveTo(ax, ay);
+                else graphics.lineTo(ax, ay);
+            }
+            graphics.strokePath();
+        }
+
+        // --- Regolith dots (surface texture) ---
+        for (const dot of this._regolithDots) {
+            graphics.fillStyle(dot.shade, dot.alpha);
+            graphics.fillCircle(dot.x, dot.y, dot.size);
+        }
+
+        // --- Terrain edge glow (wide faint stroke) ---
+        graphics.lineStyle(5, CONFIG.COLORS.TERRAIN_EDGE_GLOW, 0.08);
+        graphics.beginPath();
+        graphics.moveTo(this.points[0].x, this.points[0].y);
+        for (let i = 1; i < this.points.length; i++) {
+            graphics.lineTo(this.points[i].x, this.points[i].y);
+        }
+        graphics.strokePath();
+
+        // --- Terrain outline (crisp) ---
         graphics.lineStyle(2, CONFIG.COLORS.TERRAIN_STROKE, 1);
         graphics.beginPath();
         graphics.moveTo(this.points[0].x, this.points[0].y);
@@ -180,7 +280,6 @@ class Terrain {
         }
     }
 
-    // Get terrain height at a given x position (interpolated)
     getHeightAt(x) {
         if (x <= 0) return this.points[0].y;
         if (x >= CONFIG.WIDTH) return this.points[this.points.length - 1].y;
@@ -194,7 +293,6 @@ class Terrain {
         return CONFIG.HEIGHT;
     }
 
-    // Check if x position is on a landing pad, returns pad or null
     getPadAt(x) {
         for (const pad of this.landingPads) {
             if (pad.containsX(x)) return pad;
