@@ -14,7 +14,16 @@ Static game hub website with browser-based arcade games. Each game is a self-con
 
 1. Use an existing game file as a reference for patterns and structure.
 2. Ensure the game auto-scales to fit the viewport.
-3. Add a card to `index.html` in the appropriate category section.
+3. Add a card to `index.html` in the appropriate category section:
+
+```html
+<div class="game-card">
+    <div class="game-icon-wrap">🎮</div>
+    <h2>Game Name</h2>
+    <p>Short description of the game.</p>
+    <a href="game-name/" class="play-button">Play</a>
+</div>
+```
 
 ## Git
 
