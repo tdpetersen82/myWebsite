@@ -210,7 +210,7 @@ const UI = (() => {
 
         // Insert after player-value, before player-cards
         els.playerCards.style.display = 'none';
-        els.playerArea.insertBefore(splitDiv, els.hintPanel || null);
+        els.playerArea.appendChild(splitDiv);
         return splitDiv;
     }
 
