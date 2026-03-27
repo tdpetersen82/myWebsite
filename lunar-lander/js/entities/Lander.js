@@ -1,4 +1,4 @@
-// Lunar Lander - Lander Entity
+// Lunar Lander - Lander Entity (Enhanced with VFX)
 
 class Lander {
     constructor(scene, x, y) {
@@ -14,6 +14,10 @@ class Lander {
         this.landed = false;
         this.width = CONFIG.LANDER_WIDTH;
         this.height = CONFIG.LANDER_HEIGHT;
+
+        // RCS tracking for visual puffs
+        this.rotatingLeft = false;
+        this.rotatingRight = false;
     }
 
     update(delta, gravity, wind) {
@@ -27,6 +31,9 @@ class Lander {
         const leftPressed = cursors.left.isDown || (wasd && wasd.left.isDown);
         const rightPressed = cursors.right.isDown || (wasd && wasd.right.isDown);
         const thrustPressed = cursors.up.isDown || (wasd && wasd.up.isDown);
+
+        this.rotatingLeft = leftPressed;
+        this.rotatingRight = rightPressed;
 
         if (leftPressed) {
             this.angle -= CONFIG.ROTATION_SPEED * dt;
@@ -83,22 +90,19 @@ class Lander {
     draw(graphics) {
         if (!this.alive) return;
 
-        // We manually rotate points around (this.x, this.y)
         const rad = Phaser.Math.DegToRad(this.angle);
         const cos = Math.cos(rad);
         const sin = Math.sin(rad);
 
-        const rotate = (px, py) => {
-            return {
-                x: this.x + px * cos - py * sin,
-                y: this.y + px * sin + py * cos
-            };
-        };
+        const rotate = (px, py) => ({
+            x: this.x + px * cos - py * sin,
+            y: this.y + px * sin + py * cos
+        });
 
         const w = this.width;
         const h = this.height;
 
-        // Lander body - triangular capsule shape
+        // Body points
         const top = rotate(0, -h / 2);
         const topLeft = rotate(-w * 0.3, -h / 3);
         const topRight = rotate(w * 0.3, -h / 3);
@@ -121,6 +125,14 @@ class Lander {
         graphics.lineTo(topLeft.x, topLeft.y);
         graphics.closePath();
         graphics.fillPath();
+
+        // Specular highlight — thin bright line along top-left edge
+        graphics.lineStyle(1, 0xffffff, 0.35);
+        graphics.beginPath();
+        graphics.moveTo(top.x, top.y);
+        graphics.lineTo(topLeft.x, topLeft.y);
+        graphics.lineTo(midLeft.x, midLeft.y);
+        graphics.strokePath();
 
         // Body outline
         graphics.lineStyle(1.5, CONFIG.COLORS.LANDER_STROKE, 1);
@@ -150,7 +162,7 @@ class Lander {
         graphics.lineTo(legR2.x, legR2.y);
         graphics.strokePath();
 
-        // Leg feet (small horizontal lines)
+        // Leg feet
         const footSize = 3;
         const footLL = rotate(-w * 0.7 - footSize, h / 2 + 4);
         const footLR = rotate(-w * 0.7 + footSize, h / 2 + 4);
@@ -164,16 +176,59 @@ class Lander {
         graphics.lineTo(footRR.x, footRR.y);
         graphics.strokePath();
 
-        // Window/viewport on lander
+        // Window with glow effect — concentric circles
         const windowPos = rotate(0, -h / 5);
-        graphics.fillStyle(0x4488cc, 0.7);
+
+        // Outer glow layers
+        graphics.fillStyle(CONFIG.COLORS.LANDER_WINDOW_GLOW, 0.06);
+        graphics.fillCircle(windowPos.x, windowPos.y, 9);
+        graphics.fillStyle(CONFIG.COLORS.LANDER_WINDOW_GLOW, 0.1);
+        graphics.fillCircle(windowPos.x, windowPos.y, 7);
+        graphics.fillStyle(CONFIG.COLORS.LANDER_WINDOW_GLOW, 0.15);
+        graphics.fillCircle(windowPos.x, windowPos.y, 5);
+
+        // Window core
+        graphics.fillStyle(0x4488cc, 0.8);
         graphics.fillCircle(windowPos.x, windowPos.y, 3);
-        graphics.lineStyle(1, 0x66aaff, 0.8);
+        graphics.lineStyle(1, 0x88ccff, 0.9);
         graphics.strokeCircle(windowPos.x, windowPos.y, 3);
 
+        // Bright specular dot on window
+        const specDot = rotate(1, -h / 5 - 1);
+        graphics.fillStyle(0xffffff, 0.7);
+        graphics.fillCircle(specDot.x, specDot.y, 0.8);
+
+        // Nozzle glow when thrusting
+        if (this.thrusting) {
+            const glowAlpha = 0.15 + Math.sin(Date.now() / 50) * 0.1;
+            graphics.fillStyle(0xff6600, glowAlpha);
+            graphics.fillCircle(nozzle.x, nozzle.y, 8);
+            graphics.fillStyle(0xffaa00, glowAlpha * 0.7);
+            graphics.fillCircle(nozzle.x, nozzle.y, 12);
+        }
     }
 
-    // Get the bottom-most point of the lander (for collision)
+    // RCS position helpers — returns world positions for puff emitters
+    getRCSPositions() {
+        const rad = Phaser.Math.DegToRad(this.angle);
+        const cos = Math.cos(rad);
+        const sin = Math.sin(rad);
+        const w = this.width;
+        const h = this.height;
+
+        const rotate = (px, py) => ({
+            x: this.x + px * cos - py * sin,
+            y: this.y + px * sin + py * cos
+        });
+
+        return {
+            // When rotating left: thrust from right-top and left-bottom
+            left: [rotate(w * 0.5, -h / 4), rotate(-w * 0.5, h / 4)],
+            // When rotating right: thrust from left-top and right-bottom
+            right: [rotate(-w * 0.5, -h / 4), rotate(w * 0.5, h / 4)]
+        };
+    }
+
     getBottomY() {
         const rad = Phaser.Math.DegToRad(this.angle);
         const cos = Math.cos(rad);
@@ -181,13 +236,12 @@ class Lander {
         const h = this.height;
         const w = this.width;
 
-        // Check nozzle, feet, and bottom corners
         const points = [
-            { px: 0, py: h / 2 },                    // nozzle
-            { px: -w * 0.7, py: h / 2 + 4 },        // left foot
-            { px: w * 0.7, py: h / 2 + 4 },          // right foot
-            { px: -w / 2, py: h / 3 },                // bottom left
-            { px: w / 2, py: h / 3 }                  // bottom right
+            { px: 0, py: h / 2 },
+            { px: -w * 0.7, py: h / 2 + 4 },
+            { px: w * 0.7, py: h / 2 + 4 },
+            { px: -w / 2, py: h / 3 },
+            { px: w / 2, py: h / 3 }
         ];
 
         let maxY = -Infinity;
@@ -198,7 +252,6 @@ class Lander {
         return maxY;
     }
 
-    // Get collision points for terrain checking
     getCollisionPoints() {
         const rad = Phaser.Math.DegToRad(this.angle);
         const cos = Math.cos(rad);
@@ -212,16 +265,15 @@ class Lander {
         });
 
         return [
-            rotate(0, -h / 2),           // top
-            rotate(-w / 2, 0),            // left
-            rotate(w / 2, 0),             // right
-            rotate(0, h / 2),             // nozzle
-            rotate(-w * 0.7, h / 2 + 4), // left foot
-            rotate(w * 0.7, h / 2 + 4),  // right foot
+            rotate(0, -h / 2),
+            rotate(-w / 2, 0),
+            rotate(w / 2, 0),
+            rotate(0, h / 2),
+            rotate(-w * 0.7, h / 2 + 4),
+            rotate(w * 0.7, h / 2 + 4),
         ];
     }
 
-    // Get the nozzle position for thrust particles
     getNozzlePosition() {
         const rad = Phaser.Math.DegToRad(this.angle);
         return {
@@ -230,7 +282,6 @@ class Lander {
         };
     }
 
-    // Get altitude from terrain
     getAltitude(terrain) {
         const groundY = terrain.getHeightAt(this.x);
         return groundY - this.getBottomY();
@@ -246,5 +297,7 @@ class Lander {
         this.thrusting = false;
         this.alive = true;
         this.landed = false;
+        this.rotatingLeft = false;
+        this.rotatingRight = false;
     }
 }

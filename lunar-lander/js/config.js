@@ -44,11 +44,6 @@ const CONFIG = {
     // Wind
     WIND_MAX_FORCE: 15,     // max wind force pixels/sec^2
 
-    // Particles
-    THRUST_PARTICLE_COUNT: 3,
-    EXPLOSION_PARTICLE_COUNT: 30,
-    PARTICLE_LIFETIME: 800,  // ms
-
     // Lander dimensions
     LANDER_WIDTH: 20,
     LANDER_HEIGHT: 24,
@@ -66,7 +61,10 @@ const CONFIG = {
     COLORS: {
         SKY: 0x000011,
         TERRAIN: 0x666666,
+        TERRAIN_DARK: 0x333333,
+        TERRAIN_LIGHT: 0x888888,
         TERRAIN_STROKE: 0x999999,
+        TERRAIN_EDGE_GLOW: 0x888888,
         LANDER_BODY: 0xcccccc,
         LANDER_STROKE: 0xffffff,
         THRUST_FLAME: 0xff6600,
@@ -78,7 +76,91 @@ const CONFIG = {
         FUEL_LOW: 0xff3300,
         STAR: 0xffffff,
         EXPLOSION: [0xff4400, 0xff8800, 0xffcc00, 0xffffff],
-        WIND_ARROW: 0x4488ff
+        WIND_ARROW: 0x4488ff,
+        EARTH: 0x4488cc,
+        EARTH_GLOW: 0x2266aa,
+        EARTH_LAND: 0x228844,
+        NEBULA: [0x330066, 0x220044, 0x110055, 0x001144],
+        LANDER_WINDOW_GLOW: 0x66bbff,
+        SHOCKWAVE: 0xffffff,
+        RCS_PUFF: 0xaaddff
+    },
+
+    // VFX Configuration
+    VFX: {
+        // Stars
+        STAR_LAYERS: [
+            { count: 120, sizeMin: 0.3, sizeMax: 1.0, speed: 0.02, alphaMin: 0.15, alphaMax: 0.5 },
+            { count: 60, sizeMin: 0.8, sizeMax: 1.8, speed: 0.05, alphaMin: 0.3, alphaMax: 0.7 },
+            { count: 25, sizeMin: 1.5, sizeMax: 2.8, speed: 0.1, alphaMin: 0.5, alphaMax: 1.0 }
+        ],
+        STAR_TWINKLE_MIN: 1000,
+        STAR_TWINKLE_MAX: 4000,
+        NEBULA_COUNT: 4,
+
+        // Thrust particles
+        THRUST_CORE: { speed: [100, 180], life: 180, scale: [0.6, 0], tint: 0xffffff, rate: 30 },
+        THRUST_FLAME: { speed: [70, 150], life: 300, scale: [1.0, 0], tint: [0xff8800, 0xff6600, 0xffaa00], rate: 25 },
+        THRUST_SMOKE: { speed: [20, 60], life: 700, scale: [0.4, 1.8], alpha: [0.25, 0], tint: 0x555555, rate: 12 },
+
+        // RCS puffs
+        RCS_SPEED: [15, 35],
+        RCS_LIFE: 180,
+        RCS_SCALE: [0.3, 0],
+        RCS_RATE: 0,
+        RCS_QUANTITY: 2,
+
+        // Explosion
+        EXPLOSION_FLASH_LIFE: 120,
+        EXPLOSION_FIREBALL_COUNT: 35,
+        EXPLOSION_FIREBALL_SPEED: [50, 220],
+        EXPLOSION_FIREBALL_LIFE: 600,
+        EXPLOSION_DEBRIS_COUNT: 15,
+        EXPLOSION_DEBRIS_SPEED: [60, 200],
+        EXPLOSION_DEBRIS_LIFE: 1400,
+        EXPLOSION_SHOCKWAVE_DURATION: 450,
+        EXPLOSION_SHOCKWAVE_RADIUS: 80,
+        EXPLOSION_SHAKE_INTENSITY: 0.025,
+        EXPLOSION_SHAKE_DURATION: 600,
+
+        // Landing
+        LANDING_DUST_COUNT: 25,
+        LANDING_DUST_SPEED: [30, 90],
+        LANDING_DUST_LIFE: 900,
+
+        // Fireworks
+        FIREWORK_BURSTS: 5,
+        FIREWORK_PARTICLES: 50,
+        FIREWORK_SPEED: [80, 200],
+        FIREWORK_LIFE: 1100,
+        FIREWORK_COLORS: [0xff2244, 0x22ff44, 0x4466ff, 0xffff22, 0xff44ff, 0x44ffff],
+
+        // Camera FX
+        VIGNETTE_STRENGTH: 0.5,
+        BLOOM_STRENGTH: 0.6,
+        BLOOM_BLUR: 1.5,
+        BLOOM_STEPS: 4,
+        DESCENT_ZOOM_MAX: 0.12,
+
+        // Terrain
+        CRATER_COUNT: 8,
+        REGOLITH_DOT_COUNT: 70,
+        STRATA_LINES: 3,
+
+        // Landing pad
+        BEACON_PULSE_DURATION: 800,
+        GUIDE_LIGHT_HEIGHT: 50,
+        GUIDE_LIGHT_SEGMENTS: 6,
+
+        // Atmosphere
+        DUST_MOTE_COUNT: 12,
+        SHOOTING_STAR_MIN_INTERVAL: 6000,
+        SHOOTING_STAR_MAX_INTERVAL: 18000,
+
+        // Earth
+        EARTH_RADIUS: 35,
+        EARTH_X: 680,
+        EARTH_Y: 55
     },
 
     // LocalStorage
