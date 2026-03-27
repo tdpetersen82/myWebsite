@@ -374,7 +374,18 @@
                     <a href="privacy.html">Privacy Policy</a>
                 </div>
             </div>
-            <p class="footer-updated">Last updated: <span id="last-updated">March 27, 2026</span></p>
+            <p class="footer-updated">Last updated: <span id="last-updated"></span></p>
+            <script>
+                (function() {
+                    var d = new Date();
+                    var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+                    var h = d.getHours(), m = d.getMinutes();
+                    var ampm = h >= 12 ? 'PM' : 'AM';
+                    h = h % 12 || 12;
+                    var time = h + ':' + (m < 10 ? '0' : '') + m + ' ' + ampm;
+                    document.getElementById('last-updated').textContent = months[d.getMonth()] + ' ' + d.getDate() + ', ' + d.getFullYear() + ' at ' + time;
+                })();
+            </script>
             <!-- Ad Slot: Footer banner (responsive) -->
             <div class="ad-slot ad-slot-responsive" style="margin-top: 20px;">
                 <ins class="adsbygoogle"
