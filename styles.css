@@ -14,14 +14,14 @@ body {
     min-height: 100vh;
     display: flex;
     justify-content: center;
-    padding: 20px;
+    padding: 10px;
 }
 
 .container {
     text-align: center;
     background: rgba(255, 255, 255, 0.95);
-    border-radius: 20px;
-    padding: 40px;
+    border-radius: 16px;
+    padding: 16px 20px 20px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     max-width: 900px;
     width: 100%;
@@ -75,7 +75,7 @@ body {
 .category {
     margin-bottom: 30px;
     text-align: left;
-    scroll-margin-top: 80px;
+    scroll-margin-top: 64px;
 }
 
 .category-title {
@@ -166,15 +166,15 @@ body {
 
 h1 {
     color: #333;
-    font-size: 3em;
-    margin-bottom: 10px;
+    font-size: 1.6em;
+    margin-bottom: 4px;
     text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .subtitle {
     color: #666;
-    font-size: 1.2em;
-    margin-bottom: 40px;
+    font-size: 1em;
+    margin-bottom: 10px;
 }
 
 .play-button {
@@ -217,9 +217,9 @@ h1 {
 .game-info {
     display: flex;
     justify-content: center;
-    gap: 40px;
-    margin: 20px 0;
-    font-size: 1.3em;
+    gap: 24px;
+    margin: 6px 0;
+    font-size: 1em;
     font-weight: bold;
     color: #333;
 }
@@ -229,13 +229,13 @@ h1 {
 }
 
 .controls {
-    margin-top: 20px;
+    margin-top: 8px;
 }
 
 .controls p {
     color: #666;
-    margin: 10px 0;
-    font-size: 1.1em;
+    margin: 4px 0;
+    font-size: 0.9em;
 }
 
 canvas {
@@ -303,7 +303,7 @@ canvas {
 
 @media (max-width: 768px) {
     h1 {
-        font-size: 2em;
+        font-size: 1.4em;
     }
 
     .hub-header h1 {
@@ -314,7 +314,23 @@ canvas {
         grid-template-columns: 1fr;
     }
 
-    .container, .hub-container {
+    .container {
+        padding: 12px 10px 16px;
+        border-radius: 12px;
+    }
+
+    .hub-container {
         padding: 20px 15px;
+    }
+
+    .game-info {
+        gap: 16px;
+        font-size: 0.9em;
+        margin: 4px 0;
+    }
+
+    .controls p {
+        font-size: 0.85em;
+        margin: 2px 0;
     }
 }
