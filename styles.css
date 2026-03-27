@@ -347,6 +347,12 @@ canvas {
     color: #764ba2;
 }
 
+.footer-updated {
+    color: #bbb;
+    font-size: 0.75em;
+    margin-top: 12px;
+}
+
 @media (max-width: 768px) {
     h1 {
         font-size: 2em;
