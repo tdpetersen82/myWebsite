@@ -11,11 +11,28 @@
         <div class="hub-header">
             <h1>Arcade Game Hub</h1>
             <p class="subtitle">Classic arcade games right in your browser — no downloads, no installs.</p>
-            <span class="game-count">36 Games</span>
+            <span class="game-count">31 Games</span>
+        </div>
+
+        <!-- Category Navigation Bar -->
+        <nav class="category-nav" aria-label="Game categories">
+            <ul class="category-nav-list">
+                <li><a href="#classic-arcade" class="category-nav-link">Classic Arcade</a></li>
+                <li><a href="#retro-arcade" class="category-nav-link">Retro Arcade</a></li>
+                <li><a href="#strategy-puzzles" class="category-nav-link">Strategy & Puzzles</a></li>
+                <li><a href="#action-more" class="category-nav-link">Action & More</a></li>
+                <li><a href="#web-games" class="category-nav-link">Web Games</a></li>
+            </ul>
+        </nav>
+
+        <!-- Ad Slot: Top Leaderboard -->
+        <div class="ad-slot ad-slot-leaderboard">
+            <!-- Google AdSense: 728x90 leaderboard -->
+            Ad Space
         </div>
 
         <!-- Classic Arcade -->
-        <div class="category">
+        <div class="category" id="classic-arcade">
             <h2 class="category-title"><span class="cat-icon">👾</span> Classic Arcade</h2>
             <div class="game-grid">
                 <div class="game-card">
@@ -62,14 +79,14 @@
             </div>
         </div>
 
-        <!-- Ad Slot: Leaderboard between categories -->
+        <!-- Ad Slot: Between categories -->
         <div class="ad-slot ad-slot-leaderboard">
             <!-- Google AdSense: 728x90 leaderboard -->
             Ad Space
         </div>
 
-        <!-- New Retro Arcade (Phaser) -->
-        <div class="category">
+        <!-- Retro Arcade -->
+        <div class="category" id="retro-arcade">
             <h2 class="category-title"><span class="cat-icon">🕹️</span> Retro Arcade</h2>
             <div class="game-grid">
                 <div class="game-card">
@@ -198,19 +215,11 @@
                     <p>Watch the color pattern, then repeat it back. How long can you go?</p>
                     <a href="simon/" class="play-button">Play</a>
                 </div>
-
-                <div class="game-card">
-                    <span class="badge-new">NEW</span>
-                    <div class="game-icon-wrap">🐭</div>
-                    <h2>Lemmings</h2>
-                    <p>Guide the lemmings to safety by assigning them skills to navigate treacherous terrain!</p>
-                    <a href="lemmings/" class="play-button">Play</a>
-                </div>
             </div>
         </div>
 
         <!-- Strategy & Puzzles -->
-        <div class="category">
+        <div class="category" id="strategy-puzzles">
             <h2 class="category-title"><span class="cat-icon">🧩</span> Strategy & Puzzles</h2>
             <div class="game-grid">
                 <div class="game-card">
@@ -237,78 +246,14 @@
             </div>
         </div>
 
-        <!-- Mobile Games -->
-        <div class="category">
-            <h2 class="category-title"><span class="cat-icon">📱</span> Mobile Games</h2>
-            <div class="game-grid">
-                <div class="game-card">
-                    <span class="badge-new">NEW</span>
-                    <div class="game-icon-wrap">🔢</div>
-                    <h2>2048</h2>
-                    <p>Swipe to merge tiles and reach 2048! A classic sliding puzzle.</p>
-                    <a href="2048/" class="play-button">Play</a>
-                </div>
-
-                <div class="game-card">
-                    <span class="badge-new">NEW</span>
-                    <div class="game-icon-wrap">🏗️</div>
-                    <h2>Stack Tower</h2>
-                    <p>Tap to stack blocks perfectly. How high can you build?</p>
-                    <a href="stack-tower/" class="play-button">Play</a>
-                </div>
-
-                <div class="game-card">
-                    <span class="badge-new">NEW</span>
-                    <div class="game-icon-wrap">🎨</div>
-                    <h2>Color Switch</h2>
-                    <p>Tap through rotating color gates — match the color to pass!</p>
-                    <a href="color-switch/" class="play-button">Play</a>
-                </div>
-
-                <div class="game-card">
-                    <span class="badge-new">NEW</span>
-                    <div class="game-icon-wrap">🍉</div>
-                    <h2>Fruit Ninja</h2>
-                    <p>Swipe to slash flying fruit! Don't hit the bombs.</p>
-                    <a href="fruit-ninja/" class="play-button">Play</a>
-                </div>
-
-                <div class="game-card">
-                    <span class="badge-new">NEW</span>
-                    <div class="game-icon-wrap">🔨</div>
-                    <h2>Whack-a-Mole</h2>
-                    <p>Tap the moles as they pop up! Watch out for red ones.</p>
-                    <a href="whack-a-mole/" class="play-button">Play</a>
-                </div>
-
-                <div class="game-card">
-                    <span class="badge-new">NEW</span>
-                    <div class="game-icon-wrap">🏃</div>
-                    <h2>Endless Runner</h2>
-                    <p>Run, jump, and slide past obstacles. How far can you go?</p>
-                    <a href="endless-runner/" class="play-button">Play</a>
-                </div>
-
-                <div class="game-card">
-                    <span class="badge-new">NEW</span>
-                    <div class="game-icon-wrap">🔪</div>
-                    <h2>Knife Hit</h2>
-                    <p>Tap to throw knives into the spinning log. Don't hit another knife!</p>
-                    <a href="knife-hit/" class="play-button">Play</a>
-                </div>
-
-                <div class="game-card">
-                    <span class="badge-new">NEW</span>
-                    <div class="game-icon-wrap">🫧</div>
-                    <h2>Bubble Shooter</h2>
-                    <p>Aim and shoot to match 3+ bubbles of the same color!</p>
-                    <a href="bubble-shooter/" class="play-button">Play</a>
-                </div>
-            </div>
+        <!-- Ad Slot: Between categories -->
+        <div class="ad-slot ad-slot-leaderboard">
+            <!-- Google AdSense: 728x90 leaderboard -->
+            Ad Space
         </div>
 
         <!-- Action & More -->
-        <div class="category">
+        <div class="category" id="action-more">
             <h2 class="category-title"><span class="cat-icon">🎯</span> Action & More</h2>
             <div class="game-grid">
                 <div class="game-card">
@@ -316,13 +261,6 @@
                     <h2>Fruit Catcher</h2>
                     <p>5 modes! Catch fruits, dodge bombs, grab power-ups. Touch supported!</p>
                     <a href="fruit-catcher/" class="play-button">Play</a>
-                </div>
-
-                <div class="game-card">
-                    <div class="game-icon-wrap">🏍️</div>
-                    <h2>Motorcycle Trail Rider</h2>
-                    <p>Physics-based side-scroller! Race over hills and launch off ramps!</p>
-                    <a href="motorcycle-game/" class="play-button">Play</a>
                 </div>
 
                 <div class="game-card">
@@ -335,18 +273,10 @@
             </div>
         </div>
 
-        <!-- Web Games (Embedded from GameDistribution) -->
-        <div class="category">
+        <!-- Web Games -->
+        <div class="category" id="web-games">
             <h2 class="category-title"><span class="cat-icon">🌐</span> Web Games</h2>
             <div class="game-grid">
-                <div class="game-card">
-                    <span class="badge-new">NEW</span>
-                    <div class="game-icon-wrap">🏍️</div>
-                    <h2>Moto X3M</h2>
-                    <p>Race through 25 challenging levels on your motorcycle!</p>
-                    <a href="moto-x3m/" class="play-button">Play</a>
-                </div>
-
                 <div class="game-card">
                     <span class="badge-new">NEW</span>
                     <div class="game-icon-wrap">🫧</div>
@@ -381,18 +311,30 @@
             </div>
         </div>
 
-        <!-- Experimental -->
-        <div class="category">
-            <h2 class="category-title"><span class="cat-icon">🧪</span> Experimental</h2>
-            <div class="game-grid">
-                <div class="game-card">
-                    <div class="game-icon-wrap">⚡</div>
-                    <h2>eMoto Database</h2>
-                    <p>Browse 32 electric motorcycles — specs, pricing & reviews.</p>
-                    <a href="emoto-database/" class="play-button">Browse</a>
+        <!-- Ad Slot: Bottom Leaderboard -->
+        <div class="ad-slot ad-slot-leaderboard">
+            <!-- Google AdSense: 728x90 leaderboard -->
+            Ad Space
+        </div>
+
+        <!-- Site Footer -->
+        <footer class="site-footer">
+            <div class="footer-content">
+                <p class="footer-brand">Arcade Game Hub</p>
+                <p class="footer-tagline">Free browser games — no downloads, no installs.</p>
+                <div class="footer-links">
+                    <a href="#classic-arcade">Classic Arcade</a>
+                    <a href="#retro-arcade">Retro Arcade</a>
+                    <a href="#strategy-puzzles">Strategy & Puzzles</a>
+                    <a href="#action-more">Action & More</a>
+                    <a href="#web-games">Web Games</a>
                 </div>
             </div>
-        </div>
+            <div class="ad-slot ad-slot-banner" style="margin-top: 20px;">
+                <!-- Google AdSense: 320x50 banner -->
+                Ad Space
+            </div>
+        </footer>
     </div>
     <script src="nav.js"></script>
 </body>
