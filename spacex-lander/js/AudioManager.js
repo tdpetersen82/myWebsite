@@ -37,6 +37,7 @@ class AudioManager {
             this.stopThrust();
             this.stopLowFuelWarning();
             this.stopReentryWhoosh();
+            this.stopWindRush();
         }
         return this.muted;
     }
@@ -403,6 +404,103 @@ class AudioManager {
         }
     }
 
+    // Wind rush — continuous, scales with speed
+    updateWindRush(speed) {
+        if (this.muted || !this._ensureContext()) {
+            this.stopWindRush();
+            return;
+        }
+
+        const intensity = Math.min(1, speed / 300);
+        if (intensity < 0.05) {
+            this.stopWindRush();
+            return;
+        }
+
+        if (!this.windRushNode) {
+            const ctx = this.ctx;
+            this.windRushGain = ctx.createGain();
+            this.windRushGain.gain.setValueAtTime(0, ctx.currentTime);
+            this.windRushGain.connect(ctx.destination);
+
+            const filter = ctx.createBiquadFilter();
+            filter.type = 'bandpass';
+            filter.frequency.setValueAtTime(500, ctx.currentTime);
+            filter.Q.setValueAtTime(1.5, ctx.currentTime);
+            filter.connect(this.windRushGain);
+
+            const osc1 = ctx.createOscillator();
+            osc1.type = 'sawtooth';
+            osc1.frequency.setValueAtTime(220, ctx.currentTime);
+            osc1.connect(filter);
+
+            const osc2 = ctx.createOscillator();
+            osc2.type = 'sawtooth';
+            osc2.frequency.setValueAtTime(223, ctx.currentTime);
+            osc2.connect(filter);
+
+            osc1.start();
+            osc2.start();
+            this.windRushNode = { oscs: [osc1, osc2], filter };
+        }
+
+        // Smoothly adjust volume
+        const targetGain = intensity * 0.05;
+        this.windRushGain.gain.setTargetAtTime(targetGain, this.ctx.currentTime, 0.1);
+
+        // Shift frequency with speed for a Doppler-like effect
+        const freq = 300 + intensity * 400;
+        this.windRushNode.filter.frequency.setTargetAtTime(freq, this.ctx.currentTime, 0.1);
+    }
+
+    stopWindRush() {
+        if (this.windRushNode) {
+            this.windRushNode.oscs.forEach(o => { try { o.stop(); } catch (e) {} });
+            this.windRushNode = null;
+        }
+        if (this.windRushGain) {
+            this.windRushGain.disconnect();
+            this.windRushGain = null;
+        }
+    }
+
+    // Sonic boom — sharp crack + low rumble
+    playSonicBoom() {
+        if (this.muted || !this._ensureContext()) return;
+        const ctx = this.ctx;
+        const now = ctx.currentTime;
+
+        // Sharp crack
+        const crack = ctx.createOscillator();
+        crack.type = 'sawtooth';
+        crack.frequency.setValueAtTime(3000, now);
+        crack.frequency.exponentialRampToValueAtTime(100, now + 0.06);
+        const crackGain = ctx.createGain();
+        crackGain.gain.setValueAtTime(0.3, now);
+        crackGain.gain.exponentialRampToValueAtTime(0.001, now + 0.08);
+        crack.connect(crackGain);
+        crackGain.connect(ctx.destination);
+        crack.start(now);
+        crack.stop(now + 0.1);
+
+        // Low rumble aftermath
+        const rumble = ctx.createOscillator();
+        rumble.type = 'sawtooth';
+        rumble.frequency.setValueAtTime(60, now + 0.05);
+        rumble.frequency.exponentialRampToValueAtTime(25, now + 0.8);
+        const rumbleGain = ctx.createGain();
+        rumbleGain.gain.setValueAtTime(0.15, now + 0.05);
+        rumbleGain.gain.exponentialRampToValueAtTime(0.001, now + 0.8);
+        const rumbleFilter = ctx.createBiquadFilter();
+        rumbleFilter.type = 'lowpass';
+        rumbleFilter.frequency.setValueAtTime(120, now);
+        rumble.connect(rumbleFilter);
+        rumbleFilter.connect(rumbleGain);
+        rumbleGain.connect(ctx.destination);
+        rumble.start(now + 0.05);
+        rumble.stop(now + 0.9);
+    }
+
     // Single beep (UI)
     playBeep(freq = 440, duration = 0.1) {
         if (this.muted || !this._ensureContext()) return;
@@ -423,6 +521,7 @@ class AudioManager {
         this.stopThrust();
         this.stopLowFuelWarning();
         this.stopReentryWhoosh();
+        this.stopWindRush();
         if (this.ctx) {
             this.ctx.close();
             this.ctx = null;

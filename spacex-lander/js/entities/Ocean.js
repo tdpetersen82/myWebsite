@@ -34,64 +34,66 @@ class Ocean {
     }
 
     draw(graphics) {
-        const w = CONFIG.WIDTH;
-        const h = CONFIG.HEIGHT;
+        const cam = this.scene.cameras.main;
+        const wv = cam.worldView;
+        const left = wv.x - 100;
+        const right = wv.x + wv.width + 100;
+        const bottom = wv.y + wv.height + 100;
         const step = 4;
 
         // Water body — gradient bands
         const bands = [
             { y: this.waterLevel, h: 30, color: CONFIG.COLORS.OCEAN_SURFACE, alpha: 0.9 },
             { y: this.waterLevel + 30, h: 40, color: CONFIG.COLORS.OCEAN_MID, alpha: 0.95 },
-            { y: this.waterLevel + 70, h: h - this.waterLevel - 70, color: CONFIG.COLORS.OCEAN_DEEP, alpha: 1.0 }
+            { y: this.waterLevel + 70, h: bottom - this.waterLevel - 70, color: CONFIG.COLORS.OCEAN_DEEP, alpha: 1.0 }
         ];
 
         for (const band of bands) {
             graphics.fillStyle(band.color, band.alpha);
-            graphics.fillRect(0, band.y, w, band.h);
+            graphics.fillRect(left, band.y, right - left, band.h);
         }
 
         // Wave surface polyline fill (over the bands)
         graphics.fillStyle(CONFIG.COLORS.OCEAN_SURFACE, 0.95);
         graphics.beginPath();
-        graphics.moveTo(0, h);
+        graphics.moveTo(left, bottom);
 
-        for (let x = 0; x <= w; x += step) {
+        for (let x = left; x <= right; x += step) {
             const y = this.getHeightAt(x);
             graphics.lineTo(x, y);
         }
 
-        graphics.lineTo(w, h);
+        graphics.lineTo(right, bottom);
         graphics.closePath();
         graphics.fillPath();
 
         // Darker depth below the surface
         graphics.fillStyle(CONFIG.COLORS.OCEAN_MID, 0.4);
         graphics.beginPath();
-        graphics.moveTo(0, h);
-        for (let x = 0; x <= w; x += step) {
+        graphics.moveTo(left, bottom);
+        for (let x = left; x <= right; x += step) {
             graphics.lineTo(x, this.getHeightAt(x) + 15);
         }
-        graphics.lineTo(w, h);
+        graphics.lineTo(right, bottom);
         graphics.closePath();
         graphics.fillPath();
 
         graphics.fillStyle(CONFIG.COLORS.OCEAN_DEEP, 0.5);
         graphics.beginPath();
-        graphics.moveTo(0, h);
-        for (let x = 0; x <= w; x += step) {
+        graphics.moveTo(left, bottom);
+        for (let x = left; x <= right; x += step) {
             graphics.lineTo(x, this.getHeightAt(x) + 40);
         }
-        graphics.lineTo(w, h);
+        graphics.lineTo(right, bottom);
         graphics.closePath();
         graphics.fillPath();
 
         // Wave highlights / foam
         if (this.waveAmplitude > CONFIG.OCEAN.FOAM_THRESHOLD) {
             graphics.lineStyle(1, CONFIG.COLORS.OCEAN_FOAM, 0.3);
-            for (let x = 0; x <= w; x += step) {
+            for (let x = left; x <= right; x += step) {
                 const y = this.getHeightAt(x);
                 const nextY = this.getHeightAt(x + step);
-                // Foam on wave peaks (where slope changes from rising to falling)
                 if (y < nextY && y < this.getHeightAt(x - step)) {
                     graphics.beginPath();
                     graphics.moveTo(x - 3, y + 1);
@@ -104,9 +106,9 @@ class Ocean {
         // Horizon line glow
         graphics.lineStyle(1, CONFIG.COLORS.OCEAN_HIGHLIGHT, 0.15);
         graphics.beginPath();
-        for (let x = 0; x <= w; x += step) {
+        for (let x = left; x <= right; x += step) {
             const y = this.getHeightAt(x);
-            if (x === 0) graphics.moveTo(x, y);
+            if (x === left) graphics.moveTo(x, y);
             else graphics.lineTo(x, y);
         }
         graphics.strokePath();

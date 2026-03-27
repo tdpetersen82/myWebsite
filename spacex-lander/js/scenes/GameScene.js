@@ -14,6 +14,8 @@ class GameScene extends Phaser.Scene {
         this.landingResult = null;
         this.currentPhase = 1;
         this._prevPhase = 1;
+        this.timeScale = 1;
+        this._slowmoTimer = null;
     }
 
     create() {
@@ -100,12 +102,31 @@ class GameScene extends Phaser.Scene {
 
         // Phase overlay text
         this._showPhaseText('RE-ENTRY', CONFIG.COLORS.HUD_PHASE_1);
+
+        // --- CAMERA ZOOM SETUP ---
+        // Pin all HUD/overlay elements so they don't move with camera
+        const pinToScreen = (obj) => { if (obj) obj.setScrollFactor(0); };
+        Object.values(this.hudTexts).forEach(pinToScreen);
+        pinToScreen(this.fuelBarBg);
+        pinToScreen(this.fuelBarFg);
+        pinToScreen(this.pauseOverlay);
+        pinToScreen(this.pauseText);
+        pinToScreen(this.muteText);
+        pinToScreen(this.windGraphics);
+        if (this._windLabel) pinToScreen(this._windLabel);
+
+        // Screen flash overlay for explosions (pinned to screen)
+        this._screenFlash = this.add.rectangle(
+            CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2,
+            CONFIG.WIDTH * 3, CONFIG.HEIGHT * 3,
+            0xff6600, 0
+        ).setScrollFactor(0).setDepth(25);
     }
 
     // --- UPDATE LOOP ---
     update(time, delta) {
         if (this.paused || this.gameOver) return;
-        delta = Math.min(delta, 50);
+        delta = Math.min(delta, 50) * this.timeScale;
 
         const rocket = this.rocket;
         const ocean = this.ocean;
@@ -113,6 +134,16 @@ class GameScene extends Phaser.Scene {
 
         // Calculate altitude
         const altitude = rocket.getAltitude(ocean, ship);
+
+        // --- DYNAMIC CAMERA ZOOM ---
+        const cam = this.cameras.main;
+        const targetZoom = Phaser.Math.Clamp(
+            Phaser.Math.Linear(1.35, 0.55, altitude / 4000),
+            0.55, 1.35
+        );
+        const newZoom = cam.zoom + (targetZoom - cam.zoom) * 0.025;
+        cam.setZoom(newZoom);
+        cam.centerOn(rocket.x, rocket.y);
 
         // Phase transitions
         this._updatePhase(altitude);
@@ -152,6 +183,13 @@ class GameScene extends Phaser.Scene {
             this.vfx.stopAllThrust();
         }
 
+        // --- DECK BLAST VFX (exhaust hitting the ship) ---
+        if (rocket.thrusting && this.currentPhase === 3 && altitude < 800 && ship.containsX(rocket.x)) {
+            const intensity = 1 - altitude / 800;
+            const deckY = ship.getHeightAt(rocket.x);
+            this.vfx.emitDeckBlast(rocket.x, deckY, intensity);
+        }
+
         // --- RE-ENTRY GLOW VFX ---
         if (rocket.reentryHeat > 0.1) {
             const nozzle = rocket.getNozzlePosition();
@@ -169,6 +207,12 @@ class GameScene extends Phaser.Scene {
         } else if ((rocket.fuel <= 0 || rocket.fuel >= CONFIG.LOW_FUEL_THRESHOLD) && this._lowFuelWarning) {
             this._lowFuelWarning = false;
             if (this.audio) this.audio.stopLowFuelWarning();
+        }
+
+        // --- WIND RUSH AUDIO ---
+        if (this.audio) {
+            const speed = Math.sqrt(rocket.vx * rocket.vx + rocket.vy * rocket.vy);
+            this.audio.updateWindRush(speed);
         }
 
         // --- COLLISION ---
@@ -214,6 +258,10 @@ class GameScene extends Phaser.Scene {
 
         if (to === 2) {
             this._showPhaseText('DESCENT', CONFIG.COLORS.HUD_PHASE_2);
+            // Sonic boom on phase 1→2 transition
+            if (this.audio) this.audio.playSonicBoom();
+            this.vfx.emitSonicBoom(this.rocket.x, this.rocket.y);
+            this.cameras.main.shake(250, 0.008);
             // Switch audio mode
             if (this.audio) {
                 this.audio.stopReentryWhoosh();
@@ -231,20 +279,95 @@ class GameScene extends Phaser.Scene {
 
     _showPhaseText(text, color) {
         const w = CONFIG.WIDTH;
-        const phaseText = this.add.text(w / 2, CONFIG.HEIGHT / 2 - 50, text, {
-            fontSize: '32px',
+        const h = CONFIG.HEIGHT;
+        const cy = h / 2 - 50;
+
+        // Main text — starts invisible and slightly scaled up
+        const phaseText = this.add.text(w / 2, cy, text, {
+            fontSize: '36px',
             fontFamily: 'Courier New, monospace',
             color: color,
             fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(15);
+        }).setOrigin(0.5).setDepth(16).setAlpha(0).setScale(1.3).setScrollFactor(0);
 
+        // Subtitle for LANDING BURN
+        let subText = null;
+        if (text === 'LANDING BURN') {
+            subText = this.add.text(w / 2, cy + 36, 'STARTUP', {
+                fontSize: '16px',
+                fontFamily: 'Courier New, monospace',
+                color: color,
+                fontStyle: 'bold',
+                letterSpacing: 8
+            }).setOrigin(0.5).setDepth(16).setAlpha(0).setScrollFactor(0);
+        }
+
+        // Glow backdrop
+        const glow = this.add.rectangle(w / 2, cy, w * 0.6, 60, 0xffffff, 0)
+            .setDepth(15).setScrollFactor(0);
+
+        // Horizontal sweep line
+        const sweep = this.add.rectangle(0, cy, 4, 50, Phaser.Display.Color.HexStringToColor(color).color, 0.9)
+            .setDepth(17).setScrollFactor(0);
+
+        // Animate sweep line across, then reveal text
+        this.tweens.add({
+            targets: sweep,
+            x: w,
+            duration: 350,
+            ease: 'Quad.easeOut',
+            onStart: () => {
+                // Flash the glow backdrop
+                this.tweens.add({
+                    targets: glow,
+                    alpha: { from: 0, to: 0.08 },
+                    duration: 200,
+                    yoyo: true,
+                    hold: 300,
+                    onComplete: () => glow.destroy()
+                });
+            },
+            onUpdate: (tween) => {
+                // Reveal text as sweep passes center
+                if (tween.progress > 0.3 && phaseText.alpha === 0) {
+                    phaseText.setAlpha(1).setScale(1);
+                    if (subText) {
+                        this.time.delayedCall(150, () => subText.setAlpha(1));
+                    }
+                }
+            },
+            onComplete: () => sweep.destroy()
+        });
+
+        // Scale pop on appear
+        this.tweens.add({
+            targets: phaseText,
+            scaleX: { from: 1.3, to: 1 },
+            scaleY: { from: 1.3, to: 1 },
+            delay: 120,
+            duration: 200,
+            ease: 'Back.easeOut'
+        });
+
+        // Fade out after display
         this.tweens.add({
             targets: phaseText,
             alpha: 0,
-            delay: 1200,
+            y: cy - 15,
+            delay: 1500,
             duration: 500,
             onComplete: () => phaseText.destroy()
         });
+        if (subText) {
+            this.tweens.add({
+                targets: subText,
+                alpha: 0,
+                y: cy + 21,
+                delay: 1500,
+                duration: 500,
+                onComplete: () => subText.destroy()
+            });
+        }
     }
 
     _checkCollision() {
@@ -296,10 +419,21 @@ class GameScene extends Phaser.Scene {
         rocket.vx = 0;
         this.gameOver = true;
 
+        // Slow-motion landing moment
+        this.timeScale = 0.25;
+        if (this._slowmoTimer) this._slowmoTimer.remove();
+        this._slowmoTimer = this.time.delayedCall(700, () => {
+            this.timeScale = 1;
+        });
+
+        // Screen shake — gentle thump
+        this.cameras.main.shake(200, 0.004);
+
         if (this.audio) {
             this.audio.stopThrust();
             this.audio.stopLowFuelWarning();
             this.audio.stopReentryWhoosh();
+            this.audio.stopWindRush();
             this.audio.playLanding();
         }
 
@@ -310,7 +444,7 @@ class GameScene extends Phaser.Scene {
         this.vfx.emitOceanSpray(rocket.x, rocket.getBottomY());
 
         // Fireworks
-        this.time.delayedCall(400, () => {
+        this.time.delayedCall(600, () => {
             this.vfx.emitFireworks(rocket.x, rocket.y - 50);
         });
 
@@ -359,10 +493,25 @@ class GameScene extends Phaser.Scene {
         this.gameOver = true;
         this.lives--;
 
+        // Screen shake — heavy impact
+        this.cameras.main.shake(500, 0.025);
+
+        // Screen flash — orange explosion tint
+        if (this._screenFlash) {
+            this._screenFlash.setAlpha(0.35);
+            this.tweens.add({
+                targets: this._screenFlash,
+                alpha: 0,
+                duration: 400,
+                ease: 'Quad.easeOut'
+            });
+        }
+
         if (this.audio) {
             this.audio.stopThrust();
             this.audio.stopLowFuelWarning();
             this.audio.stopReentryWhoosh();
+            this.audio.stopWindRush();
             this.audio.playCrash();
         }
 
@@ -507,7 +656,7 @@ class GameScene extends Phaser.Scene {
                 fontSize: '10px',
                 fontFamily: 'Courier New, monospace',
                 color: '#4488ff'
-            }).setOrigin(0.5, 0).setDepth(10);
+            }).setOrigin(0.5, 0).setDepth(10).setScrollFactor(0);
         }
         this._windLabel.setText(`WIND ${Math.abs(this.wind).toFixed(1)}`);
     }
@@ -549,7 +698,9 @@ class GameScene extends Phaser.Scene {
             this.audio.stopThrust();
             this.audio.stopLowFuelWarning();
             this.audio.stopReentryWhoosh();
+            this.audio.stopWindRush();
         }
         if (this.vfx) this.vfx.destroy();
+        this.timeScale = 1;
     }
 }

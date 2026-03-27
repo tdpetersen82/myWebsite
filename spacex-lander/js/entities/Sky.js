@@ -71,8 +71,12 @@ class Sky {
     }
 
     draw(graphics) {
-        const w = CONFIG.WIDTH;
-        const h = CONFIG.HEIGHT;
+        const cam = this.scene.cameras.main;
+        const wv = cam.worldView;
+        const w = wv.width;
+        const h = wv.height;
+        const ox = wv.x;
+        const oy = wv.y;
         const blend = this.atmosphereBlend;
 
         graphics.clear();
@@ -81,12 +85,60 @@ class Sky {
         if (blend < 1) {
             const spaceAlpha = 1 - blend;
             graphics.fillStyle(CONFIG.COLORS.SPACE, spaceAlpha);
-            graphics.fillRect(0, 0, w, h);
+            graphics.fillRect(ox - 100, oy - 100, w + 200, h + 200);
 
             // Stars
             for (const s of this.stars) {
                 graphics.fillStyle(0xffffff, s.alpha * spaceAlpha);
                 graphics.fillCircle(s.x, s.y, s.size);
+            }
+
+            // --- EARTH CURVATURE at high altitude ---
+            if (blend < 0.6) {
+                const curveFade = 1 - blend / 0.6; // 1 at full space, 0 at atmosphere
+                const curveY = oy + h * 0.85;
+                const curveRadius = 2000;
+                const centerX = ox + w / 2;
+
+                // Atmospheric haze bands above the curve
+                const hazeColors = [
+                    { r: 10, g: 40, b: 100, a: 0.5 },
+                    { r: 30, g: 80, b: 160, a: 0.35 },
+                    { r: 60, g: 130, b: 200, a: 0.2 },
+                    { r: 100, g: 170, b: 230, a: 0.1 }
+                ];
+
+                for (let i = hazeColors.length - 1; i >= 0; i--) {
+                    const haze = hazeColors[i];
+                    const bandOffset = i * 12;
+                    const color = Phaser.Display.Color.GetColor(haze.r, haze.g, haze.b);
+                    graphics.fillStyle(color, haze.a * curveFade);
+                    graphics.beginPath();
+                    // Draw a curved arc
+                    for (let x = ox - 100; x <= ox + w + 100; x += 8) {
+                        const dx = x - centerX;
+                        const curveOffset = (dx * dx) / (curveRadius * 2);
+                        const py = curveY - bandOffset + curveOffset;
+                        if (x === ox - 100) graphics.moveTo(x, py);
+                        else graphics.lineTo(x, py);
+                    }
+                    graphics.lineTo(ox + w + 100, oy + h + 100);
+                    graphics.lineTo(ox - 100, oy + h + 100);
+                    graphics.closePath();
+                    graphics.fillPath();
+                }
+
+                // Earth's limb — bright blue-white line
+                graphics.lineStyle(2, 0x4499dd, 0.6 * curveFade);
+                graphics.beginPath();
+                for (let x = ox - 100; x <= ox + w + 100; x += 8) {
+                    const dx = x - centerX;
+                    const curveOffset = (dx * dx) / (curveRadius * 2);
+                    const py = curveY + curveOffset;
+                    if (x === ox - 100) graphics.moveTo(x, py);
+                    else graphics.lineTo(x, py);
+                }
+                graphics.strokePath();
             }
         }
 
@@ -95,17 +147,16 @@ class Sky {
             const steps = 60;
             for (let i = 0; i < steps; i++) {
                 const t = i / steps;
-                const y = t * h;
-                const segH = h / steps + 1;
+                const y = oy + t * h;
+                const segH = h / steps + 2;
 
-                // Interpolate from top color to bottom color
                 const r = Math.floor(this._lerp(10, 106, t));
                 const g = Math.floor(this._lerp(40, 170, t));
                 const b = Math.floor(this._lerp(80, 232, t));
                 const color = Phaser.Display.Color.GetColor(r, g, b);
 
                 graphics.fillStyle(color, blend * 0.85);
-                graphics.fillRect(0, y, w, segH);
+                graphics.fillRect(ox - 100, y, w + 200, segH);
             }
 
             // Clouds

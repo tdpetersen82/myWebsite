@@ -299,12 +299,32 @@ class VFXManager {
         this.finPuff.emitParticleAt(x, y, CONFIG.VFX.FIN_PUFF_QUANTITY);
     }
 
-    // --- EXPLOSION ---
+    // --- EXPLOSION (multi-stage) ---
     emitExplosion(x, y) {
-        this.explosionFlash.emitParticleAt(x, y, 1);
+        // Primary blast
+        this.explosionFlash.emitParticleAt(x, y, 2);
         this.explosionFireball.emitParticleAt(x, y, CONFIG.VFX.EXPLOSION_FIREBALL_COUNT);
         this.explosionDebris.emitParticleAt(x, y, CONFIG.VFX.EXPLOSION_DEBRIS_COUNT);
         this._createShockwave(x, y);
+
+        // Secondary explosions at offset positions
+        this.scene.time.delayedCall(150, () => {
+            const ox = x + (Math.random() - 0.5) * 60;
+            const oy = y + (Math.random() - 0.5) * 30;
+            this.explosionFireball.emitParticleAt(ox, oy, 20);
+            this.explosionFlash.emitParticleAt(ox, oy, 1);
+            this._createShockwave(ox, oy);
+        });
+
+        this.scene.time.delayedCall(350, () => {
+            const ox = x + (Math.random() - 0.5) * 80;
+            const oy = y + (Math.random() - 0.5) * 40;
+            this.explosionFireball.emitParticleAt(ox, oy, 15);
+            this.explosionDebris.emitParticleAt(ox, oy, 10);
+        });
+
+        // Rising smoke column
+        this._createSmokeColumn(x, y);
     }
 
     _createShockwave(x, y) {
@@ -356,6 +376,76 @@ class VFXManager {
                 this.fireworks.emitParticleAt(fx, fy, vfx.FIREWORK_PARTICLES);
             });
         }
+    }
+
+    // --- SMOKE COLUMN (post-explosion) ---
+    _createSmokeColumn(x, y) {
+        for (let i = 0; i < 8; i++) {
+            this.scene.time.delayedCall(i * 80, () => {
+                const sx = x + (Math.random() - 0.5) * 30;
+                this.entrySmoke.emitParticleAt(sx, y, 3);
+            });
+        }
+    }
+
+    // --- DECK BLAST (exhaust hitting ship surface) ---
+    emitDeckBlast(x, y, intensity) {
+        const count = Math.ceil(intensity * 4);
+        for (let i = 0; i < count; i++) {
+            const px = x + (Math.random() - 0.5) * 40;
+            // Emit sideways using the smoke emitter for a quick spray
+            this.landSmoke.emitParticleAt(px, y - 2, 1);
+        }
+        // Additional bright spray particles
+        if (intensity > 0.3) {
+            this.oceanSpray.emitParticleAt(x, y, Math.ceil(intensity * 3));
+        }
+    }
+
+    // --- SONIC BOOM (Mach cone visual) ---
+    emitSonicBoom(x, y) {
+        const vfx = CONFIG.VFX;
+
+        // Mach cone — expanding V-shape using two angled lines
+        const cone = this.scene.add.graphics().setDepth(9);
+        cone.lineStyle(3, 0xffffff, 0.7);
+
+        let progress = 0;
+        const duration = vfx.SONIC_BOOM_DURATION;
+        const radius = vfx.SONIC_BOOM_RADIUS;
+
+        const timer = this.scene.time.addEvent({
+            delay: 16,
+            repeat: Math.floor(duration / 16),
+            callback: () => {
+                progress += 16 / duration;
+                const r = radius * progress;
+                const alpha = 0.7 * (1 - progress);
+
+                cone.clear();
+                cone.lineStyle(3 * (1 - progress * 0.5), 0xffffff, alpha);
+                cone.beginPath();
+                cone.moveTo(x - r * 0.7, y - r * 0.5);
+                cone.lineTo(x, y);
+                cone.lineTo(x + r * 0.7, y - r * 0.5);
+                cone.strokePath();
+
+                // Inner cone
+                cone.lineStyle(2 * (1 - progress), 0xaaddff, alpha * 0.5);
+                cone.beginPath();
+                cone.moveTo(x - r * 0.4, y - r * 0.3);
+                cone.lineTo(x, y);
+                cone.lineTo(x + r * 0.4, y - r * 0.3);
+                cone.strokePath();
+
+                if (progress >= 1) {
+                    cone.destroy();
+                }
+            }
+        });
+
+        // Also emit a burst of white particles
+        this.explosionFlash.emitParticleAt(x, y, 1);
     }
 
     // --- CLEANUP ---

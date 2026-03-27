@@ -9,6 +9,10 @@ class LaunchScene extends Phaser.Scene {
         this.level = data.level || 1;
         this.score = data.score || 0;
         this.lives = data.lives !== undefined ? data.lives : CONFIG.STARTING_LIVES;
+        // Reset scene state (Phaser reuses instances)
+        this._skippable = false;
+        this._skipped = false;
+        this._transitioned = false;
     }
 
     create() {
@@ -255,14 +259,57 @@ class LaunchScene extends Phaser.Scene {
                 g.fillRect(0, i, w, 1);
             }
             // Ground
+            const groundY = h - 60 + this.bgOffset * 0.3;
             g.fillStyle(0x445533, 1);
-            g.fillRect(0, h - 60 + this.bgOffset * 0.3, w, 80);
+            g.fillRect(0, groundY, w, 80);
             // Concrete pad
             g.fillStyle(0x888888, 1);
-            g.fillRect(w / 2 - 40, h - 62 + this.bgOffset * 0.3, 80, 6);
+            g.fillRect(w / 2 - 50, groundY - 2, 100, 6);
             // Flame trench
             g.fillStyle(0x555555, 1);
-            g.fillRect(w / 2 - 15, h - 56 + this.bgOffset * 0.3, 30, 10);
+            g.fillRect(w / 2 - 15, groundY + 4, 30, 10);
+
+            // --- LAUNCH TOWER ---
+            const towerX = w / 2 + 30;
+            const towerBaseY = groundY;
+            const towerTopY = towerBaseY - 130;
+            const towerW = 6;
+
+            // Main tower structure
+            g.fillStyle(0x999999, 1);
+            g.fillRect(towerX - towerW / 2, towerTopY, towerW, towerBaseY - towerTopY);
+
+            // Cross-beams
+            g.lineStyle(1, 0x888888, 0.8);
+            for (let ty = towerTopY + 15; ty < towerBaseY; ty += 20) {
+                g.beginPath();
+                g.moveTo(towerX - towerW / 2, ty);
+                g.lineTo(towerX + towerW / 2, ty + 15);
+                g.strokePath();
+                g.beginPath();
+                g.moveTo(towerX + towerW / 2, ty);
+                g.lineTo(towerX - towerW / 2, ty + 15);
+                g.strokePath();
+            }
+
+            // Crew arm / umbilical (extends toward rocket)
+            const armY = towerBaseY - 85;
+            g.fillStyle(0xaaaaaa, 1);
+            g.fillRect(towerX - towerW / 2 - 18, armY, 20, 3);
+
+            // Strongback / clamp arm (lower)
+            const clampY = towerBaseY - 45;
+            g.fillStyle(0x888888, 1);
+            g.fillRect(towerX - towerW / 2 - 22, clampY, 24, 4);
+
+            // Tower top platform
+            g.fillStyle(0xaaaaaa, 1);
+            g.fillRect(towerX - 8, towerTopY - 2, 16, 4);
+
+            // Red warning light at top
+            const blink = Math.sin(Date.now() / 300) > 0 ? 0.8 : 0.2;
+            g.fillStyle(0xff2200, blink);
+            g.fillCircle(towerX, towerTopY - 4, 2);
         } else if (this.bgPhase === 'sky') {
             // Upper atmosphere — transitioning to dark
             for (let i = 0; i < h; i++) {
@@ -274,7 +321,7 @@ class LaunchScene extends Phaser.Scene {
                 g.fillRect(0, i, w, 1);
             }
         } else {
-            // Space — clean dark
+            // Space — clean dark with earth below
             g.fillStyle(0x080810, 1);
             g.fillRect(0, 0, w, h);
             CONFIG.VFX.STAR_LAYERS.forEach(layer => {
@@ -283,6 +330,50 @@ class LaunchScene extends Phaser.Scene {
                     g.fillCircle(Math.random() * w, Math.random() * h, layer.sizeMin + Math.random() * (layer.sizeMax - layer.sizeMin));
                 }
             });
+
+            // Earth curvature at the bottom
+            const earthY = h * 0.75;
+            const curveRadius = 3000;
+            const centerX = w / 2;
+
+            // Atmospheric haze bands
+            const hazeColors = [
+                { r: 10, g: 40, b: 100, a: 0.6 },
+                { r: 30, g: 80, b: 160, a: 0.4 },
+                { r: 60, g: 130, b: 200, a: 0.25 },
+                { r: 100, g: 170, b: 230, a: 0.12 }
+            ];
+
+            for (let i = hazeColors.length - 1; i >= 0; i--) {
+                const haze = hazeColors[i];
+                const bandOffset = i * 15;
+                const color = Phaser.Display.Color.GetColor(haze.r, haze.g, haze.b);
+                g.fillStyle(color, haze.a);
+                g.beginPath();
+                for (let x = -10; x <= w + 10; x += 8) {
+                    const dx = x - centerX;
+                    const curveOffset = (dx * dx) / (curveRadius * 2);
+                    const py = earthY - bandOffset + curveOffset;
+                    if (x === -10) g.moveTo(x, py);
+                    else g.lineTo(x, py);
+                }
+                g.lineTo(w + 10, h + 10);
+                g.lineTo(-10, h + 10);
+                g.closePath();
+                g.fillPath();
+            }
+
+            // Earth's limb line
+            g.lineStyle(2, 0x4499dd, 0.7);
+            g.beginPath();
+            for (let x = -10; x <= w + 10; x += 8) {
+                const dx = x - centerX;
+                const curveOffset = (dx * dx) / (curveRadius * 2);
+                const py = earthY + curveOffset;
+                if (x === -10) g.moveTo(x, py);
+                else g.lineTo(x, py);
+            }
+            g.strokePath();
         }
     }
 

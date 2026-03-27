@@ -115,14 +115,14 @@ class MenuScene extends Phaser.Scene {
         // High score
         const highScore = localStorage.getItem(CONFIG.HIGH_SCORE_KEY) || 0;
         if (highScore > 0) {
-            this.add.text(w / 2, h - 68, 'HIGH SCORE', {
+            this.add.text(w / 2, h - 88, 'HIGH SCORE', {
                 fontSize: '9px',
                 fontFamily: 'Arial, Helvetica, sans-serif',
                 color: '#556677',
                 letterSpacing: 2
             }).setOrigin(0.5);
 
-            this.add.text(w / 2, h - 52, `${highScore}`, {
+            this.add.text(w / 2, h - 72, `${highScore}`, {
                 fontSize: '18px',
                 fontFamily: 'Arial, Helvetica, sans-serif',
                 color: '#ffffff',
