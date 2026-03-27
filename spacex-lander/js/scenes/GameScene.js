@@ -16,6 +16,8 @@ class GameScene extends Phaser.Scene {
         this._prevPhase = 1;
         this.timeScale = 1;
         this._slowmoTimer = null;
+        this._handoverCountdown = CONFIG.HANDOVER_COUNTDOWN || 3;
+        this._playerHasControl = false;
     }
 
     create() {
@@ -44,7 +46,7 @@ class GameScene extends Phaser.Scene {
         const fuelPenalty = this.level >= lvl.FUEL_PENALTY_START_LEVEL
             ? Math.min(lvl.FUEL_PENALTY_MAX, (this.level - lvl.FUEL_PENALTY_START_LEVEL) * lvl.FUEL_PENALTY_PER_LEVEL)
             : 0;
-        this.rocket = new Rocket(this, startX, 10);
+        this.rocket = new Rocket(this, startX, CONFIG.START_Y || -120);
         this.rocket.fuel = CONFIG.FUEL_MAX * (1 - fuelPenalty);
         this.rocketGraphics = this.add.graphics().setDepth(4);
 
@@ -100,27 +102,69 @@ class GameScene extends Phaser.Scene {
         this._legsAutoDeployed = false;
         this._phaseTextTimer = null;
 
+        // Handover countdown text (center screen)
+        this._handoverText = this.add.text(w / 2, h / 2 + 20, '', {
+            fontSize: '48px',
+            fontFamily: 'Courier New, monospace',
+            color: '#ffffff',
+            fontStyle: 'bold',
+            align: 'center'
+        }).setOrigin(0.5).setDepth(16);
+
+        this._handoverLabel = this.add.text(w / 2, h / 2 - 20, 'CONTROL IN', {
+            fontSize: '14px',
+            fontFamily: 'Courier New, monospace',
+            color: '#88aacc',
+            letterSpacing: 4
+        }).setOrigin(0.5).setDepth(16);
+
         // Phase overlay text
         this._showPhaseText('RE-ENTRY', CONFIG.COLORS.HUD_PHASE_1);
 
-        // --- CAMERA ZOOM SETUP ---
-        // Pin all HUD/overlay elements so they don't move with camera
-        const pinToScreen = (obj) => { if (obj) obj.setScrollFactor(0); };
-        Object.values(this.hudTexts).forEach(pinToScreen);
-        pinToScreen(this.fuelBarBg);
-        pinToScreen(this.fuelBarFg);
-        pinToScreen(this.pauseOverlay);
-        pinToScreen(this.pauseText);
-        pinToScreen(this.muteText);
-        pinToScreen(this.windGraphics);
-        if (this._windLabel) pinToScreen(this._windLabel);
+        // --- DUAL CAMERA SETUP ---
+        // HUD camera: never zooms/scrolls, renders only HUD elements
+        // Main camera: zooms/scrolls, renders only game world
+        this.hudCamera = this.cameras.add(0, 0, w, h);
+        this.hudCamera.setName('hud');
 
-        // Screen flash overlay for explosions (pinned to screen)
+        // Collect all HUD objects to isolate them from main camera
+        this._hudObjects = [
+            ...Object.values(this.hudTexts),
+            this.fuelBarBg, this.fuelBarFg,
+            this.pauseOverlay, this.pauseText,
+            this.muteText, this.windGraphics,
+            this._handoverText, this._handoverLabel
+        ].filter(Boolean);
+
+        // Collect world objects to isolate from HUD camera
+        this._worldObjects = [
+            this.skyGraphics, this.oceanGraphics,
+            this.shipGraphics, this.rocketGraphics
+        ];
+
+        // HUD objects: hide from main camera
+        this._hudObjects.forEach(obj => this.cameras.main.ignore(obj));
+
+        // World objects: hide from HUD camera
+        this._worldObjects.forEach(obj => this.hudCamera.ignore(obj));
+
+        // VFX particles: hide from HUD camera
+        if (this.vfx) {
+            const vfxEmitters = [
+                this.vfx.entryCore, this.vfx.entryFlame, this.vfx.entrySmoke,
+                this.vfx.landCore, this.vfx.landFlame, this.vfx.landSmoke,
+                this.vfx.reentryGlow, this.vfx.finPuff,
+                this.vfx.explosionFireball, this.vfx.explosionFlash, this.vfx.explosionDebris,
+                this.vfx.oceanSpray, this.vfx.fireworks
+            ];
+            vfxEmitters.forEach(e => { if (e) this.hudCamera.ignore(e); });
+        }
+
+        // Screen flash overlay for explosions (on HUD camera, not zoomed)
         this._screenFlash = this.add.rectangle(
-            CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2,
-            CONFIG.WIDTH * 3, CONFIG.HEIGHT * 3,
-            0xff6600, 0
-        ).setScrollFactor(0).setDepth(25);
+            w / 2, h / 2, w, h, 0xff6600, 0
+        ).setDepth(25);
+        this.cameras.main.ignore(this._screenFlash);
     }
 
     // --- UPDATE LOOP ---
@@ -132,13 +176,30 @@ class GameScene extends Phaser.Scene {
         const ocean = this.ocean;
         const ship = this.droneShip;
 
+        // --- HANDOVER COUNTDOWN ---
+        if (!this._playerHasControl) {
+            this._handoverCountdown -= delta / 1000;
+            if (this._handoverCountdown <= 0) {
+                this._playerHasControl = true;
+                this._handoverText.setVisible(false);
+                this._handoverLabel.setVisible(false);
+                if (this.audio) this.audio.playCountdownBeep(true);
+            } else {
+                const sec = Math.ceil(this._handoverCountdown);
+                this._handoverText.setText(sec.toString());
+                if (this.audio && Math.ceil(this._handoverCountdown + delta / 1000) !== sec) {
+                    this.audio.playCountdownBeep(false);
+                }
+            }
+        }
+
         // Calculate altitude
         const altitude = rocket.getAltitude(ocean, ship);
 
         // --- DYNAMIC CAMERA ZOOM ---
         const cam = this.cameras.main;
         const targetZoom = Phaser.Math.Clamp(
-            Phaser.Math.Linear(1.35, 0.55, altitude / 4000),
+            Phaser.Math.Linear(1.35, 0.55, altitude / 5000),
             0.55, 1.35
         );
         const newZoom = cam.zoom + (targetZoom - cam.zoom) * 0.025;
@@ -153,7 +214,7 @@ class GameScene extends Phaser.Scene {
         ocean.update(delta);
         ship.update(delta, ocean);
         ship.updateProximity(altitude);
-        rocket.update(delta, CONFIG.GRAVITY, this.wind, this.currentPhase);
+        rocket.update(delta, CONFIG.GRAVITY, this.wind, this.currentPhase, this._playerHasControl);
 
         // Auto-deploy legs
         if (!this._legsAutoDeployed && altitude < CONFIG.LEG_DEPLOY_ALTITUDE && this.currentPhase === 3) {
@@ -282,33 +343,39 @@ class GameScene extends Phaser.Scene {
         const h = CONFIG.HEIGHT;
         const cy = h / 2 - 50;
 
+        // Helper: register object on HUD camera only
+        const hudOnly = (obj) => {
+            if (this.hudCamera) this.cameras.main.ignore(obj);
+            return obj;
+        };
+
         // Main text — starts invisible and slightly scaled up
-        const phaseText = this.add.text(w / 2, cy, text, {
+        const phaseText = hudOnly(this.add.text(w / 2, cy, text, {
             fontSize: '36px',
             fontFamily: 'Courier New, monospace',
             color: color,
             fontStyle: 'bold'
-        }).setOrigin(0.5).setDepth(16).setAlpha(0).setScale(1.3).setScrollFactor(0);
+        }).setOrigin(0.5).setDepth(16).setAlpha(0).setScale(1.3));
 
         // Subtitle for LANDING BURN
         let subText = null;
         if (text === 'LANDING BURN') {
-            subText = this.add.text(w / 2, cy + 36, 'STARTUP', {
+            subText = hudOnly(this.add.text(w / 2, cy + 36, 'STARTUP', {
                 fontSize: '16px',
                 fontFamily: 'Courier New, monospace',
                 color: color,
                 fontStyle: 'bold',
                 letterSpacing: 8
-            }).setOrigin(0.5).setDepth(16).setAlpha(0).setScrollFactor(0);
+            }).setOrigin(0.5).setDepth(16).setAlpha(0));
         }
 
         // Glow backdrop
-        const glow = this.add.rectangle(w / 2, cy, w * 0.6, 60, 0xffffff, 0)
-            .setDepth(15).setScrollFactor(0);
+        const glow = hudOnly(this.add.rectangle(w / 2, cy, w * 0.6, 60, 0xffffff, 0)
+            .setDepth(15));
 
         // Horizontal sweep line
-        const sweep = this.add.rectangle(0, cy, 4, 50, Phaser.Display.Color.HexStringToColor(color).color, 0.9)
-            .setDepth(17).setScrollFactor(0);
+        const sweep = hudOnly(this.add.rectangle(0, cy, 4, 50, Phaser.Display.Color.HexStringToColor(color).color, 0.9)
+            .setDepth(17));
 
         // Animate sweep line across, then reveal text
         this.tweens.add({
@@ -656,7 +723,8 @@ class GameScene extends Phaser.Scene {
                 fontSize: '10px',
                 fontFamily: 'Courier New, monospace',
                 color: '#4488ff'
-            }).setOrigin(0.5, 0).setDepth(10).setScrollFactor(0);
+            }).setOrigin(0.5, 0).setDepth(10);
+            if (this.hudCamera) this.cameras.main.ignore(this._windLabel);
         }
         this._windLabel.setText(`WIND ${Math.abs(this.wind).toFixed(1)}`);
     }
@@ -701,6 +769,10 @@ class GameScene extends Phaser.Scene {
             this.audio.stopWindRush();
         }
         if (this.vfx) this.vfx.destroy();
+        if (this.hudCamera) {
+            this.cameras.remove(this.hudCamera);
+            this.hudCamera = null;
+        }
         this.timeScale = 1;
     }
 }

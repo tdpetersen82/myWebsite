@@ -28,14 +28,16 @@ const CONFIG = {
     LAND_MAX_ANGLE: 10,
 
     // Phase altitude thresholds
-    PHASE_2_ALTITUDE: 2000,
-    PHASE_3_ALTITUDE: 300,
-    LEG_DEPLOY_ALTITUDE: 250,
+    PHASE_2_ALTITUDE: 2500,
+    PHASE_3_ALTITUDE: 400,
+    LEG_DEPLOY_ALTITUDE: 350,
 
     // Starting conditions
-    START_VY: 180,                  // Initial downward velocity
+    START_VY: 260,                  // Initial downward velocity (fast re-entry)
+    START_Y: -120,                  // Start above visible area for more distance
     ALTITUDE_SCALE: 8,              // Pixel-to-altitude unit scale
     STARTING_LIVES: 3,
+    HANDOVER_COUNTDOWN: 3,          // Seconds of auto-descent before human control
 
     // Scoring
     BASE_LANDING_SCORE: 200,

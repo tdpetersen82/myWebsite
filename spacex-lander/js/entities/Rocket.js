@@ -35,7 +35,7 @@ class Rocket {
         this.steeringRight = false;
     }
 
-    update(delta, gravity, wind, phase) {
+    update(delta, gravity, wind, phase, playerHasControl) {
         if (!this.alive || this.landed) return;
 
         const dt = delta / 1000;
@@ -44,10 +44,10 @@ class Rocket {
         const cursors = this.scene.cursors;
         const wasd = this.scene.wasd;
 
-        // Input
-        const leftPressed = cursors.left.isDown || (wasd && wasd.left.isDown);
-        const rightPressed = cursors.right.isDown || (wasd && wasd.right.isDown);
-        const thrustPressed = cursors.up.isDown || (wasd && wasd.up.isDown);
+        // Input (disabled during handover countdown)
+        const leftPressed = playerHasControl && (cursors.left.isDown || (wasd && wasd.left.isDown));
+        const rightPressed = playerHasControl && (cursors.right.isDown || (wasd && wasd.right.isDown));
+        const thrustPressed = playerHasControl && (cursors.up.isDown || (wasd && wasd.up.isDown));
 
         this.steeringLeft = leftPressed;
         this.steeringRight = rightPressed;
@@ -362,33 +362,33 @@ class Rocket {
             const attachX = side * (w / 2);
             const attach = rotate(attachX, legAttachY);
 
-            // Leg extends outward and downward
+            // Compute foot in body-local space, then rotate to world
             const legRad = Phaser.Math.DegToRad(legAngleDeg * side);
-            const totalRad = Phaser.Math.DegToRad(this.angle) + legRad;
-
-            const footX = attach.x + Math.sin(totalRad) * legLength;
-            const footY = attach.y + Math.cos(totalRad) * legLength;
+            const localFootX = attachX + Math.sin(legRad) * legLength;
+            const localFootY = legAttachY + Math.cos(legRad) * legLength;
+            const foot = rotate(localFootX, localFootY);
 
             // Leg strut
             graphics.lineStyle(1.5, CONFIG.COLORS.LANDING_LEG, 0.9);
             graphics.beginPath();
             graphics.moveTo(attach.x, attach.y);
-            graphics.lineTo(footX, footY);
+            graphics.lineTo(foot.x, foot.y);
             graphics.strokePath();
 
             // Foot pad
             if (deploy > 0.5) {
                 const footAlpha = (deploy - 0.5) * 2;
-                const perpRad = totalRad + Math.PI / 2;
-                const fx1 = footX - Math.cos(perpRad) * footWidth;
-                const fy1 = footY + Math.sin(perpRad) * footWidth;
-                const fx2 = footX + Math.cos(perpRad) * footWidth;
-                const fy2 = footY - Math.sin(perpRad) * footWidth;
+                // Perpendicular to leg direction in world space
+                const dx = foot.x - attach.x;
+                const dy = foot.y - attach.y;
+                const len = Math.sqrt(dx * dx + dy * dy) || 1;
+                const perpX = -dy / len * footWidth;
+                const perpY = dx / len * footWidth;
 
                 graphics.lineStyle(2, CONFIG.COLORS.LEG_FOOT, footAlpha);
                 graphics.beginPath();
-                graphics.moveTo(fx1, fy1);
-                graphics.lineTo(fx2, fy2);
+                graphics.moveTo(foot.x - perpX, foot.y - perpY);
+                graphics.lineTo(foot.x + perpX, foot.y + perpY);
                 graphics.strokePath();
             }
         }
