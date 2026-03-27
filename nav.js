@@ -1,5 +1,5 @@
 // ============================================================
-// Arcade Game Hub — Navigation Drawer Component
+// Arcade Game Hub — Persistent Top Navigation Bar
 // Include this script on every page: <script src="nav.js"></script>
 // ============================================================
 
@@ -79,10 +79,8 @@
     if (!SIZE_PRESETS[currentSize]) currentSize = DEFAULT_SIZE;
 
     var totalGames = GAME_CATALOG.reduce(function (sum, cat) { return sum + cat.games.length; }, 0);
-    // Extract folder name for games in subdirectories (e.g., /snake/ or /snake/index.html)
     var pathParts = location.pathname.replace(/\/index\.html$/, '/').split('/').filter(Boolean);
     var lastPart = pathParts.length > 0 ? pathParts[pathParts.length - 1] : '';
-    // Check if we're inside a game subfolder (not root index)
     var allGameFolders = GAME_CATALOG.reduce(function (arr, cat) { return arr.concat(cat.games.map(function (g) { return g.url.replace(/\/$/, ''); })); }, []);
     var inSubfolder = allGameFolders.indexOf(lastPart) !== -1;
     var basePath = inSubfolder ? '../' : '';
@@ -91,60 +89,97 @@
     // ── Inject CSS ──────────────────────────────────────────
     var style = document.createElement('style');
     style.textContent = '\
-/* Nav Drawer Styles */\
-.nav-toggle{position:fixed;top:16px;left:16px;z-index:10001;width:48px;height:48px;border-radius:50%;border:none;cursor:pointer;background:linear-gradient(135deg,#667eea 0%,#764ba2 100%);box-shadow:0 4px 20px rgba(102,126,234,0.5);display:flex;align-items:center;justify-content:center;flex-direction:column;gap:5px;padding:0;transition:box-shadow .3s ease,transform .2s ease}\
-.nav-toggle:hover{box-shadow:0 4px 30px rgba(102,126,234,0.8);transform:scale(1.08)}\
-.nav-toggle:active{transform:scale(0.95)}\
-.nav-toggle .bar{display:block;width:22px;height:2.5px;background:#fff;border-radius:2px;transition:transform .3s ease,opacity .3s ease}\
-.nav-open .nav-toggle .bar:nth-child(1){transform:rotate(45deg) translate(5px,5px)}\
-.nav-open .nav-toggle .bar:nth-child(2){opacity:0}\
-.nav-open .nav-toggle .bar:nth-child(3){transform:rotate(-45deg) translate(5px,-5px)}\
+/* ── Site Nav Bar ── */\
+.site-nav{position:fixed;top:0;left:0;width:100%;z-index:10000;background:rgba(15,12,41,0.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:0 2px 20px rgba(0,0,0,0.3);font-family:"Segoe UI",Tahoma,Geneva,Verdana,sans-serif}\
+.site-nav-inner{max-width:1400px;margin:0 auto;display:flex;align-items:center;height:52px;padding:0 16px;gap:4px}\
 \
-.nav-overlay{position:fixed;top:0;left:0;width:100%;height:100%;background:rgba(0,0,0,0.5);z-index:9998;opacity:0;visibility:hidden;transition:opacity .3s ease,visibility .3s ease;backdrop-filter:blur(4px);-webkit-backdrop-filter:blur(4px)}\
-.nav-open .nav-overlay{opacity:1;visibility:visible}\
+/* Home / Brand */\
+.site-nav-home{display:flex;align-items:center;gap:8px;color:#fff;text-decoration:none;font-weight:700;font-size:0.95em;padding:6px 14px;border-radius:10px;transition:background .2s;white-space:nowrap;flex-shrink:0}\
+.site-nav-home:hover{background:rgba(255,255,255,0.08)}\
+.site-nav-home-icon{font-size:1.3em}\
 \
-.nav-drawer{position:fixed;top:0;left:0;width:320px;height:100%;z-index:9999;background:rgba(15,12,41,0.97);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);box-shadow:4px 0 40px rgba(0,0,0,0.5);transform:translateX(-100%);transition:transform .35s cubic-bezier(0.4,0,0.2,1);display:flex;flex-direction:column;overflow:hidden}\
-.nav-open .nav-drawer{transform:translateX(0)}\
+/* Category triggers (desktop) */\
+.site-nav-cats{display:flex;list-style:none;margin:0;padding:0;gap:2px;flex:1;justify-content:center}\
+.site-nav-cat{position:relative}\
+.site-nav-cat-btn{display:flex;align-items:center;gap:5px;padding:8px 12px;border:none;background:none;color:rgba(255,255,255,0.75);font-size:0.85em;font-weight:600;cursor:pointer;border-radius:8px;transition:background .2s,color .2s;white-space:nowrap;font-family:inherit}\
+.site-nav-cat-btn:hover,.site-nav-cat.open .site-nav-cat-btn{background:rgba(255,255,255,0.1);color:#fff}\
+.site-nav-cat-btn .chevron{font-size:0.65em;opacity:0.5;transition:transform .2s}\
+.site-nav-cat.open .site-nav-cat-btn .chevron{transform:rotate(180deg)}\
 \
-.nav-drawer-header{padding:24px 20px 16px;border-bottom:1px solid rgba(255,255,255,0.08)}\
-.nav-drawer-brand{display:flex;align-items:center;gap:12px;margin-bottom:16px;text-decoration:none}\
-.nav-drawer-brand-icon{width:42px;height:42px;border-radius:12px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;font-size:1.4em;flex-shrink:0}\
-.nav-drawer-brand h2{color:#fff;font-size:1.15em;margin:0;line-height:1.2}\
-.nav-drawer-brand small{color:rgba(255,255,255,0.5);font-size:0.75em;font-weight:400}\
+/* Dropdown panels */\
+.site-nav-dropdown{position:absolute;top:100%;left:50%;transform:translateX(-50%);min-width:200px;background:rgba(15,12,41,0.98);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:8px;box-shadow:0 12px 40px rgba(0,0,0,0.5);opacity:0;visibility:hidden;transition:opacity .15s,visibility .15s;margin-top:4px}\
+.site-nav-cat.open .site-nav-dropdown{opacity:1;visibility:visible}\
+.site-nav-dropdown a{display:flex;align-items:center;gap:8px;padding:8px 12px;color:rgba(255,255,255,0.75);text-decoration:none;font-size:0.88em;border-radius:8px;transition:background .15s,color .15s}\
+.site-nav-dropdown a:hover{background:rgba(102,126,234,0.15);color:#fff}\
+.site-nav-dropdown a.active{color:#a78bfa;background:rgba(102,126,234,0.1);font-weight:600}\
+.site-nav-dropdown .game-icon{width:22px;text-align:center;flex-shrink:0}\
 \
-.nav-search{position:relative}\
-.nav-search input{width:100%;padding:10px 14px 10px 38px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#fff;font-size:0.9em;outline:none;transition:border-color .2s,background .2s}\
-.nav-search input::placeholder{color:rgba(255,255,255,0.35)}\
-.nav-search input:focus{border-color:rgba(102,126,234,0.6);background:rgba(255,255,255,0.1)}\
-.nav-search-icon{position:absolute;left:12px;top:50%;transform:translateY(-50%);color:rgba(255,255,255,0.35);font-size:0.9em;pointer-events:none}\
+/* Wide dropdown for Retro Arcade (16 games) */\
+.site-nav-dropdown.wide{min-width:380px;display:grid;grid-template-columns:1fr 1fr;gap:2px}\
 \
-.nav-drawer-body{flex:1;overflow-y:auto;padding:12px 0;scrollbar-width:thin;scrollbar-color:rgba(102,126,234,0.3) transparent}\
-.nav-drawer-body::-webkit-scrollbar{width:6px}\
-.nav-drawer-body::-webkit-scrollbar-track{background:transparent}\
-.nav-drawer-body::-webkit-scrollbar-thumb{background:rgba(102,126,234,0.3);border-radius:3px}\
-.nav-drawer-body::-webkit-scrollbar-thumb:hover{background:rgba(102,126,234,0.5)}\
+/* Tools area (right side) */\
+.site-nav-tools{display:flex;align-items:center;gap:4px;flex-shrink:0}\
 \
-.nav-home-link{display:flex;align-items:center;gap:10px;padding:10px 20px;color:rgba(255,255,255,0.8);text-decoration:none;font-weight:600;font-size:0.95em;transition:background .2s,color .2s;margin-bottom:4px}\
-.nav-home-link:hover{background:rgba(255,255,255,0.06);color:#fff}\
-.nav-home-link.active{color:#667eea;background:rgba(102,126,234,0.1)}\
+/* Search */\
+.site-nav-search{position:relative}\
+.site-nav-search-btn{width:36px;height:36px;border:none;background:none;color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;border-radius:8px;transition:background .2s,color .2s;display:flex;align-items:center;justify-content:center}\
+.site-nav-search-btn:hover{background:rgba(255,255,255,0.1);color:#fff}\
+.site-nav-search-dropdown{position:absolute;top:100%;right:0;width:320px;background:rgba(15,12,41,0.98);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,0.5);opacity:0;visibility:hidden;transition:opacity .15s,visibility .15s;margin-top:4px}\
+.site-nav-search.open .site-nav-search-dropdown{opacity:1;visibility:visible}\
+.site-nav-search-dropdown input{width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#fff;font-size:0.9em;outline:none;transition:border-color .2s;font-family:inherit}\
+.site-nav-search-dropdown input::placeholder{color:rgba(255,255,255,0.35)}\
+.site-nav-search-dropdown input:focus{border-color:rgba(102,126,234,0.6)}\
+.site-nav-search-results{max-height:300px;overflow-y:auto;margin-top:8px;scrollbar-width:thin;scrollbar-color:rgba(102,126,234,0.3) transparent}\
+.site-nav-search-results::-webkit-scrollbar{width:5px}\
+.site-nav-search-results::-webkit-scrollbar-thumb{background:rgba(102,126,234,0.3);border-radius:3px}\
+.site-nav-search-results a{display:flex;align-items:center;gap:8px;padding:8px 10px;color:rgba(255,255,255,0.75);text-decoration:none;font-size:0.88em;border-radius:8px;transition:background .15s,color .15s}\
+.site-nav-search-results a:hover{background:rgba(102,126,234,0.15);color:#fff}\
+.site-nav-search-results .search-cat{color:rgba(255,255,255,0.35);font-size:0.75em;font-weight:700;text-transform:uppercase;letter-spacing:0.5px;padding:8px 10px 4px}\
+.site-nav-search-none{color:rgba(255,255,255,0.35);text-align:center;padding:16px;font-size:0.9em}\
 \
-.nav-category{margin-bottom:4px}\
-.nav-category-header{display:flex;align-items:center;gap:8px;padding:10px 20px;cursor:pointer;color:rgba(255,255,255,0.6);font-size:0.8em;font-weight:700;text-transform:uppercase;letter-spacing:0.8px;transition:color .2s;user-select:none;-webkit-user-select:none}\
-.nav-category-header:hover{color:rgba(255,255,255,0.9)}\
-.nav-category-header .cat-chevron{margin-left:auto;transition:transform .25s ease;font-size:0.7em}\
-.nav-category.collapsed .cat-chevron{transform:rotate(-90deg)}\
-.nav-category.collapsed .nav-game-list{display:none}\
+/* Size selector */\
+.site-nav-size{position:relative}\
+.site-nav-size-btn{width:36px;height:36px;border:none;background:none;color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;border-radius:8px;transition:background .2s,color .2s;display:flex;align-items:center;justify-content:center}\
+.site-nav-size-btn:hover{background:rgba(255,255,255,0.1);color:#fff}\
+.site-nav-size-dropdown{position:absolute;top:100%;right:0;width:220px;background:rgba(15,12,41,0.98);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,0.5);opacity:0;visibility:hidden;transition:opacity .15s,visibility .15s;margin-top:4px}\
+.site-nav-size.open .site-nav-size-dropdown{opacity:1;visibility:visible}\
+.nav-size-label{display:block;color:rgba(255,255,255,0.5);font-size:0.75em;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}\
+.nav-size-buttons{display:flex;gap:6px}\
+.nav-size-btn{flex:1;padding:6px 4px;border:1px solid rgba(255,255,255,0.15);border-radius:8px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);font-size:0.78em;cursor:pointer;transition:all .2s;font-family:inherit}\
+.nav-size-btn:hover{background:rgba(255,255,255,0.1);color:#fff}\
+.nav-size-btn.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-color:transparent;font-weight:600}\
 \
-.nav-game-list{list-style:none;margin:0;padding:0}\
-.nav-game-item a{display:flex;align-items:center;gap:10px;padding:9px 20px 9px 32px;color:rgba(255,255,255,0.7);text-decoration:none;font-size:0.9em;transition:background .15s,color .15s,transform .15s;border-left:3px solid transparent}\
-.nav-game-item a:hover{background:rgba(255,255,255,0.05);color:#fff;transform:translateX(2px)}\
-.nav-game-item a.active{color:#a78bfa;border-left-color:#667eea;background:rgba(102,126,234,0.08);font-weight:600}\
-.nav-game-item .game-icon{width:24px;text-align:center;font-size:1.05em;flex-shrink:0}\
+/* Mobile hamburger */\
+.site-nav-mobile-btn{display:none;width:36px;height:36px;border:none;background:none;cursor:pointer;border-radius:8px;transition:background .2s;flex-direction:column;align-items:center;justify-content:center;gap:4px;padding:0}\
+.site-nav-mobile-btn:hover{background:rgba(255,255,255,0.1)}\
+.site-nav-mobile-btn .bar{display:block;width:18px;height:2px;background:#fff;border-radius:2px;transition:transform .3s,opacity .3s}\
+body.mobile-nav-open .site-nav-mobile-btn .bar:nth-child(1){transform:rotate(45deg) translate(4px,4px)}\
+body.mobile-nav-open .site-nav-mobile-btn .bar:nth-child(2){opacity:0}\
+body.mobile-nav-open .site-nav-mobile-btn .bar:nth-child(3){transform:rotate(-45deg) translate(4px,-4px)}\
 \
-.nav-no-results{padding:20px;text-align:center;color:rgba(255,255,255,0.35);font-size:0.9em}\
+/* Mobile panel */\
+.site-nav-mobile-panel{display:none;background:rgba(15,12,41,0.98);border-top:1px solid rgba(255,255,255,0.08);max-height:0;overflow:hidden;transition:max-height .35s cubic-bezier(0.4,0,0.2,1)}\
+body.mobile-nav-open .site-nav-mobile-panel{max-height:calc(100vh - 52px);overflow-y:auto}\
+.site-nav-mobile-panel .mobile-search{padding:12px 16px}\
+.site-nav-mobile-panel .mobile-search input{width:100%;padding:10px 14px;border-radius:10px;border:1px solid rgba(255,255,255,0.1);background:rgba(255,255,255,0.06);color:#fff;font-size:0.9em;outline:none;font-family:inherit}\
+.site-nav-mobile-panel .mobile-search input::placeholder{color:rgba(255,255,255,0.35)}\
+.site-nav-mobile-panel .mobile-search input:focus{border-color:rgba(102,126,234,0.6)}\
+.site-nav-mobile-panel .mobile-cat{border-bottom:1px solid rgba(255,255,255,0.05)}\
+.site-nav-mobile-panel .mobile-cat-header{display:flex;align-items:center;gap:8px;padding:12px 16px;color:rgba(255,255,255,0.7);font-size:0.9em;font-weight:600;cursor:pointer;transition:background .2s}\
+.site-nav-mobile-panel .mobile-cat-header:hover{background:rgba(255,255,255,0.05)}\
+.site-nav-mobile-panel .mobile-cat-header .chevron{margin-left:auto;font-size:0.6em;transition:transform .2s}\
+.site-nav-mobile-panel .mobile-cat.collapsed .chevron{transform:rotate(-90deg)}\
+.site-nav-mobile-panel .mobile-cat.collapsed .mobile-game-list{display:none}\
+.site-nav-mobile-panel .mobile-game-list{list-style:none;margin:0;padding:0 0 8px}\
+.site-nav-mobile-panel .mobile-game-list a{display:flex;align-items:center;gap:10px;padding:8px 16px 8px 36px;color:rgba(255,255,255,0.65);text-decoration:none;font-size:0.88em;transition:background .15s,color .15s}\
+.site-nav-mobile-panel .mobile-game-list a:hover{background:rgba(255,255,255,0.05);color:#fff}\
+.site-nav-mobile-panel .mobile-game-list a.active{color:#a78bfa;font-weight:600}\
+.site-nav-mobile-panel .mobile-size{padding:12px 16px;border-top:1px solid rgba(255,255,255,0.08)}\
+.site-nav-mobile-panel .mobile-no-results{padding:16px;text-align:center;color:rgba(255,255,255,0.35);font-size:0.88em;display:none}\
 \
-.nav-drawer-footer{padding:16px 20px;border-top:1px solid rgba(255,255,255,0.08);text-align:center}\
-.nav-ad-slot{min-height:100px;background:rgba(255,255,255,0.03);border:1px dashed rgba(255,255,255,0.1);border-radius:8px;display:flex;align-items:center;justify-content:center;color:rgba(255,255,255,0.15);font-size:0.75em;letter-spacing:1px;text-transform:uppercase}\
+/* Mobile overlay */\
+.site-nav-mobile-overlay{position:fixed;top:52px;left:0;width:100%;height:calc(100vh - 52px);background:rgba(0,0,0,0.5);z-index:9998;opacity:0;visibility:hidden;transition:opacity .3s,visibility .3s}\
+body.mobile-nav-open .site-nav-mobile-overlay{opacity:1;visibility:visible}\
 \
 /* Ad slots for page content */\
 .ad-slot{margin:20px auto;text-align:center;min-height:90px;background:rgba(0,0,0,0.02);border-radius:8px;overflow:hidden;width:100%}\
@@ -155,206 +190,405 @@
 .ad-slot-banner{width:100%;max-width:320px;min-height:50px}\
 \
 /* Body scroll lock */\
-body.nav-open{overflow:hidden}\
+body.mobile-nav-open{overflow:hidden}\
 \
-/* Mobile */\
-@media(max-width:768px){\
-.nav-drawer{width:100%}\
-.nav-toggle{top:12px;left:12px;width:42px;height:42px}\
-.nav-toggle .bar{width:18px;height:2px}\
-}\
-\
-/* Ensure game content does not overlap nav button */\
+/* Ensure game content does not overlap nav */\
 .container,.hub-container{position:relative}\
 \
-/* Game Size Selector */\
-.nav-size-selector{padding:12px 0 0;margin-top:12px;border-top:1px solid rgba(255,255,255,0.08)}\
-.nav-size-label{display:block;color:rgba(255,255,255,0.5);font-size:0.75em;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}\
-.nav-size-buttons{display:flex;gap:6px}\
-.nav-size-btn{flex:1;padding:6px 4px;border:1px solid rgba(255,255,255,0.15);border-radius:8px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);font-size:0.78em;cursor:pointer;transition:all .2s}\
-.nav-size-btn:hover{background:rgba(255,255,255,0.1);color:#fff}\
-.nav-size-btn.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-color:transparent;font-weight:600}\
+/* ── Responsive ── */\
+@media(max-width:768px){\
+.site-nav-cats{display:none}\
+.site-nav-mobile-btn{display:flex}\
+.site-nav-mobile-panel{display:block}\
+.site-nav-search-dropdown{width:calc(100vw - 32px);right:-8px}\
+}\
+@media(min-width:769px){\
+.site-nav-mobile-panel{display:none !important}\
+.site-nav-mobile-overlay{display:none !important}\
+}\
 ';
     document.head.appendChild(style);
 
     // ── Build DOM ───────────────────────────────────────────
-    // Toggle button
-    var btn = document.createElement('button');
-    btn.className = 'nav-toggle';
-    btn.setAttribute('aria-label', 'Toggle navigation menu');
-    btn.innerHTML = '<span class="bar"></span><span class="bar"></span><span class="bar"></span>';
+    var nav = document.createElement('nav');
+    nav.className = 'site-nav';
+    nav.setAttribute('role', 'navigation');
+    nav.setAttribute('aria-label', 'Game navigation');
 
-    // Overlay
-    var overlay = document.createElement('div');
-    overlay.className = 'nav-overlay';
-
-    // Drawer
-    var drawer = document.createElement('nav');
-    drawer.className = 'nav-drawer';
-    drawer.setAttribute('role', 'navigation');
-    drawer.setAttribute('aria-label', 'Game navigation');
-
-    // Header
-    var header = document.createElement('div');
-    header.className = 'nav-drawer-header';
-    header.innerHTML = '\
-<a href="' + basePath + 'index.html" class="nav-drawer-brand">\
-<div class="nav-drawer-brand-icon">\u{1F3AE}</div>\
-<div><h2>Arcade Game Hub</h2><small>' + totalGames + ' Games</small></div>\
-</a>\
-<div class="nav-search">\
-<span class="nav-search-icon">\u{1F50D}</span>\
-<input type="text" id="navSearchInput" placeholder="Search ' + totalGames + ' games\u2026" autocomplete="off">\
-</div>';
-
-    // Size selector in drawer header
-    var sizeSelector = document.createElement('div');
-    sizeSelector.className = 'nav-size-selector';
-    sizeSelector.innerHTML = '<label class="nav-size-label">Game Size</label><div class="nav-size-buttons"></div>';
-    var btnGroup = sizeSelector.querySelector('.nav-size-buttons');
-    SIZE_ORDER.forEach(function (key) {
-        var preset = SIZE_PRESETS[key];
-        var sBtn = document.createElement('button');
-        sBtn.className = 'nav-size-btn' + (key === currentSize ? ' active' : '');
-        sBtn.dataset.size = key;
-        sBtn.textContent = preset.label;
-        sBtn.addEventListener('click', function () { setViewportSize(key); });
-        btnGroup.appendChild(sBtn);
-    });
-    header.appendChild(sizeSelector);
-
-    // Body (scrollable game list)
-    var body = document.createElement('div');
-    body.className = 'nav-drawer-body';
+    var inner = document.createElement('div');
+    inner.className = 'site-nav-inner';
 
     // Home link
     var homeLink = document.createElement('a');
     homeLink.href = basePath + 'index.html';
-    homeLink.className = 'nav-home-link' + (currentPage === 'index.html' ? ' active' : '');
-    homeLink.innerHTML = '<span>\u{1F3E0}</span> Home';
-    body.appendChild(homeLink);
+    homeLink.className = 'site-nav-home';
+    homeLink.innerHTML = '<span class="site-nav-home-icon">\u{1F3AE}</span> <span>Arcade Hub</span>';
+    inner.appendChild(homeLink);
 
-    // No results message (hidden by default)
-    var noResults = document.createElement('div');
-    noResults.className = 'nav-no-results';
-    noResults.style.display = 'none';
-    noResults.textContent = 'No games found';
+    // Category triggers (desktop)
+    var catList = document.createElement('ul');
+    catList.className = 'site-nav-cats';
+    var openCatTimer = null;
+    var closeCatTimer = null;
+    var currentOpenCat = null;
 
-    // Build categories
+    function closeAllCats() {
+        var all = catList.querySelectorAll('.site-nav-cat.open');
+        all.forEach(function (el) { el.classList.remove('open'); });
+        currentOpenCat = null;
+    }
+
+    GAME_CATALOG.forEach(function (cat, catIdx) {
+        var li = document.createElement('li');
+        li.className = 'site-nav-cat';
+
+        var trigger = document.createElement('button');
+        trigger.className = 'site-nav-cat-btn';
+        trigger.innerHTML = '<span>' + cat.icon + '</span> ' + cat.name + ' <span class="chevron">\u25BE</span>';
+
+        var dropdown = document.createElement('div');
+        dropdown.className = 'site-nav-dropdown' + (cat.games.length > 8 ? ' wide' : '');
+
+        cat.games.forEach(function (game) {
+            var a = document.createElement('a');
+            a.href = basePath + game.url;
+            if (currentPage === game.url) a.className = 'active';
+            a.innerHTML = '<span class="game-icon">' + game.icon + '</span> ' + game.name;
+            dropdown.appendChild(a);
+        });
+
+        li.appendChild(trigger);
+        li.appendChild(dropdown);
+
+        // Desktop hover logic
+        li.addEventListener('mouseenter', function () {
+            clearTimeout(closeCatTimer);
+            if (currentOpenCat && currentOpenCat !== li) {
+                currentOpenCat.classList.remove('open');
+            }
+            openCatTimer = setTimeout(function () {
+                li.classList.add('open');
+                currentOpenCat = li;
+            }, 50);
+        });
+
+        li.addEventListener('mouseleave', function () {
+            clearTimeout(openCatTimer);
+            closeCatTimer = setTimeout(function () {
+                li.classList.remove('open');
+                if (currentOpenCat === li) currentOpenCat = null;
+            }, 200);
+        });
+
+        // Click toggle (touch laptops)
+        trigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var isOpen = li.classList.contains('open');
+            closeAllCats();
+            if (!isOpen) {
+                li.classList.add('open');
+                currentOpenCat = li;
+            }
+        });
+
+        catList.appendChild(li);
+    });
+
+    inner.appendChild(catList);
+
+    // Tools area
+    var tools = document.createElement('div');
+    tools.className = 'site-nav-tools';
+
+    // Search
+    var searchWrap = document.createElement('div');
+    searchWrap.className = 'site-nav-search';
+
+    var searchBtn = document.createElement('button');
+    searchBtn.className = 'site-nav-search-btn';
+    searchBtn.innerHTML = '\u{1F50D}';
+    searchBtn.setAttribute('aria-label', 'Search games');
+
+    var searchDropdown = document.createElement('div');
+    searchDropdown.className = 'site-nav-search-dropdown';
+
+    var searchInput = document.createElement('input');
+    searchInput.type = 'text';
+    searchInput.placeholder = 'Search ' + totalGames + ' games\u2026';
+    searchInput.autocomplete = 'off';
+
+    var searchResults = document.createElement('div');
+    searchResults.className = 'site-nav-search-results';
+
+    searchDropdown.appendChild(searchInput);
+    searchDropdown.appendChild(searchResults);
+    searchWrap.appendChild(searchBtn);
+    searchWrap.appendChild(searchDropdown);
+    tools.appendChild(searchWrap);
+
+    // Size selector (game pages only)
+    if (inSubfolder) {
+        var sizeWrap = document.createElement('div');
+        sizeWrap.className = 'site-nav-size';
+
+        var sizeBtn = document.createElement('button');
+        sizeBtn.className = 'site-nav-size-btn';
+        sizeBtn.innerHTML = '\u2699\uFE0F';
+        sizeBtn.setAttribute('aria-label', 'Game size');
+
+        var sizeDropdown = document.createElement('div');
+        sizeDropdown.className = 'site-nav-size-dropdown';
+        sizeDropdown.innerHTML = '<label class="nav-size-label">Game Size</label><div class="nav-size-buttons"></div>';
+
+        var btnGroup = sizeDropdown.querySelector('.nav-size-buttons');
+        SIZE_ORDER.forEach(function (key) {
+            var preset = SIZE_PRESETS[key];
+            var sBtn = document.createElement('button');
+            sBtn.className = 'nav-size-btn' + (key === currentSize ? ' active' : '');
+            sBtn.dataset.size = key;
+            sBtn.textContent = preset.label;
+            sBtn.addEventListener('click', function () { setViewportSize(key); });
+            btnGroup.appendChild(sBtn);
+        });
+
+        sizeWrap.appendChild(sizeBtn);
+        sizeWrap.appendChild(sizeDropdown);
+        tools.appendChild(sizeWrap);
+
+        // Toggle size dropdown
+        sizeBtn.addEventListener('click', function (e) {
+            e.stopPropagation();
+            sizeWrap.classList.toggle('open');
+            searchWrap.classList.remove('open');
+            closeAllCats();
+        });
+    }
+
+    // Mobile hamburger button
+    var mobileBtn = document.createElement('button');
+    mobileBtn.className = 'site-nav-mobile-btn';
+    mobileBtn.setAttribute('aria-label', 'Menu');
+    mobileBtn.innerHTML = '<span class="bar"></span><span class="bar"></span><span class="bar"></span>';
+    tools.appendChild(mobileBtn);
+
+    inner.appendChild(tools);
+    nav.appendChild(inner);
+
+    // ── Mobile Panel ──────────────────────────────────────
+    var mobilePanel = document.createElement('div');
+    mobilePanel.className = 'site-nav-mobile-panel';
+
+    // Mobile search
+    var mobileSearchDiv = document.createElement('div');
+    mobileSearchDiv.className = 'mobile-search';
+    var mobileSearchInput = document.createElement('input');
+    mobileSearchInput.type = 'text';
+    mobileSearchInput.placeholder = 'Search ' + totalGames + ' games\u2026';
+    mobileSearchInput.autocomplete = 'off';
+    mobileSearchDiv.appendChild(mobileSearchInput);
+    mobilePanel.appendChild(mobileSearchDiv);
+
+    // Mobile no-results
+    var mobileNoResults = document.createElement('div');
+    mobileNoResults.className = 'mobile-no-results';
+    mobileNoResults.textContent = 'No games found';
+
+    // Mobile categories
     GAME_CATALOG.forEach(function (cat) {
-        var section = document.createElement('div');
-        section.className = 'nav-category';
+        var catDiv = document.createElement('div');
+        catDiv.className = 'mobile-cat';
 
         var catHeader = document.createElement('div');
-        catHeader.className = 'nav-category-header';
-        catHeader.innerHTML = '<span>' + cat.icon + '</span> ' + cat.name + ' <span class="cat-chevron">\u25BC</span>';
+        catHeader.className = 'mobile-cat-header';
+        catHeader.innerHTML = '<span>' + cat.icon + '</span> ' + cat.name + ' <span class="chevron">\u25BC</span>';
 
         var list = document.createElement('ul');
-        list.className = 'nav-game-list';
+        list.className = 'mobile-game-list';
 
         cat.games.forEach(function (game) {
             var li = document.createElement('li');
-            li.className = 'nav-game-item';
-            var isActive = currentPage === game.url;
-            li.innerHTML = '<a href="' + basePath + game.url + '"' + (isActive ? ' class="active"' : '') + '><span class="game-icon">' + game.icon + '</span> ' + game.name + '</a>';
+            var a = document.createElement('a');
+            a.href = basePath + game.url;
+            if (currentPage === game.url) a.className = 'active';
+            a.innerHTML = '<span class="game-icon">' + game.icon + '</span> ' + game.name;
+            li.appendChild(a);
             list.appendChild(li);
         });
 
         catHeader.addEventListener('click', function () {
-            section.classList.toggle('collapsed');
+            catDiv.classList.toggle('collapsed');
         });
 
-        section.appendChild(catHeader);
-        section.appendChild(list);
-        body.appendChild(section);
+        catDiv.appendChild(catHeader);
+        catDiv.appendChild(list);
+        mobilePanel.appendChild(catDiv);
     });
 
-    body.appendChild(noResults);
+    mobilePanel.appendChild(mobileNoResults);
 
-    // Footer with ad slot
-    var footer = document.createElement('div');
-    footer.className = 'nav-drawer-footer';
-    footer.innerHTML = '<div class="nav-ad-slot"><ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-XXXXXXXXXXXXXXXX" data-ad-slot="XXXXXXXXXX" data-ad-format="rectangle" data-full-width-responsive="false"></ins></div>';
-    try { (window.adsbygoogle = window.adsbygoogle || []).push({}); } catch(e) {}
+    // Mobile size selector (game pages only)
+    if (inSubfolder) {
+        var mobileSizeDiv = document.createElement('div');
+        mobileSizeDiv.className = 'mobile-size';
+        mobileSizeDiv.innerHTML = '<label class="nav-size-label">Game Size</label><div class="nav-size-buttons"></div>';
+        var mobileBtnGroup = mobileSizeDiv.querySelector('.nav-size-buttons');
+        SIZE_ORDER.forEach(function (key) {
+            var preset = SIZE_PRESETS[key];
+            var sBtn = document.createElement('button');
+            sBtn.className = 'nav-size-btn' + (key === currentSize ? ' active' : '');
+            sBtn.dataset.size = key;
+            sBtn.textContent = preset.label;
+            sBtn.addEventListener('click', function () { setViewportSize(key); });
+            mobileBtnGroup.appendChild(sBtn);
+        });
+        mobilePanel.appendChild(mobileSizeDiv);
+    }
 
-    // Assemble drawer
-    drawer.appendChild(header);
-    drawer.appendChild(body);
-    drawer.appendChild(footer);
+    nav.appendChild(mobilePanel);
+
+    // Mobile overlay
+    var mobileOverlay = document.createElement('div');
+    mobileOverlay.className = 'site-nav-mobile-overlay';
 
     // Insert into page
-    document.body.appendChild(btn);
-    document.body.appendChild(overlay);
-    document.body.appendChild(drawer);
+    document.body.insertBefore(mobileOverlay, document.body.firstChild);
+    document.body.insertBefore(nav, document.body.firstChild);
 
-    // ── Open / Close Logic ──────────────────────────────────
-    function openNav() {
-        document.body.classList.add('nav-open');
-        btn.setAttribute('aria-expanded', 'true');
-    }
-    function closeNav() {
-        document.body.classList.remove('nav-open');
-        btn.setAttribute('aria-expanded', 'false');
-    }
-    function toggleNav() {
-        if (document.body.classList.contains('nav-open')) closeNav();
-        else openNav();
-    }
+    // Push content below fixed nav
+    document.body.style.paddingTop = '52px';
 
-    btn.addEventListener('click', toggleNav);
-    overlay.addEventListener('click', closeNav);
-
-    document.addEventListener('keydown', function (e) {
-        if (e.key === 'Escape' && document.body.classList.contains('nav-open')) {
-            closeNav();
+    // ── Search Toggle & Logic ─────────────────────────────
+    searchBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        var opening = !searchWrap.classList.contains('open');
+        searchWrap.classList.toggle('open');
+        closeAllCats();
+        if (document.querySelector('.site-nav-size')) {
+            document.querySelector('.site-nav-size').classList.remove('open');
+        }
+        if (opening) {
+            searchInput.focus();
         }
     });
 
-    // ── Search ──────────────────────────────────────────────
-    var searchInput = document.getElementById('navSearchInput');
-    if (searchInput) {
-        searchInput.addEventListener('input', function () {
-            var query = this.value.trim().toLowerCase();
-            var anyVisible = false;
-            var categories = drawer.querySelectorAll('.nav-category');
+    function doSearch(input, resultsContainer, noResultsEl) {
+        var query = input.value.trim().toLowerCase();
+        resultsContainer.innerHTML = '';
 
-            categories.forEach(function (catEl) {
-                var items = catEl.querySelectorAll('.nav-game-item');
-                var catVisible = false;
+        if (!query) {
+            resultsContainer.innerHTML = '';
+            if (noResultsEl) noResultsEl.style.display = 'none';
+            return;
+        }
 
-                items.forEach(function (item) {
-                    var name = item.textContent.toLowerCase();
-                    if (!query || name.indexOf(query) !== -1) {
-                        item.style.display = '';
-                        catVisible = true;
-                    } else {
-                        item.style.display = 'none';
-                    }
+        var anyMatch = false;
+        GAME_CATALOG.forEach(function (cat) {
+            var matches = cat.games.filter(function (g) {
+                return g.name.toLowerCase().indexOf(query) !== -1;
+            });
+            if (matches.length > 0) {
+                anyMatch = true;
+                var catLabel = document.createElement('div');
+                catLabel.className = 'search-cat';
+                catLabel.textContent = cat.name;
+                resultsContainer.appendChild(catLabel);
+
+                matches.forEach(function (game) {
+                    var a = document.createElement('a');
+                    a.href = basePath + game.url;
+                    a.innerHTML = '<span class="game-icon">' + game.icon + '</span> ' + game.name;
+                    resultsContainer.appendChild(a);
                 });
+            }
+        });
 
-                catEl.style.display = catVisible ? '' : 'none';
-                if (catVisible) anyVisible = true;
+        if (!anyMatch) {
+            if (noResultsEl) {
+                noResultsEl.style.display = 'block';
+            } else {
+                resultsContainer.innerHTML = '<div class="site-nav-search-none">No games found</div>';
+            }
+        } else {
+            if (noResultsEl) noResultsEl.style.display = 'none';
+        }
+    }
 
-                // Auto-expand categories when searching
-                if (query && catVisible) {
-                    catEl.classList.remove('collapsed');
+    // Desktop search
+    searchInput.addEventListener('input', function () {
+        doSearch(searchInput, searchResults, null);
+    });
+
+    // Mobile search
+    mobileSearchInput.addEventListener('input', function () {
+        var query = this.value.trim().toLowerCase();
+        var anyVisible = false;
+        var cats = mobilePanel.querySelectorAll('.mobile-cat');
+        cats.forEach(function (catEl) {
+            var items = catEl.querySelectorAll('.mobile-game-list li');
+            var catVisible = false;
+            items.forEach(function (item) {
+                var name = item.textContent.toLowerCase();
+                if (!query || name.indexOf(query) !== -1) {
+                    item.style.display = '';
+                    catVisible = true;
+                } else {
+                    item.style.display = 'none';
                 }
             });
+            catEl.style.display = catVisible ? '' : 'none';
+            if (catVisible) anyVisible = true;
+            if (query && catVisible) catEl.classList.remove('collapsed');
+        });
+        mobileNoResults.style.display = anyVisible ? 'none' : 'block';
+    });
 
-            noResults.style.display = anyVisible ? 'none' : 'block';
+    // Prevent game key events from firing while typing in search
+    [searchInput, mobileSearchInput].forEach(function (input) {
+        ['keydown', 'keyup', 'keypress'].forEach(function (evt) {
+            input.addEventListener(evt, function (e) {
+                e.stopPropagation();
+            });
         });
+    });
 
-        // Prevent game key events from firing while typing in search
-        searchInput.addEventListener('keydown', function (e) {
-            e.stopPropagation();
-        });
-        searchInput.addEventListener('keyup', function (e) {
-            e.stopPropagation();
-        });
-        searchInput.addEventListener('keypress', function (e) {
-            e.stopPropagation();
-        });
+    // ── Mobile Panel Toggle ───────────────────────────────
+    function toggleMobileNav() {
+        document.body.classList.toggle('mobile-nav-open');
     }
+    function closeMobileNav() {
+        document.body.classList.remove('mobile-nav-open');
+    }
+
+    mobileBtn.addEventListener('click', function (e) {
+        e.stopPropagation();
+        toggleMobileNav();
+    });
+    mobileOverlay.addEventListener('click', closeMobileNav);
+
+    // ── Global Close Logic ────────────────────────────────
+    document.addEventListener('click', function (e) {
+        // Close desktop dropdowns if clicking outside
+        if (!e.target.closest('.site-nav-cat')) {
+            closeAllCats();
+        }
+        if (!e.target.closest('.site-nav-search')) {
+            searchWrap.classList.remove('open');
+        }
+        if (!e.target.closest('.site-nav-size')) {
+            var sizeEl = document.querySelector('.site-nav-size');
+            if (sizeEl) sizeEl.classList.remove('open');
+        }
+    });
+
+    document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape') {
+            closeAllCats();
+            searchWrap.classList.remove('open');
+            var sizeEl = document.querySelector('.site-nav-size');
+            if (sizeEl) sizeEl.classList.remove('open');
+            closeMobileNav();
+        }
+    });
 
     // ── Update game count badge on hub page ─────────────────
     var countBadge = document.querySelector('.game-count');
@@ -367,7 +601,6 @@ body.nav-open{overflow:hidden}\
         var preset = SIZE_PRESETS[sizeKey];
         if (!preset) return;
 
-        // Vanilla canvas games (use #gameCanvas with CSS transform scaling)
         var canvas = document.getElementById('gameCanvas');
         if (canvas) {
             var bw = canvas.width, bh = canvas.height;
@@ -381,7 +614,6 @@ body.nav-open{overflow:hidden}\
             canvas.style.marginBottom = (-(bh * (1 - s))) + 'px';
         }
 
-        // Phaser games (use #game-container with Phaser.Scale.FIT)
         var gameContainer = document.getElementById('game-container');
         if (gameContainer) {
             var container = gameContainer.closest('.container');
@@ -392,13 +624,11 @@ body.nav-open{overflow:hidden}\
             gameContainer.style.overflow = 'hidden';
         }
 
-        // Embedded iframe games (GameDistribution etc.)
         var embedFrame = document.querySelector('.embed-game-frame');
         if (embedFrame) {
             embedFrame.style.height = (window.innerHeight * preset.vhFactor) + 'px';
         }
 
-        // Hex-defense uses #game-wrapper with its own scaling
         var wrapper = document.getElementById('game-wrapper');
         if (wrapper && !canvas && !gameContainer) {
             wrapper.style.maxHeight = (window.innerHeight * preset.vhFactor) + 'px';
@@ -414,11 +644,9 @@ body.nav-open{overflow:hidden}\
             b.classList.toggle('active', b.dataset.size === sizeKey);
         });
         applyViewportSize(sizeKey);
-        // Trigger resize so Phaser Scale Manager recalculates
         window.dispatchEvent(new Event('resize'));
     }
 
-    // Apply on load and on every resize
     applyViewportSize(currentSize);
     window.addEventListener('resize', function () {
         applyViewportSize(currentSize);
