@@ -29,6 +29,7 @@
                 { name: 'Galaga', icon: '\u{1F6F8}', url: 'galaga/' },
                 { name: 'Centipede', icon: '\u{1F41B}', url: 'centipede/' },
                 { name: 'Lunar Lander', icon: '\u{1F315}', url: 'lunar-lander/' },
+                { name: 'SpaceX Lander', icon: '\u{1F680}', url: 'spacex-lander/' },
                 { name: 'Joust', icon: '\u2694\uFE0F', url: 'joust/' },
                 { name: 'Bomberman', icon: '\u{1F4A3}', url: 'bomberman/' },
                 { name: 'Q*bert', icon: '\u{1F536}', url: 'qbert/' },

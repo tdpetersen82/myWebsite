@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+  <url><loc>https://example.com/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://example.com/privacy.html</loc><priority>0.3</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://example.com/snake/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/pong/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/breakout/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/space-invaders/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/flappy-bird/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/block-puzzle/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/asteroids/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/pac-man/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/frogger/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/missile-command/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/galaga/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/centipede/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/lunar-lander/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/spacex-lander/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/joust/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/bomberman/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/qbert/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/donkey-kong/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/dig-dug/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/tempest/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/defender/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/tron/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/simon/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/connect-4/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/connect-dots/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/hex-defense/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/fruit-catcher/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/beat-em-up/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/bubble-shooter-hd/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/merge-fruit/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/drift-boss/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/slope-run/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+</urlset>
