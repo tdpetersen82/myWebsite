@@ -199,8 +199,8 @@ class GameScene extends Phaser.Scene {
         // --- DYNAMIC CAMERA ZOOM ---
         const cam = this.cameras.main;
         const targetZoom = Phaser.Math.Clamp(
-            Phaser.Math.Linear(1.35, 0.5, altitude / 6000),
-            0.5, 1.35
+            Phaser.Math.Linear(1.35, 0.45, altitude / 8000),
+            0.45, 1.35
         );
         const newZoom = cam.zoom + (targetZoom - cam.zoom) * 0.025;
         cam.setZoom(newZoom);

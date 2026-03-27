@@ -6,38 +6,38 @@ const CONFIG = {
     HEIGHT: 600,
 
     // Physics
-    GRAVITY: 50,                    // Earth gravity (px/sec^2)
+    GRAVITY: 40,                    // Earth gravity (px/sec^2)
     ENTRY_THRUST_POWER: 120,        // Multi-engine entry burn
-    LANDING_THRUST_POWER: 85,       // Single-engine precision
+    LANDING_THRUST_POWER: 90,       // Single-engine precision
     GRID_FIN_ROTATION_RATE: 90,     // Degrees/sec at max effectiveness
     GRID_FIN_LATERAL_FORCE: 30,     // Lateral push from fins
     FIN_MAX_SPEED_REF: 200,         // Speed where fins are 100% effective
     THRUST_GIMBAL_RATE: 80,         // Rotation from thrust vectoring (deg/sec)
-    DRAG_COEFFICIENT: 0.002,        // Atmospheric drag
+    DRAG_COEFFICIENT: 0.001,        // Atmospheric drag (gentle)
     MAX_VELOCITY: 400,
 
     // Fuel (single pool)
-    FUEL_MAX: 1500,
+    FUEL_MAX: 1800,
     ENTRY_BURN_RATE: 2.0,
     LANDING_BURN_RATE: 0.8,
-    LOW_FUEL_THRESHOLD: 200,
+    LOW_FUEL_THRESHOLD: 300,
 
     // Landing thresholds
-    LAND_MAX_VY: 30,
-    LAND_MAX_VX: 15,
-    LAND_MAX_ANGLE: 10,
+    LAND_MAX_VY: 35,
+    LAND_MAX_VX: 20,
+    LAND_MAX_ANGLE: 12,
 
     // Phase altitude thresholds
-    PHASE_2_ALTITUDE: 3000,
-    PHASE_3_ALTITUDE: 500,
-    LEG_DEPLOY_ALTITUDE: 400,
+    PHASE_2_ALTITUDE: 3500,
+    PHASE_3_ALTITUDE: 800,
+    LEG_DEPLOY_ALTITUDE: 600,
 
     // Starting conditions
-    START_VY: 200,                  // Initial downward velocity
-    START_Y: -300,                  // Start well above visible area for long descent
+    START_VY: 120,                  // Initial downward velocity (manageable re-entry)
+    START_Y: -600,                  // Start very high for long, generous descent
     ALTITUDE_SCALE: 8,              // Pixel-to-altitude unit scale
     STARTING_LIVES: 3,
-    HANDOVER_COUNTDOWN: 3,          // Seconds of auto-descent before human control
+    HANDOVER_COUNTDOWN: 2,          // Seconds of auto-descent before human control
 
     // Scoring
     BASE_LANDING_SCORE: 200,
