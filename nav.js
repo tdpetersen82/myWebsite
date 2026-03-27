@@ -38,7 +38,6 @@
                 { name: 'Defender', icon: '\u{1F6E1}\uFE0F', url: 'defender/' },
                 { name: 'Tron Light Cycles', icon: '\u{1F3CD}\uFE0F', url: 'tron/' },
                 { name: 'Simon', icon: '\u{1F534}', url: 'simon/' },
-                { name: 'Lemmings', icon: '\u{1F42D}', url: 'lemmings/' },
             ]
         },
         {
@@ -50,42 +49,21 @@
             ]
         },
         {
-            name: 'Mobile Games', icon: '\u{1F4F1}',
-            games: [
-                { name: '2048', icon: '\u{1F522}', url: '2048/' },
-                { name: 'Stack Tower', icon: '\u{1F3D7}\uFE0F', url: 'stack-tower/' },
-                { name: 'Color Switch', icon: '\u{1F3A8}', url: 'color-switch/' },
-                { name: 'Fruit Ninja', icon: '\u{1F349}', url: 'fruit-ninja/' },
-                { name: 'Whack-a-Mole', icon: '\u{1F528}', url: 'whack-a-mole/' },
-                { name: 'Endless Runner', icon: '\u{1F3C3}', url: 'endless-runner/' },
-                { name: 'Knife Hit', icon: '\u{1F52A}', url: 'knife-hit/' },
-                { name: 'Bubble Shooter', icon: '\u{1FAE7}', url: 'bubble-shooter/' },
-            ]
-        },
-        {
             name: 'Action & More', icon: '\u{1F3AF}',
             games: [
                 { name: 'Fruit Catcher', icon: '\u{1F34E}', url: 'fruit-catcher/' },
-                { name: 'Motorcycle Trail Rider', icon: '\u{1F3CD}\uFE0F', url: 'motorcycle-game/' },
                 { name: 'Street Brawl', icon: '\u{1F44A}', url: 'beat-em-up/' },
             ]
         },
         {
             name: 'Web Games', icon: '\u{1F310}',
             games: [
-                { name: 'Moto X3M', icon: '\u{1F3CD}\uFE0F', url: 'moto-x3m/' },
                 { name: 'Bubble Shooter HD', icon: '\u{1FAE7}', url: 'bubble-shooter-hd/' },
                 { name: 'Merge Fruit', icon: '\u{1F349}', url: 'merge-fruit/' },
                 { name: 'Drift Boss', icon: '\u{1F697}', url: 'drift-boss/' },
                 { name: 'Slope Run', icon: '\u{1F3D4}\uFE0F', url: 'slope-run/' },
             ]
         },
-        {
-            name: 'Experimental', icon: '\u{1F9EA}',
-            games: [
-                { name: 'eMoto Database', icon: '\u26A1', url: 'emoto-database/' },
-            ]
-        }
     ];
 
     // ── Viewport Size Presets ─────────────────────────────
