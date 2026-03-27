@@ -71,58 +71,6 @@ body {
     margin-top: 10px;
 }
 
-/* Category Navigation Bar */
-.category-nav {
-    position: sticky;
-    top: 0;
-    z-index: 100;
-    background: rgba(255, 255, 255, 0.97);
-    backdrop-filter: blur(12px);
-    -webkit-backdrop-filter: blur(12px);
-    border-radius: 12px;
-    padding: 12px 16px;
-    margin-bottom: 24px;
-    box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-    border: 1px solid #f0f0f0;
-}
-
-.category-nav-list {
-    display: flex;
-    gap: 8px;
-    list-style: none;
-    overflow-x: auto;
-    scrollbar-width: none;
-    -ms-overflow-style: none;
-    justify-content: center;
-    flex-wrap: wrap;
-}
-
-.category-nav-list::-webkit-scrollbar {
-    display: none;
-}
-
-.category-nav-link {
-    display: inline-block;
-    padding: 8px 18px;
-    border-radius: 20px;
-    text-decoration: none;
-    font-size: 0.9em;
-    font-weight: 600;
-    color: #555;
-    background: #f5f3ff;
-    border: 1px solid #e8e0f0;
-    transition: all 0.2s ease;
-    white-space: nowrap;
-}
-
-.category-nav-link:hover {
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    color: white;
-    border-color: transparent;
-    transform: translateY(-1px);
-    box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
-}
-
 /* Category sections */
 .category {
     margin-bottom: 30px;
@@ -368,15 +316,5 @@ canvas {
 
     .container, .hub-container {
         padding: 20px 15px;
-    }
-
-    .category-nav-list {
-        justify-content: flex-start;
-        flex-wrap: nowrap;
-    }
-
-    .category-nav-link {
-        padding: 6px 14px;
-        font-size: 0.82em;
     }
 }
