@@ -1,0 +1,113 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Difference — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .tool-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; align-items: end; }
+        .tool-row > div { flex: 1; min-width: 160px; }
+        .tool-row label { display: block; font-size: 0.85em; color: #666; margin-bottom: 4px; }
+        .tool-row input { width: 100%; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap: 12px; margin-top: 16px; }
+        .info-item { background: #f0f4ff; border-radius: 10px; padding: 16px; text-align: center; }
+        .info-label { font-size: 0.8em; color: #888; margin-bottom: 4px; }
+        .info-value { font-size: 1.3em; font-weight: 700; color: #667eea; }
+        .compound { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 12px; padding: 20px; color: #fff; margin-top: 16px; text-align: center; }
+        .compound .big { font-size: 1.6em; font-weight: 700; }
+        .calc-btn { background: #667eea; color: #fff; border: none; border-radius: 8px; padding: 10px 24px; cursor: pointer; font-size: 1em; }
+        .calc-btn:hover { background: #5a6fd6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#128196; Date Difference</h1>
+        <p class="subtitle">Calculate the exact difference between two dates.</p>
+
+        <div class="tool-area">
+            <div class="tool-row">
+                <div>
+                    <label>Start Date</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div>
+                    <label>End Date</label>
+                    <input type="date" id="endDate">
+                </div>
+                <div style="flex:0;">
+                    <button class="calc-btn" onclick="calc()">Calculate</button>
+                </div>
+            </div>
+
+            <div id="output" style="display:none;">
+                <div class="compound">
+                    <div class="big" id="compound"></div>
+                </div>
+
+                <div class="result-grid">
+                    <div class="info-item"><div class="info-label">Total Days</div><div class="info-value" id="totalDays"></div></div>
+                    <div class="info-item"><div class="info-label">Total Weeks</div><div class="info-value" id="totalWeeks"></div></div>
+                    <div class="info-item"><div class="info-label">Total Hours</div><div class="info-value" id="totalHours"></div></div>
+                    <div class="info-item"><div class="info-label">Weekdays</div><div class="info-value" id="weekdays"></div></div>
+                    <div class="info-item"><div class="info-label">Weekend Days</div><div class="info-value" id="weekends"></div></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const now = new Date();
+        document.getElementById('startDate').value = now.toISOString().slice(0,10);
+        const future = new Date(now); future.setMonth(future.getMonth() + 1);
+        document.getElementById('endDate').value = future.toISOString().slice(0,10);
+
+        function calc() {
+            let s = new Date(document.getElementById('startDate').value + 'T00:00:00');
+            let e = new Date(document.getElementById('endDate').value + 'T00:00:00');
+            if (isNaN(s) || isNaN(e)) return;
+
+            let swapped = false;
+            if (s > e) { [s, e] = [e, s]; swapped = true; }
+
+            // Compound difference
+            let years = e.getFullYear() - s.getFullYear();
+            let months = e.getMonth() - s.getMonth();
+            let days = e.getDate() - s.getDate();
+            if (days < 0) {
+                months--;
+                const prev = new Date(e.getFullYear(), e.getMonth(), 0).getDate();
+                days += prev;
+            }
+            if (months < 0) { years--; months += 12; }
+
+            let parts = [];
+            if (years) parts.push(years + (years === 1 ? ' year' : ' years'));
+            if (months) parts.push(months + (months === 1 ? ' month' : ' months'));
+            parts.push(days + (days === 1 ? ' day' : ' days'));
+            document.getElementById('compound').textContent = parts.join(', ');
+
+            const totalDays = Math.round((e - s) / 86400000);
+            document.getElementById('totalDays').textContent = totalDays.toLocaleString();
+            document.getElementById('totalWeeks').textContent = (totalDays / 7).toFixed(1);
+            document.getElementById('totalHours').textContent = (totalDays * 24).toLocaleString();
+
+            // Count weekdays/weekends
+            let wd = 0, we = 0;
+            const cur = new Date(s);
+            while (cur < e) {
+                const day = cur.getDay();
+                if (day === 0 || day === 6) we++; else wd++;
+                cur.setDate(cur.getDate() + 1);
+            }
+            document.getElementById('weekdays').textContent = wd.toLocaleString();
+            document.getElementById('weekends').textContent = we.toLocaleString();
+
+            document.getElementById('output').style.display = '';
+        }
+
+        calc();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

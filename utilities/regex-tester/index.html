@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regex Tester — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .flags { display: flex; gap: 12px; justify-content: center; margin: 8px 0; flex-wrap: wrap; }
+        .flags label { display: flex; align-items: center; gap: 4px; font-size: 0.9em; cursor: pointer; }
+        .highlight-area { background: #1a1a2e; color: #e0e0e0; border-radius: 10px; padding: 16px; font-family: 'Courier New', monospace; min-height: 80px; text-align: left; white-space: pre-wrap; word-break: break-all; line-height: 1.6; }
+        .highlight-area mark { background: #667eea55; color: #fff; border-radius: 3px; padding: 1px 2px; border-bottom: 2px solid #667eea; }
+        .match-info { margin-top: 12px; }
+        .group-item { background: #f0f0f5; border-radius: 6px; padding: 6px 10px; margin: 4px 0; text-align: left; font-family: monospace; font-size: 0.9em; }
+        .error-msg { color: #d33; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Regex Tester</h1>
+        <p class="subtitle">Test regular expressions with real-time match highlighting.</p>
+        <div class="tool-area">
+            <label for="pattern">Regex Pattern:</label>
+            <input type="text" id="pattern" placeholder="e.g. (\w+)@(\w+)\.(\w+)" oninput="testRegex()">
+            <div class="flags">
+                <label><input type="checkbox" id="flag-g" checked onchange="testRegex()"> g (global)</label>
+                <label><input type="checkbox" id="flag-i" onchange="testRegex()"> i (case-insensitive)</label>
+                <label><input type="checkbox" id="flag-m" onchange="testRegex()"> m (multiline)</label>
+                <label><input type="checkbox" id="flag-s" onchange="testRegex()"> s (dotAll)</label>
+            </div>
+            <label for="teststr">Test String:</label>
+            <textarea id="teststr" rows="5" placeholder="Enter text to test against..." oninput="testRegex()"></textarea>
+            <label>Matches:</label>
+            <div class="highlight-area" id="highlighted"></div>
+            <div class="tool-grid match-info" id="matchInfo"></div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        function testRegex() {
+            const pattern = document.getElementById('pattern').value;
+            const testStr = document.getElementById('teststr').value;
+            const highlightEl = document.getElementById('highlighted');
+            const infoEl = document.getElementById('matchInfo');
+            if (!pattern) { highlightEl.innerHTML = escapeHtml(testStr); infoEl.innerHTML = ''; return; }
+            let flags = '';
+            if (document.getElementById('flag-g').checked) flags += 'g';
+            if (document.getElementById('flag-i').checked) flags += 'i';
+            if (document.getElementById('flag-m').checked) flags += 'm';
+            if (document.getElementById('flag-s').checked) flags += 's';
+            let regex;
+            try { regex = new RegExp(pattern, flags); }
+            catch(e) { highlightEl.innerHTML = '<span class="error-msg">' + escapeHtml(e.message) + '</span>'; infoEl.innerHTML = ''; return; }
+            const matches = [];
+            let m;
+            if (flags.includes('g')) {
+                while ((m = regex.exec(testStr)) !== null) {
+                    matches.push({ index: m.index, length: m[0].length, match: m[0], groups: m.slice(1) });
+                    if (m[0].length === 0) regex.lastIndex++;
+                }
+            } else {
+                m = regex.exec(testStr);
+                if (m) matches.push({ index: m.index, length: m[0].length, match: m[0], groups: m.slice(1) });
+            }
+            // Build highlighted output
+            let html = '', last = 0;
+            for (const mt of matches) {
+                html += escapeHtml(testStr.slice(last, mt.index));
+                html += '<mark>' + escapeHtml(testStr.slice(mt.index, mt.index + mt.length)) + '</mark>';
+                last = mt.index + mt.length;
+            }
+            html += escapeHtml(testStr.slice(last));
+            highlightEl.innerHTML = html || escapeHtml(testStr);
+            // Info
+            let info = '<div class="info-item"><span class="info-label">Match Count</span><span class="info-value">' + matches.length + '</span></div>';
+            matches.forEach((mt, i) => {
+                info += '<div class="info-item"><span class="info-label">Match ' + (i+1) + '</span><span class="info-value" style="font-family:monospace">' + escapeHtml(mt.match) + '</span></div>';
+                mt.groups.forEach((g, gi) => {
+                    if (g !== undefined) info += '<div class="info-item"><span class="info-label">Group ' + (gi+1) + '</span><span class="info-value" style="font-family:monospace">' + escapeHtml(g) + '</span></div>';
+                });
+            });
+            infoEl.innerHTML = info;
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Countdown Timer — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .timer-display { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; margin: 24px 0; }
+        .timer-unit { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 14px; padding: 20px 24px; color: #fff; min-width: 100px; text-align: center; }
+        .timer-unit .num { font-size: 3em; font-weight: 800; line-height: 1; }
+        .timer-unit .lbl { font-size: 0.75em; opacity: 0.8; margin-top: 4px; text-transform: uppercase; letter-spacing: 1px; }
+        .completed { font-size: 2em; color: #27ae60; font-weight: 700; margin: 30px 0; }
+        .tool-row { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 16px; }
+        .tool-row label { display: block; font-size: 0.85em; color: #666; margin-bottom: 4px; }
+        .tool-row input { width: 100%; }
+        .set-btn { background: #667eea; color: #fff; border: none; border-radius: 8px; padding: 10px 24px; cursor: pointer; font-size: 1em; }
+        .set-btn:hover { background: #5a6fd6; }
+        .share-link { margin-top: 12px; font-size: 0.85em; color: #888; word-break: break-all; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#9203; Countdown Timer</h1>
+        <p class="subtitle">Count down to any date and time. Shareable via URL.</p>
+
+        <div class="tool-area">
+            <div class="tool-row">
+                <div style="flex:1;">
+                    <label>Target Date & Time</label>
+                    <input type="datetime-local" id="targetInput">
+                </div>
+                <div>
+                    <button class="set-btn" onclick="setTarget()">Start</button>
+                </div>
+            </div>
+
+            <div id="display"></div>
+            <div class="share-link" id="shareLink"></div>
+        </div>
+    </div>
+
+    <script>
+        let target = null;
+        let interval = null;
+
+        function setTarget() {
+            const val = document.getElementById('targetInput').value;
+            if (!val) return;
+            target = new Date(val);
+            const url = new URL(window.location.href);
+            url.searchParams.set('target', val);
+            document.getElementById('shareLink').textContent = 'Share: ' + url.toString();
+            window.history.replaceState({}, '', url);
+            startCountdown();
+        }
+
+        function startCountdown() {
+            if (interval) clearInterval(interval);
+            update();
+            interval = setInterval(update, 1000);
+        }
+
+        function update() {
+            if (!target) return;
+            const now = new Date();
+            let diff = target - now;
+
+            if (diff <= 0) {
+                document.getElementById('display').innerHTML = '<div class="completed">Completed!</div>';
+                clearInterval(interval);
+                return;
+            }
+
+            const days = Math.floor(diff / 86400000); diff %= 86400000;
+            const hours = Math.floor(diff / 3600000); diff %= 3600000;
+            const mins = Math.floor(diff / 60000); diff %= 60000;
+            const secs = Math.floor(diff / 1000);
+
+            document.getElementById('display').innerHTML = `
+                <div class="timer-display">
+                    <div class="timer-unit"><div class="num">${days}</div><div class="lbl">Days</div></div>
+                    <div class="timer-unit"><div class="num">${String(hours).padStart(2,'0')}</div><div class="lbl">Hours</div></div>
+                    <div class="timer-unit"><div class="num">${String(mins).padStart(2,'0')}</div><div class="lbl">Minutes</div></div>
+                    <div class="timer-unit"><div class="num">${String(secs).padStart(2,'0')}</div><div class="lbl">Seconds</div></div>
+                </div>`;
+        }
+
+        // Check URL param
+        const params = new URLSearchParams(window.location.search);
+        const paramTarget = params.get('target');
+        if (paramTarget) {
+            document.getElementById('targetInput').value = paramTarget;
+            target = new Date(paramTarget);
+            startCountdown();
+        } else {
+            // Default: New Year
+            const ny = new Date(new Date().getFullYear() + 1, 0, 1);
+            document.getElementById('targetInput').value = ny.toISOString().slice(0, 16);
+            target = ny;
+            startCountdown();
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>
