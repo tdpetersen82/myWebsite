@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Reader — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .scan-area { position: relative; margin: 14px 0; }
+        #videoPreview { width: 100%; max-width: 400px; border-radius: 12px; display: none; margin: 0 auto; background: #000; }
+        #canvasPreview { display: none; }
+        .result-box {
+            background: #f5f5fa; border-radius: 10px; padding: 16px; margin: 12px 0;
+            word-break: break-all; font-family: monospace; text-align: left; min-height: 2em;
+        }
+        .result-box.success { border-left: 4px solid #43e97b; }
+        .result-box.error { border-left: 4px solid #f5576c; }
+        .upload-area {
+            border: 3px dashed #ccc; border-radius: 12px; padding: 30px; text-align: center;
+            cursor: pointer; transition: border-color 0.2s; margin: 12px 0;
+        }
+        .upload-area:hover { border-color: #667eea; }
+        .upload-area input { display: none; }
+        .camera-status { font-size: 0.9em; color: #666; margin: 6px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📷 QR Code Reader</h1>
+        <p class="subtitle">Scan QR codes from images or your camera.</p>
+
+        <div class="tool-area">
+            <div class="tool-tabs">
+                <button class="tool-tab active" onclick="switchMode('upload')">📁 Upload Image</button>
+                <button class="tool-tab" onclick="switchMode('camera')">📹 Camera Scan</button>
+            </div>
+
+            <div id="uploadMode">
+                <div class="upload-area" onclick="document.getElementById('fileInput').click()">
+                    <p style="font-size:2em;margin-bottom:8px;">📁</p>
+                    <p>Click to upload an image with a QR code</p>
+                    <p style="font-size:0.85em;color:#999;">Supports PNG, JPG, GIF, BMP</p>
+                    <input type="file" id="fileInput" accept="image/*" onchange="handleFile(this)">
+                </div>
+                <img id="imagePreview" style="max-width:100%;border-radius:10px;display:none;margin:10px auto;">
+            </div>
+
+            <div id="cameraMode" style="display:none;">
+                <div class="scan-area">
+                    <video id="videoPreview" playsinline></video>
+                    <canvas id="canvasPreview"></canvas>
+                </div>
+                <div class="camera-status" id="cameraStatus">Camera not started</div>
+                <div style="text-align:center;margin:8px 0;">
+                    <button class="copy-btn" id="cameraBtn" onclick="toggleCamera()">📹 Start Camera</button>
+                </div>
+            </div>
+
+            <div id="resultSection" style="display:none;">
+                <h3>Decoded Result</h3>
+                <div class="result-box" id="resultBox"></div>
+                <div style="text-align:center;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                    <button class="copy-btn" onclick="copyResult()">📋 Copy</button>
+                    <button class="copy-btn" id="openUrlBtn" onclick="openUrl()" style="display:none;">🔗 Open URL</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsqr@1.4.0/dist/jsQR.js"></script>
+    <script>
+        let cameraStream = null;
+        let scanning = false;
+        let lastResult = '';
+
+        function switchMode(mode) {
+            document.querySelectorAll('.tool-tab').forEach((t, i) => t.classList.toggle('active', (mode === 'upload' ? i === 0 : i === 1)));
+            document.getElementById('uploadMode').style.display = mode === 'upload' ? '' : 'none';
+            document.getElementById('cameraMode').style.display = mode === 'camera' ? '' : 'none';
+            if (mode === 'upload' && cameraStream) stopCamera();
+        }
+
+        function handleFile(input) {
+            const file = input.files[0];
+            if (!file) return;
+            const img = new Image();
+            img.onload = function() {
+                const preview = document.getElementById('imagePreview');
+                preview.src = img.src;
+                preview.style.display = 'block';
+                const canvas = document.createElement('canvas');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                if (code) {
+                    showResult(code.data, true);
+                } else {
+                    showResult('No QR code found in this image.', false);
+                }
+            };
+            img.src = URL.createObjectURL(file);
+        }
+
+        function showResult(text, success) {
+            lastResult = success ? text : '';
+            const section = document.getElementById('resultSection');
+            const box = document.getElementById('resultBox');
+            section.style.display = '';
+            box.textContent = text;
+            box.className = 'result-box ' + (success ? 'success' : 'error');
+            const urlBtn = document.getElementById('openUrlBtn');
+            try {
+                new URL(text);
+                urlBtn.style.display = '';
+            } catch { urlBtn.style.display = 'none'; }
+        }
+
+        function copyResult() {
+            if (lastResult) navigator.clipboard.writeText(lastResult);
+        }
+
+        function openUrl() {
+            if (lastResult) window.open(lastResult, '_blank');
+        }
+
+        async function toggleCamera() {
+            if (cameraStream) { stopCamera(); return; }
+            try {
+                cameraStream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+                const video = document.getElementById('videoPreview');
+                video.srcObject = cameraStream;
+                video.style.display = 'block';
+                await video.play();
+                document.getElementById('cameraBtn').textContent = '⏹ Stop Camera';
+                document.getElementById('cameraStatus').textContent = 'Scanning...';
+                scanning = true;
+                scanLoop();
+            } catch (e) {
+                document.getElementById('cameraStatus').textContent = 'Camera error: ' + e.message;
+            }
+        }
+
+        function stopCamera() {
+            scanning = false;
+            if (cameraStream) {
+                cameraStream.getTracks().forEach(t => t.stop());
+                cameraStream = null;
+            }
+            document.getElementById('videoPreview').style.display = 'none';
+            document.getElementById('cameraBtn').textContent = '📹 Start Camera';
+            document.getElementById('cameraStatus').textContent = 'Camera stopped';
+        }
+
+        function scanLoop() {
+            if (!scanning) return;
+            const video = document.getElementById('videoPreview');
+            const canvas = document.getElementById('canvasPreview');
+            if (video.readyState === video.HAVE_ENOUGH_DATA) {
+                canvas.width = video.videoWidth;
+                canvas.height = video.videoHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(video, 0, 0);
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const code = jsQR(imageData.data, imageData.width, imageData.height);
+                if (code) {
+                    showResult(code.data, true);
+                    document.getElementById('cameraStatus').textContent = 'QR code found!';
+                }
+            }
+            requestAnimationFrame(scanLoop);
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

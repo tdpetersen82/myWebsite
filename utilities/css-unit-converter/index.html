@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Unit Converter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .form-group { text-align:left; margin-bottom:10px; }
+        .form-group label { font-weight:600; font-size:0.88em; color:#444; display:block; margin-bottom:3px; }
+        .form-group input, .form-group select { padding:9px 11px; border:2px solid #e0e0e0; border-radius:8px; font-size:0.92em; }
+        .form-group input:focus, .form-group select:focus { border-color:#667eea; outline:none; }
+        .input-row { display:flex; gap:10px; flex-wrap:wrap; align-items:end; }
+        .input-row .form-group { flex:1; min-width:120px; }
+        .input-row .form-group input, .input-row .form-group select { width:100%; }
+        .config-row { display:flex; gap:10px; flex-wrap:wrap; margin:12px 0; padding:12px; background:#f8f8fc; border-radius:10px; }
+        .config-row .form-group { flex:1; min-width:130px; margin-bottom:0; }
+        .config-row .form-group input { width:100%; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📐 CSS Unit Converter</h1>
+        <p class="subtitle">Convert between CSS units: px, em, rem, pt, vw, vh, and %.</p>
+
+        <div class="tool-area">
+            <div class="input-row">
+                <div class="form-group">
+                    <label for="inputVal">Value</label>
+                    <input type="number" id="inputVal" value="16" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="inputUnit">Unit</label>
+                    <select id="inputUnit">
+                        <option value="px" selected>px</option>
+                        <option value="em">em</option>
+                        <option value="rem">rem</option>
+                        <option value="pt">pt</option>
+                        <option value="vw">vw</option>
+                        <option value="vh">vh</option>
+                        <option value="%">%</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="config-row">
+                <div class="form-group">
+                    <label for="baseFontSize">Base Font Size (px)</label>
+                    <input type="number" id="baseFontSize" value="16" min="1" step="any">
+                </div>
+                <div class="form-group">
+                    <label for="viewportW">Viewport Width (px)</label>
+                    <input type="number" id="viewportW" value="1920" min="1">
+                </div>
+                <div class="form-group">
+                    <label for="viewportH">Viewport Height (px)</label>
+                    <input type="number" id="viewportH" value="1080" min="1">
+                </div>
+            </div>
+
+            <div class="tool-grid" id="results">
+                <div class="info-item"><div class="info-label">px</div><div class="info-value" id="r-px">—</div></div>
+                <div class="info-item"><div class="info-label">em</div><div class="info-value" id="r-em">—</div></div>
+                <div class="info-item"><div class="info-label">rem</div><div class="info-value" id="r-rem">—</div></div>
+                <div class="info-item"><div class="info-label">pt</div><div class="info-value" id="r-pt">—</div></div>
+                <div class="info-item"><div class="info-label">vw</div><div class="info-value" id="r-vw">—</div></div>
+                <div class="info-item"><div class="info-label">vh</div><div class="info-value" id="r-vh">—</div></div>
+                <div class="info-item"><div class="info-label">%</div><div class="info-value" id="r-pct">—</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        function convert() {
+            const val = parseFloat(document.getElementById('inputVal').value);
+            const unit = document.getElementById('inputUnit').value;
+            const base = parseFloat(document.getElementById('baseFontSize').value) || 16;
+            const vw = parseFloat(document.getElementById('viewportW').value) || 1920;
+            const vh = parseFloat(document.getElementById('viewportH').value) || 1080;
+
+            if (isNaN(val)) {
+                ['px','em','rem','pt','vw','vh','pct'].forEach(u => {
+                    document.getElementById('r-' + u).textContent = '—';
+                });
+                return;
+            }
+
+            // First convert to px
+            let px;
+            switch(unit) {
+                case 'px': px = val; break;
+                case 'em': px = val * base; break;
+                case 'rem': px = val * base; break;
+                case 'pt': px = val * (4/3); break;
+                case 'vw': px = val * vw / 100; break;
+                case 'vh': px = val * vh / 100; break;
+                case '%': px = val * base / 100; break;
+            }
+
+            function fmt(n) {
+                return parseFloat(n.toFixed(4));
+            }
+
+            document.getElementById('r-px').textContent = fmt(px);
+            document.getElementById('r-em').textContent = fmt(px / base);
+            document.getElementById('r-rem').textContent = fmt(px / base);
+            document.getElementById('r-pt').textContent = fmt(px * 0.75);
+            document.getElementById('r-vw').textContent = fmt(px / vw * 100);
+            document.getElementById('r-vh').textContent = fmt(px / vh * 100);
+            document.getElementById('r-pct').textContent = fmt(px / base * 100);
+        }
+
+        ['inputVal','inputUnit','baseFontSize','viewportW','viewportH'].forEach(id => {
+            document.getElementById(id).addEventListener('input', convert);
+            document.getElementById(id).addEventListener('change', convert);
+        });
+
+        convert();
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>
