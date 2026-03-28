@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSR Decoder — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📜 CSR Decoder</h1>
+        <p class="subtitle">Decode PEM-encoded Certificate Signing Requests and view subject details.</p>
+
+        <div class="tool-area">
+            <div>
+                <label for="csrInput">PEM-encoded CSR</label>
+                <textarea id="csrInput" placeholder="-----BEGIN CERTIFICATE REQUEST-----&#10;Paste your CSR here...&#10;-----END CERTIFICATE REQUEST-----" style="height:180px;font-family:monospace;font-size:0.85em;"></textarea>
+            </div>
+
+            <div style="text-align:center;margin:10px 0;">
+                <button class="copy-btn" onclick="decodeCSR()">Decode CSR</button>
+            </div>
+
+            <div class="tool-output" id="results" style="display:none;">
+                <div class="tool-grid" id="csrInfo"></div>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+        </div>
+    </div>
+
+    <script>
+        const errorMsg = document.getElementById('errorMsg');
+
+        // OID to name mapping
+        const OID_MAP = {
+            '2.5.4.3': 'Common Name (CN)',
+            '2.5.4.6': 'Country (C)',
+            '2.5.4.7': 'Locality (L)',
+            '2.5.4.8': 'State/Province (ST)',
+            '2.5.4.10': 'Organization (O)',
+            '2.5.4.11': 'Organizational Unit (OU)',
+            '2.5.4.5': 'Serial Number',
+            '1.2.840.113549.1.1.1': 'RSA',
+            '1.2.840.113549.1.1.5': 'SHA-1 with RSA',
+            '1.2.840.113549.1.1.11': 'SHA-256 with RSA',
+            '1.2.840.113549.1.1.12': 'SHA-384 with RSA',
+            '1.2.840.113549.1.1.13': 'SHA-512 with RSA',
+            '1.2.840.10045.2.1': 'EC',
+            '1.2.840.10045.3.1.7': 'P-256 (prime256v1)',
+            '1.3.132.0.34': 'P-384 (secp384r1)',
+            '1.3.132.0.35': 'P-521 (secp521r1)',
+        };
+
+        function decodeCSR() {
+            errorMsg.textContent = '';
+            const pem = document.getElementById('csrInput').value.trim();
+
+            if (!pem) {
+                errorMsg.textContent = 'Please paste a PEM-encoded CSR.';
+                return;
+            }
+
+            try {
+                // Extract base64 content
+                const b64 = pem.replace(/-----BEGIN .*?-----/, '').replace(/-----END .*?-----/, '').replace(/\s/g, '');
+                const binary = atob(b64);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+                const asn1 = parseASN1(bytes, 0);
+                const info = extractCSRInfo(asn1);
+
+                displayResults(info);
+            } catch (e) {
+                errorMsg.textContent = 'Failed to decode CSR: ' + e.message;
+            }
+        }
+
+        function parseASN1(bytes, offset) {
+            if (offset >= bytes.length) throw new Error('Unexpected end of data');
+
+            const tag = bytes[offset++];
+            let length = bytes[offset++];
+
+            if (length & 0x80) {
+                const numBytes = length & 0x7f;
+                length = 0;
+                for (let i = 0; i < numBytes; i++) {
+                    length = (length << 8) | bytes[offset++];
+                }
+            }
+
+            const start = offset;
+            const end = offset + length;
+            const isConstructed = (tag & 0x20) !== 0;
+            const tagNum = tag & 0x1f;
+            const tagClass = (tag >> 6) & 0x03;
+
+            const node = { tag, tagNum, tagClass, isConstructed, start, length, end };
+
+            if (isConstructed || tagClass !== 0) {
+                node.children = [];
+                let pos = start;
+                while (pos < end) {
+                    try {
+                        const child = parseASN1(bytes, pos);
+                        node.children.push(child);
+                        pos = child.end;
+                    } catch (e) {
+                        break;
+                    }
+                }
+            }
+
+            // Extract value for primitive types
+            if (!isConstructed) {
+                node.value = bytes.slice(start, end);
+            }
+
+            return node;
+        }
+
+        function readOID(bytes) {
+            const parts = [];
+            parts.push(Math.floor(bytes[0] / 40));
+            parts.push(bytes[0] % 40);
+            let val = 0;
+            for (let i = 1; i < bytes.length; i++) {
+                val = (val << 7) | (bytes[i] & 0x7f);
+                if (!(bytes[i] & 0x80)) {
+                    parts.push(val);
+                    val = 0;
+                }
+            }
+            return parts.join('.');
+        }
+
+        function readString(node) {
+            if (node.value) {
+                return new TextDecoder().decode(node.value);
+            }
+            return '';
+        }
+
+        function extractCSRInfo(root) {
+            const info = { subject: {}, keyAlgorithm: '', keySize: '' };
+
+            try {
+                // CSR structure: SEQUENCE { CertificationRequestInfo, SignatureAlgorithm, Signature }
+                const certReqInfo = root.children[0]; // CertificationRequestInfo
+
+                // CertificationRequestInfo: SEQUENCE { version, subject, subjectPKInfo, ... }
+                const subjectNode = certReqInfo.children[1]; // Subject (SEQUENCE of SETs)
+                const pkInfoNode = certReqInfo.children[2]; // SubjectPublicKeyInfo
+
+                // Parse subject
+                if (subjectNode && subjectNode.children) {
+                    for (const set of subjectNode.children) {
+                        if (set.children) {
+                            for (const seq of set.children) {
+                                if (seq.children && seq.children.length >= 2) {
+                                    const oid = readOID(seq.children[0].value);
+                                    const val = readString(seq.children[1]);
+                                    const name = OID_MAP[oid] || oid;
+                                    info.subject[name] = val;
+                                }
+                            }
+                        }
+                    }
+                }
+
+                // Parse public key info
+                if (pkInfoNode && pkInfoNode.children) {
+                    const algoSeq = pkInfoNode.children[0];
+                    if (algoSeq && algoSeq.children) {
+                        const oid = readOID(algoSeq.children[0].value);
+                        info.keyAlgorithm = OID_MAP[oid] || oid;
+
+                        if (algoSeq.children.length > 1 && algoSeq.children[1].value) {
+                            const curveOid = readOID(algoSeq.children[1].value);
+                            if (OID_MAP[curveOid]) {
+                                info.keyAlgorithm += ' / ' + OID_MAP[curveOid];
+                            }
+                        }
+                    }
+
+                    // Key size from bit string
+                    if (pkInfoNode.children[1]) {
+                        const bitString = pkInfoNode.children[1];
+                        const keyBits = (bitString.length - 1) * 8;
+                        if (info.keyAlgorithm.startsWith('RSA')) {
+                            // RSA key size is roughly the bit string length
+                            // More accurate: parse the modulus
+                            try {
+                                const keyBytes = new Uint8Array(bitString.value.slice(1)); // skip padding byte
+                                const inner = parseASN1(keyBytes, 0);
+                                if (inner.children && inner.children[0]) {
+                                    info.keySize = ((inner.children[0].length - 1) * 8) + ' bits';
+                                }
+                            } catch (e) {
+                                info.keySize = keyBits + ' bits (approx)';
+                            }
+                        } else {
+                            info.keySize = keyBits + ' bits';
+                        }
+                    }
+                }
+
+                // Signature algorithm
+                if (root.children[1] && root.children[1].children) {
+                    const sigOid = readOID(root.children[1].children[0].value);
+                    info.signatureAlgorithm = OID_MAP[sigOid] || sigOid;
+                }
+            } catch (e) {
+                // Partial parse is OK
+            }
+
+            return info;
+        }
+
+        function displayResults(info) {
+            const container = document.getElementById('csrInfo');
+            let html = '';
+
+            for (const [name, val] of Object.entries(info.subject)) {
+                html += '<div class="info-item"><span class="info-label">' + escHtml(name) + '</span><span class="info-value">' + escHtml(val) + '</span></div>';
+            }
+
+            if (info.keyAlgorithm) {
+                html += '<div class="info-item"><span class="info-label">Key Algorithm</span><span class="info-value">' + escHtml(info.keyAlgorithm) + '</span></div>';
+            }
+            if (info.keySize) {
+                html += '<div class="info-item"><span class="info-label">Key Size</span><span class="info-value">' + escHtml(info.keySize) + '</span></div>';
+            }
+            if (info.signatureAlgorithm) {
+                html += '<div class="info-item"><span class="info-label">Signature Algorithm</span><span class="info-value">' + escHtml(info.signatureAlgorithm) + '</span></div>';
+            }
+
+            if (!html) {
+                html = '<div class="info-item"><span class="info-value">No readable fields found in CSR.</span></div>';
+            }
+
+            container.innerHTML = html;
+            document.getElementById('results').style.display = '';
+        }
+
+        function escHtml(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

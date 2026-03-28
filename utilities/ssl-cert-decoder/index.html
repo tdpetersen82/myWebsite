@@ -1,0 +1,257 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SSL Certificate Decoder — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🛡️ SSL Certificate Decoder</h1>
+        <p class="subtitle">Decode PEM-encoded X.509 certificates and view subject, issuer, validity, and key details.</p>
+
+        <div class="tool-area">
+            <div>
+                <label for="certInput">PEM-encoded Certificate</label>
+                <textarea id="certInput" placeholder="-----BEGIN CERTIFICATE-----&#10;Paste your certificate here...&#10;-----END CERTIFICATE-----" style="height:180px;font-family:monospace;font-size:0.85em;"></textarea>
+            </div>
+
+            <div style="text-align:center;margin:10px 0;">
+                <button class="copy-btn" onclick="decodeCert()">Decode Certificate</button>
+            </div>
+
+            <div class="tool-output" id="results" style="display:none;">
+                <div class="tool-grid" id="certInfo"></div>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+        </div>
+    </div>
+
+    <script>
+        const errorMsg = document.getElementById('errorMsg');
+
+        const OID_MAP = {
+            '2.5.4.3': 'CN', '2.5.4.6': 'C', '2.5.4.7': 'L', '2.5.4.8': 'ST',
+            '2.5.4.10': 'O', '2.5.4.11': 'OU', '2.5.4.5': 'Serial',
+            '1.2.840.113549.1.1.1': 'RSA', '1.2.840.113549.1.1.5': 'SHA-1 with RSA',
+            '1.2.840.113549.1.1.11': 'SHA-256 with RSA', '1.2.840.113549.1.1.12': 'SHA-384 with RSA',
+            '1.2.840.113549.1.1.13': 'SHA-512 with RSA', '1.2.840.10045.2.1': 'EC',
+            '1.2.840.10045.3.1.7': 'P-256', '1.3.132.0.34': 'P-384', '1.3.132.0.35': 'P-521',
+            '1.2.840.113549.1.9.1': 'Email',
+        };
+
+        function decodeCert() {
+            errorMsg.textContent = '';
+            const pem = document.getElementById('certInput').value.trim();
+            if (!pem) { errorMsg.textContent = 'Please paste a PEM-encoded certificate.'; return; }
+
+            try {
+                const b64 = pem.replace(/-----BEGIN .*?-----/, '').replace(/-----END .*?-----/, '').replace(/\s/g, '');
+                const binary = atob(b64);
+                const bytes = new Uint8Array(binary.length);
+                for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+
+                const asn1 = parseASN1(bytes, 0);
+                const info = extractCertInfo(asn1, bytes);
+                displayResults(info);
+            } catch (e) {
+                errorMsg.textContent = 'Failed to decode certificate: ' + e.message;
+            }
+        }
+
+        function parseASN1(bytes, offset) {
+            if (offset >= bytes.length) throw new Error('Unexpected end of data');
+            const tag = bytes[offset++];
+            let length = bytes[offset++];
+            if (length & 0x80) {
+                const n = length & 0x7f;
+                length = 0;
+                for (let i = 0; i < n; i++) length = (length << 8) | bytes[offset++];
+            }
+            const start = offset;
+            const end = offset + length;
+            const isConstructed = (tag & 0x20) !== 0;
+            const tagNum = tag & 0x1f;
+            const tagClass = (tag >> 6) & 0x03;
+            const node = { tag, tagNum, tagClass, isConstructed, start, length, end };
+
+            if (isConstructed || tagClass !== 0) {
+                node.children = [];
+                let pos = start;
+                while (pos < end) {
+                    try {
+                        const child = parseASN1(bytes, pos);
+                        node.children.push(child);
+                        pos = child.end;
+                    } catch (e) { break; }
+                }
+            }
+            if (!isConstructed) node.value = bytes.slice(start, end);
+            return node;
+        }
+
+        function readOID(bytes) {
+            const parts = [Math.floor(bytes[0] / 40), bytes[0] % 40];
+            let val = 0;
+            for (let i = 1; i < bytes.length; i++) {
+                val = (val << 7) | (bytes[i] & 0x7f);
+                if (!(bytes[i] & 0x80)) { parts.push(val); val = 0; }
+            }
+            return parts.join('.');
+        }
+
+        function readString(node) {
+            if (node.value) return new TextDecoder().decode(node.value);
+            return '';
+        }
+
+        function readDN(seqNode) {
+            const parts = [];
+            if (!seqNode || !seqNode.children) return '';
+            for (const set of seqNode.children) {
+                if (set.children) {
+                    for (const seq of set.children) {
+                        if (seq.children && seq.children.length >= 2) {
+                            const oid = readOID(seq.children[0].value);
+                            const val = readString(seq.children[1]);
+                            const name = OID_MAP[oid] || oid;
+                            parts.push(name + '=' + val);
+                        }
+                    }
+                }
+            }
+            return parts.join(', ');
+        }
+
+        function readTime(node) {
+            if (!node || !node.value) return null;
+            const s = new TextDecoder().decode(node.value);
+            let year, rest;
+            if (node.tag === 0x17) { // UTCTime
+                year = parseInt(s.substring(0, 2));
+                year += year >= 50 ? 1900 : 2000;
+                rest = s.substring(2);
+            } else { // GeneralizedTime
+                year = parseInt(s.substring(0, 4));
+                rest = s.substring(4);
+            }
+            const month = parseInt(rest.substring(0, 2)) - 1;
+            const day = parseInt(rest.substring(2, 4));
+            const hour = parseInt(rest.substring(4, 6));
+            const min = parseInt(rest.substring(6, 8));
+            const sec = parseInt(rest.substring(8, 10));
+            return new Date(Date.UTC(year, month, day, hour, min, sec));
+        }
+
+        function extractCertInfo(root, bytes) {
+            const info = {};
+            try {
+                const tbsCert = root.children[0]; // TBSCertificate
+
+                // Version: [0] EXPLICIT INTEGER (index 0 if present)
+                let idx = 0;
+                if (tbsCert.children[0].tagClass === 2) { // context-specific
+                    idx = 1; // skip version
+                }
+
+                // Serial Number
+                const serialNode = tbsCert.children[idx];
+                if (serialNode && serialNode.value) {
+                    info.serialNumber = Array.from(serialNode.value).map(b => b.toString(16).padStart(2, '0')).join(':');
+                }
+
+                // Signature algorithm (inside TBS)
+                const sigAlgoNode = tbsCert.children[idx + 1];
+                if (sigAlgoNode && sigAlgoNode.children) {
+                    const oid = readOID(sigAlgoNode.children[0].value);
+                    info.signatureAlgorithm = OID_MAP[oid] || oid;
+                }
+
+                // Issuer
+                info.issuer = readDN(tbsCert.children[idx + 2]);
+
+                // Validity
+                const validity = tbsCert.children[idx + 3];
+                if (validity && validity.children && validity.children.length >= 2) {
+                    info.validFrom = readTime(validity.children[0]);
+                    info.validTo = readTime(validity.children[1]);
+                }
+
+                // Subject
+                info.subject = readDN(tbsCert.children[idx + 4]);
+
+                // Subject Public Key Info
+                const pkInfo = tbsCert.children[idx + 5];
+                if (pkInfo && pkInfo.children) {
+                    const algoSeq = pkInfo.children[0];
+                    if (algoSeq && algoSeq.children) {
+                        const oid = readOID(algoSeq.children[0].value);
+                        info.keyAlgorithm = OID_MAP[oid] || oid;
+                        if (algoSeq.children.length > 1 && algoSeq.children[1].value) {
+                            try {
+                                const curveOid = readOID(algoSeq.children[1].value);
+                                if (OID_MAP[curveOid]) info.keyAlgorithm += ' / ' + OID_MAP[curveOid];
+                            } catch (e) {}
+                        }
+                    }
+                    // Key size
+                    if (pkInfo.children[1]) {
+                        const bitString = pkInfo.children[1];
+                        if (info.keyAlgorithm && info.keyAlgorithm.startsWith('RSA')) {
+                            try {
+                                const keyBytes = new Uint8Array(bitString.value.slice(1));
+                                const inner = parseASN1(keyBytes, 0);
+                                if (inner.children && inner.children[0]) {
+                                    info.keySize = ((inner.children[0].length - 1) * 8) + ' bits';
+                                }
+                            } catch (e) {
+                                info.keySize = ((bitString.length - 1) * 8) + ' bits (approx)';
+                            }
+                        } else {
+                            info.keySize = ((bitString.length - 1) * 8) + ' bits';
+                        }
+                    }
+                }
+            } catch (e) { /* partial parse OK */ }
+            return info;
+        }
+
+        function displayResults(info) {
+            const container = document.getElementById('certInfo');
+            let html = '';
+
+            function addRow(label, value, extra) {
+                html += '<div class="info-item"><span class="info-label">' + esc(label) + '</span><span class="info-value"' + (extra || '') + '>' + esc(value || 'N/A') + '</span></div>';
+            }
+
+            addRow('Subject', info.subject);
+            addRow('Issuer', info.issuer);
+
+            if (info.validFrom) addRow('Valid From', info.validFrom.toUTCString());
+            if (info.validTo) {
+                const now = new Date();
+                const expired = now > info.validTo;
+                const statusColor = expired ? ' style="color:#e74c3c;"' : ' style="color:#27ae60;"';
+                html += '<div class="info-item"><span class="info-label">Valid To</span><span class="info-value">' + esc(info.validTo.toUTCString()) + ' <strong' + statusColor + '>(' + (expired ? 'EXPIRED' : 'Valid') + ')</strong></span></div>';
+            }
+
+            if (info.serialNumber) addRow('Serial Number', info.serialNumber);
+            if (info.signatureAlgorithm) addRow('Signature Algorithm', info.signatureAlgorithm);
+            if (info.keyAlgorithm) addRow('Key Algorithm', info.keyAlgorithm);
+            if (info.keySize) addRow('Key Size', info.keySize);
+
+            if (!html) html = '<div class="info-item"><span class="info-value">No readable fields found.</span></div>';
+
+            container.innerHTML = html;
+            document.getElementById('results').style.display = '';
+        }
+
+        function esc(s) {
+            return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

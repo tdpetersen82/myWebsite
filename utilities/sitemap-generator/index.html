@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>XML Sitemap Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .form-group { text-align:left; margin-bottom:12px; }
+        .form-group label { font-weight:600; font-size:0.9em; color:#444; display:block; margin-bottom:4px; }
+        .form-group textarea { width:100%; min-height:120px; padding:10px 12px; border:2px solid #e0e0e0; border-radius:8px; font-size:0.9em; font-family:monospace; resize:vertical; }
+        .form-group select, .form-group input { padding:10px 12px; border:2px solid #e0e0e0; border-radius:8px; font-size:0.95em; }
+        .form-group select:focus, .form-group input:focus, .form-group textarea:focus { border-color:#667eea; outline:none; }
+        .inline-group { display:flex; gap:12px; flex-wrap:wrap; }
+        .inline-group > div { flex:1; min-width:150px; }
+        .output-box { background:#1a1a2e; color:#ccc; border-radius:10px; padding:16px; font-family:'Courier New',monospace; font-size:0.8em; white-space:pre-wrap; word-break:break-all; max-height:400px; overflow:auto; margin-top:10px; text-align:left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗺️ XML Sitemap Generator</h1>
+        <p class="subtitle">Generate a valid XML sitemap for search engines from a list of URLs.</p>
+
+        <div class="tool-area">
+            <div class="form-group">
+                <label for="urlList">URLs (one per line)</label>
+                <textarea id="urlList" placeholder="https://example.com/&#10;https://example.com/about&#10;https://example.com/contact"></textarea>
+            </div>
+
+            <div class="inline-group">
+                <div class="form-group">
+                    <label for="globalPriority">Priority</label>
+                    <select id="globalPriority">
+                        <option value="1.0">1.0</option>
+                        <option value="0.9">0.9</option>
+                        <option value="0.8" selected>0.8</option>
+                        <option value="0.7">0.7</option>
+                        <option value="0.6">0.6</option>
+                        <option value="0.5">0.5</option>
+                        <option value="0.4">0.4</option>
+                        <option value="0.3">0.3</option>
+                        <option value="0.2">0.2</option>
+                        <option value="0.1">0.1</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="globalFreq">Change Frequency</label>
+                    <select id="globalFreq">
+                        <option value="always">always</option>
+                        <option value="hourly">hourly</option>
+                        <option value="daily">daily</option>
+                        <option value="weekly" selected>weekly</option>
+                        <option value="monthly">monthly</option>
+                        <option value="yearly">yearly</option>
+                        <option value="never">never</option>
+                    </select>
+                </div>
+            </div>
+
+            <button class="copy-btn" id="generateBtn" style="width:100%;padding:12px;font-size:1em;margin-top:8px;">Generate Sitemap</button>
+
+            <div class="tool-output">
+                <div class="output-box" id="output"></div>
+                <div class="tool-row" style="margin-top:10px;display:flex;gap:8px;">
+                    <button class="copy-btn" id="copyBtn">Copy</button>
+                    <button class="copy-btn" id="downloadBtn">Download .xml</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        function escapeXml(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;').replace(/'/g,'&apos;');
+        }
+
+        function generate() {
+            const urls = document.getElementById('urlList').value.trim().split('\n').map(u => u.trim()).filter(u => u);
+            if (!urls.length) { document.getElementById('output').textContent = 'Please enter at least one URL.'; return; }
+            const priority = document.getElementById('globalPriority').value;
+            const freq = document.getElementById('globalFreq').value;
+            const today = new Date().toISOString().split('T')[0];
+
+            let xml = '<?xml version="1.0" encoding="UTF-8"?>\n';
+            xml += '<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n';
+            urls.forEach(url => {
+                xml += '  <url>\n';
+                xml += '    <loc>' + escapeXml(url) + '</loc>\n';
+                xml += '    <lastmod>' + today + '</lastmod>\n';
+                xml += '    <changefreq>' + freq + '</changefreq>\n';
+                xml += '    <priority>' + priority + '</priority>\n';
+                xml += '  </url>\n';
+            });
+            xml += '</urlset>';
+            document.getElementById('output').textContent = xml;
+        }
+
+        document.getElementById('generateBtn').addEventListener('click', generate);
+
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            const txt = document.getElementById('output').textContent;
+            if (!txt) return;
+            navigator.clipboard.writeText(txt).then(() => {
+                this.textContent = 'Copied!';
+                setTimeout(() => this.textContent = 'Copy', 1200);
+            });
+        });
+
+        document.getElementById('downloadBtn').addEventListener('click', function() {
+            const txt = document.getElementById('output').textContent;
+            if (!txt) return;
+            const blob = new Blob([txt], {type:'application/xml'});
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'sitemap.xml';
+            a.click();
+            URL.revokeObjectURL(a.href);
+        });
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

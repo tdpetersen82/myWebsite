@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number Base Converter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔢 Number Base Converter</h1>
+        <p class="subtitle">Convert numbers between binary, octal, decimal, and hexadecimal.</p>
+
+        <div class="tool-area">
+            <div class="tool-row">
+                <div>
+                    <label for="numInput">Value</label>
+                    <input type="text" id="numInput" value="255" placeholder="Enter a number...">
+                </div>
+                <div>
+                    <label for="numBase">Source Base</label>
+                    <select id="numBase">
+                        <option value="2">Binary (2)</option>
+                        <option value="8">Octal (8)</option>
+                        <option value="10" selected>Decimal (10)</option>
+                        <option value="16">Hexadecimal (16)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-bottom:8px;font-size:0.9em;"></div>
+
+            <div class="tool-grid" id="resultsGrid">
+                <div class="info-item"><div class="info-label">Binary (Base 2)</div><div class="info-value" id="rBin">—</div></div>
+                <div class="info-item"><div class="info-label">Octal (Base 8)</div><div class="info-value" id="rOct">—</div></div>
+                <div class="info-item"><div class="info-label">Decimal (Base 10)</div><div class="info-value" id="rDec">—</div></div>
+                <div class="info-item"><div class="info-label">Hexadecimal (Base 16)</div><div class="info-value" id="rHex">—</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const numInput = document.getElementById('numInput');
+        const numBase = document.getElementById('numBase');
+        const errorMsg = document.getElementById('errorMsg');
+
+        function convert() {
+            const value = numInput.value.trim();
+            const base = parseInt(numBase.value);
+            errorMsg.textContent = '';
+
+            if (value === '') {
+                ['rBin', 'rOct', 'rDec', 'rHex'].forEach(id => document.getElementById(id).textContent = '—');
+                return;
+            }
+
+            // Validate input against selected base
+            const validChars = '0123456789abcdef'.slice(0, base);
+            const regex = new RegExp('^[' + validChars + ']+$', 'i');
+            if (!regex.test(value)) {
+                errorMsg.textContent = 'Invalid character for base ' + base + '. Valid characters: ' + validChars.split('').join(', ').toUpperCase();
+                ['rBin', 'rOct', 'rDec', 'rHex'].forEach(id => document.getElementById(id).textContent = '—');
+                return;
+            }
+
+            const decimal = parseInt(value, base);
+            if (isNaN(decimal)) {
+                errorMsg.textContent = 'Could not parse the number.';
+                return;
+            }
+
+            document.getElementById('rBin').textContent = decimal.toString(2);
+            document.getElementById('rOct').textContent = decimal.toString(8);
+            document.getElementById('rDec').textContent = decimal.toString(10);
+            document.getElementById('rHex').textContent = decimal.toString(16).toUpperCase();
+        }
+
+        numInput.addEventListener('input', convert);
+        numBase.addEventListener('change', convert);
+        convert();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

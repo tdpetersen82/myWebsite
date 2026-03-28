@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Aspect Ratio Calculator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .ratio-inputs {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            margin-bottom: 16px;
+            flex-wrap: wrap;
+        }
+        .ratio-inputs .input-group {
+            flex: 1;
+            min-width: 100px;
+        }
+        .ratio-inputs .input-group label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 4px;
+            font-size: 0.9em;
+        }
+        .ratio-inputs .input-group input {
+            width: 100%;
+            padding: 10px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            background: #fafafa;
+            color: #333;
+        }
+        .ratio-inputs .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+            background: #fff;
+        }
+        .ratio-display {
+            font-size: 2em;
+            font-weight: 700;
+            color: #667eea;
+            margin: 16px 0;
+        }
+        .lock-row {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        .lock-row label {
+            font-weight: 600;
+            color: #555;
+            font-size: 0.9em;
+        }
+        .presets-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        .preset-btn {
+            padding: 8px 16px;
+            border: 2px solid #e0e0e0;
+            border-radius: 25px;
+            background: #fff;
+            color: #555;
+            font-weight: 600;
+            font-size: 0.85em;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: inherit;
+        }
+        .preset-btn:hover {
+            border-color: #667eea;
+            color: #667eea;
+        }
+        .preset-btn.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-color: transparent;
+        }
+        .preview-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #f0f0f0;
+            border-radius: 12px;
+            padding: 20px;
+            min-height: 200px;
+        }
+        .ratio-rect {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.9em;
+            transition: width 0.3s, height 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📐 Aspect Ratio Calculator</h1>
+        <p class="subtitle">Calculate aspect ratios, lock proportions, and preview dimensions visually.</p>
+
+        <div class="tool-area">
+            <div class="ratio-inputs">
+                <div class="input-group">
+                    <label>Width</label>
+                    <input type="number" id="width" value="1920" min="1">
+                </div>
+                <span style="font-size:1.5em;font-weight:700;color:#999;margin-top:20px;">×</span>
+                <div class="input-group">
+                    <label>Height</label>
+                    <input type="number" id="height" value="1080" min="1">
+                </div>
+            </div>
+
+            <div class="lock-row">
+                <input type="checkbox" id="lockRatio">
+                <label for="lockRatio">Lock aspect ratio (change one dimension to auto-update the other)</label>
+            </div>
+
+            <div class="ratio-display" id="ratioDisplay">16:9</div>
+
+            <label style="display:block;font-weight:600;color:#555;margin-bottom:8px;font-size:0.9em;">Common Presets</label>
+            <div class="presets-row" id="presets"></div>
+
+            <div class="preview-container">
+                <div class="ratio-rect" id="ratioRect"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const widthEl = document.getElementById('width');
+        const heightEl = document.getElementById('height');
+        const lockEl = document.getElementById('lockRatio');
+        const displayEl = document.getElementById('ratioDisplay');
+        const rectEl = document.getElementById('ratioRect');
+        const presetsEl = document.getElementById('presets');
+
+        const presets = [
+            { label: '16:9', w: 16, h: 9 },
+            { label: '4:3', w: 4, h: 3 },
+            { label: '1:1', w: 1, h: 1 },
+            { label: '21:9', w: 21, h: 9 },
+            { label: '3:2', w: 3, h: 2 },
+            { label: '9:16', w: 9, h: 16 },
+        ];
+
+        let lockedRatio = null;
+
+        function gcd(a, b) {
+            a = Math.abs(Math.round(a));
+            b = Math.abs(Math.round(b));
+            while (b) { let t = b; b = a % b; a = t; }
+            return a;
+        }
+
+        function calcRatio(w, h) {
+            if (!w || !h) return '—';
+            const d = gcd(w, h);
+            return (w / d) + ':' + (h / d);
+        }
+
+        function updatePreview() {
+            const w = parseInt(widthEl.value) || 1;
+            const h = parseInt(heightEl.value) || 1;
+            const ratio = w / h;
+            const maxW = 300, maxH = 180;
+            let rw, rh;
+            if (ratio > maxW / maxH) {
+                rw = maxW;
+                rh = maxW / ratio;
+            } else {
+                rh = maxH;
+                rw = maxH * ratio;
+            }
+            rw = Math.max(30, rw);
+            rh = Math.max(30, rh);
+            rectEl.style.width = rw + 'px';
+            rectEl.style.height = rh + 'px';
+            rectEl.textContent = w + ' × ' + h;
+        }
+
+        function update() {
+            const w = parseInt(widthEl.value) || 0;
+            const h = parseInt(heightEl.value) || 0;
+            displayEl.textContent = calcRatio(w, h);
+            updatePreview();
+
+            // Highlight matching preset
+            document.querySelectorAll('.preset-btn').forEach(function(btn) {
+                const pw = parseInt(btn.dataset.w);
+                const ph = parseInt(btn.dataset.h);
+                const wd = gcd(w, h);
+                btn.classList.toggle('active', w && h && (w / wd) === pw && (h / wd) === ph);
+            });
+        }
+
+        widthEl.addEventListener('input', function() {
+            if (lockEl.checked && lockedRatio) {
+                const w = parseInt(this.value) || 1;
+                heightEl.value = Math.round(w / lockedRatio);
+            }
+            update();
+        });
+
+        heightEl.addEventListener('input', function() {
+            if (lockEl.checked && lockedRatio) {
+                const h = parseInt(this.value) || 1;
+                widthEl.value = Math.round(h * lockedRatio);
+            }
+            update();
+        });
+
+        lockEl.addEventListener('change', function() {
+            if (this.checked) {
+                const w = parseInt(widthEl.value) || 1;
+                const h = parseInt(heightEl.value) || 1;
+                lockedRatio = w / h;
+            } else {
+                lockedRatio = null;
+            }
+        });
+
+        presets.forEach(function(p) {
+            const btn = document.createElement('button');
+            btn.className = 'preset-btn';
+            btn.textContent = p.label;
+            btn.dataset.w = p.w;
+            btn.dataset.h = p.h;
+            btn.addEventListener('click', function() {
+                // Set a sensible resolution for the preset
+                const baseW = 1920;
+                widthEl.value = baseW;
+                heightEl.value = Math.round(baseW * p.h / p.w);
+                if (lockEl.checked) {
+                    lockedRatio = p.w / p.h;
+                }
+                update();
+            });
+            presetsEl.appendChild(btn);
+        });
+
+        update();
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

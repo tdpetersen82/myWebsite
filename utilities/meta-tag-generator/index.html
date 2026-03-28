@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Meta Tag Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .char-count { font-size: 0.8em; color: #999; text-align: right; }
+        .char-count.warn { color: #e74c3c; }
+        .google-preview { background: #fff; border: 1px solid #e0e0e0; border-radius: 10px; padding: 16px; margin: 12px 0; text-align: left; }
+        .gp-title { color: #1a0dab; font-size: 1.2em; font-family: Arial, sans-serif; text-decoration: underline; cursor: pointer; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+        .gp-url { color: #006621; font-size: 0.85em; font-family: Arial, sans-serif; margin: 2px 0; }
+        .gp-desc { color: #545454; font-size: 0.9em; font-family: Arial, sans-serif; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+        .code-output { background: #1a1a2e; color: #e0e0e0; border-radius: 8px; padding: 14px; font-family: 'Courier New', monospace; font-size: 0.82em; white-space: pre-wrap; text-align: left; max-height: 300px; overflow-y: auto; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏷️ Meta Tag Generator</h1>
+        <p class="subtitle">Generate SEO meta tags and preview your Google search snippet.</p>
+        <div class="tool-area">
+            <label for="title">Page Title:</label>
+            <input type="text" id="title" placeholder="My Awesome Page" maxlength="70" oninput="generate()">
+            <div class="char-count" id="titleCount">0 / 60</div>
+
+            <label for="desc">Description:</label>
+            <textarea id="desc" rows="2" placeholder="A brief description of your page..." maxlength="200" oninput="generate()"></textarea>
+            <div class="char-count" id="descCount">0 / 160</div>
+
+            <label for="keywords">Keywords (comma-separated):</label>
+            <input type="text" id="keywords" placeholder="seo, meta tags, generator" oninput="generate()">
+
+            <label for="author">Author:</label>
+            <input type="text" id="author" placeholder="Your Name" oninput="generate()">
+
+            <label for="canonical">Canonical URL:</label>
+            <input type="text" id="canonical" placeholder="https://example.com/page" oninput="generate()">
+
+            <label for="ogImage">OG Image URL:</label>
+            <input type="text" id="ogImage" placeholder="https://example.com/image.jpg" oninput="generate()">
+
+            <h3 style="margin:16px 0 8px">Google Search Preview</h3>
+            <div class="google-preview">
+                <div class="gp-title" id="gpTitle">Page Title</div>
+                <div class="gp-url" id="gpUrl">https://example.com</div>
+                <div class="gp-desc" id="gpDesc">Page description will appear here...</div>
+            </div>
+
+            <h3 style="margin:16px 0 8px">Generated Meta Tags</h3>
+            <div class="code-output" id="codeOutput"></div>
+            <button class="copy-btn" onclick="copyCode()">Copy Meta Tags</button>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        let codeResult = '';
+        function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;'); }
+        function generate() {
+            const title = document.getElementById('title').value;
+            const desc = document.getElementById('desc').value;
+            const keywords = document.getElementById('keywords').value;
+            const author = document.getElementById('author').value;
+            const canonical = document.getElementById('canonical').value;
+            const ogImage = document.getElementById('ogImage').value;
+
+            document.getElementById('titleCount').textContent = title.length + ' / 60';
+            document.getElementById('titleCount').classList.toggle('warn', title.length > 60);
+            document.getElementById('descCount').textContent = desc.length + ' / 160';
+            document.getElementById('descCount').classList.toggle('warn', desc.length > 160);
+
+            document.getElementById('gpTitle').textContent = title || 'Page Title';
+            document.getElementById('gpUrl').textContent = canonical || 'https://example.com';
+            document.getElementById('gpDesc').textContent = desc || 'Page description will appear here...';
+
+            let tags = '';
+            if (title) tags += '&lt;title&gt;' + esc(title) + '&lt;/title&gt;\n';
+            if (desc) tags += '&lt;meta name="description" content="' + esc(desc) + '"&gt;\n';
+            if (keywords) tags += '&lt;meta name="keywords" content="' + esc(keywords) + '"&gt;\n';
+            if (author) tags += '&lt;meta name="author" content="' + esc(author) + '"&gt;\n';
+            if (canonical) tags += '&lt;link rel="canonical" href="' + esc(canonical) + '"&gt;\n';
+            tags += '\n&lt;!-- Open Graph --&gt;\n';
+            if (title) tags += '&lt;meta property="og:title" content="' + esc(title) + '"&gt;\n';
+            if (desc) tags += '&lt;meta property="og:description" content="' + esc(desc) + '"&gt;\n';
+            tags += '&lt;meta property="og:type" content="website"&gt;\n';
+            if (canonical) tags += '&lt;meta property="og:url" content="' + esc(canonical) + '"&gt;\n';
+            if (ogImage) tags += '&lt;meta property="og:image" content="' + esc(ogImage) + '"&gt;\n';
+            tags += '\n&lt;!-- Twitter Card --&gt;\n';
+            tags += '&lt;meta name="twitter:card" content="summary_large_image"&gt;\n';
+            if (title) tags += '&lt;meta name="twitter:title" content="' + esc(title) + '"&gt;\n';
+            if (desc) tags += '&lt;meta name="twitter:description" content="' + esc(desc) + '"&gt;\n';
+            if (ogImage) tags += '&lt;meta name="twitter:image" content="' + esc(ogImage) + '"&gt;\n';
+
+            document.getElementById('codeOutput').innerHTML = tags;
+            // Plain text version for copy
+            codeResult = tags.replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&amp;/g, '&').replace(/&quot;/g, '"');
+        }
+        function copyCode() {
+            navigator.clipboard.writeText(codeResult).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Meta Tags', 1500);
+            });
+        }
+        generate();
+    </script>
+</body>
+</html>

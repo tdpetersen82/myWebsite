@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Encoder/Decoder — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 URL Encoder</h1>
+        <p class="subtitle">Encode and decode URLs and query strings.</p>
+
+        <div class="tool-area">
+            <div class="tool-row">
+                <div>
+                    <label for="urlInput">Input</label>
+                    <textarea id="urlInput" placeholder="Enter a URL or encoded string..."></textarea>
+                </div>
+                <div>
+                    <label for="urlOutput">Output</label>
+                    <textarea id="urlOutput" readonly placeholder="Result will appear here..."></textarea>
+                </div>
+            </div>
+
+            <div style="text-align:center;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button class="copy-btn" onclick="encodeUrl()">Encode →</button>
+                <button class="copy-btn" onclick="decodeUrl()">← Decode</button>
+                <button class="copy-btn" onclick="copyOutput()">📋 Copy Output</button>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('urlInput');
+        const output = document.getElementById('urlOutput');
+        const errorMsg = document.getElementById('errorMsg');
+
+        function encodeUrl() {
+            errorMsg.textContent = '';
+            try {
+                output.value = encodeURIComponent(input.value);
+            } catch (e) {
+                errorMsg.textContent = 'Error encoding: ' + e.message;
+            }
+        }
+
+        function decodeUrl() {
+            errorMsg.textContent = '';
+            try {
+                output.value = decodeURIComponent(input.value.trim());
+            } catch (e) {
+                errorMsg.textContent = 'Invalid encoded URL. Please check your input.';
+            }
+        }
+
+        function copyOutput() {
+            navigator.clipboard.writeText(output.value).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

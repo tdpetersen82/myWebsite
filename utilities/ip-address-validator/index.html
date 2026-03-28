@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IP Address Validator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .status-badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 0.95em; margin: 8px 0; }
+        .status-valid { background: #d4edda; color: #155724; }
+        .status-invalid { background: #f8d7da; color: #721c24; }
+        .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 12px; }
+        .info-card { background: #f8f9fa; border-radius: 8px; padding: 10px 14px; }
+        .info-card .label { font-size: 0.8em; color: #888; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 2px; }
+        .info-card .value { font-family: monospace; font-size: 0.95em; word-break: break-all; }
+        .info-card.full { grid-column: 1 / -1; }
+        .section-title { font-weight: bold; margin: 16px 0 8px; padding-top: 12px; border-top: 1px solid #eee; font-size: 0.95em; }
+        .private-badge { background: #fff3cd; color: #856404; padding: 2px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold; }
+        .public-badge { background: #d4edda; color: #155724; padding: 2px 10px; border-radius: 12px; font-size: 0.85em; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 IP Address Validator</h1>
+        <p class="subtitle">Validate IPv4/IPv6 addresses and analyze CIDR notation.</p>
+
+        <div class="tool-area">
+            <label for="ipInput">IP Address (with optional CIDR notation)</label>
+            <input type="text" id="ipInput" placeholder="e.g. 192.168.1.0/24 or 2001:db8::1" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;box-sizing:border-box;font-family:monospace;">
+
+            <div style="text-align:center;margin:12px 0;">
+                <button class="copy-btn" onclick="validateIP()" style="padding:10px 24px;">🔍 Validate</button>
+                <button class="copy-btn" onclick="clearAll()" style="padding:10px 24px;margin-left:8px;">Clear</button>
+            </div>
+
+            <div style="display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px;">
+                <button class="copy-btn" onclick="loadExample('192.168.1.1')" style="padding:4px 12px;font-size:0.85em;">192.168.1.1</button>
+                <button class="copy-btn" onclick="loadExample('10.0.0.0/8')" style="padding:4px 12px;font-size:0.85em;">10.0.0.0/8</button>
+                <button class="copy-btn" onclick="loadExample('192.168.1.0/24')" style="padding:4px 12px;font-size:0.85em;">192.168.1.0/24</button>
+                <button class="copy-btn" onclick="loadExample('2001:0db8:85a3:0000:0000:8a2e:0370:7334')" style="padding:4px 12px;font-size:0.85em;">IPv6 Example</button>
+                <button class="copy-btn" onclick="loadExample('::1')" style="padding:4px 12px;font-size:0.85em;">::1</button>
+                <button class="copy-btn" onclick="loadExample('255.255.255.255')" style="padding:4px 12px;font-size:0.85em;">255.255.255.255</button>
+            </div>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        function loadExample(ip) {
+            document.getElementById('ipInput').value = ip;
+            validateIP();
+        }
+
+        function clearAll() {
+            document.getElementById('ipInput').value = '';
+            document.getElementById('result').innerHTML = '';
+        }
+
+        // --- IPv4 Helpers ---
+
+        function isValidIPv4(str) {
+            const parts = str.split('.');
+            if (parts.length !== 4) return false;
+            return parts.every(p => {
+                if (!/^\d{1,3}$/.test(p)) return false;
+                const n = parseInt(p, 10);
+                return n >= 0 && n <= 255 && String(n) === p;
+            });
+        }
+
+        function ipv4ToInt(ip) {
+            const parts = ip.split('.').map(Number);
+            return ((parts[0] << 24) | (parts[1] << 16) | (parts[2] << 8) | parts[3]) >>> 0;
+        }
+
+        function intToIPv4(n) {
+            return [(n >>> 24) & 255, (n >>> 16) & 255, (n >>> 8) & 255, n & 255].join('.');
+        }
+
+        function ipv4ToBinary(ip) {
+            return ip.split('.').map(p => parseInt(p, 10).toString(2).padStart(8, '0')).join('.');
+        }
+
+        function getIPv4Class(ip) {
+            const first = parseInt(ip.split('.')[0], 10);
+            if (first <= 127) return 'A';
+            if (first <= 191) return 'B';
+            if (first <= 223) return 'C';
+            if (first <= 239) return 'D (Multicast)';
+            return 'E (Reserved)';
+        }
+
+        function isPrivateIPv4(ip) {
+            const n = ipv4ToInt(ip);
+            // 10.0.0.0/8
+            if ((n >>> 24) === 10) return true;
+            // 172.16.0.0/12
+            if ((n >>> 20) === (172 * 16 + 1)) return true; // 172.16-31.x.x
+            const second = (n >>> 16) & 255;
+            const first = (n >>> 24) & 255;
+            if (first === 172 && second >= 16 && second <= 31) return true;
+            // 192.168.0.0/16
+            if (first === 192 && second === 168) return true;
+            // 127.0.0.0/8 loopback
+            if (first === 127) return true;
+            // 169.254.0.0/16 link-local
+            if (first === 169 && second === 254) return true;
+            return false;
+        }
+
+        function getPrivateLabel(ip) {
+            const n = ipv4ToInt(ip);
+            const first = (n >>> 24) & 255;
+            const second = (n >>> 16) & 255;
+            if (first === 10) return 'Private (10.0.0.0/8)';
+            if (first === 172 && second >= 16 && second <= 31) return 'Private (172.16.0.0/12)';
+            if (first === 192 && second === 168) return 'Private (192.168.0.0/16)';
+            if (first === 127) return 'Loopback (127.0.0.0/8)';
+            if (first === 169 && second === 254) return 'Link-Local (169.254.0.0/16)';
+            return 'Public';
+        }
+
+        // --- IPv6 Helpers ---
+
+        function parseIPv6(str) {
+            // Handle ::
+            let halves = str.split('::');
+            if (halves.length > 2) return null;
+
+            let groups = [];
+            if (halves.length === 2) {
+                const left = halves[0] ? halves[0].split(':') : [];
+                const right = halves[1] ? halves[1].split(':') : [];
+                const missing = 8 - left.length - right.length;
+                if (missing < 0) return null;
+                groups = [...left, ...Array(missing).fill('0'), ...right];
+            } else {
+                groups = str.split(':');
+            }
+
+            if (groups.length !== 8) return null;
+
+            const expanded = groups.map(g => {
+                if (!/^[0-9a-fA-F]{1,4}$/.test(g)) return null;
+                return g.padStart(4, '0').toLowerCase();
+            });
+
+            if (expanded.some(g => g === null)) return null;
+            return expanded;
+        }
+
+        function isValidIPv6(str) {
+            return parseIPv6(str) !== null;
+        }
+
+        function expandIPv6(str) {
+            const groups = parseIPv6(str);
+            if (!groups) return null;
+            return groups.join(':');
+        }
+
+        function compressIPv6(str) {
+            const groups = parseIPv6(str);
+            if (!groups) return null;
+
+            // Convert to numbers to remove leading zeros
+            const short = groups.map(g => g.replace(/^0+/, '') || '0');
+
+            // Find longest run of consecutive 0 groups
+            let bestStart = -1, bestLen = 0, curStart = -1, curLen = 0;
+            for (let i = 0; i < 8; i++) {
+                if (short[i] === '0') {
+                    if (curStart === -1) curStart = i;
+                    curLen++;
+                    if (curLen > bestLen) { bestStart = curStart; bestLen = curLen; }
+                } else {
+                    curStart = -1; curLen = 0;
+                }
+            }
+
+            if (bestLen < 2) return short.join(':');
+
+            const left = short.slice(0, bestStart).join(':');
+            const right = short.slice(bestStart + bestLen).join(':');
+            return left + '::' + right;
+        }
+
+        // --- CIDR Helpers ---
+
+        function parseCIDRv4(input) {
+            const match = input.match(/^(.+)\/(\d+)$/);
+            if (!match) return null;
+            const ip = match[1];
+            const prefix = parseInt(match[2], 10);
+            if (!isValidIPv4(ip) || prefix < 0 || prefix > 32) return null;
+            return { ip, prefix };
+        }
+
+        function computeCIDRv4(ip, prefix) {
+            const ipInt = ipv4ToInt(ip);
+            const mask = prefix === 0 ? 0 : (0xFFFFFFFF << (32 - prefix)) >>> 0;
+            const network = (ipInt & mask) >>> 0;
+            const broadcast = (network | (~mask >>> 0)) >>> 0;
+            const hosts = prefix >= 31 ? (prefix === 32 ? 1 : 2) : Math.pow(2, 32 - prefix) - 2;
+            const firstHost = prefix >= 31 ? network : (network + 1) >>> 0;
+            const lastHost = prefix >= 31 ? broadcast : (broadcast - 1) >>> 0;
+
+            return {
+                network: intToIPv4(network),
+                broadcast: intToIPv4(broadcast),
+                subnetMask: intToIPv4(mask),
+                hosts: hosts,
+                totalAddresses: Math.pow(2, 32 - prefix),
+                firstHost: intToIPv4(firstHost),
+                lastHost: intToIPv4(lastHost),
+                prefix
+            };
+        }
+
+        // --- Main Validation ---
+
+        function validateIP() {
+            const raw = document.getElementById('ipInput').value.trim();
+            if (!raw) { document.getElementById('result').innerHTML = ''; return; }
+
+            let html = '';
+
+            // Check for CIDR notation
+            const cidrMatch = raw.match(/^(.+)\/(\d+)$/);
+            const ipPart = cidrMatch ? cidrMatch[1] : raw;
+            const cidrPrefix = cidrMatch ? parseInt(cidrMatch[2], 10) : null;
+
+            const v4 = isValidIPv4(ipPart);
+            const v6 = isValidIPv6(ipPart);
+
+            if (!v4 && !v6) {
+                html = '<div class="status-badge status-invalid">&#10060; Invalid IP Address</div>';
+                html += '<p style="color:#999;font-size:0.9em;margin-top:8px;">The input is not a valid IPv4 or IPv6 address.</p>';
+                document.getElementById('result').innerHTML = html;
+                return;
+            }
+
+            if (v4) {
+                html += '<div class="status-badge status-valid">&#10004; Valid IPv4 Address</div>';
+                const priv = isPrivateIPv4(ipPart);
+                const privLabel = getPrivateLabel(ipPart);
+                html += ' <span class="' + (priv ? 'private-badge' : 'public-badge') + '">' + privLabel + '</span>';
+
+                html += '<div class="info-grid">';
+                html += card('Dotted Decimal', ipPart);
+                html += card('IP Class', getIPv4Class(ipPart));
+                html += card('Binary', ipv4ToBinary(ipPart), true);
+                html += card('Integer', ipv4ToInt(ipPart).toString());
+                html += '</div>';
+
+                // CIDR info
+                if (cidrPrefix !== null) {
+                    if (cidrPrefix < 0 || cidrPrefix > 32) {
+                        html += '<div class="section-title">CIDR Notation</div>';
+                        html += '<div class="status-badge status-invalid">Invalid prefix length (must be 0-32)</div>';
+                    } else {
+                        const cidr = computeCIDRv4(ipPart, cidrPrefix);
+                        html += '<div class="section-title">CIDR Analysis (/' + cidrPrefix + ')</div>';
+                        html += '<div class="info-grid">';
+                        html += card('Network Address', cidr.network);
+                        html += card('Broadcast Address', cidr.broadcast);
+                        html += card('Subnet Mask', cidr.subnetMask);
+                        html += card('Usable Hosts', cidr.hosts.toLocaleString());
+                        html += card('Total Addresses', cidr.totalAddresses.toLocaleString());
+                        html += card('Prefix Length', '/' + cidr.prefix);
+                        html += card('First Usable Host', cidr.firstHost);
+                        html += card('Last Usable Host', cidr.lastHost);
+                        html += '</div>';
+                    }
+                }
+            }
+
+            if (v6) {
+                html += '<div class="status-badge status-valid">&#10004; Valid IPv6 Address</div>';
+
+                const expanded = expandIPv6(ipPart);
+                const compressed = compressIPv6(ipPart);
+
+                html += '<div class="info-grid">';
+                html += card('Expanded Form', expanded, true);
+                html += card('Compressed Form', compressed, true);
+                html += '</div>';
+
+                if (cidrPrefix !== null) {
+                    if (cidrPrefix < 0 || cidrPrefix > 128) {
+                        html += '<div class="section-title">CIDR Notation</div>';
+                        html += '<div class="status-badge status-invalid">Invalid prefix length (must be 0-128)</div>';
+                    } else {
+                        html += '<div class="section-title">CIDR Analysis (/' + cidrPrefix + ')</div>';
+                        const totalBits = 128 - cidrPrefix;
+                        const totalAddresses = totalBits <= 52 ? Math.pow(2, totalBits) : null;
+                        html += '<div class="info-grid">';
+                        html += card('Prefix Length', '/' + cidrPrefix);
+                        if (totalAddresses !== null) {
+                            html += card('Total Addresses', totalAddresses.toLocaleString());
+                        } else {
+                            html += card('Total Addresses', '2^' + totalBits + ' (too large to display)');
+                        }
+                        html += card('Full Notation', expanded + '/' + cidrPrefix, true);
+                        html += '</div>';
+                    }
+                }
+            }
+
+            document.getElementById('result').innerHTML = html;
+        }
+
+        function card(label, value, full) {
+            return '<div class="info-card' + (full ? ' full' : '') + '"><div class="label">' + label + '</div><div class="value">' + value + '</div></div>';
+        }
+
+        document.getElementById('ipInput').addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') validateIP();
+        });
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,128 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Converter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📏 Unit Converter</h1>
+        <p class="subtitle">Convert between common units of length, weight, temperature, and volume instantly.</p>
+
+        <div class="tool-area">
+            <div class="tool-tabs" id="tabs">
+                <button class="tool-tab active" data-tab="length">Length</button>
+                <button class="tool-tab" data-tab="weight">Weight</button>
+                <button class="tool-tab" data-tab="temperature">Temperature</button>
+                <button class="tool-tab" data-tab="volume">Volume</button>
+            </div>
+
+            <div class="tool-row">
+                <div>
+                    <label for="inputValue">Value</label>
+                    <input type="number" id="inputValue" value="1" step="any">
+                </div>
+                <div>
+                    <label for="sourceUnit">From</label>
+                    <select id="sourceUnit"></select>
+                </div>
+            </div>
+
+            <div class="tool-grid" id="results"></div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const units = {
+            length: {
+                mm:     { name: 'Millimeters (mm)',  toBase: v => v / 1000,       fromBase: v => v * 1000 },
+                cm:     { name: 'Centimeters (cm)',  toBase: v => v / 100,        fromBase: v => v * 100 },
+                m:      { name: 'Meters (m)',        toBase: v => v,              fromBase: v => v },
+                km:     { name: 'Kilometers (km)',   toBase: v => v * 1000,       fromBase: v => v / 1000 },
+                inches: { name: 'Inches (in)',       toBase: v => v * 0.0254,     fromBase: v => v / 0.0254 },
+                feet:   { name: 'Feet (ft)',         toBase: v => v * 0.3048,     fromBase: v => v / 0.3048 },
+                yards:  { name: 'Yards (yd)',        toBase: v => v * 0.9144,     fromBase: v => v / 0.9144 },
+                miles:  { name: 'Miles (mi)',        toBase: v => v * 1609.344,   fromBase: v => v / 1609.344 }
+            },
+            weight: {
+                mg: { name: 'Milligrams (mg)', toBase: v => v / 1000,       fromBase: v => v * 1000 },
+                g:  { name: 'Grams (g)',       toBase: v => v,              fromBase: v => v },
+                kg: { name: 'Kilograms (kg)',  toBase: v => v * 1000,       fromBase: v => v / 1000 },
+                oz: { name: 'Ounces (oz)',     toBase: v => v * 28.3495,    fromBase: v => v / 28.3495 },
+                lb: { name: 'Pounds (lb)',     toBase: v => v * 453.592,    fromBase: v => v / 453.592 }
+            },
+            temperature: {
+                celsius:    { name: 'Celsius (°C)',    toBase: v => v,                  fromBase: v => v },
+                fahrenheit: { name: 'Fahrenheit (°F)', toBase: v => (v - 32) * 5 / 9,   fromBase: v => v * 9 / 5 + 32 },
+                kelvin:     { name: 'Kelvin (K)',      toBase: v => v - 273.15,          fromBase: v => v + 273.15 }
+            },
+            volume: {
+                ml:      { name: 'Milliliters (ml)',  toBase: v => v / 1000,        fromBase: v => v * 1000 },
+                L:       { name: 'Liters (L)',        toBase: v => v,               fromBase: v => v },
+                fl_oz:   { name: 'Fluid Ounces (fl oz)', toBase: v => v * 0.0295735, fromBase: v => v / 0.0295735 },
+                cups:    { name: 'Cups',              toBase: v => v * 0.236588,    fromBase: v => v / 0.236588 },
+                pints:   { name: 'Pints',             toBase: v => v * 0.473176,    fromBase: v => v / 0.473176 },
+                gallons: { name: 'Gallons',           toBase: v => v * 3.78541,     fromBase: v => v / 3.78541 }
+            }
+        };
+
+        let currentTab = 'length';
+        const inputEl = document.getElementById('inputValue');
+        const sourceEl = document.getElementById('sourceUnit');
+        const resultsEl = document.getElementById('results');
+
+        function populateSelect() {
+            sourceEl.innerHTML = '';
+            const catUnits = units[currentTab];
+            for (const key in catUnits) {
+                const opt = document.createElement('option');
+                opt.value = key;
+                opt.textContent = catUnits[key].name;
+                sourceEl.appendChild(opt);
+            }
+        }
+
+        function convert() {
+            const catUnits = units[currentTab];
+            const val = parseFloat(inputEl.value);
+            const from = sourceEl.value;
+            resultsEl.innerHTML = '';
+
+            if (isNaN(val)) return;
+
+            const baseVal = catUnits[from].toBase(val);
+
+            for (const key in catUnits) {
+                const converted = catUnits[key].fromBase(baseVal);
+                const display = Number.isInteger(converted) ? converted.toString() : converted.toPrecision(10).replace(/\.?0+$/, '');
+                const item = document.createElement('div');
+                item.className = 'info-item';
+                item.innerHTML = '<div class="info-label">' + catUnits[key].name + '</div><div class="info-value">' + display + '</div>';
+                resultsEl.appendChild(item);
+            }
+        }
+
+        document.getElementById('tabs').addEventListener('click', function(e) {
+            if (!e.target.classList.contains('tool-tab')) return;
+            document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+            e.target.classList.add('active');
+            currentTab = e.target.dataset.tab;
+            populateSelect();
+            convert();
+        });
+
+        inputEl.addEventListener('input', convert);
+        sourceEl.addEventListener('change', convert);
+
+        populateSelect();
+        convert();
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,163 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My IP Address — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .ip-loading {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 40px 0;
+            color: #999;
+        }
+        .ip-loading .spinner {
+            width: 36px;
+            height: 36px;
+            border: 4px solid #e0e0e0;
+            border-top-color: #667eea;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .ip-hero {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 12px;
+            color: #fff;
+        }
+        .ip-hero .info-label {
+            color: rgba(255,255,255,0.7);
+            font-size: 0.8em;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        .ip-hero .ip-address {
+            font-size: 2em;
+            font-weight: 700;
+            margin: 6px 0 12px;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+        .error-message {
+            background: #fff0f0;
+            border: 2px solid #fcc;
+            border-radius: 10px;
+            padding: 20px;
+            color: #c33;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📍 My IP Address</h1>
+        <p class="subtitle">Instantly see your public IP address and geolocation details.</p>
+
+        <div class="tool-area" id="content">
+            <div class="ip-loading" id="loading">
+                <div class="spinner"></div>
+                <span>Looking up your IP address...</span>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const contentEl = document.getElementById('content');
+        const loadingEl = document.getElementById('loading');
+
+        async function fetchIP() {
+            const cached = sessionStorage.getItem('myIpData');
+            if (cached) {
+                try {
+                    renderResult(JSON.parse(cached));
+                    return;
+                } catch (e) { /* fall through */ }
+            }
+
+            try {
+                const res = await fetch('https://ipapi.co/json/');
+                if (!res.ok) throw new Error('API returned ' + res.status);
+                const data = await res.json();
+                if (data.error) throw new Error(data.reason || 'API error');
+                sessionStorage.setItem('myIpData', JSON.stringify(data));
+                renderResult(data);
+            } catch (err) {
+                loadingEl.remove();
+                contentEl.innerHTML += '<div class="error-message">Unable to retrieve your IP information.<br><small>' + escHtml(err.message) + '</small></div>';
+            }
+        }
+
+        function escHtml(s) {
+            return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        }
+
+        function renderResult(data) {
+            loadingEl.remove();
+
+            const ip = data.ip || '—';
+            const city = data.city || '—';
+            const region = data.region || '—';
+            const country = data.country_name || data.country || '—';
+            const org = data.org || '—';
+            const timezone = data.timezone || '—';
+            const lat = data.latitude ?? '—';
+            const lon = data.longitude ?? '—';
+
+            const html = `
+                <div class="ip-hero">
+                    <div class="info-label">Your IP Address</div>
+                    <div class="ip-address" id="ipValue">${escHtml(ip)}</div>
+                    <button class="copy-btn" id="copyBtn" onclick="copyIP()">Copy IP</button>
+                </div>
+                <div class="tool-grid">
+                    <div class="info-item">
+                        <div class="info-label">City</div>
+                        <div class="info-value">${escHtml(city)}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Region</div>
+                        <div class="info-value">${escHtml(region)}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Country</div>
+                        <div class="info-value">${escHtml(country)}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">ISP / Organization</div>
+                        <div class="info-value">${escHtml(org)}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Timezone</div>
+                        <div class="info-value">${escHtml(timezone)}</div>
+                    </div>
+                    <div class="info-item">
+                        <div class="info-label">Latitude / Longitude</div>
+                        <div class="info-value">${escHtml(String(lat))} / ${escHtml(String(lon))}</div>
+                    </div>
+                </div>
+            `;
+
+            contentEl.insertAdjacentHTML('beforeend', html);
+        }
+
+        function copyIP() {
+            const ip = document.getElementById('ipValue').textContent;
+            navigator.clipboard.writeText(ip).then(() => {
+                const btn = document.getElementById('copyBtn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy IP', 1500);
+            });
+        }
+
+        fetchIP();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

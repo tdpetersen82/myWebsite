@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Coin Flipper — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .coin-container { perspective: 400px; margin: 20px auto; }
+        .coin {
+            width: 150px; height: 150px; border-radius: 50%; margin: 0 auto;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 3em; font-weight: bold; color: #fff;
+            background: linear-gradient(135deg, #f5af19, #f12711);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.2);
+            transition: transform 0.1s;
+            transform-style: preserve-3d;
+            cursor: pointer; user-select: none;
+        }
+        .coin.flipping { animation: coinFlip 0.6s ease-out; }
+        @keyframes coinFlip {
+            0% { transform: rotateY(0deg) scale(1); }
+            50% { transform: rotateY(900deg) scale(1.2); }
+            100% { transform: rotateY(1800deg) scale(1); }
+        }
+        .coin.heads { background: linear-gradient(135deg, #f5af19, #f12711); }
+        .coin.tails { background: linear-gradient(135deg, #667eea, #764ba2); }
+        .result-text { font-size: 1.6em; font-weight: bold; margin: 12px 0; min-height: 1.4em; }
+        .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); gap: 10px; margin: 16px 0; }
+        .stat-card { background: #f5f5fa; border-radius: 10px; padding: 12px; text-align: center; }
+        .stat-card .stat-num { font-size: 1.6em; font-weight: bold; color: #764ba2; }
+        .stat-card .stat-label { font-size: 0.85em; color: #666; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🪙 Coin Flipper</h1>
+        <p class="subtitle">Flip a virtual coin and track your statistics.</p>
+
+        <div class="tool-area">
+            <div class="coin-container">
+                <div class="coin heads" id="coin" onclick="flipCoin()">H</div>
+            </div>
+            <div class="result-text" id="resultText"></div>
+
+            <div style="text-align:center;margin:12px 0;">
+                <button class="copy-btn" onclick="flipCoin()" style="font-size:1.1em;padding:10px 28px;">🪙 Flip Coin</button>
+            </div>
+
+            <h3>Statistics</h3>
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-num" id="totalFlips">0</div>
+                    <div class="stat-label">Total Flips</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="headsCount">0</div>
+                    <div class="stat-label">Heads</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="tailsCount">0</div>
+                    <div class="stat-label">Tails</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="headsPercent">0%</div>
+                    <div class="stat-label">Heads %</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-num" id="tailsPercent">0%</div>
+                    <div class="stat-label">Tails %</div>
+                </div>
+            </div>
+
+            <div style="text-align:center;margin-top:10px;">
+                <button class="copy-btn" onclick="resetStats()">🔄 Reset Stats</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let stats = { total: 0, heads: 0, tails: 0 };
+        let flipping = false;
+
+        function flipCoin() {
+            if (flipping) return;
+            flipping = true;
+            const coin = document.getElementById('coin');
+            const result = Math.random() < 0.5 ? 'heads' : 'tails';
+            coin.classList.add('flipping');
+            setTimeout(() => {
+                coin.classList.remove('flipping');
+                coin.className = 'coin ' + result;
+                coin.textContent = result === 'heads' ? 'H' : 'T';
+                document.getElementById('resultText').textContent = result === 'heads' ? 'Heads!' : 'Tails!';
+                document.getElementById('resultText').style.color = result === 'heads' ? '#f12711' : '#764ba2';
+                stats.total++;
+                stats[result]++;
+                updateStats();
+                flipping = false;
+            }, 600);
+        }
+
+        function updateStats() {
+            document.getElementById('totalFlips').textContent = stats.total;
+            document.getElementById('headsCount').textContent = stats.heads;
+            document.getElementById('tailsCount').textContent = stats.tails;
+            document.getElementById('headsPercent').textContent = stats.total ? (stats.heads / stats.total * 100).toFixed(1) + '%' : '0%';
+            document.getElementById('tailsPercent').textContent = stats.total ? (stats.tails / stats.total * 100).toFixed(1) + '%' : '0%';
+        }
+
+        function resetStats() {
+            stats = { total: 0, heads: 0, tails: 0 };
+            updateStats();
+            document.getElementById('resultText').textContent = '';
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

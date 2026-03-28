@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Tip Calculator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .preset-row { display: flex; gap: 8px; justify-content: center; margin: 8px 0; flex-wrap: wrap; }
+        .preset-btn { padding: 8px 16px; border: 2px solid #667eea; background: #fff; color: #667eea; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .preset-btn:hover, .preset-btn.active { background: #667eea; color: #fff; }
+        .slider-row { display: flex; align-items: center; gap: 12px; margin: 8px 0; }
+        .slider-row input[type=range] { flex: 1; }
+        .slider-val { font-weight: bold; font-size: 1.2em; color: #667eea; min-width: 50px; }
+        .result-big { font-size: 1.8em; font-weight: bold; color: #667eea; margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Tip Calculator</h1>
+        <p class="subtitle">Calculate tip amount, total, and per-person split.</p>
+        <div class="tool-area">
+            <label for="bill">Bill Amount ($):</label>
+            <input type="number" id="bill" placeholder="0.00" min="0" step="0.01" oninput="calc()">
+            <label>Tip Percentage:</label>
+            <div class="slider-row">
+                <span>10%</span>
+                <input type="range" id="tipPct" min="10" max="30" value="18" oninput="calc()">
+                <span>30%</span>
+                <span class="slider-val" id="tipVal">18%</span>
+            </div>
+            <div class="preset-row">
+                <button class="preset-btn" onclick="setTip(15)">15%</button>
+                <button class="preset-btn active" onclick="setTip(18)">18%</button>
+                <button class="preset-btn" onclick="setTip(20)">20%</button>
+                <button class="preset-btn" onclick="setTip(25)">25%</button>
+            </div>
+            <label for="people">Number of People:</label>
+            <input type="number" id="people" value="1" min="1" oninput="calc()">
+            <div class="tool-grid" id="results">
+                <div class="info-item"><span class="info-label">Tip Amount</span><span class="info-value" id="tipAmt">$0.00</span></div>
+                <div class="info-item"><span class="info-label">Total</span><span class="info-value" id="total">$0.00</span></div>
+                <div class="info-item"><span class="info-label">Per Person</span><span class="info-value" id="perPerson">$0.00</span></div>
+            </div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function setTip(pct) {
+            document.getElementById('tipPct').value = pct;
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', parseInt(b.textContent) === pct));
+            calc();
+        }
+        function calc() {
+            const bill = parseFloat(document.getElementById('bill').value) || 0;
+            const pct = parseInt(document.getElementById('tipPct').value);
+            const people = Math.max(1, parseInt(document.getElementById('people').value) || 1);
+            document.getElementById('tipVal').textContent = pct + '%';
+            document.querySelectorAll('.preset-btn').forEach(b => b.classList.toggle('active', parseInt(b.textContent) === pct));
+            const tip = bill * pct / 100;
+            const total = bill + tip;
+            const pp = total / people;
+            document.getElementById('tipAmt').textContent = '$' + tip.toFixed(2);
+            document.getElementById('total').textContent = '$' + total.toFixed(2);
+            document.getElementById('perPerson').textContent = '$' + pp.toFixed(2);
+        }
+    </script>
+</body>
+</html>

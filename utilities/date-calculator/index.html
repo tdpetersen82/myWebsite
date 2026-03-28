@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Date Calculator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .tool-row { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 14px; align-items: end; }
+        .tool-row > div { flex: 1; min-width: 120px; }
+        .tool-row label { display: block; font-size: 0.85em; color: #666; margin-bottom: 4px; }
+        .tool-row input, .tool-row select { width: 100%; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
+        .info-item { background: #f0f4ff; border-radius: 10px; padding: 16px; text-align: center; }
+        .info-label { font-size: 0.8em; color: #888; margin-bottom: 4px; }
+        .info-value { font-size: 1.4em; font-weight: 700; color: #667eea; }
+        .calc-btn { background: #667eea; color: #fff; border: none; border-radius: 8px; padding: 10px 24px; cursor: pointer; font-size: 1em; margin-top: 8px; }
+        .calc-btn:hover { background: #5a6fd6; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#128197; Date Calculator</h1>
+        <p class="subtitle">Add or subtract years, months, and days from any date.</p>
+
+        <div class="tool-area">
+            <div class="tool-row">
+                <div>
+                    <label>Start Date</label>
+                    <input type="date" id="startDate">
+                </div>
+                <div>
+                    <label>Operation</label>
+                    <select id="operation">
+                        <option value="add">Add (+)</option>
+                        <option value="sub">Subtract (-)</option>
+                    </select>
+                </div>
+            </div>
+            <div class="tool-row">
+                <div>
+                    <label>Years</label>
+                    <input type="number" id="years" value="0" min="0">
+                </div>
+                <div>
+                    <label>Months</label>
+                    <input type="number" id="months" value="0" min="0">
+                </div>
+                <div>
+                    <label>Days</label>
+                    <input type="number" id="days" value="0" min="0">
+                </div>
+            </div>
+            <button class="calc-btn" onclick="calculate()">Calculate</button>
+
+            <div class="result-grid" id="results" style="display:none;">
+                <div class="info-item"><div class="info-label">Result Date</div><div class="info-value" id="resDate"></div></div>
+                <div class="info-item"><div class="info-label">Day of Week</div><div class="info-value" id="resDow"></div></div>
+                <div class="info-item"><div class="info-label">ISO Week Number</div><div class="info-value" id="resWeek"></div></div>
+                <div class="info-item"><div class="info-label">Days From Today</div><div class="info-value" id="resDays"></div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Set default to today
+        const today = new Date();
+        document.getElementById('startDate').value = today.toISOString().slice(0, 10);
+
+        function getISOWeek(d) {
+            const date = new Date(d.getTime());
+            date.setHours(0,0,0,0);
+            date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+            const week1 = new Date(date.getFullYear(), 0, 4);
+            return 1 + Math.round(((date - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+        }
+
+        function calculate() {
+            const start = new Date(document.getElementById('startDate').value + 'T00:00:00');
+            if (isNaN(start)) return;
+            const op = document.getElementById('operation').value;
+            const sign = op === 'add' ? 1 : -1;
+            const y = parseInt(document.getElementById('years').value) || 0;
+            const m = parseInt(document.getElementById('months').value) || 0;
+            const d = parseInt(document.getElementById('days').value) || 0;
+
+            const result = new Date(start);
+            result.setFullYear(result.getFullYear() + sign * y);
+            result.setMonth(result.getMonth() + sign * m);
+            result.setDate(result.getDate() + sign * d);
+
+            const dows = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+
+            document.getElementById('resDate').textContent = result.toLocaleDateString('en-US', { year: 'numeric', month: 'short', day: 'numeric' });
+            document.getElementById('resDow').textContent = dows[result.getDay()];
+            document.getElementById('resWeek').textContent = 'W' + getISOWeek(result);
+
+            const now = new Date();
+            now.setHours(0,0,0,0);
+            const diffMs = result - now;
+            const diffDays = Math.round(diffMs / 86400000);
+            if (diffDays > 0) document.getElementById('resDays').textContent = diffDays + ' days from now';
+            else if (diffDays < 0) document.getElementById('resDays').textContent = Math.abs(diffDays) + ' days ago';
+            else document.getElementById('resDays').textContent = 'Today';
+
+            document.getElementById('results').style.display = '';
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

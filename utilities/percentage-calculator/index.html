@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Percentage Calculator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .result-display { font-size: 2em; font-weight: bold; color: #667eea; margin: 16px 0; min-height: 1.5em; }
+        .calc-row { display: flex; align-items: center; gap: 8px; justify-content: center; flex-wrap: wrap; margin: 12px 0; font-size: 1.1em; }
+        .calc-row input { width: 120px; text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Percentage Calculator</h1>
+        <p class="subtitle">Three common percentage calculations — results update as you type.</p>
+        <div class="tool-area">
+            <div class="tool-tabs">
+                <button class="tool-tab active" onclick="setTab(0)">X% of Y</button>
+                <button class="tool-tab" onclick="setTab(1)">X is ?% of Y</button>
+                <button class="tool-tab" onclick="setTab(2)">% Change</button>
+            </div>
+            <div id="tab0" class="tab-content">
+                <div class="calc-row">
+                    What is <input type="number" id="t0x" oninput="calc0()" placeholder="X"> % of <input type="number" id="t0y" oninput="calc0()" placeholder="Y"> ?
+                </div>
+                <div class="result-display" id="r0">—</div>
+            </div>
+            <div id="tab1" class="tab-content" style="display:none">
+                <div class="calc-row">
+                    <input type="number" id="t1x" oninput="calc1()" placeholder="X"> is what % of <input type="number" id="t1y" oninput="calc1()" placeholder="Y"> ?
+                </div>
+                <div class="result-display" id="r1">—</div>
+            </div>
+            <div id="tab2" class="tab-content" style="display:none">
+                <div class="calc-row">
+                    % change from <input type="number" id="t2x" oninput="calc2()" placeholder="Old"> to <input type="number" id="t2y" oninput="calc2()" placeholder="New"> ?
+                </div>
+                <div class="result-display" id="r2">—</div>
+            </div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function setTab(i) {
+            document.querySelectorAll('.tool-tab').forEach((t, idx) => t.classList.toggle('active', idx === i));
+            document.querySelectorAll('.tab-content').forEach((c, idx) => c.style.display = idx === i ? '' : 'none');
+        }
+        function calc0() {
+            const x = parseFloat(document.getElementById('t0x').value);
+            const y = parseFloat(document.getElementById('t0y').value);
+            document.getElementById('r0').textContent = (!isNaN(x) && !isNaN(y)) ? (x / 100 * y).toFixed(4).replace(/\.?0+$/, '') : '—';
+        }
+        function calc1() {
+            const x = parseFloat(document.getElementById('t1x').value);
+            const y = parseFloat(document.getElementById('t1y').value);
+            document.getElementById('r1').textContent = (!isNaN(x) && !isNaN(y) && y !== 0) ? (x / y * 100).toFixed(4).replace(/\.?0+$/, '') + '%' : '—';
+        }
+        function calc2() {
+            const x = parseFloat(document.getElementById('t2x').value);
+            const y = parseFloat(document.getElementById('t2y').value);
+            if (!isNaN(x) && !isNaN(y) && x !== 0) {
+                const pct = ((y - x) / Math.abs(x) * 100);
+                document.getElementById('r2').textContent = (pct >= 0 ? '+' : '') + pct.toFixed(4).replace(/\.?0+$/, '') + '%';
+                document.getElementById('r2').style.color = pct >= 0 ? '#2ecc71' : '#e74c3c';
+            } else { document.getElementById('r2').textContent = '—'; document.getElementById('r2').style.color = '#667eea'; }
+        }
+    </script>
+</body>
+</html>

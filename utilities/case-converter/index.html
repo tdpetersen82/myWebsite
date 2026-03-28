@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Case Converter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .case-buttons { display: flex; flex-wrap: wrap; gap: 8px; margin: 12px 0; justify-content: center; }
+        .case-btn { padding: 8px 16px; border: 2px solid #667eea; background: #fff; color: #667eea; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 0.9em; transition: all 0.2s; }
+        .case-btn:hover, .case-btn.active { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔤 Case Converter</h1>
+        <p class="subtitle">Convert text between different letter cases instantly.</p>
+        <div class="tool-area">
+            <label for="input">Enter your text:</label>
+            <textarea id="input" rows="5" placeholder="Type or paste your text here..."></textarea>
+            <div class="case-buttons">
+                <button class="case-btn" onclick="convert('upper')">UPPERCASE</button>
+                <button class="case-btn" onclick="convert('lower')">lowercase</button>
+                <button class="case-btn" onclick="convert('title')">Title Case</button>
+                <button class="case-btn" onclick="convert('sentence')">Sentence case</button>
+                <button class="case-btn" onclick="convert('camel')">camelCase</button>
+                <button class="case-btn" onclick="convert('pascal')">PascalCase</button>
+                <button class="case-btn" onclick="convert('snake')">snake_case</button>
+                <button class="case-btn" onclick="convert('kebab')">kebab-case</button>
+                <button class="case-btn" onclick="convert('constant')">CONSTANT_CASE</button>
+            </div>
+            <label>Result:</label>
+            <div class="tool-output" id="output" style="min-height:60px;white-space:pre-wrap;"></div>
+            <button class="copy-btn" onclick="copyResult()">Copy Result</button>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function getWords(str) {
+            return str.replace(/([a-z])([A-Z])/g, '$1 $2')
+                      .replace(/[_\-]+/g, ' ')
+                      .trim().split(/\s+/).filter(Boolean);
+        }
+        function convert(type) {
+            const text = document.getElementById('input').value;
+            let result = '';
+            const words = getWords(text);
+            switch(type) {
+                case 'upper': result = text.toUpperCase(); break;
+                case 'lower': result = text.toLowerCase(); break;
+                case 'title': result = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(' '); break;
+                case 'sentence':
+                    result = text.toLowerCase().replace(/(^\s*|[.!?]\s+)(\w)/g, (m, p, c) => p + c.toUpperCase());
+                    break;
+                case 'camel': result = words.map((w, i) => i === 0 ? w.toLowerCase() : w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(''); break;
+                case 'pascal': result = words.map(w => w.charAt(0).toUpperCase() + w.slice(1).toLowerCase()).join(''); break;
+                case 'snake': result = words.map(w => w.toLowerCase()).join('_'); break;
+                case 'kebab': result = words.map(w => w.toLowerCase()).join('-'); break;
+                case 'constant': result = words.map(w => w.toUpperCase()).join('_'); break;
+            }
+            document.getElementById('output').textContent = result;
+            document.querySelectorAll('.case-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+        }
+        function copyResult() {
+            const text = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Result', 1500);
+            });
+        }
+    </script>
+</body>
+</html>

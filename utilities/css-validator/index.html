@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Validator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .issue{padding:8px 12px;border-radius:8px;margin-bottom:6px;font-size:.88em}
+        .issue.error{background:#fef2f2;border-left:4px solid #ef4444;color:#991b1b}
+        .issue.warning{background:#fffbeb;border-left:4px solid #f59e0b;color:#92400e}
+        .stats-bar{display:flex;gap:16px;flex-wrap:wrap;margin:12px 0;font-size:.9em;font-weight:600;color:#555}
+        .stats-bar span{color:#667eea}
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 CSS Validator</h1>
+        <p class="subtitle">Validate CSS syntax and check for common errors.</p>
+        <div class="tool-area">
+            <label>CSS Input</label>
+            <textarea id="input" placeholder="Paste your CSS here..." style="min-height:200px;font-family:monospace"></textarea>
+            <div style="margin-top:12px">
+                <button class="copy-btn" onclick="validate()">Validate CSS</button>
+            </div>
+            <div class="stats-bar" id="stats" style="display:none"></div>
+            <div id="results" style="margin-top:12px"></div>
+        </div>
+    </div>
+    <script>
+    const COMMON_PROPS=new Set(['align-content','align-items','align-self','all','animation','animation-delay','animation-direction','animation-duration','animation-fill-mode','animation-iteration-count','animation-name','animation-play-state','animation-timing-function','appearance','aspect-ratio','backdrop-filter','backface-visibility','background','background-attachment','background-blend-mode','background-clip','background-color','background-image','background-origin','background-position','background-repeat','background-size','border','border-bottom','border-bottom-color','border-bottom-left-radius','border-bottom-right-radius','border-bottom-style','border-bottom-width','border-collapse','border-color','border-image','border-left','border-left-color','border-left-style','border-left-width','border-radius','border-right','border-right-color','border-right-style','border-right-width','border-spacing','border-style','border-top','border-top-color','border-top-left-radius','border-top-right-radius','border-top-style','border-top-width','border-width','bottom','box-decoration-break','box-shadow','box-sizing','break-after','break-before','break-inside','caption-side','caret-color','clear','clip','clip-path','color','column-count','column-fill','column-gap','column-rule','column-span','column-width','columns','container','container-name','container-type','content','counter-increment','counter-reset','cursor','direction','display','empty-cells','filter','flex','flex-basis','flex-direction','flex-flow','flex-grow','flex-shrink','flex-wrap','float','font','font-family','font-feature-settings','font-kerning','font-size','font-size-adjust','font-stretch','font-style','font-variant','font-weight','gap','grid','grid-area','grid-auto-columns','grid-auto-flow','grid-auto-rows','grid-column','grid-column-end','grid-column-gap','grid-column-start','grid-gap','grid-row','grid-row-end','grid-row-gap','grid-row-start','grid-template','grid-template-areas','grid-template-columns','grid-template-rows','height','hyphens','image-rendering','inset','isolation','justify-content','justify-items','justify-self','left','letter-spacing','line-clamp','line-height','list-style','list-style-image','list-style-position','list-style-type','margin','margin-block','margin-bottom','margin-inline','margin-left','margin-right','margin-top','mask','max-height','max-width','min-height','min-width','mix-blend-mode','object-fit','object-position','offset','opacity','order','orphans','outline','outline-color','outline-offset','outline-style','outline-width','overflow','overflow-anchor','overflow-wrap','overflow-x','overflow-y','overscroll-behavior','padding','padding-block','padding-bottom','padding-inline','padding-left','padding-right','padding-top','page-break-after','page-break-before','page-break-inside','paint-order','perspective','perspective-origin','place-content','place-items','place-self','pointer-events','position','quotes','resize','right','rotate','row-gap','scale','scroll-behavior','scroll-margin','scroll-padding','scroll-snap-align','scroll-snap-type','shape-outside','tab-size','table-layout','text-align','text-align-last','text-combine-upright','text-decoration','text-decoration-color','text-decoration-line','text-decoration-style','text-decoration-thickness','text-emphasis','text-indent','text-justify','text-orientation','text-overflow','text-rendering','text-shadow','text-transform','text-underline-offset','text-wrap','top','touch-action','transform','transform-origin','transform-style','transition','transition-delay','transition-duration','transition-property','transition-timing-function','translate','unicode-bidi','user-select','vertical-align','visibility','white-space','widows','width','will-change','word-break','word-spacing','word-wrap','writing-mode','z-index']);
+    function validate(){
+        const css=document.getElementById('input').value;
+        const issues=[];const lines=css.split('\n');
+        let openBraces=0,selectors=0,props=0,rules=0;
+        let inComment=false,inString=false,stringChar='';
+        for(let i=0;i<lines.length;i++){
+            let line=lines[i];
+            for(let j=0;j<line.length;j++){
+                if(inComment){if(line[j]==='*'&&line[j+1]==='/'){inComment=false;j++;}continue;}
+                if(inString){if(line[j]===stringChar&&line[j-1]!=='\\')inString=false;continue;}
+                if(line[j]==='/'&&line[j+1]==='*'){inComment=true;j++;continue;}
+                if(line[j]==='"'||line[j]==="'"){inString=true;stringChar=line[j];continue;}
+                if(line[j]==='{'){openBraces++;selectors++;}
+                if(line[j]==='}'){openBraces--;rules++;if(openBraces<0)issues.push({line:i+1,msg:'Unexpected closing brace',type:'error'});}
+            }
+            const trimmed=line.trim();
+            if(!inComment&&trimmed.includes(':')&&!trimmed.startsWith('//')&&!trimmed.startsWith('/*')&&!trimmed.startsWith('@')&&!trimmed.includes('{')&&openBraces>0){
+                const propMatch=trimmed.match(/^\s*([\w-]+)\s*:/);
+                if(propMatch){
+                    props++;
+                    const prop=propMatch[1].toLowerCase();
+                    if(!prop.startsWith('-')&&!prop.startsWith('--')&&!COMMON_PROPS.has(prop)){
+                        issues.push({line:i+1,msg:`Unknown property: "${prop}"`,type:'warning'});
+                    }
+                }
+            }
+        }
+        if(inComment)issues.push({line:lines.length,msg:'Unclosed comment (/* without */)',type:'error'});
+        if(inString)issues.push({line:lines.length,msg:'Unclosed string',type:'error'});
+        if(openBraces>0)issues.push({line:lines.length,msg:`${openBraces} unclosed brace(s)`,type:'error'});
+        // empty rules
+        const emptyRule=css.replace(/\/\*[\s\S]*?\*\//g,'').match(/\{[\s\n\r]*\}/g);
+        if(emptyRule)issues.push({line:0,msg:`${emptyRule.length} empty rule(s) found`,type:'warning'});
+
+        const statsEl=document.getElementById('stats');
+        statsEl.style.display='flex';
+        statsEl.innerHTML=`Selectors: <span>${selectors}</span> | Properties: <span>${props}</span> | Rules: <span>${rules}</span>`;
+        const res=document.getElementById('results');
+        if(!issues.length){res.innerHTML='<div class="issue" style="background:#f0fdf4;border-left-color:#22c55e;color:#166534">✅ Valid CSS — no issues found!</div>';return;}
+        res.innerHTML=issues.map(i=>`<div class="issue ${i.type}">${i.line?`Line ${i.line}: `:''}${i.msg}</div>`).join('');
+    }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

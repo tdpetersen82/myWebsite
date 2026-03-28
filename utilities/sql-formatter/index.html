@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SQL Formatter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .sql-highlight {
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            white-space: pre-wrap;
+            word-break: break-all;
+            text-align: left;
+            padding: 12px;
+            background: #1e1e2e;
+            color: #cdd6f4;
+            border-radius: 8px;
+            min-height: 150px;
+            max-height: 400px;
+            overflow: auto;
+            line-height: 1.5;
+        }
+        .sql-highlight .kw { color: #89b4fa; font-weight: bold; }
+        .sql-highlight .str { color: #a6e3a1; }
+        .sql-highlight .num { color: #fab387; }
+        .sql-highlight .cmt { color: #6c7086; font-style: italic; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🗃️ SQL Formatter</h1>
+        <p class="subtitle">Format and beautify SQL queries with syntax highlighting.</p>
+
+        <div class="tool-area">
+            <div>
+                <label for="sqlInput">Input SQL</label>
+                <textarea id="sqlInput" placeholder="Paste your SQL query here..."></textarea>
+            </div>
+
+            <div style="text-align:center;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:10px 0;">
+                <button class="copy-btn" onclick="formatSQL()">Format SQL</button>
+                <button class="copy-btn" onclick="copyOutput()">📋 Copy Output</button>
+            </div>
+
+            <label>Formatted Output</label>
+            <div class="sql-highlight" id="sqlHighlight"></div>
+            <textarea id="sqlOutput" style="display:none;"></textarea>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('sqlInput');
+        const output = document.getElementById('sqlOutput');
+        const highlight = document.getElementById('sqlHighlight');
+        const errorMsg = document.getElementById('errorMsg');
+
+        const KEYWORDS = [
+            'SELECT','DISTINCT','FROM','WHERE','AND','OR','NOT','IN','EXISTS',
+            'BETWEEN','LIKE','IS','NULL','AS','ON','JOIN','INNER','LEFT','RIGHT',
+            'FULL','OUTER','CROSS','NATURAL','UNION','ALL','INTERSECT','EXCEPT',
+            'ORDER','BY','GROUP','HAVING','LIMIT','OFFSET','INSERT','INTO','VALUES',
+            'UPDATE','SET','DELETE','CREATE','TABLE','ALTER','DROP','INDEX','VIEW',
+            'TRIGGER','PROCEDURE','FUNCTION','IF','ELSE','THEN','END','CASE','WHEN',
+            'BEGIN','COMMIT','ROLLBACK','GRANT','REVOKE','WITH','RECURSIVE','ASC','DESC',
+            'TOP','FETCH','NEXT','ROWS','ONLY','COUNT','SUM','AVG','MIN','MAX','CAST',
+            'COALESCE','NULLIF','PRIMARY','KEY','FOREIGN','REFERENCES','CONSTRAINT',
+            'UNIQUE','CHECK','DEFAULT','AUTO_INCREMENT','IDENTITY','RETURNING'
+        ];
+
+        const MAJOR_CLAUSES = ['SELECT','FROM','WHERE','JOIN','INNER JOIN','LEFT JOIN',
+            'RIGHT JOIN','FULL JOIN','CROSS JOIN','NATURAL JOIN','ORDER BY','GROUP BY',
+            'HAVING','LIMIT','OFFSET','UNION','UNION ALL','INTERSECT','EXCEPT',
+            'INSERT INTO','VALUES','UPDATE','SET','DELETE FROM','CREATE TABLE',
+            'ALTER TABLE','DROP TABLE','WITH','RETURNING','FETCH'];
+
+        function formatSQL() {
+            errorMsg.textContent = '';
+            const src = input.value.trim();
+            if (!src) {
+                errorMsg.textContent = 'Please enter a SQL query to format.';
+                return;
+            }
+
+            // Tokenize preserving strings and comments
+            let tokens = [];
+            let i = 0;
+            while (i < src.length) {
+                // String literal
+                if (src[i] === "'") {
+                    let s = "'";
+                    i++;
+                    while (i < src.length) {
+                        if (src[i] === "'" && i + 1 < src.length && src[i + 1] === "'") {
+                            s += "''"; i += 2;
+                        } else if (src[i] === "'") {
+                            s += "'"; i++; break;
+                        } else {
+                            s += src[i++];
+                        }
+                    }
+                    tokens.push({ type: 'string', value: s });
+                }
+                // Line comment
+                else if (src[i] === '-' && src[i + 1] === '-') {
+                    let c = '';
+                    while (i < src.length && src[i] !== '\n') c += src[i++];
+                    tokens.push({ type: 'comment', value: c });
+                }
+                // Block comment
+                else if (src[i] === '/' && src[i + 1] === '*') {
+                    let c = '/*';
+                    i += 2;
+                    while (i < src.length - 1 && !(src[i] === '*' && src[i + 1] === '/')) c += src[i++];
+                    c += '*/'; i += 2;
+                    tokens.push({ type: 'comment', value: c });
+                }
+                // Whitespace
+                else if (/\s/.test(src[i])) {
+                    while (i < src.length && /\s/.test(src[i])) i++;
+                    tokens.push({ type: 'ws', value: ' ' });
+                }
+                // Punctuation
+                else if ('(),;*'.includes(src[i])) {
+                    tokens.push({ type: 'punct', value: src[i++] });
+                }
+                // Numbers
+                else if (/\d/.test(src[i])) {
+                    let n = '';
+                    while (i < src.length && /[\d.]/.test(src[i])) n += src[i++];
+                    tokens.push({ type: 'number', value: n });
+                }
+                // Words
+                else {
+                    let w = '';
+                    while (i < src.length && !/[\s(),;*'"]/.test(src[i]) && !(src[i] === '-' && src[i+1] === '-') && !(src[i] === '/' && src[i+1] === '*')) {
+                        w += src[i++];
+                    }
+                    if (KEYWORDS.includes(w.toUpperCase())) {
+                        tokens.push({ type: 'keyword', value: w.toUpperCase() });
+                    } else {
+                        tokens.push({ type: 'word', value: w });
+                    }
+                }
+            }
+
+            // Build formatted output
+            let formatted = '';
+            let indent = 0;
+            const INDENT = '    ';
+
+            for (let t = 0; t < tokens.length; t++) {
+                const tok = tokens[t];
+                if (tok.type === 'ws') continue; // we control whitespace ourselves
+
+                const val = tok.value;
+
+                // Check for multi-word clauses
+                let multiWord = '';
+                if (tok.type === 'keyword') {
+                    const next = tokens.slice(t + 1).find(x => x.type !== 'ws');
+                    if (next && next.type === 'keyword') {
+                        const combo = val + ' ' + next.value;
+                        if (MAJOR_CLAUSES.includes(combo)) {
+                            multiWord = combo;
+                        }
+                    }
+                }
+
+                if (multiWord) {
+                    formatted += '\n' + INDENT.repeat(indent) + multiWord;
+                    // skip to the next keyword token
+                    t++;
+                    while (t < tokens.length && tokens[t].type === 'ws') t++;
+                    // t is now pointing at the second keyword; loop will increment
+                } else if (tok.type === 'keyword' && MAJOR_CLAUSES.includes(val)) {
+                    if (val === 'SELECT' || val === 'UPDATE' || val === 'DELETE' || val === 'INSERT' || val === 'WITH' || val === 'CREATE') {
+                        if (formatted.length > 0) formatted += '\n';
+                        formatted += INDENT.repeat(indent) + val;
+                    } else {
+                        formatted += '\n' + INDENT.repeat(indent) + val;
+                    }
+                } else if (tok.type === 'punct' && val === '(') {
+                    formatted += ' (';
+                    indent++;
+                } else if (tok.type === 'punct' && val === ')') {
+                    indent = Math.max(0, indent - 1);
+                    formatted += ')';
+                } else if (tok.type === 'punct' && val === ',') {
+                    formatted += ',\n' + INDENT.repeat(indent) + '    ';
+                } else if (tok.type === 'punct' && val === ';') {
+                    formatted += ';\n';
+                } else if (tok.type === 'keyword' && (val === 'AND' || val === 'OR')) {
+                    formatted += '\n' + INDENT.repeat(indent) + '    ' + val;
+                } else {
+                    // Add space before token if needed
+                    if (formatted.length > 0 && !/[\n( ]$/.test(formatted) && val !== ')') {
+                        formatted += ' ';
+                    }
+                    formatted += (tok.type === 'keyword') ? val : tok.value;
+                }
+            }
+
+            formatted = formatted.trim();
+            output.value = formatted;
+
+            // Syntax highlight
+            let html = escapeHtml(formatted);
+            // Highlight keywords
+            KEYWORDS.forEach(kw => {
+                const re = new RegExp('\\b(' + kw + ')\\b', 'g');
+                html = html.replace(re, '<span class="kw">$1</span>');
+            });
+            // Highlight strings
+            html = html.replace(/'([^']*)'/g, '<span class="str">\'$1\'</span>');
+            // Highlight numbers (standalone)
+            html = html.replace(/\b(\d+\.?\d*)\b/g, '<span class="num">$1</span>');
+            // Highlight comments
+            html = html.replace(/(--[^\n]*)/g, '<span class="cmt">$1</span>');
+            html = html.replace(/(\/\*[\s\S]*?\*\/)/g, '<span class="cmt">$1</span>');
+
+            highlight.innerHTML = html;
+        }
+
+        function escapeHtml(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function copyOutput() {
+            navigator.clipboard.writeText(output.value).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,134 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Find and Replace — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .options-row { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; justify-content: center; align-items: center; }
+        .options-row label { display: flex; align-items: center; gap: 6px; font-size: 0.9em; cursor: pointer; }
+        .fr-row { display: flex; gap: 8px; margin: 8px 0; flex-wrap: wrap; }
+        .fr-row input { flex: 1; min-width: 120px; padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 0.95em; }
+        .preview-area { min-height: 100px; white-space: pre-wrap; text-align: left; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; background: #fafafa; margin: 8px 0; line-height: 1.6; word-break: break-word; }
+        .preview-area mark { background: #ffe066; padding: 1px 2px; border-radius: 3px; }
+        .match-count { font-size: 0.85em; color: #667eea; font-weight: 600; margin: 6px 0; }
+        .action-row { display: flex; gap: 8px; justify-content: center; margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Find and Replace</h1>
+        <p class="subtitle">Search, highlight, and replace text with powerful options.</p>
+        <div class="tool-area">
+            <label for="source">Source text:</label>
+            <textarea id="source" rows="8" placeholder="Paste your text here..."></textarea>
+            <div class="fr-row">
+                <input type="text" id="findInput" placeholder="Find...">
+                <input type="text" id="replaceInput" placeholder="Replace with...">
+            </div>
+            <div class="options-row">
+                <label><input type="checkbox" id="caseSensitive"> Case-sensitive</label>
+                <label><input type="checkbox" id="regexMode"> Regex mode</label>
+                <label><input type="checkbox" id="wholeWord"> Whole word</label>
+            </div>
+            <div class="match-count" id="matchCount"></div>
+            <label>Preview (matches highlighted):</label>
+            <div class="preview-area" id="preview"></div>
+            <div class="action-row">
+                <button class="copy-btn" onclick="doReplace()">Replace All</button>
+                <button class="copy-btn" onclick="copyResult()">Copy Result</button>
+            </div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function escapeHtml(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        function escapeRegex(s) {
+            return s.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function getRegex() {
+            const find = document.getElementById('findInput').value;
+            if (!find) return null;
+            const caseSensitive = document.getElementById('caseSensitive').checked;
+            const regexMode = document.getElementById('regexMode').checked;
+            const wholeWord = document.getElementById('wholeWord').checked;
+            let pattern = regexMode ? find : escapeRegex(find);
+            if (wholeWord) pattern = `\\b${pattern}\\b`;
+            const flags = 'g' + (caseSensitive ? '' : 'i');
+            try {
+                return new RegExp(pattern, flags);
+            } catch (e) {
+                return null;
+            }
+        }
+
+        function updatePreview() {
+            const source = document.getElementById('source').value;
+            const regex = getRegex();
+            const preview = document.getElementById('preview');
+            const countEl = document.getElementById('matchCount');
+
+            if (!regex) {
+                preview.innerHTML = escapeHtml(source);
+                countEl.textContent = '';
+                return;
+            }
+
+            let count = 0;
+            const html = escapeHtml(source).replace(
+                // We need to apply regex to original then map to escaped version
+                // Simpler: apply to escaped directly won't work if pattern has < etc.
+                // Let's do it properly with offset mapping
+                /.*/,  '' // placeholder
+            );
+
+            // Proper approach: find matches in original, build highlighted HTML
+            const parts = [];
+            let lastIndex = 0;
+            let match;
+            const re = new RegExp(regex.source, regex.flags);
+            while ((match = re.exec(source)) !== null) {
+                if (match[0].length === 0) { re.lastIndex++; continue; }
+                count++;
+                parts.push(escapeHtml(source.substring(lastIndex, match.index)));
+                parts.push('<mark>' + escapeHtml(match[0]) + '</mark>');
+                lastIndex = match.index + match[0].length;
+            }
+            parts.push(escapeHtml(source.substring(lastIndex)));
+
+            preview.innerHTML = parts.join('');
+            countEl.textContent = `${count} match${count !== 1 ? 'es' : ''} found`;
+        }
+
+        function doReplace() {
+            const regex = getRegex();
+            if (!regex) return;
+            const source = document.getElementById('source');
+            const replaceWith = document.getElementById('replaceInput').value;
+            source.value = source.value.replace(regex, replaceWith);
+            updatePreview();
+        }
+
+        function copyResult() {
+            const text = document.getElementById('preview').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btns = document.querySelectorAll('.copy-btn');
+                const btn = btns[btns.length - 1];
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Result', 1500);
+            });
+        }
+
+        document.getElementById('source').addEventListener('input', updatePreview);
+        document.getElementById('findInput').addEventListener('input', updatePreview);
+        document.getElementById('caseSensitive').addEventListener('change', updatePreview);
+        document.getElementById('regexMode').addEventListener('change', updatePreview);
+        document.getElementById('wholeWord').addEventListener('change', updatePreview);
+    </script>
+</body>
+</html>

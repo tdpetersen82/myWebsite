@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Cropper — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .tool-tabs { display: flex; gap: 8px; margin-bottom: 16px; flex-wrap: wrap; }
+        .tool-tab { padding: 6px 14px; border-radius: 6px; border: 2px solid #667eea; background: none; color: #667eea; cursor: pointer; font-size: 0.85em; }
+        .tool-tab.active { background: #667eea; color: #fff; }
+        .crop-container { position: relative; display: inline-block; max-width: 100%; cursor: crosshair; margin-top: 12px; }
+        .crop-container img { max-width: 100%; max-height: 500px; display: block; }
+        .crop-overlay { position: absolute; border: 2px dashed #667eea; background: rgba(102,126,234,0.15); pointer-events: none; }
+        .preview-area { margin-top: 16px; text-align: center; }
+        .preview-area img { max-width: 100%; max-height: 300px; border: 2px solid #e0e0e0; border-radius: 8px; }
+        .btn-row { margin-top: 12px; display: flex; gap: 8px; justify-content: center; flex-wrap: wrap; }
+        .action-btn { background: #667eea; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; }
+        .action-btn.green { background: #27ae60; }
+        .action-btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#9986; Image Cropper</h1>
+        <p class="subtitle">Crop images right in your browser with custom or preset aspect ratios.</p>
+
+        <div class="tool-area">
+            <input type="file" id="fileInput" accept="image/*">
+
+            <div class="tool-tabs" id="ratioTabs" style="display:none;">
+                <button class="tool-tab active" data-ratio="free">Free</button>
+                <button class="tool-tab" data-ratio="1:1">1:1</button>
+                <button class="tool-tab" data-ratio="4:3">4:3</button>
+                <button class="tool-tab" data-ratio="16:9">16:9</button>
+            </div>
+
+            <div class="crop-container" id="cropContainer" style="display:none;">
+                <img id="srcImg">
+                <div class="crop-overlay" id="overlay" style="display:none;"></div>
+            </div>
+
+            <div class="btn-row" id="btnRow" style="display:none;">
+                <button class="action-btn" onclick="doCrop()">Crop</button>
+                <button class="action-btn green" id="dlBtn" onclick="downloadCrop()" style="display:none;">Download</button>
+            </div>
+
+            <div class="preview-area" id="previewArea" style="display:none;">
+                <p style="color:#888;font-size:0.85em;">Cropped Result</p>
+                <img id="previewImg">
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let img = null, imgW = 0, imgH = 0, scaleX = 1, scaleY = 1;
+        let startX = 0, startY = 0, curX = 0, curY = 0, dragging = false;
+        let ratio = null; // null = free
+        let croppedBlob = null;
+
+        const container = document.getElementById('cropContainer');
+        const overlay = document.getElementById('overlay');
+        const srcImg = document.getElementById('srcImg');
+
+        document.getElementById('fileInput').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const url = URL.createObjectURL(file);
+            srcImg.onload = () => {
+                imgW = srcImg.naturalWidth;
+                imgH = srcImg.naturalHeight;
+                scaleX = imgW / srcImg.clientWidth;
+                scaleY = imgH / srcImg.clientHeight;
+                container.style.display = '';
+                document.getElementById('ratioTabs').style.display = '';
+                document.getElementById('btnRow').style.display = '';
+                overlay.style.display = 'none';
+            };
+            srcImg.src = url;
+        });
+
+        // Ratio tabs
+        document.getElementById('ratioTabs').addEventListener('click', e => {
+            if (!e.target.classList.contains('tool-tab')) return;
+            document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+            e.target.classList.add('active');
+            const r = e.target.dataset.ratio;
+            ratio = r === 'free' ? null : r.split(':').map(Number);
+        });
+
+        // Drag to select
+        container.addEventListener('mousedown', e => { startDrag(e.offsetX, e.offsetY); });
+        container.addEventListener('mousemove', e => { moveDrag(e.offsetX, e.offsetY); });
+        container.addEventListener('mouseup', () => { dragging = false; });
+
+        container.addEventListener('touchstart', e => {
+            e.preventDefault();
+            const r = container.getBoundingClientRect();
+            const t = e.touches[0];
+            startDrag(t.clientX - r.left, t.clientY - r.top);
+        });
+        container.addEventListener('touchmove', e => {
+            e.preventDefault();
+            const r = container.getBoundingClientRect();
+            const t = e.touches[0];
+            moveDrag(t.clientX - r.left, t.clientY - r.top);
+        });
+        container.addEventListener('touchend', () => { dragging = false; });
+
+        function startDrag(x, y) {
+            dragging = true;
+            startX = x; startY = y;
+            curX = x; curY = y;
+            updateOverlay();
+        }
+
+        function moveDrag(x, y) {
+            if (!dragging) return;
+            curX = x; curY = y;
+            if (ratio) {
+                const w = Math.abs(curX - startX);
+                const h = w * ratio[1] / ratio[0];
+                curY = startY + (curY > startY ? h : -h);
+            }
+            updateOverlay();
+        }
+
+        function updateOverlay() {
+            const x = Math.min(startX, curX);
+            const y = Math.min(startY, curY);
+            const w = Math.abs(curX - startX);
+            const h = Math.abs(curY - startY);
+            overlay.style.left = x + 'px';
+            overlay.style.top = y + 'px';
+            overlay.style.width = w + 'px';
+            overlay.style.height = h + 'px';
+            overlay.style.display = '';
+        }
+
+        function doCrop() {
+            const rect = {
+                x: Math.min(startX, curX) * scaleX,
+                y: Math.min(startY, curY) * scaleY,
+                w: Math.abs(curX - startX) * scaleX,
+                h: Math.abs(curY - startY) * scaleY
+            };
+            if (rect.w < 2 || rect.h < 2) return;
+
+            const canvas = document.createElement('canvas');
+            canvas.width = rect.w;
+            canvas.height = rect.h;
+            const ctx = canvas.getContext('2d');
+
+            const full = new Image();
+            full.crossOrigin = 'anonymous';
+            full.onload = () => {
+                ctx.drawImage(full, rect.x, rect.y, rect.w, rect.h, 0, 0, rect.w, rect.h);
+                canvas.toBlob(blob => {
+                    croppedBlob = blob;
+                    document.getElementById('previewImg').src = URL.createObjectURL(blob);
+                    document.getElementById('previewArea').style.display = '';
+                    document.getElementById('dlBtn').style.display = '';
+                }, 'image/png');
+            };
+            full.src = srcImg.src;
+        }
+
+        function downloadCrop() {
+            if (!croppedBlob) return;
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(croppedBlob);
+            a.download = 'cropped.png';
+            a.click();
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

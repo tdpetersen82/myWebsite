@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Energy Converter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>⚡ Energy Converter</h1>
+        <p class="subtitle">Convert between joules, calories, watt-hours, BTU, electronvolts, and more.</p>
+        <div class="tool-area">
+            <div class="tool-row">
+                <input type="number" id="input" placeholder="Enter value" value="1" step="any">
+                <select id="unit">
+                    <option value="J">Joules</option>
+                    <option value="kJ">Kilojoules</option>
+                    <option value="cal">Calories</option>
+                    <option value="kcal">Kilocalories</option>
+                    <option value="Wh">Watt-hours</option>
+                    <option value="kWh">Kilowatt-hours</option>
+                    <option value="BTU">BTU</option>
+                    <option value="eV">Electronvolts</option>
+                </select>
+            </div>
+            <div class="tool-grid" id="results"></div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        // All values in joules
+        const toJoules = {
+            J: 1,
+            kJ: 1000,
+            cal: 4.184,
+            kcal: 4184,
+            Wh: 3600,
+            kWh: 3600000,
+            BTU: 1055.06,
+            eV: 1.602176634e-19
+        };
+        const labels = {
+            J: 'Joules (J)',
+            kJ: 'Kilojoules (kJ)',
+            cal: 'Calories (cal)',
+            kcal: 'Kilocalories (kcal)',
+            Wh: 'Watt-hours (Wh)',
+            kWh: 'Kilowatt-hours (kWh)',
+            BTU: 'BTU',
+            eV: 'Electronvolts (eV)'
+        };
+
+        function fmt(v) {
+            if (isNaN(v) || !isFinite(v)) return '—';
+            if (v === 0) return '0';
+            if (Math.abs(v) >= 1e15 || Math.abs(v) < 1e-6) return v.toExponential(6);
+            return Number.isInteger(v) ? v.toString() : v.toPrecision(10).replace(/\.?0+$/, '');
+        }
+
+        function convert() {
+            const val = parseFloat(document.getElementById('input').value);
+            const unit = document.getElementById('unit').value;
+            const grid = document.getElementById('results');
+            if (isNaN(val)) { grid.innerHTML = ''; return; }
+            const inJ = val * toJoules[unit];
+            grid.innerHTML = Object.keys(toJoules).map(u => {
+                const result = inJ / toJoules[u];
+                return `<div class="info-item"><span class="info-label">${labels[u]}</span><span class="info-value">${fmt(result)}</span></div>`;
+            }).join('');
+        }
+
+        document.getElementById('input').addEventListener('input', convert);
+        document.getElementById('unit').addEventListener('change', convert);
+        convert();
+    </script>
+</body>
+</html>

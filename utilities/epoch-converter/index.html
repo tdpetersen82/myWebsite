@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unix Timestamp Converter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .live-ts { font-size: 2em; font-weight: bold; color: #667eea; font-family: 'Courier New', monospace; margin: 12px 0; }
+        .toggle-row { display: flex; gap: 8px; justify-content: center; margin: 8px 0; }
+        .toggle-btn { padding: 6px 16px; border: 2px solid #667eea; background: #fff; color: #667eea; border-radius: 8px; cursor: pointer; font-weight: 600; transition: all 0.2s; }
+        .toggle-btn.active { background: #667eea; color: #fff; }
+        .section-title { font-weight: 600; margin: 16px 0 8px; color: #333; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏱️ Unix Timestamp Converter</h1>
+        <p class="subtitle">Convert between Unix timestamps and human-readable dates.</p>
+        <div class="tool-area">
+            <div class="section-title">Current Unix Timestamp</div>
+            <div class="live-ts" id="liveTs"></div>
+
+            <div class="section-title">Timestamp → Date</div>
+            <div class="toggle-row">
+                <button class="toggle-btn active" onclick="setUnit('s')">Seconds</button>
+                <button class="toggle-btn" onclick="setUnit('ms')">Milliseconds</button>
+            </div>
+            <input type="text" id="tsInput" placeholder="Enter Unix timestamp..." oninput="tsToDate()">
+            <div class="tool-grid" id="tsResult"></div>
+
+            <div class="section-title">Date → Timestamp</div>
+            <input type="datetime-local" id="dateInput" onchange="dateToTs()" step="1">
+            <div class="tool-grid" id="dateResult"></div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        let unit = 's';
+        function setUnit(u) {
+            unit = u;
+            document.querySelectorAll('.toggle-btn').forEach(b => b.classList.toggle('active', b.textContent.toLowerCase().startsWith(u === 's' ? 's' : 'm')));
+            tsToDate();
+        }
+        function tsToDate() {
+            const val = document.getElementById('tsInput').value.trim();
+            const el = document.getElementById('tsResult');
+            if (!val || isNaN(val)) { el.innerHTML = ''; return; }
+            const ms = unit === 's' ? Number(val) * 1000 : Number(val);
+            const d = new Date(ms);
+            if (isNaN(d.getTime())) { el.innerHTML = '<div class="info-item"><span class="info-label">Error</span><span class="info-value">Invalid timestamp</span></div>'; return; }
+            el.innerHTML =
+                '<div class="info-item"><span class="info-label">Local Time</span><span class="info-value">' + d.toLocaleString() + '</span></div>' +
+                '<div class="info-item"><span class="info-label">UTC</span><span class="info-value">' + d.toUTCString() + '</span></div>' +
+                '<div class="info-item"><span class="info-label">ISO 8601</span><span class="info-value">' + d.toISOString() + '</span></div>';
+        }
+        function dateToTs() {
+            const val = document.getElementById('dateInput').value;
+            const el = document.getElementById('dateResult');
+            if (!val) { el.innerHTML = ''; return; }
+            const d = new Date(val);
+            const sec = Math.floor(d.getTime() / 1000);
+            const ms = d.getTime();
+            el.innerHTML =
+                '<div class="info-item"><span class="info-label">Seconds</span><span class="info-value" style="font-family:monospace">' + sec + '</span></div>' +
+                '<div class="info-item"><span class="info-label">Milliseconds</span><span class="info-value" style="font-family:monospace">' + ms + '</span></div>' +
+                '<div class="info-item"><span class="info-label">UTC</span><span class="info-value">' + d.toUTCString() + '</span></div>';
+        }
+        setInterval(() => {
+            document.getElementById('liveTs').textContent = Math.floor(Date.now() / 1000);
+        }, 1000);
+        document.getElementById('liveTs').textContent = Math.floor(Date.now() / 1000);
+    </script>
+</body>
+</html>

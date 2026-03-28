@@ -1,0 +1,189 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Picker — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        canvas { max-width: 100%; border-radius: 12px; margin: 12px auto; display: block; cursor: pointer; }
+        .picked-item { font-size: 1.8em; font-weight: bold; color: #764ba2; margin: 12px 0; min-height: 1.5em; }
+        .history-list { text-align: left; max-height: 200px; overflow-y: auto; padding: 8px; background: #f5f5fa; border-radius: 8px; margin-top: 10px; }
+        .history-list div { padding: 4px 8px; border-bottom: 1px solid #e0e0e0; font-size: 0.9em; }
+        .history-list div:last-child { border-bottom: none; }
+        .anim-item { font-size: 1.4em; color: #667eea; transition: opacity 0.1s; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎰 Random Picker</h1>
+        <p class="subtitle">Enter items and pick one at random, or spin the wheel!</p>
+
+        <div class="tool-area">
+            <div class="tool-tabs">
+                <button class="tool-tab active" onclick="switchTab('list')">List Picker</button>
+                <button class="tool-tab" onclick="switchTab('wheel')">Spin Wheel</button>
+            </div>
+
+            <label for="itemsInput">Items (one per line)</label>
+            <textarea id="itemsInput" rows="6" placeholder="Pizza&#10;Tacos&#10;Sushi&#10;Burgers&#10;Salad"></textarea>
+
+            <div id="listTab">
+                <div style="text-align:center;margin:12px 0;">
+                    <button class="copy-btn" onclick="pickRandom()" style="font-size:1.1em;padding:10px 28px;">🎲 Pick Random</button>
+                </div>
+                <div class="picked-item" id="pickedItem"></div>
+            </div>
+
+            <div id="wheelTab" style="display:none;">
+                <canvas id="wheelCanvas" width="400" height="400"></canvas>
+                <div style="text-align:center;">
+                    <button class="copy-btn" onclick="spinWheel()" id="spinBtn" style="font-size:1.1em;padding:10px 28px;">🎡 Spin!</button>
+                </div>
+                <div class="picked-item" id="wheelResult"></div>
+            </div>
+
+            <div id="historySection" style="display:none;">
+                <h3 style="margin-top:14px;">Pick History</h3>
+                <div class="history-list" id="historyList"></div>
+                <button class="copy-btn" onclick="clearHistory()" style="margin-top:8px;">Clear History</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const itemsInput = document.getElementById('itemsInput');
+        const pickedItem = document.getElementById('pickedItem');
+        const wheelResult = document.getElementById('wheelResult');
+        const historyList = document.getElementById('historyList');
+        const historySection = document.getElementById('historySection');
+        const canvas = document.getElementById('wheelCanvas');
+        const ctx = canvas.getContext('2d');
+        let history = [];
+        let spinning = false;
+        let currentAngle = 0;
+
+        const colors = ['#667eea','#764ba2','#f093fb','#f5576c','#4facfe','#00f2fe','#43e97b','#fa709a','#fee140','#30cfd0','#a18cd1','#fbc2eb'];
+
+        function getItems() {
+            return itemsInput.value.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+        }
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tool-tab').forEach((t, i) => t.classList.toggle('active', (tab === 'list' ? i === 0 : i === 1)));
+            document.getElementById('listTab').style.display = tab === 'list' ? '' : 'none';
+            document.getElementById('wheelTab').style.display = tab === 'wheel' ? '' : 'none';
+            if (tab === 'wheel') drawWheel();
+        }
+
+        function pickRandom() {
+            const items = getItems();
+            if (items.length === 0) { pickedItem.textContent = 'Add some items first!'; return; }
+            let count = 0;
+            const interval = setInterval(() => {
+                pickedItem.textContent = items[Math.floor(Math.random() * items.length)];
+                pickedItem.style.opacity = count % 2 === 0 ? '1' : '0.5';
+                count++;
+                if (count > 15) {
+                    clearInterval(interval);
+                    const result = items[Math.floor(Math.random() * items.length)];
+                    pickedItem.textContent = result;
+                    pickedItem.style.opacity = '1';
+                    addHistory(result);
+                }
+            }, 80);
+        }
+
+        function addHistory(item) {
+            history.unshift({ item, time: new Date().toLocaleTimeString() });
+            historySection.style.display = '';
+            renderHistory();
+        }
+
+        function renderHistory() {
+            historyList.innerHTML = history.map(h => `<div><strong>${h.item}</strong> <span style="color:#999;float:right;">${h.time}</span></div>`).join('');
+        }
+
+        function clearHistory() {
+            history = [];
+            historySection.style.display = 'none';
+            historyList.innerHTML = '';
+        }
+
+        function drawWheel(highlightIndex) {
+            const items = getItems();
+            if (items.length === 0) { ctx.clearRect(0, 0, 400, 400); return; }
+            const cx = 200, cy = 200, r = 180;
+            const sliceAngle = (2 * Math.PI) / items.length;
+            ctx.clearRect(0, 0, 400, 400);
+            items.forEach((item, i) => {
+                const start = currentAngle + i * sliceAngle;
+                const end = start + sliceAngle;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy);
+                ctx.arc(cx, cy, r, start, end);
+                ctx.closePath();
+                ctx.fillStyle = colors[i % colors.length];
+                if (highlightIndex === i) ctx.fillStyle = '#fff176';
+                ctx.fill();
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                ctx.save();
+                ctx.translate(cx, cy);
+                ctx.rotate(start + sliceAngle / 2);
+                ctx.fillStyle = '#fff';
+                ctx.font = 'bold 13px sans-serif';
+                ctx.textAlign = 'center';
+                ctx.textBaseline = 'middle';
+                const label = item.length > 14 ? item.slice(0, 12) + '..' : item;
+                ctx.fillText(label, r * 0.6, 0);
+                ctx.restore();
+            });
+            // Arrow
+            ctx.beginPath();
+            ctx.moveTo(cx + r + 5, cy);
+            ctx.lineTo(cx + r + 25, cy - 12);
+            ctx.lineTo(cx + r + 25, cy + 12);
+            ctx.closePath();
+            ctx.fillStyle = '#e74c3c';
+            ctx.fill();
+        }
+
+        function spinWheel() {
+            if (spinning) return;
+            const items = getItems();
+            if (items.length === 0) { wheelResult.textContent = 'Add some items first!'; return; }
+            spinning = true;
+            document.getElementById('spinBtn').disabled = true;
+            const totalRotation = Math.PI * 2 * (5 + Math.random() * 5);
+            const duration = 3000;
+            const startAngle = currentAngle;
+            const startTime = performance.now();
+            function animate(now) {
+                const elapsed = now - startTime;
+                const t = Math.min(elapsed / duration, 1);
+                const ease = 1 - Math.pow(1 - t, 3);
+                currentAngle = startAngle + totalRotation * ease;
+                drawWheel();
+                if (t < 1) {
+                    requestAnimationFrame(animate);
+                } else {
+                    spinning = false;
+                    document.getElementById('spinBtn').disabled = false;
+                    const sliceAngle = (2 * Math.PI) / items.length;
+                    const norm = ((2 * Math.PI - (currentAngle % (2 * Math.PI))) + 2 * Math.PI) % (2 * Math.PI);
+                    const idx = Math.floor(norm / sliceAngle) % items.length;
+                    wheelResult.textContent = items[idx];
+                    addHistory(items[idx]);
+                }
+            }
+            requestAnimationFrame(animate);
+        }
+
+        itemsInput.addEventListener('input', () => { if (!spinning) drawWheel(); });
+        drawWheel();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,338 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Picker — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .picker-layout {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .sv-canvas {
+            width: 280px;
+            height: 280px;
+            border-radius: 8px;
+            cursor: crosshair;
+            border: 2px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+        .hue-canvas {
+            width: 32px;
+            height: 280px;
+            border-radius: 8px;
+            cursor: pointer;
+            border: 2px solid #e0e0e0;
+            flex-shrink: 0;
+        }
+        .pick-swatch {
+            width: 100%;
+            height: 80px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+            margin-bottom: 12px;
+        }
+        .value-row {
+            display: flex;
+            gap: 8px;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        .value-row label {
+            min-width: 36px;
+            font-weight: 600;
+            color: #555;
+            font-size: 0.85em;
+        }
+        .value-row input {
+            flex: 1;
+        }
+        .value-row .copy-btn { flex-shrink: 0; }
+        .palette-section { margin-top: 16px; }
+        .palette-section h3 { font-size: 0.95em; color: #555; margin-bottom: 8px; }
+        .palette-bar {
+            display: flex;
+            gap: 6px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .pal-swatch {
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: transform 0.15s;
+            position: relative;
+        }
+        .pal-swatch:hover { transform: scale(1.15); }
+        .pal-swatch .pal-del {
+            position: absolute;
+            top: -6px;
+            right: -6px;
+            background: #d33;
+            color: #fff;
+            border: none;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            font-size: 10px;
+            cursor: pointer;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            line-height: 1;
+        }
+        .pal-swatch:hover .pal-del { display: flex; }
+        @media (max-width: 600px) {
+            .picker-layout { flex-direction: column; align-items: center; }
+            .sv-canvas { width: 100%; max-width: 280px; }
+            .hue-canvas { width: 100%; max-width: 280px; height: 32px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌈 Color Picker</h1>
+        <p class="subtitle">Pick any color visually, view it in multiple formats, and save favorites to your palette.</p>
+
+        <div class="tool-area">
+            <div class="picker-layout">
+                <canvas class="sv-canvas" id="svCanvas" width="280" height="280"></canvas>
+                <canvas class="hue-canvas" id="hueCanvas" width="32" height="280"></canvas>
+            </div>
+
+            <div class="pick-swatch" id="swatch"></div>
+
+            <div class="value-row">
+                <label>HEX</label>
+                <input type="text" id="hexVal" readonly>
+                <button class="copy-btn" data-field="hexVal">Copy</button>
+            </div>
+            <div class="value-row">
+                <label>RGB</label>
+                <input type="text" id="rgbVal" readonly>
+                <button class="copy-btn" data-field="rgbVal">Copy</button>
+            </div>
+            <div class="value-row">
+                <label>HSL</label>
+                <input type="text" id="hslVal" readonly>
+                <button class="copy-btn" data-field="hslVal">Copy</button>
+            </div>
+
+            <div style="margin-top:10px;">
+                <button class="copy-btn" id="saveBtn">Save to Palette</button>
+            </div>
+
+            <div class="palette-section">
+                <h3>Saved Palette (up to 10)</h3>
+                <div class="palette-bar" id="paletteBar"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const svCanvas = document.getElementById('svCanvas');
+        const hueCanvas = document.getElementById('hueCanvas');
+        const svCtx = svCanvas.getContext('2d');
+        const hueCtx = hueCanvas.getContext('2d');
+        const swatchEl = document.getElementById('swatch');
+        const hexEl = document.getElementById('hexVal');
+        const rgbEl = document.getElementById('rgbVal');
+        const hslEl = document.getElementById('hslVal');
+        const paletteBar = document.getElementById('paletteBar');
+
+        let currentH = 220, currentS = 0.75, currentV = 0.92;
+        let palette = JSON.parse(localStorage.getItem('colorPickerPalette') || '[]');
+
+        // HSV to RGB
+        function hsvToRgb(h, s, v) {
+            let c = v * s, x = c * (1 - Math.abs((h / 60) % 2 - 1)), m = v - c;
+            let r, g, b;
+            if (h < 60)       { r = c; g = x; b = 0; }
+            else if (h < 120) { r = x; g = c; b = 0; }
+            else if (h < 180) { r = 0; g = c; b = x; }
+            else if (h < 240) { r = 0; g = x; b = c; }
+            else if (h < 300) { r = x; g = 0; b = c; }
+            else              { r = c; g = 0; b = x; }
+            return {
+                r: Math.round((r + m) * 255),
+                g: Math.round((g + m) * 255),
+                b: Math.round((b + m) * 255)
+            };
+        }
+
+        function rgbToHsl(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            let h, s, l = (max + min) / 2;
+            if (max === min) { h = s = 0; }
+            else {
+                const d = max - min;
+                s = l > 0.5 ? d / (2 - max - min) : d / (max + min);
+                switch (max) {
+                    case r: h = ((g - b) / d + (g < b ? 6 : 0)) / 6; break;
+                    case g: h = ((b - r) / d + 2) / 6; break;
+                    case b: h = ((r - g) / d + 4) / 6; break;
+                }
+            }
+            return { h: Math.round(h * 360), s: Math.round(s * 100), l: Math.round(l * 100) };
+        }
+
+        function rgbToHex(r, g, b) {
+            return '#' + [r, g, b].map(c => c.toString(16).padStart(2, '0')).join('');
+        }
+
+        // Draw hue bar
+        function drawHueBar() {
+            const w = hueCanvas.width, h = hueCanvas.height;
+            const grad = hueCtx.createLinearGradient(0, 0, 0, h);
+            for (let i = 0; i <= 360; i += 30) {
+                grad.addColorStop(i / 360, 'hsl(' + i + ', 100%, 50%)');
+            }
+            hueCtx.fillStyle = grad;
+            hueCtx.fillRect(0, 0, w, h);
+        }
+
+        // Draw SV square
+        function drawSVSquare() {
+            const w = svCanvas.width, h = svCanvas.height;
+            const baseColor = 'hsl(' + currentH + ', 100%, 50%)';
+            // White to color (horizontal saturation)
+            const gradH = svCtx.createLinearGradient(0, 0, w, 0);
+            gradH.addColorStop(0, '#fff');
+            gradH.addColorStop(1, baseColor);
+            svCtx.fillStyle = gradH;
+            svCtx.fillRect(0, 0, w, h);
+            // Black overlay (vertical value)
+            const gradV = svCtx.createLinearGradient(0, 0, 0, h);
+            gradV.addColorStop(0, 'rgba(0,0,0,0)');
+            gradV.addColorStop(1, '#000');
+            svCtx.fillStyle = gradV;
+            svCtx.fillRect(0, 0, w, h);
+        }
+
+        function updateDisplay() {
+            const rgb = hsvToRgb(currentH, currentS, currentV);
+            const hex = rgbToHex(rgb.r, rgb.g, rgb.b);
+            const hsl = rgbToHsl(rgb.r, rgb.g, rgb.b);
+            swatchEl.style.backgroundColor = hex;
+            hexEl.value = hex;
+            rgbEl.value = 'rgb(' + rgb.r + ', ' + rgb.g + ', ' + rgb.b + ')';
+            hslEl.value = 'hsl(' + hsl.h + ', ' + hsl.s + '%, ' + hsl.l + '%)';
+        }
+
+        // SV Canvas interaction
+        function handleSV(e) {
+            const rect = svCanvas.getBoundingClientRect();
+            const clientX = e.touches ? e.touches[0].clientX : e.clientX;
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const x = Math.max(0, Math.min(1, (clientX - rect.left) / rect.width));
+            const y = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+            currentS = x;
+            currentV = 1 - y;
+            updateDisplay();
+        }
+
+        let svDown = false;
+        svCanvas.addEventListener('mousedown', e => { svDown = true; handleSV(e); });
+        window.addEventListener('mousemove', e => { if (svDown) handleSV(e); });
+        window.addEventListener('mouseup', () => { svDown = false; });
+        svCanvas.addEventListener('touchstart', e => { e.preventDefault(); handleSV(e); });
+        svCanvas.addEventListener('touchmove', e => { e.preventDefault(); handleSV(e); });
+
+        // Hue Canvas interaction
+        function handleHue(e) {
+            const rect = hueCanvas.getBoundingClientRect();
+            const clientY = e.touches ? e.touches[0].clientY : e.clientY;
+            const y = Math.max(0, Math.min(1, (clientY - rect.top) / rect.height));
+            currentH = y * 360;
+            drawSVSquare();
+            updateDisplay();
+        }
+
+        let hueDown = false;
+        hueCanvas.addEventListener('mousedown', e => { hueDown = true; handleHue(e); });
+        window.addEventListener('mousemove', e => { if (hueDown) handleHue(e); });
+        window.addEventListener('mouseup', () => { hueDown = false; });
+        hueCanvas.addEventListener('touchstart', e => { e.preventDefault(); handleHue(e); });
+        hueCanvas.addEventListener('touchmove', e => { e.preventDefault(); handleHue(e); });
+
+        // Copy buttons
+        document.querySelectorAll('.copy-btn[data-field]').forEach(btn => {
+            btn.addEventListener('click', function() {
+                const val = document.getElementById(this.dataset.field).value;
+                navigator.clipboard.writeText(val).then(() => {
+                    const orig = this.textContent;
+                    this.textContent = 'Copied!';
+                    setTimeout(() => this.textContent = orig, 1200);
+                });
+            });
+        });
+
+        // Palette
+        function renderPalette() {
+            paletteBar.innerHTML = '';
+            palette.forEach((color, idx) => {
+                const sw = document.createElement('div');
+                sw.className = 'pal-swatch';
+                sw.style.backgroundColor = color;
+                sw.title = color;
+                sw.addEventListener('click', function(e) {
+                    if (e.target.classList.contains('pal-del')) return;
+                    // Parse hex and set as current
+                    const hex = color.replace('#', '');
+                    const r = parseInt(hex.substring(0, 2), 16);
+                    const g = parseInt(hex.substring(2, 4), 16);
+                    const b = parseInt(hex.substring(4, 6), 16);
+                    // Convert RGB to HSV
+                    const rr = r / 255, gg = g / 255, bb = b / 255;
+                    const max = Math.max(rr, gg, bb), min = Math.min(rr, gg, bb);
+                    const d = max - min;
+                    currentV = max;
+                    currentS = max === 0 ? 0 : d / max;
+                    if (d === 0) currentH = 0;
+                    else if (max === rr) currentH = ((gg - bb) / d + (gg < bb ? 6 : 0)) * 60;
+                    else if (max === gg) currentH = ((bb - rr) / d + 2) * 60;
+                    else currentH = ((rr - gg) / d + 4) * 60;
+                    drawSVSquare();
+                    updateDisplay();
+                });
+                const del = document.createElement('button');
+                del.className = 'pal-del';
+                del.textContent = '×';
+                del.addEventListener('click', function(e) {
+                    e.stopPropagation();
+                    palette.splice(idx, 1);
+                    localStorage.setItem('colorPickerPalette', JSON.stringify(palette));
+                    renderPalette();
+                });
+                sw.appendChild(del);
+                paletteBar.appendChild(sw);
+            });
+        }
+
+        document.getElementById('saveBtn').addEventListener('click', function() {
+            if (palette.length >= 10) {
+                palette.shift();
+            }
+            palette.push(hexEl.value);
+            localStorage.setItem('colorPickerPalette', JSON.stringify(palette));
+            renderPalette();
+        });
+
+        // Init
+        drawHueBar();
+        drawSVSquare();
+        updateDisplay();
+        renderPalette();
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

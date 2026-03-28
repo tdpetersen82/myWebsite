@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Compressor — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .tool-row { display: flex; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .tool-row label { font-size: 0.85em; color: #666; }
+        .quality-val { font-weight: 700; color: #667eea; min-width: 40px; }
+        .preview-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+        .preview-box { text-align: center; }
+        .preview-box img { max-width: 100%; max-height: 300px; border-radius: 8px; border: 2px solid #e0e0e0; }
+        .preview-box .label { font-size: 0.85em; color: #888; margin-bottom: 4px; }
+        .stats { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin-top: 16px; }
+        .info-item { background: #f0f4ff; border-radius: 10px; padding: 14px 20px; text-align: center; }
+        .info-label { font-size: 0.8em; color: #888; }
+        .info-value { font-size: 1.2em; font-weight: 700; color: #667eea; }
+        .download-btn { background: #27ae60; color: #fff; border: none; border-radius: 8px; padding: 10px 24px; cursor: pointer; font-size: 1em; margin-top: 16px; }
+        .download-btn:hover { background: #219a52; }
+        .slider { width: 200px; }
+        @media(max-width:600px){ .preview-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#128230; Image Compressor</h1>
+        <p class="subtitle">Compress images in your browser. Nothing is uploaded to a server.</p>
+
+        <div class="tool-area">
+            <input type="file" id="fileInput" accept="image/*">
+
+            <div class="tool-row" style="margin-top:12px;">
+                <label>Quality:</label>
+                <input type="range" id="quality" min="1" max="100" value="80" class="slider" oninput="document.getElementById('qval').textContent=this.value+'%'">
+                <span class="quality-val" id="qval">80%</span>
+                <button class="download-btn" id="compressBtn" style="display:none;" onclick="compress()">Compress</button>
+            </div>
+
+            <div id="output" style="display:none;">
+                <div class="preview-row">
+                    <div class="preview-box">
+                        <div class="label">Original</div>
+                        <img id="origImg">
+                    </div>
+                    <div class="preview-box">
+                        <div class="label">Compressed</div>
+                        <img id="compImg">
+                    </div>
+                </div>
+                <div class="stats">
+                    <div class="info-item"><div class="info-label">Original Size</div><div class="info-value" id="origSize"></div></div>
+                    <div class="info-item"><div class="info-label">Compressed Size</div><div class="info-value" id="compSize"></div></div>
+                    <div class="info-item"><div class="info-label">Reduction</div><div class="info-value" id="reduction"></div></div>
+                </div>
+                <button class="download-btn" id="dlBtn" onclick="download()">Download Compressed</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let origFile = null;
+        let compBlob = null;
+
+        document.getElementById('fileInput').addEventListener('change', e => {
+            origFile = e.target.files[0];
+            if (!origFile) return;
+            document.getElementById('compressBtn').style.display = '';
+            compress();
+        });
+
+        function fmtSize(bytes) {
+            if (bytes < 1024) return bytes + ' B';
+            if (bytes < 1048576) return (bytes / 1024).toFixed(1) + ' KB';
+            return (bytes / 1048576).toFixed(2) + ' MB';
+        }
+
+        function compress() {
+            if (!origFile) return;
+            const quality = parseInt(document.getElementById('quality').value) / 100;
+            const img = new Image();
+            const url = URL.createObjectURL(origFile);
+            img.onload = () => {
+                document.getElementById('origImg').src = url;
+                const canvas = document.createElement('canvas');
+                canvas.width = img.naturalWidth;
+                canvas.height = img.naturalHeight;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0);
+
+                canvas.toBlob(blob => {
+                    compBlob = blob;
+                    document.getElementById('compImg').src = URL.createObjectURL(blob);
+                    document.getElementById('origSize').textContent = fmtSize(origFile.size);
+                    document.getElementById('compSize').textContent = fmtSize(blob.size);
+                    const pct = ((1 - blob.size / origFile.size) * 100).toFixed(1);
+                    document.getElementById('reduction').textContent = pct + '%';
+                    document.getElementById('output').style.display = '';
+                }, 'image/jpeg', quality);
+            };
+            img.src = url;
+        }
+
+        function download() {
+            if (!compBlob) return;
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(compBlob);
+            a.download = 'compressed-' + (origFile ? origFile.name.replace(/\.[^.]+$/, '') : 'image') + '.jpg';
+            a.click();
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

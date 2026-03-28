@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSS Gradient Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .gradient-preview {
+            width: 100%;
+            height: 200px;
+            border-radius: 12px;
+            border: 2px solid #e0e0e0;
+            margin-bottom: 16px;
+            transition: background 0.3s;
+        }
+        .control-group {
+            margin-bottom: 14px;
+        }
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            color: #555;
+            margin-bottom: 4px;
+            font-size: 0.9em;
+        }
+        .control-group input[type="range"] {
+            width: 100%;
+        }
+        .control-group input[type="color"] {
+            width: 60px;
+            height: 36px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            padding: 2px;
+        }
+        .color-row {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+        .color-row .color-pair {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .shape-select {
+            padding: 8px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 0.95em;
+            background: #fafafa;
+        }
+        .presets-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(80px, 1fr));
+            gap: 8px;
+            margin-top: 8px;
+        }
+        .preset-swatch {
+            height: 48px;
+            border-radius: 8px;
+            border: 2px solid #e0e0e0;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        .preset-swatch:hover {
+            transform: scale(1.08);
+            border-color: #667eea;
+        }
+        .range-value {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.9em;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 CSS Gradient Generator</h1>
+        <p class="subtitle">Create beautiful CSS gradients with a live preview and copy the code.</p>
+
+        <div class="tool-area">
+            <div class="tool-tabs">
+                <button class="tool-tab active" data-tab="linear">Linear</button>
+                <button class="tool-tab" data-tab="radial">Radial</button>
+            </div>
+
+            <div class="gradient-preview" id="preview"></div>
+
+            <div id="linearControls">
+                <div class="control-group">
+                    <label>Angle: <span class="range-value" id="angleValue">135</span>°</label>
+                    <input type="range" id="angle" min="0" max="360" value="135">
+                </div>
+            </div>
+
+            <div id="radialControls" style="display:none;">
+                <div class="control-group">
+                    <label>Shape</label>
+                    <select class="shape-select" id="shape">
+                        <option value="circle">Circle</option>
+                        <option value="ellipse">Ellipse</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="control-group">
+                <label>Colors</label>
+                <div class="color-row">
+                    <div class="color-pair">
+                        <span style="font-size:0.85em;color:#777;">Start</span>
+                        <input type="color" id="color1" value="#667eea">
+                    </div>
+                    <div class="color-pair">
+                        <span style="font-size:0.85em;color:#777;">End</span>
+                        <input type="color" id="color2" value="#764ba2">
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-output" id="cssOutput"></div>
+            <div style="margin-top:10px;">
+                <button class="copy-btn" id="copyBtn">Copy CSS</button>
+            </div>
+
+            <div class="control-group" style="margin-top:20px;">
+                <label>Preset Gradients</label>
+                <div class="presets-grid" id="presets"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const presets = [
+            { c1: '#667eea', c2: '#764ba2', angle: 135 },
+            { c1: '#f093fb', c2: '#f5576c', angle: 135 },
+            { c1: '#4facfe', c2: '#00f2fe', angle: 135 },
+            { c1: '#43e97b', c2: '#38f9d7', angle: 135 },
+            { c1: '#fa709a', c2: '#fee140', angle: 135 },
+            { c1: '#a18cd1', c2: '#fbc2eb', angle: 135 },
+            { c1: '#fccb90', c2: '#d57eeb', angle: 135 },
+            { c1: '#e0c3fc', c2: '#8ec5fc', angle: 135 },
+            { c1: '#f5576c', c2: '#ffd194', angle: 135 },
+            { c1: '#0c3483', c2: '#a2b6df', angle: 135 },
+            { c1: '#ff9a9e', c2: '#fecfef', angle: 135 },
+            { c1: '#00c6fb', c2: '#005bea', angle: 135 },
+        ];
+
+        let mode = 'linear';
+        const angleEl = document.getElementById('angle');
+        const angleValueEl = document.getElementById('angleValue');
+        const shapeEl = document.getElementById('shape');
+        const color1El = document.getElementById('color1');
+        const color2El = document.getElementById('color2');
+        const previewEl = document.getElementById('preview');
+        const cssOutputEl = document.getElementById('cssOutput');
+        const linearCtrl = document.getElementById('linearControls');
+        const radialCtrl = document.getElementById('radialControls');
+
+        function update() {
+            let css;
+            if (mode === 'linear') {
+                css = 'linear-gradient(' + angleEl.value + 'deg, ' + color1El.value + ', ' + color2El.value + ')';
+            } else {
+                css = 'radial-gradient(' + shapeEl.value + ', ' + color1El.value + ', ' + color2El.value + ')';
+            }
+            previewEl.style.background = css;
+            cssOutputEl.textContent = 'background: ' + css + ';';
+        }
+
+        // Tabs
+        document.querySelectorAll('.tool-tab').forEach(tab => {
+            tab.addEventListener('click', function() {
+                document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+                this.classList.add('active');
+                mode = this.dataset.tab;
+                linearCtrl.style.display = mode === 'linear' ? '' : 'none';
+                radialCtrl.style.display = mode === 'radial' ? '' : 'none';
+                update();
+            });
+        });
+
+        angleEl.addEventListener('input', function() {
+            angleValueEl.textContent = this.value;
+            update();
+        });
+
+        shapeEl.addEventListener('change', update);
+        color1El.addEventListener('input', update);
+        color2El.addEventListener('input', update);
+
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            navigator.clipboard.writeText(cssOutputEl.textContent).then(() => {
+                this.textContent = 'Copied!';
+                setTimeout(() => this.textContent = 'Copy CSS', 1200);
+            });
+        });
+
+        // Render presets
+        const presetsEl = document.getElementById('presets');
+        presets.forEach(p => {
+            const sw = document.createElement('div');
+            sw.className = 'preset-swatch';
+            sw.style.background = 'linear-gradient(135deg, ' + p.c1 + ', ' + p.c2 + ')';
+            sw.addEventListener('click', function() {
+                color1El.value = p.c1;
+                color2El.value = p.c2;
+                angleEl.value = p.angle;
+                angleValueEl.textContent = p.angle;
+                update();
+            });
+            presetsEl.appendChild(sw);
+        });
+
+        update();
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

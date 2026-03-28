@@ -1,0 +1,278 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crontab Validator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .cron-input-row { display: flex; gap: 8px; margin-bottom: 12px; }
+        .cron-input-row input { flex: 1; font-family: 'Courier New', monospace; font-size: 1.3em; text-align: center; letter-spacing: 2px; }
+        .cron-input-row button { white-space: nowrap; }
+        .preset-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 12px 0; }
+        .preset-btn { padding: 6px 12px; border: 2px solid #667eea; background: #fff; color: #667eea; border-radius: 6px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.2s; }
+        .preset-btn:hover { background: #667eea; color: #fff; }
+        .status-bar { padding: 10px 14px; border-radius: 8px; font-weight: 600; font-size: 1em; margin: 10px 0; transition: all 0.3s; }
+        .status-valid { background: #d4edda; color: #155724; border: 2px solid #28a745; }
+        .status-invalid { background: #f8d7da; color: #721c24; border: 2px solid #dc3545; }
+        .human-desc { font-size: 1.1em; color: #333; margin: 8px 0; font-style: italic; }
+        .breakdown-table { width: 100%; border-collapse: collapse; margin: 12px 0; font-size: 0.9em; }
+        .breakdown-table th, .breakdown-table td { padding: 8px 10px; border: 1px solid #ddd; text-align: left; }
+        .breakdown-table th { background: #667eea; color: #fff; font-weight: 600; }
+        .breakdown-table tr:nth-child(even) { background: #f8f9ff; }
+        .breakdown-table .field-val { font-family: 'Courier New', monospace; font-weight: 700; color: #667eea; }
+        .next-runs { text-align: left; margin-top: 12px; }
+        .next-runs h3 { margin: 8px 0; color: #333; }
+        .next-runs ol { padding-left: 20px; }
+        .next-runs li { padding: 4px 0; font-family: monospace; font-size: 0.9em; }
+        .section-label { font-weight: 600; color: #555; margin: 14px 0 6px; font-size: 0.95em; text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏱️ Crontab Validator</h1>
+        <p class="subtitle">Validate cron expressions and see next scheduled runs.</p>
+        <div class="tool-area">
+            <label for="cronInput">Cron Expression (5-field format)</label>
+            <div class="cron-input-row">
+                <input type="text" id="cronInput" value="*/5 * * * *" placeholder="min hour dom month dow" oninput="validate()">
+                <button class="copy-btn" onclick="copyExpr()">Copy</button>
+            </div>
+
+            <div class="preset-row">
+                <button class="preset-btn" onclick="setPreset('* * * * *')">Every Minute</button>
+                <button class="preset-btn" onclick="setPreset('0 * * * *')">Hourly</button>
+                <button class="preset-btn" onclick="setPreset('0 0 * * *')">Daily</button>
+                <button class="preset-btn" onclick="setPreset('0 0 * * 1')">Weekly (Mon)</button>
+                <button class="preset-btn" onclick="setPreset('0 0 1 * *')">Monthly</button>
+                <button class="preset-btn" onclick="setPreset('*/5 * * * *')">Every 5 Min</button>
+                <button class="preset-btn" onclick="setPreset('*/15 * * * *')">Every 15 Min</button>
+                <button class="preset-btn" onclick="setPreset('0 9-17 * * 1-5')">Work Hours</button>
+            </div>
+
+            <div id="statusBar" class="status-bar status-valid"></div>
+
+            <div id="humanDesc" class="human-desc"></div>
+
+            <div class="section-label">Field Breakdown</div>
+            <table class="breakdown-table">
+                <thead>
+                    <tr><th>Field</th><th>Value</th><th>Allowed</th><th>Meaning</th></tr>
+                </thead>
+                <tbody id="breakdownBody"></tbody>
+            </table>
+
+            <div class="next-runs">
+                <h3>Next 5 Scheduled Runs</h3>
+                <ol id="nextRuns"></ol>
+            </div>
+        </div>
+    </div>
+    <script>
+        const FIELD_NAMES = ['Minute', 'Hour', 'Day of Month', 'Month', 'Day of Week'];
+        const FIELD_RANGES = [[0, 59], [0, 23], [1, 31], [1, 12], [0, 6]];
+        const MONTH_NAMES = ['', 'January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const DAY_NAMES = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        function setPreset(expr) {
+            document.getElementById('cronInput').value = expr;
+            validate();
+        }
+
+        function copyExpr() {
+            navigator.clipboard.writeText(document.getElementById('cronInput').value.trim()).then(function() {
+                var btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(function() { btn.textContent = 'Copy'; }, 1500);
+            });
+        }
+
+        function validateField(val, min, max) {
+            if (val === '*') return { valid: true, desc: 'Every value (' + min + '-' + max + ')' };
+            var parts = val.split(',');
+            for (var i = 0; i < parts.length; i++) {
+                var part = parts[i].trim();
+                if (part === '') return { valid: false, desc: 'Empty value in list' };
+                var stepMatch = part.match(/^(.+)\/(\d+)$/);
+                var step = 1;
+                var range = part;
+                if (stepMatch) {
+                    step = parseInt(stepMatch[2]);
+                    range = stepMatch[1];
+                    if (step < 1) return { valid: false, desc: 'Step must be >= 1' };
+                }
+                if (range === '*') continue;
+                var rangeMatch = range.match(/^(\d+)-(\d+)$/);
+                if (rangeMatch) {
+                    var lo = parseInt(rangeMatch[1]);
+                    var hi = parseInt(rangeMatch[2]);
+                    if (lo < min || hi > max) return { valid: false, desc: 'Range ' + lo + '-' + hi + ' out of bounds (' + min + '-' + max + ')' };
+                    if (lo > hi) return { valid: false, desc: 'Range start ' + lo + ' > end ' + hi };
+                    continue;
+                }
+                if (/^\d+$/.test(range)) {
+                    var n = parseInt(range);
+                    if (n < min || n > max) return { valid: false, desc: 'Value ' + n + ' out of range (' + min + '-' + max + ')' };
+                    continue;
+                }
+                return { valid: false, desc: 'Invalid syntax: ' + part };
+            }
+            return { valid: true, desc: describeField(val, min, max) };
+        }
+
+        function describeField(val, min, max) {
+            if (val === '*') return 'Every value (' + min + '-' + max + ')';
+            var parts = val.split(',');
+            var descs = [];
+            for (var i = 0; i < parts.length; i++) {
+                var part = parts[i].trim();
+                var stepMatch = part.match(/^(.+)\/(\d+)$/);
+                if (stepMatch) {
+                    var range = stepMatch[1];
+                    var step = stepMatch[2];
+                    if (range === '*') descs.push('Every ' + step + ' values');
+                    else descs.push(range + ' stepping by ' + step);
+                } else if (part.includes('-')) {
+                    descs.push('Range ' + part);
+                } else {
+                    descs.push(part);
+                }
+            }
+            return descs.join(', ');
+        }
+
+        function humanReadable(parts) {
+            var m = parts[0], h = parts[1], dom = parts[2], mon = parts[3], dow = parts[4];
+            var desc = '';
+
+            if (m === '*' && h === '*' && dom === '*' && mon === '*' && dow === '*') return 'Every minute';
+            if (m === '0' && h === '0' && dom === '1' && mon === '1' && dow === '*') return 'At midnight on January 1st (yearly)';
+
+            var stepMatch = m.match(/^\*\/(\d+)$/);
+            if (stepMatch && h === '*' && dom === '*' && mon === '*' && dow === '*') return 'Every ' + stepMatch[1] + ' minutes';
+
+            if (m !== '*' && h === '*') desc = 'At minute ' + m + ' of every hour';
+            else if (m !== '*' && h !== '*') {
+                var hVal = h.padStart(2, '0');
+                var mVal = m.padStart(2, '0');
+                var hNum = parseInt(h);
+                if (!isNaN(hNum) && !isNaN(parseInt(m))) {
+                    var ampm = hNum >= 12 ? 'PM' : 'AM';
+                    var h12 = hNum === 0 ? 12 : (hNum > 12 ? hNum - 12 : hNum);
+                    desc = 'At ' + h12 + ':' + mVal + ' ' + ampm;
+                } else {
+                    desc = 'At ' + hVal + ':' + mVal;
+                }
+            } else if (m === '*' && h !== '*') {
+                desc = 'Every minute during hour ' + h;
+            } else {
+                desc = 'At ' + m + ' ' + h;
+            }
+
+            if (dom !== '*') desc += ' on day ' + dom + ' of the month';
+            if (mon !== '*') {
+                var mNum = parseInt(mon);
+                desc += ' in ' + (MONTH_NAMES[mNum] || mon);
+            }
+            if (dow !== '*') {
+                var dNum = parseInt(dow);
+                if (!isNaN(dNum) && DAY_NAMES[dNum]) desc += ' on ' + DAY_NAMES[dNum];
+                else if (dow.includes('-')) {
+                    var dp = dow.split('-');
+                    var d0 = parseInt(dp[0]), d1 = parseInt(dp[1]);
+                    desc += ' on ' + (DAY_NAMES[d0] || dp[0]) + ' through ' + (DAY_NAMES[d1] || dp[1]);
+                } else {
+                    desc += ' on day-of-week ' + dow;
+                }
+            }
+            return desc;
+        }
+
+        function expandField(val, min, max) {
+            if (val === '*') return Array.from({ length: max - min + 1 }, function(_, i) { return min + i; });
+            var result = new Set();
+            val.split(',').forEach(function(part) {
+                var stepMatch = part.match(/^(.+)\/(\d+)$/);
+                var range, step = 1;
+                if (stepMatch) { range = stepMatch[1]; step = parseInt(stepMatch[2]); }
+                else range = part;
+                if (range === '*') { for (var i = min; i <= max; i += step) result.add(i); return; }
+                var rm = range.match(/^(\d+)-(\d+)$/);
+                if (rm) { for (var i = parseInt(rm[1]); i <= parseInt(rm[2]); i += step) result.add(i); }
+                else result.add(parseInt(range));
+            });
+            return Array.from(result).filter(function(n) { return n >= min && n <= max; }).sort(function(a, b) { return a - b; });
+        }
+
+        function calcNextRuns(parts) {
+            var minutes = expandField(parts[0], 0, 59);
+            var hours = expandField(parts[1], 0, 23);
+            var doms = expandField(parts[2], 1, 31);
+            var months = expandField(parts[3], 1, 12);
+            var dows = expandField(parts[4], 0, 6);
+            var results = [];
+            var now = new Date();
+            var d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes() + 1, 0);
+            var limit = new Date(d.getTime() + 365 * 86400000);
+            while (results.length < 5 && d < limit) {
+                if (months.includes(d.getMonth() + 1) && doms.includes(d.getDate()) && dows.includes(d.getDay()) && hours.includes(d.getHours()) && minutes.includes(d.getMinutes())) {
+                    results.push(new Date(d));
+                }
+                d.setMinutes(d.getMinutes() + 1);
+            }
+            return results;
+        }
+
+        function validate() {
+            var input = document.getElementById('cronInput').value.trim();
+            var statusBar = document.getElementById('statusBar');
+            var humanDesc = document.getElementById('humanDesc');
+            var breakdownBody = document.getElementById('breakdownBody');
+            var nextRunsEl = document.getElementById('nextRuns');
+
+            var parts = input.split(/\s+/);
+            if (parts.length !== 5) {
+                statusBar.className = 'status-bar status-invalid';
+                statusBar.textContent = 'Invalid: Expected 5 fields (minute hour day-of-month month day-of-week), got ' + parts.length;
+                humanDesc.textContent = '';
+                breakdownBody.innerHTML = '';
+                nextRunsEl.innerHTML = '<li>Fix expression to see next runs</li>';
+                return;
+            }
+
+            var allValid = true;
+            var rows = '';
+            for (var i = 0; i < 5; i++) {
+                var result = validateField(parts[i], FIELD_RANGES[i][0], FIELD_RANGES[i][1]);
+                if (!result.valid) allValid = false;
+                var statusIcon = result.valid ? '&#10003;' : '&#10007;';
+                var statusColor = result.valid ? '#28a745' : '#dc3545';
+                rows += '<tr><td>' + FIELD_NAMES[i] + '</td><td class="field-val">' + parts[i] + '</td><td>' + FIELD_RANGES[i][0] + '-' + FIELD_RANGES[i][1] + '</td><td><span style="color:' + statusColor + ';font-weight:700">' + statusIcon + '</span> ' + result.desc + '</td></tr>';
+            }
+            breakdownBody.innerHTML = rows;
+
+            if (allValid) {
+                statusBar.className = 'status-bar status-valid';
+                statusBar.textContent = 'Valid cron expression';
+                humanDesc.textContent = humanReadable(parts);
+                var runs = calcNextRuns(parts);
+                if (runs.length === 0) {
+                    nextRunsEl.innerHTML = '<li>No runs found in the next year</li>';
+                } else {
+                    nextRunsEl.innerHTML = runs.map(function(r) {
+                        return '<li>' + r.toLocaleString('en-US', { weekday: 'short', year: 'numeric', month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit', hour12: true }) + '</li>';
+                    }).join('');
+                }
+            } else {
+                statusBar.className = 'status-bar status-invalid';
+                statusBar.textContent = 'Invalid cron expression — see field errors below';
+                humanDesc.textContent = '';
+                nextRunsEl.innerHTML = '<li>Fix expression to see next runs</li>';
+            }
+        }
+
+        validate();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

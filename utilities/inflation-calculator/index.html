@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Inflation Calculator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .form-group { text-align:left; margin-bottom:10px; }
+        .form-group label { font-weight:600; font-size:0.88em; color:#444; display:block; margin-bottom:3px; }
+        .form-group input { width:100%; padding:9px 11px; border:2px solid #e0e0e0; border-radius:8px; font-size:0.92em; }
+        .form-group input:focus { border-color:#667eea; outline:none; }
+        .breakdown-table { width:100%; border-collapse:collapse; margin-top:16px; font-size:0.9em; text-align:left; }
+        .breakdown-table th { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; padding:10px 12px; }
+        .breakdown-table td { padding:8px 12px; border-bottom:1px solid #eee; }
+        .breakdown-table tr:nth-child(even) { background:#f8f8fc; }
+        .breakdown-table tr:last-child td { font-weight:700; background:#eef; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📈 Inflation Calculator</h1>
+        <p class="subtitle">See how inflation affects purchasing power over time.</p>
+
+        <div class="tool-area">
+            <div class="form-group">
+                <label for="amount">Amount ($)</label>
+                <input type="number" id="amount" value="1000" step="0.01" min="0">
+            </div>
+            <div class="form-group">
+                <label for="rate">Annual Inflation Rate (%)</label>
+                <input type="number" id="rate" value="3" step="0.1" min="0">
+            </div>
+            <div class="form-group">
+                <label for="years">Number of Years</label>
+                <input type="number" id="years" value="10" step="1" min="1" max="100">
+            </div>
+
+            <button class="copy-btn" id="calcBtn" style="width:100%;padding:12px;font-size:1em;margin-top:8px;">Calculate</button>
+
+            <div class="tool-grid" id="summary" style="margin-top:16px;">
+                <div class="info-item"><div class="info-label">Future Value</div><div class="info-value" id="rFuture">—</div></div>
+                <div class="info-item"><div class="info-label">Purchasing Power</div><div class="info-value" id="rPower">—</div></div>
+                <div class="info-item"><div class="info-label">Total Inflation</div><div class="info-value" id="rTotal">—</div></div>
+            </div>
+
+            <div class="tool-output" id="tableContainer"></div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        function fmt(n) {
+            return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+        }
+
+        document.getElementById('calcBtn').addEventListener('click', function() {
+            const amount = parseFloat(document.getElementById('amount').value);
+            const rate = parseFloat(document.getElementById('rate').value) / 100;
+            const years = parseInt(document.getElementById('years').value);
+
+            if (isNaN(amount) || isNaN(rate) || isNaN(years) || years < 1) return;
+
+            const futureValue = amount * Math.pow(1 + rate, years);
+            const purchasingPower = amount / Math.pow(1 + rate, years);
+            const totalInflation = ((futureValue - amount) / amount) * 100;
+
+            document.getElementById('rFuture').textContent = fmt(futureValue);
+            document.getElementById('rPower').textContent = fmt(purchasingPower);
+            document.getElementById('rTotal').textContent = totalInflation.toFixed(1) + '%';
+
+            let html = '<table class="breakdown-table"><thead><tr><th>Year</th><th>Future Value</th><th>Purchasing Power</th><th>Cumulative Inflation</th></tr></thead><tbody>';
+            for (let y = 1; y <= years; y++) {
+                const fv = amount * Math.pow(1 + rate, y);
+                const pp = amount / Math.pow(1 + rate, y);
+                const ci = ((fv - amount) / amount * 100);
+                html += '<tr><td>' + y + '</td><td>' + fmt(fv) + '</td><td>' + fmt(pp) + '</td><td>' + ci.toFixed(1) + '%</td></tr>';
+            }
+            html += '</tbody></table>';
+            document.getElementById('tableContainer').innerHTML = html;
+        });
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

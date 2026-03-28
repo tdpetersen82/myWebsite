@@ -1,0 +1,131 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Number to Words — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .form-group { text-align:left; margin-bottom:10px; }
+        .form-group label { font-weight:600; font-size:0.88em; color:#444; display:block; margin-bottom:3px; }
+        .form-group input { width:100%; padding:9px 11px; border:2px solid #e0e0e0; border-radius:8px; font-size:0.92em; }
+        .form-group input:focus { border-color:#667eea; outline:none; }
+        .result-box { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-radius:12px; padding:20px; margin-top:16px; text-align:center; font-size:1.2em; font-weight:600; min-height:60px; display:flex; align-items:center; justify-content:center; word-break:break-word; }
+        .examples { background:#f8f8fc; border-radius:10px; padding:12px 16px; margin-top:16px; text-align:left; font-size:0.85em; }
+        .examples div { padding:3px 0; color:#555; }
+        .examples span { font-weight:700; color:#667eea; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔢 Number to Words</h1>
+        <p class="subtitle">Convert any number up to trillions into English words.</p>
+
+        <div class="tool-area">
+            <div class="form-group">
+                <label for="numInput">Enter a number</label>
+                <input type="text" id="numInput" placeholder="e.g. 1234.56" autocomplete="off">
+            </div>
+
+            <div class="result-box" id="result">Type a number above...</div>
+            <button class="copy-btn" id="copyBtn" style="margin-top:10px;">Copy</button>
+
+            <div class="examples">
+                <strong>Examples:</strong>
+                <div><span>0</span> &rarr; zero</div>
+                <div><span>42</span> &rarr; forty-two</div>
+                <div><span>1234</span> &rarr; one thousand two hundred thirty-four</div>
+                <div><span>-100.5</span> &rarr; negative one hundred point five</div>
+                <div><span>1000000</span> &rarr; one million</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const ones = ['','one','two','three','four','five','six','seven','eight','nine',
+            'ten','eleven','twelve','thirteen','fourteen','fifteen','sixteen','seventeen','eighteen','nineteen'];
+        const tens = ['','','twenty','thirty','forty','fifty','sixty','seventy','eighty','ninety'];
+        const scales = ['','thousand','million','billion','trillion'];
+
+        function convertChunk(n) {
+            if (n === 0) return '';
+            let str = '';
+            if (n >= 100) {
+                str += ones[Math.floor(n / 100)] + ' hundred';
+                n %= 100;
+                if (n > 0) str += ' ';
+            }
+            if (n >= 20) {
+                str += tens[Math.floor(n / 10)];
+                if (n % 10 > 0) str += '-' + ones[n % 10];
+            } else if (n > 0) {
+                str += ones[n];
+            }
+            return str;
+        }
+
+        function intToWords(n) {
+            if (n === 0) return 'zero';
+            let num = Math.abs(n);
+            if (num > 999999999999999) return 'number too large';
+            let words = '';
+            let scaleIdx = 0;
+            while (num > 0) {
+                const chunk = num % 1000;
+                if (chunk > 0) {
+                    const chunkWords = convertChunk(chunk);
+                    const scale = scales[scaleIdx];
+                    words = chunkWords + (scale ? ' ' + scale : '') + (words ? ' ' + words : '');
+                }
+                num = Math.floor(num / 1000);
+                scaleIdx++;
+            }
+            return words.trim();
+        }
+
+        function numberToWords(input) {
+            const str = input.trim();
+            if (str === '' || str === '-') return '';
+            if (!/^-?\d+(\.\d+)?$/.test(str)) return 'Invalid number';
+
+            const isNeg = str.startsWith('-');
+            const parts = str.replace(/^-/, '').split('.');
+            const intPart = parseInt(parts[0], 10);
+            let result = intToWords(intPart);
+
+            if (parts.length === 2 && parts[1].length > 0) {
+                const decDigits = parts[1].split('');
+                const decWords = decDigits.map(d => ones[parseInt(d)] || 'zero').join(' ');
+                result += ' point ' + decWords;
+            }
+
+            if (isNeg && intPart !== 0) result = 'negative ' + result;
+            if (isNeg && intPart === 0 && parts.length === 2) result = 'negative ' + result;
+
+            return result;
+        }
+
+        const input = document.getElementById('numInput');
+        const result = document.getElementById('result');
+
+        input.addEventListener('input', function() {
+            const words = numberToWords(this.value);
+            result.textContent = words || 'Type a number above...';
+        });
+
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            const txt = result.textContent;
+            if (!txt || txt === 'Type a number above...') return;
+            navigator.clipboard.writeText(txt).then(() => {
+                this.textContent = 'Copied!';
+                setTimeout(() => this.textContent = 'Copy', 1200);
+            });
+        });
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

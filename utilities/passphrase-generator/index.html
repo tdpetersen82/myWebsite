@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Passphrase Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .passphrase-display {
+            background: #1a1a2e; color: #43e97b; font-family: 'Courier New', monospace;
+            font-size: 1.3em; padding: 20px; border-radius: 10px; margin: 14px 0;
+            word-break: break-all; min-height: 2em; letter-spacing: 0.5px;
+        }
+        .entropy-display { font-size: 0.95em; color: #666; margin: 6px 0; }
+        .entropy-display strong { color: #764ba2; }
+        .config-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 12px; margin: 14px 0; text-align: left; }
+        .config-item { background: #f5f5fa; padding: 12px; border-radius: 10px; }
+        .config-item label { display: block; font-weight: 600; margin-bottom: 6px; font-size: 0.9em; color: #555; }
+        .config-item input[type="range"] { width: 100%; }
+        .config-item select { width: 100%; padding: 6px 10px; border: 2px solid #e0e0e0; border-radius: 6px; }
+        .toggle-row { display: flex; align-items: center; gap: 8px; }
+        .toggle-row input[type="checkbox"] { width: 18px; height: 18px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 Passphrase Generator</h1>
+        <p class="subtitle">Generate secure, memorable passphrases from common English words.</p>
+
+        <div class="tool-area">
+            <div class="passphrase-display" id="passphraseDisplay">Loading...</div>
+            <div class="entropy-display" id="entropyDisplay"></div>
+
+            <div style="text-align:center;margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button class="copy-btn" onclick="generate()" style="font-size:1.05em;padding:10px 24px;">🔄 Generate</button>
+                <button class="copy-btn" onclick="copyPassphrase()">📋 Copy</button>
+            </div>
+
+            <div class="config-grid">
+                <div class="config-item">
+                    <label>Word Count: <span id="wordCountLabel">5</span></label>
+                    <input type="range" id="wordCount" min="3" max="10" value="5" oninput="document.getElementById('wordCountLabel').textContent=this.value;generate()">
+                </div>
+                <div class="config-item">
+                    <label>Separator</label>
+                    <select id="separator" onchange="generate()">
+                        <option value="-">Dash (-)</option>
+                        <option value=" ">Space</option>
+                        <option value=".">Period (.)</option>
+                        <option value="">None</option>
+                    </select>
+                </div>
+                <div class="config-item">
+                    <label>Options</label>
+                    <div class="toggle-row"><input type="checkbox" id="capitalize" checked onchange="generate()"><label for="capitalize">Capitalize words</label></div>
+                    <div class="toggle-row" style="margin-top:6px;"><input type="checkbox" id="includeNum" onchange="generate()"><label for="includeNum">Include number</label></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const WORDS = ["about","above","abuse","acid","across","act","added","admit","adopt","adult","after","again","agent","agree","ahead","aim","air","album","alive","allow","alone","along","also","alter","among","amount","anger","angle","angry","apart","appeal","apple","apply","area","argue","arm","army","around","arrive","arrow","art","aside","ask","asset","assume","atom","attack","avoid","awake","award","aware","awful","baby","back","badge","badly","bag","bake","balance","ball","band","bank","bar","bare","barn","base","basic","basis","basket","bath","battle","bay","beach","bean","bear","beat","beauty","become","bed","beer","begin","being","bell","belong","below","belt","bench","bend","best","better","beyond","bid","big","bike","bill","bind","bird","birth","bit","bite","black","blade","blame","blank","blast","bleed","blend","bless","blind","block","blood","blow","blue","board","boat","body","bomb","bond","bone","book","boom","boot","border","born","boss","both","bother","bottle","bottom","bound","bowl","brain","brand","brave","bread","break","breath","breed","brick","bridge","brief","bright","bring","broad","broke","brown","brush","bubble","budget","build","bulk","bullet","bunch","burden","burn","burst","bus","busy","butter","buy","buyer","cabin","cable","cake","call","calm","came","camera","camp","cancel","candy","cap","carbon","card","care","career","carry","case","cash","cast","cat","catch","cause","cell","center","chain","chair","chance","change","charge","chart","chase","cheap","check","chest","chief","child","chip","choice","chunk","church","circle","civil","claim","class","clean","clear","climb","clinic","clip","clock","close","cloth","cloud","club","clue","coach","coast","coat","code","coffee","coin","cold","collar","color","column","come","commit","common","comply","cook","cool","cope","copy","core","corner","cost","cotton","couch","could","count","county","couple","course","court","cousin","cover","crack","craft","crash","crazy","cream","create","credit","crew","crime","cross","crowd","cruel","crush","cry","cup","cure","custom","cycle","dad","daily","damage","dance","danger","dare","dark","data","date","dawn","dead","deal","dear","death","debate","debt","decade","deep","deer","defeat","defend","define","degree","delay","demand","deny","depend","depth","deputy","derive","desert","design","desire","desk","detail","detect","device","devil","diet","differ","dig","dinner","direct","dirty","dish","disk","divide","doctor","dog","dollar","domain","door","double","doubt","down","dozen","draft","drag","dragon","drama","draw","dream","dress","drink","drive","drop","drug","drum","dry","due","dump","during","dust","duty","each","eager","earn","earth","ease","easily","east","easy","eat","echo","edge","editor","effort","egg","eight","either","elder","elect","emerge","empire","employ","empty","enable","end","enemy","energy","engage","engine","enjoy","enough","ensure","enter","entire","entry","equal","equip","error","escape","even","event","ever","every","evil","exact","exam","except","exist","expect","expert","export","extend","extra","eye","face","fact","factor","fail","fair","faith","fall","false","family","famous","fan","fancy","farm","fast","fat","fate","father","fault","fear","fed","feed","feel","female","fence","few","fiber","field","fifth","fifty","fight","figure","file","fill","film","final","find","fine","finger","finish","fire","firm","first","fish","fit","five","fix","flag","flame","flash","flat","flavor","flee","flesh","flight","flip","float","flood","floor","flow","flower","fly","focus","fold","folk","follow","food","foot","force","forest","forget","fork","form","formal","former","forth","forum","foster","found","four","fox","frame","free","fresh","friend","front","fruit","fuel","full","fun","fund","funny","future","gain","galaxy","game","gang","gap","garage","garden","gate","gather","gave","gear","gene","gentle","ghost","giant","gift","girl","give","glad","global","glove","goal","gold","golden","gone","good","govern","grab","grace","grade","grain","grand","grant","grass","grave","gray","great","green","grew","grip","gross","ground","group","grow","growth","guard","guess","guest","guide","guilt","guitar","gun","guy","habit","hair","half","hall","hand","handle","hang","happen","happy","hard","hardly","harm","hat","hate","have","head","health","hear","heart","heat","heavy","height","hello","help","hence","hero","hide","high","highly","hill","hire","his","hit","hold","hole","holy","home","honest","honor","hope","horse","host","hot","hotel","hour","house","huge","human","humor","hungry","hunt","hurt","ice","idea","ignore","image","impact","imply","import","impose","inch","income","index","infant","inform","injury","inner","input","insect","inside","insist","intact","intend","invest","iron","island","issue","item","ivory","jacket","job","join","joint","joke","judge","juice","jump","junior","jury","just","keen","keep","key","kick","kid","kill","kind","king","kiss","kit","knee","knew","knife","knock","know","label","lack","lady","lake","land","lane","large","last","late","lately","later","latter","laugh","launch","law","lawn","lay","layer","lead","leader","leaf","lean","learn","least","leave","left","legal","lend","length","less","lesson","let","letter","level","light","like","likely","limit","line","link","lip","liquid","list","listen","little","live","living","load","loan","local","lock","long","look","lord","lose","loss","lost","lot","loud","love","lovely","lover","low","lower","luck","lunch","lung","mad","magic","main","mainly","major","make","male","manage","manner","many","map","march","margin","mark","market","marry","mask","mass","master","match","mate","matter","may","maybe","mayor","meal","mean","meat","media","medium","meet","member","memory","mental","merely","merit","mess","metal","method","middle","might","mild","milk","mind","mine","minor","minute","mirror","miss","mix","mode","model","modern","modify","moment","money","month","mood","moon","moral","more","most","mother","motion","motor","mount","mouse","mouth","move","movie","much","murder","muscle","music","must","mutual","myself","myth","nail","name","narrow","nation","native","nature","near","nearly","neat","neck","need","nerve","net","never","new","newly","next","nice","night","nine","noble","nobody","node","noise","none","normal","north","nose","note","notice","notion","novel","now","number","nurse","object","obtain","occur","ocean","odd","off","offend","offer","office","often","oil","okay","old","once","one","only","onto","open","opera","option","orange","order","organ","other","ought","out","outer","output","over","owner","pace","pack","page","paid","pain","paint","pair","palace","pale","palm","pan","panel","panic","paper","parent","park","partly","party","pass","past","path","patrol","pause","pay","peace","peak","peer","penny","people","per","period","permit","person","pet","phase","phone","photo","phrase","pick","pie","piece","pile","pilot","pine","pink","pipe","pitch","place","plain","plan","plane","plant","plate","play","player","please","plenty","plot","plus","pocket","poem","poet","point","pole","police","policy","pool","poor","pop","port","pose","post","potato","pound","pour","power","pray","prefer","press","pretty","price","pride","priest","prince","print","prior","prison","prize","profit","proper","prove","public","pull","pump","punch","pupil","pure","push","put","queen","quick","quiet","quit","quite","quote","race","rack","rage","rain","raise","range","rank","rapid","rare","rate","rather","raw","ray","reach","react","read","ready","real","reason","recall","record","red","reduce","refer","reform","regard","region","reject","relate","relief","rely","remain","remote","remove","rent","repair","repeat","reply","report","resist","resort","rest","result","retain","retire","return","reveal","review","reward","rhythm","rice","rich","rid","ride","rifle","right","ring","rise","risk","river","road","robot","rock","role","roll","roof","room","root","rope","rose","rough","round","route","row","royal","rub","rule","run","rush","sacred","sad","safe","sail","sake","salary","sale","salt","same","sample","sand","save","say","scale","scene","scheme","school","score","screen","sea","search","season","seat","second","secret","sector","see","seed","seek","seem","seize","select","sell","send","senior","sense","serve","set","settle","seven","shade","shadow","shake","shall","shape","share","sharp","shed","sheer","shelf","shell","shift","shine","ship","shirt","shock","shoe","shoot","shop","shore","short","shot","should","shout","show","shut","sick","side","sight","sign","signal","silent","silver","simple","since","sing","sir","sister","sit","site","six","size","skill","skin","sky","slave","sleep","slice","slide","slight","slip","slow","small","smart","smell","smile","smoke","smooth","snap","snow","social","soft","soil","solar","solid","some","son","song","soon","sorry","sort","soul","sound","source","south","space","spare","speak","speech","speed","spend","sphere","spirit","split","spot","spread","spring","square","stable","staff","stage","stand","star","stare","start","state","status","stay","steady","steal","steam","steel","steep","stem","step","stick","stiff","still","stock","stone","stop","store","storm","story","strain","strand","street","stress","strike","strip","stroke","strong","stuff","stupid","style","submit","such","sudden","suffer","sugar","suit","summer","sun","super","supply","sure","survey","sweet","swim","swing","switch","symbol","system","table","tackle","tail","take","tale","talent","talk","tall","tank","tape","target","task","taste","tax","teach","team","tell","ten","tend","term","terror","test","text","than","thank","that","theme","then","theory","there","these","thick","thin","thing","think","third","those","though","three","throw","thus","ticket","tide","tie","tight","till","time","tiny","tip","tire","title","today","toe","told","tone","tongue","tonight","too","tool","tooth","top","topic","total","touch","tough","tour","toward","tower","town","trace","track","trade","train","trait","travel","treat","tree","trend","trial","tribe","trick","trip","troop","truck","truly","trust","truth","try","tube","tune","turn","twice","twin","twist","two","type","ugly","uncle","under","union","unique","unit","unless","unlike","until","update","upon","upper","urban","urge","usage","use","used","useful","user","usual","valley","value","van","vary","vast","verb","verify","very","via","victim","video","view","violin","virtue","vision","visit","visual","vital","voice","volume","vote","wage","wait","wake","walk","wall","wander","want","war","warm","warn","wash","waste","watch","water","wave","way","weak","wealth","weapon","wear","web","week","weigh","weird","well","west","wet","what","wheat","wheel","when","where","which","while","white","whole","whom","why","wide","widely","wife","wild","will","win","wind","window","wine","wing","winner","winter","wire","wise","wish","with","woman","wonder","wood","word","work","worker","world","worry","worse","worst","worth","would","wound","wrap","write","wrong","yard","yeah","year","yellow","yes","yet","yield","young","yours","youth","zero","zone"];
+
+        function generate() {
+            const count = parseInt(document.getElementById('wordCount').value);
+            const sep = document.getElementById('separator').value;
+            const cap = document.getElementById('capitalize').checked;
+            const addNum = document.getElementById('includeNum').checked;
+
+            const words = [];
+            const used = new Set();
+            while (words.length < count) {
+                const idx = Math.floor(Math.random() * WORDS.length);
+                if (!used.has(idx)) {
+                    used.add(idx);
+                    let w = WORDS[idx];
+                    if (cap) w = w.charAt(0).toUpperCase() + w.slice(1);
+                    words.push(w);
+                }
+            }
+
+            if (addNum) {
+                const pos = Math.floor(Math.random() * (words.length + 1));
+                words.splice(pos, 0, String(Math.floor(Math.random() * 100)));
+            }
+
+            const passphrase = words.join(sep);
+            document.getElementById('passphraseDisplay').textContent = passphrase;
+
+            const bitsPerWord = Math.log2(WORDS.length);
+            let totalBits = count * bitsPerWord;
+            if (addNum) totalBits += Math.log2(100);
+            document.getElementById('entropyDisplay').innerHTML = `Entropy: <strong>~${Math.round(totalBits)} bits</strong> (${WORDS.length} word list, ${count} words)`;
+        }
+
+        function copyPassphrase() {
+            const text = document.getElementById('passphraseDisplay').textContent;
+            navigator.clipboard.writeText(text);
+        }
+
+        generate();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

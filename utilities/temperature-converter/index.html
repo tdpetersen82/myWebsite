@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Temperature Converter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .temp-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin: 16px 0; }
+        .temp-card { background: #f8f8fc; border-radius: 12px; padding: 16px; text-align: center; }
+        .temp-card label { font-size: 1.2em; font-weight: 700; color: #667eea; display: block; margin-bottom: 8px; }
+        .temp-card input { font-size: 1.8em; text-align: center; width: 100%; border: 2px solid #ddd; border-radius: 8px; padding: 8px; font-weight: bold; }
+        .temp-card input:focus { border-color: #667eea; outline: none; }
+        .formulas { background: #f0f0f5; border-radius: 10px; padding: 14px; text-align: left; margin-top: 16px; }
+        .formulas h3 { margin-bottom: 8px; color: #333; }
+        .formulas p { font-family: 'Courier New', monospace; font-size: 0.9em; margin: 4px 0; color: #555; }
+        @media (max-width: 500px) { .temp-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌡️ Temperature Converter</h1>
+        <p class="subtitle">Convert between Celsius, Fahrenheit, and Kelvin instantly.</p>
+        <div class="tool-area">
+            <div class="temp-grid">
+                <div class="temp-card">
+                    <label>°C</label>
+                    <input type="number" id="celsius" step="any" oninput="fromC()">
+                </div>
+                <div class="temp-card">
+                    <label>°F</label>
+                    <input type="number" id="fahrenheit" step="any" oninput="fromF()">
+                </div>
+                <div class="temp-card">
+                    <label>K</label>
+                    <input type="number" id="kelvin" step="any" oninput="fromK()">
+                </div>
+            </div>
+            <div class="formulas">
+                <h3>Conversion Formulas</h3>
+                <p>°F = °C × 9/5 + 32</p>
+                <p>°C = (°F − 32) × 5/9</p>
+                <p>K = °C + 273.15</p>
+                <p>°C = K − 273.15</p>
+                <p>°F = K × 9/5 − 459.67</p>
+                <p>K = (°F + 459.67) × 5/9</p>
+            </div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function r(n) { return Math.round(n * 10000) / 10000; }
+        function fromC() {
+            const c = parseFloat(document.getElementById('celsius').value);
+            if (isNaN(c)) return;
+            document.getElementById('fahrenheit').value = r(c * 9/5 + 32);
+            document.getElementById('kelvin').value = r(c + 273.15);
+        }
+        function fromF() {
+            const f = parseFloat(document.getElementById('fahrenheit').value);
+            if (isNaN(f)) return;
+            const c = (f - 32) * 5/9;
+            document.getElementById('celsius').value = r(c);
+            document.getElementById('kelvin').value = r(c + 273.15);
+        }
+        function fromK() {
+            const k = parseFloat(document.getElementById('kelvin').value);
+            if (isNaN(k)) return;
+            const c = k - 273.15;
+            document.getElementById('celsius').value = r(c);
+            document.getElementById('fahrenheit').value = r(c * 9/5 + 32);
+        }
+    </script>
+</body>
+</html>

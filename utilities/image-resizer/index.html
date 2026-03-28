@@ -1,0 +1,106 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Image Resizer — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .preview-area { display: flex; gap: 16px; justify-content: center; flex-wrap: wrap; margin: 12px 0; }
+        .preview-box { border: 2px dashed #ccc; border-radius: 10px; padding: 8px; text-align: center; max-width: 400px; }
+        .preview-box img { max-width: 100%; max-height: 250px; border-radius: 6px; }
+        .preview-label { font-weight: 600; font-size: 0.85em; color: #666; margin-bottom: 4px; }
+        .size-row { display: flex; gap: 8px; align-items: center; justify-content: center; margin: 10px 0; flex-wrap: wrap; }
+        .size-row input { width: 100px; text-align: center; }
+        .lock-btn { padding: 6px 12px; border: 2px solid #667eea; background: #667eea; color: #fff; border-radius: 8px; cursor: pointer; font-weight: 600; }
+        .lock-btn.off { background: #fff; color: #667eea; }
+        .dl-btn { display: inline-block; padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin-top: 8px; text-decoration: none; }
+        .dl-btn:hover { opacity: 0.9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖼️ Image Resizer</h1>
+        <p class="subtitle">Upload an image, resize it, and download the result.</p>
+        <div class="tool-area">
+            <label for="fileInput">Upload Image:</label>
+            <input type="file" id="fileInput" accept="image/*" onchange="loadImage(event)" style="margin:8px 0">
+            <div class="tool-grid" id="origInfo"></div>
+            <div class="size-row">
+                <label>Width:</label>
+                <input type="number" id="newW" min="1" oninput="dimChanged('w')">
+                <button class="lock-btn" id="lockBtn" onclick="toggleLock()">🔒 Locked</button>
+                <label>Height:</label>
+                <input type="number" id="newH" min="1" oninput="dimChanged('h')">
+            </div>
+            <div class="preview-area">
+                <div class="preview-box"><div class="preview-label">Original</div><img id="origPreview" style="display:none"></div>
+                <div class="preview-box"><div class="preview-label">Resized</div><canvas id="canvas" style="max-width:100%;max-height:250px;display:none"></canvas></div>
+            </div>
+            <button class="dl-btn" id="dlBtn" onclick="download()" style="display:none">Download Resized Image</button>
+            <div class="tool-grid" id="newInfo"></div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        let origImg = null, aspectLock = true, ratio = 1;
+        function toggleLock() {
+            aspectLock = !aspectLock;
+            const btn = document.getElementById('lockBtn');
+            btn.textContent = aspectLock ? '🔒 Locked' : '🔓 Unlocked';
+            btn.classList.toggle('off', !aspectLock);
+        }
+        function loadImage(e) {
+            const file = e.target.files[0];
+            if (!file) return;
+            const img = new Image();
+            img.onload = function() {
+                origImg = img;
+                ratio = img.width / img.height;
+                document.getElementById('origPreview').src = img.src;
+                document.getElementById('origPreview').style.display = '';
+                document.getElementById('newW').value = img.width;
+                document.getElementById('newH').value = img.height;
+                document.getElementById('origInfo').innerHTML =
+                    '<div class="info-item"><span class="info-label">Original Size</span><span class="info-value">' + img.width + ' x ' + img.height + '</span></div>' +
+                    '<div class="info-item"><span class="info-label">File Size</span><span class="info-value">' + (file.size / 1024).toFixed(1) + ' KB</span></div>';
+                resize();
+            };
+            img.src = URL.createObjectURL(file);
+        }
+        function dimChanged(which) {
+            if (!origImg) return;
+            if (aspectLock) {
+                if (which === 'w') {
+                    document.getElementById('newH').value = Math.round(parseInt(document.getElementById('newW').value) / ratio);
+                } else {
+                    document.getElementById('newW').value = Math.round(parseInt(document.getElementById('newH').value) * ratio);
+                }
+            }
+            resize();
+        }
+        function resize() {
+            if (!origImg) return;
+            const w = parseInt(document.getElementById('newW').value) || 1;
+            const h = parseInt(document.getElementById('newH').value) || 1;
+            const canvas = document.getElementById('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(origImg, 0, 0, w, h);
+            canvas.style.display = '';
+            document.getElementById('dlBtn').style.display = '';
+            canvas.toBlob(function(blob) {
+                document.getElementById('newInfo').innerHTML =
+                    '<div class="info-item"><span class="info-label">New Size</span><span class="info-value">' + w + ' x ' + h + '</span></div>' +
+                    '<div class="info-item"><span class="info-label">Est. File Size</span><span class="info-value">' + (blob.size / 1024).toFixed(1) + ' KB</span></div>';
+            }, 'image/png');
+        }
+        function download() {
+            const canvas = document.getElementById('canvas');
+            const a = document.createElement('a');
+            a.href = canvas.toDataURL('image/png');
+            a.download = 'resized-image.png';
+            a.click();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,104 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Discount Calculator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .form-group { text-align:left; margin-bottom:10px; }
+        .form-group label { font-weight:600; font-size:0.88em; color:#444; display:block; margin-bottom:3px; }
+        .form-group input { width:100%; padding:9px 11px; border:2px solid #e0e0e0; border-radius:8px; font-size:0.92em; }
+        .form-group input:focus { border-color:#667eea; outline:none; }
+        .tab-panel { display:none; padding-top:12px; }
+        .tab-panel.active { display:block; }
+        .result-box { background:linear-gradient(135deg,#667eea,#764ba2); color:#fff; border-radius:12px; padding:20px; margin-top:16px; text-align:center; }
+        .result-box .big { font-size:2em; font-weight:800; }
+        .result-box .detail { font-size:0.95em; margin-top:6px; opacity:0.9; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💰 Discount Calculator</h1>
+        <p class="subtitle">Calculate sale prices, discount percentages, or original prices.</p>
+
+        <div class="tool-area">
+            <div class="tool-tabs">
+                <button class="tool-tab active" data-tab="sale">Find Sale Price</button>
+                <button class="tool-tab" data-tab="percent">Find Discount %</button>
+                <button class="tool-tab" data-tab="original">Find Original Price</button>
+            </div>
+
+            <div class="tab-panel active" id="panel-sale">
+                <div class="form-group"><label>Original Price ($)</label><input type="number" id="s-original" placeholder="100" step="0.01" min="0"></div>
+                <div class="form-group"><label>Discount (%)</label><input type="number" id="s-discount" placeholder="20" step="0.01" min="0" max="100"></div>
+                <button class="copy-btn" onclick="calcSale()" style="width:100%;padding:12px;font-size:1em;margin-top:8px;">Calculate</button>
+                <div class="result-box" id="r-sale" style="display:none;"></div>
+            </div>
+
+            <div class="tab-panel" id="panel-percent">
+                <div class="form-group"><label>Original Price ($)</label><input type="number" id="p-original" placeholder="100" step="0.01" min="0"></div>
+                <div class="form-group"><label>Sale Price ($)</label><input type="number" id="p-sale" placeholder="80" step="0.01" min="0"></div>
+                <button class="copy-btn" onclick="calcPercent()" style="width:100%;padding:12px;font-size:1em;margin-top:8px;">Calculate</button>
+                <div class="result-box" id="r-percent" style="display:none;"></div>
+            </div>
+
+            <div class="tab-panel" id="panel-original">
+                <div class="form-group"><label>Sale Price ($)</label><input type="number" id="o-sale" placeholder="80" step="0.01" min="0"></div>
+                <div class="form-group"><label>Discount (%)</label><input type="number" id="o-discount" placeholder="20" step="0.01" min="0" max="100"></div>
+                <button class="copy-btn" onclick="calcOriginal()" style="width:100%;padding:12px;font-size:1em;margin-top:8px;">Calculate</button>
+                <div class="result-box" id="r-original" style="display:none;"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        document.querySelectorAll('.tool-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+                document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+                tab.classList.add('active');
+                document.getElementById('panel-' + tab.dataset.tab).classList.add('active');
+            });
+        });
+
+        window.calcSale = function() {
+            const orig = parseFloat(document.getElementById('s-original').value);
+            const disc = parseFloat(document.getElementById('s-discount').value);
+            if (isNaN(orig) || isNaN(disc)) return;
+            const savings = orig * disc / 100;
+            const sale = orig - savings;
+            const el = document.getElementById('r-sale');
+            el.style.display = 'block';
+            el.innerHTML = '<div class="big">$' + sale.toFixed(2) + '</div><div class="detail">You save $' + savings.toFixed(2) + ' (' + disc.toFixed(1) + '% off)</div>';
+        };
+
+        window.calcPercent = function() {
+            const orig = parseFloat(document.getElementById('p-original').value);
+            const sale = parseFloat(document.getElementById('p-sale').value);
+            if (isNaN(orig) || isNaN(sale) || orig === 0) return;
+            const savings = orig - sale;
+            const pct = (savings / orig) * 100;
+            const el = document.getElementById('r-percent');
+            el.style.display = 'block';
+            el.innerHTML = '<div class="big">' + pct.toFixed(1) + '% off</div><div class="detail">You save $' + savings.toFixed(2) + ' (from $' + orig.toFixed(2) + ' to $' + sale.toFixed(2) + ')</div>';
+        };
+
+        window.calcOriginal = function() {
+            const sale = parseFloat(document.getElementById('o-sale').value);
+            const disc = parseFloat(document.getElementById('o-discount').value);
+            if (isNaN(sale) || isNaN(disc) || disc >= 100) return;
+            const orig = sale / (1 - disc / 100);
+            const savings = orig - sale;
+            const el = document.getElementById('r-original');
+            el.style.display = 'block';
+            el.innerHTML = '<div class="big">$' + orig.toFixed(2) + '</div><div class="detail">Original price was $' + orig.toFixed(2) + ', you save $' + savings.toFixed(2) + '</div>';
+        };
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Favicon Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .sizes-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(140px, 1fr)); gap: 14px; margin-top: 16px; }
+        .size-card { background: #f0f4ff; border-radius: 10px; padding: 14px; text-align: center; }
+        .size-card canvas { border: 1px solid #ddd; background: #fff; image-rendering: pixelated; }
+        .size-card .lbl { font-size: 0.8em; color: #888; margin-top: 6px; }
+        .size-card .dl-btn { background: #667eea; color: #fff; border: none; border-radius: 6px; padding: 4px 12px; cursor: pointer; font-size: 0.8em; margin-top: 6px; }
+        .size-card .dl-btn:hover { background: #5a6fd6; }
+        .code-block { background: #1e1e2e; color: #a6e3a1; padding: 14px; border-radius: 8px; margin-top: 16px; font-family: monospace; font-size: 0.8em; text-align: left; overflow-x: auto; position: relative; }
+        .copy-btn { position: absolute; top: 8px; right: 8px; background: #667eea; color: #fff; border: none; border-radius: 4px; padding: 4px 10px; cursor: pointer; font-size: 0.75em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#11088; Favicon Generator</h1>
+        <p class="subtitle">Generate favicons in all standard sizes from any image.</p>
+
+        <div class="tool-area">
+            <input type="file" id="fileInput" accept="image/*">
+            <div id="output" style="display:none;">
+                <div class="sizes-grid" id="sizesGrid"></div>
+                <div class="code-block" id="codeBlock">
+                    <button class="copy-btn" onclick="copyCode()">Copy</button>
+                    <pre id="linkTags"></pre>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sizes = [16, 32, 48, 64, 128, 256];
+        const canvases = {};
+
+        document.getElementById('fileInput').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const img = new Image();
+            img.onload = () => generate(img);
+            img.src = URL.createObjectURL(file);
+        });
+
+        function generate(img) {
+            const grid = document.getElementById('sizesGrid');
+            grid.innerHTML = '';
+            let linkHtml = '';
+
+            sizes.forEach(size => {
+                const canvas = document.createElement('canvas');
+                canvas.width = size;
+                canvas.height = size;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, size, size);
+                canvases[size] = canvas;
+
+                const displaySize = Math.min(size, 128);
+
+                const card = document.createElement('div');
+                card.className = 'size-card';
+                card.innerHTML = `<div class="lbl">${size}x${size}</div>`;
+
+                const preview = document.createElement('canvas');
+                preview.width = displaySize;
+                preview.height = displaySize;
+                preview.style.width = displaySize + 'px';
+                preview.style.height = displaySize + 'px';
+                preview.getContext('2d').drawImage(canvas, 0, 0, displaySize, displaySize);
+                card.insertBefore(preview, card.firstChild);
+
+                const btn = document.createElement('button');
+                btn.className = 'dl-btn';
+                btn.textContent = 'Download';
+                btn.onclick = () => downloadSize(size);
+                card.appendChild(btn);
+
+                grid.appendChild(card);
+
+                linkHtml += `&lt;link rel="icon" type="image/png" sizes="${size}x${size}" href="favicon-${size}x${size}.png"&gt;\n`;
+            });
+
+            document.getElementById('linkTags').innerHTML = linkHtml;
+            document.getElementById('output').style.display = '';
+        }
+
+        function downloadSize(size) {
+            const canvas = canvases[size];
+            canvas.toBlob(blob => {
+                const a = document.createElement('a');
+                a.href = URL.createObjectURL(blob);
+                a.download = `favicon-${size}x${size}.png`;
+                a.click();
+            }, 'image/png');
+        }
+
+        function copyCode() {
+            const text = document.getElementById('linkTags').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.code-block .copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 1500);
+            });
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

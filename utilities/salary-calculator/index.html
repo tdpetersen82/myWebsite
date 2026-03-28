@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Salary Converter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .form-group { text-align:left; margin-bottom:10px; }
+        .form-group label { font-weight:600; font-size:0.88em; color:#444; display:block; margin-bottom:3px; }
+        .form-group input, .form-group select { width:100%; padding:9px 11px; border:2px solid #e0e0e0; border-radius:8px; font-size:0.92em; }
+        .form-group input:focus, .form-group select:focus { border-color:#667eea; outline:none; }
+        .inline-group { display:flex; gap:10px; flex-wrap:wrap; }
+        .inline-group .form-group { flex:1; min-width:120px; }
+        .config-row { display:flex; gap:10px; flex-wrap:wrap; margin:12px 0; padding:12px; background:#f8f8fc; border-radius:10px; }
+        .config-row .form-group { flex:1; min-width:130px; margin-bottom:0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💵 Salary Converter</h1>
+        <p class="subtitle">Convert salary between hourly, daily, weekly, biweekly, monthly, and annual.</p>
+
+        <div class="tool-area">
+            <div class="inline-group">
+                <div class="form-group">
+                    <label for="salaryAmount">Salary Amount ($)</label>
+                    <input type="number" id="salaryAmount" value="50000" step="0.01" min="0">
+                </div>
+                <div class="form-group">
+                    <label for="salaryPeriod">Period</label>
+                    <select id="salaryPeriod">
+                        <option value="hourly">Hourly</option>
+                        <option value="daily">Daily</option>
+                        <option value="weekly">Weekly</option>
+                        <option value="biweekly">Biweekly</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="annual" selected>Annual</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="config-row">
+                <div class="form-group">
+                    <label for="hoursWeek">Hours per Week</label>
+                    <input type="number" id="hoursWeek" value="40" min="1" step="0.5">
+                </div>
+                <div class="form-group">
+                    <label for="weeksYear">Weeks per Year</label>
+                    <input type="number" id="weeksYear" value="52" min="1" step="1">
+                </div>
+            </div>
+
+            <div class="tool-grid" id="results">
+                <div class="info-item"><div class="info-label">Hourly</div><div class="info-value" id="r-hourly">—</div></div>
+                <div class="info-item"><div class="info-label">Daily</div><div class="info-value" id="r-daily">—</div></div>
+                <div class="info-item"><div class="info-label">Weekly</div><div class="info-value" id="r-weekly">—</div></div>
+                <div class="info-item"><div class="info-label">Biweekly</div><div class="info-value" id="r-biweekly">—</div></div>
+                <div class="info-item"><div class="info-label">Monthly</div><div class="info-value" id="r-monthly">—</div></div>
+                <div class="info-item"><div class="info-label">Annual</div><div class="info-value" id="r-annual">—</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        function fmt(n) {
+            return '$' + n.toLocaleString('en-US', {minimumFractionDigits:2, maximumFractionDigits:2});
+        }
+
+        function calc() {
+            const amount = parseFloat(document.getElementById('salaryAmount').value);
+            const period = document.getElementById('salaryPeriod').value;
+            const hpw = parseFloat(document.getElementById('hoursWeek').value) || 40;
+            const wpy = parseFloat(document.getElementById('weeksYear').value) || 52;
+
+            if (isNaN(amount)) return;
+
+            const hpd = hpw / 5; // hours per day (5-day work week)
+            let annual;
+
+            switch(period) {
+                case 'hourly': annual = amount * hpw * wpy; break;
+                case 'daily': annual = amount * 5 * wpy; break;
+                case 'weekly': annual = amount * wpy; break;
+                case 'biweekly': annual = amount * (wpy / 2); break;
+                case 'monthly': annual = amount * 12; break;
+                case 'annual': annual = amount; break;
+            }
+
+            const hourly = annual / (hpw * wpy);
+            const daily = annual / (5 * wpy);
+            const weekly = annual / wpy;
+            const biweekly = annual / (wpy / 2);
+            const monthly = annual / 12;
+
+            document.getElementById('r-hourly').textContent = fmt(hourly);
+            document.getElementById('r-daily').textContent = fmt(daily);
+            document.getElementById('r-weekly').textContent = fmt(weekly);
+            document.getElementById('r-biweekly').textContent = fmt(biweekly);
+            document.getElementById('r-monthly').textContent = fmt(monthly);
+            document.getElementById('r-annual').textContent = fmt(annual);
+        }
+
+        ['salaryAmount','salaryPeriod','hoursWeek','weeksYear'].forEach(id => {
+            document.getElementById(id).addEventListener('input', calc);
+            document.getElementById(id).addEventListener('change', calc);
+        });
+
+        calc();
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

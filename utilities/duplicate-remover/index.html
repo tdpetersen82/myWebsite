@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Duplicate Line Remover — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .options-row { display: flex; flex-wrap: wrap; gap: 16px; margin: 12px 0; justify-content: center; align-items: center; }
+        .options-row label { display: flex; align-items: center; gap: 6px; font-size: 0.9em; cursor: pointer; }
+        .stats { display: flex; gap: 16px; justify-content: center; margin: 10px 0; flex-wrap: wrap; }
+        .stat { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; padding: 6px 14px; border-radius: 20px; font-size: 0.85em; font-weight: 600; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧹 Duplicate Line Remover</h1>
+        <p class="subtitle">Remove duplicate lines from your text instantly.</p>
+        <div class="tool-area">
+            <label for="input">Enter your text (one item per line):</label>
+            <textarea id="input" rows="8" placeholder="Paste your text here..."></textarea>
+            <div class="options-row">
+                <label><input type="checkbox" id="caseSensitive" checked> Case-sensitive</label>
+                <label><input type="checkbox" id="trimWhitespace" checked> Trim whitespace</label>
+                <label><input type="checkbox" id="sortOutput"> Sort output</label>
+            </div>
+            <div class="stats" id="stats"></div>
+            <label>Result:</label>
+            <div class="tool-output" id="output" style="min-height:80px;white-space:pre-wrap;text-align:left;"></div>
+            <button class="copy-btn" onclick="copyResult()">Copy Result</button>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function process() {
+            const text = document.getElementById('input').value;
+            const caseSensitive = document.getElementById('caseSensitive').checked;
+            const trimWS = document.getElementById('trimWhitespace').checked;
+            const sortOut = document.getElementById('sortOutput').checked;
+
+            let lines = text.split('\n');
+            const originalCount = lines.length;
+
+            const seen = new Set();
+            const unique = [];
+            for (const line of lines) {
+                let processed = trimWS ? line.trim() : line;
+                let key = caseSensitive ? processed : processed.toLowerCase();
+                if (!seen.has(key)) {
+                    seen.add(key);
+                    unique.push(processed);
+                }
+            }
+
+            let result = sortOut ? [...unique].sort((a, b) => a.localeCompare(b)) : unique;
+            const dupes = originalCount - unique.length;
+
+            document.getElementById('output').textContent = result.join('\n');
+            document.getElementById('stats').innerHTML =
+                `<span class="stat">Original: ${originalCount}</span>` +
+                `<span class="stat">Unique: ${unique.length}</span>` +
+                `<span class="stat">Removed: ${dupes}</span>`;
+        }
+
+        function copyResult() {
+            const text = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Result', 1500);
+            });
+        }
+
+        document.getElementById('input').addEventListener('input', process);
+        document.getElementById('caseSensitive').addEventListener('change', process);
+        document.getElementById('trimWhitespace').addEventListener('change', process);
+        document.getElementById('sortOutput').addEventListener('change', process);
+    </script>
+</body>
+</html>

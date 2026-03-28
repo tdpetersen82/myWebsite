@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JWT Decoder — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .jwt-part { text-align: left; margin: 12px 0; }
+        .jwt-part h3 { font-size: 0.95em; color: #667eea; margin-bottom: 4px; }
+        .jwt-json { background: #1a1a2e; color: #e0e0e0; border-radius: 8px; padding: 12px; font-family: 'Courier New', monospace; font-size: 0.85em; white-space: pre-wrap; word-break: break-all; max-height: 200px; overflow-y: auto; }
+        .expiry-ok { color: #2ecc71; font-weight: 600; }
+        .expiry-bad { color: #e74c3c; font-weight: 600; }
+        .jwt-sig { background: #2a1a2e; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 JWT Decoder</h1>
+        <p class="subtitle">Decode JSON Web Tokens and inspect header, payload, and signature.</p>
+        <div class="tool-area">
+            <label for="jwt">Paste JWT:</label>
+            <textarea id="jwt" rows="4" placeholder="eyJhbGciOiJIUzI1NiIs..." oninput="decode()"></textarea>
+            <div id="output"></div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function b64urlDecode(str) {
+            str = str.replace(/-/g, '+').replace(/_/g, '/');
+            while (str.length % 4) str += '=';
+            return atob(str);
+        }
+        function toHex(str) {
+            return Array.from(str).map(c => c.charCodeAt(0).toString(16).padStart(2, '0')).join('');
+        }
+        function decode() {
+            const jwt = document.getElementById('jwt').value.trim();
+            const out = document.getElementById('output');
+            if (!jwt) { out.innerHTML = ''; return; }
+            const parts = jwt.split('.');
+            if (parts.length !== 3) { out.innerHTML = '<p style="color:#e74c3c;font-weight:600">Invalid JWT: expected 3 parts, got ' + parts.length + '</p>'; return; }
+            let header, payload;
+            try {
+                header = JSON.parse(b64urlDecode(parts[0]));
+            } catch(e) { out.innerHTML = '<p style="color:#e74c3c">Failed to decode header: ' + e.message + '</p>'; return; }
+            try {
+                payload = JSON.parse(b64urlDecode(parts[1]));
+            } catch(e) { out.innerHTML = '<p style="color:#e74c3c">Failed to decode payload: ' + e.message + '</p>'; return; }
+            let sigHex;
+            try { sigHex = toHex(b64urlDecode(parts[2])); } catch(e) { sigHex = parts[2]; }
+            let expiryHtml = '';
+            if (payload.exp) {
+                const expDate = new Date(payload.exp * 1000);
+                const isExpired = expDate < new Date();
+                expiryHtml = '<div class="tool-grid" style="margin-top:8px"><div class="info-item"><span class="info-label">Expires</span><span class="info-value">' + expDate.toLocaleString() + '</span></div><div class="info-item"><span class="info-label">Status</span><span class="info-value ' + (isExpired ? 'expiry-bad' : 'expiry-ok') + '">' + (isExpired ? 'EXPIRED' : 'Valid') + '</span></div></div>';
+            }
+            if (payload.iat) {
+                const iatDate = new Date(payload.iat * 1000);
+                expiryHtml += '<div class="tool-grid"><div class="info-item"><span class="info-label">Issued At</span><span class="info-value">' + iatDate.toLocaleString() + '</span></div></div>';
+            }
+            out.innerHTML =
+                '<div class="jwt-part"><h3>Header</h3><div class="jwt-json">' + escHtml(JSON.stringify(header, null, 2)) + '</div><button class="copy-btn" onclick="copyText(this)" data-text=\'' + escAttr(JSON.stringify(header, null, 2)) + '\'>Copy</button></div>' +
+                '<div class="jwt-part"><h3>Payload</h3><div class="jwt-json">' + escHtml(JSON.stringify(payload, null, 2)) + '</div><button class="copy-btn" onclick="copyText(this)" data-text=\'' + escAttr(JSON.stringify(payload, null, 2)) + '\'>Copy</button></div>' +
+                expiryHtml +
+                '<div class="jwt-part"><h3>Signature (hex)</h3><div class="jwt-json jwt-sig">' + sigHex + '</div></div>';
+        }
+        function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        function escAttr(s) { return s.replace(/&/g,'&amp;').replace(/'/g,'&#39;').replace(/"/g,'&quot;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+        function copyText(btn) {
+            navigator.clipboard.writeText(btn.dataset.text).then(() => { btn.textContent = 'Copied!'; setTimeout(() => btn.textContent = 'Copy', 1500); });
+        }
+    </script>
+</body>
+</html>

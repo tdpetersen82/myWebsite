@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stopwatch & Timer — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .time-display {
+            font-family: 'Courier New', monospace;
+            font-size: 3em;
+            font-weight: bold;
+            color: #333;
+            padding: 24px 0;
+            letter-spacing: 2px;
+        }
+        .lap-list {
+            text-align: left;
+            max-height: 240px;
+            overflow-y: auto;
+            margin-top: 12px;
+        }
+        .lap-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 14px;
+            border-radius: 8px;
+            font-size: 0.9em;
+            font-family: 'Courier New', monospace;
+        }
+        .lap-item:nth-child(odd) {
+            background: #f5f5f5;
+        }
+        .lap-label {
+            font-weight: 600;
+            color: #667eea;
+        }
+        .lap-time {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>⏱️ Stopwatch</h1>
+        <p class="subtitle">Precise stopwatch with lap recording.</p>
+
+        <div class="tool-area" style="text-align:center;">
+            <div class="time-display" id="timeDisplay">00:00:00.00</div>
+
+            <div style="display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button class="copy-btn" id="startStopBtn" onclick="toggleStartStop()">▶ Start</button>
+                <button class="copy-btn" id="lapBtn" onclick="recordLap()" style="opacity:0.5;" disabled>🏁 Lap</button>
+                <button class="copy-btn" id="resetBtn" onclick="resetStopwatch()">↺ Reset</button>
+            </div>
+
+            <div class="lap-list" id="lapList"></div>
+        </div>
+    </div>
+
+    <script>
+        let running = false;
+        let startTime = 0;
+        let elapsed = 0;
+        let animFrame = null;
+        let laps = [];
+        let lastLapTime = 0;
+
+        const display = document.getElementById('timeDisplay');
+        const startStopBtn = document.getElementById('startStopBtn');
+        const lapBtn = document.getElementById('lapBtn');
+        const lapList = document.getElementById('lapList');
+
+        function formatTime(ms) {
+            const totalSeconds = ms / 1000;
+            const hours = Math.floor(totalSeconds / 3600);
+            const minutes = Math.floor((totalSeconds % 3600) / 60);
+            const seconds = Math.floor(totalSeconds % 60);
+            const centiseconds = Math.floor((ms % 1000) / 10);
+            return String(hours).padStart(2, '0') + ':' +
+                   String(minutes).padStart(2, '0') + ':' +
+                   String(seconds).padStart(2, '0') + '.' +
+                   String(centiseconds).padStart(2, '0');
+        }
+
+        function update() {
+            const now = performance.now();
+            const current = elapsed + (now - startTime);
+            display.textContent = formatTime(current);
+            animFrame = requestAnimationFrame(update);
+        }
+
+        function toggleStartStop() {
+            if (running) {
+                // Stop
+                running = false;
+                elapsed += performance.now() - startTime;
+                cancelAnimationFrame(animFrame);
+                startStopBtn.textContent = '▶ Start';
+                lapBtn.disabled = true;
+                lapBtn.style.opacity = '0.5';
+            } else {
+                // Start
+                running = true;
+                startTime = performance.now();
+                animFrame = requestAnimationFrame(update);
+                startStopBtn.textContent = '⏸ Stop';
+                lapBtn.disabled = false;
+                lapBtn.style.opacity = '1';
+            }
+        }
+
+        function recordLap() {
+            if (!running) return;
+            const now = performance.now();
+            const totalMs = elapsed + (now - startTime);
+            const lapMs = totalMs - lastLapTime;
+            lastLapTime = totalMs;
+            laps.push({ total: totalMs, lap: lapMs });
+
+            const item = document.createElement('div');
+            item.className = 'lap-item';
+            item.innerHTML = '<span class="lap-label">Lap ' + laps.length + '</span>' +
+                '<span class="lap-time">' + formatTime(lapMs) + ' (total: ' + formatTime(totalMs) + ')</span>';
+            lapList.insertBefore(item, lapList.firstChild);
+        }
+
+        function resetStopwatch() {
+            running = false;
+            elapsed = 0;
+            lastLapTime = 0;
+            laps = [];
+            cancelAnimationFrame(animFrame);
+            display.textContent = '00:00:00.00';
+            startStopBtn.textContent = '▶ Start';
+            lapBtn.disabled = true;
+            lapBtn.style.opacity = '0.5';
+            lapList.innerHTML = '';
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

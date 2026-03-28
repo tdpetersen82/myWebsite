@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HMAC Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔑 HMAC Generator</h1>
+        <p class="subtitle">Generate HMAC (Hash-based Message Authentication Code) using SHA-256, SHA-384, or SHA-512.</p>
+
+        <div class="tool-area">
+            <div>
+                <label for="hmacMsg">Message</label>
+                <textarea id="hmacMsg" placeholder="Enter message to authenticate..."></textarea>
+            </div>
+
+            <div class="tool-row" style="margin-top:10px;">
+                <div>
+                    <label for="hmacKey">Secret Key</label>
+                    <input type="text" id="hmacKey" placeholder="Enter secret key..." style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                </div>
+                <div>
+                    <label for="hmacAlgo">Algorithm</label>
+                    <select id="hmacAlgo" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                        <option value="SHA-256">SHA-256</option>
+                        <option value="SHA-384">SHA-384</option>
+                        <option value="SHA-512">SHA-512</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="text-align:center;margin:10px 0;">
+                <button class="copy-btn" onclick="generateHMAC()">Generate HMAC</button>
+            </div>
+
+            <div class="tool-output" id="results" style="display:none;">
+                <div class="tool-grid">
+                    <div class="info-item">
+                        <span class="info-label">HMAC (Hex)</span>
+                        <span class="info-value" id="hmacHex" style="word-break:break-all;font-family:monospace;font-size:0.85em;">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">HMAC (Base64)</span>
+                        <span class="info-value" id="hmacB64" style="word-break:break-all;font-family:monospace;font-size:0.85em;">—</span>
+                    </div>
+                </div>
+                <div style="text-align:center;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-top:10px;">
+                    <button class="copy-btn" onclick="copyText('hmacHex')">📋 Copy Hex</button>
+                    <button class="copy-btn" onclick="copyText('hmacB64')">📋 Copy Base64</button>
+                </div>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+        </div>
+    </div>
+
+    <script>
+        const msgEl = document.getElementById('hmacMsg');
+        const keyEl = document.getElementById('hmacKey');
+        const algoEl = document.getElementById('hmacAlgo');
+        const errorMsg = document.getElementById('errorMsg');
+
+        async function generateHMAC() {
+            errorMsg.textContent = '';
+            const message = msgEl.value;
+            const secret = keyEl.value;
+
+            if (!secret) {
+                errorMsg.textContent = 'Please enter a secret key.';
+                return;
+            }
+
+            try {
+                const algo = algoEl.value;
+                const enc = new TextEncoder();
+                const keyData = enc.encode(secret);
+                const msgData = enc.encode(message);
+
+                const cryptoKey = await crypto.subtle.importKey(
+                    'raw', keyData, { name: 'HMAC', hash: algo }, false, ['sign']
+                );
+
+                const signature = await crypto.subtle.sign('HMAC', cryptoKey, msgData);
+                const hashArray = new Uint8Array(signature);
+
+                // Hex
+                const hex = Array.from(hashArray).map(b => b.toString(16).padStart(2, '0')).join('');
+                document.getElementById('hmacHex').textContent = hex;
+
+                // Base64
+                const b64 = btoa(String.fromCharCode(...hashArray));
+                document.getElementById('hmacB64').textContent = b64;
+
+                document.getElementById('results').style.display = '';
+            } catch (e) {
+                errorMsg.textContent = 'Error generating HMAC: ' + e.message;
+            }
+        }
+
+        function copyText(id) {
+            const text = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>
