@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Data Size Converter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>💾 Data Size Converter</h1>
+        <p class="subtitle">Convert between bytes, kilobytes, megabytes, gigabytes, terabytes, and petabytes.</p>
+
+        <div class="tool-area">
+            <div class="tool-row">
+                <div>
+                    <label for="sizeInput">Value</label>
+                    <input type="number" id="sizeInput" value="1" min="0" step="any" placeholder="Enter a number...">
+                </div>
+                <div>
+                    <label for="sizeUnit">Unit</label>
+                    <select id="sizeUnit">
+                        <option value="0">Bytes</option>
+                        <option value="1">KB (Kilobytes)</option>
+                        <option value="2" selected>MB (Megabytes)</option>
+                        <option value="3">GB (Gigabytes)</option>
+                        <option value="4">TB (Terabytes)</option>
+                        <option value="5">PB (Petabytes)</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="tool-grid" id="resultsGrid">
+                <div class="info-item"><div class="info-label">Bytes</div><div class="info-value" id="rBytes">—</div></div>
+                <div class="info-item"><div class="info-label">Kilobytes (KB)</div><div class="info-value" id="rKB">—</div></div>
+                <div class="info-item"><div class="info-label">Megabytes (MB)</div><div class="info-value" id="rMB">—</div></div>
+                <div class="info-item"><div class="info-label">Gigabytes (GB)</div><div class="info-value" id="rGB">—</div></div>
+                <div class="info-item"><div class="info-label">Terabytes (TB)</div><div class="info-value" id="rTB">—</div></div>
+                <div class="info-item"><div class="info-label">Petabytes (PB)</div><div class="info-value" id="rPB">—</div></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const sizeInput = document.getElementById('sizeInput');
+        const sizeUnit = document.getElementById('sizeUnit');
+        const units = ['rBytes', 'rKB', 'rMB', 'rGB', 'rTB', 'rPB'];
+        const labels = ['B', 'KB', 'MB', 'GB', 'TB', 'PB'];
+
+        function convert() {
+            const value = parseFloat(sizeInput.value);
+            if (isNaN(value) || value < 0) {
+                units.forEach(id => document.getElementById(id).textContent = '—');
+                return;
+            }
+
+            const exponent = parseInt(sizeUnit.value);
+            const bytes = value * Math.pow(1024, exponent);
+
+            for (let i = 0; i < units.length; i++) {
+                const converted = bytes / Math.pow(1024, i);
+                let display;
+                if (converted === 0) {
+                    display = '0';
+                } else if (converted >= 1) {
+                    display = converted.toLocaleString(undefined, { maximumFractionDigits: 4 });
+                } else {
+                    display = converted.toPrecision(6);
+                }
+                document.getElementById(units[i]).textContent = display;
+            }
+        }
+
+        sizeInput.addEventListener('input', convert);
+        sizeUnit.addEventListener('change', convert);
+        convert();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>
