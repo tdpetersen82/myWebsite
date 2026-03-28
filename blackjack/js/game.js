@@ -242,7 +242,7 @@ const Game = (() => {
             UI.showActions({ hit: true, stand: true, double: Hand.canDouble(playerHands[0].cards), split: Hand.canSplit(playerHands[0].cards, splitCount), insurance: true, surrender: true });
             UI.setMessage('Insurance?');
             if (hintsOn) {
-                UI.showHint('DECLINE INSURANCE', 'Insurance has a high house edge. Basic strategy says to never take insurance.');
+                UI.showHint('DECLINE INSURANCE', 'Insurance has a high house edge. Basic strategy says to never take insurance.', 'House edge: 7.7%', 'risk-bad', 'Insurance is a side bet that pays 2:1 if the dealer has blackjack. It sounds protective, but the odds are against you. Only 4 out of 13 card values (10, J, Q, K) give the dealer blackjack, meaning you lose insurance ~69% of the time. Over many hands, this bet costs you 7.7 cents per dollar wagered.');
             }
         } else {
             enterPlayerTurn();
@@ -286,7 +286,7 @@ const Game = (() => {
         const canSurr = hand.cards.length === 2 && !hand.isFromSplit;
 
         const rec = Strategy.getRecommendation(hand.cards, dealerCards[0], canSpl, canDbl, canSurr);
-        UI.showHint(rec.action, rec.explanation);
+        UI.showHint(rec.action, rec.explanation, rec.riskLabel, rec.riskClass, rec.detailedExplanation);
     }
 
     function getActiveCardContainer() {

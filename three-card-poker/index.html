@@ -3,25 +3,25 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackjack</title>
+    <title>Three Card Poker</title>
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>&#x1F0CF; Blackjack</h1>
+        <h1>&#x1F0CF; Three Card Poker</h1>
         <div id="game-wrapper">
 
             <!-- Header -->
-            <div class="bj-header">
-                <h1>&#x2660; Blackjack</h1>
-                <div class="bj-bankroll">Bankroll: <span id="bankroll-value">$1,000</span></div>
+            <div class="tcp-header">
+                <h1>&#x1F0CF; Three Card Poker</h1>
+                <div class="tcp-bankroll">Bankroll: <span id="bankroll-value">$1,000</span></div>
                 <button class="btn-hints" id="btn-hints">Hints: OFF</button>
             </div>
 
             <!-- Table -->
-            <div class="bj-table">
+            <div class="tcp-table">
 
                 <!-- Dealer Hand -->
                 <div class="hand-area" id="dealer-area">
@@ -31,10 +31,26 @@
                 </div>
 
                 <!-- Message -->
-                <div class="message-area" id="message">Place your bet</div>
+                <div class="message-area" id="message">Place your bets</div>
 
                 <!-- Result Banner -->
                 <div class="result-banner" id="result-banner"></div>
+
+                <!-- Bet Circles -->
+                <div class="bet-circles">
+                    <div class="bet-circle" id="circle-pair-plus">
+                        <div class="bet-circle-label">PAIR PLUS</div>
+                        <div class="bet-circle-amount" id="pair-plus-amount"></div>
+                    </div>
+                    <div class="bet-circle" id="circle-ante">
+                        <div class="bet-circle-label">ANTE</div>
+                        <div class="bet-circle-amount" id="ante-amount"></div>
+                    </div>
+                    <div class="bet-circle" id="circle-play">
+                        <div class="bet-circle-label">PLAY</div>
+                        <div class="bet-circle-amount" id="play-amount"></div>
+                    </div>
+                </div>
 
                 <!-- Player Hand -->
                 <div class="hand-area" id="player-area">
@@ -56,16 +72,16 @@
 
                 <!-- Action Buttons -->
                 <div class="action-bar" id="action-bar" style="display:none">
-                    <button class="btn-action btn-hit" id="btn-hit">Hit</button>
-                    <button class="btn-action btn-stand" id="btn-stand">Stand</button>
-                    <button class="btn-action btn-double" id="btn-double">Double</button>
-                    <button class="btn-action btn-split" id="btn-split">Split</button>
-                    <button class="btn-action btn-insurance" id="btn-insurance">Insurance</button>
-                    <button class="btn-action btn-surrender" id="btn-surrender">Surrender</button>
+                    <button class="btn-action btn-play" id="btn-play">Play</button>
+                    <button class="btn-action btn-fold" id="btn-fold">Fold</button>
                 </div>
 
                 <!-- Betting Area -->
                 <div class="betting-area" id="betting-area">
+                    <div class="bet-selector">
+                        <button class="bet-target active" id="target-ante" data-target="ante">Ante</button>
+                        <button class="bet-target" id="target-pair-plus" data-target="pairplus">Pair Plus</button>
+                    </div>
                     <div class="chip-rack" id="chip-rack">
                         <div class="chip" data-value="5" style="background: #e74c3c; border-color: #c0392b;">$5</div>
                         <div class="chip" data-value="25" style="background: #27ae60; border-color: #1e8449;">$25</div>
@@ -74,7 +90,8 @@
                     </div>
                     <div class="bet-display">
                         <button class="btn-clear" id="btn-clear">Clear</button>
-                        <span>Bet: <span class="bet-amount" id="bet-amount">$0</span></span>
+                        <span>Ante: <span class="bet-amount" id="bet-ante-display">$0</span></span>
+                        <span>PP: <span class="bet-amount" id="bet-pp-display">$0</span></span>
                         <button class="btn-rebet" id="btn-rebet">Rebet</button>
                         <button class="btn-deal" id="btn-deal" disabled>Deal</button>
                     </div>
@@ -83,8 +100,8 @@
                 <!-- Stats -->
                 <div class="stats-bar" id="stats-bar">
                     <span>Played: 0</span>
-                    <span>Won: 0</span>
-                    <span>BJ: 0</span>
+                    <span>Wins: 0</span>
+                    <span>Bonuses: 0</span>
                     <span>Best: $1,000</span>
                 </div>
             </div>

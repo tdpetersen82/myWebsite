@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Roulette</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>&#127922; Roulette</h1>
+        <div id="game-wrapper">
+
+            <!-- Header -->
+            <div class="rl-header">
+                <h1>&#127922; Roulette</h1>
+                <div class="rl-bankroll">Bankroll: <span id="bankroll-value">$1,000</span></div>
+                <button class="btn-hints" id="btn-hints">Hints: OFF</button>
+            </div>
+
+            <!-- Main Table -->
+            <div class="rl-table">
+
+                <!-- Left: Wheel + Controls -->
+                <div class="wheel-area">
+                    <div class="wheel-container">
+                        <canvas id="wheel-canvas"></canvas>
+                    </div>
+
+                    <div class="result-area">
+                        <div class="result-label">Result</div>
+                        <div class="result-num" id="result-display">&#8211;</div>
+                    </div>
+
+                    <div class="chip-rack-area">
+                        <div class="chip-rack-label">Select Chip</div>
+                        <div class="chip-rack" id="chip-rack">
+                            <div class="chip selected" data-value="5" style="background: #e74c3c; border-color: #c0392b;">$5</div>
+                            <div class="chip" data-value="25" style="background: #27ae60; border-color: #1e8449;">$25</div>
+                            <div class="chip" data-value="100" style="background: #2980b9; border-color: #1f6fa5;">$100</div>
+                            <div class="chip" data-value="500" style="background: #8e44ad; border-color: #6c3483;">$500</div>
+                        </div>
+                    </div>
+
+                    <div class="bet-controls">
+                        <button class="btn-clear" id="btn-clear">Clear</button>
+                        <div class="bet-total">Bet: <span class="bet-amount" id="total-bet">$0</span></div>
+                        <button class="btn-spin" id="btn-spin" disabled>Spin</button>
+                    </div>
+
+                    <!-- Message -->
+                    <div class="message-area" id="message">Place your bets</div>
+
+                    <!-- Stats -->
+                    <div class="stats-bar" id="stats-bar">
+                        <span>Spins: 0</span>
+                        <span>Wins: 0</span>
+                        <span>Biggest: $0</span>
+                        <span>Best: $1,000</span>
+                    </div>
+                </div>
+
+                <!-- Right: Betting Table + Hints -->
+                <div class="table-area">
+                    <div id="betting-table"></div>
+
+                    <!-- Hint Panel -->
+                    <div class="hint-panel" id="hint-panel">
+                        <div class="hint-header">
+                            <span class="hint-action" id="hint-action"></span>
+                            <span class="hint-risk" id="hint-risk"></span>
+                        </div>
+                        <div class="hint-explanation" id="hint-explanation"></div>
+                        <div class="hint-detail-toggle" id="hint-detail-toggle">Learn More &#9656;</div>
+                        <div class="hint-detail" id="hint-detail"></div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Result Banner -->
+            <div class="result-banner" id="result-banner"></div>
+        </div>
+    </div>
+
+    <!-- JS modules in dependency order -->
+    <script src="js/config.js"></script>
+    <script src="js/wheel.js"></script>
+    <script src="js/strategy.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+
+    <!-- Auto-scaling -->
+    <script>
+    (function() {
+        var wrapper = document.getElementById('game-wrapper');
+        function resize() {
+            var W = 960, H = 640;
+            var s = Math.min(window.innerWidth / W, (window.innerHeight * 0.85) / H, 1);
+            wrapper.style.transform = 'scale(' + s + ')';
+            wrapper.style.transformOrigin = 'top center';
+            wrapper.style.marginTop = Math.max(0, (window.innerHeight * 0.85 - H * s) / 2) + 'px';
+        }
+        window.addEventListener('resize', resize);
+        resize();
+    })();
+    </script>
+
+    <script src="../nav.js"></script>
+</body>
+</html>

@@ -1,5 +1,4 @@
 const UI = (() => {
-    // Cached DOM elements (populated on init)
     let els = {};
 
     function init() {
@@ -7,22 +6,15 @@ const UI = (() => {
             wrapper: document.getElementById('game-wrapper'),
             bankroll: document.getElementById('bankroll-value'),
             hintsBtn: document.getElementById('btn-hints'),
-
-            dealerArea: document.getElementById('dealer-area'),
-            dealerCards: document.getElementById('dealer-cards'),
-            dealerValue: document.getElementById('dealer-value'),
+            commission: document.getElementById('commission-value'),
 
             playerArea: document.getElementById('player-area'),
             playerCards: document.getElementById('player-cards'),
             playerValue: document.getElementById('player-value'),
 
-            actionBar: document.getElementById('action-bar'),
-            btnHit: document.getElementById('btn-hit'),
-            btnStand: document.getElementById('btn-stand'),
-            btnDouble: document.getElementById('btn-double'),
-            btnSplit: document.getElementById('btn-split'),
-            btnInsurance: document.getElementById('btn-insurance'),
-            btnSurrender: document.getElementById('btn-surrender'),
+            bankerArea: document.getElementById('banker-area'),
+            bankerCards: document.getElementById('banker-cards'),
+            bankerValue: document.getElementById('banker-value'),
 
             hintPanel: document.getElementById('hint-panel'),
             hintAction: document.getElementById('hint-action'),
@@ -38,19 +30,23 @@ const UI = (() => {
             btnClear: document.getElementById('btn-clear'),
             btnRebet: document.getElementById('btn-rebet'),
 
+            betZones: document.getElementById('bet-zones'),
+            zonePlayer: document.getElementById('zone-player'),
+            zoneTie: document.getElementById('zone-tie'),
+            zoneBanker: document.getElementById('zone-banker'),
+
             statsBar: document.getElementById('stats-bar'),
             message: document.getElementById('message'),
             resultBanner: document.getElementById('result-banner'),
         };
     }
 
-    function createCardEl(card, faceDown = false) {
+    function createCardEl(card) {
         const div = document.createElement('div');
         div.className = 'card';
         const inner = document.createElement('div');
         inner.className = 'card-inner';
 
-        // Face
         const face = document.createElement('div');
         const isRed = Deck.isRed(card);
         face.className = 'card-face ' + (isRed ? 'red' : 'black');
@@ -74,7 +70,6 @@ const UI = (() => {
         face.appendChild(suit);
         face.appendChild(cornerBot);
 
-        // Back
         const back = document.createElement('div');
         back.className = 'card-back';
 
@@ -82,33 +77,15 @@ const UI = (() => {
         inner.appendChild(back);
         div.appendChild(inner);
 
-        if (faceDown) {
-            face.style.display = 'none';
-            back.style.display = 'flex';
-        } else {
-            face.style.display = 'flex';
-            back.style.display = 'none';
-        }
+        face.style.display = 'flex';
+        back.style.display = 'none';
 
         div._card = card;
-        div._faceDown = faceDown;
         return div;
     }
 
-    function revealCard(cardEl, callback) {
-        Animations.flipCard(cardEl.querySelector('.card-inner'), () => {
-            const face = cardEl.querySelector('.card-face');
-            const back = cardEl.querySelector('.card-back');
-            face.style.display = 'flex';
-            back.style.display = 'none';
-            cardEl._faceDown = false;
-            Audio.cardFlip();
-            if (callback) callback();
-        });
-    }
-
-    function dealCardToArea(card, container, faceDown = false) {
-        const cardEl = createCardEl(card, faceDown);
+    function dealCardToArea(card, container) {
+        const cardEl = createCardEl(card);
         container.appendChild(cardEl);
         Animations.dealCard(cardEl);
         Audio.cardDeal();
@@ -116,39 +93,24 @@ const UI = (() => {
     }
 
     function clearCards() {
-        els.dealerCards.innerHTML = '';
         els.playerCards.innerHTML = '';
-        els.playerArea.querySelector('.split-hands')?.remove();
+        els.bankerCards.innerHTML = '';
     }
 
     function updateBankroll(amount) {
         els.bankroll.textContent = '$' + amount.toLocaleString();
     }
 
+    function updateCommission(amount) {
+        els.commission.textContent = '$' + amount.toLocaleString();
+    }
+
     function updateBet(amount) {
         els.betAmount.textContent = '$' + amount;
     }
 
-    function updateHandValue(el, value, soft) {
-        if (value === 0) {
-            el.textContent = '';
-        } else {
-            el.textContent = (soft ? 'Soft ' : '') + value;
-        }
-    }
-
-    function showActions(actions) {
-        els.actionBar.style.display = 'flex';
-        els.btnHit.style.display = actions.hit ? 'inline-block' : 'none';
-        els.btnStand.style.display = actions.stand ? 'inline-block' : 'none';
-        els.btnDouble.style.display = actions.double ? 'inline-block' : 'none';
-        els.btnSplit.style.display = actions.split ? 'inline-block' : 'none';
-        els.btnInsurance.style.display = actions.insurance ? 'inline-block' : 'none';
-        els.btnSurrender.style.display = actions.surrender ? 'inline-block' : 'none';
-    }
-
-    function hideActions() {
-        els.actionBar.style.display = 'none';
+    function updateHandValue(el, value) {
+        el.textContent = value === null ? '' : value;
     }
 
     function showBetting(show) {
@@ -157,6 +119,18 @@ const UI = (() => {
 
     function enableDeal(enabled) {
         els.btnDeal.disabled = !enabled;
+    }
+
+    function highlightBetZone(type) {
+        els.zonePlayer.classList.toggle('active', type === 'player');
+        els.zoneTie.classList.toggle('active', type === 'tie');
+        els.zoneBanker.classList.toggle('active', type === 'banker');
+    }
+
+    function clearBetZones() {
+        els.zonePlayer.classList.remove('active');
+        els.zoneTie.classList.remove('active');
+        els.zoneBanker.classList.remove('active');
     }
 
     function showHint(action, explanation, riskLabel, riskClass, detailedExplanation) {
@@ -193,52 +167,17 @@ const UI = (() => {
     function updateStats(stats) {
         els.statsBar.innerHTML =
             '<span>Played: ' + stats.handsPlayed + '</span>' +
-            '<span>Won: ' + stats.handsWon + '</span>' +
-            '<span>BJ: ' + stats.blackjacks + '</span>' +
+            '<span>Player: ' + stats.playerWins + '</span>' +
+            '<span>Banker: ' + stats.bankerWins + '</span>' +
             '<span>Best: $' + stats.biggestBankroll.toLocaleString() + '</span>';
-    }
-
-    // Create split hand containers
-    function createSplitLayout(handCount) {
-        // Remove existing player cards row and replace with split layout
-        const existing = els.playerArea.querySelector('.split-hands');
-        if (existing) existing.remove();
-
-        const splitDiv = document.createElement('div');
-        splitDiv.className = 'split-hands';
-        for (let i = 0; i < handCount; i++) {
-            const hand = document.createElement('div');
-            hand.className = 'split-hand';
-            hand.dataset.handIndex = i;
-
-            const val = document.createElement('div');
-            val.className = 'hand-value split-value';
-            const row = document.createElement('div');
-            row.className = 'cards-row';
-
-            hand.appendChild(val);
-            hand.appendChild(row);
-            splitDiv.appendChild(hand);
-        }
-
-        // Insert after player-value, before player-cards
-        els.playerCards.style.display = 'none';
-        els.playerArea.appendChild(splitDiv);
-        return splitDiv;
-    }
-
-    function removeSplitLayout() {
-        const existing = els.playerArea.querySelector('.split-hands');
-        if (existing) existing.remove();
-        els.playerCards.style.display = 'flex';
     }
 
     return {
         init, els: () => els,
-        createCardEl, revealCard, dealCardToArea, clearCards,
-        updateBankroll, updateBet, updateHandValue,
-        showActions, hideActions, showBetting, enableDeal,
+        createCardEl, dealCardToArea, clearCards,
+        updateBankroll, updateCommission, updateBet, updateHandValue,
+        showBetting, enableDeal,
+        highlightBetZone, clearBetZones,
         showHint, hideHint, setMessage, showResult, updateStats,
-        createSplitLayout, removeSplitLayout,
     };
 })();
