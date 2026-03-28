@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Regex Debugger — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .regex-input {
+            font-family: 'Courier New', monospace; font-size: 1.1em; padding: 12px;
+            border: 2px solid #e0e0e0; border-radius: 8px; width: 100%; box-sizing: border-box;
+        }
+        .regex-input:focus { border-color: #667eea; outline: none; }
+        .flags-row { display: flex; gap: 10px; margin: 8px 0; flex-wrap: wrap; justify-content: center; }
+        .flags-row label { display: flex; align-items: center; gap: 4px; font-size: 0.9em; cursor: pointer; }
+        .match-highlight { background: #fff176; padding: 1px 2px; border-radius: 2px; }
+        .match-highlight:nth-of-type(even) { background: #a5d6a7; }
+        .test-output {
+            font-family: 'Courier New', monospace; background: #1a1a2e; color: #fff;
+            padding: 14px; border-radius: 10px; min-height: 60px; white-space: pre-wrap;
+            word-break: break-all; text-align: left; line-height: 1.6;
+        }
+        .match-detail { text-align: left; background: #f5f5fa; padding: 10px; border-radius: 8px; margin: 6px 0; font-size: 0.9em; }
+        .match-detail .match-item { padding: 4px 0; border-bottom: 1px solid #e0e0e0; font-family: monospace; }
+        .explain-list { text-align: left; margin: 10px 0; }
+        .explain-item { padding: 6px 10px; border-left: 3px solid #667eea; margin: 4px 0; border-radius: 0 6px 6px 0; background: #f5f5fa; font-size: 0.9em; }
+        .explain-item code { color: #764ba2; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔍 Regex Debugger</h1>
+        <p class="subtitle">Test, debug, and understand regular expressions with match highlighting.</p>
+
+        <div class="tool-area">
+            <label for="regexInput">Regular Expression</label>
+            <input type="text" id="regexInput" class="regex-input" placeholder="e.g. (\w+)@(\w+)\.(\w+)" value="">
+
+            <div class="flags-row">
+                <label><input type="checkbox" id="flagG" checked> global (g)</label>
+                <label><input type="checkbox" id="flagI"> case-insensitive (i)</label>
+                <label><input type="checkbox" id="flagM"> multiline (m)</label>
+                <label><input type="checkbox" id="flagS"> dotAll (s)</label>
+            </div>
+
+            <label for="testInput">Test String</label>
+            <textarea id="testInput" rows="4" placeholder="Enter text to test against the regex..."></textarea>
+
+            <h3 style="margin-top:12px;">Highlighted Matches</h3>
+            <div class="test-output" id="testOutput">Enter a regex and test string above.</div>
+
+            <div id="matchDetails"></div>
+
+            <h3 style="margin-top:14px;">Pattern Explanation</h3>
+            <div class="explain-list" id="explainList"></div>
+        </div>
+    </div>
+
+    <script>
+        const regexInput = document.getElementById('regexInput');
+        const testInput = document.getElementById('testInput');
+
+        function getFlags() {
+            let f = '';
+            if (document.getElementById('flagG').checked) f += 'g';
+            if (document.getElementById('flagI').checked) f += 'i';
+            if (document.getElementById('flagM').checked) f += 'm';
+            if (document.getElementById('flagS').checked) f += 's';
+            return f;
+        }
+
+        function escapeHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+        function update() {
+            const pattern = regexInput.value;
+            const testStr = testInput.value;
+            const output = document.getElementById('testOutput');
+            const details = document.getElementById('matchDetails');
+
+            if (!pattern) {
+                output.innerHTML = escapeHtml(testStr) || 'Enter a regex and test string above.';
+                details.innerHTML = '';
+                explainPattern(pattern);
+                return;
+            }
+
+            let regex;
+            try {
+                regex = new RegExp(pattern, getFlags());
+            } catch (e) {
+                output.innerHTML = `<span style="color:#f5576c;">Error: ${escapeHtml(e.message)}</span>`;
+                details.innerHTML = '';
+                return;
+            }
+
+            explainPattern(pattern);
+
+            if (!testStr) { output.innerHTML = 'Enter a test string above.'; details.innerHTML = ''; return; }
+
+            // Find matches
+            const matches = [];
+            if (regex.global) {
+                let m;
+                while ((m = regex.exec(testStr)) !== null) {
+                    matches.push({ index: m.index, length: m[0].length, value: m[0], groups: m.slice(1) });
+                    if (m[0].length === 0) regex.lastIndex++;
+                }
+            } else {
+                const m = regex.exec(testStr);
+                if (m) matches.push({ index: m.index, length: m[0].length, value: m[0], groups: m.slice(1) });
+            }
+
+            // Highlight
+            let highlighted = '';
+            let lastIdx = 0;
+            const colors = ['#fff176', '#a5d6a7', '#90caf9', '#f48fb1', '#ce93d8', '#ffcc80'];
+            matches.forEach((m, i) => {
+                highlighted += escapeHtml(testStr.slice(lastIdx, m.index));
+                highlighted += `<span style="background:${colors[i % colors.length]};color:#000;border-radius:2px;padding:0 1px;">${escapeHtml(m.value)}</span>`;
+                lastIdx = m.index + m.length;
+            });
+            highlighted += escapeHtml(testStr.slice(lastIdx));
+            output.innerHTML = highlighted || escapeHtml(testStr);
+
+            // Match details
+            if (matches.length > 0) {
+                let dHtml = `<h3 style="margin-top:12px;">Match Details (${matches.length} match${matches.length>1?'es':''})</h3><div class="match-detail">`;
+                matches.forEach((m, i) => {
+                    dHtml += `<div class="match-item"><strong>Match ${i+1}:</strong> "${escapeHtml(m.value)}" at index ${m.index}`;
+                    if (m.groups.length) {
+                        m.groups.forEach((g, gi) => { dHtml += `<br>&nbsp;&nbsp;Group ${gi+1}: "${escapeHtml(g || '')}"`; });
+                    }
+                    dHtml += `</div>`;
+                });
+                dHtml += `</div>`;
+                details.innerHTML = dHtml;
+            } else {
+                details.innerHTML = `<p style="color:#999;margin-top:8px;">No matches found.</p>`;
+            }
+        }
+
+        function explainPattern(pattern) {
+            const list = document.getElementById('explainList');
+            if (!pattern) { list.innerHTML = '<div class="explain-item" style="color:#999;">Enter a regex pattern to see explanation.</div>'; return; }
+
+            const tokens = [];
+            const explanations = {
+                '^': 'Start of string (or line in multiline mode)',
+                '$': 'End of string (or line in multiline mode)',
+                '.': 'Any character (except newline by default)',
+                '*': 'Zero or more of the preceding element',
+                '+': 'One or more of the preceding element',
+                '?': 'Zero or one of the preceding element (optional)',
+                '\\d': 'Any digit [0-9]',
+                '\\D': 'Any non-digit',
+                '\\w': 'Any word character [a-zA-Z0-9_]',
+                '\\W': 'Any non-word character',
+                '\\s': 'Any whitespace character',
+                '\\S': 'Any non-whitespace character',
+                '\\b': 'Word boundary',
+                '\\B': 'Non-word boundary',
+                '\\n': 'Newline',
+                '\\t': 'Tab',
+            };
+
+            let i = 0;
+            while (i < pattern.length) {
+                const c = pattern[i];
+                if (c === '\\' && i + 1 < pattern.length) {
+                    const seq = '\\' + pattern[i+1];
+                    tokens.push({ token: seq, desc: explanations[seq] || `Escaped character: ${pattern[i+1]}` });
+                    i += 2;
+                } else if (c === '[') {
+                    let end = pattern.indexOf(']', i);
+                    if (end === -1) end = pattern.length;
+                    const cls = pattern.slice(i, end + 1);
+                    const neg = cls[1] === '^' ? ' (negated)' : '';
+                    tokens.push({ token: cls, desc: `Character class${neg}` });
+                    i = end + 1;
+                } else if (c === '(') {
+                    let desc = 'Capturing group';
+                    if (pattern[i+1] === '?' && pattern[i+2] === ':') desc = 'Non-capturing group';
+                    else if (pattern[i+1] === '?' && pattern[i+2] === '=') desc = 'Positive lookahead';
+                    else if (pattern[i+1] === '?' && pattern[i+2] === '!') desc = 'Negative lookahead';
+                    else if (pattern[i+1] === '?' && pattern[i+2] === '<' && pattern[i+3] === '=') desc = 'Positive lookbehind';
+                    else if (pattern[i+1] === '?' && pattern[i+2] === '<' && pattern[i+3] === '!') desc = 'Negative lookbehind';
+                    tokens.push({ token: c, desc });
+                    i++;
+                } else if (c === ')') {
+                    tokens.push({ token: c, desc: 'End of group' });
+                    i++;
+                } else if (c === '{') {
+                    let end = pattern.indexOf('}', i);
+                    if (end === -1) end = pattern.length;
+                    const q = pattern.slice(i, end + 1);
+                    tokens.push({ token: q, desc: `Quantifier: repeat ${q}` });
+                    i = end + 1;
+                } else if (c === '|') {
+                    tokens.push({ token: c, desc: 'Alternation (OR)' });
+                    i++;
+                } else if (explanations[c]) {
+                    tokens.push({ token: c, desc: explanations[c] });
+                    i++;
+                } else {
+                    tokens.push({ token: c, desc: `Literal character: "${c}"` });
+                    i++;
+                }
+            }
+
+            list.innerHTML = tokens.map(t => `<div class="explain-item"><code>${escapeHtml(t.token)}</code> — ${t.desc}</div>`).join('');
+        }
+
+        regexInput.addEventListener('input', update);
+        testInput.addEventListener('input', update);
+        document.querySelectorAll('.flags-row input').forEach(cb => cb.addEventListener('change', update));
+        update();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

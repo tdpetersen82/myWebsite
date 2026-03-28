@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>URL Validator & Parser — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .status-badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 0.95em; margin: 8px 0; }
+        .status-valid { background: #d4edda; color: #155724; }
+        .status-invalid { background: #f8d7da; color: #721c24; }
+        .params-table { width: 100%; border-collapse: collapse; margin: 10px 0; font-size: 0.9em; text-align: left; }
+        .params-table th { background: #667eea; color: #fff; padding: 8px 12px; }
+        .params-table td { padding: 8px 12px; border-bottom: 1px solid #eee; font-family: monospace; word-break: break-all; }
+        .params-table tr:hover { background: #f5f5fa; }
+        .encoded-display { background: #f5f5fa; padding: 10px; border-radius: 8px; font-family: monospace; word-break: break-all; font-size: 0.9em; margin: 6px 0; text-align: left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 URL Validator & Parser</h1>
+        <p class="subtitle">Validate and parse URL components including query parameters.</p>
+
+        <div class="tool-area">
+            <label for="urlInput">URL</label>
+            <input type="text" id="urlInput" placeholder="https://example.com/path?key=value&foo=bar#section" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;box-sizing:border-box;">
+
+            <div style="text-align:center;margin:12px 0;">
+                <button class="copy-btn" onclick="validateUrl()" style="padding:10px 24px;">🔍 Validate & Parse</button>
+            </div>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        function validateUrl() {
+            const input = document.getElementById('urlInput').value.trim();
+            const result = document.getElementById('result');
+            if (!input) { result.innerHTML = ''; return; }
+
+            let url;
+            try {
+                url = new URL(input);
+            } catch {
+                result.innerHTML = `<div class="status-badge status-invalid">❌ Invalid URL</div>
+                    <p style="color:#666;font-size:0.9em;">The input could not be parsed as a valid URL.</p>`;
+                return;
+            }
+
+            let html = `<div class="status-badge status-valid">✅ Valid URL</div>`;
+
+            html += `<div class="tool-grid" style="margin-top:10px;">
+                <div class="info-item"><div class="info-label">Protocol</div><div class="info-value">${url.protocol}</div></div>
+                <div class="info-item"><div class="info-label">Hostname</div><div class="info-value">${url.hostname}</div></div>
+                <div class="info-item"><div class="info-label">Port</div><div class="info-value">${url.port || '(default)'}</div></div>
+                <div class="info-item"><div class="info-label">Pathname</div><div class="info-value">${url.pathname}</div></div>
+                <div class="info-item"><div class="info-label">Hash</div><div class="info-value">${url.hash || '(none)'}</div></div>
+                <div class="info-item"><div class="info-label">Origin</div><div class="info-value">${url.origin}</div></div>
+                ${url.username ? `<div class="info-item"><div class="info-label">Username</div><div class="info-value">${url.username}</div></div>` : ''}
+                ${url.password ? `<div class="info-item"><div class="info-label">Password</div><div class="info-value">${url.password}</div></div>` : ''}
+            </div>`;
+
+            const params = Array.from(url.searchParams.entries());
+            if (params.length > 0) {
+                html += `<h3 style="margin-top:14px;text-align:left;">Query Parameters (${params.length})</h3>`;
+                html += `<table class="params-table"><tr><th>Key</th><th>Value (decoded)</th><th>Value (encoded)</th></tr>`;
+                params.forEach(([k, v]) => {
+                    html += `<tr><td>${k}</td><td>${v}</td><td>${encodeURIComponent(v)}</td></tr>`;
+                });
+                html += `</table>`;
+            }
+
+            html += `<h3 style="margin-top:14px;text-align:left;">Full URL</h3>`;
+            html += `<div class="encoded-display"><strong>Decoded:</strong> ${decodeURIComponent(url.href)}</div>`;
+            html += `<div class="encoded-display"><strong>Encoded:</strong> ${url.href}</div>`;
+
+            result.innerHTML = html;
+        }
+
+        document.getElementById('urlInput').addEventListener('keydown', e => { if (e.key === 'Enter') validateUrl(); });
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

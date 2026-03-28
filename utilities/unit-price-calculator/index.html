@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Unit Price Comparator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .item-row { display:flex; gap:8px; align-items:center; margin-bottom:8px; flex-wrap:wrap; text-align:left; }
+        .item-row input { padding:8px 10px; border:2px solid #e0e0e0; border-radius:8px; font-size:0.9em; }
+        .item-row input:focus { border-color:#667eea; outline:none; }
+        .item-row .name-input { flex:2; min-width:100px; }
+        .item-row .num-input { flex:1; min-width:70px; }
+        .item-row .unit-input { width:60px; }
+        .item-row button { background:#e74c3c; color:#fff; border:none; border-radius:8px; padding:8px 12px; cursor:pointer; font-size:0.9em; }
+        .result-row { display:flex; justify-content:space-between; align-items:center; padding:12px 16px; border-radius:10px; margin-bottom:6px; font-size:0.95em; text-align:left; }
+        .result-row.best { background:#d4edda; border:2px solid #28a745; }
+        .result-row:not(.best) { background:#f8f8fc; border:2px solid #e0e0e0; }
+        .result-name { font-weight:700; }
+        .result-price { font-weight:600; color:#667eea; }
+        .rank-badge { background:#667eea; color:#fff; border-radius:50%; width:24px; height:24px; display:inline-flex; align-items:center; justify-content:center; font-size:0.8em; font-weight:700; margin-right:8px; }
+        .result-row.best .rank-badge { background:#28a745; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏷️ Unit Price Comparator</h1>
+        <p class="subtitle">Compare prices per unit to find the best deal.</p>
+
+        <div class="tool-area">
+            <div id="itemsContainer"></div>
+            <button class="copy-btn" id="addItem" style="margin:8px 0;">+ Add Item</button>
+            <button class="copy-btn" id="compareBtn" style="width:100%;padding:12px;font-size:1em;margin-top:8px;">Compare</button>
+
+            <div class="tool-output" id="results" style="margin-top:16px;"></div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+        const container = document.getElementById('itemsContainer');
+        let itemCount = 0;
+
+        function addItem() {
+            if (itemCount >= 10) return;
+            itemCount++;
+            const row = document.createElement('div');
+            row.className = 'item-row';
+            row.innerHTML = '<input type="text" class="name-input" placeholder="Item name" value="Item ' + itemCount + '">' +
+                '<input type="number" class="num-input" placeholder="Price" step="0.01" min="0">' +
+                '<input type="number" class="num-input" placeholder="Qty" step="0.01" min="0.01">' +
+                '<input type="text" class="unit-input" placeholder="unit" value="oz">' +
+                '<button title="Remove">&times;</button>';
+            row.querySelector('button').addEventListener('click', () => { row.remove(); itemCount--; });
+            container.appendChild(row);
+        }
+
+        document.getElementById('addItem').addEventListener('click', addItem);
+        addItem(); addItem();
+
+        document.getElementById('compareBtn').addEventListener('click', function() {
+            const rows = container.querySelectorAll('.item-row');
+            const items = [];
+            rows.forEach(row => {
+                const inputs = row.querySelectorAll('input');
+                const name = inputs[0].value.trim() || 'Unnamed';
+                const price = parseFloat(inputs[1].value);
+                const qty = parseFloat(inputs[2].value);
+                const unit = inputs[3].value.trim() || 'unit';
+                if (!isNaN(price) && !isNaN(qty) && qty > 0) {
+                    items.push({name, price, qty, unit, unitPrice: price / qty});
+                }
+            });
+
+            if (items.length === 0) {
+                document.getElementById('results').innerHTML = '<p style="color:#999;">Enter prices and quantities to compare.</p>';
+                return;
+            }
+
+            items.sort((a, b) => a.unitPrice - b.unitPrice);
+            let html = '';
+            items.forEach((item, i) => {
+                const isBest = i === 0;
+                html += '<div class="result-row' + (isBest ? ' best' : '') + '">' +
+                    '<div><span class="rank-badge">' + (i + 1) + '</span><span class="result-name">' + escHtml(item.name) + '</span>' +
+                    (isBest ? ' <span style="color:#28a745;font-weight:700;">Best Deal!</span>' : '') +
+                    '</div>' +
+                    '<div class="result-price">$' + item.unitPrice.toFixed(4) + '/' + escHtml(item.unit) +
+                    ' <span style="font-size:0.85em;color:#888;">($' + item.price.toFixed(2) + ' for ' + item.qty + ' ' + escHtml(item.unit) + ')</span></div>' +
+                    '</div>';
+            });
+            document.getElementById('results').innerHTML = html;
+        });
+
+        function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>
