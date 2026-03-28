@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Formatter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .json-output {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 16px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.88em;
+            color: #ccc;
+            white-space: pre-wrap;
+            word-break: break-all;
+            min-height: 120px;
+            max-height: 500px;
+            overflow: auto;
+            margin-top: 8px;
+            line-height: 1.5;
+        }
+        .json-output .str { color: #6ec96e; }
+        .json-output .num { color: #5cacee; }
+        .json-output .bool { color: #c39bd3; }
+        .json-output .null { color: #888; }
+        .json-output .key { color: #e07070; }
+        .json-output .brace { color: #ccc; }
+        .error-msg {
+            background: #fff0f0;
+            border: 2px solid #f5c6c6;
+            color: #c33;
+            border-radius: 10px;
+            padding: 12px 16px;
+            font-size: 0.9em;
+            margin-top: 8px;
+            display: none;
+        }
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            margin: 12px 0;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 JSON Formatter</h1>
+        <p class="subtitle">Format, minify, and validate JSON with syntax highlighting.</p>
+
+        <div class="tool-area">
+            <label for="jsonInput">Input JSON</label>
+            <textarea id="jsonInput" placeholder='Paste your JSON here, e.g. {"name": "test", "value": 42}'></textarea>
+
+            <div class="btn-row">
+                <button class="copy-btn" id="btnFormat">Format</button>
+                <button class="copy-btn" id="btnMinify">Minify</button>
+                <button class="copy-btn" id="btnValidate">Validate</button>
+                <button class="copy-btn" id="btnCopy">Copy Output</button>
+            </div>
+
+            <div class="error-msg" id="errorMsg"></div>
+            <div class="json-output" id="jsonOutput">Formatted JSON will appear here...</div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const inputEl = document.getElementById('jsonInput');
+        const outputEl = document.getElementById('jsonOutput');
+        const errorEl = document.getElementById('errorMsg');
+
+        let currentFormatted = '';
+
+        function showError(msg) {
+            errorEl.textContent = msg;
+            errorEl.style.display = 'block';
+        }
+
+        function hideError() {
+            errorEl.style.display = 'none';
+        }
+
+        function getLineCol(str, pos) {
+            const lines = str.substring(0, pos).split('\n');
+            return { line: lines.length, col: lines[lines.length - 1].length + 1 };
+        }
+
+        function tryParse(str) {
+            try {
+                return { data: JSON.parse(str), error: null };
+            } catch (e) {
+                let msg = e.message;
+                // Try to extract position
+                const posMatch = msg.match(/position\s+(\d+)/i);
+                if (posMatch) {
+                    const pos = parseInt(posMatch[1]);
+                    const lc = getLineCol(str, pos);
+                    msg += ' (line ' + lc.line + ', column ' + lc.col + ')';
+                }
+                return { data: null, error: msg };
+            }
+        }
+
+        function escapeHtml(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+
+        function syntaxHighlight(json) {
+            return json.replace(/("(\\u[\da-fA-F]{4}|\\[^u]|[^\\"])*"(\s*:)?|\b(true|false|null)\b|-?\d+(?:\.\d*)?(?:[eE][+\-]?\d+)?)/g, function(match) {
+                let cls = 'num';
+                if (/^"/.test(match)) {
+                    if (/:$/.test(match)) {
+                        cls = 'key';
+                        // Remove the colon for wrapping, then add it back
+                        return '<span class="' + cls + '">' + escapeHtml(match.slice(0, -1)) + '</span>:';
+                    } else {
+                        cls = 'str';
+                    }
+                } else if (/true|false/.test(match)) {
+                    cls = 'bool';
+                } else if (/null/.test(match)) {
+                    cls = 'null';
+                }
+                return '<span class="' + cls + '">' + escapeHtml(match) + '</span>';
+            });
+        }
+
+        document.getElementById('btnFormat').addEventListener('click', function() {
+            hideError();
+            const input = inputEl.value.trim();
+            if (!input) { showError('Please enter some JSON.'); return; }
+            const { data, error } = tryParse(input);
+            if (error) { showError('Invalid JSON: ' + error); outputEl.textContent = ''; return; }
+            currentFormatted = JSON.stringify(data, null, 2);
+            outputEl.innerHTML = syntaxHighlight(escapeHtml(currentFormatted));
+        });
+
+        document.getElementById('btnMinify').addEventListener('click', function() {
+            hideError();
+            const input = inputEl.value.trim();
+            if (!input) { showError('Please enter some JSON.'); return; }
+            const { data, error } = tryParse(input);
+            if (error) { showError('Invalid JSON: ' + error); outputEl.textContent = ''; return; }
+            currentFormatted = JSON.stringify(data);
+            outputEl.innerHTML = syntaxHighlight(escapeHtml(currentFormatted));
+        });
+
+        document.getElementById('btnValidate').addEventListener('click', function() {
+            hideError();
+            const input = inputEl.value.trim();
+            if (!input) { showError('Please enter some JSON.'); return; }
+            const { data, error } = tryParse(input);
+            if (error) {
+                showError('Invalid JSON: ' + error);
+                outputEl.textContent = '';
+            } else {
+                hideError();
+                outputEl.innerHTML = '<span style="color:#6ec96e;font-weight:bold;">✓ Valid JSON</span>\n\nType: ' +
+                    (Array.isArray(data) ? 'Array (' + data.length + ' items)' : 'Object (' + Object.keys(data).length + ' keys)');
+            }
+        });
+
+        document.getElementById('btnCopy').addEventListener('click', function() {
+            if (!currentFormatted) return;
+            navigator.clipboard.writeText(currentFormatted).then(() => {
+                const btn = this;
+                const orig = btn.textContent;
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = orig, 1200);
+            });
+        });
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

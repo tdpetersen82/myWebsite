@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Calculator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .calc-display {
+            background: #1a1a2e;
+            border-radius: 10px;
+            padding: 16px 20px;
+            margin-bottom: 12px;
+            text-align: right;
+            min-height: 80px;
+            display: flex;
+            flex-direction: column;
+            justify-content: flex-end;
+        }
+        .calc-expr {
+            color: #8888aa;
+            font-size: 0.95em;
+            font-family: 'Courier New', monospace;
+            min-height: 1.2em;
+            word-break: break-all;
+        }
+        .calc-result {
+            color: #fff;
+            font-size: 2em;
+            font-weight: bold;
+            font-family: 'Courier New', monospace;
+            word-break: break-all;
+        }
+        .calc-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px;
+        }
+        .calc-btn {
+            padding: 14px 4px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.05em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+            font-family: inherit;
+            background: #f0f0f5;
+            color: #333;
+        }
+        .calc-btn:hover { transform: scale(1.05); box-shadow: 0 2px 8px rgba(0,0,0,0.1); }
+        .calc-btn:active { transform: scale(0.97); }
+        .calc-btn.op { background: #e8e0f0; color: #764ba2; }
+        .calc-btn.fn { background: #e0e8ff; color: #667eea; font-size: 0.85em; }
+        .calc-btn.eq {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+        }
+        .calc-btn.danger { background: #ffe0e0; color: #d33; }
+        .calc-btn.wide { grid-column: span 2; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🖩 Calculator</h1>
+        <p class="subtitle">A full-featured calculator with scientific functions and keyboard support.</p>
+
+        <div class="tool-area">
+            <div class="calc-display">
+                <div class="calc-expr" id="expr"></div>
+                <div class="calc-result" id="result">0</div>
+            </div>
+            <div class="calc-grid" id="calcGrid"></div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const exprEl = document.getElementById('expr');
+        const resultEl = document.getElementById('result');
+        let expression = '';
+        let lastResult = null;
+        let justEvaluated = false;
+
+        const buttons = [
+            { label: 'sin',  cls: 'fn', action: 'fn:sin(' },
+            { label: 'cos',  cls: 'fn', action: 'fn:cos(' },
+            { label: 'tan',  cls: 'fn', action: 'fn:tan(' },
+            { label: 'log',  cls: 'fn', action: 'fn:log(' },
+            { label: 'ln',   cls: 'fn', action: 'fn:ln(' },
+            { label: '√',    cls: 'fn', action: 'fn:sqrt(' },
+            { label: 'x²',   cls: 'fn', action: 'fn:sq' },
+            { label: 'π',    cls: 'fn', action: 'fn:pi' },
+            { label: 'e',    cls: 'fn', action: 'fn:e' },
+            { label: '%',    cls: 'fn', action: 'fn:%' },
+            { label: 'C',    cls: 'danger', action: 'clear' },
+            { label: '⌫',   cls: 'danger', action: 'backspace' },
+            { label: '(',    cls: 'op', action: 'input:(' },
+            { label: ')',    cls: 'op', action: 'input:)' },
+            { label: '÷',    cls: 'op', action: 'input:÷' },
+            { label: '7',    cls: '',   action: 'input:7' },
+            { label: '8',    cls: '',   action: 'input:8' },
+            { label: '9',    cls: '',   action: 'input:9' },
+            { label: '×',    cls: 'op', action: 'input:×' },
+            { label: '−',    cls: 'op', action: 'input:−' },
+            { label: '4',    cls: '',   action: 'input:4' },
+            { label: '5',    cls: '',   action: 'input:5' },
+            { label: '6',    cls: '',   action: 'input:6' },
+            { label: '+',    cls: 'op', action: 'input:+' },
+            { label: '.',    cls: '',   action: 'input:.' },
+            { label: '1',    cls: '',   action: 'input:1' },
+            { label: '2',    cls: '',   action: 'input:2' },
+            { label: '3',    cls: '',   action: 'input:3' },
+            { label: '=',    cls: 'eq wide', action: 'eval' },
+            { label: '0',    cls: '',   action: 'input:0' },
+        ];
+
+        const grid = document.getElementById('calcGrid');
+        buttons.forEach(b => {
+            const btn = document.createElement('button');
+            btn.className = 'calc-btn ' + b.cls;
+            btn.textContent = b.label;
+            btn.addEventListener('click', () => handleAction(b.action));
+            grid.appendChild(btn);
+        });
+
+        function handleAction(action) {
+            if (action === 'clear') {
+                expression = '';
+                lastResult = null;
+                resultEl.textContent = '0';
+                exprEl.textContent = '';
+                justEvaluated = false;
+                return;
+            }
+            if (action === 'backspace') {
+                // Remove last token (function name or single char)
+                const fnMatch = expression.match(/(sin|cos|tan|log|ln|sqrt)\($/);
+                if (fnMatch) {
+                    expression = expression.slice(0, -fnMatch[0].length);
+                } else {
+                    expression = expression.slice(0, -1);
+                }
+                exprEl.textContent = expression;
+                justEvaluated = false;
+                return;
+            }
+            if (action === 'eval') {
+                evaluate();
+                return;
+            }
+            if (action.startsWith('fn:')) {
+                const fn = action.slice(3);
+                if (fn === 'pi') {
+                    if (justEvaluated) { expression = ''; justEvaluated = false; }
+                    expression += 'π';
+                } else if (fn === 'e') {
+                    if (justEvaluated) { expression = ''; justEvaluated = false; }
+                    expression += 'e';
+                } else if (fn === 'sq') {
+                    expression += '²';
+                } else if (fn === '%') {
+                    expression += '%';
+                } else {
+                    if (justEvaluated) { expression = ''; justEvaluated = false; }
+                    expression += fn + '(';
+                }
+                exprEl.textContent = expression;
+                justEvaluated = false;
+                return;
+            }
+            if (action.startsWith('input:')) {
+                const ch = action.slice(6);
+                // If just evaluated and user types a number or function, start fresh
+                if (justEvaluated && /[0-9.(]/.test(ch)) {
+                    expression = '';
+                }
+                justEvaluated = false;
+                expression += ch;
+                exprEl.textContent = expression;
+            }
+        }
+
+        // Safe expression parser — no eval
+        function evaluate() {
+            try {
+                const result = parseExpression(expression);
+                if (result === undefined || result === null || isNaN(result)) {
+                    resultEl.textContent = 'Error';
+                    return;
+                }
+                const display = Number.isInteger(result) ? result.toString() :
+                    parseFloat(result.toPrecision(12)).toString();
+                resultEl.textContent = display;
+                exprEl.textContent = expression + ' =';
+                lastResult = result;
+                expression = display;
+                justEvaluated = true;
+            } catch (e) {
+                resultEl.textContent = 'Error';
+            }
+        }
+
+        // Tokenizer
+        function tokenize(expr) {
+            const tokens = [];
+            let i = 0;
+            while (i < expr.length) {
+                const ch = expr[i];
+                if (/\s/.test(ch)) { i++; continue; }
+                // Numbers
+                if (/[0-9.]/.test(ch)) {
+                    let num = '';
+                    while (i < expr.length && /[0-9.]/.test(expr[i])) { num += expr[i]; i++; }
+                    tokens.push({ type: 'number', value: parseFloat(num) });
+                    continue;
+                }
+                // Named functions/constants
+                if (/[a-z]/i.test(ch)) {
+                    let name = '';
+                    while (i < expr.length && /[a-z]/i.test(expr[i])) { name += expr[i]; i++; }
+                    if (name === 'e') {
+                        tokens.push({ type: 'number', value: Math.E });
+                    } else {
+                        tokens.push({ type: 'func', value: name });
+                    }
+                    continue;
+                }
+                if (ch === 'π') { tokens.push({ type: 'number', value: Math.PI }); i++; continue; }
+                if (ch === '²') { tokens.push({ type: 'op', value: '²' }); i++; continue; }
+                if (ch === '%') { tokens.push({ type: 'op', value: '%' }); i++; continue; }
+                if ('()+'.indexOf(ch) !== -1) { tokens.push({ type: 'op', value: ch }); i++; continue; }
+                if (ch === ')') { tokens.push({ type: 'op', value: ')' }); i++; continue; }
+                if (ch === '×' || ch === '*') { tokens.push({ type: 'op', value: '*' }); i++; continue; }
+                if (ch === '÷' || ch === '/') { tokens.push({ type: 'op', value: '/' }); i++; continue; }
+                if (ch === '−' || ch === '-') { tokens.push({ type: 'op', value: '-' }); i++; continue; }
+                i++;
+            }
+            return tokens;
+        }
+
+        // Recursive descent parser
+        function parseExpression(exprStr) {
+            const tokens = tokenize(exprStr);
+            let pos = 0;
+
+            function peek() { return pos < tokens.length ? tokens[pos] : null; }
+            function consume() { return tokens[pos++]; }
+
+            function parseExpr() {
+                let left = parseTerm();
+                while (peek() && (peek().value === '+' || peek().value === '-')) {
+                    const op = consume().value;
+                    const right = parseTerm();
+                    left = op === '+' ? left + right : left - right;
+                }
+                return left;
+            }
+
+            function parseTerm() {
+                let left = parseUnary();
+                while (peek() && (peek().value === '*' || peek().value === '/')) {
+                    const op = consume().value;
+                    const right = parseUnary();
+                    left = op === '*' ? left * right : left / right;
+                }
+                return left;
+            }
+
+            function parseUnary() {
+                if (peek() && peek().value === '-') {
+                    consume();
+                    return -parsePostfix();
+                }
+                return parsePostfix();
+            }
+
+            function parsePostfix() {
+                let val = parsePrimary();
+                while (peek() && (peek().value === '²' || peek().value === '%')) {
+                    const op = consume().value;
+                    if (op === '²') val = val * val;
+                    else if (op === '%') val = val / 100;
+                }
+                return val;
+            }
+
+            function parsePrimary() {
+                const t = peek();
+                if (!t) throw new Error('Unexpected end');
+
+                if (t.type === 'number') {
+                    consume();
+                    // Handle implicit multiplication: 2π, 2(3)
+                    if (peek() && (peek().type === 'number' || peek().type === 'func' || peek().value === '(')) {
+                        return t.value * parsePostfix();
+                    }
+                    return t.value;
+                }
+
+                if (t.type === 'func') {
+                    const name = consume().value;
+                    // Expect (
+                    if (peek() && peek().value === '(') {
+                        consume(); // (
+                        const arg = parseExpr();
+                        if (peek() && peek().value === ')') consume(); // )
+                        switch (name) {
+                            case 'sin': return Math.sin(arg * Math.PI / 180);
+                            case 'cos': return Math.cos(arg * Math.PI / 180);
+                            case 'tan': return Math.tan(arg * Math.PI / 180);
+                            case 'sqrt': return Math.sqrt(arg);
+                            case 'log': return Math.log10(arg);
+                            case 'ln': return Math.log(arg);
+                            default: throw new Error('Unknown function: ' + name);
+                        }
+                    }
+                    throw new Error('Expected ( after function');
+                }
+
+                if (t.value === '(') {
+                    consume();
+                    const val = parseExpr();
+                    if (peek() && peek().value === ')') consume();
+                    return val;
+                }
+
+                throw new Error('Unexpected token: ' + JSON.stringify(t));
+            }
+
+            const result = parseExpr();
+            return result;
+        }
+
+        // Keyboard support
+        document.addEventListener('keydown', function(e) {
+            const key = e.key;
+            if (/^[0-9.]$/.test(key)) { handleAction('input:' + key); return; }
+            if (key === '+') { handleAction('input:+'); return; }
+            if (key === '-') { handleAction('input:−'); return; }
+            if (key === '*') { handleAction('input:×'); return; }
+            if (key === '/') { e.preventDefault(); handleAction('input:÷'); return; }
+            if (key === '(' || key === ')') { handleAction('input:' + key); return; }
+            if (key === 'Enter' || key === '=') { handleAction('eval'); return; }
+            if (key === 'Backspace') { handleAction('backspace'); return; }
+            if (key === 'Escape' || key === 'c' || key === 'C') { handleAction('clear'); return; }
+        });
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>
