@@ -1,0 +1,65 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Slug Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Slug Generator</h1>
+        <p class="subtitle">Convert any text into a clean, URL-friendly slug.</p>
+        <div class="tool-area">
+            <label for="input">Enter text:</label>
+            <input type="text" id="input" placeholder="e.g. My Blog Post Title!" style="width:100%;padding:10px;font-size:1em;border:2px solid #e0e0e0;border-radius:8px;margin-bottom:12px;">
+            <div class="tool-row">
+                <label>Separator:
+                    <select id="separator">
+                        <option value="-">Hyphen (-)</option>
+                        <option value="_">Underscore (_)</option>
+                    </select>
+                </label>
+                <label>Max length:
+                    <input type="number" id="maxlen" value="0" min="0" placeholder="0 = no limit" style="width:80px;">
+                </label>
+            </div>
+            <label>Result:</label>
+            <div class="tool-output" id="output" style="min-height:40px;word-break:break-all;"></div>
+            <button class="copy-btn" onclick="copyResult()">Copy Result</button>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function generateSlug() {
+            const text = document.getElementById('input').value;
+            const sep = document.getElementById('separator').value;
+            const maxLen = parseInt(document.getElementById('maxlen').value) || 0;
+            let slug = text
+                .toLowerCase()
+                .normalize('NFD')
+                .replace(/[\u0300-\u036f]/g, '')
+                .replace(/[^a-z0-9]+/g, sep)
+                .replace(new RegExp(`\\${sep}+`, 'g'), sep)
+                .replace(new RegExp(`^\\${sep}|\\${sep}$`, 'g'), '');
+            if (maxLen > 0 && slug.length > maxLen) {
+                slug = slug.substring(0, maxLen).replace(new RegExp(`\\${sep}$`), '');
+            }
+            document.getElementById('output').textContent = slug;
+        }
+
+        function copyResult() {
+            const text = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Result', 1500);
+            });
+        }
+
+        document.getElementById('input').addEventListener('input', generateSlug);
+        document.getElementById('separator').addEventListener('change', generateSlug);
+        document.getElementById('maxlen').addEventListener('input', generateSlug);
+    </script>
+</body>
+</html>

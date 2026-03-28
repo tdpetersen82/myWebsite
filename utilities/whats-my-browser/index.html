@@ -1,0 +1,158 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>What's My Browser — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .browser-icon {
+            font-size: 3em;
+            margin-bottom: 8px;
+        }
+        .browser-name {
+            font-size: 1.3em;
+            font-weight: 700;
+            color: #667eea;
+            margin-bottom: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🌐 What's My Browser</h1>
+        <p class="subtitle">Instantly detect your browser, OS, screen details, and supported web features.</p>
+
+        <div class="tool-area">
+            <div class="browser-icon" id="browserIcon"></div>
+            <div class="browser-name" id="browserName">Detecting...</div>
+
+            <div class="tool-grid" id="infoGrid"></div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        function detectBrowser() {
+            const ua = navigator.userAgent;
+            let name = 'Unknown', version = '';
+
+            if (/Edg\//i.test(ua)) {
+                name = 'Microsoft Edge';
+                version = ua.match(/Edg\/([\d.]+)/)[1];
+            } else if (/OPR\//i.test(ua) || /Opera/i.test(ua)) {
+                name = 'Opera';
+                version = (ua.match(/OPR\/([\d.]+)/) || ua.match(/Opera\/([\d.]+)/) || ['',''])[1];
+            } else if (/Chrome\//i.test(ua) && !/Chromium/i.test(ua)) {
+                name = 'Google Chrome';
+                version = ua.match(/Chrome\/([\d.]+)/)[1];
+            } else if (/Safari\//i.test(ua) && !/Chrome/i.test(ua)) {
+                name = 'Safari';
+                version = (ua.match(/Version\/([\d.]+)/) || ['',''])[1];
+            } else if (/Firefox\//i.test(ua)) {
+                name = 'Firefox';
+                version = ua.match(/Firefox\/([\d.]+)/)[1];
+            } else if (/Trident/i.test(ua) || /MSIE/i.test(ua)) {
+                name = 'Internet Explorer';
+                version = (ua.match(/(?:MSIE |rv:)([\d.]+)/) || ['',''])[1];
+            }
+
+            return { name: name, version: version };
+        }
+
+        function detectEngine() {
+            const ua = navigator.userAgent;
+            if (/AppleWebKit/i.test(ua)) return 'WebKit / Blink';
+            if (/Gecko\//i.test(ua)) return 'Gecko';
+            if (/Trident/i.test(ua)) return 'Trident';
+            return 'Unknown';
+        }
+
+        function detectOS() {
+            const ua = navigator.userAgent;
+            if (/Windows NT 10/i.test(ua)) return 'Windows 10/11';
+            if (/Windows NT 6.3/i.test(ua)) return 'Windows 8.1';
+            if (/Windows NT 6.2/i.test(ua)) return 'Windows 8';
+            if (/Windows NT 6.1/i.test(ua)) return 'Windows 7';
+            if (/Mac OS X/i.test(ua)) {
+                const v = ua.match(/Mac OS X ([\d_.]+)/);
+                return 'macOS' + (v ? ' ' + v[1].replace(/_/g, '.') : '');
+            }
+            if (/Android/i.test(ua)) {
+                const v = ua.match(/Android ([\d.]+)/);
+                return 'Android' + (v ? ' ' + v[1] : '');
+            }
+            if (/iPhone|iPad/i.test(ua)) {
+                const v = ua.match(/OS ([\d_]+)/);
+                return 'iOS' + (v ? ' ' + v[1].replace(/_/g, '.') : '');
+            }
+            if (/Linux/i.test(ua)) return 'Linux';
+            if (/CrOS/i.test(ua)) return 'Chrome OS';
+            return 'Unknown';
+        }
+
+        function getWebGLRenderer() {
+            try {
+                const canvas = document.createElement('canvas');
+                const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
+                if (!gl) return 'Not supported';
+                const ext = gl.getExtension('WEBGL_debug_renderer_info');
+                if (ext) return gl.getParameter(ext.UNMASKED_RENDERER_WEBGL);
+                return 'Supported (renderer hidden)';
+            } catch (e) {
+                return 'Not supported';
+            }
+        }
+
+        function getNotificationPermission() {
+            if (!('Notification' in window)) return 'Not supported';
+            return Notification.permission;
+        }
+
+        const browser = detectBrowser();
+
+        // Set browser icon
+        const iconMap = {
+            'Google Chrome': '🟢',
+            'Firefox': '🦊',
+            'Safari': '🧭',
+            'Microsoft Edge': '🔵',
+            'Opera': '🔴',
+            'Internet Explorer': '🔷'
+        };
+        document.getElementById('browserIcon').textContent = iconMap[browser.name] || '🌐';
+        document.getElementById('browserName').textContent = browser.name + (browser.version ? ' ' + browser.version : '');
+
+        const info = [
+            { label: 'Browser', value: browser.name + ' ' + browser.version },
+            { label: 'Rendering Engine', value: detectEngine() },
+            { label: 'Operating System', value: detectOS() },
+            { label: 'Platform', value: navigator.platform || 'Unknown' },
+            { label: 'Language', value: navigator.language || 'Unknown' },
+            { label: 'Cookies Enabled', value: navigator.cookieEnabled ? 'Yes' : 'No' },
+            { label: 'JavaScript', value: 'Enabled' },
+            { label: 'Do Not Track', value: navigator.doNotTrack === '1' ? 'Enabled' : navigator.doNotTrack === '0' ? 'Disabled' : 'Not set' },
+            { label: 'Screen Resolution', value: screen.width + ' × ' + screen.height },
+            { label: 'Viewport Size', value: window.innerWidth + ' × ' + window.innerHeight },
+            { label: 'Device Pixel Ratio', value: (window.devicePixelRatio || 1).toFixed(2) },
+            { label: 'Color Depth', value: screen.colorDepth + '-bit' },
+            { label: 'Touch Support', value: ('ontouchstart' in window || navigator.maxTouchPoints > 0) ? 'Yes (' + navigator.maxTouchPoints + ' points)' : 'No' },
+            { label: 'WebGL', value: getWebGLRenderer() },
+            { label: 'Service Worker', value: ('serviceWorker' in navigator) ? 'Supported' : 'Not supported' },
+            { label: 'Notifications', value: getNotificationPermission() },
+        ];
+
+        const grid = document.getElementById('infoGrid');
+        info.forEach(function(item) {
+            const div = document.createElement('div');
+            div.className = 'info-item';
+            div.innerHTML = '<div class="info-label">' + item.label + '</div><div class="info-value">' + item.value + '</div>';
+            grid.appendChild(div);
+        });
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

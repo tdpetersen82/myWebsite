@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTTP Header Viewer — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .url-input-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 16px;
+        }
+        .url-input-row input {
+            flex: 1;
+            padding: 12px 14px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        .url-input-row input:focus {
+            border-color: #667eea;
+        }
+        .check-btn {
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: 600;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity 0.2s;
+        }
+        .check-btn:hover {
+            opacity: 0.9;
+        }
+        .check-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        .cors-note {
+            background: #fff8e1;
+            border: 2px solid #ffe082;
+            border-radius: 10px;
+            padding: 16px;
+            margin-bottom: 20px;
+            font-size: 0.92em;
+            line-height: 1.6;
+        }
+        .cors-note strong {
+            color: #e65100;
+        }
+        .section-title {
+            font-size: 1.15em;
+            font-weight: 700;
+            margin: 24px 0 12px;
+            color: #333;
+        }
+        .section-title:first-of-type {
+            margin-top: 0;
+        }
+        .headers-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 16px;
+        }
+        .headers-table th,
+        .headers-table td {
+            text-align: left;
+            padding: 10px 12px;
+            border-bottom: 1px solid #eee;
+            font-size: 0.92em;
+        }
+        .headers-table th {
+            background: #f5f5f5;
+            font-weight: 600;
+            color: #555;
+            position: sticky;
+            top: 0;
+        }
+        .headers-table td:first-child {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #667eea;
+            white-space: nowrap;
+        }
+        .headers-table td:last-child {
+            word-break: break-all;
+        }
+        .copy-btn {
+            font-size: 0.8em;
+            padding: 4px 10px;
+            cursor: pointer;
+        }
+        .result-box {
+            display: none;
+        }
+        .result-box.visible {
+            display: block;
+        }
+        .error-message {
+            background: #fff0f0;
+            border: 2px solid #fcc;
+            border-radius: 10px;
+            padding: 16px;
+            color: #c33;
+        }
+        .loading-spinner {
+            display: inline-block;
+            width: 18px;
+            height: 18px;
+            border: 3px solid #fff;
+            border-top-color: transparent;
+            border-radius: 50%;
+            animation: spin 0.7s linear infinite;
+            vertical-align: middle;
+            margin-right: 6px;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .header-status {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 6px;
+            font-weight: 700;
+            font-size: 0.95em;
+            margin-bottom: 12px;
+        }
+        .header-status.ok { background: #e8f5e9; color: #2e7d32; }
+        .header-status.redirect { background: #fff8e1; color: #f57f17; }
+        .header-status.error { background: #fce4ec; color: #c62828; }
+        .page-headers-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 2px solid #eee;
+        }
+        .reference-section {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 2px solid #eee;
+        }
+        .ref-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        .info-item {
+            padding: 10px 14px;
+        }
+        .info-label {
+            font-family: 'Courier New', monospace;
+            font-weight: 600;
+            color: #667eea;
+            font-size: 0.92em;
+            margin-bottom: 2px;
+        }
+        .info-value {
+            font-size: 0.88em;
+            color: #666;
+            line-height: 1.5;
+        }
+        .copy-all-btn {
+            padding: 8px 16px;
+            background: #f5f5f5;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 0.88em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .copy-all-btn:hover {
+            background: #eee;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📡 HTTP Header Viewer</h1>
+        <p class="subtitle">View HTTP response headers for any URL.</p>
+
+        <div class="tool-area">
+            <div class="cors-note">
+                <strong>⚠ Important — Browser CORS Limitation:</strong> Due to browser security policies (CORS), only a limited set of response headers are exposed to JavaScript when fetching cross-origin URLs. These "CORS-safe" headers include: <code>Cache-Control</code>, <code>Content-Language</code>, <code>Content-Length</code>, <code>Content-Type</code>, <code>Expires</code>, <code>Last-Modified</code>, and <code>Pragma</code>. The remote server must send an <code>Access-Control-Expose-Headers</code> header to reveal additional headers. For a full header view, use your browser's DevTools Network tab or a server-side tool like <code>curl</code>.
+            </div>
+
+            <div class="url-input-row">
+                <input type="url" id="urlInput" placeholder="https://example.com" spellcheck="false" autocomplete="off">
+                <button class="check-btn" id="checkBtn" onclick="checkHeaders()">Check Headers</button>
+            </div>
+
+            <div class="result-box" id="resultBox"></div>
+
+            <div class="page-headers-section">
+                <h3 class="section-title">Current Page Headers</h3>
+                <p style="font-size:0.9em;color:#888;margin-bottom:12px;">Headers from the initial page load, retrieved via the Performance API.</p>
+                <div id="pageHeaders"></div>
+            </div>
+
+            <div class="reference-section">
+                <h3 class="section-title">Common HTTP Headers Reference</h3>
+                <div class="ref-grid" id="referenceGrid"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+
+        const urlInput = document.getElementById('urlInput');
+        const checkBtn = document.getElementById('checkBtn');
+        const resultBox = document.getElementById('resultBox');
+
+        function escHtml(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+        }
+
+        // Enter key triggers check
+        urlInput.addEventListener('keydown', function(e) {
+            if (e.key === 'Enter') checkHeaders();
+        });
+
+        window.checkHeaders = async function() {
+            let url = urlInput.value.trim();
+            if (!url) {
+                urlInput.focus();
+                return;
+            }
+
+            // Auto-prepend https:// if missing
+            if (!/^https?:\/\//i.test(url)) {
+                url = 'https://' + url;
+                urlInput.value = url;
+            }
+
+            // Validate URL
+            try {
+                new URL(url);
+            } catch (e) {
+                resultBox.className = 'result-box visible';
+                resultBox.innerHTML = '<div class="error-message"><strong>Invalid URL</strong><br>Please enter a valid URL (e.g. https://example.com).</div>';
+                return;
+            }
+
+            // Set loading state
+            checkBtn.disabled = true;
+            checkBtn.innerHTML = '<span class="loading-spinner"></span>Checking...';
+            resultBox.className = 'result-box visible';
+            resultBox.innerHTML = '<div style="text-align:center;padding:20px;color:#999;">Fetching headers...</div>';
+
+            try {
+                const res = await fetch(url, { method: 'HEAD', mode: 'cors' });
+
+                const statusClass = res.status < 300 ? 'ok' : (res.status < 400 ? 'redirect' : 'error');
+                let html = '';
+                html += '<h3 class="section-title">Response Headers</h3>';
+                html += '<div class="header-status ' + statusClass + '">' + escHtml(String(res.status)) + ' ' + escHtml(res.statusText || '') + '</div>';
+
+                const headers = [];
+                res.headers.forEach(function(value, name) {
+                    headers.push({ name: name, value: value });
+                });
+
+                if (headers.length === 0) {
+                    html += '<p style="color:#999;font-size:0.92em;">No headers were exposed by the server for this cross-origin request.</p>';
+                } else {
+                    html += '<div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">';
+                    html += '<span style="font-size:0.88em;color:#999;">' + headers.length + ' header' + (headers.length !== 1 ? 's' : '') + ' exposed</span>';
+                    html += '<button class="copy-all-btn" onclick="copyAllHeaders()">Copy All</button>';
+                    html += '</div>';
+                    html += '<table class="headers-table"><thead><tr><th>Header</th><th>Value</th></tr></thead><tbody>';
+                    headers.forEach(function(h) {
+                        html += '<tr><td>' + escHtml(h.name) + '</td><td>' + escHtml(h.value) + '</td></tr>';
+                    });
+                    html += '</tbody></table>';
+                }
+
+                resultBox.innerHTML = html;
+
+                // Store for copying
+                window._lastHeaders = headers;
+
+            } catch (err) {
+                let msg = err.message || 'Unknown error';
+                let detail = '';
+
+                if (msg.includes('Failed to fetch') || msg.includes('NetworkError') || msg.includes('Load failed')) {
+                    detail = 'This is likely caused by CORS restrictions — the server does not allow cross-origin requests from the browser. Try using your browser DevTools Network tab or <code>curl</code> from the command line instead.';
+                } else if (msg.includes('URL')) {
+                    detail = 'The URL could not be reached. Check that it is correct and accessible.';
+                }
+
+                resultBox.innerHTML = '<div class="error-message"><strong>Request Failed</strong><br>' + escHtml(msg) + (detail ? '<br><br><span style="font-size:0.9em;color:#666;">' + detail + '</span>' : '') + '</div>';
+            } finally {
+                checkBtn.disabled = false;
+                checkBtn.textContent = 'Check Headers';
+            }
+        };
+
+        window.copyAllHeaders = function() {
+            const headers = window._lastHeaders || [];
+            const text = headers.map(function(h) { return h.name + ': ' + h.value; }).join('\n');
+            navigator.clipboard.writeText(text).then(function() {
+                const btns = document.querySelectorAll('.copy-all-btn');
+                if (btns.length) {
+                    btns[0].textContent = 'Copied!';
+                    setTimeout(function() { btns[0].textContent = 'Copy All'; }, 1500);
+                }
+            });
+        };
+
+        // Current page headers via Performance API
+        function loadPageHeaders() {
+            const container = document.getElementById('pageHeaders');
+            const entries = performance.getEntriesByType('navigation');
+
+            if (entries.length === 0) {
+                // Fallback for older browsers
+                const res = performance.getEntriesByType('resource');
+                container.innerHTML = '<p style="color:#999;font-size:0.9em;">The Performance Navigation Timing API is not supported in this browser.</p>';
+                return;
+            }
+
+            const navEntry = entries[0];
+            const serverTiming = navEntry.serverTiming || [];
+
+            // Try to get response headers via the PerformanceResourceTiming API
+            // Note: only serverTiming and transfer size data are available
+            const items = [];
+
+            if (navEntry.transferSize !== undefined) {
+                items.push({ label: 'Transfer Size', value: formatBytes(navEntry.transferSize) });
+            }
+            if (navEntry.encodedBodySize !== undefined) {
+                items.push({ label: 'Encoded Body Size', value: formatBytes(navEntry.encodedBodySize) });
+            }
+            if (navEntry.decodedBodySize !== undefined) {
+                items.push({ label: 'Decoded Body Size', value: formatBytes(navEntry.decodedBodySize) });
+            }
+            if (navEntry.responseStart && navEntry.requestStart) {
+                items.push({ label: 'Time to First Byte (TTFB)', value: Math.round(navEntry.responseStart - navEntry.requestStart) + ' ms' });
+            }
+            if (navEntry.responseEnd && navEntry.responseStart) {
+                items.push({ label: 'Response Download Time', value: Math.round(navEntry.responseEnd - navEntry.responseStart) + ' ms' });
+            }
+            if (navEntry.domContentLoadedEventEnd && navEntry.startTime !== undefined) {
+                items.push({ label: 'DOM Content Loaded', value: Math.round(navEntry.domContentLoadedEventEnd - navEntry.startTime) + ' ms' });
+            }
+            if (navEntry.loadEventEnd && navEntry.startTime !== undefined && navEntry.loadEventEnd > 0) {
+                items.push({ label: 'Full Page Load', value: Math.round(navEntry.loadEventEnd - navEntry.startTime) + ' ms' });
+            }
+            items.push({ label: 'Protocol', value: navEntry.nextHopProtocol || 'unknown' });
+            items.push({ label: 'Redirect Count', value: String(navEntry.redirectCount || 0) });
+
+            if (serverTiming.length > 0) {
+                serverTiming.forEach(function(st) {
+                    items.push({ label: 'Server-Timing: ' + st.name, value: (st.duration ? st.duration + 'ms' : '') + (st.description ? ' — ' + st.description : '') || '—' });
+                });
+            }
+
+            if (items.length === 0) {
+                container.innerHTML = '<p style="color:#999;font-size:0.9em;">No page timing data available.</p>';
+                return;
+            }
+
+            let html = '<table class="headers-table"><thead><tr><th>Metric</th><th>Value</th></tr></thead><tbody>';
+            items.forEach(function(item) {
+                html += '<tr><td>' + escHtml(item.label) + '</td><td>' + escHtml(item.value) + '</td></tr>';
+            });
+            html += '</tbody></table>';
+            container.innerHTML = html;
+        }
+
+        function formatBytes(bytes) {
+            if (bytes === 0) return '0 B';
+            var k = 1024;
+            var sizes = ['B', 'KB', 'MB', 'GB'];
+            var i = Math.floor(Math.log(bytes) / Math.log(k));
+            return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + ' ' + sizes[i];
+        }
+
+        // Common HTTP headers reference
+        function loadReference() {
+            var headers = [
+                { name: 'Content-Type', desc: 'Indicates the media type of the resource (e.g. text/html, application/json). Tells the browser how to interpret the response body.' },
+                { name: 'Content-Length', desc: 'The size of the response body in bytes. Helps the browser know how much data to expect.' },
+                { name: 'Cache-Control', desc: 'Directives for caching mechanisms. Controls how and for how long the response is cached (e.g. max-age=3600, no-cache).' },
+                { name: 'Content-Encoding', desc: 'The compression algorithm used on the response body (e.g. gzip, br). The browser decompresses it automatically.' },
+                { name: 'Set-Cookie', desc: 'Sends a cookie from the server to the browser. Used for sessions, authentication, and tracking.' },
+                { name: 'Location', desc: 'Used in redirect responses (3xx) to indicate the URL the client should follow.' },
+                { name: 'ETag', desc: 'An identifier for a specific version of a resource. Used for conditional requests and efficient caching.' },
+                { name: 'Last-Modified', desc: 'The date and time the resource was last changed. Used alongside If-Modified-Since for cache validation.' },
+                { name: 'Access-Control-Allow-Origin', desc: 'Specifies which origins are allowed to read the response in cross-origin requests (CORS). A value of * allows any origin.' },
+                { name: 'Access-Control-Expose-Headers', desc: 'Lists which headers the browser is allowed to access in cross-origin responses, beyond the default CORS-safe set.' },
+                { name: 'Strict-Transport-Security', desc: 'Tells the browser to only access the site over HTTPS for a specified duration (HSTS). Prevents protocol downgrade attacks.' },
+                { name: 'X-Content-Type-Options', desc: 'When set to "nosniff", prevents the browser from MIME-type sniffing. Reduces risk of XSS via incorrect content interpretation.' },
+                { name: 'X-Frame-Options', desc: 'Controls whether the page can be embedded in an iframe. Values: DENY, SAMEORIGIN. Prevents clickjacking attacks.' },
+                { name: 'Content-Security-Policy', desc: 'A powerful header that defines approved sources of content. Mitigates XSS and data injection attacks.' },
+                { name: 'Server', desc: 'Identifies the web server software (e.g. nginx, Apache). Sometimes hidden for security reasons.' },
+                { name: 'Date', desc: 'The date and time the response was generated by the server.' },
+                { name: 'Expires', desc: 'A legacy caching header specifying when the response becomes stale. Superseded by Cache-Control.' },
+                { name: 'Vary', desc: 'Tells caches which request headers affect the response. Common value: Accept-Encoding.' },
+                { name: 'Transfer-Encoding', desc: 'Specifies the encoding used to transfer the body (e.g. chunked). Different from Content-Encoding.' },
+                { name: 'X-Powered-By', desc: 'Non-standard header indicating the technology behind the web application (e.g. Express, PHP). Often removed for security.' },
+            ];
+
+            var grid = document.getElementById('referenceGrid');
+            var html = '';
+            headers.forEach(function(h) {
+                html += '<div class="info-item">';
+                html += '<div class="info-label">' + escHtml(h.name) + '</div>';
+                html += '<div class="info-value">' + escHtml(h.desc) + '</div>';
+                html += '</div>';
+            });
+            grid.innerHTML = html;
+        }
+
+        // Init
+        window.addEventListener('load', function() {
+            loadPageHeaders();
+        });
+        loadReference();
+
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>
