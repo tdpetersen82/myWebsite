@@ -564,6 +564,7 @@
             levelComplete() {
                 this.level++;
                 this.score += 200;
+                this.farthestRow = 0;
                 levelSound();
                 this.homeFilled = [false, false, false, false, false];
                 this.createHomeSlots();

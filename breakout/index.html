@@ -186,8 +186,20 @@
                             ball.x - ball.radius < b.x + brick.width &&
                             ball.y + ball.radius > b.y &&
                             ball.y - ball.radius < b.y + brick.height) {
-                            
-                            ball.dy = -ball.dy;
+
+                            // Determine which side of the brick was hit
+                            const overlapLeft = (ball.x + ball.radius) - b.x;
+                            const overlapRight = (b.x + brick.width) - (ball.x - ball.radius);
+                            const overlapTop = (ball.y + ball.radius) - b.y;
+                            const overlapBottom = (b.y + brick.height) - (ball.y - ball.radius);
+                            const minOverlapX = Math.min(overlapLeft, overlapRight);
+                            const minOverlapY = Math.min(overlapTop, overlapBottom);
+
+                            if (minOverlapX < minOverlapY) {
+                                ball.dx = -ball.dx;
+                            } else {
+                                ball.dy = -ball.dy;
+                            }
                             b.status = 0;
                             score += 10;
                             scoreElement.textContent = score;
@@ -277,7 +289,9 @@
                     // Add angle based on where ball hits paddle
                     let hitPos = (ball.x - paddle.x) / paddle.width;
                     ball.dx = (hitPos - 0.5) * ball.speed * 2;
-                    ball.dy = -Math.abs(ball.dy);
+                    // Clamp dx and normalize to maintain constant ball speed
+                    ball.dx = Math.max(-ball.speed * 0.9, Math.min(ball.speed * 0.9, ball.dx));
+                    ball.dy = -Math.sqrt(ball.speed * ball.speed - ball.dx * ball.dx);
                     playPaddleHitSound();
                 }
 
