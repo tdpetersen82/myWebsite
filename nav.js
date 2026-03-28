@@ -76,6 +76,8 @@
                 { name: 'My IP Address', icon: '\u{1F4CD}', url: 'utilities/my-ip/' },
                 { name: 'Device Info', icon: '\u{1F4F1}', url: 'utilities/device-info/' },
                 { name: 'Speed Test', icon: '\u{1F4F6}', url: 'utilities/speed-test/' },
+                { name: "What's My Browser", icon: '\u{1F50D}', url: 'utilities/whats-my-browser/' },
+                { name: 'HTTP Header Viewer', icon: '\u{1F4E1}', url: 'utilities/http-headers/' },
             ]
         },
         {
@@ -85,6 +87,11 @@
                 { name: 'Color Converter', icon: '\u{1F3A8}', url: 'utilities/color-converter/' },
                 { name: 'Number Base', icon: '\u{1F522}', url: 'utilities/number-base/' },
                 { name: 'Data Size', icon: '\u{1F4BE}', url: 'utilities/data-size/' },
+                { name: 'Temperature', icon: '\u{1F321}\uFE0F', url: 'utilities/temperature-converter/' },
+                { name: 'Time Units', icon: '\u231B', url: 'utilities/time-converter/' },
+                { name: 'Currency', icon: '\u{1F4B1}', url: 'utilities/currency-converter/' },
+                { name: 'Angle', icon: '\u{1F4D0}', url: 'utilities/angle-converter/' },
+                { name: 'Energy', icon: '\u26A1', url: 'utilities/energy-converter/' },
             ]
         },
         {
@@ -95,6 +102,14 @@
                 { name: 'URL Encoder', icon: '\u{1F517}', url: 'utilities/url-encoder/' },
                 { name: 'JSON Formatter', icon: '\u{1F4CB}', url: 'utilities/json-formatter/' },
                 { name: 'UUID Generator', icon: '\u{1F3B2}', url: 'utilities/uuid-generator/' },
+                { name: 'Case Converter', icon: '\u{1F520}', url: 'utilities/case-converter/' },
+                { name: 'Lorem Ipsum', icon: '\u{1F4DC}', url: 'utilities/lorem-ipsum/' },
+                { name: 'Slug Generator', icon: '\u{1F517}', url: 'utilities/slug-generator/' },
+                { name: 'Duplicate Remover', icon: '\u{1F9F9}', url: 'utilities/duplicate-remover/' },
+                { name: 'Find & Replace', icon: '\u{1F50E}', url: 'utilities/find-replace/' },
+                { name: 'Text Diff', icon: '\u{1F4CA}', url: 'utilities/text-diff/' },
+                { name: 'Markdown Preview', icon: '\u{1F4DD}', url: 'utilities/markdown-preview/' },
+                { name: 'String Utilities', icon: '\u{1F9F5}', url: 'utilities/string-utilities/' },
             ]
         },
         {
@@ -105,6 +120,131 @@
                 { name: 'Password Generator', icon: '\u{1F512}', url: 'utilities/password-generator/' },
                 { name: 'Calculator', icon: '\u{1F5A9}', url: 'utilities/calculator/' },
                 { name: 'Stopwatch', icon: '\u{23F1}\uFE0F', url: 'utilities/stopwatch/' },
+                { name: 'Gradient Generator', icon: '\u{1F3A8}', url: 'utilities/gradient-generator/' },
+                { name: 'Box Shadow', icon: '\u{1F5BC}\uFE0F', url: 'utilities/box-shadow-generator/' },
+                { name: 'Aspect Ratio', icon: '\u{1F4FA}', url: 'utilities/aspect-ratio-calculator/' },
+                { name: 'Random Number', icon: '\u{1F3B0}', url: 'utilities/random-number/' },
+                { name: 'Percentage Calc', icon: '\u2797', url: 'utilities/percentage-calculator/' },
+            ]
+        },
+        {
+            name: 'Developer Tools', icon: '\u{1F6E0}\uFE0F',
+            items: [
+                { name: 'Regex Tester', icon: '\u{1F9EA}', url: 'utilities/regex-tester/' },
+                { name: 'JWT Decoder', icon: '\u{1F513}', url: 'utilities/jwt-decoder/' },
+                { name: 'Cron Builder', icon: '\u{1F550}', url: 'utilities/cron-builder/' },
+                { name: 'HTML Minifier', icon: '\u{1F5DC}\uFE0F', url: 'utilities/html-minifier/' },
+                { name: 'CSS Minifier', icon: '\u{1F5DC}\uFE0F', url: 'utilities/css-minifier/' },
+                { name: 'JS Minifier', icon: '\u{1F5DC}\uFE0F', url: 'utilities/js-minifier/' },
+                { name: 'SQL Formatter', icon: '\u{1F5C3}\uFE0F', url: 'utilities/sql-formatter/' },
+                { name: 'HTML Entities', icon: '\u{1F3F7}\uFE0F', url: 'utilities/html-entity-encoder/' },
+                { name: 'JSON to CSV', icon: '\u{1F4C4}', url: 'utilities/json-to-csv/' },
+                { name: 'CSV to JSON', icon: '\u{1F4CB}', url: 'utilities/csv-to-json/' },
+                { name: 'YAML Formatter', icon: '\u{1F4D1}', url: 'utilities/yaml-formatter/' },
+                { name: 'XML Formatter', icon: '\u{1F4F0}', url: 'utilities/xml-formatter/' },
+            ]
+        },
+        {
+            name: 'Encoding & Security', icon: '\u{1F510}',
+            items: [
+                { name: 'Hash Generator', icon: '#\uFE0F\u20E3', url: 'utilities/hash-generator/' },
+                { name: 'HMAC Generator', icon: '\u{1F50F}', url: 'utilities/hmac-generator/' },
+                { name: 'AES Encrypt', icon: '\u{1F510}', url: 'utilities/aes-encrypt/' },
+                { name: 'Bcrypt Generator', icon: '\u{1F9C2}', url: 'utilities/bcrypt-generator/' },
+                { name: 'RSA Key Generator', icon: '\u{1F511}', url: 'utilities/rsa-key-generator/' },
+                { name: 'TOTP Generator', icon: '\u{1F522}', url: 'utilities/totp-generator/' },
+                { name: 'CSR Decoder', icon: '\u{1F4DC}', url: 'utilities/csr-decoder/' },
+                { name: 'SSL Cert Decoder', icon: '\u{1F6E1}\uFE0F', url: 'utilities/ssl-cert-decoder/' },
+                { name: 'PGP Key Generator', icon: '\u{1F5DD}\uFE0F', url: 'utilities/pgp-key-generator/' },
+            ]
+        },
+        {
+            name: 'Date & Time', icon: '\u{1F4C5}',
+            items: [
+                { name: 'Unix Timestamp', icon: '\u{1F570}\uFE0F', url: 'utilities/epoch-converter/' },
+                { name: 'Timezone Converter', icon: '\u{1F30D}', url: 'utilities/timezone-converter/' },
+                { name: 'Date Calculator', icon: '\u{1F4C5}', url: 'utilities/date-calculator/' },
+                { name: 'Date Difference', icon: '\u{1F4C6}', url: 'utilities/date-difference/' },
+                { name: 'Countdown Timer', icon: '\u23F0', url: 'utilities/countdown-timer/' },
+                { name: 'World Clock', icon: '\u{1F310}', url: 'utilities/world-clock/' },
+                { name: 'Age Calculator', icon: '\u{1F382}', url: 'utilities/age-calculator/' },
+                { name: 'Week Number', icon: '\u{1F4C7}', url: 'utilities/week-number/' },
+            ]
+        },
+        {
+            name: 'Image & Media', icon: '\u{1F5BC}\uFE0F',
+            items: [
+                { name: 'Image Resizer', icon: '\u{1F5BC}\uFE0F', url: 'utilities/image-resizer/' },
+                { name: 'Image Compressor', icon: '\u{1F4E6}', url: 'utilities/image-compressor/' },
+                { name: 'Image Cropper', icon: '\u2702\uFE0F', url: 'utilities/image-cropper/' },
+                { name: 'Image to Base64', icon: '\u{1F504}', url: 'utilities/image-to-base64/' },
+                { name: 'Favicon Generator', icon: '\u2B50', url: 'utilities/favicon-generator/' },
+                { name: 'Placeholder Image', icon: '\u{1F3DE}\uFE0F', url: 'utilities/placeholder-image/' },
+                { name: 'SVG to PNG', icon: '\u{1F500}', url: 'utilities/svg-to-png/' },
+                { name: 'Color Palette', icon: '\u{1F3A8}', url: 'utilities/color-palette-generator/' },
+                { name: 'Contrast Checker', icon: '\u267F', url: 'utilities/contrast-checker/' },
+                { name: 'GIF Frame Viewer', icon: '\u{1F39E}\uFE0F', url: 'utilities/gif-maker/' },
+            ]
+        },
+        {
+            name: 'Web & SEO', icon: '\u{1F310}',
+            items: [
+                { name: 'Meta Tag Generator', icon: '\u{1F3F7}\uFE0F', url: 'utilities/meta-tag-generator/' },
+                { name: 'Open Graph Preview', icon: '\u{1F441}\uFE0F', url: 'utilities/open-graph-preview/' },
+                { name: 'Robots.txt Generator', icon: '\u{1F916}', url: 'utilities/robots-txt-generator/' },
+                { name: 'Sitemap Generator', icon: '\u{1F5FA}\uFE0F', url: 'utilities/sitemap-generator/' },
+                { name: '.htaccess Generator', icon: '\u2699\uFE0F', url: 'utilities/htaccess-generator/' },
+                { name: 'Schema Markup', icon: '\u{1F4CA}', url: 'utilities/structured-data-generator/' },
+                { name: 'Twitter Card', icon: '\u{1F426}', url: 'utilities/twitter-card-generator/' },
+                { name: 'UTM Builder', icon: '\u{1F517}', url: 'utilities/utm-builder/' },
+                { name: 'Redirect Codes', icon: '\u21A9\uFE0F', url: 'utilities/redirect-code-generator/' },
+                { name: 'CSS Unit Converter', icon: '\u{1F4CF}', url: 'utilities/css-unit-converter/' },
+            ]
+        },
+        {
+            name: 'Math & Finance', icon: '\u{1F4B0}',
+            items: [
+                { name: 'Tip Calculator', icon: '\u{1F4B0}', url: 'utilities/tip-calculator/' },
+                { name: 'Loan Calculator', icon: '\u{1F3E0}', url: 'utilities/loan-calculator/' },
+                { name: 'Compound Interest', icon: '\u{1F4C8}', url: 'utilities/compound-interest/' },
+                { name: 'BMI Calculator', icon: '\u2696\uFE0F', url: 'utilities/bmi-calculator/' },
+                { name: 'Calorie Calculator', icon: '\u{1F34E}', url: 'utilities/calorie-calculator/' },
+                { name: 'Discount Calculator', icon: '\u{1F3F7}\uFE0F', url: 'utilities/discount-calculator/' },
+                { name: 'Unit Price Compare', icon: '\u{1F6D2}', url: 'utilities/unit-price-calculator/' },
+                { name: 'GPA Calculator', icon: '\u{1F393}', url: 'utilities/gpa-calculator/' },
+                { name: 'Salary Converter', icon: '\u{1F4BC}', url: 'utilities/salary-calculator/' },
+                { name: 'Inflation Calculator', icon: '\u{1F4B9}', url: 'utilities/inflation-calculator/' },
+                { name: 'Number to Words', icon: '\u{1F522}', url: 'utilities/number-to-words/' },
+            ]
+        },
+        {
+            name: 'Generators', icon: '\u{1F3B2}',
+            items: [
+                { name: 'Random Picker', icon: '\u{1F3A1}', url: 'utilities/random-picker/' },
+                { name: 'Coin Flipper', icon: '\u{1FA99}', url: 'utilities/coin-flipper/' },
+                { name: 'Dice Roller', icon: '\u{1F3B2}', url: 'utilities/dice-roller/' },
+                { name: 'Team Generator', icon: '\u{1F465}', url: 'utilities/team-generator/' },
+                { name: 'Random Color', icon: '\u{1F3A8}', url: 'utilities/color-randomizer/' },
+                { name: 'Name Generator', icon: '\u{1F464}', url: 'utilities/name-generator/' },
+                { name: 'Passphrase Generator', icon: '\u{1F524}', url: 'utilities/passphrase-generator/' },
+                { name: 'Barcode Generator', icon: '\u{1F4CA}', url: 'utilities/barcode-generator/' },
+                { name: 'QR Code Reader', icon: '\u{1F4F8}', url: 'utilities/qr-reader/' },
+            ]
+        },
+        {
+            name: 'Validators', icon: '\u2705',
+            items: [
+                { name: 'JSON Schema', icon: '\u2705', url: 'utilities/json-validator/' },
+                { name: 'Email Validator', icon: '\u{1F4E7}', url: 'utilities/email-validator/' },
+                { name: 'URL Validator', icon: '\u{1F517}', url: 'utilities/url-validator/' },
+                { name: 'Credit Card', icon: '\u{1F4B3}', url: 'utilities/credit-card-validator/' },
+                { name: 'IBAN Validator', icon: '\u{1F3E6}', url: 'utilities/iban-validator/' },
+                { name: 'Regex Debugger', icon: '\u{1F41B}', url: 'utilities/regex-validator/' },
+                { name: 'HTML Validator', icon: '\u{1F3D7}\uFE0F', url: 'utilities/html-validator/' },
+                { name: 'CSS Validator', icon: '\u{1F3A8}', url: 'utilities/css-validator/' },
+                { name: 'IP Address', icon: '\u{1F310}', url: 'utilities/ip-address-validator/' },
+                { name: 'YAML Validator', icon: '\u{1F4D1}', url: 'utilities/yaml-validator/' },
+                { name: 'Crontab Validator', icon: '\u{23F1}\uFE0F', url: 'utilities/crontab-validator/' },
             ]
         },
     ];
