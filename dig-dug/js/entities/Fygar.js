@@ -333,6 +333,11 @@ class Fygar {
             case 4: base = CONFIG.SCORE.PUMP_KILL_LAYER4; break;
             default: base = CONFIG.SCORE.PUMP_KILL_LAYER1;
         }
+        // Fygar killed from horizontal direction scores double
+        const player = this.scene.player;
+        if (player && player.row === this.row) {
+            base *= CONFIG.SCORE.FYGAR_HORIZONTAL_BONUS;
+        }
         return base;
     }
 

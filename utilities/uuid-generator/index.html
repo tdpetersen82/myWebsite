@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UUID Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🎲 UUID Generator</h1>
+        <p class="subtitle">Generate random UUID v4 identifiers instantly.</p>
+
+        <div class="tool-area">
+            <label>How many UUIDs?</label>
+            <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
+                <button class="copy-btn" onclick="generate(1)">1 UUID</button>
+                <button class="copy-btn" onclick="generate(5)">5 UUIDs</button>
+                <button class="copy-btn" onclick="generate(10)">10 UUIDs</button>
+            </div>
+
+            <div class="tool-output" id="uuidOutput"></div>
+
+            <div style="margin-top:10px;text-align:center;">
+                <button class="copy-btn" onclick="copyOutput()">📋 Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        function generate(count) {
+            const uuids = [];
+            for (let i = 0; i < count; i++) {
+                uuids.push(crypto.randomUUID());
+            }
+            document.getElementById('uuidOutput').textContent = uuids.join('\n');
+        }
+
+        function copyOutput() {
+            const text = document.getElementById('uuidOutput').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+
+        generate(1);
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

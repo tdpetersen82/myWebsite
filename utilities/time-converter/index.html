@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Time Unit Converter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>⏱️ Time Unit Converter</h1>
+        <p class="subtitle">Convert between seconds, minutes, hours, days, weeks, months, and years.</p>
+        <div class="tool-area">
+            <div class="tool-row">
+                <input type="number" id="input" placeholder="Enter value" value="1" step="any">
+                <select id="unit">
+                    <option value="seconds">Seconds</option>
+                    <option value="minutes">Minutes</option>
+                    <option value="hours">Hours</option>
+                    <option value="days">Days</option>
+                    <option value="weeks">Weeks</option>
+                    <option value="months">Months</option>
+                    <option value="years">Years</option>
+                </select>
+            </div>
+            <div class="tool-grid" id="results"></div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        const toSeconds = {
+            seconds: 1,
+            minutes: 60,
+            hours: 3600,
+            days: 86400,
+            weeks: 604800,
+            months: 30.44 * 86400,
+            years: 365.25 * 86400
+        };
+        const labels = {
+            seconds: 'Seconds',
+            minutes: 'Minutes',
+            hours: 'Hours',
+            days: 'Days',
+            weeks: 'Weeks',
+            months: 'Months',
+            years: 'Years'
+        };
+
+        function convert() {
+            const val = parseFloat(document.getElementById('input').value);
+            const unit = document.getElementById('unit').value;
+            const grid = document.getElementById('results');
+            if (isNaN(val)) { grid.innerHTML = ''; return; }
+            const inSeconds = val * toSeconds[unit];
+            grid.innerHTML = Object.keys(toSeconds).map(u => {
+                const result = inSeconds / toSeconds[u];
+                return `<div class="info-item"><span class="info-label">${labels[u]}</span><span class="info-value">${Number.isInteger(result) ? result : result.toPrecision(10).replace(/\.?0+$/, '')}</span></div>`;
+            }).join('');
+        }
+
+        document.getElementById('input').addEventListener('input', convert);
+        document.getElementById('unit').addEventListener('change', convert);
+        convert();
+    </script>
+</body>
+</html>

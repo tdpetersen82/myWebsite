@@ -66,9 +66,9 @@ class Player {
             this.invincibleTimer -= dt;
         }
 
-        // Update hammer timer
+        // Update hammer timer (timer is in ms, dt is in seconds)
         if (this.hasHammer) {
-            this.hammerTimer -= dt;
+            this.hammerTimer -= dt * 1000;
             this.hammerSwing += dt * 10;
             if (this.hammerTimer <= 0) {
                 this.hasHammer = false;

@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YAML Formatter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>📄 YAML Formatter</h1>
+        <p class="subtitle">Format YAML, validate syntax, and convert between YAML and JSON.</p>
+
+        <div class="tool-area">
+            <div class="tool-row">
+                <div>
+                    <label for="yamlInput">Input</label>
+                    <textarea id="yamlInput" placeholder="Paste YAML or JSON here..."></textarea>
+                </div>
+                <div>
+                    <label for="yamlOutput">Output</label>
+                    <textarea id="yamlOutput" readonly placeholder="Formatted output will appear here..."></textarea>
+                </div>
+            </div>
+
+            <div style="text-align:center;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button class="copy-btn" onclick="formatYAML()">Format YAML</button>
+                <button class="copy-btn" onclick="yamlToJSON()">YAML → JSON</button>
+                <button class="copy-btn" onclick="jsonToYAML()">JSON → YAML</button>
+                <button class="copy-btn" onclick="copyOutput()">📋 Copy Output</button>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/js-yaml@4.1.0/dist/js-yaml.min.js"></script>
+    <script>
+        const input = document.getElementById('yamlInput');
+        const output = document.getElementById('yamlOutput');
+        const errorMsg = document.getElementById('errorMsg');
+
+        function formatYAML() {
+            errorMsg.textContent = '';
+            try {
+                const parsed = jsyaml.load(input.value);
+                output.value = jsyaml.dump(parsed, { indent: 2, lineWidth: 120, noRefs: true });
+            } catch (e) {
+                showError(e);
+            }
+        }
+
+        function yamlToJSON() {
+            errorMsg.textContent = '';
+            try {
+                const parsed = jsyaml.load(input.value);
+                output.value = JSON.stringify(parsed, null, 2);
+            } catch (e) {
+                showError(e);
+            }
+        }
+
+        function jsonToYAML() {
+            errorMsg.textContent = '';
+            try {
+                const parsed = JSON.parse(input.value);
+                output.value = jsyaml.dump(parsed, { indent: 2, lineWidth: 120, noRefs: true });
+            } catch (e) {
+                errorMsg.textContent = 'Invalid JSON: ' + e.message;
+            }
+        }
+
+        function showError(e) {
+            let msg = 'YAML Error: ' + e.message;
+            if (e.mark) {
+                msg += ' (line ' + (e.mark.line + 1) + ', column ' + (e.mark.column + 1) + ')';
+            }
+            errorMsg.textContent = msg;
+        }
+
+        function copyOutput() {
+            navigator.clipboard.writeText(output.value).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

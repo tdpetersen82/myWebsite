@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CSV to JSON — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .error-msg { color: #e74c3c; font-weight: 600; margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 CSV to JSON</h1>
+        <p class="subtitle">Convert CSV data into formatted JSON. First row is used as keys.</p>
+        <div class="tool-area">
+            <label for="csvInput">CSV Input:</label>
+            <textarea id="csvInput" rows="8" placeholder="name,age,city&#10;Alice,30,New York&#10;Bob,25,London" oninput="convert()"></textarea>
+            <div class="error-msg" id="error"></div>
+            <label>JSON Output:</label>
+            <div class="tool-output" id="jsonOutput" style="white-space:pre-wrap;font-family:monospace;text-align:left;min-height:60px;max-height:400px;overflow-y:auto;"></div>
+            <button class="copy-btn" onclick="copyJSON()">Copy JSON</button>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        let jsonResult = '';
+        function parseCSVLine(line) {
+            const fields = [];
+            let current = '', inQuotes = false;
+            for (let i = 0; i < line.length; i++) {
+                const ch = line[i];
+                if (inQuotes) {
+                    if (ch === '"') {
+                        if (i + 1 < line.length && line[i + 1] === '"') { current += '"'; i++; }
+                        else inQuotes = false;
+                    } else current += ch;
+                } else {
+                    if (ch === '"') inQuotes = true;
+                    else if (ch === ',') { fields.push(current); current = ''; }
+                    else current += ch;
+                }
+            }
+            fields.push(current);
+            return fields;
+        }
+        function convert() {
+            const input = document.getElementById('csvInput').value.trim();
+            const errEl = document.getElementById('error');
+            const outEl = document.getElementById('jsonOutput');
+            if (!input) { errEl.textContent = ''; outEl.textContent = ''; jsonResult = ''; return; }
+            const lines = input.split(/\r?\n/).filter(l => l.trim());
+            if (lines.length < 2) { errEl.textContent = 'Need at least a header row and one data row.'; outEl.textContent = ''; jsonResult = ''; return; }
+            errEl.textContent = '';
+            const headers = parseCSVLine(lines[0]);
+            const result = [];
+            for (let i = 1; i < lines.length; i++) {
+                const values = parseCSVLine(lines[i]);
+                const obj = {};
+                headers.forEach((h, idx) => {
+                    let val = values[idx] !== undefined ? values[idx].trim() : '';
+                    if (val !== '' && !isNaN(val) && val !== '') val = Number(val);
+                    obj[h.trim()] = val;
+                });
+                result.push(obj);
+            }
+            jsonResult = JSON.stringify(result, null, 2);
+            outEl.textContent = jsonResult;
+        }
+        function copyJSON() {
+            navigator.clipboard.writeText(jsonResult).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy JSON', 1500);
+            });
+        }
+    </script>
+</body>
+</html>

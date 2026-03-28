@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SVG to PNG — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .tool-output { width: 100%; min-height: 200px; border: 2px solid #e0e0e0; border-radius: 8px; padding: 10px; font-family: monospace; font-size: 0.85em; resize: vertical; }
+        .tool-row { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin: 12px 0; }
+        .tool-tabs { display: flex; gap: 8px; margin-bottom: 12px; }
+        .tool-tab { padding: 6px 14px; border-radius: 6px; border: 2px solid #667eea; background: none; color: #667eea; cursor: pointer; font-size: 0.85em; }
+        .tool-tab.active { background: #667eea; color: #fff; }
+        .preview-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-top: 16px; }
+        .preview-box { text-align: center; }
+        .preview-box .lbl { font-size: 0.85em; color: #888; margin-bottom: 4px; }
+        .preview-box img, .preview-box canvas { max-width: 100%; max-height: 300px; border: 2px solid #e0e0e0; border-radius: 8px; background: #fafafa; }
+        .action-btn { background: #667eea; color: #fff; border: none; border-radius: 8px; padding: 10px 20px; cursor: pointer; }
+        .action-btn.green { background: #27ae60; }
+        .action-btn:hover { opacity: 0.9; }
+        .info-item { display: inline-block; background: #f0f4ff; border-radius: 8px; padding: 8px 14px; margin: 4px; }
+        .info-label { font-size: 0.75em; color: #888; }
+        .info-value { font-weight: 700; color: #667eea; }
+        @media(max-width:600px) { .preview-row { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#128736; SVG to PNG</h1>
+        <p class="subtitle">Convert SVG to PNG at various scale factors.</p>
+
+        <div class="tool-area">
+            <p style="font-size:0.85em;color:#888;">Paste SVG code or upload a file:</p>
+            <textarea class="tool-output" id="svgInput" placeholder="<svg>...</svg>"></textarea>
+            <div class="tool-row">
+                <input type="file" id="svgFile" accept=".svg,image/svg+xml">
+                <div>
+                    <label style="font-size:0.85em;color:#666;">Scale:</label>
+                    <div class="tool-tabs" style="display:inline-flex;margin:0;">
+                        <button class="tool-tab active" data-scale="1">1x</button>
+                        <button class="tool-tab" data-scale="2">2x</button>
+                        <button class="tool-tab" data-scale="3">3x</button>
+                        <button class="tool-tab" data-scale="4">4x</button>
+                    </div>
+                </div>
+                <button class="action-btn" onclick="convert()">Convert</button>
+            </div>
+
+            <div id="output" style="display:none;">
+                <div class="preview-row">
+                    <div class="preview-box">
+                        <div class="lbl">SVG Preview</div>
+                        <div id="svgPreview"></div>
+                    </div>
+                    <div class="preview-box">
+                        <div class="lbl">PNG Output</div>
+                        <canvas id="pngCanvas"></canvas>
+                    </div>
+                </div>
+                <div style="margin-top:12px;">
+                    <div class="info-item"><div class="info-label">PNG Size</div><div class="info-value" id="pngSize"></div></div>
+                    <div class="info-item"><div class="info-label">Dimensions</div><div class="info-value" id="pngDims"></div></div>
+                </div>
+                <button class="action-btn green" style="margin-top:12px;" onclick="downloadPng()">Download PNG</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let scale = 1;
+        let pngBlob = null;
+
+        document.querySelectorAll('[data-scale]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('[data-scale]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                scale = parseInt(btn.dataset.scale);
+            });
+        });
+
+        document.getElementById('svgFile').addEventListener('change', e => {
+            const file = e.target.files[0];
+            if (!file) return;
+            const reader = new FileReader();
+            reader.onload = () => { document.getElementById('svgInput').value = reader.result; };
+            reader.readAsText(file);
+        });
+
+        function convert() {
+            const svgCode = document.getElementById('svgInput').value.trim();
+            if (!svgCode) return;
+
+            // Show SVG preview
+            document.getElementById('svgPreview').innerHTML = svgCode;
+            const svgEl = document.getElementById('svgPreview').querySelector('svg');
+
+            const blob = new Blob([svgCode], { type: 'image/svg+xml;charset=utf-8' });
+            const url = URL.createObjectURL(blob);
+            const img = new Image();
+            img.onload = () => {
+                const w = img.naturalWidth || 300;
+                const h = img.naturalHeight || 150;
+                const canvas = document.getElementById('pngCanvas');
+                canvas.width = w * scale;
+                canvas.height = h * scale;
+                const ctx = canvas.getContext('2d');
+                ctx.drawImage(img, 0, 0, w * scale, h * scale);
+                URL.revokeObjectURL(url);
+
+                canvas.toBlob(b => {
+                    pngBlob = b;
+                    document.getElementById('pngSize').textContent = (b.size / 1024).toFixed(1) + ' KB';
+                    document.getElementById('pngDims').textContent = canvas.width + 'x' + canvas.height;
+                    document.getElementById('output').style.display = '';
+                }, 'image/png');
+            };
+            img.src = url;
+        }
+
+        function downloadPng() {
+            if (!pngBlob) return;
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(pngBlob);
+            a.download = 'converted.png';
+            a.click();
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

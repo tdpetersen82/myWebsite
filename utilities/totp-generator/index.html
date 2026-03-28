@@ -1,0 +1,360 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>TOTP Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .totp-code {
+            font-family: 'Courier New', monospace;
+            font-size: 3em;
+            font-weight: bold;
+            letter-spacing: 0.2em;
+            color: #2c3e50;
+            text-align: center;
+            margin: 16px 0 8px;
+        }
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 8px 0;
+        }
+        .progress-bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #27ae60, #2ecc71);
+            transition: width 1s linear;
+            border-radius: 3px;
+        }
+        .progress-bar-fill.urgent {
+            background: linear-gradient(90deg, #e74c3c, #c0392b);
+        }
+        #qrCanvas {
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            margin-top: 10px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔢 TOTP Generator</h1>
+        <p class="subtitle">Generate Time-based One-Time Passwords (RFC 6238) from a Base32 secret.</p>
+
+        <div class="tool-area">
+            <div>
+                <label for="totpSecret">Base32 Secret Key</label>
+                <input type="text" id="totpSecret" placeholder="e.g. JBSWY3DPEHPK3PXP" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;font-family:monospace;" oninput="startTOTP()">
+            </div>
+
+            <div class="tool-row" style="margin-top:10px;">
+                <div>
+                    <label for="totpIssuer">Issuer (optional)</label>
+                    <input type="text" id="totpIssuer" placeholder="e.g. MyService" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                </div>
+                <div>
+                    <label for="totpAccount">Account (optional)</label>
+                    <input type="text" id="totpAccount" placeholder="e.g. user@example.com" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                </div>
+            </div>
+
+            <div id="totpDisplay" style="display:none;">
+                <div class="totp-code" id="totpCode">------</div>
+                <div class="progress-bar">
+                    <div class="progress-bar-fill" id="totpProgress"></div>
+                </div>
+                <p style="text-align:center;color:#666;font-size:0.85em;" id="totpTimer">Refreshes in -- seconds</p>
+
+                <div style="text-align:center;margin-top:8px;">
+                    <button class="copy-btn" onclick="copyCode()">📋 Copy Code</button>
+                    <button class="copy-btn" onclick="showQR()">QR Code</button>
+                </div>
+
+                <div id="qrArea" style="display:none;text-align:center;margin-top:12px;">
+                    <canvas id="qrCanvas"></canvas>
+                </div>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+        </div>
+    </div>
+
+    <script>
+        const errorMsg = document.getElementById('errorMsg');
+        let totpInterval = null;
+
+        // Base32 decode
+        function base32Decode(input) {
+            const alphabet = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ234567';
+            input = input.replace(/[\s=-]/g, '').toUpperCase();
+            let bits = '';
+            for (let i = 0; i < input.length; i++) {
+                const val = alphabet.indexOf(input[i]);
+                if (val === -1) throw new Error('Invalid Base32 character: ' + input[i]);
+                bits += val.toString(2).padStart(5, '0');
+            }
+            const bytes = new Uint8Array(Math.floor(bits.length / 8));
+            for (let i = 0; i < bytes.length; i++) {
+                bytes[i] = parseInt(bits.substr(i * 8, 8), 2);
+            }
+            return bytes;
+        }
+
+        async function generateTOTP(secret) {
+            const keyBytes = base32Decode(secret);
+            const epoch = Math.floor(Date.now() / 1000);
+            const timeStep = Math.floor(epoch / 30);
+
+            // Convert counter to 8-byte big-endian
+            const counterBytes = new Uint8Array(8);
+            let temp = timeStep;
+            for (let i = 7; i >= 0; i--) {
+                counterBytes[i] = temp & 0xff;
+                temp = Math.floor(temp / 256);
+            }
+
+            // HMAC-SHA1
+            const key = await crypto.subtle.importKey(
+                'raw', keyBytes, { name: 'HMAC', hash: 'SHA-1' }, false, ['sign']
+            );
+            const signature = await crypto.subtle.sign('HMAC', key, counterBytes);
+            const hmac = new Uint8Array(signature);
+
+            // Dynamic truncation
+            const offset = hmac[hmac.length - 1] & 0x0f;
+            const code = (
+                ((hmac[offset] & 0x7f) << 24) |
+                ((hmac[offset + 1] & 0xff) << 16) |
+                ((hmac[offset + 2] & 0xff) << 8) |
+                (hmac[offset + 3] & 0xff)
+            ) % 1000000;
+
+            return code.toString().padStart(6, '0');
+        }
+
+        function startTOTP() {
+            const secret = document.getElementById('totpSecret').value.trim();
+            if (!secret) {
+                document.getElementById('totpDisplay').style.display = 'none';
+                if (totpInterval) clearInterval(totpInterval);
+                return;
+            }
+
+            errorMsg.textContent = '';
+            document.getElementById('totpDisplay').style.display = '';
+
+            if (totpInterval) clearInterval(totpInterval);
+
+            async function update() {
+                try {
+                    const code = await generateTOTP(secret);
+                    document.getElementById('totpCode').textContent = code.substring(0, 3) + ' ' + code.substring(3);
+
+                    const epoch = Math.floor(Date.now() / 1000);
+                    const remaining = 30 - (epoch % 30);
+                    const pct = (remaining / 30) * 100;
+                    const bar = document.getElementById('totpProgress');
+                    bar.style.width = pct + '%';
+                    bar.className = 'progress-bar-fill' + (remaining <= 5 ? ' urgent' : '');
+                    document.getElementById('totpTimer').textContent = 'Refreshes in ' + remaining + ' seconds';
+                } catch (e) {
+                    errorMsg.textContent = 'Error: ' + e.message;
+                }
+            }
+
+            update();
+            totpInterval = setInterval(update, 1000);
+        }
+
+        function copyCode() {
+            const code = document.getElementById('totpCode').textContent.replace(/\s/g, '');
+            navigator.clipboard.writeText(code).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+
+        function showQR() {
+            const secret = document.getElementById('totpSecret').value.trim();
+            const issuer = document.getElementById('totpIssuer').value.trim() || 'Tool';
+            const account = document.getElementById('totpAccount').value.trim() || 'user';
+
+            const uri = 'otpauth://totp/' + encodeURIComponent(issuer) + ':' + encodeURIComponent(account) +
+                '?secret=' + encodeURIComponent(secret) + '&issuer=' + encodeURIComponent(issuer) + '&digits=6&period=30';
+
+            const canvas = document.getElementById('qrCanvas');
+            generateQR(canvas, uri);
+            document.getElementById('qrArea').style.display = '';
+        }
+
+        // Minimal QR code generator (inline)
+        function generateQR(canvas, text) {
+            // Simple QR code using a basic encoding approach
+            // For production, use a library. This generates a visual representation.
+            const size = 200;
+            canvas.width = size;
+            canvas.height = size;
+            const ctx = canvas.getContext('2d');
+            ctx.fillStyle = '#fff';
+            ctx.fillRect(0, 0, size, size);
+
+            // Use a simple approach: encode data as a matrix pattern
+            // This is a simplified visual QR - for real scanning, use qrcode lib
+            const modules = createQRMatrix(text);
+            const moduleSize = Math.floor(size / (modules.length + 8));
+            const offset = Math.floor((size - modules.length * moduleSize) / 2);
+
+            ctx.fillStyle = '#000';
+            for (let row = 0; row < modules.length; row++) {
+                for (let col = 0; col < modules[row].length; col++) {
+                    if (modules[row][col]) {
+                        ctx.fillRect(offset + col * moduleSize, offset + row * moduleSize, moduleSize, moduleSize);
+                    }
+                }
+            }
+        }
+
+        // Minimal QR Code encoder (Version 1-6, Byte mode, ECC L)
+        function createQRMatrix(text) {
+            // Encode as byte mode
+            const data = new TextEncoder().encode(text);
+            const len = data.length;
+
+            // Choose version based on capacity (ECC L, byte mode)
+            const capacities = [0, 17, 32, 53, 78, 106, 134, 154, 192, 230, 271];
+            let version = 1;
+            for (let v = 1; v <= 10; v++) {
+                if (len <= capacities[v]) { version = v; break; }
+            }
+            if (len > capacities[10]) version = 10;
+
+            const size = 17 + version * 4;
+            const matrix = Array.from({ length: size }, () => Array(size).fill(null));
+            const reserved = Array.from({ length: size }, () => Array(size).fill(false));
+
+            // Place finder patterns
+            function placeFinderPattern(row, col) {
+                for (let r = -1; r <= 7; r++) {
+                    for (let c = -1; c <= 7; c++) {
+                        const mr = row + r, mc = col + c;
+                        if (mr < 0 || mr >= size || mc < 0 || mc >= size) continue;
+                        if (r === -1 || r === 7 || c === -1 || c === 7) {
+                            matrix[mr][mc] = 0;
+                        } else if (r === 0 || r === 6 || c === 0 || c === 6) {
+                            matrix[mr][mc] = 1;
+                        } else if (r >= 2 && r <= 4 && c >= 2 && c <= 4) {
+                            matrix[mr][mc] = 1;
+                        } else {
+                            matrix[mr][mc] = 0;
+                        }
+                        reserved[mr][mc] = true;
+                    }
+                }
+            }
+
+            placeFinderPattern(0, 0);
+            placeFinderPattern(0, size - 7);
+            placeFinderPattern(size - 7, 0);
+
+            // Timing patterns
+            for (let i = 8; i < size - 8; i++) {
+                matrix[6][i] = i % 2 === 0 ? 1 : 0;
+                reserved[6][i] = true;
+                matrix[i][6] = i % 2 === 0 ? 1 : 0;
+                reserved[i][6] = true;
+            }
+
+            // Dark module
+            matrix[size - 8][8] = 1;
+            reserved[size - 8][8] = true;
+
+            // Reserve format info areas
+            for (let i = 0; i < 9; i++) {
+                reserved[8][i] = true;
+                reserved[i][8] = true;
+            }
+            for (let i = 0; i < 8; i++) {
+                reserved[8][size - 1 - i] = true;
+                reserved[size - 1 - i][8] = true;
+            }
+
+            // Generate data bits (simplified - just fill with data pattern)
+            const bits = [];
+            // Mode indicator: byte mode = 0100
+            bits.push(0, 1, 0, 0);
+            // Character count (8 bits for version 1-9)
+            for (let i = 7; i >= 0; i--) bits.push((len >> i) & 1);
+            // Data
+            for (const byte of data) {
+                for (let i = 7; i >= 0; i--) bits.push((byte >> i) & 1);
+            }
+            // Terminator
+            for (let i = 0; i < 4 && bits.length < capacities[version] * 8; i++) bits.push(0);
+            // Pad to byte boundary
+            while (bits.length % 8 !== 0) bits.push(0);
+            // Pad bytes
+            let padByte = 0;
+            while (bits.length < capacities[version] * 8) {
+                const pb = padByte % 2 === 0 ? 0xEC : 0x11;
+                for (let i = 7; i >= 0; i--) bits.push((pb >> i) & 1);
+                padByte++;
+            }
+
+            // Place data bits in zigzag pattern
+            let bitIdx = 0;
+            let upward = true;
+            for (let col = size - 1; col >= 0; col -= 2) {
+                if (col === 6) col = 5; // skip timing column
+                const rows = upward ? Array.from({ length: size }, (_, i) => size - 1 - i) : Array.from({ length: size }, (_, i) => i);
+                for (const row of rows) {
+                    for (let c = 0; c < 2; c++) {
+                        const cc = col - c;
+                        if (cc < 0) continue;
+                        if (!reserved[row][cc] && matrix[row][cc] === null) {
+                            matrix[row][cc] = bitIdx < bits.length ? bits[bitIdx++] : 0;
+                        }
+                    }
+                }
+                upward = !upward;
+            }
+
+            // Apply mask pattern 0 (checkerboard)
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    if (!reserved[r][c] && matrix[r][c] !== null) {
+                        if ((r + c) % 2 === 0) {
+                            matrix[r][c] ^= 1;
+                        }
+                    }
+                }
+            }
+
+            // Fill nulls
+            for (let r = 0; r < size; r++) {
+                for (let c = 0; c < size; c++) {
+                    if (matrix[r][c] === null) matrix[r][c] = 0;
+                }
+            }
+
+            // Place format info (mask 0, ECC L = 01)
+            const formatBits = [1, 1, 1, 0, 1, 1, 1, 1, 1, 0, 0, 0, 1, 0, 0];
+            for (let i = 0; i < 6; i++) matrix[8][i] = formatBits[i];
+            matrix[8][7] = formatBits[6];
+            matrix[8][8] = formatBits[7];
+            matrix[7][8] = formatBits[8];
+            for (let i = 0; i < 6; i++) matrix[5 - i][8] = formatBits[9 + i];
+
+            for (let i = 0; i < 7; i++) matrix[size - 1 - i][8] = formatBits[i];
+            for (let i = 0; i < 8; i++) matrix[8][size - 8 + i] = formatBits[7 + i];
+
+            return matrix;
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WCAG Contrast Checker — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .color-row { display: flex; gap: 16px; align-items: center; flex-wrap: wrap; margin-bottom: 16px; }
+        .color-row label { font-size: 0.85em; color: #666; min-width: 90px; }
+        .color-row input[type=color] { width: 50px; height: 36px; border: none; cursor: pointer; }
+        .color-row input[type=text] { width: 90px; font-family: monospace; }
+        .swap-btn { background: none; border: 2px solid #667eea; color: #667eea; border-radius: 8px; padding: 6px 12px; cursor: pointer; font-size: 0.85em; }
+        .swap-btn:hover { background: #667eea; color: #fff; }
+        .preview-box { border-radius: 12px; padding: 24px; margin: 16px 0; text-align: center; }
+        .preview-box .large { font-size: 1.4em; font-weight: 700; }
+        .preview-box .normal { font-size: 1em; margin-top: 8px; }
+        .ratio-display { font-size: 2.5em; font-weight: 800; color: #667eea; text-align: center; margin: 12px 0; }
+        .results-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; margin-top: 16px; }
+        .result-card { border-radius: 10px; padding: 14px; text-align: center; }
+        .result-card .level { font-weight: 700; font-size: 0.9em; }
+        .result-card .verdict { font-size: 1.3em; font-weight: 800; margin-top: 4px; }
+        .pass { background: #e8f5e9; }
+        .pass .verdict { color: #27ae60; }
+        .fail { background: #fde8e8; }
+        .fail .verdict { color: #e74c3c; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#9876; Contrast Checker</h1>
+        <p class="subtitle">Check color contrast ratios against WCAG 2.1 accessibility guidelines.</p>
+
+        <div class="tool-area">
+            <div class="color-row">
+                <label>Foreground:</label>
+                <input type="color" id="fgColor" value="#333333">
+                <input type="text" id="fgHex" value="#333333" maxlength="7">
+            </div>
+            <div class="color-row">
+                <label>Background:</label>
+                <input type="color" id="bgColor" value="#ffffff">
+                <input type="text" id="bgHex" value="#ffffff" maxlength="7">
+                <button class="swap-btn" onclick="swapColors()">Swap</button>
+            </div>
+
+            <div class="preview-box" id="preview">
+                <div class="large">Large Text Preview (18pt+)</div>
+                <div class="normal">Normal text preview (14pt). The quick brown fox jumps over the lazy dog.</div>
+            </div>
+
+            <div class="ratio-display" id="ratio"></div>
+
+            <div class="results-grid" id="results"></div>
+        </div>
+    </div>
+
+    <script>
+        function luminance(hex) {
+            const r = parseInt(hex.slice(1,3),16)/255;
+            const g = parseInt(hex.slice(3,5),16)/255;
+            const b = parseInt(hex.slice(5,7),16)/255;
+            const toLinear = c => c <= 0.03928 ? c/12.92 : Math.pow((c+0.055)/1.055, 2.4);
+            return 0.2126*toLinear(r) + 0.7152*toLinear(g) + 0.0722*toLinear(b);
+        }
+
+        function contrastRatio(hex1, hex2) {
+            const l1 = luminance(hex1);
+            const l2 = luminance(hex2);
+            const lighter = Math.max(l1, l2);
+            const darker = Math.min(l1, l2);
+            return (lighter + 0.05) / (darker + 0.05);
+        }
+
+        function update() {
+            const fg = document.getElementById('fgColor').value;
+            const bg = document.getElementById('bgColor').value;
+            document.getElementById('fgHex').value = fg;
+            document.getElementById('bgHex').value = bg;
+
+            const preview = document.getElementById('preview');
+            preview.style.background = bg;
+            preview.style.color = fg;
+
+            const ratio = contrastRatio(fg, bg);
+            document.getElementById('ratio').textContent = ratio.toFixed(2) + ':1';
+
+            const checks = [
+                { label: 'AA Normal (4.5:1)', pass: ratio >= 4.5 },
+                { label: 'AA Large (3:1)', pass: ratio >= 3 },
+                { label: 'AAA Normal (7:1)', pass: ratio >= 7 },
+                { label: 'AAA Large (4.5:1)', pass: ratio >= 4.5 }
+            ];
+
+            document.getElementById('results').innerHTML = checks.map(c =>
+                `<div class="result-card ${c.pass ? 'pass' : 'fail'}">
+                    <div class="level">${c.label}</div>
+                    <div class="verdict">${c.pass ? 'PASS' : 'FAIL'}</div>
+                </div>`
+            ).join('');
+        }
+
+        function swapColors() {
+            const fg = document.getElementById('fgColor').value;
+            const bg = document.getElementById('bgColor').value;
+            document.getElementById('fgColor').value = bg;
+            document.getElementById('bgColor').value = fg;
+            update();
+        }
+
+        document.getElementById('fgColor').addEventListener('input', update);
+        document.getElementById('bgColor').addEventListener('input', update);
+        document.getElementById('fgHex').addEventListener('input', e => {
+            if (/^#[0-9a-f]{6}$/i.test(e.target.value)) {
+                document.getElementById('fgColor').value = e.target.value;
+                update();
+            }
+        });
+        document.getElementById('bgHex').addEventListener('input', e => {
+            if (/^#[0-9a-f]{6}$/i.test(e.target.value)) {
+                document.getElementById('bgColor').value = e.target.value;
+                update();
+            }
+        });
+
+        update();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Angle Converter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        #angle-visual { display: flex; justify-content: center; margin: 16px 0; }
+        #angle-visual canvas { border: 1px solid #e0e0e0; border-radius: 8px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📐 Angle Converter</h1>
+        <p class="subtitle">Convert between degrees, radians, gradians, and turns with a visual indicator.</p>
+        <div class="tool-area">
+            <div class="tool-row">
+                <input type="number" id="input" placeholder="Enter value" value="90" step="any">
+                <select id="unit">
+                    <option value="degrees">Degrees</option>
+                    <option value="radians">Radians</option>
+                    <option value="gradians">Gradians</option>
+                    <option value="turns">Turns</option>
+                </select>
+            </div>
+            <div id="angle-visual"><canvas id="canvas" width="160" height="160"></canvas></div>
+            <div class="tool-grid" id="results"></div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        const toDegrees = { degrees: 1, radians: 180 / Math.PI, gradians: 0.9, turns: 360 };
+        const labels = { degrees: 'Degrees (°)', radians: 'Radians (rad)', gradians: 'Gradians (gon)', turns: 'Turns' };
+
+        function fmt(v) {
+            if (isNaN(v) || !isFinite(v)) return '—';
+            return Number.isInteger(v) ? v.toString() : v.toPrecision(10).replace(/\.?0+$/, '');
+        }
+
+        function drawAngle(deg) {
+            const c = document.getElementById('canvas');
+            const ctx = c.getContext('2d');
+            const cx = 80, cy = 80, r = 60;
+            ctx.clearRect(0, 0, 160, 160);
+            // circle
+            ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.strokeStyle = '#ccc'; ctx.lineWidth = 2; ctx.stroke();
+            // arc
+            const startAngle = -Math.PI / 2;
+            const endAngle = startAngle + (deg * Math.PI / 180);
+            ctx.beginPath(); ctx.moveTo(cx, cy); ctx.arc(cx, cy, r, startAngle, endAngle, deg < 0);
+            ctx.closePath(); ctx.fillStyle = 'rgba(102,126,234,0.25)'; ctx.fill();
+            ctx.beginPath(); ctx.arc(cx, cy, r, startAngle, endAngle, deg < 0); ctx.strokeStyle = '#667eea'; ctx.lineWidth = 3; ctx.stroke();
+            // line
+            ctx.beginPath(); ctx.moveTo(cx, cy);
+            ctx.lineTo(cx + r * Math.cos(endAngle), cy + r * Math.sin(endAngle));
+            ctx.strokeStyle = '#764ba2'; ctx.lineWidth = 2; ctx.stroke();
+        }
+
+        function convert() {
+            const val = parseFloat(document.getElementById('input').value);
+            const unit = document.getElementById('unit').value;
+            const grid = document.getElementById('results');
+            if (isNaN(val)) { grid.innerHTML = ''; return; }
+            const inDeg = val * toDegrees[unit];
+            grid.innerHTML = Object.keys(toDegrees).map(u => {
+                const result = inDeg / toDegrees[u];
+                return `<div class="info-item"><span class="info-label">${labels[u]}</span><span class="info-value">${fmt(result)}</span></div>`;
+            }).join('');
+            drawAngle(inDeg);
+        }
+
+        document.getElementById('input').addEventListener('input', convert);
+        document.getElementById('unit').addEventListener('change', convert);
+        convert();
+    </script>
+</body>
+</html>

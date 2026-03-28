@@ -1,0 +1,70 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Age Calculator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .age-big { font-size: 2.2em; font-weight: bold; color: #667eea; margin: 12px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎂 Age Calculator</h1>
+        <p class="subtitle">Enter your date of birth to see your exact age and fun facts.</p>
+        <div class="tool-area">
+            <label for="dob">Date of Birth:</label>
+            <input type="date" id="dob" onchange="calc()">
+            <div class="age-big" id="ageBig"></div>
+            <div class="tool-grid" id="results"></div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function getZodiac(m, d) {
+            const signs = [['Capricorn',19],['Aquarius',18],['Pisces',20],['Aries',19],['Taurus',20],['Gemini',20],['Cancer',22],['Leo',22],['Virgo',22],['Libra',22],['Scorpio',21],['Sagittarius',21],['Capricorn',31]];
+            return d > signs[m].at(1) ? signs[m + 1][0] : signs[m][0];
+        }
+        function calc() {
+            const dobStr = document.getElementById('dob').value;
+            if (!dobStr) return;
+            const dob = new Date(dobStr + 'T00:00:00');
+            const now = new Date();
+            const el = document.getElementById('results');
+            const bigEl = document.getElementById('ageBig');
+            if (dob > now) { bigEl.textContent = ''; el.innerHTML = '<div class="info-item"><span class="info-value">Date is in the future!</span></div>'; return; }
+
+            // Exact age
+            let years = now.getFullYear() - dob.getFullYear();
+            let months = now.getMonth() - dob.getMonth();
+            let days = now.getDate() - dob.getDate();
+            if (days < 0) { months--; const prev = new Date(now.getFullYear(), now.getMonth(), 0); days += prev.getDate(); }
+            if (months < 0) { years--; months += 12; }
+
+            bigEl.textContent = years + ' years, ' + months + ' months, ' + days + ' days';
+
+            // Total days
+            const totalDays = Math.floor((now - dob) / 86400000);
+
+            // Next birthday
+            let next = new Date(now.getFullYear(), dob.getMonth(), dob.getDate());
+            if (next <= now) next.setFullYear(next.getFullYear() + 1);
+            const daysUntil = Math.ceil((next - now) / 86400000);
+
+            // Day of week born
+            const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            const bornDay = dayNames[dob.getDay()];
+
+            // Zodiac
+            const zodiac = getZodiac(dob.getMonth(), dob.getDate());
+
+            el.innerHTML =
+                '<div class="info-item"><span class="info-label">Total Days Alive</span><span class="info-value">' + totalDays.toLocaleString() + '</span></div>' +
+                '<div class="info-item"><span class="info-label">Next Birthday</span><span class="info-value">' + daysUntil + ' days away</span></div>' +
+                '<div class="info-item"><span class="info-label">Born On</span><span class="info-value">' + bornDay + '</span></div>' +
+                '<div class="info-item"><span class="info-label">Zodiac Sign</span><span class="info-value">' + zodiac + '</span></div>';
+        }
+    </script>
+</body>
+</html>

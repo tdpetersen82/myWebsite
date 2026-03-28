@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>String Utilities — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .extra-opts { display: flex; gap: 8px; margin: 8px 0; justify-content: center; align-items: center; flex-wrap: wrap; }
+        .extra-opts label { font-size: 0.9em; }
+        .extra-opts input, .extra-opts select { padding: 6px 10px; border: 2px solid #e0e0e0; border-radius: 6px; font-size: 0.9em; width: 80px; }
+        .char-count { font-size: 0.85em; color: #888; margin: 6px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🧰 String Utilities</h1>
+        <p class="subtitle">Reverse, shuffle, repeat, truncate, and pad your text.</p>
+        <div class="tool-area">
+            <label for="input">Enter your text:</label>
+            <textarea id="input" rows="4" placeholder="Type or paste your text here..."></textarea>
+            <div class="char-count" id="charCount">0 characters</div>
+            <div class="tool-tabs">
+                <button class="tool-tab active" data-op="reverse">Reverse</button>
+                <button class="tool-tab" data-op="shuffle">Shuffle</button>
+                <button class="tool-tab" data-op="repeat">Repeat</button>
+                <button class="tool-tab" data-op="truncate">Truncate</button>
+                <button class="tool-tab" data-op="pad">Pad</button>
+            </div>
+            <div class="extra-opts" id="extraOpts"></div>
+            <label>Result:</label>
+            <div class="tool-output" id="output" style="min-height:60px;white-space:pre-wrap;text-align:left;"></div>
+            <button class="copy-btn" onclick="copyResult()">Copy Result</button>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        let currentOp = 'reverse';
+
+        function showOpts() {
+            const opts = document.getElementById('extraOpts');
+            if (currentOp === 'repeat') {
+                opts.innerHTML = '<label>Count: <input type="number" id="repeatCount" value="3" min="1" max="100"></label>';
+                document.getElementById('repeatCount').addEventListener('input', process);
+            } else if (currentOp === 'truncate') {
+                opts.innerHTML = '<label>Length: <input type="number" id="truncLen" value="20" min="1"></label>';
+                document.getElementById('truncLen').addEventListener('input', process);
+            } else if (currentOp === 'pad') {
+                opts.innerHTML = '<label>Char: <input type="text" id="padChar" value=" " maxlength="1" style="width:40px;"></label>' +
+                    '<label>Length: <input type="number" id="padLen" value="20" min="1"></label>' +
+                    '<label>Side: <select id="padSide"><option value="left">Left</option><option value="right">Right</option></select></label>';
+                document.getElementById('padChar').addEventListener('input', process);
+                document.getElementById('padLen').addEventListener('input', process);
+                document.getElementById('padSide').addEventListener('change', process);
+            } else {
+                opts.innerHTML = '';
+            }
+        }
+
+        function process() {
+            const text = document.getElementById('input').value;
+            document.getElementById('charCount').textContent = `${text.length} characters`;
+            let result = '';
+            switch (currentOp) {
+                case 'reverse':
+                    result = [...text].reverse().join('');
+                    break;
+                case 'shuffle':
+                    const arr = [...text];
+                    for (let i = arr.length - 1; i > 0; i--) {
+                        const j = Math.floor(Math.random() * (i + 1));
+                        [arr[i], arr[j]] = [arr[j], arr[i]];
+                    }
+                    result = arr.join('');
+                    break;
+                case 'repeat':
+                    const count = parseInt(document.getElementById('repeatCount')?.value) || 1;
+                    result = text.repeat(Math.min(count, 100));
+                    break;
+                case 'truncate':
+                    const len = parseInt(document.getElementById('truncLen')?.value) || 20;
+                    result = text.length > len ? text.substring(0, len) + '...' : text;
+                    break;
+                case 'pad':
+                    const ch = (document.getElementById('padChar')?.value || ' ')[0] || ' ';
+                    const padLen = parseInt(document.getElementById('padLen')?.value) || 20;
+                    const side = document.getElementById('padSide')?.value || 'left';
+                    result = side === 'left' ? text.padStart(padLen, ch) : text.padEnd(padLen, ch);
+                    break;
+            }
+            document.getElementById('output').textContent = result;
+        }
+
+        document.querySelectorAll('.tool-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                currentOp = tab.dataset.op;
+                showOpts();
+                process();
+            });
+        });
+
+        document.getElementById('input').addEventListener('input', process);
+
+        function copyResult() {
+            const text = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Result', 1500);
+            });
+        }
+
+        showOpts();
+    </script>
+</body>
+</html>

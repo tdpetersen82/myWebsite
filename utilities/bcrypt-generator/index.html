@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bcrypt Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Bcrypt Generator</h1>
+        <p class="subtitle">Hash passwords with bcrypt and verify hashes.</p>
+
+        <div class="tool-area">
+            <div class="tool-tabs">
+                <button class="tool-tab active" onclick="switchTab('hash', this)">Hash</button>
+                <button class="tool-tab" onclick="switchTab('verify', this)">Verify</button>
+            </div>
+
+            <div id="hashTab">
+                <div style="margin-top:10px;">
+                    <label for="hashPassword">Password</label>
+                    <input type="text" id="hashPassword" placeholder="Enter password to hash..." style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                </div>
+                <div style="margin-top:10px;">
+                    <label for="rounds">Rounds: <span id="roundsVal">10</span></label>
+                    <input type="range" id="rounds" min="4" max="12" value="10" oninput="document.getElementById('roundsVal').textContent=this.value" style="width:100%;">
+                </div>
+                <div style="text-align:center;margin:10px 0;">
+                    <button class="copy-btn" onclick="hashPwd()">Generate Hash</button>
+                </div>
+                <div>
+                    <label for="hashOutput">Bcrypt Hash</label>
+                    <textarea id="hashOutput" readonly placeholder="Hash will appear here..." style="height:80px;"></textarea>
+                </div>
+                <div style="text-align:center;margin-top:8px;">
+                    <button class="copy-btn" onclick="copyEl('hashOutput')">📋 Copy Hash</button>
+                </div>
+            </div>
+
+            <div id="verifyTab" style="display:none;">
+                <div style="margin-top:10px;">
+                    <label for="verifyPassword">Password</label>
+                    <input type="text" id="verifyPassword" placeholder="Enter password to verify..." style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                </div>
+                <div style="margin-top:10px;">
+                    <label for="verifyHash">Bcrypt Hash</label>
+                    <input type="text" id="verifyHash" placeholder="Enter bcrypt hash..." style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;font-family:monospace;">
+                </div>
+                <div style="text-align:center;margin:10px 0;">
+                    <button class="copy-btn" onclick="verifyPwd()">Verify</button>
+                </div>
+                <div class="tool-output" id="verifyResult" style="display:none;">
+                    <div class="info-item">
+                        <span class="info-label">Result</span>
+                        <span class="info-value" id="matchResult">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+            <div id="loading" style="display:none;text-align:center;margin-top:8px;color:#666;">
+                <span>Processing... (this may take a moment for high rounds)</span>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bcryptjs@2.4.3/dist/bcrypt.min.js"></script>
+    <script>
+        const errorMsg = document.getElementById('errorMsg');
+        const loading = document.getElementById('loading');
+
+        function switchTab(tab, btn) {
+            errorMsg.textContent = '';
+            document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('hashTab').style.display = tab === 'hash' ? '' : 'none';
+            document.getElementById('verifyTab').style.display = tab === 'verify' ? '' : 'none';
+        }
+
+        function hashPwd() {
+            errorMsg.textContent = '';
+            const password = document.getElementById('hashPassword').value;
+            if (!password) {
+                errorMsg.textContent = 'Please enter a password.';
+                return;
+            }
+
+            const rounds = parseInt(document.getElementById('rounds').value);
+            loading.style.display = '';
+
+            setTimeout(() => {
+                try {
+                    const salt = dcodeIO.bcrypt.genSaltSync(rounds);
+                    const hash = dcodeIO.bcrypt.hashSync(password, salt);
+                    document.getElementById('hashOutput').value = hash;
+                } catch (e) {
+                    errorMsg.textContent = 'Error: ' + e.message;
+                }
+                loading.style.display = 'none';
+            }, 50);
+        }
+
+        function verifyPwd() {
+            errorMsg.textContent = '';
+            const password = document.getElementById('verifyPassword').value;
+            const hash = document.getElementById('verifyHash').value.trim();
+
+            if (!password || !hash) {
+                errorMsg.textContent = 'Please enter both a password and a hash.';
+                return;
+            }
+
+            loading.style.display = '';
+
+            setTimeout(() => {
+                try {
+                    const match = dcodeIO.bcrypt.compareSync(password, hash);
+                    const resultEl = document.getElementById('matchResult');
+                    if (match) {
+                        resultEl.textContent = 'Match! Password is correct.';
+                        resultEl.style.color = '#27ae60';
+                    } else {
+                        resultEl.textContent = 'No match. Password is incorrect.';
+                        resultEl.style.color = '#e74c3c';
+                    }
+                    document.getElementById('verifyResult').style.display = '';
+                } catch (e) {
+                    errorMsg.textContent = 'Invalid hash format: ' + e.message;
+                }
+                loading.style.display = 'none';
+            }, 50);
+        }
+
+        function copyEl(id) {
+            navigator.clipboard.writeText(document.getElementById(id).value).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Open Graph Preview — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .og-input { display:flex; flex-direction:column; gap:10px; margin-bottom:16px; text-align:left; }
+        .og-input label { font-weight:600; font-size:0.9em; color:#444; }
+        .og-input input { padding:10px 12px; border:2px solid #e0e0e0; border-radius:8px; font-size:0.95em; }
+        .og-input input:focus { border-color:#667eea; outline:none; }
+        .preview-section { margin-top:20px; text-align:left; }
+        .preview-label { font-weight:700; font-size:0.95em; margin-bottom:8px; color:#555; }
+        .fb-card { border:1px solid #dadde1; border-radius:3px; overflow:hidden; max-width:500px; font-family:Helvetica,Arial,sans-serif; background:#fff; margin-bottom:20px; }
+        .fb-card-img { width:100%; height:200px; background:#e4e6eb; display:flex; align-items:center; justify-content:center; color:#999; font-size:0.9em; overflow:hidden; }
+        .fb-card-img img { width:100%; height:100%; object-fit:cover; }
+        .fb-card-body { padding:10px 12px; border-top:1px solid #dadde1; background:#f2f3f5; }
+        .fb-card-url { font-size:0.75em; color:#606770; text-transform:uppercase; }
+        .fb-card-title { font-size:1em; font-weight:700; color:#1d2129; margin:3px 0; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+        .fb-card-desc { font-size:0.85em; color:#606770; display:-webkit-box; -webkit-line-clamp:2; -webkit-box-orient:vertical; overflow:hidden; }
+        .tw-card { border:1px solid #e1e8ed; border-radius:14px; overflow:hidden; max-width:500px; font-family:-apple-system,BlinkMacSystemFont,sans-serif; background:#fff; margin-bottom:20px; }
+        .tw-card-img { width:100%; height:200px; background:#e4e6eb; display:flex; align-items:center; justify-content:center; color:#999; font-size:0.9em; overflow:hidden; }
+        .tw-card-img img { width:100%; height:100%; object-fit:cover; }
+        .tw-card-body { padding:10px 14px; }
+        .tw-card-url { font-size:0.8em; color:#8899a6; }
+        .tw-card-title { font-size:0.95em; font-weight:700; color:#14171a; margin:2px 0; }
+        .tw-card-desc { font-size:0.85em; color:#657786; }
+        .meta-output { background:#1a1a2e; color:#ccc; border-radius:10px; padding:16px; font-family:'Courier New',monospace; font-size:0.85em; white-space:pre-wrap; word-break:break-all; margin-top:10px; text-align:left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 Open Graph Preview</h1>
+        <p class="subtitle">Preview how your page will look when shared on Facebook and Twitter.</p>
+
+        <div class="tool-area">
+            <div class="og-input">
+                <label for="ogTitle">og:title</label>
+                <input type="text" id="ogTitle" placeholder="My Awesome Page">
+                <label for="ogDesc">og:description</label>
+                <input type="text" id="ogDesc" placeholder="A short description of the page content.">
+                <label for="ogImage">og:image URL</label>
+                <input type="url" id="ogImage" placeholder="https://example.com/image.jpg">
+                <label for="ogUrl">og:url</label>
+                <input type="url" id="ogUrl" placeholder="https://example.com/page">
+            </div>
+
+            <div class="preview-section">
+                <div class="preview-label">Facebook Preview</div>
+                <div class="fb-card" id="fbCard">
+                    <div class="fb-card-img" id="fbImg">No image</div>
+                    <div class="fb-card-body">
+                        <div class="fb-card-url" id="fbUrl">example.com</div>
+                        <div class="fb-card-title" id="fbTitle">Page Title</div>
+                        <div class="fb-card-desc" id="fbDesc">Page description will appear here.</div>
+                    </div>
+                </div>
+
+                <div class="preview-label">Twitter Preview</div>
+                <div class="tw-card" id="twCard">
+                    <div class="tw-card-img" id="twImg">No image</div>
+                    <div class="tw-card-body">
+                        <div class="tw-card-title" id="twTitle">Page Title</div>
+                        <div class="tw-card-desc" id="twDesc">Page description will appear here.</div>
+                        <div class="tw-card-url" id="twUrl">example.com</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-output">
+                <div class="preview-label">Meta Tags</div>
+                <div class="meta-output" id="metaOutput"></div>
+                <button class="copy-btn" id="copyBtn" style="margin-top:10px;">Copy Meta Tags</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+        const ti = document.getElementById('ogTitle');
+        const de = document.getElementById('ogDesc');
+        const im = document.getElementById('ogImage');
+        const ur = document.getElementById('ogUrl');
+
+        function extractDomain(url) {
+            try { return new URL(url).hostname; } catch { return url || 'example.com'; }
+        }
+
+        function update() {
+            const title = ti.value || 'Page Title';
+            const desc = de.value || 'Page description will appear here.';
+            const image = im.value;
+            const url = ur.value;
+            const domain = extractDomain(url);
+
+            document.getElementById('fbTitle').textContent = title;
+            document.getElementById('fbDesc').textContent = desc;
+            document.getElementById('fbUrl').textContent = domain;
+            document.getElementById('twTitle').textContent = title;
+            document.getElementById('twDesc').textContent = desc;
+            document.getElementById('twUrl').textContent = domain;
+
+            const fbImgEl = document.getElementById('fbImg');
+            const twImgEl = document.getElementById('twImg');
+            if (image) {
+                fbImgEl.innerHTML = '<img src="' + image + '" onerror="this.parentElement.textContent=\'Image failed to load\'">';
+                twImgEl.innerHTML = '<img src="' + image + '" onerror="this.parentElement.textContent=\'Image failed to load\'">';
+            } else {
+                fbImgEl.textContent = 'No image';
+                twImgEl.textContent = 'No image';
+            }
+
+            let meta = '<meta property="og:type" content="website">\n';
+            if (ti.value) meta += '<meta property="og:title" content="' + ti.value.replace(/"/g, '&quot;') + '">\n';
+            if (de.value) meta += '<meta property="og:description" content="' + de.value.replace(/"/g, '&quot;') + '">\n';
+            if (im.value) meta += '<meta property="og:image" content="' + im.value.replace(/"/g, '&quot;') + '">\n';
+            if (ur.value) meta += '<meta property="og:url" content="' + ur.value.replace(/"/g, '&quot;') + '">\n';
+            document.getElementById('metaOutput').textContent = meta;
+        }
+
+        [ti, de, im, ur].forEach(el => el.addEventListener('input', update));
+        update();
+
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            navigator.clipboard.writeText(document.getElementById('metaOutput').textContent).then(() => {
+                this.textContent = 'Copied!';
+                setTimeout(() => this.textContent = 'Copy Meta Tags', 1200);
+            });
+        });
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

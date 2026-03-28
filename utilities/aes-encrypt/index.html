@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AES Encrypt/Decrypt — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 AES Encrypt/Decrypt</h1>
+        <p class="subtitle">Encrypt and decrypt text using AES-GCM with password-based key derivation (PBKDF2).</p>
+
+        <div class="tool-area">
+            <div class="tool-tabs">
+                <button class="tool-tab active" onclick="switchTab('encrypt', this)">Encrypt</button>
+                <button class="tool-tab" onclick="switchTab('decrypt', this)">Decrypt</button>
+            </div>
+
+            <div id="encryptTab">
+                <div style="margin-top:10px;">
+                    <label for="plaintext">Plaintext</label>
+                    <textarea id="plaintext" placeholder="Enter text to encrypt..."></textarea>
+                </div>
+                <div style="margin-top:10px;">
+                    <label for="encPassword">Password</label>
+                    <input type="password" id="encPassword" placeholder="Enter encryption password..." style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                </div>
+                <div style="text-align:center;margin:10px 0;">
+                    <button class="copy-btn" onclick="encryptText()">Encrypt</button>
+                </div>
+                <div>
+                    <label for="cipherOutput">Encrypted Output (Base64)</label>
+                    <textarea id="cipherOutput" readonly placeholder="Encrypted text will appear here..."></textarea>
+                </div>
+                <div style="text-align:center;margin-top:8px;">
+                    <button class="copy-btn" onclick="copyEl('cipherOutput')">📋 Copy Ciphertext</button>
+                </div>
+            </div>
+
+            <div id="decryptTab" style="display:none;">
+                <div style="margin-top:10px;">
+                    <label for="cipherInput">Ciphertext (Base64)</label>
+                    <textarea id="cipherInput" placeholder="Paste encrypted base64 text..."></textarea>
+                </div>
+                <div style="margin-top:10px;">
+                    <label for="decPassword">Password</label>
+                    <input type="password" id="decPassword" placeholder="Enter decryption password..." style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                </div>
+                <div style="text-align:center;margin:10px 0;">
+                    <button class="copy-btn" onclick="decryptText()">Decrypt</button>
+                </div>
+                <div>
+                    <label for="plainOutput">Decrypted Output</label>
+                    <textarea id="plainOutput" readonly placeholder="Decrypted text will appear here..."></textarea>
+                </div>
+                <div style="text-align:center;margin-top:8px;">
+                    <button class="copy-btn" onclick="copyEl('plainOutput')">📋 Copy Plaintext</button>
+                </div>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+        </div>
+    </div>
+
+    <script>
+        const errorMsg = document.getElementById('errorMsg');
+
+        function switchTab(tab, btn) {
+            errorMsg.textContent = '';
+            document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            document.getElementById('encryptTab').style.display = tab === 'encrypt' ? '' : 'none';
+            document.getElementById('decryptTab').style.display = tab === 'decrypt' ? '' : 'none';
+        }
+
+        async function deriveKey(password, salt) {
+            const enc = new TextEncoder();
+            const keyMaterial = await crypto.subtle.importKey(
+                'raw', enc.encode(password), 'PBKDF2', false, ['deriveKey']
+            );
+            return crypto.subtle.deriveKey(
+                { name: 'PBKDF2', salt: salt, iterations: 100000, hash: 'SHA-256' },
+                keyMaterial,
+                { name: 'AES-GCM', length: 256 },
+                false,
+                ['encrypt', 'decrypt']
+            );
+        }
+
+        async function encryptText() {
+            errorMsg.textContent = '';
+            const plaintext = document.getElementById('plaintext').value;
+            const password = document.getElementById('encPassword').value;
+
+            if (!password) {
+                errorMsg.textContent = 'Please enter a password.';
+                return;
+            }
+
+            try {
+                const enc = new TextEncoder();
+                const salt = crypto.getRandomValues(new Uint8Array(16));
+                const iv = crypto.getRandomValues(new Uint8Array(12));
+                const key = await deriveKey(password, salt);
+
+                const ciphertext = await crypto.subtle.encrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    enc.encode(plaintext)
+                );
+
+                // Combine salt + iv + ciphertext
+                const combined = new Uint8Array(salt.length + iv.length + ciphertext.byteLength);
+                combined.set(salt, 0);
+                combined.set(iv, salt.length);
+                combined.set(new Uint8Array(ciphertext), salt.length + iv.length);
+
+                document.getElementById('cipherOutput').value = btoa(String.fromCharCode(...combined));
+            } catch (e) {
+                errorMsg.textContent = 'Encryption error: ' + e.message;
+            }
+        }
+
+        async function decryptText() {
+            errorMsg.textContent = '';
+            const cipherB64 = document.getElementById('cipherInput').value.trim();
+            const password = document.getElementById('decPassword').value;
+
+            if (!password) {
+                errorMsg.textContent = 'Please enter a password.';
+                return;
+            }
+            if (!cipherB64) {
+                errorMsg.textContent = 'Please enter ciphertext.';
+                return;
+            }
+
+            try {
+                const combined = Uint8Array.from(atob(cipherB64), c => c.charCodeAt(0));
+
+                const salt = combined.slice(0, 16);
+                const iv = combined.slice(16, 28);
+                const ciphertext = combined.slice(28);
+
+                const key = await deriveKey(password, salt);
+
+                const decrypted = await crypto.subtle.decrypt(
+                    { name: 'AES-GCM', iv: iv },
+                    key,
+                    ciphertext
+                );
+
+                document.getElementById('plainOutput').value = new TextDecoder().decode(decrypted);
+            } catch (e) {
+                errorMsg.textContent = 'Decryption failed. Wrong password or corrupted data.';
+            }
+        }
+
+        function copyEl(id) {
+            navigator.clipboard.writeText(document.getElementById(id).value).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

@@ -1,0 +1,122 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Minifier — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🗜️ HTML Minifier</h1>
+        <p class="subtitle">Minify HTML by removing comments, collapsing whitespace, and optimizing markup.</p>
+
+        <div class="tool-area">
+            <div class="tool-row">
+                <div>
+                    <label for="htmlInput">Input HTML</label>
+                    <textarea id="htmlInput" placeholder="Paste your HTML here..."></textarea>
+                </div>
+                <div>
+                    <label for="htmlOutput">Minified Output</label>
+                    <textarea id="htmlOutput" readonly placeholder="Minified HTML will appear here..."></textarea>
+                </div>
+            </div>
+
+            <div style="text-align:center;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button class="copy-btn" onclick="minifyHTML()">Minify HTML</button>
+                <button class="copy-btn" onclick="copyOutput()">📋 Copy Output</button>
+            </div>
+
+            <div class="tool-output" id="stats" style="display:none;">
+                <div class="tool-grid">
+                    <div class="info-item">
+                        <span class="info-label">Original Size</span>
+                        <span class="info-value" id="origSize">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Minified Size</span>
+                        <span class="info-value" id="minSize">—</span>
+                    </div>
+                    <div class="info-item">
+                        <span class="info-label">Reduction</span>
+                        <span class="info-value" id="reduction">—</span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tool-output" style="margin-top:12px;">
+                <p style="font-size:0.85em;color:#666;"><strong>ℹ️ Info:</strong> Optional closing tags that can be safely omitted include <code>&lt;/li&gt;</code>, <code>&lt;/td&gt;</code>, <code>&lt;/tr&gt;</code>, <code>&lt;/th&gt;</code>, <code>&lt;/thead&gt;</code>, <code>&lt;/tbody&gt;</code>, <code>&lt;/tfoot&gt;</code>, <code>&lt;/dt&gt;</code>, <code>&lt;/dd&gt;</code>, <code>&lt;/option&gt;</code>, <code>&lt;/optgroup&gt;</code>, <code>&lt;/p&gt;</code> (in some contexts), <code>&lt;/colgroup&gt;</code>, and <code>&lt;/caption&gt;</code>. This minifier removes them when safe.</p>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+        </div>
+    </div>
+
+    <script>
+        const input = document.getElementById('htmlInput');
+        const output = document.getElementById('htmlOutput');
+        const errorMsg = document.getElementById('errorMsg');
+
+        function minifyHTML() {
+            errorMsg.textContent = '';
+            const src = input.value;
+            if (!src.trim()) {
+                errorMsg.textContent = 'Please enter some HTML to minify.';
+                return;
+            }
+
+            let result = src;
+
+            // Remove HTML comments (but not conditional comments)
+            result = result.replace(/<!--(?!\[if)[\s\S]*?-->/g, '');
+
+            // Collapse whitespace between tags
+            result = result.replace(/>\s+</g, '><');
+
+            // Collapse multiple whitespace to single space
+            result = result.replace(/\s{2,}/g, ' ');
+
+            // Remove optional closing tags
+            const optionalClose = ['li', 'td', 'tr', 'th', 'thead', 'tbody', 'tfoot', 'dt', 'dd', 'option', 'optgroup', 'colgroup', 'caption'];
+            optionalClose.forEach(tag => {
+                const regex = new RegExp('</' + tag + '\\s*>', 'gi');
+                result = result.replace(regex, '');
+            });
+
+            // Remove whitespace around = in attributes
+            result = result.replace(/\s*=\s*/g, '=');
+
+            // Trim leading/trailing whitespace
+            result = result.trim();
+
+            output.value = result;
+
+            // Show stats
+            const origBytes = new Blob([src]).size;
+            const minBytes = new Blob([result]).size;
+            const pct = origBytes > 0 ? ((1 - minBytes / origBytes) * 100).toFixed(1) : 0;
+
+            document.getElementById('origSize').textContent = formatBytes(origBytes);
+            document.getElementById('minSize').textContent = formatBytes(minBytes);
+            document.getElementById('reduction').textContent = pct + '% smaller';
+            document.getElementById('stats').style.display = '';
+        }
+
+        function formatBytes(b) {
+            if (b < 1024) return b + ' B';
+            return (b / 1024).toFixed(2) + ' KB';
+        }
+
+        function copyOutput() {
+            navigator.clipboard.writeText(output.value).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

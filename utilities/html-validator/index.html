@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Validator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .issue-item {
+            text-align: left; padding: 8px 12px; margin: 4px 0; border-radius: 0 8px 8px 0;
+            font-size: 0.9em; display: flex; align-items: flex-start; gap: 8px;
+        }
+        .issue-error { background: #fff5f5; border-left: 3px solid #e74c3c; }
+        .issue-warning { background: #fffbf0; border-left: 3px solid #f0ad4e; }
+        .issue-line { color: #764ba2; font-family: monospace; font-weight: bold; min-width: 50px; }
+        .stats-row { display: flex; gap: 12px; justify-content: center; margin: 10px 0; flex-wrap: wrap; }
+        .stat-pill { padding: 6px 14px; border-radius: 20px; font-size: 0.9em; font-weight: bold; }
+        .stat-errors { background: #f8d7da; color: #721c24; }
+        .stat-warnings { background: #fff3cd; color: #856404; }
+        .stat-ok { background: #d4edda; color: #155724; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏷️ HTML Validator</h1>
+        <p class="subtitle">Check HTML for common errors, missing attributes, and bad practices.</p>
+
+        <div class="tool-area">
+            <label for="htmlInput">HTML Code</label>
+            <textarea id="htmlInput" rows="12" placeholder='<!DOCTYPE html>
+<html>
+<head><title>Test</title></head>
+<body>
+  <img src="photo.jpg">
+  <p>Hello world
+  <div><span>test</div></span>
+</body>
+</html>'></textarea>
+
+            <div style="text-align:center;margin:12px 0;">
+                <button class="copy-btn" onclick="validate()" style="padding:10px 24px;">✅ Validate HTML</button>
+            </div>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script>
+        const voidElements = new Set(['area','base','br','col','embed','hr','img','input','link','meta','param','source','track','wbr']);
+        const deprecatedTags = new Set(['acronym','applet','basefont','bgsound','big','blink','center','command','content','dir','element','font','frame','frameset','image','isindex','keygen','listing','marquee','menuitem','multicol','nextid','nobr','noembed','noframes','plaintext','shadow','spacer','strike','tt','xmp']);
+
+        function validate() {
+            const html = document.getElementById('htmlInput').value;
+            const lines = html.split('\n');
+            const issues = [];
+
+            // Check doctype
+            if (!/<!DOCTYPE\s+html>/i.test(html)) {
+                issues.push({ line: 1, type: 'warning', msg: 'Missing <!DOCTYPE html> declaration.' });
+            }
+
+            // Track open tags for nesting
+            const tagStack = [];
+            const tagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b[^>]*\/?>/gi;
+
+            lines.forEach((line, lineIdx) => {
+                const lineNum = lineIdx + 1;
+                let match;
+                const lineTagRegex = /<\/?([a-zA-Z][a-zA-Z0-9]*)\b([^>]*)\/?>/gi;
+
+                while ((match = lineTagRegex.exec(line)) !== null) {
+                    const fullTag = match[0];
+                    const tagName = match[1].toLowerCase();
+                    const attrs = match[2] || '';
+                    const isClosing = fullTag.startsWith('</');
+                    const isSelfClosing = fullTag.endsWith('/>');
+
+                    // Check deprecated
+                    if (!isClosing && deprecatedTags.has(tagName)) {
+                        issues.push({ line: lineNum, type: 'warning', msg: `<${tagName}> is deprecated. Use CSS instead.` });
+                    }
+
+                    // Check img alt
+                    if (!isClosing && tagName === 'img' && !/\balt\s*=/i.test(attrs)) {
+                        issues.push({ line: lineNum, type: 'error', msg: '<img> is missing the alt attribute.' });
+                    }
+
+                    // Check a href
+                    if (!isClosing && tagName === 'a' && !/\bhref\s*=/i.test(attrs)) {
+                        issues.push({ line: lineNum, type: 'warning', msg: '<a> link is missing href attribute.' });
+                    }
+
+                    // Track nesting
+                    if (!isClosing && !isSelfClosing && !voidElements.has(tagName)) {
+                        tagStack.push({ tag: tagName, line: lineNum });
+                    } else if (isClosing) {
+                        const lastIdx = tagStack.map(t => t.tag).lastIndexOf(tagName);
+                        if (lastIdx === -1) {
+                            issues.push({ line: lineNum, type: 'error', msg: `Closing </${tagName}> has no matching opening tag.` });
+                        } else if (lastIdx !== tagStack.length - 1) {
+                            // Mismatched nesting
+                            for (let i = tagStack.length - 1; i > lastIdx; i--) {
+                                issues.push({ line: tagStack[i].line, type: 'error', msg: `<${tagStack[i].tag}> (line ${tagStack[i].line}) is not properly closed before </${tagName}>.` });
+                            }
+                            tagStack.splice(lastIdx);
+                        } else {
+                            tagStack.pop();
+                        }
+                    }
+                }
+
+                // Check for unclosed strings in attributes (rough check)
+                const attrQuotes = (line.match(/(?<==\s*)"[^"]*$|(?<==\s*)'[^']*$/g) || []);
+                if (attrQuotes.length > 0) {
+                    issues.push({ line: lineNum, type: 'warning', msg: 'Possible unclosed attribute string.' });
+                }
+            });
+
+            // Remaining unclosed tags
+            tagStack.forEach(t => {
+                issues.push({ line: t.line, type: 'error', msg: `<${t.tag}> opened on line ${t.line} is never closed.` });
+            });
+
+            // Render
+            const errors = issues.filter(i => i.type === 'error');
+            const warnings = issues.filter(i => i.type === 'warning');
+
+            let resultHtml = `<div class="stats-row">`;
+            if (errors.length === 0 && warnings.length === 0) {
+                resultHtml += `<div class="stat-pill stat-ok">✅ No issues found!</div>`;
+            } else {
+                if (errors.length) resultHtml += `<div class="stat-pill stat-errors">❌ ${errors.length} Error${errors.length>1?'s':''}</div>`;
+                if (warnings.length) resultHtml += `<div class="stat-pill stat-warnings">⚠️ ${warnings.length} Warning${warnings.length>1?'s':''}</div>`;
+            }
+            resultHtml += `</div>`;
+
+            issues.sort((a, b) => a.line - b.line);
+            resultHtml += issues.map(i =>
+                `<div class="issue-item issue-${i.type}">
+                    <span class="issue-line">L${i.line}</span>
+                    <span>${i.type === 'error' ? '❌' : '⚠️'} ${i.msg}</span>
+                </div>`
+            ).join('');
+
+            document.getElementById('result').innerHTML = resultHtml;
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

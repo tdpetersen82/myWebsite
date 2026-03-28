@@ -1,0 +1,115 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Barcode Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .barcode-preview { background: #fff; padding: 20px; border-radius: 12px; border: 2px solid #e0e0e0; margin: 14px 0; text-align: center; min-height: 100px; }
+        .barcode-preview svg { max-width: 100%; }
+        .config-row { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; justify-content: center; margin: 12px 0; }
+        .config-row input, .config-row select { padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; }
+        .config-row input[type="text"] { min-width: 250px; }
+        .error-msg { color: #e74c3c; font-size: 0.9em; margin: 6px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 Barcode Generator</h1>
+        <p class="subtitle">Generate barcodes in various formats. Download as PNG or SVG.</p>
+
+        <div class="tool-area">
+            <div class="config-row">
+                <input type="text" id="barcodeInput" placeholder="Enter text or number..." value="Hello-World-123">
+                <select id="barcodeFormat">
+                    <option value="CODE128">CODE128</option>
+                    <option value="EAN13">EAN-13</option>
+                    <option value="UPC">UPC</option>
+                    <option value="CODE39">CODE39</option>
+                    <option value="ITF14">ITF-14</option>
+                </select>
+            </div>
+
+            <div class="config-row">
+                <label><input type="checkbox" id="showText" checked onchange="generateBarcode()"> Show text below barcode</label>
+            </div>
+
+            <div style="text-align:center;margin:10px 0;">
+                <button class="copy-btn" onclick="generateBarcode()" style="font-size:1.05em;padding:10px 24px;">⚡ Generate</button>
+            </div>
+
+            <div class="barcode-preview" id="barcodePreview">
+                <svg id="barcodeSvg"></svg>
+            </div>
+            <div class="error-msg" id="errorMsg"></div>
+
+            <div style="text-align:center;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button class="copy-btn" onclick="downloadPNG()">📥 Download PNG</button>
+                <button class="copy-btn" onclick="downloadSVG()">📥 Download SVG</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/jsbarcode@3.11.6/dist/JsBarcode.all.min.js"></script>
+    <script>
+        const input = document.getElementById('barcodeInput');
+        const format = document.getElementById('barcodeFormat');
+        const showText = document.getElementById('showText');
+        const errorMsg = document.getElementById('errorMsg');
+
+        function generateBarcode() {
+            errorMsg.textContent = '';
+            try {
+                JsBarcode('#barcodeSvg', input.value, {
+                    format: format.value,
+                    displayValue: showText.checked,
+                    lineColor: '#333',
+                    width: 2,
+                    height: 80,
+                    margin: 10,
+                    fontSize: 16,
+                    font: 'monospace'
+                });
+            } catch (e) {
+                errorMsg.textContent = 'Error: ' + e.message;
+            }
+        }
+
+        function downloadPNG() {
+            const svg = document.getElementById('barcodeSvg');
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const canvas = document.createElement('canvas');
+            const ctx = canvas.getContext('2d');
+            const img = new Image();
+            img.onload = function() {
+                canvas.width = img.width * 2;
+                canvas.height = img.height * 2;
+                ctx.fillStyle = '#fff';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+                const a = document.createElement('a');
+                a.download = 'barcode.png';
+                a.href = canvas.toDataURL('image/png');
+                a.click();
+            };
+            img.src = 'data:image/svg+xml;base64,' + btoa(unescape(encodeURIComponent(svgData)));
+        }
+
+        function downloadSVG() {
+            const svg = document.getElementById('barcodeSvg');
+            const svgData = new XMLSerializer().serializeToString(svg);
+            const blob = new Blob([svgData], { type: 'image/svg+xml' });
+            const a = document.createElement('a');
+            a.download = 'barcode.svg';
+            a.href = URL.createObjectURL(blob);
+            a.click();
+        }
+
+        input.addEventListener('input', generateBarcode);
+        format.addEventListener('change', generateBarcode);
+        generateBarcode();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

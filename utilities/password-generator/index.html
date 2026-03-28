@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .password-display {
+            font-size: 1.3em;
+            font-family: 'Courier New', monospace;
+            letter-spacing: 1px;
+        }
+        .strength-bar {
+            height: 8px;
+            border-radius: 4px;
+            background: #e0e0e0;
+            margin-top: 8px;
+            overflow: hidden;
+        }
+        .strength-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s, background 0.3s;
+        }
+        .strength-label {
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-top: 4px;
+        }
+        .setting-row {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin: 8px 0;
+            font-size: 0.95em;
+        }
+        .setting-row label {
+            display: inline;
+            margin-bottom: 0;
+            cursor: pointer;
+        }
+        .setting-row input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: #667eea;
+        }
+        .setting-row input[type="range"] {
+            flex: 1;
+            accent-color: #667eea;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔒 Password Generator</h1>
+        <p class="subtitle">Generate strong, random passwords with customizable options.</p>
+
+        <div class="tool-area">
+            <div class="tool-output password-display" id="passwordOutput" style="text-align:center;"></div>
+
+            <div class="strength-bar"><div class="strength-fill" id="strengthFill"></div></div>
+            <div class="strength-label" id="strengthLabel" style="text-align:center;"></div>
+
+            <div style="margin-top:16px;">
+                <div class="setting-row">
+                    <label for="lengthSlider">Length: <strong id="lengthVal">16</strong></label>
+                    <input type="range" id="lengthSlider" min="8" max="128" value="16">
+                </div>
+                <div class="setting-row">
+                    <input type="checkbox" id="optUpper" checked>
+                    <label for="optUpper">Uppercase (A-Z)</label>
+                </div>
+                <div class="setting-row">
+                    <input type="checkbox" id="optLower" checked>
+                    <label for="optLower">Lowercase (a-z)</label>
+                </div>
+                <div class="setting-row">
+                    <input type="checkbox" id="optNumbers" checked>
+                    <label for="optNumbers">Numbers (0-9)</label>
+                </div>
+                <div class="setting-row">
+                    <input type="checkbox" id="optSymbols" checked>
+                    <label for="optSymbols">Symbols (!@#$%...)</label>
+                </div>
+            </div>
+
+            <div style="text-align:center;margin-top:12px;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button class="copy-btn" onclick="generatePassword()">🔄 Generate</button>
+                <button class="copy-btn" onclick="copyPassword()">📋 Copy</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const UPPER = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ';
+        const LOWER = 'abcdefghijklmnopqrstuvwxyz';
+        const NUMBERS = '0123456789';
+        const SYMBOLS = '!@#$%^&*()_+-=[]{}|;:,.<>?';
+
+        const lengthSlider = document.getElementById('lengthSlider');
+        const lengthVal = document.getElementById('lengthVal');
+        const output = document.getElementById('passwordOutput');
+
+        function generatePassword() {
+            let charset = '';
+            if (document.getElementById('optUpper').checked) charset += UPPER;
+            if (document.getElementById('optLower').checked) charset += LOWER;
+            if (document.getElementById('optNumbers').checked) charset += NUMBERS;
+            if (document.getElementById('optSymbols').checked) charset += SYMBOLS;
+
+            if (charset === '') {
+                output.textContent = 'Select at least one option';
+                updateStrength('');
+                return;
+            }
+
+            const length = parseInt(lengthSlider.value);
+            const array = new Uint32Array(length);
+            crypto.getRandomValues(array);
+            let password = '';
+            for (let i = 0; i < length; i++) {
+                password += charset[array[i] % charset.length];
+            }
+
+            output.textContent = password;
+            updateStrength(password);
+        }
+
+        function updateStrength(pw) {
+            const fill = document.getElementById('strengthFill');
+            const label = document.getElementById('strengthLabel');
+
+            if (!pw) {
+                fill.style.width = '0%';
+                label.textContent = '';
+                return;
+            }
+
+            let score = 0;
+            if (pw.length >= 8) score++;
+            if (pw.length >= 16) score++;
+            if (pw.length >= 24) score++;
+            if (/[a-z]/.test(pw) && /[A-Z]/.test(pw)) score++;
+            if (/\d/.test(pw)) score++;
+            if (/[^a-zA-Z0-9]/.test(pw)) score++;
+
+            const levels = [
+                { min: 0, label: 'Weak', color: '#e74c3c', width: '25%' },
+                { min: 2, label: 'Medium', color: '#f39c12', width: '50%' },
+                { min: 4, label: 'Strong', color: '#27ae60', width: '75%' },
+                { min: 5, label: 'Very Strong', color: '#2ecc71', width: '100%' },
+            ];
+
+            let level = levels[0];
+            for (const l of levels) {
+                if (score >= l.min) level = l;
+            }
+
+            fill.style.width = level.width;
+            fill.style.background = level.color;
+            label.textContent = level.label;
+            label.style.color = level.color;
+        }
+
+        function copyPassword() {
+            navigator.clipboard.writeText(output.textContent).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+
+        lengthSlider.addEventListener('input', () => {
+            lengthVal.textContent = lengthSlider.value;
+            generatePassword();
+        });
+
+        document.querySelectorAll('input[type="checkbox"]').forEach(cb => {
+            cb.addEventListener('change', generatePassword);
+        });
+
+        generatePassword();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

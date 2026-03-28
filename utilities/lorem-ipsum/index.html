@@ -1,0 +1,112 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lorem Ipsum Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .slider-row { display: flex; align-items: center; gap: 12px; margin: 12px 0; }
+        .slider-row input[type=range] { flex: 1; }
+        .slider-row span { min-width: 30px; font-weight: 600; color: #667eea; }
+        .word-count { margin-top: 8px; font-size: 0.85em; color: #888; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Lorem Ipsum Generator</h1>
+        <p class="subtitle">Generate placeholder text for your designs and layouts.</p>
+        <div class="tool-area">
+            <div class="slider-row">
+                <label>Count:</label>
+                <input type="range" id="count" min="1" max="20" value="3">
+                <span id="countVal">3</span>
+            </div>
+            <div class="tool-tabs">
+                <button class="tool-tab active" data-type="paragraphs">Paragraphs</button>
+                <button class="tool-tab" data-type="sentences">Sentences</button>
+                <button class="tool-tab" data-type="words">Words</button>
+            </div>
+            <button class="copy-btn" style="margin:12px 0" onclick="generate()">Generate</button>
+            <div class="tool-output" id="output" style="min-height:80px;white-space:pre-wrap;text-align:left;"></div>
+            <div class="word-count" id="wordCount"></div>
+            <button class="copy-btn" onclick="copyResult()">Copy Result</button>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        const PARAGRAPHS = [
+            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.",
+            "Curabitur pretium tincidunt lacus. Nulla gravida orci a odio. Nullam varius, turpis et commodo pharetra, est eros bibendum elit, nec luctus magna felis sollicitudin mauris. Integer in mauris eu nibh euismod gravida. Duis ac tellus et risus vulputate vehicula. Donec lobortis risus a elit. Etiam tempor. Ut ullamcorper, ligula ut dictum pharetra, nisi nunc fringilla magna, in commodo elit erat nec turpis. Ut pharetra augue nec augue.",
+            "Praesent dapibus, neque id cursus faucibus, tortor neque egestas augue, eu vulputate magna eros eu erat. Aliquam erat volutpat. Nam dui mi, tincidunt quis, accumsan porttitor, facilisis luctus, metus. Phasellus ultrices nulla quis nibh. Quisque a lectus. Donec consectetuer ligula vulputate sem tristique cursus. Nam nulla quam, gravida non, commodo a, sodales sit amet, nisi.",
+            "Pellentesque fermentum dolor. Aliquam quam lectus, facilisis auctor, ultrices ut, elementum vulputate, nunc. Sed adipiscing ornare risus. Morbi est est, blandit sit amet, sagittis vel, euismod vel, velit. Pellentesque egestas sem. Suspendisse commodo ullamcorper magna. Ut nulla. Vivamus bibendum, nulla ut congue fringilla, lorem ipsum ultricies risus, ut rutrum velit tortor vel purus.",
+            "Fusce mauris. Vestibulum luctus nibh at lectus. Sed bibendum, nulla a faucibus semper, leo velit ultricies tellus, ac venenatis arcu wisi vel nisl. Vestibulum diam. Aliquam pellentesque, augue quis sagittis posuere, turpis lacus congue quam, in hendrerit risus eros eget felis. Maecenas eget erat in sapien mattis facilisis. Aliquam feugiat tellus ut neque.",
+            "Nunc porta vulputate tellus. Nunc rutrum turpis sed pede. Sed bibendum. Aliquam posuere. Nunc aliquet, augue nec adipiscing interdum, lacus tellus malesuada massa, quis varius mi purus non odio. Pellentesque condimentum, magna ut suscipit hendrerit, ipsum augue ornare nulla, non luctus diam neque sit amet urna. Curabitur vulputate vestibulum lorem.",
+            "Maecenas sollicitudin. Morbi quam enim, posuere a, adipiscing nec, volutpat vel, nisl. Praesent eget sem vel leo ultrices bibendum. Aenean faucibus. Morbi dolor nulla, malesuada eu, pulvinar at, mollis ac, nulla. Curabitur auctor semper nulla. Donec varius orci eget risus. Duis nibh mi, congue eu, accumsan eleifend, sagittis quis, diam. Duis eget orci sit amet orci dignissim rutrum.",
+            "Suspendisse potenti. Sed scelerisque lacinia nisi. Quisque molestie placerat erat. Vestibulum ante ipsum primis in faucibus orci luctus et ultrices posuere cubilia curae; Aliquam nibh. Mauris ac mauris sed pede pellentesque fermentum. Maecenas adipiscing ante non diam sodales hendrerit. Ut velit mauris, egestas sed, gravida nec, ornare ut, mi.",
+            "Aenean ut eros et nisl sagittis vestibulum. Nullam nulla eros, ultricies sit amet, nonummy id, imperdiet feugiat, pede. Sed lectus. Donec mollis hendrerit risus. Phasellus nec sem in justo pellentesque facilisis. Etiam imperdiet imperdiet orci. Nunc nec neque. Phasellus leo dolor, tempus non, auctor et, hendrerit quis, nisi.",
+            "Vivamus elementum semper nisi. Aenean vulputate eleifend tellus. Aenean leo ligula, porttitor eu, consequat vitae, eleifend ac, enim. Aliquam lorem ante, dapibus in, viverra quis, feugiat a, tellus. Phasellus viverra nulla ut metus varius laoreet. Quisque rutrum. Aenean imperdiet. Etiam ultricies nisi vel augue. Curabitur ullamcorper ultricies nisi. Nam eget dui."
+        ];
+
+        let outputType = 'paragraphs';
+
+        document.querySelectorAll('.tool-tab').forEach(tab => {
+            tab.addEventListener('click', () => {
+                document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+                tab.classList.add('active');
+                outputType = tab.dataset.type;
+            });
+        });
+
+        document.getElementById('count').addEventListener('input', e => {
+            document.getElementById('countVal').textContent = e.target.value;
+        });
+
+        function getAllSentences() {
+            const sentences = [];
+            PARAGRAPHS.forEach(p => {
+                p.split(/(?<=\.)\s+/).forEach(s => { if (s.trim()) sentences.push(s.trim()); });
+            });
+            return sentences;
+        }
+
+        function getAllWords() {
+            return PARAGRAPHS.join(' ').split(/\s+/);
+        }
+
+        function generate() {
+            const count = parseInt(document.getElementById('count').value);
+            let text = '';
+            if (outputType === 'paragraphs') {
+                const parts = [];
+                for (let i = 0; i < count; i++) parts.push(PARAGRAPHS[i % PARAGRAPHS.length]);
+                text = parts.join('\n\n');
+            } else if (outputType === 'sentences') {
+                const all = getAllSentences();
+                const parts = [];
+                for (let i = 0; i < count; i++) parts.push(all[i % all.length]);
+                text = parts.join(' ');
+            } else {
+                const all = getAllWords();
+                const parts = [];
+                for (let i = 0; i < count; i++) parts.push(all[i % all.length]);
+                text = parts.join(' ');
+            }
+            document.getElementById('output').textContent = text;
+            const wc = text.trim().split(/\s+/).filter(Boolean).length;
+            document.getElementById('wordCount').textContent = `Word count: ${wc}`;
+        }
+
+        function copyResult() {
+            const text = document.getElementById('output').textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = document.querySelector('.copy-btn:last-of-type');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Result', 1500);
+            });
+        }
+
+        generate();
+    </script>
+</body>
+</html>

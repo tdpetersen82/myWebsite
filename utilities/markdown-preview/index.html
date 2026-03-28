@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Markdown Previewer — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+    <style>
+        .split-pane { display: flex; gap: 12px; margin: 12px 0; min-height: 400px; }
+        .split-pane > * { flex: 1; min-width: 0; }
+        .split-pane textarea { width: 100%; height: 100%; min-height: 400px; border: 2px solid #e0e0e0; border-radius: 10px; padding: 14px; font-family: 'Courier New', monospace; font-size: 0.9em; resize: vertical; }
+        .split-pane textarea:focus { border-color: #667eea; outline: none; }
+        .preview-pane { border: 2px solid #e0e0e0; border-radius: 10px; padding: 14px; text-align: left; overflow-y: auto; max-height: 500px; background: #fff; }
+        .preview-pane h1 { font-size: 1.8em; border-bottom: 2px solid #e0e0e0; padding-bottom: 6px; margin: 16px 0 8px; }
+        .preview-pane h2 { font-size: 1.4em; border-bottom: 1px solid #e0e0e0; padding-bottom: 4px; margin: 14px 0 6px; }
+        .preview-pane h3 { font-size: 1.15em; margin: 12px 0 4px; }
+        .preview-pane p { margin: 8px 0; line-height: 1.6; }
+        .preview-pane code { background: #f0f0f5; padding: 2px 6px; border-radius: 4px; font-family: 'Courier New', monospace; font-size: 0.9em; }
+        .preview-pane pre { background: #1a1a2e; color: #e0e0e0; border-radius: 8px; padding: 12px; overflow-x: auto; margin: 8px 0; }
+        .preview-pane pre code { background: none; color: inherit; padding: 0; }
+        .preview-pane ul, .preview-pane ol { padding-left: 24px; margin: 8px 0; }
+        .preview-pane li { margin: 4px 0; }
+        .preview-pane a { color: #667eea; }
+        .preview-pane blockquote { border-left: 4px solid #667eea; padding-left: 12px; margin: 8px 0; color: #666; }
+        .preview-pane table { border-collapse: collapse; width: 100%; margin: 8px 0; }
+        .preview-pane th, .preview-pane td { border: 1px solid #ddd; padding: 8px; text-align: left; }
+        .preview-pane th { background: #f0f0f5; }
+        .preview-pane img { max-width: 100%; }
+        @media (max-width: 600px) { .split-pane { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📝 Markdown Previewer</h1>
+        <p class="subtitle">Write Markdown on the left, see rendered HTML on the right.</p>
+        <div class="tool-area">
+            <div class="split-pane">
+                <textarea id="mdInput" oninput="render()"></textarea>
+                <div class="preview-pane" id="preview"></div>
+            </div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        const defaultMd = `# Hello, Markdown!
+
+This is a **live preview** of your Markdown content.
+
+## Features
+
+- **Bold** and *italic* text
+- [Links](https://example.com)
+- Inline \`code\` and code blocks
+
+### Code Block
+
+\`\`\`javascript
+function greet(name) {
+    return \`Hello, \${name}!\`;
+}
+\`\`\`
+
+### Lists
+
+1. First item
+2. Second item
+3. Third item
+
+> This is a blockquote. It can span multiple lines.
+
+### Table
+
+| Name  | Role       |
+|-------|------------|
+| Alice | Developer  |
+| Bob   | Designer   |
+
+---
+
+*Start editing to see the preview update in real time!*`;
+
+        document.getElementById('mdInput').value = defaultMd;
+
+        function render() {
+            const md = document.getElementById('mdInput').value;
+            document.getElementById('preview').innerHTML = marked.parse(md);
+        }
+        render();
+    </script>
+</body>
+</html>

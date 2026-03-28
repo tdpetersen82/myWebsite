@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>YAML Validator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .status-badge {
+            display: inline-block; padding: 6px 16px; border-radius: 20px; font-weight: bold;
+            font-size: 0.95em; margin: 10px 0;
+        }
+        .status-valid { background: #d4edda; color: #155724; }
+        .status-invalid { background: #f8d7da; color: #721c24; }
+        .error-detail {
+            background: #fff5f5; border-left: 3px solid #e74c3c; padding: 8px 12px;
+            margin: 8px 0; border-radius: 0 8px 8px 0; font-size: 0.9em; text-align: left;
+        }
+        .error-detail .line-info { font-family: monospace; color: #764ba2; font-weight: bold; }
+        #outputArea {
+            background: #f8f9fa; border: 1px solid #dee2e6; border-radius: 8px;
+            padding: 12px; margin-top: 10px; text-align: left; white-space: pre-wrap;
+            font-family: monospace; font-size: 0.9em; max-height: 400px; overflow: auto;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📑 YAML Validator</h1>
+        <p class="subtitle">Validate YAML syntax and convert to JSON.</p>
+
+        <div class="tool-area">
+            <label for="yamlInput">Paste YAML</label>
+            <textarea id="yamlInput" rows="12" placeholder="name: John Doe
+age: 30
+address:
+  street: 123 Main St
+  city: Springfield
+hobbies:
+  - reading
+  - coding"></textarea>
+
+            <div style="text-align:center;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin:12px 0;">
+                <button class="copy-btn" onclick="validateYAML()">✅ Validate</button>
+                <button class="copy-btn" onclick="formatYAML()">🔧 Format YAML</button>
+                <button class="copy-btn" onclick="convertToJSON()">📄 Convert to JSON</button>
+                <button class="copy-btn" onclick="copyOutput()">📋 Copy Output</button>
+            </div>
+
+            <div id="result"></div>
+            <pre id="outputArea"></pre>
+        </div>
+    </div>
+
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/js-yaml/4.1.0/js-yaml.min.js"></script>
+    <script>
+        const input = document.getElementById('yamlInput');
+        const result = document.getElementById('result');
+        const outputArea = document.getElementById('outputArea');
+
+        function validateYAML() {
+            const yaml = input.value.trim();
+            if (!yaml) {
+                result.innerHTML = '';
+                outputArea.style.display = 'none';
+                return;
+            }
+
+            try {
+                const parsed = jsyaml.load(yaml);
+                result.innerHTML = '<div class="status-badge status-valid">✅ Valid YAML</div>';
+                outputArea.style.display = 'block';
+                outputArea.textContent = JSON.stringify(parsed, null, 2);
+            } catch (e) {
+                showError(e);
+            }
+        }
+
+        function formatYAML() {
+            const yaml = input.value.trim();
+            if (!yaml) return;
+
+            try {
+                const parsed = jsyaml.load(yaml);
+                const formatted = jsyaml.dump(parsed, { indent: 2, lineWidth: 120, noRefs: true });
+                result.innerHTML = '<div class="status-badge status-valid">✅ Valid — Formatted YAML</div>';
+                outputArea.style.display = 'block';
+                outputArea.textContent = formatted;
+            } catch (e) {
+                showError(e);
+            }
+        }
+
+        function convertToJSON() {
+            const yaml = input.value.trim();
+            if (!yaml) return;
+
+            try {
+                const parsed = jsyaml.load(yaml);
+                const json = JSON.stringify(parsed, null, 2);
+                result.innerHTML = '<div class="status-badge status-valid">✅ Converted to JSON</div>';
+                outputArea.style.display = 'block';
+                outputArea.textContent = json;
+            } catch (e) {
+                showError(e);
+            }
+        }
+
+        function showError(e) {
+            let lineInfo = '';
+            if (e.mark) {
+                lineInfo = `<span class="line-info">Line ${e.mark.line + 1}, Column ${e.mark.column + 1}</span>: `;
+            }
+            result.innerHTML = `<div class="status-badge status-invalid">❌ Invalid YAML</div>
+                <div class="error-detail">${lineInfo}${escapeHtml(e.message)}</div>`;
+            outputArea.style.display = 'none';
+        }
+
+        function escapeHtml(str) {
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
+        function copyOutput() {
+            const text = outputArea.textContent;
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

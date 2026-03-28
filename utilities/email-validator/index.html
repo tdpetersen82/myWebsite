@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Validator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .status-badge { display: inline-block; padding: 6px 16px; border-radius: 20px; font-weight: bold; font-size: 0.95em; margin: 8px 0; }
+        .status-valid { background: #d4edda; color: #155724; }
+        .status-invalid { background: #f8d7da; color: #721c24; }
+        .suggestion { background: #fff3cd; border-left: 3px solid #ffc107; padding: 8px 12px; margin: 6px 0; border-radius: 0 8px 8px 0; font-size: 0.9em; }
+        .bulk-result { text-align: left; margin: 6px 0; padding: 6px 10px; border-radius: 6px; font-size: 0.9em; display: flex; align-items: center; gap: 8px; }
+        .bulk-valid { background: #d4edda; }
+        .bulk-invalid { background: #f8d7da; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📧 Email Validator</h1>
+        <p class="subtitle">Validate email addresses with RFC 5322 compliance and typo detection.</p>
+
+        <div class="tool-area">
+            <div class="tool-tabs">
+                <button class="tool-tab active" onclick="switchTab('single')">Single Email</button>
+                <button class="tool-tab" onclick="switchTab('bulk')">Bulk Validate</button>
+            </div>
+
+            <div id="singleTab">
+                <label for="emailInput">Email Address</label>
+                <input type="text" id="emailInput" placeholder="user@example.com" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;box-sizing:border-box;">
+
+                <div style="text-align:center;margin:12px 0;">
+                    <button class="copy-btn" onclick="validateSingle()" style="padding:10px 24px;">✅ Validate</button>
+                </div>
+
+                <div id="singleResult"></div>
+            </div>
+
+            <div id="bulkTab" style="display:none;">
+                <label for="bulkInput">Emails (one per line)</label>
+                <textarea id="bulkInput" rows="8" placeholder="user1@example.com&#10;user2@gmail.com&#10;invalid-email"></textarea>
+
+                <div style="text-align:center;margin:12px 0;">
+                    <button class="copy-btn" onclick="validateBulk()" style="padding:10px 24px;">✅ Validate All</button>
+                </div>
+
+                <div id="bulkResult"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const emailRegex = /^[a-zA-Z0-9.!#$%&'*+\/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*$/;
+
+        const typoMap = {
+            'gmial.com': 'gmail.com', 'gmal.com': 'gmail.com', 'gamil.com': 'gmail.com',
+            'gnail.com': 'gmail.com', 'gmail.co': 'gmail.com', 'gmaill.com': 'gmail.com',
+            'hotmial.com': 'hotmail.com', 'hotmal.com': 'hotmail.com', 'hotmai.com': 'hotmail.com',
+            'outloo.com': 'outlook.com', 'outlok.com': 'outlook.com',
+            'yaho.com': 'yahoo.com', 'yahooo.com': 'yahoo.com', 'yhoo.com': 'yahoo.com',
+            'yhaoo.com': 'yahoo.com', 'iclod.com': 'icloud.com', 'icoud.com': 'icloud.com'
+        };
+
+        function switchTab(tab) {
+            document.querySelectorAll('.tool-tab').forEach((t, i) => t.classList.toggle('active', (tab === 'single' ? i === 0 : i === 1)));
+            document.getElementById('singleTab').style.display = tab === 'single' ? '' : 'none';
+            document.getElementById('bulkTab').style.display = tab === 'bulk' ? '' : 'none';
+        }
+
+        function analyzeEmail(email) {
+            email = email.trim();
+            const isValid = emailRegex.test(email) && email.length <= 254;
+            const parts = email.split('@');
+            const local = parts[0] || '';
+            const domain = parts[1] || '';
+            const tld = domain.split('.').pop() || '';
+            let suggestion = null;
+            if (domain && typoMap[domain.toLowerCase()]) {
+                suggestion = local + '@' + typoMap[domain.toLowerCase()];
+            }
+            return { email, isValid, local, domain, tld, suggestion };
+        }
+
+        function validateSingle() {
+            const email = document.getElementById('emailInput').value.trim();
+            if (!email) { document.getElementById('singleResult').innerHTML = ''; return; }
+            const r = analyzeEmail(email);
+            let html = `<div class="status-badge ${r.isValid ? 'status-valid' : 'status-invalid'}">${r.isValid ? '✅ Valid Email' : '❌ Invalid Email'}</div>`;
+
+            if (r.isValid) {
+                html += `<div class="tool-grid" style="margin-top:10px;">
+                    <div class="info-item"><div class="info-label">Local Part</div><div class="info-value">${r.local}</div></div>
+                    <div class="info-item"><div class="info-label">Domain</div><div class="info-value">${r.domain}</div></div>
+                    <div class="info-item"><div class="info-label">TLD</div><div class="info-value">${r.tld}</div></div>
+                </div>`;
+            }
+
+            if (r.suggestion) {
+                html += `<div class="suggestion">💡 Did you mean <strong>${r.suggestion}</strong>?</div>`;
+            }
+
+            if (r.isValid) {
+                html += `<p style="font-size:0.85em;color:#999;margin-top:8px;">Note: This validates email format only. MX record lookup requires a server-side check.</p>`;
+            }
+
+            document.getElementById('singleResult').innerHTML = html;
+        }
+
+        function validateBulk() {
+            const emails = document.getElementById('bulkInput').value.split('\n').map(s => s.trim()).filter(s => s);
+            if (!emails.length) return;
+            const results = emails.map(analyzeEmail);
+            const valid = results.filter(r => r.isValid).length;
+            let html = `<p style="margin:8px 0;"><strong>${valid}</strong> valid, <strong>${results.length - valid}</strong> invalid out of <strong>${results.length}</strong> emails</p>`;
+            html += results.map(r =>
+                `<div class="bulk-result ${r.isValid ? 'bulk-valid' : 'bulk-invalid'}">
+                    <span>${r.isValid ? '✅' : '❌'}</span>
+                    <span>${r.email}</span>
+                    ${r.suggestion ? `<span style="color:#856404;font-size:0.85em;">→ ${r.suggestion}?</span>` : ''}
+                </div>`
+            ).join('');
+            document.getElementById('bulkResult').innerHTML = html;
+        }
+
+        document.getElementById('emailInput').addEventListener('keydown', e => { if (e.key === 'Enter') validateSingle(); });
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

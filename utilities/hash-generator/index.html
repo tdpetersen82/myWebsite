@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hash Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/spark-md5@3.0.2/spark-md5.min.js"></script>
+    <style>
+        .hash-row { display: flex; align-items: center; gap: 8px; margin: 6px 0; }
+        .hash-row .info-label { min-width: 70px; text-align: right; }
+        .hash-row .info-value { flex: 1; word-break: break-all; font-family: 'Courier New', monospace; font-size: 0.85em; text-align: left; }
+        .hash-row .copy-btn { padding: 4px 10px; font-size: 0.8em; margin: 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔐 Hash Generator</h1>
+        <p class="subtitle">Generate MD5, SHA-1, SHA-256, and SHA-512 hashes from text.</p>
+        <div class="tool-area">
+            <label for="input">Enter text to hash:</label>
+            <textarea id="input" rows="4" placeholder="Type or paste text here..." oninput="generateHashes()"></textarea>
+            <div class="tool-grid" id="results">
+                <div class="info-item"><span class="info-label">MD5</span><span class="info-value" id="md5">—</span><button class="copy-btn" onclick="copyHash('md5')">Copy</button></div>
+                <div class="info-item"><span class="info-label">SHA-1</span><span class="info-value" id="sha1">—</span><button class="copy-btn" onclick="copyHash('sha1')">Copy</button></div>
+                <div class="info-item"><span class="info-label">SHA-256</span><span class="info-value" id="sha256">—</span><button class="copy-btn" onclick="copyHash('sha256')">Copy</button></div>
+                <div class="info-item"><span class="info-label">SHA-512</span><span class="info-value" id="sha512">—</span><button class="copy-btn" onclick="copyHash('sha512')">Copy</button></div>
+            </div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        async function sha(algo, text) {
+            const buf = new TextEncoder().encode(text);
+            const hash = await crypto.subtle.digest(algo, buf);
+            return Array.from(new Uint8Array(hash)).map(b => b.toString(16).padStart(2, '0')).join('');
+        }
+        async function generateHashes() {
+            const text = document.getElementById('input').value;
+            document.getElementById('md5').textContent = SparkMD5.hash(text);
+            document.getElementById('sha1').textContent = await sha('SHA-1', text);
+            document.getElementById('sha256').textContent = await sha('SHA-256', text);
+            document.getElementById('sha512').textContent = await sha('SHA-512', text);
+        }
+        function copyHash(id) {
+            const text = document.getElementById(id).textContent;
+            navigator.clipboard.writeText(text).then(() => {
+                const btn = event.target;
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy', 1500);
+            });
+        }
+    </script>
+</body>
+</html>
