@@ -13,6 +13,8 @@ const CONFIG = {
     GRID_FIN_LATERAL_FORCE: 30,     // Lateral push from fins
     FIN_MAX_SPEED_REF: 200,         // Speed where fins are 100% effective
     THRUST_GIMBAL_RATE: 80,         // Rotation from thrust vectoring (deg/sec)
+    RCS_ROTATION_RATE: 45,          // Cold-gas RCS rotation (deg/sec) — fills gap at low speed w/o thrust
+    RCS_LATERAL_FORCE: 15,          // RCS lateral push (px/s^2)
     DRAG_COEFFICIENT: 0.001,        // Atmospheric drag (gentle)
     MAX_VELOCITY: 400,
 
@@ -49,6 +51,14 @@ const CONFIG = {
     // Rocket dimensions
     ROCKET_WIDTH: 16,
     ROCKET_HEIGHT: 70,
+
+    // Camera
+    CAMERA: {
+        ZOOM_MIN: 0.45,
+        ZOOM_MAX: 1.05,
+        ZOOM_ALT_REF: 8000,
+        ZOOM_LERP: 0.025
+    },
 
     // Ocean
     OCEAN: {
@@ -93,7 +103,13 @@ const CONFIG = {
         FUEL_PENALTY_PER_LEVEL: 0.04,
         FUEL_PENALTY_MAX: 0.35,
         // Ship size shrink
-        SHIP_SHRINK_FACTOR: 0.97
+        SHIP_SHRINK_FACTOR: 0.97,
+        // Entry angle progression
+        ENTRY_ANGLE_START_LEVEL: 2,
+        ENTRY_ANGLE_PER_LEVEL: 3,
+        ENTRY_ANGLE_MAX: 25,
+        ENTRY_VX_PER_LEVEL: 8,
+        ENTRY_VX_MAX: 60
     },
 
     // Colors

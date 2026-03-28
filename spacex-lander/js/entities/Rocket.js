@@ -30,6 +30,9 @@ class Rocket {
         // Re-entry heat
         this.reentryHeat = 0; // 0 to 1
 
+        // RCS (cold-gas thrusters)
+        this.rcsActive = false;
+
         // Steering input tracking
         this.steeringLeft = false;
         this.steeringRight = false;
@@ -71,6 +74,19 @@ class Rocket {
 
         // Lateral force from grid fins
         this.vx += this.gridFinAngle * CONFIG.GRID_FIN_LATERAL_FORCE * finEffectiveness * dt;
+
+        // RCS cold-gas thrusters — provide steering at low speed when not thrusting
+        this.rcsActive = false;
+        const thrustWillFire = thrustPressed && this.fuel > 0;
+        const gimbalCovers = thrustWillFire && phase >= 2;
+        if (Math.abs(this.gridFinAngle) > 0.05 && !gimbalCovers) {
+            const rcsEffectiveness = Math.max(0, 1 - finEffectiveness);
+            if (rcsEffectiveness > 0.05) {
+                this.rcsActive = true;
+                this.angle += this.gridFinAngle * CONFIG.RCS_ROTATION_RATE * rcsEffectiveness * dt;
+                this.vx += this.gridFinAngle * CONFIG.RCS_LATERAL_FORCE * rcsEffectiveness * dt;
+            }
+        }
 
         // Thrust
         const thrustPower = phase === 1 ? CONFIG.ENTRY_THRUST_POWER : CONFIG.LANDING_THRUST_POWER;
@@ -212,6 +228,21 @@ class Rocket {
         graphics.closePath();
         graphics.fillPath();
 
+        // Body shadow (right 30% for cylindrical 3D look)
+        const shR = w * 0.2;
+        const shtl = rotate(w / 2 - shR, bodyTop);
+        const shtr = rotate(w / 2, bodyTop);
+        const shbr = rotate(w / 2, bodyBot);
+        const shbl = rotate(w / 2 - shR, bodyBot);
+        graphics.fillStyle(0x000000, 0.12);
+        graphics.beginPath();
+        graphics.moveTo(shtl.x, shtl.y);
+        graphics.lineTo(shtr.x, shtr.y);
+        graphics.lineTo(shbr.x, shbr.y);
+        graphics.lineTo(shbl.x, shbl.y);
+        graphics.closePath();
+        graphics.fillPath();
+
         // Panel lines
         graphics.lineStyle(0.5, 0xcccccc, 0.25);
         for (let i = 1; i <= 3; i++) {
@@ -288,6 +319,11 @@ class Rocket {
         // --- GRID FINS ---
         this._drawGridFins(graphics, rotate, w, h);
 
+        // --- RCS COLD-GAS PUFFS ---
+        if (this.rcsActive) {
+            this._drawRcsPuffs(graphics, rotate, w, h);
+        }
+
         // --- BODY OUTLINE ---
         graphics.lineStyle(1, CONFIG.COLORS.ROCKET_STROKE, 0.6);
         graphics.beginPath();
@@ -343,6 +379,24 @@ class Rocket {
             graphics.moveTo(points[0].x, points[0].y);
             graphics.lineTo(points[1].x, points[1].y);
             graphics.strokePath();
+        }
+    }
+
+    _drawRcsPuffs(graphics, rotate, w, h) {
+        // Puffs appear on the OPPOSITE side of steering direction
+        const side = -Math.sign(this.gridFinAngle);
+        if (side === 0) return;
+
+        const puffX = side * (w / 2 + 4);
+        const flicker = 0.5 + Math.sin(Date.now() / 30) * 0.3;
+
+        // Two puff positions along body
+        for (const py of [-h * 0.15, h * 0.2]) {
+            const p = rotate(puffX, py);
+            graphics.fillStyle(0xccddff, 0.35 * flicker);
+            graphics.fillCircle(p.x, p.y, 3.5);
+            graphics.fillStyle(0xffffff, 0.5 * flicker);
+            graphics.fillCircle(p.x, p.y, 1.5);
         }
     }
 
@@ -541,6 +595,7 @@ class Rocket {
         this.gridFinAngle = 0;
         this.legsDeployed = false;
         this.legDeployProgress = 0;
+        this.rcsActive = false;
         this.reentryHeat = 0;
         this.phase = 1;
         this.steeringLeft = false;

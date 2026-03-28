@@ -94,11 +94,26 @@ class Ocean {
             for (let x = left; x <= right; x += step) {
                 const y = this.getHeightAt(x);
                 const nextY = this.getHeightAt(x + step);
-                if (y < nextY && y < this.getHeightAt(x - step)) {
+                const prevY = this.getHeightAt(x - step);
+                if (y < nextY && y < prevY) {
+                    // Foam line at wave peak
                     graphics.beginPath();
                     graphics.moveTo(x - 3, y + 1);
                     graphics.lineTo(x + 3, y + 1);
                     graphics.strokePath();
+
+                    // Scattered foam dots near peaks
+                    graphics.fillStyle(CONFIG.COLORS.OCEAN_FOAM, 0.2);
+                    graphics.fillCircle(x + 5, y + 2.5, 1);
+                    graphics.fillCircle(x - 4, y + 3, 0.8);
+                } else if (y > nextY) {
+                    // Specular highlight on rising wave face
+                    graphics.lineStyle(0.5, CONFIG.COLORS.OCEAN_HIGHLIGHT, 0.12);
+                    graphics.beginPath();
+                    graphics.moveTo(x, y);
+                    graphics.lineTo(x + step, nextY);
+                    graphics.strokePath();
+                    graphics.lineStyle(1, CONFIG.COLORS.OCEAN_FOAM, 0.3);
                 }
             }
         }

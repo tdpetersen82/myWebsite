@@ -242,6 +242,34 @@ class DroneShip {
         graphics.lineTo(x2b.x, x2b.y);
         graphics.strokePath();
 
+        // --- "OCISLY" TEXT on deck ---
+        const textY = -hh + 2.5 + targetR + 3;
+        const letterSpacing = 3.5;
+        const letters = 'OCISLY';
+        const textStartX = -(letters.length - 1) * letterSpacing / 2;
+        graphics.lineStyle(0.8, 0xffffff, 0.35);
+        for (let i = 0; i < letters.length; i++) {
+            const lp = rotate(textStartX + i * letterSpacing, textY);
+            // Tiny dot per letter — at this scale text isn't legible, so use dashes
+            graphics.fillStyle(0xffffff, 0.3);
+            graphics.fillRect(lp.x - 1, lp.y, 2.5, 0.8);
+        }
+
+        // --- DIAGONAL WARNING STRIPES near deck edges ---
+        graphics.lineStyle(0.5, CONFIG.COLORS.SHIP_BARRIER, 0.25);
+        for (const side of [-1, 1]) {
+            const stripeX = side * (hw - 10);
+            for (let s = 0; s < 3; s++) {
+                const sy = -hh + 1 + s * 2;
+                const s1 = rotate(stripeX - 1.5, sy);
+                const s2 = rotate(stripeX + 1.5, sy + 2);
+                graphics.beginPath();
+                graphics.moveTo(s1.x, s1.y);
+                graphics.lineTo(s2.x, s2.y);
+                graphics.strokePath();
+            }
+        }
+
         // --- EDGE BARRIERS (hazard stripes) ---
         const barrierH = 7;
         for (const side of [-1, 1]) {
