@@ -34,6 +34,12 @@
   <url><loc>https://example.com/merge-fruit/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://example.com/drift-boss/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://example.com/slope-run/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/blackjack/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/roulette/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/video-poker/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/baccarat/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/craps/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/three-card-poker/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://example.com/utilities/</loc><priority>0.7</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://example.com/utilities/my-ip/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://example.com/utilities/device-info/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
