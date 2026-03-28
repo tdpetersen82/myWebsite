@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON Schema Validator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .status-badge {
+            display: inline-block; padding: 6px 16px; border-radius: 20px; font-weight: bold;
+            font-size: 0.95em; margin: 10px 0;
+        }
+        .status-valid { background: #d4edda; color: #155724; }
+        .status-invalid { background: #f8d7da; color: #721c24; }
+        .error-list { text-align: left; margin: 10px 0; }
+        .error-item {
+            background: #fff5f5; border-left: 3px solid #e74c3c; padding: 8px 12px;
+            margin: 6px 0; border-radius: 0 8px 8px 0; font-size: 0.9em;
+        }
+        .error-item .path { font-family: monospace; color: #764ba2; font-weight: bold; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 JSON Schema Validator</h1>
+        <p class="subtitle">Validate JSON data against a JSON Schema definition.</p>
+
+        <div class="tool-area">
+            <div class="tool-row">
+                <div>
+                    <label for="jsonData">JSON Data</label>
+                    <textarea id="jsonData" rows="10" placeholder='{"name": "John", "age": 30}'></textarea>
+                </div>
+                <div>
+                    <label for="jsonSchema">JSON Schema</label>
+                    <textarea id="jsonSchema" rows="10" placeholder='{"type": "object", "properties": {"name": {"type": "string"}, "age": {"type": "integer", "minimum": 0}}, "required": ["name"]}'></textarea>
+                </div>
+            </div>
+
+            <div style="text-align:center;margin:12px 0;">
+                <button class="copy-btn" onclick="validate()" style="font-size:1.05em;padding:10px 24px;">✅ Validate</button>
+            </div>
+
+            <div id="result"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/ajv@8.12.0/dist/ajv7.min.js"></script>
+    <script>
+        function validate() {
+            const resultDiv = document.getElementById('result');
+            let data, schema;
+
+            try {
+                data = JSON.parse(document.getElementById('jsonData').value);
+            } catch (e) {
+                resultDiv.innerHTML = `<div class="status-badge status-invalid">Invalid JSON Data</div>
+                    <div class="error-list"><div class="error-item">${e.message}</div></div>`;
+                return;
+            }
+
+            try {
+                schema = JSON.parse(document.getElementById('jsonSchema').value);
+            } catch (e) {
+                resultDiv.innerHTML = `<div class="status-badge status-invalid">Invalid JSON Schema</div>
+                    <div class="error-list"><div class="error-item">${e.message}</div></div>`;
+                return;
+            }
+
+            try {
+                const ajv = new ajv7({ allErrors: true, verbose: true });
+                const valid = ajv.validate(schema, data);
+
+                if (valid) {
+                    resultDiv.innerHTML = `<div class="status-badge status-valid">✅ Valid</div>
+                        <p style="color:#666;font-size:0.9em;">The JSON data conforms to the provided schema.</p>`;
+                } else {
+                    const errors = ajv.errors || [];
+                    resultDiv.innerHTML = `<div class="status-badge status-invalid">❌ Invalid — ${errors.length} error(s)</div>
+                        <div class="error-list">${errors.map(err =>
+                            `<div class="error-item">
+                                <span class="path">${err.instancePath || '/'}</span>: ${err.message}
+                                ${err.params ? `<br><small style="color:#999;">${JSON.stringify(err.params)}</small>` : ''}
+                            </div>`
+                        ).join('')}</div>`;
+                }
+            } catch (e) {
+                resultDiv.innerHTML = `<div class="status-badge status-invalid">Schema Error</div>
+                    <div class="error-list"><div class="error-item">${e.message}</div></div>`;
+            }
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>
