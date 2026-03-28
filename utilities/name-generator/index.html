@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Name Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .config-row { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; margin: 12px 0; align-items: center; }
+        .config-row select { padding: 8px 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 1em; }
+        .name-list { text-align: left; margin: 16px 0; }
+        .name-item {
+            display: flex; justify-content: space-between; align-items: center;
+            padding: 8px 12px; border-bottom: 1px solid #eee; font-size: 1.05em;
+        }
+        .name-item:hover { background: #f5f5fa; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📛 Name Generator</h1>
+        <p class="subtitle">Generate random names for characters, projects, or fun.</p>
+
+        <div class="tool-area">
+            <div class="config-row">
+                <label>Gender:
+                    <select id="gender">
+                        <option value="any">Any</option>
+                        <option value="male">Male</option>
+                        <option value="female">Female</option>
+                    </select>
+                </label>
+                <label>Style:
+                    <select id="style">
+                        <option value="casual">Casual</option>
+                        <option value="formal">Formal</option>
+                        <option value="fantasy">Fantasy</option>
+                    </select>
+                </label>
+            </div>
+
+            <div style="text-align:center;margin:10px 0;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button class="copy-btn" onclick="generate()" style="font-size:1.05em;padding:10px 24px;">⚡ Generate Names</button>
+                <button class="copy-btn" onclick="copyAll()">📋 Copy All</button>
+            </div>
+
+            <div class="name-list" id="nameList"></div>
+        </div>
+    </div>
+
+    <script>
+        const maleNames = ['James','John','Robert','Michael','David','William','Richard','Joseph','Thomas','Christopher','Charles','Daniel','Matthew','Anthony','Mark','Donald','Steven','Paul','Andrew','Joshua','Kenneth','Kevin','Brian','George','Timothy','Ronald','Edward','Jason','Jeffrey','Ryan','Jacob','Gary','Nicholas','Eric','Jonathan','Stephen','Larry','Justin','Scott','Brandon','Benjamin','Samuel','Raymond','Gregory','Frank','Alexander','Patrick','Jack','Dennis','Jerry','Tyler','Aaron','Nathan','Henry','Peter','Adam','Douglas','Zachary','Walter','Kyle','Harold','Carl','Arthur','Gerald','Roger','Keith','Lawrence','Terry','Sean','Albert','Jesse','Austin','Bruce','Gabriel','Joe','Logan','Ralph','Roy','Eugene','Randy','Russell','Bobby','Mason','Philip','Louis','Harry','Vincent'];
+        const femaleNames = ['Mary','Patricia','Jennifer','Linda','Barbara','Elizabeth','Susan','Jessica','Sarah','Karen','Lisa','Nancy','Betty','Margaret','Sandra','Ashley','Dorothy','Kimberly','Emily','Donna','Michelle','Carol','Amanda','Melissa','Deborah','Stephanie','Rebecca','Sharon','Laura','Cynthia','Kathleen','Amy','Angela','Shirley','Brenda','Anna','Pamela','Emma','Nicole','Helen','Samantha','Katherine','Christine','Debra','Rachel','Carolyn','Janet','Catherine','Maria','Heather','Diane','Ruth','Julie','Olivia','Joyce','Virginia','Victoria','Kelly','Lauren','Christina','Joan','Evelyn','Judith','Megan','Andrea','Cheryl','Hannah','Jacqueline','Martha','Gloria','Teresa','Ann','Sara','Madison','Frances','Kathryn','Janice','Jean','Abigail','Alice','Judy','Sophia','Grace','Denise','Amber','Doris','Marilyn','Danielle','Beverly','Isabella','Theresa','Diana','Natalie','Brittany','Charlotte','Marie','Kayla','Alexis','Lori'];
+        const lastNames = ['Smith','Johnson','Williams','Brown','Jones','Garcia','Miller','Davis','Rodriguez','Martinez','Hernandez','Lopez','Gonzalez','Wilson','Anderson','Thomas','Taylor','Moore','Jackson','Martin','Lee','Perez','Thompson','White','Harris','Sanchez','Clark','Ramirez','Lewis','Robinson','Walker','Young','Allen','King','Wright','Scott','Torres','Nguyen','Hill','Flores','Green','Adams','Nelson','Baker','Hall','Rivera','Campbell','Mitchell','Carter','Roberts','Gomez','Phillips','Evans','Turner','Diaz','Parker','Cruz','Edwards','Collins','Reyes','Stewart','Morris','Morales','Murphy','Cook','Rogers','Gutierrez','Ortiz','Morgan','Cooper','Peterson','Bailey','Reed','Kelly','Howard','Ramos','Kim','Cox','Ward','Richardson','Watson','Brooks','Chavez','Wood','James','Bennett','Gray','Mendoza','Ruiz','Hughes','Price','Alvarez','Castillo','Sanders','Patel','Myers','Long','Ross','Foster','Jimenez','Powell','Jenkins'];
+        const fantasyFirst = ['Aelindra','Thorian','Seraphina','Kael','Lyranthe','Draven','Elowen','Zephyros','Isolde','Fenris','Morgath','Sylvaine','Alaric','Thessaly','Oberon','Calista','Ragnar','Nimue','Cedric','Elara','Valthor','Freya','Aldric','Rowena','Theron','Lirien','Magnus','Ysara','Gwydion','Arwen','Bastian','Cordelia','Darius','Fionna','Hadrian','Illyria','Jasper','Katarina','Leander','Mirael','Noctis','Ophira','Percival','Quenara','Rowan','Sable','Tristan','Undine','Vesper','Wren','Xander','Ysolde','Zaran','Briar','Caspian','Dahlia','Evander','Fable','Gareth','Helios','Inara','Jareth','Kira','Lucian','Maeve','Nerys','Orion','Petra','Quinn','Rhiannon'];
+        const fantasyLast = ['Shadowmere','Ironforge','Stormwind','Dawnbringer','Nightwhisper','Silverleaf','Darkhollow','Brightstar','Frostborne','Flamecrest','Moonvale','Thunderpeak','Ashwood','Goldvein','Ravenscroft','Winterfell','Sunfire','Blackthorn','Crystalvein','Starweaver','Duskwalker','Windrunner','Stoneheart','Oakenshield','Mistwood','Dragonbane','Hawkwind','Spellforge','Wolfsbane','Voidwalker','Emberheart','Skywarden','Deepwell','Thornwall','Ironblood','Silvershade','Dawncrest','Stormrider','Firebrand','Moonshadow'];
+
+        function generate() {
+            const gender = document.getElementById('gender').value;
+            const style = document.getElementById('style').value;
+            const names = [];
+
+            for (let i = 0; i < 10; i++) {
+                let first, last;
+                if (style === 'fantasy') {
+                    first = fantasyFirst[Math.floor(Math.random() * fantasyFirst.length)];
+                    last = fantasyLast[Math.floor(Math.random() * fantasyLast.length)];
+                } else {
+                    let pool;
+                    if (gender === 'male') pool = maleNames;
+                    else if (gender === 'female') pool = femaleNames;
+                    else pool = Math.random() < 0.5 ? maleNames : femaleNames;
+                    first = pool[Math.floor(Math.random() * pool.length)];
+                    last = lastNames[Math.floor(Math.random() * lastNames.length)];
+                    if (style === 'formal') first = first + ' ' + String.fromCharCode(65 + Math.floor(Math.random()*26)) + '.';
+                }
+                names.push(first + ' ' + last);
+            }
+
+            document.getElementById('nameList').innerHTML = names.map(n =>
+                `<div class="name-item"><span>${n}</span><button class="copy-btn" onclick="navigator.clipboard.writeText('${n.replace(/'/g,"\\'")}')" style="padding:3px 10px;font-size:0.85em;">📋</button></div>`
+            ).join('');
+        }
+
+        function copyAll() {
+            const items = document.querySelectorAll('.name-item span');
+            const text = Array.from(items).map(s => s.textContent).join('\n');
+            if (text) navigator.clipboard.writeText(text);
+        }
+
+        generate();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

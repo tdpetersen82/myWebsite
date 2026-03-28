@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Currency Converter — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .conv-row { display: flex; gap: 12px; align-items: flex-end; justify-content: center; flex-wrap: wrap; margin: 16px 0; }
+        .conv-row > div { flex: 1; min-width: 120px; }
+        .swap-btn { padding: 10px 16px; border: 2px solid #667eea; background: #fff; color: #667eea; border-radius: 50%; cursor: pointer; font-size: 1.3em; font-weight: bold; transition: all 0.2s; flex-shrink: 0; align-self: center; }
+        .swap-btn:hover { background: #667eea; color: #fff; }
+        .result-big { font-size: 2em; font-weight: bold; color: #667eea; margin: 12px 0; }
+        .rate-info { font-size: 0.85em; color: #888; margin: 4px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>💱 Currency Converter</h1>
+        <p class="subtitle">Convert between major world currencies using live exchange rates.</p>
+        <div class="tool-area">
+            <div class="conv-row">
+                <div>
+                    <label for="amount">Amount:</label>
+                    <input type="number" id="amount" value="1" min="0" step="any" oninput="convert()">
+                </div>
+                <div>
+                    <label for="fromCur">From:</label>
+                    <select id="fromCur" onchange="convert()"></select>
+                </div>
+                <button class="swap-btn" onclick="swap()" title="Swap currencies">⇄</button>
+                <div>
+                    <label for="toCur">To:</label>
+                    <select id="toCur" onchange="convert()"></select>
+                </div>
+            </div>
+            <div class="result-big" id="result">—</div>
+            <div class="rate-info" id="rateInfo"></div>
+            <div class="tool-grid" id="details"></div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        const currencies = ['USD','EUR','GBP','JPY','CAD','AUD','CHF','CNY','INR','MXN','BRL','KRW'];
+        const names = {USD:'US Dollar',EUR:'Euro',GBP:'British Pound',JPY:'Japanese Yen',CAD:'Canadian Dollar',AUD:'Australian Dollar',CHF:'Swiss Franc',CNY:'Chinese Yuan',INR:'Indian Rupee',MXN:'Mexican Peso',BRL:'Brazilian Real',KRW:'South Korean Won'};
+        let rates = null;
+
+        function populateSelects() {
+            const from = document.getElementById('fromCur');
+            const to = document.getElementById('toCur');
+            currencies.forEach(c => {
+                from.add(new Option(c + ' - ' + names[c], c));
+                to.add(new Option(c + ' - ' + names[c], c));
+            });
+            to.value = 'EUR';
+        }
+
+        async function fetchRates() {
+            const cached = sessionStorage.getItem('currencyRates');
+            if (cached) { try { rates = JSON.parse(cached); convert(); return; } catch(e) {} }
+            try {
+                const resp = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
+                const data = await resp.json();
+                rates = data.usd;
+                sessionStorage.setItem('currencyRates', JSON.stringify(rates));
+            } catch(e) {
+                document.getElementById('result').textContent = 'Failed to load rates';
+                return;
+            }
+            convert();
+        }
+
+        function convert() {
+            if (!rates) return;
+            const amount = parseFloat(document.getElementById('amount').value) || 0;
+            const from = document.getElementById('fromCur').value.toLowerCase();
+            const to = document.getElementById('toCur').value.toLowerCase();
+            const fromRate = from === 'usd' ? 1 : rates[from];
+            const toRate = to === 'usd' ? 1 : rates[to];
+            if (!fromRate || !toRate) { document.getElementById('result').textContent = 'Rate unavailable'; return; }
+            const result = amount / fromRate * toRate;
+            const displayTo = document.getElementById('toCur').value;
+            document.getElementById('result').textContent = result.toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 4}) + ' ' + displayTo;
+            const rate = toRate / fromRate;
+            const displayFrom = document.getElementById('fromCur').value;
+            document.getElementById('rateInfo').textContent = '1 ' + displayFrom + ' = ' + rate.toFixed(6) + ' ' + displayTo;
+        }
+
+        function swap() {
+            const from = document.getElementById('fromCur');
+            const to = document.getElementById('toCur');
+            const tmp = from.value;
+            from.value = to.value;
+            to.value = tmp;
+            convert();
+        }
+
+        populateSelects();
+        fetchRates();
+    </script>
+</body>
+</html>

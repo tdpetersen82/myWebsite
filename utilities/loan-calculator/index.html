@@ -1,0 +1,77 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Loan Calculator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .result-big { font-size: 2em; font-weight: bold; color: #667eea; margin: 12px 0; }
+        .amort-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.85em; }
+        .amort-table th, .amort-table td { padding: 6px 8px; border-bottom: 1px solid #e0e0e0; text-align: right; }
+        .amort-table th { background: #f0f0f5; font-weight: 600; position: sticky; top: 0; }
+        .amort-wrap { max-height: 300px; overflow-y: auto; border-radius: 8px; border: 1px solid #e0e0e0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏦 Loan Calculator</h1>
+        <p class="subtitle">Calculate monthly payments, total cost, and view amortization.</p>
+        <div class="tool-area">
+            <div class="tool-row">
+                <div><label for="amount">Loan Amount ($):</label><input type="number" id="amount" placeholder="250000" min="0" oninput="calc()"></div>
+                <div><label for="rate">Annual Rate (%):</label><input type="number" id="rate" placeholder="6.5" min="0" step="0.01" oninput="calc()"></div>
+                <div><label for="term">Term (years):</label><input type="number" id="term" placeholder="30" min="1" oninput="calc()"></div>
+            </div>
+            <div class="result-big" id="monthly">$0.00 / month</div>
+            <div class="tool-grid" id="summary"></div>
+            <div class="amort-wrap" id="amortWrap" style="display:none">
+                <table class="amort-table" id="amortTable"></table>
+            </div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function fmt(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+        function calc() {
+            const P = parseFloat(document.getElementById('amount').value);
+            const annualRate = parseFloat(document.getElementById('rate').value);
+            const years = parseInt(document.getElementById('term').value);
+            if (!P || !annualRate || !years || P <= 0 || annualRate <= 0 || years <= 0) {
+                document.getElementById('monthly').textContent = '$0.00 / month';
+                document.getElementById('summary').innerHTML = '';
+                document.getElementById('amortWrap').style.display = 'none';
+                return;
+            }
+            const r = annualRate / 100 / 12;
+            const n = years * 12;
+            const M = P * (r * Math.pow(1 + r, n)) / (Math.pow(1 + r, n) - 1);
+            const totalPay = M * n;
+            const totalInt = totalPay - P;
+            document.getElementById('monthly').textContent = fmt(M) + ' / month';
+            document.getElementById('summary').innerHTML =
+                '<div class="info-item"><span class="info-label">Total Payment</span><span class="info-value">' + fmt(totalPay) + '</span></div>' +
+                '<div class="info-item"><span class="info-label">Total Interest</span><span class="info-value">' + fmt(totalInt) + '</span></div>' +
+                '<div class="info-item"><span class="info-label">Principal</span><span class="info-value">' + fmt(P) + '</span></div>';
+            // Amortization by year
+            let html = '<thead><tr><th>Year</th><th>Principal</th><th>Interest</th><th>Balance</th></tr></thead><tbody>';
+            let balance = P;
+            for (let y = 1; y <= years; y++) {
+                let yearPrinc = 0, yearInt = 0;
+                for (let m = 0; m < 12; m++) {
+                    const intPay = balance * r;
+                    const princPay = M - intPay;
+                    yearInt += intPay;
+                    yearPrinc += princPay;
+                    balance -= princPay;
+                }
+                if (balance < 0) balance = 0;
+                html += '<tr><td>' + y + '</td><td>' + fmt(yearPrinc) + '</td><td>' + fmt(yearInt) + '</td><td>' + fmt(balance) + '</td></tr>';
+            }
+            html += '</tbody>';
+            document.getElementById('amortTable').innerHTML = html;
+            document.getElementById('amortWrap').style.display = '';
+        }
+    </script>
+</body>
+</html>

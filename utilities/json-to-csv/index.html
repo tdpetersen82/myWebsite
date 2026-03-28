@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>JSON to CSV — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .dl-btn { display: inline-block; padding: 10px 24px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; margin: 4px; }
+        .dl-btn:hover { opacity: 0.9; }
+        .error-msg { color: #e74c3c; font-weight: 600; margin: 8px 0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📋 JSON to CSV</h1>
+        <p class="subtitle">Convert a JSON array of objects into CSV format.</p>
+        <div class="tool-area">
+            <label for="jsonInput">JSON Input (array of objects):</label>
+            <textarea id="jsonInput" rows="8" placeholder='[{"name":"Alice","age":30},{"name":"Bob","age":25}]' oninput="convert()"></textarea>
+            <div class="error-msg" id="error"></div>
+            <label>CSV Output:</label>
+            <div class="tool-output" id="csvOutput" style="white-space:pre;overflow-x:auto;font-family:monospace;text-align:left;min-height:60px;"></div>
+            <div style="margin-top:8px">
+                <button class="copy-btn" onclick="copyCSV()">Copy CSV</button>
+                <button class="dl-btn" onclick="downloadCSV()">Download .csv</button>
+            </div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        let csvResult = '';
+        function flatten(obj, prefix) {
+            const result = {};
+            for (const key in obj) {
+                const fullKey = prefix ? prefix + '.' + key : key;
+                if (obj[key] !== null && typeof obj[key] === 'object' && !Array.isArray(obj[key])) {
+                    Object.assign(result, flatten(obj[key], fullKey));
+                } else {
+                    result[fullKey] = obj[key];
+                }
+            }
+            return result;
+        }
+        function escCSV(val) {
+            const s = val === null || val === undefined ? '' : String(val);
+            return s.includes(',') || s.includes('"') || s.includes('\n') ? '"' + s.replace(/"/g, '""') + '"' : s;
+        }
+        function convert() {
+            const input = document.getElementById('jsonInput').value.trim();
+            const errEl = document.getElementById('error');
+            const outEl = document.getElementById('csvOutput');
+            if (!input) { errEl.textContent = ''; outEl.textContent = ''; csvResult = ''; return; }
+            let data;
+            try { data = JSON.parse(input); } catch(e) { errEl.textContent = 'Invalid JSON: ' + e.message; outEl.textContent = ''; csvResult = ''; return; }
+            if (!Array.isArray(data)) { errEl.textContent = 'JSON must be an array of objects.'; outEl.textContent = ''; csvResult = ''; return; }
+            errEl.textContent = '';
+            const flat = data.map(item => flatten(item, ''));
+            const headers = [...new Set(flat.flatMap(Object.keys))];
+            const lines = [headers.map(escCSV).join(',')];
+            flat.forEach(row => { lines.push(headers.map(h => escCSV(row[h])).join(',')); });
+            csvResult = lines.join('\n');
+            outEl.textContent = csvResult;
+        }
+        function copyCSV() {
+            navigator.clipboard.writeText(csvResult).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy CSV', 1500);
+            });
+        }
+        function downloadCSV() {
+            if (!csvResult) return;
+            const blob = new Blob([csvResult], { type: 'text/csv' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = 'data.csv';
+            a.click();
+        }
+    </script>
+</body>
+</html>

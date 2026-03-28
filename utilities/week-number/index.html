@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Week Number Calculator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .current-week { background: linear-gradient(135deg, #667eea, #764ba2); border-radius: 14px; padding: 24px; color: #fff; text-align: center; margin-bottom: 20px; }
+        .current-week .big { font-size: 3.5em; font-weight: 800; line-height: 1; }
+        .current-week .lbl { opacity: 0.8; margin-top: 4px; }
+        .tool-row { display: flex; gap: 12px; align-items: end; flex-wrap: wrap; margin-bottom: 16px; }
+        .tool-row label { display: block; font-size: 0.85em; color: #666; margin-bottom: 4px; }
+        .tool-row input { width: 100%; }
+        .result-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 12px; margin-top: 16px; }
+        .info-item { background: #f0f4ff; border-radius: 10px; padding: 14px; text-align: center; }
+        .info-label { font-size: 0.8em; color: #888; margin-bottom: 4px; }
+        .info-value { font-size: 1.2em; font-weight: 700; color: #667eea; }
+        .mini-cal { margin-top: 20px; }
+        .mini-cal table { width: 100%; border-collapse: collapse; font-size: 0.85em; }
+        .mini-cal th { background: #667eea; color: #fff; padding: 6px; }
+        .mini-cal td { padding: 6px; text-align: center; border: 1px solid #e0e0e0; }
+        .mini-cal .week-col { background: #f0f4ff; font-weight: 700; color: #667eea; }
+        .mini-cal .today { background: #667eea; color: #fff; border-radius: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#128197; Week Number Calculator</h1>
+        <p class="subtitle">Find the ISO week number for any date.</p>
+
+        <div class="tool-area">
+            <div class="current-week">
+                <div class="lbl">Current ISO Week</div>
+                <div class="big" id="currentWeek"></div>
+                <div class="lbl" id="currentYear"></div>
+            </div>
+
+            <div class="tool-row">
+                <div style="flex:1;">
+                    <label>Pick a Date</label>
+                    <input type="date" id="datePicker" onchange="lookup()">
+                </div>
+            </div>
+
+            <div class="result-grid" id="results" style="display:none;">
+                <div class="info-item"><div class="info-label">Week Number</div><div class="info-value" id="resWeek"></div></div>
+                <div class="info-item"><div class="info-label">ISO Year</div><div class="info-value" id="resYear"></div></div>
+                <div class="info-item"><div class="info-label">Week Start (Mon)</div><div class="info-value" id="resStart"></div></div>
+                <div class="info-item"><div class="info-label">Week End (Sun)</div><div class="info-value" id="resEnd"></div></div>
+            </div>
+
+            <div class="mini-cal" id="miniCal"></div>
+        </div>
+    </div>
+
+    <script>
+        function getISOWeek(d) {
+            const date = new Date(d.getTime());
+            date.setHours(0,0,0,0);
+            date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+            const week1 = new Date(date.getFullYear(), 0, 4);
+            return 1 + Math.round(((date - week1) / 86400000 - 3 + (week1.getDay() + 6) % 7) / 7);
+        }
+
+        function getISOWeekYear(d) {
+            const date = new Date(d.getTime());
+            date.setDate(date.getDate() + 3 - (date.getDay() + 6) % 7);
+            return date.getFullYear();
+        }
+
+        function getWeekStart(d) {
+            const date = new Date(d.getTime());
+            const day = date.getDay();
+            const diff = (day === 0 ? -6 : 1) - day;
+            date.setDate(date.getDate() + diff);
+            return date;
+        }
+
+        const today = new Date();
+        today.setHours(0,0,0,0);
+        document.getElementById('currentWeek').textContent = 'W' + getISOWeek(today);
+        document.getElementById('currentYear').textContent = getISOWeekYear(today);
+        document.getElementById('datePicker').value = today.toISOString().slice(0,10);
+
+        function fmtShort(d) {
+            return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+        }
+
+        function lookup() {
+            const val = document.getElementById('datePicker').value;
+            if (!val) return;
+            const d = new Date(val + 'T00:00:00');
+            const wn = getISOWeek(d);
+            const wy = getISOWeekYear(d);
+            const ws = getWeekStart(d);
+            const we = new Date(ws); we.setDate(we.getDate() + 6);
+
+            document.getElementById('resWeek').textContent = 'W' + wn;
+            document.getElementById('resYear').textContent = wy;
+            document.getElementById('resStart').textContent = fmtShort(ws);
+            document.getElementById('resEnd').textContent = fmtShort(we);
+            document.getElementById('results').style.display = '';
+        }
+
+        function buildCalendar() {
+            const now = new Date();
+            const year = now.getFullYear();
+            const month = now.getMonth();
+            const firstDay = new Date(year, month, 1);
+            const lastDay = new Date(year, month + 1, 0);
+
+            let html = '<table><thead><tr><th>Wk</th><th>Mo</th><th>Tu</th><th>We</th><th>Th</th><th>Fr</th><th>Sa</th><th>Su</th></tr></thead><tbody>';
+
+            let cur = new Date(firstDay);
+            // Go back to Monday
+            const dayOfWeek = cur.getDay();
+            const diff = (dayOfWeek === 0 ? -6 : 1) - dayOfWeek;
+            cur.setDate(cur.getDate() + diff);
+
+            while (cur <= lastDay || cur.getDay() !== 1) {
+                if (cur.getDay() === 1 || cur.getTime() === cur.getTime()) {
+                    if (cur.getDay() === 1) {
+                        html += '<tr><td class="week-col">' + getISOWeek(cur) + '</td>';
+                    }
+                }
+                const isToday = cur.toDateString() === today.toDateString();
+                const isMonth = cur.getMonth() === month;
+                html += `<td class="${isToday ? 'today' : ''}" style="${!isMonth ? 'opacity:0.3' : ''}">${cur.getDate()}</td>`;
+                if (cur.getDay() === 0) html += '</tr>';
+                cur.setDate(cur.getDate() + 1);
+                if (cur.getDay() === 1 && cur > lastDay) break;
+            }
+
+            html += '</tbody></table>';
+            document.getElementById('miniCal').innerHTML = '<h3 style="margin-bottom:8px;">' + firstDay.toLocaleDateString('en-US', { month: 'long', year: 'numeric' }) + '</h3>' + html;
+        }
+
+        lookup();
+        buildCalendar();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

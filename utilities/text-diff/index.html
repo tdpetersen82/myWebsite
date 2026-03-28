@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Text Diff Checker — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .diff-inputs { display: flex; gap: 12px; margin: 12px 0; }
+        .diff-inputs > div { flex: 1; }
+        .diff-inputs textarea { width: 100%; min-height: 200px; }
+        .diff-btn { padding: 10px 28px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: #fff; border: none; border-radius: 8px; cursor: pointer; font-weight: 600; font-size: 1em; margin: 8px 0; }
+        .diff-btn:hover { opacity: 0.9; }
+        .diff-output { text-align: left; font-family: 'Courier New', monospace; font-size: 0.88em; border: 1px solid #e0e0e0; border-radius: 8px; overflow: hidden; max-height: 400px; overflow-y: auto; margin: 12px 0; }
+        .diff-line { padding: 2px 12px; white-space: pre-wrap; word-break: break-all; border-bottom: 1px solid #f0f0f0; }
+        .diff-add { background: #e6ffe6; color: #006600; }
+        .diff-del { background: #ffe6e6; color: #990000; }
+        .diff-same { background: #fff; color: #333; }
+        @media (max-width: 600px) { .diff-inputs { flex-direction: column; } }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📄 Text Diff Checker</h1>
+        <p class="subtitle">Compare two texts and highlight additions, deletions, and unchanged lines.</p>
+        <div class="tool-area">
+            <div class="diff-inputs">
+                <div><label for="original">Original:</label><textarea id="original" placeholder="Paste original text here..."></textarea></div>
+                <div><label for="modified">Modified:</label><textarea id="modified" placeholder="Paste modified text here..."></textarea></div>
+            </div>
+            <button class="diff-btn" onclick="compare()">Compare</button>
+            <div class="tool-grid" id="stats"></div>
+            <div class="diff-output" id="diffOutput" style="display:none"></div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function lcs(a, b) {
+            const m = a.length, n = b.length;
+            const dp = Array.from({length: m + 1}, () => new Array(n + 1).fill(0));
+            for (let i = 1; i <= m; i++)
+                for (let j = 1; j <= n; j++)
+                    dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] + 1 : Math.max(dp[i-1][j], dp[i][j-1]);
+            // Backtrack
+            const result = [];
+            let i = m, j = n;
+            while (i > 0 && j > 0) {
+                if (a[i-1] === b[j-1]) { result.unshift({type: 'same', line: a[i-1]}); i--; j--; }
+                else if (dp[i-1][j] >= dp[i][j-1]) { result.unshift({type: 'del', line: a[i-1]}); i--; }
+                else { result.unshift({type: 'add', line: b[j-1]}); j--; }
+            }
+            while (i > 0) { result.unshift({type: 'del', line: a[i-1]}); i--; }
+            while (j > 0) { result.unshift({type: 'add', line: b[j-1]}); j--; }
+            return result;
+        }
+        function compare() {
+            const origLines = document.getElementById('original').value.split('\n');
+            const modLines = document.getElementById('modified').value.split('\n');
+            const diff = lcs(origLines, modLines);
+            let added = 0, removed = 0, unchanged = 0;
+            let html = '';
+            for (const d of diff) {
+                if (d.type === 'add') { added++; html += '<div class="diff-line diff-add">+ ' + escHtml(d.line) + '</div>'; }
+                else if (d.type === 'del') { removed++; html += '<div class="diff-line diff-del">- ' + escHtml(d.line) + '</div>'; }
+                else { unchanged++; html += '<div class="diff-line diff-same">  ' + escHtml(d.line) + '</div>'; }
+            }
+            document.getElementById('stats').innerHTML =
+                '<div class="info-item"><span class="info-label">Added</span><span class="info-value" style="color:#006600">+' + added + ' lines</span></div>' +
+                '<div class="info-item"><span class="info-label">Removed</span><span class="info-value" style="color:#990000">-' + removed + ' lines</span></div>' +
+                '<div class="info-item"><span class="info-label">Unchanged</span><span class="info-value">' + unchanged + ' lines</span></div>';
+            const out = document.getElementById('diffOutput');
+            out.innerHTML = html;
+            out.style.display = '';
+        }
+        function escHtml(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+    </script>
+</body>
+</html>

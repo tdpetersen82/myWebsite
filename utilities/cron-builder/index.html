@@ -1,0 +1,119 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cron Expression Builder — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .cron-display { font-family: 'Courier New', monospace; font-size: 2em; font-weight: bold; color: #667eea; margin: 12px 0; letter-spacing: 4px; }
+        .cron-fields { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 12px 0; }
+        .cron-field label { display: block; font-size: 0.8em; font-weight: 600; color: #666; margin-bottom: 4px; }
+        .cron-field input, .cron-field select { width: 100%; text-align: center; }
+        .preset-row { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 10px 0; }
+        .preset-btn { padding: 6px 12px; border: 2px solid #667eea; background: #fff; color: #667eea; border-radius: 6px; cursor: pointer; font-size: 0.85em; font-weight: 600; transition: all 0.2s; }
+        .preset-btn:hover { background: #667eea; color: #fff; }
+        .human-desc { font-size: 1.1em; color: #333; margin: 8px 0; font-style: italic; }
+        .next-runs { text-align: left; }
+        .next-runs li { padding: 4px 0; font-family: monospace; font-size: 0.9em; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🕐 Cron Expression Builder</h1>
+        <p class="subtitle">Build cron expressions visually and see upcoming run times.</p>
+        <div class="tool-area">
+            <div class="preset-row">
+                <button class="preset-btn" onclick="setPreset('* * * * *')">Every Minute</button>
+                <button class="preset-btn" onclick="setPreset('0 * * * *')">Hourly</button>
+                <button class="preset-btn" onclick="setPreset('0 0 * * *')">Daily</button>
+                <button class="preset-btn" onclick="setPreset('0 0 * * 0')">Weekly</button>
+                <button class="preset-btn" onclick="setPreset('0 0 1 * *')">Monthly</button>
+            </div>
+            <div class="cron-fields">
+                <div class="cron-field"><label>Minute (0-59)</label><input type="text" id="f0" value="*" oninput="update()"></div>
+                <div class="cron-field"><label>Hour (0-23)</label><input type="text" id="f1" value="*" oninput="update()"></div>
+                <div class="cron-field"><label>Day of Month (1-31)</label><input type="text" id="f2" value="*" oninput="update()"></div>
+                <div class="cron-field"><label>Month (1-12)</label><input type="text" id="f3" value="*" oninput="update()"></div>
+                <div class="cron-field"><label>Day of Week (0-6)</label><input type="text" id="f4" value="*" oninput="update()"></div>
+            </div>
+            <div class="cron-display" id="cronExpr">* * * * *</div>
+            <button class="copy-btn" onclick="copyCron()">Copy Expression</button>
+            <div class="human-desc" id="humanDesc"></div>
+            <div class="next-runs"><h3 style="margin:8px 0">Next 5 Run Times:</h3><ol id="nextRuns"></ol></div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function setPreset(expr) {
+            const parts = expr.split(' ');
+            for (let i = 0; i < 5; i++) document.getElementById('f' + i).value = parts[i];
+            update();
+        }
+        function update() {
+            const parts = [];
+            for (let i = 0; i < 5; i++) parts.push(document.getElementById('f' + i).value.trim() || '*');
+            const expr = parts.join(' ');
+            document.getElementById('cronExpr').textContent = expr;
+            document.getElementById('humanDesc').textContent = descCron(parts);
+            calcNext(parts);
+        }
+        function descCron(p) {
+            const monthNames = ['','January','February','March','April','May','June','July','August','September','October','November','December'];
+            const dayNames = ['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+            let d = 'Runs ';
+            if (p[0] === '*' && p[1] === '*') d += 'every minute';
+            else if (p[0] !== '*' && p[1] === '*') d += 'at minute ' + p[0] + ' of every hour';
+            else if (p[0] !== '*' && p[1] !== '*') d += 'at ' + p[1].padStart(2,'0') + ':' + p[0].padStart(2,'0');
+            else d += 'every minute of hour ' + p[1];
+            if (p[2] !== '*') d += ', on day ' + p[2] + ' of the month';
+            if (p[3] !== '*') { const m = parseInt(p[3]); d += ', in ' + (monthNames[m] || p[3]); }
+            if (p[4] !== '*') { const dw = parseInt(p[4]); d += ', on ' + (dayNames[dw] || p[4]); }
+            return d + '.';
+        }
+        function expandField(val, min, max) {
+            if (val === '*') return Array.from({length: max - min + 1}, (_, i) => min + i);
+            const result = new Set();
+            val.split(',').forEach(part => {
+                const stepMatch = part.match(/^(.+)\/(\d+)$/);
+                let range, step = 1;
+                if (stepMatch) { range = stepMatch[1]; step = parseInt(stepMatch[2]); }
+                else range = part;
+                if (range === '*') { for (let i = min; i <= max; i += step) result.add(i); return; }
+                const rm = range.match(/^(\d+)-(\d+)$/);
+                if (rm) { for (let i = parseInt(rm[1]); i <= parseInt(rm[2]); i += step) result.add(i); }
+                else result.add(parseInt(range));
+            });
+            return [...result].filter(n => n >= min && n <= max).sort((a, b) => a - b);
+        }
+        function calcNext(p) {
+            const minutes = expandField(p[0], 0, 59);
+            const hours = expandField(p[1], 0, 23);
+            const doms = expandField(p[2], 1, 31);
+            const months = expandField(p[3], 1, 12);
+            const dows = expandField(p[4], 0, 6);
+            const results = [];
+            const now = new Date();
+            const d = new Date(now.getFullYear(), now.getMonth(), now.getDate(), now.getHours(), now.getMinutes() + 1, 0);
+            const limit = new Date(d.getTime() + 365 * 86400000);
+            while (results.length < 5 && d < limit) {
+                if (months.includes(d.getMonth() + 1) && doms.includes(d.getDate()) && dows.includes(d.getDay()) && hours.includes(d.getHours()) && minutes.includes(d.getMinutes())) {
+                    results.push(new Date(d));
+                }
+                d.setMinutes(d.getMinutes() + 1);
+            }
+            const el = document.getElementById('nextRuns');
+            if (results.length === 0) { el.innerHTML = '<li>No runs found in next year</li>'; return; }
+            el.innerHTML = results.map(r => '<li>' + r.toLocaleString() + '</li>').join('');
+        }
+        function copyCron() {
+            navigator.clipboard.writeText(document.getElementById('cronExpr').textContent).then(() => {
+                const btn = document.querySelector('.copy-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Expression', 1500);
+            });
+        }
+        update();
+    </script>
+</body>
+</html>

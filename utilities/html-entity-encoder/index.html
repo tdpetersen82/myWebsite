@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>HTML Entity Encoder/Decoder — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔤 HTML Entity Encoder/Decoder</h1>
+        <p class="subtitle">Encode special characters to HTML entities or decode them back.</p>
+
+        <div class="tool-area">
+            <div class="tool-row">
+                <div>
+                    <label for="encInput">Plain Text</label>
+                    <textarea id="encInput" placeholder="Enter text to encode..."></textarea>
+                </div>
+                <div>
+                    <label for="encOutput">HTML Entities</label>
+                    <textarea id="encOutput" placeholder="Encoded entities will appear here..."></textarea>
+                </div>
+            </div>
+
+            <div style="text-align:center;display:flex;gap:8px;justify-content:center;flex-wrap:wrap;">
+                <button class="copy-btn" onclick="encodeEntities()">Encode →</button>
+                <button class="copy-btn" onclick="decodeEntities()">← Decode</button>
+                <button class="copy-btn" onclick="copyLeft()">📋 Copy Left</button>
+                <button class="copy-btn" onclick="copyRight()">📋 Copy Right</button>
+            </div>
+
+            <div class="tool-tabs" style="margin-top:12px;">
+                <button class="tool-tab active" onclick="setMode('named', this)">Named Entities</button>
+                <button class="tool-tab" onclick="setMode('numeric', this)">Numeric Entities</button>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+        </div>
+    </div>
+
+    <script>
+        const inputEl = document.getElementById('encInput');
+        const outputEl = document.getElementById('encOutput');
+        const errorMsg = document.getElementById('errorMsg');
+        let mode = 'named';
+
+        const NAMED_MAP = {
+            '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&apos;',
+            '\u00a0': '&nbsp;', '\u00a9': '&copy;', '\u00ae': '&reg;', '\u2122': '&trade;',
+            '\u00ab': '&laquo;', '\u00bb': '&raquo;', '\u2013': '&ndash;', '\u2014': '&mdash;',
+            '\u2018': '&lsquo;', '\u2019': '&rsquo;', '\u201c': '&ldquo;', '\u201d': '&rdquo;',
+            '\u2026': '&hellip;', '\u00b0': '&deg;', '\u00b1': '&plusmn;', '\u00d7': '&times;',
+            '\u00f7': '&divide;', '\u2260': '&ne;', '\u2264': '&le;', '\u2265': '&ge;',
+            '\u00a2': '&cent;', '\u00a3': '&pound;', '\u00a5': '&yen;', '\u20ac': '&euro;'
+        };
+
+        const REVERSE_NAMED = {};
+        for (const [ch, ent] of Object.entries(NAMED_MAP)) {
+            REVERSE_NAMED[ent] = ch;
+        }
+
+        function setMode(m, btn) {
+            mode = m;
+            document.querySelectorAll('.tool-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+        }
+
+        function encodeEntities() {
+            errorMsg.textContent = '';
+            const src = inputEl.value;
+            let result = '';
+
+            for (let i = 0; i < src.length; i++) {
+                const ch = src[i];
+                const code = src.charCodeAt(i);
+
+                if (mode === 'named' && NAMED_MAP[ch]) {
+                    result += NAMED_MAP[ch];
+                } else if (code > 127 || ch === '&' || ch === '<' || ch === '>' || ch === '"' || ch === "'") {
+                    if (mode === 'named' && NAMED_MAP[ch]) {
+                        result += NAMED_MAP[ch];
+                    } else {
+                        result += '&#' + code + ';';
+                    }
+                } else {
+                    result += ch;
+                }
+            }
+
+            outputEl.value = result;
+        }
+
+        function decodeEntities() {
+            errorMsg.textContent = '';
+            const src = outputEl.value;
+
+            // Use a temporary element to decode all entities
+            const textarea = document.createElement('textarea');
+            textarea.innerHTML = src;
+            inputEl.value = textarea.value;
+        }
+
+        function copyLeft() {
+            navigator.clipboard.writeText(inputEl.value).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+
+        function copyRight() {
+            navigator.clipboard.writeText(outputEl.value).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

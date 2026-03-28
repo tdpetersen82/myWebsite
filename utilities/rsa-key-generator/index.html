@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RSA Key Pair Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🗝️ RSA Key Pair Generator</h1>
+        <p class="subtitle">Generate RSA public/private key pairs in PEM format using Web Crypto API.</p>
+
+        <div class="tool-area">
+            <div class="tool-row" style="align-items:end;">
+                <div>
+                    <label for="keySize">Key Size</label>
+                    <select id="keySize" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                        <option value="2048">2048 bits</option>
+                        <option value="4096">4096 bits</option>
+                    </select>
+                </div>
+                <div>
+                    <button class="copy-btn" onclick="generateKeys()" style="width:100%;">Generate Key Pair</button>
+                </div>
+            </div>
+
+            <div id="loading" style="display:none;text-align:center;margin:16px 0;color:#666;">
+                <span>Generating keys... This may take a few seconds for 4096-bit keys.</span>
+            </div>
+
+            <div id="results" style="display:none;">
+                <div style="margin-top:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <label for="pubKey">Public Key (SPKI PEM)</label>
+                        <button class="copy-btn" onclick="copyEl('pubKey')" style="font-size:0.8em;">📋 Copy</button>
+                    </div>
+                    <textarea id="pubKey" readonly style="height:200px;font-family:monospace;font-size:0.8em;"></textarea>
+                </div>
+                <div style="margin-top:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <label for="privKey">Private Key (PKCS8 PEM)</label>
+                        <button class="copy-btn" onclick="copyEl('privKey')" style="font-size:0.8em;">📋 Copy</button>
+                    </div>
+                    <textarea id="privKey" readonly style="height:300px;font-family:monospace;font-size:0.8em;"></textarea>
+                </div>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+        </div>
+    </div>
+
+    <script>
+        const errorMsg = document.getElementById('errorMsg');
+
+        async function generateKeys() {
+            errorMsg.textContent = '';
+            document.getElementById('loading').style.display = '';
+            document.getElementById('results').style.display = 'none';
+
+            try {
+                const keySize = parseInt(document.getElementById('keySize').value);
+
+                const keyPair = await crypto.subtle.generateKey(
+                    {
+                        name: 'RSA-OAEP',
+                        modulusLength: keySize,
+                        publicExponent: new Uint8Array([1, 0, 1]),
+                        hash: 'SHA-256'
+                    },
+                    true,
+                    ['encrypt', 'decrypt']
+                );
+
+                // Export public key as SPKI
+                const pubExported = await crypto.subtle.exportKey('spki', keyPair.publicKey);
+                const pubPem = arrayBufferToPem(pubExported, 'PUBLIC KEY');
+
+                // Export private key as PKCS8
+                const privExported = await crypto.subtle.exportKey('pkcs8', keyPair.privateKey);
+                const privPem = arrayBufferToPem(privExported, 'PRIVATE KEY');
+
+                document.getElementById('pubKey').value = pubPem;
+                document.getElementById('privKey').value = privPem;
+                document.getElementById('results').style.display = '';
+            } catch (e) {
+                errorMsg.textContent = 'Error generating keys: ' + e.message;
+            }
+
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function arrayBufferToPem(buffer, label) {
+            const base64 = btoa(String.fromCharCode(...new Uint8Array(buffer)));
+            const lines = base64.match(/.{1,64}/g) || [];
+            return '-----BEGIN ' + label + '-----\n' + lines.join('\n') + '\n-----END ' + label + '-----';
+        }
+
+        function copyEl(id) {
+            navigator.clipboard.writeText(document.getElementById(id).value).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

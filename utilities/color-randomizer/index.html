@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Random Color Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .color-swatch {
+            width: 100%; height: 120px; border-radius: 12px; margin: 12px 0;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.15); transition: background-color 0.3s;
+        }
+        .color-values { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; margin: 8px 0; }
+        .color-val { display: flex; align-items: center; gap: 4px; background: #f5f5fa; padding: 6px 12px; border-radius: 8px; font-family: monospace; font-size: 0.9em; }
+        .palette-grid { display: grid; grid-template-columns: repeat(5, 1fr); gap: 8px; margin: 16px 0; }
+        .palette-item { position: relative; border-radius: 10px; overflow: hidden; }
+        .palette-swatch { height: 80px; cursor: pointer; transition: transform 0.2s; }
+        .palette-swatch:hover { transform: scale(1.05); }
+        .palette-info { padding: 6px; text-align: center; font-size: 0.75em; font-family: monospace; background: #f5f5fa; }
+        .lock-btn {
+            position: absolute; top: 4px; right: 4px; background: rgba(255,255,255,0.8);
+            border: none; border-radius: 50%; width: 28px; height: 28px; cursor: pointer;
+            font-size: 0.9em; display: flex; align-items: center; justify-content: center;
+        }
+        .lock-btn.locked { background: rgba(255,200,0,0.9); }
+        .style-options { display: flex; gap: 6px; flex-wrap: wrap; justify-content: center; margin: 10px 0; }
+        .style-opt { padding: 6px 14px; border: 2px solid #e0e0e0; border-radius: 20px; background: #fff; cursor: pointer; font-size: 0.9em; transition: all 0.2s; }
+        .style-opt:hover { border-color: #667eea; }
+        .style-opt.active { border-color: #764ba2; background: #764ba2; color: #fff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎨 Random Color Generator</h1>
+        <p class="subtitle">Generate random colors with different styles and palettes.</p>
+
+        <div class="tool-area">
+            <div class="style-options" id="styleOptions">
+                <button class="style-opt active" data-style="any">Any</button>
+                <button class="style-opt" data-style="pastel">Pastel</button>
+                <button class="style-opt" data-style="dark">Dark</button>
+                <button class="style-opt" data-style="warm">Warm</button>
+                <button class="style-opt" data-style="cool">Cool</button>
+                <button class="style-opt" data-style="neon">Neon</button>
+            </div>
+
+            <div class="color-swatch" id="mainSwatch"></div>
+            <div class="color-values" id="colorValues"></div>
+
+            <div style="text-align:center;margin:10px 0;">
+                <button class="copy-btn" onclick="generateSingle()" style="font-size:1.05em;padding:10px 24px;">🎲 Generate Color</button>
+            </div>
+
+            <h3 style="margin-top:16px;">Palette (5 colors)</h3>
+            <div class="palette-grid" id="paletteGrid"></div>
+            <div style="text-align:center;">
+                <button class="copy-btn" onclick="generatePalette()">🎨 Generate Palette</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentStyle = 'any';
+        let palette = [{},{},{},{},{}];
+        let locks = [false,false,false,false,false];
+
+        document.getElementById('styleOptions').addEventListener('click', e => {
+            if (e.target.dataset.style) {
+                document.querySelectorAll('.style-opt').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                currentStyle = e.target.dataset.style;
+            }
+        });
+
+        function randomColor(style) {
+            let h, s, l;
+            switch (style) {
+                case 'pastel': h = Math.random()*360; s = 50+Math.random()*30; l = 75+Math.random()*15; break;
+                case 'dark': h = Math.random()*360; s = 30+Math.random()*40; l = 10+Math.random()*25; break;
+                case 'warm': h = Math.random()*60-10; if(h<0)h+=360; s = 60+Math.random()*30; l = 40+Math.random()*30; break;
+                case 'cool': h = 180+Math.random()*120; s = 50+Math.random()*40; l = 35+Math.random()*35; break;
+                case 'neon': h = Math.random()*360; s = 100; l = 50+Math.random()*10; break;
+                default: h = Math.random()*360; s = Math.random()*100; l = Math.random()*100; break;
+            }
+            h = Math.round(h) % 360; s = Math.round(s); l = Math.round(l);
+            return { h, s, l };
+        }
+
+        function hslToRgb(h, s, l) {
+            s /= 100; l /= 100;
+            const a = s * Math.min(l, 1-l);
+            const f = n => { const k = (n + h/30) % 12; return l - a * Math.max(Math.min(k-3,9-k,1),-1); };
+            return [Math.round(f(0)*255), Math.round(f(8)*255), Math.round(f(4)*255)];
+        }
+
+        function rgbToHex(r,g,b) { return '#' + [r,g,b].map(x => x.toString(16).padStart(2,'0')).join(''); }
+
+        function colorStr(c) {
+            const [r,g,b] = hslToRgb(c.h,c.s,c.l);
+            return { hex: rgbToHex(r,g,b), rgb: `rgb(${r}, ${g}, ${b})`, hsl: `hsl(${c.h}, ${c.s}%, ${c.l}%)`, r, g, b };
+        }
+
+        function copyText(txt, btn) {
+            navigator.clipboard.writeText(txt);
+            if (btn) { const orig = btn.textContent; btn.textContent = '✓'; setTimeout(() => btn.textContent = orig, 800); }
+        }
+
+        function generateSingle() {
+            const c = randomColor(currentStyle);
+            const info = colorStr(c);
+            document.getElementById('mainSwatch').style.backgroundColor = info.hex;
+            document.getElementById('colorValues').innerHTML = [
+                { label: 'HEX', val: info.hex },
+                { label: 'RGB', val: info.rgb },
+                { label: 'HSL', val: info.hsl }
+            ].map(v => `<div class="color-val">${v.label}: <strong>${v.val}</strong> <button class="copy-btn" onclick="copyText('${v.val}', this)" style="padding:2px 8px;font-size:0.85em;">📋</button></div>`).join('');
+        }
+
+        function generatePalette() {
+            for (let i = 0; i < 5; i++) {
+                if (!locks[i]) {
+                    palette[i] = randomColor(currentStyle);
+                }
+            }
+            renderPalette();
+        }
+
+        function renderPalette() {
+            const grid = document.getElementById('paletteGrid');
+            grid.innerHTML = palette.map((c, i) => {
+                const info = colorStr(c);
+                return `<div class="palette-item">
+                    <div class="palette-swatch" style="background:${info.hex};" onclick="copyText('${info.hex}')"></div>
+                    <button class="lock-btn ${locks[i]?'locked':''}" onclick="toggleLock(${i})">${locks[i]?'🔒':'🔓'}</button>
+                    <div class="palette-info">${info.hex}</div>
+                </div>`;
+            }).join('');
+        }
+
+        function toggleLock(i) {
+            locks[i] = !locks[i];
+            renderPalette();
+        }
+
+        generateSingle();
+        generatePalette();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

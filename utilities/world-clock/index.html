@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>World Clock — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .clock-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 14px; margin-top: 16px; }
+        .clock-card { background: #f0f4ff; border-radius: 12px; padding: 16px; text-align: center; }
+        .clock-card .city { font-weight: 700; color: #333; font-size: 1em; margin-bottom: 4px; }
+        .clock-card .time { font-size: 1.8em; font-weight: 800; color: #667eea; }
+        .clock-card .date { font-size: 0.8em; color: #888; margin-top: 2px; }
+        .add-row { margin-top: 16px; display: flex; gap: 8px; flex-wrap: wrap; }
+        .add-row select { flex: 1; min-width: 200px; }
+        .add-btn { background: #667eea; color: #fff; border: none; border-radius: 8px; padding: 8px 16px; cursor: pointer; }
+        .add-btn:hover { background: #5a6fd6; }
+        .remove-btn { background: none; border: none; color: #e74c3c; cursor: pointer; font-size: 0.8em; margin-top: 4px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>&#127758; World Clock</h1>
+        <p class="subtitle">See the current time in cities around the world.</p>
+
+        <div class="tool-area">
+            <div class="clock-grid" id="clockGrid"></div>
+
+            <div class="add-row">
+                <select id="addTz">
+                    <option value="">Add a city...</option>
+                </select>
+                <button class="add-btn" onclick="addCity()">Add</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const allTimezones = [
+            'America/New_York','America/Chicago','America/Denver','America/Los_Angeles',
+            'America/Anchorage','America/Toronto','America/Mexico_City','America/Sao_Paulo',
+            'America/Buenos_Aires','America/Vancouver',
+            'Europe/London','Europe/Paris','Europe/Berlin','Europe/Rome','Europe/Madrid','Europe/Moscow','Europe/Istanbul',
+            'Asia/Dubai','Asia/Kolkata','Asia/Bangkok','Asia/Shanghai','Asia/Tokyo','Asia/Seoul','Asia/Singapore','Asia/Hong_Kong','Asia/Taipei',
+            'Australia/Sydney','Australia/Melbourne','Australia/Perth',
+            'Pacific/Auckland','Pacific/Honolulu','Africa/Cairo','Africa/Lagos','Africa/Johannesburg'
+        ];
+
+        const defaultCities = [
+            { name: 'New York', tz: 'America/New_York' },
+            { name: 'London', tz: 'Europe/London' },
+            { name: 'Paris', tz: 'Europe/Paris' },
+            { name: 'Tokyo', tz: 'Asia/Tokyo' },
+            { name: 'Sydney', tz: 'Australia/Sydney' },
+            { name: 'Dubai', tz: 'Asia/Dubai' },
+            { name: 'Mumbai', tz: 'Asia/Kolkata' },
+            { name: 'Los Angeles', tz: 'America/Los_Angeles' }
+        ];
+
+        let cities = [...defaultCities];
+
+        const addSelect = document.getElementById('addTz');
+        allTimezones.forEach(tz => {
+            addSelect.add(new Option(tz.replace(/_/g, ' '), tz));
+        });
+
+        function addCity() {
+            const tz = addSelect.value;
+            if (!tz) return;
+            const name = tz.split('/').pop().replace(/_/g, ' ');
+            cities.push({ name, tz, custom: true });
+            addSelect.value = '';
+            render();
+        }
+
+        function removeCity(i) {
+            cities.splice(i, 1);
+            render();
+        }
+
+        function render() {
+            const grid = document.getElementById('clockGrid');
+            const now = new Date();
+            grid.innerHTML = cities.map((c, i) => {
+                const timeFmt = new Intl.DateTimeFormat('en-US', { timeZone: c.tz, hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
+                const dateFmt = new Intl.DateTimeFormat('en-US', { timeZone: c.tz, weekday: 'short', month: 'short', day: 'numeric' });
+                const removeHtml = c.custom ? `<button class="remove-btn" onclick="removeCity(${i})">Remove</button>` : '';
+                return `<div class="clock-card">
+                    <div class="city">${c.name}</div>
+                    <div class="time">${timeFmt.format(now)}</div>
+                    <div class="date">${dateFmt.format(now)}</div>
+                    ${removeHtml}
+                </div>`;
+            }).join('');
+        }
+
+        render();
+        setInterval(render, 1000);
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>
