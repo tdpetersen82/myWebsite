@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Super Off Road — Free Online Multiplayer Racing | Arcade Game Hub</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        #game-container canvas {
+            border: 2px solid #333;
+            background-color: #1a1a2e;
+            display: block;
+            margin: 0 auto;
+            border-radius: 10px;
+        }
+        #game-container {
+            margin: 10px auto;
+            max-width: 1204px;
+        }
+        @font-face {
+            font-family: 'Press Start 2P';
+            src: url('https://fonts.gstatic.com/s/pressstart2p/v15/e3t4euO8T-267oIAQAu6jDQyK0nSgPJE4580w.woff2') format('woff2');
+            font-weight: 400;
+            font-style: normal;
+            font-display: swap;
+        }
+    </style>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <script src="https://unpkg.com/peerjs@1.5.4/dist/peerjs.min.js"></script>
+    <meta name="description" content="Play Super Off Road free in your browser. Multiplayer top-down racing for up to 8 players! Create a room, share the code, race your friends. No downloads, no installs.">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Super Off Road","description":"Multiplayer top-down racing for up to 8 players. Create a room, share the code, race your friends!","playMode":["SinglePlayer","MultiPlayer"],"numberOfPlayers":{"@type":"QuantitativeValue","minValue":1,"maxValue":8},"applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Arcade Game Hub"}}</script>
+</head>
+<body>
+    <div class="container">
+        <h1>🏎️ Super Off Road</h1>
+        <div class="game-info">
+            <p>Players: <span id="playerCount">1</span>/8</p>
+            <p>Room: <span id="roomCode">—</span></p>
+        </div>
+        <div id="game-container"></div>
+        <div class="controls-info">
+            <p><strong>Controls:</strong> Arrow Keys/WASD = Steer & Gas/Brake | Space = Nitro | Shift = Drift | E = Use Power-Up | M = Mute | ESC = Leave</p>
+        </div>
+    </div>
+
+    <!-- Game scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/AudioManager.js"></script>
+    <script src="js/NetworkManager.js"></script>
+    <script src="js/InputManager.js"></script>
+    <script src="js/TrackRenderer.js"></script>
+    <script src="js/PhysicsEngine.js"></script>
+    <script src="js/entities/Vehicle.js"></script>
+    <script src="js/entities/PowerUp.js"></script>
+    <script src="js/entities/Projectile.js"></script>
+    <script src="js/entities/ParticleEmitter.js"></script>
+    <script src="js/scenes/BootScene.js"></script>
+    <script src="js/scenes/MenuScene.js"></script>
+    <script src="js/scenes/LobbyScene.js"></script>
+    <script src="js/scenes/RaceScene.js"></script>
+    <script src="js/scenes/ResultsScene.js"></script>
+
+    <script>
+    // Initialize global systems
+    window.gameAudio = new AudioManager();
+    window.networkManager = new NetworkManager();
+
+    // Create Phaser game
+    const game = new Phaser.Game({
+        type: Phaser.AUTO,
+        width: CONFIG.WIDTH,
+        height: CONFIG.HEIGHT,
+        parent: 'game-container',
+        backgroundColor: '#1a1a2e',
+        scale: {
+            mode: Phaser.Scale.FIT,
+            autoCenter: Phaser.Scale.CENTER_BOTH,
+        },
+        scene: [MenuScene, LobbyScene, RaceScene, ResultsScene],
+        input: {
+            keyboard: true,
+            mouse: true,
+            touch: true,
+        },
+        render: {
+            antialias: true,
+            pixelArt: false,
+            roundPixels: false,
+        },
+        autoFocus: false,
+        pauseOnBlur: false,
+    });
+    </script>
+
+    <script src="../nav.js"></script>
+</body>
+</html>

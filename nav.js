@@ -65,6 +65,7 @@
             games: [
                 { name: 'Fruit Catcher', icon: '\u{1F34E}', url: 'fruit-catcher/' },
                 { name: 'Street Brawl', icon: '\u{1F44A}', url: 'beat-em-up/' },
+                { name: 'Super Off Road', icon: '\u{1F3CE}', url: 'off-road/' },
             ]
         },
         {
