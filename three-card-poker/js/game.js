@@ -78,11 +78,14 @@ const Game = (() => {
             var val = parseInt(chip.dataset.value);
 
             if (betTarget === 'ante') {
-                if (anteBet + val <= CONFIG.MAX_BET && anteBet + val <= bankroll - pairPlusBet) {
-                    anteBet += val;
+                // Reserve bankroll for play bet (equal to ante)
+                var newAnte = anteBet + val;
+                if (newAnte <= CONFIG.MAX_BET && newAnte + newAnte + pairPlusBet <= bankroll) {
+                    anteBet = newAnte;
                 }
             } else {
-                if (pairPlusBet + val <= CONFIG.MAX_BET && pairPlusBet + val <= bankroll - anteBet) {
+                // Reserve bankroll for play bet (equal to ante)
+                if (pairPlusBet + val <= CONFIG.MAX_BET && anteBet + anteBet + pairPlusBet + val <= bankroll) {
                     pairPlusBet += val;
                 }
             }
@@ -105,7 +108,7 @@ const Game = (() => {
         els.btnRebet.addEventListener('click', function() {
             if (state !== STATES.BETTING) return;
             if (lastAnte === 0 && lastPairPlus === 0) return;
-            var totalNeeded = lastAnte + lastPairPlus;
+            var totalNeeded = lastAnte + lastPairPlus + lastAnte; // ante + PP + play bet reserve
             if (totalNeeded <= bankroll && lastAnte >= CONFIG.MIN_BET) {
                 anteBet = lastAnte;
                 pairPlusBet = lastPairPlus;
@@ -264,6 +267,7 @@ const Game = (() => {
 
     function playerPlay() {
         if (state !== STATES.DECISION) return;
+        state = STATES.REVEAL; // lock state immediately to prevent double-click
 
         // Place Play bet equal to Ante
         playBet = anteBet;
@@ -285,13 +289,13 @@ const Game = (() => {
 
     function playerFold() {
         if (state !== STATES.DECISION) return;
+        state = STATES.RESOLUTION; // lock state immediately to prevent double-click
 
         UI.hideActions();
         UI.hideHint();
         Audio.fold();
 
         // Lose ante bet (already deducted). Pair Plus still pays if applicable.
-        state = STATES.RESOLUTION;
 
         // Check Pair Plus before resolving
         var ppPayout = 0;
@@ -395,6 +399,7 @@ const Game = (() => {
             var playReturn = playBet; // push
             totalPayout += antePay + playReturn;
             messages.push('Dealer does not qualify \u2014 Ante wins 1:1, Play pushes');
+            stats.handsWon++;
         } else {
             // Dealer qualifies
             if (comparison > 0) {

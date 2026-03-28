@@ -54,6 +54,7 @@ const Game = (() => {
         // Bet Max
         els.btnBetMax.addEventListener('click', () => {
             if (state !== STATES.BETTING) return;
+            if (bankroll < 1) return;
             coinsBet = Math.min(CONFIG.MAX_COINS, bankroll);
             UI.setActiveCoin(coinsBet);
             UI.highlightPaytable(null, coinsBet);
@@ -120,6 +121,8 @@ const Game = (() => {
             UI.setMessage('Out of chips! Bankroll reset.');
             bankroll = CONFIG.STARTING_BANKROLL;
             UI.updateBankroll(bankroll);
+            UI.enableDeal(true);
+            UI.enableBetMax(true);
             saveState();
         }
     }
@@ -130,6 +133,7 @@ const Game = (() => {
         if (bankroll < coinsBet) {
             coinsBet = Math.max(1, bankroll);
             UI.setActiveCoin(coinsBet);
+            UI.highlightPaytable(null, coinsBet);
         }
 
         state = STATES.DEALING;

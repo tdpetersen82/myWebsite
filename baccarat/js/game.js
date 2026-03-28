@@ -138,6 +138,14 @@ const Game = (() => {
             UI.setMessage('Place your bet');
         }
 
+        // Reset for bankruptcy before updating UI
+        if (bankroll < CONFIG.MIN_BET) {
+            UI.setMessage('Out of chips! Bankroll reset.');
+            bankroll = CONFIG.STARTING_BANKROLL;
+            totalCommission = 0;
+            saveState();
+        }
+
         UI.clearCards();
         UI.showBetting(true);
         UI.hideHint();
@@ -149,16 +157,6 @@ const Game = (() => {
 
         UI.updateHandValue(UI.els().playerValue, null);
         UI.updateHandValue(UI.els().bankerValue, null);
-
-        // Reset for bankruptcy
-        if (bankroll < CONFIG.MIN_BET) {
-            UI.setMessage('Out of chips! Bankroll reset.');
-            bankroll = CONFIG.STARTING_BANKROLL;
-            totalCommission = 0;
-            UI.updateBankroll(bankroll);
-            UI.updateCommission(totalCommission);
-            saveState();
-        }
 
         if (hintsOn) updateHint();
     }
@@ -299,7 +297,7 @@ const Game = (() => {
                 netResult = payout - currentBet;
                 resultText = 'Tie! You Win $' + netResult + '!';
                 resultColor = '#f1c40f';
-                Animations.winEffect(UI.els().playerArea);
+                Animations.winEffect(UI.els().wrapper);
                 Audio.win();
             } else {
                 // Tie: return bet
@@ -329,7 +327,7 @@ const Game = (() => {
             // banker wins
             stats.bankerWins++;
             if (betType === 'banker') {
-                const commission = Math.floor(currentBet * CONFIG.BANKER_COMMISSION);
+                const commission = Math.round(currentBet * CONFIG.BANKER_COMMISSION);
                 const payout = currentBet + currentBet - commission;
                 totalCommission += commission;
                 bankroll += payout;
