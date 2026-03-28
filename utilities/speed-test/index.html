@@ -1,0 +1,202 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Speed Test — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .speed-display {
+            padding: 30px 0 10px;
+            text-align: center;
+        }
+        .speed-value {
+            font-size: 3.5em;
+            font-weight: 800;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            line-height: 1.1;
+        }
+        .speed-unit {
+            font-size: 1.1em;
+            color: #999;
+            font-weight: 600;
+            margin-top: 2px;
+        }
+        .start-btn {
+            display: inline-block;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 14px 48px;
+            border-radius: 30px;
+            border: none;
+            font-weight: bold;
+            font-size: 1.1em;
+            cursor: pointer;
+            transition: transform 0.2s, box-shadow 0.2s;
+            font-family: inherit;
+            margin: 16px 0;
+        }
+        .start-btn:hover:not(:disabled) {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(102, 126, 234, 0.4);
+        }
+        .start-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        .progress-wrap {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            padding: 24px 0;
+        }
+        .progress-wrap.active {
+            display: flex;
+        }
+        .pulse-ring {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            animation: pulse 1.2s ease-in-out infinite;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .pulse-ring span {
+            color: #fff;
+            font-weight: 700;
+            font-size: 0.9em;
+        }
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.8; }
+        }
+        .progress-text {
+            color: #999;
+            font-size: 0.9em;
+        }
+        .disclaimer {
+            color: #bbb;
+            font-size: 0.78em;
+            margin-top: 14px;
+            font-style: italic;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📶 Speed Test</h1>
+        <p class="subtitle">Estimate your download speed by fetching resources from a public CDN.</p>
+
+        <div class="tool-area" style="text-align:center;">
+            <div id="resultArea" class="speed-display" style="display:none;">
+                <div class="speed-value" id="speedValue">—</div>
+                <div class="speed-unit">Mbps</div>
+            </div>
+
+            <div class="progress-wrap" id="progress">
+                <div class="pulse-ring"><span id="runLabel">1/3</span></div>
+                <div class="progress-text" id="progressText">Downloading test file...</div>
+            </div>
+
+            <button class="start-btn" id="startBtn" onclick="runTest()">Start Test</button>
+
+            <div id="detailsArea" style="display:none;">
+                <div class="tool-grid" id="detailsGrid"></div>
+            </div>
+
+            <p class="disclaimer">Results are estimates and depend on CDN proximity, network conditions, and browser throttling.</p>
+        </div>
+    </div>
+
+    <script>
+        const TEST_URL = 'https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css';
+        const RUNS = 3;
+        const startBtn = document.getElementById('startBtn');
+        const progress = document.getElementById('progress');
+        const runLabel = document.getElementById('runLabel');
+        const progressText = document.getElementById('progressText');
+        const resultArea = document.getElementById('resultArea');
+        const speedValue = document.getElementById('speedValue');
+        const detailsArea = document.getElementById('detailsArea');
+        const detailsGrid = document.getElementById('detailsGrid');
+
+        async function runTest() {
+            startBtn.disabled = true;
+            startBtn.textContent = 'Testing...';
+            resultArea.style.display = 'none';
+            detailsArea.style.display = 'none';
+            progress.classList.add('active');
+
+            const speeds = [];
+            let totalBytes = 0;
+            let totalTime = 0;
+            let firstByteLatency = null;
+
+            for (let i = 0; i < RUNS; i++) {
+                runLabel.textContent = (i + 1) + '/' + RUNS;
+                progressText.textContent = 'Downloading test file (run ' + (i + 1) + ' of ' + RUNS + ')...';
+
+                try {
+                    const bustUrl = TEST_URL + '?_t=' + Date.now() + '_' + i;
+                    const t0 = performance.now();
+                    const res = await fetch(bustUrl, { cache: 'no-store' });
+                    const ttfb = performance.now() - t0;
+                    if (firstByteLatency === null) firstByteLatency = ttfb;
+
+                    const blob = await res.blob();
+                    const t1 = performance.now();
+                    const elapsed = (t1 - t0) / 1000; // seconds
+                    const bytes = blob.size;
+
+                    totalBytes += bytes;
+                    totalTime += elapsed;
+
+                    const mbps = (bytes * 8) / (elapsed * 1000000);
+                    speeds.push(mbps);
+                } catch (err) {
+                    speeds.push(0);
+                }
+            }
+
+            progress.classList.remove('active');
+
+            const validSpeeds = speeds.filter(s => s > 0);
+            const avgSpeed = validSpeeds.length > 0 ? validSpeeds.reduce((a, b) => a + b, 0) / validSpeeds.length : 0;
+
+            speedValue.textContent = avgSpeed > 0 ? avgSpeed.toFixed(1) : '—';
+            resultArea.style.display = 'block';
+
+            detailsGrid.innerHTML = `
+                <div class="info-item">
+                    <div class="info-label">Latency (est.)</div>
+                    <div class="info-value">${firstByteLatency !== null ? Math.round(firstByteLatency) + ' ms' : '—'}</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Total Downloaded</div>
+                    <div class="info-value">${(totalBytes / 1024).toFixed(1)} KB</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Test Duration</div>
+                    <div class="info-value">${totalTime.toFixed(2)} sec</div>
+                </div>
+                <div class="info-item">
+                    <div class="info-label">Runs Completed</div>
+                    <div class="info-value">${validSpeeds.length} / ${RUNS}</div>
+                </div>
+            `;
+            detailsArea.style.display = 'block';
+
+            startBtn.disabled = false;
+            startBtn.textContent = 'Test Again';
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

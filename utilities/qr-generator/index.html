@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>QR Code Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        #qrDisplay {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 160px;
+            margin: 16px 0;
+        }
+        #qrDisplay img {
+            border-radius: 8px;
+        }
+        .qr-actions {
+            text-align: center;
+            margin-top: 8px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📲 QR Generator</h1>
+        <p class="subtitle">Generate a QR code for any URL or text. Download it as a PNG image.</p>
+
+        <div class="tool-area">
+            <label for="qrInput">Enter URL or text:</label>
+            <input type="text" id="qrInput" placeholder="https://example.com">
+        </div>
+
+        <div class="tool-tabs" id="sizeTabs">
+            <button class="tool-tab" data-size="128" onclick="setSize(128, this)">Small (128px)</button>
+            <button class="tool-tab active" data-size="256" onclick="setSize(256, this)">Medium (256px)</button>
+            <button class="tool-tab" data-size="512" onclick="setSize(512, this)">Large (512px)</button>
+        </div>
+
+        <div id="qrDisplay"></div>
+
+        <div class="qr-actions">
+            <button class="copy-btn" id="downloadBtn" onclick="downloadQR()">Download PNG</button>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/qrcodejs@1.0.0/qrcode.min.js"></script>
+    <script>
+        const qrInput = document.getElementById('qrInput');
+        const qrDisplay = document.getElementById('qrDisplay');
+        let currentSize = 256;
+        let qrInstance = null;
+        let debounceTimer = null;
+
+        function generateQR(text) {
+            if (!text) {
+                qrDisplay.innerHTML = '<span style="color:#ccc;">Enter text above to generate a QR code.</span>';
+                return;
+            }
+
+            qrDisplay.innerHTML = '';
+            qrInstance = new QRCode(qrDisplay, {
+                text: text,
+                width: currentSize,
+                height: currentSize,
+                colorDark: '#333333',
+                colorLight: '#ffffff',
+                correctLevel: QRCode.CorrectLevel.M
+            });
+        }
+
+        function setSize(size, btn) {
+            currentSize = size;
+            document.querySelectorAll('#sizeTabs .tool-tab').forEach(t => t.classList.remove('active'));
+            btn.classList.add('active');
+            generateQR(qrInput.value.trim());
+        }
+
+        function downloadQR() {
+            const canvas = qrDisplay.querySelector('canvas');
+            if (!canvas) return;
+            const link = document.createElement('a');
+            link.download = 'qrcode.png';
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        }
+
+        qrInput.addEventListener('input', function () {
+            clearTimeout(debounceTimer);
+            debounceTimer = setTimeout(() => {
+                generateQR(qrInput.value.trim());
+            }, 300);
+        });
+
+        // Default: generate QR for current page URL
+        qrInput.value = window.location.href;
+        generateQR(window.location.href);
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>
