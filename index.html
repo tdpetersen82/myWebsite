@@ -4,16 +4,82 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Arcade Game Hub — Free Browser Games Online</title>
-    <meta name="description" content="Play 37 free arcade and casino games in your browser. Classic retro games, blackjack, roulette, poker, and more — no downloads, no installs.">
+    <meta name="description" content="Play 38 free arcade and casino games in your browser. Classic retro games, blackjack, roulette, poker, and more — no downloads, no installs.">
     <meta name="keywords" content="free online games, arcade games, browser games, retro games, casino games, blackjack, roulette, video poker, Pac-Man, Space Invaders">
     <meta property="og:title" content="Arcade Game Hub — Free Browser Games Online">
-    <meta property="og:description" content="Play 37 free arcade and casino games in your browser. No downloads, no installs.">
+    <meta property="og:description" content="Play 38 free arcade and casino games in your browser. No downloads, no installs.">
     <meta property="og:type" content="website">
+    <meta property="og:url" content="https://example.com/">
+    <meta property="og:image" content="https://example.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Arcade Game Hub — Free Browser Games Online">
+    <meta name="twitter:description" content="Play 38 free arcade and casino games in your browser. No downloads, no installs.">
+    <meta name="twitter:image" content="https://example.com/og-image.png">
     <link rel="canonical" href="https://example.com/">
+    <link rel="manifest" href="manifest.json">
     <link rel="stylesheet" href="styles.css">
+
+    <!-- Google Analytics — replace GA_MEASUREMENT_ID with your tracking ID -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=GA_MEASUREMENT_ID"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","GA_MEASUREMENT_ID");</script>
 
     <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <!-- Structured Data: Organization + Game Catalog -->
+    <script type="application/ld+json">{
+      "@context": "https://schema.org",
+      "@type": "Organization",
+      "name": "Arcade Game Hub",
+      "url": "https://example.com",
+      "description": "Free browser arcade games — no downloads, no installs."
+    }</script>
+    <script type="application/ld+json">{
+      "@context": "https://schema.org",
+      "@type": "ItemList",
+      "name": "Free Browser Games",
+      "numberOfItems": 38,
+      "itemListElement": [
+        {"@type":"ListItem","position":1,"url":"https://example.com/snake/","name":"Snake"},
+        {"@type":"ListItem","position":2,"url":"https://example.com/pong/","name":"Pong"},
+        {"@type":"ListItem","position":3,"url":"https://example.com/breakout/","name":"Breakout"},
+        {"@type":"ListItem","position":4,"url":"https://example.com/space-invaders/","name":"Space Invaders"},
+        {"@type":"ListItem","position":5,"url":"https://example.com/flappy-bird/","name":"Flappy Bird"},
+        {"@type":"ListItem","position":6,"url":"https://example.com/block-puzzle/","name":"Block Puzzle"},
+        {"@type":"ListItem","position":7,"url":"https://example.com/asteroids/","name":"Asteroids"},
+        {"@type":"ListItem","position":8,"url":"https://example.com/pac-man/","name":"Pac-Man"},
+        {"@type":"ListItem","position":9,"url":"https://example.com/frogger/","name":"Frogger"},
+        {"@type":"ListItem","position":10,"url":"https://example.com/missile-command/","name":"Missile Command"},
+        {"@type":"ListItem","position":11,"url":"https://example.com/galaga/","name":"Galaga"},
+        {"@type":"ListItem","position":12,"url":"https://example.com/centipede/","name":"Centipede"},
+        {"@type":"ListItem","position":13,"url":"https://example.com/lunar-lander/","name":"Lunar Lander"},
+        {"@type":"ListItem","position":14,"url":"https://example.com/spacex-lander/","name":"SpaceX Lander"},
+        {"@type":"ListItem","position":15,"url":"https://example.com/joust/","name":"Joust"},
+        {"@type":"ListItem","position":16,"url":"https://example.com/bomberman/","name":"Bomberman"},
+        {"@type":"ListItem","position":17,"url":"https://example.com/qbert/","name":"Q*bert"},
+        {"@type":"ListItem","position":18,"url":"https://example.com/donkey-kong/","name":"Donkey Kong"},
+        {"@type":"ListItem","position":19,"url":"https://example.com/dig-dug/","name":"Dig Dug"},
+        {"@type":"ListItem","position":20,"url":"https://example.com/tempest/","name":"Tempest"},
+        {"@type":"ListItem","position":21,"url":"https://example.com/defender/","name":"Defender"},
+        {"@type":"ListItem","position":22,"url":"https://example.com/tron/","name":"Tron Light Cycles"},
+        {"@type":"ListItem","position":23,"url":"https://example.com/simon/","name":"Simon"},
+        {"@type":"ListItem","position":24,"url":"https://example.com/connect-4/","name":"Connect 4"},
+        {"@type":"ListItem","position":25,"url":"https://example.com/connect-dots/","name":"Dots & Boxes"},
+        {"@type":"ListItem","position":26,"url":"https://example.com/hex-defense/","name":"Hex Defense"},
+        {"@type":"ListItem","position":27,"url":"https://example.com/blackjack/","name":"Blackjack"},
+        {"@type":"ListItem","position":28,"url":"https://example.com/roulette/","name":"Roulette"},
+        {"@type":"ListItem","position":29,"url":"https://example.com/video-poker/","name":"Video Poker"},
+        {"@type":"ListItem","position":30,"url":"https://example.com/baccarat/","name":"Baccarat"},
+        {"@type":"ListItem","position":31,"url":"https://example.com/craps/","name":"Craps"},
+        {"@type":"ListItem","position":32,"url":"https://example.com/three-card-poker/","name":"Three Card Poker"},
+        {"@type":"ListItem","position":33,"url":"https://example.com/fruit-catcher/","name":"Fruit Catcher"},
+        {"@type":"ListItem","position":34,"url":"https://example.com/beat-em-up/","name":"Street Brawl"},
+        {"@type":"ListItem","position":35,"url":"https://example.com/bubble-shooter-hd/","name":"Bubble Shooter HD"},
+        {"@type":"ListItem","position":36,"url":"https://example.com/merge-fruit/","name":"Merge Fruit"},
+        {"@type":"ListItem","position":37,"url":"https://example.com/drift-boss/","name":"Drift Boss"},
+        {"@type":"ListItem","position":38,"url":"https://example.com/slope-run/","name":"Slope Run"}
+      ]
+    }</script>
 </head>
 <body>
     <div class="hub-container">

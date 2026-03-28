@@ -1,0 +1,21 @@
+{
+  "name": "Arcade Game Hub",
+  "short_name": "Arcade Hub",
+  "description": "Free browser arcade games — no downloads, no installs.",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#1a1a2e",
+  "theme_color": "#667eea",
+  "icons": [
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
