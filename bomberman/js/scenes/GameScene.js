@@ -402,7 +402,7 @@ class GameScene extends Phaser.Scene {
             // Check enemies
             for (const enemy of this.enemies) {
                 if (!enemy.alive) continue;
-                if (explosion.isAffecting(enemy.gridRow, enemy.gridCol)) {
+                if (explosion.isAffecting(enemy.getCurrentRow(), enemy.getCurrentCol())) {
                     const pts = enemy.kill();
                     this.score += pts;
                     this.audio.enemyKill();
