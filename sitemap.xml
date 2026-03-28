@@ -34,4 +34,22 @@
   <url><loc>https://example.com/merge-fruit/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://example.com/drift-boss/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://example.com/slope-run/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/</loc><priority>0.7</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://example.com/utilities/my-ip/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/device-info/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/speed-test/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/unit-converter/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/color-converter/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/number-base/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/data-size/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/text-counter/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/base64-tool/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/url-encoder/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/json-formatter/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/uuid-generator/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/qr-generator/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/color-picker/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/password-generator/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/calculator/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://example.com/utilities/stopwatch/</loc><priority>0.6</priority><changefreq>monthly</changefreq></url>
 </urlset>

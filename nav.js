@@ -68,6 +68,47 @@
         },
     ];
 
+    // ── Utilities Catalog ───────────────────────────────────
+    const UTILITIES_CATALOG = [
+        {
+            name: 'Network & Device', icon: '\u{1F310}',
+            items: [
+                { name: 'My IP Address', icon: '\u{1F4CD}', url: 'utilities/my-ip/' },
+                { name: 'Device Info', icon: '\u{1F4F1}', url: 'utilities/device-info/' },
+                { name: 'Speed Test', icon: '\u{1F4F6}', url: 'utilities/speed-test/' },
+            ]
+        },
+        {
+            name: 'Conversions', icon: '\u{1F504}',
+            items: [
+                { name: 'Unit Converter', icon: '\u{1F4CF}', url: 'utilities/unit-converter/' },
+                { name: 'Color Converter', icon: '\u{1F3A8}', url: 'utilities/color-converter/' },
+                { name: 'Number Base', icon: '\u{1F522}', url: 'utilities/number-base/' },
+                { name: 'Data Size', icon: '\u{1F4BE}', url: 'utilities/data-size/' },
+            ]
+        },
+        {
+            name: 'Text & Data', icon: '\u{1F4DD}',
+            items: [
+                { name: 'Text Counter', icon: '\u{1F524}', url: 'utilities/text-counter/' },
+                { name: 'Base64 Tool', icon: '\u{1F510}', url: 'utilities/base64-tool/' },
+                { name: 'URL Encoder', icon: '\u{1F517}', url: 'utilities/url-encoder/' },
+                { name: 'JSON Formatter', icon: '\u{1F4CB}', url: 'utilities/json-formatter/' },
+                { name: 'UUID Generator', icon: '\u{1F3B2}', url: 'utilities/uuid-generator/' },
+            ]
+        },
+        {
+            name: 'Visual & Math', icon: '\u{1F9EE}',
+            items: [
+                { name: 'QR Generator', icon: '\u{1F4F2}', url: 'utilities/qr-generator/' },
+                { name: 'Color Picker', icon: '\u{1F308}', url: 'utilities/color-picker/' },
+                { name: 'Password Generator', icon: '\u{1F512}', url: 'utilities/password-generator/' },
+                { name: 'Calculator', icon: '\u{1F5A9}', url: 'utilities/calculator/' },
+                { name: 'Stopwatch', icon: '\u{23F1}\uFE0F', url: 'utilities/stopwatch/' },
+            ]
+        },
+    ];
+
     // ── Viewport Size Presets ─────────────────────────────
     var SIZE_PRESETS = {
         compact:  { label: 'Compact',  vhFactor: 0.50, containerMax: 600 },
@@ -83,12 +124,19 @@
     var totalGames = GAME_CATALOG.reduce(function (sum, cat) { return sum + cat.games.length; }, 0);
 
     // Detect basePath from how the script tag references nav.js
-    // Game pages use src="../nav.js", hub uses src="nav.js"
+    // Utility pages use src="../../nav.js", game pages use src="../nav.js", hub uses src="nav.js"
     var basePath = '';
     var inSubfolder = false;
+    var isUtilityPage = false;
     var scripts = document.getElementsByTagName('script');
     for (var i = 0; i < scripts.length; i++) {
         var src = scripts[i].getAttribute('src') || '';
+        if (src === '../../nav.js' || src.endsWith('/../../nav.js')) {
+            basePath = '../../';
+            inSubfolder = true;
+            isUtilityPage = true;
+            break;
+        }
         if (src === '../nav.js' || src.endsWith('/../nav.js')) {
             basePath = '../';
             inSubfolder = true;
@@ -100,6 +148,9 @@
     var pathParts = location.pathname.replace(/\/index\.html$/, '/').split('/').filter(Boolean);
     var lastPart = pathParts.length > 0 ? pathParts[pathParts.length - 1] : '';
     var currentPage = inSubfolder ? lastPart + '/' : 'index.html';
+    if (isUtilityPage && pathParts.length >= 2) {
+        currentPage = pathParts[pathParts.length - 2] + '/' + pathParts[pathParts.length - 1] + '/';
+    }
 
     // ── Inject CSS ──────────────────────────────────────────
     var style = document.createElement('style');
@@ -311,6 +362,14 @@ body.mobile-nav-open{overflow:hidden}\
 
     inner.appendChild(catList);
 
+    // Utilities link (desktop)
+    var utilLink = document.createElement('a');
+    utilLink.href = basePath + 'utilities/';
+    utilLink.className = 'site-nav-home';
+    utilLink.style.cssText = 'font-size:0.85em;padding:6px 12px;margin-left:2px';
+    utilLink.innerHTML = '<span>\u{1F6E0}\uFE0F</span> <span>Utilities</span>';
+    inner.appendChild(utilLink);
+
     // Tools area
     var tools = document.createElement('div');
     tools.className = 'site-nav-tools';
@@ -329,7 +388,8 @@ body.mobile-nav-open{overflow:hidden}\
 
     var searchInput = document.createElement('input');
     searchInput.type = 'text';
-    searchInput.placeholder = 'Search ' + totalGames + ' games\u2026';
+    var totalUtilities = UTILITIES_CATALOG.reduce(function (sum, cat) { return sum + cat.items.length; }, 0);
+    searchInput.placeholder = 'Search games & tools\u2026';
     searchInput.autocomplete = 'off';
 
     var searchResults = document.createElement('div');
@@ -341,8 +401,8 @@ body.mobile-nav-open{overflow:hidden}\
     searchWrap.appendChild(searchDropdown);
     tools.appendChild(searchWrap);
 
-    // Size selector (game pages only)
-    if (inSubfolder) {
+    // Size selector (game pages only, not utility pages)
+    if (inSubfolder && !isUtilityPage) {
         var sizeWrap = document.createElement('div');
         sizeWrap.className = 'site-nav-size';
 
@@ -398,7 +458,7 @@ body.mobile-nav-open{overflow:hidden}\
     mobileSearchDiv.className = 'mobile-search';
     var mobileSearchInput = document.createElement('input');
     mobileSearchInput.type = 'text';
-    mobileSearchInput.placeholder = 'Search ' + totalGames + ' games\u2026';
+    mobileSearchInput.placeholder = 'Search games & tools\u2026';
     mobileSearchInput.autocomplete = 'off';
     mobileSearchDiv.appendChild(mobileSearchInput);
     mobilePanel.appendChild(mobileSearchDiv);
@@ -439,10 +499,37 @@ body.mobile-nav-open{overflow:hidden}\
         mobilePanel.appendChild(catDiv);
     });
 
+    // Mobile utilities link
+    var mobileUtilDiv = document.createElement('div');
+    mobileUtilDiv.className = 'mobile-cat';
+    var mobileUtilHeader = document.createElement('div');
+    mobileUtilHeader.className = 'mobile-cat-header';
+    mobileUtilHeader.innerHTML = '<span>\u{1F6E0}\uFE0F</span> Utilities <span class="chevron">\u25BC</span>';
+    var mobileUtilList = document.createElement('ul');
+    mobileUtilList.className = 'mobile-game-list';
+    UTILITIES_CATALOG.forEach(function (cat) {
+        cat.items.forEach(function (tool) {
+            var li = document.createElement('li');
+            var a = document.createElement('a');
+            a.href = basePath + tool.url;
+            if (currentPage === tool.url) a.className = 'active';
+            a.innerHTML = '<span class="game-icon">' + tool.icon + '</span> ' + tool.name;
+            li.appendChild(a);
+            mobileUtilList.appendChild(li);
+        });
+    });
+    mobileUtilHeader.addEventListener('click', function () {
+        mobileUtilDiv.classList.toggle('collapsed');
+    });
+    mobileUtilDiv.appendChild(mobileUtilHeader);
+    mobileUtilDiv.appendChild(mobileUtilList);
+    mobileUtilDiv.classList.add('collapsed');
+    mobilePanel.appendChild(mobileUtilDiv);
+
     mobilePanel.appendChild(mobileNoResults);
 
-    // Mobile size selector (game pages only)
-    if (inSubfolder) {
+    // Mobile size selector (game pages only, not utility pages)
+    if (inSubfolder && !isUtilityPage) {
         var mobileSizeDiv = document.createElement('div');
         mobileSizeDiv.className = 'mobile-size';
         mobileSizeDiv.innerHTML = '<label class="nav-size-label">Game Size</label><div class="nav-size-buttons"></div>';
@@ -512,6 +599,26 @@ body.mobile-nav-open{overflow:hidden}\
                     var a = document.createElement('a');
                     a.href = basePath + game.url;
                     a.innerHTML = '<span class="game-icon">' + game.icon + '</span> ' + game.name;
+                    resultsContainer.appendChild(a);
+                });
+            }
+        });
+
+        UTILITIES_CATALOG.forEach(function (cat) {
+            var matches = cat.items.filter(function (t) {
+                return t.name.toLowerCase().indexOf(query) !== -1;
+            });
+            if (matches.length > 0) {
+                anyMatch = true;
+                var catLabel = document.createElement('div');
+                catLabel.className = 'search-cat';
+                catLabel.textContent = '\u{1F6E0}\uFE0F ' + cat.name;
+                resultsContainer.appendChild(catLabel);
+
+                matches.forEach(function (tool) {
+                    var a = document.createElement('a');
+                    a.href = basePath + tool.url;
+                    a.innerHTML = '<span class="game-icon">' + tool.icon + '</span> ' + tool.name;
                     resultsContainer.appendChild(a);
                 });
             }
