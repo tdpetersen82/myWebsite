@@ -539,6 +539,7 @@ const Game = (() => {
 
         playerHands.forEach((hand, i) => {
             if (hand.surrendered) {
+                totalResult -= Math.ceil(hand.bet / 2);
                 stats.handsPlayed++;
                 return; // already settled
             }
@@ -554,8 +555,9 @@ const Game = (() => {
                 if (playerBJ) stats.blackjacks++;
             } else if (mult === 0) {
                 bankroll += hand.bet; // push
+            } else {
+                totalResult -= hand.bet;
             }
-            // loss: bet already deducted
 
             stats.handsPlayed++;
         });

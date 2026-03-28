@@ -54,10 +54,11 @@ const Animations = (() => {
 
     function flashBetSpot(el) {
         if (!el) return;
+        var origBg = el.style.backgroundColor;
         el.style.transition = 'background-color 0.15s';
         el.style.backgroundColor = 'rgba(241,196,15,0.5)';
         setTimeout(function() {
-            el.style.backgroundColor = '';
+            el.style.backgroundColor = origBg;
             setTimeout(function() { el.style.transition = ''; }, 200);
         }, 200);
     }

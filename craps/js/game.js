@@ -145,8 +145,10 @@ const Game = (() => {
 
     function clearAllBets() {
         if (gameState !== STATES.BETTING) return;
-        // Return all bets to bankroll
+        // Return bets to bankroll (pass/dontPass/odds are contract bets during point phase)
+        var contractBets = (phase === PHASES.POINT) ? ['pass', 'dontPass', 'odds'] : [];
         Object.keys(bets).forEach(function(k) {
+            if (contractBets.indexOf(k) !== -1) return;
             bankroll += bets[k];
             bets[k] = 0;
         });
@@ -157,7 +159,7 @@ const Game = (() => {
     }
 
     function hasBets() {
-        return bets.pass > 0 || bets.dontPass > 0 || bets.field > 0 || bets.place6 > 0 || bets.place8 > 0;
+        return bets.pass > 0 || bets.dontPass > 0 || bets.odds > 0 || bets.field > 0 || bets.place6 > 0 || bets.place8 > 0;
     }
 
     function updateBetDisplays() {
@@ -259,7 +261,7 @@ const Game = (() => {
             // Place 6
             if (bets.place6 > 0) {
                 if (total === 6) {
-                    var p6 = Math.floor(bets.place6 * CONFIG.PLACE_PAYOUTS[6].pays / CONFIG.PLACE_PAYOUTS[6].for) + bets.place6;
+                    var p6 = Math.round(bets.place6 * CONFIG.PLACE_PAYOUTS[6].pays / CONFIG.PLACE_PAYOUTS[6].for) + bets.place6;
                     winnings += p6;
                     bankroll += p6;
                     messages.push('Place 6 wins! +$' + (p6 - bets.place6));
@@ -273,7 +275,7 @@ const Game = (() => {
             // Place 8
             if (bets.place8 > 0) {
                 if (total === 8) {
-                    var p8 = Math.floor(bets.place8 * CONFIG.PLACE_PAYOUTS[8].pays / CONFIG.PLACE_PAYOUTS[8].for) + bets.place8;
+                    var p8 = Math.round(bets.place8 * CONFIG.PLACE_PAYOUTS[8].pays / CONFIG.PLACE_PAYOUTS[8].for) + bets.place8;
                     winnings += p8;
                     bankroll += p8;
                     messages.push('Place 8 wins! +$' + (p8 - bets.place8));

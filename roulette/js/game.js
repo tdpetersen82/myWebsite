@@ -214,12 +214,14 @@ const Game = (() => {
             }
         });
 
-        var netWin = totalWinnings - getTotalBet();
+        var profit = totalWinnings - getTotalBet();
 
         if (totalWinnings > 0) {
             bankroll += totalWinnings;
+        }
+
+        if (profit > 0) {
             stats.spinsWon++;
-            var profit = totalWinnings - getTotalBet();
             stats.biggestWin = Math.max(stats.biggestWin, profit);
 
             if (profit >= getTotalBet() * 10) {
@@ -232,7 +234,10 @@ const Game = (() => {
                 Animations.winEffect(UI.els().wrapper);
                 Audio.win();
             }
-            UI.setMessage('Won $' + totalWinnings + '!');
+            UI.setMessage('Won $' + profit + '!');
+        } else if (profit === 0 && totalWinnings > 0) {
+            UI.showResult('Push', '#f1c40f');
+            UI.setMessage('Ball landed on ' + result + ' \u2014 broke even');
         } else {
             UI.showResult('No win', '#e74c3c');
             Animations.loseEffect(UI.els().wrapper);
@@ -248,7 +253,7 @@ const Game = (() => {
 
         // Show result hint
         if (hintsOn) {
-            var hint = Strategy.getResultHint(result, bets, totalWinnings > 0 ? totalWinnings - getTotalBet() : 0);
+            var hint = Strategy.getResultHint(result, bets, profit > 0 ? profit : 0);
             UI.showHint(hint.action, hint.explanation, hint.riskLabel, hint.riskClass, hint.detailedExplanation);
         }
 
