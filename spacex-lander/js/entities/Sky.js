@@ -19,6 +19,10 @@ class Sky {
             }
         });
 
+        // Shooting stars
+        this.shootingStars = [];
+        this._shootingStarTimer = 0;
+
         // Pre-generate clouds
         this.clouds = [];
         for (let i = 0; i < 5; i++) {
@@ -68,6 +72,30 @@ class Sky {
             c.x -= c.speed;
             if (c.x < -100) c.x = CONFIG.WIDTH + 100;
         }
+
+        // Shooting stars (only in space)
+        const dt = delta / 1000;
+        if (this.atmosphereBlend < 0.5) {
+            this._shootingStarTimer -= dt;
+            if (this._shootingStarTimer <= 0) {
+                this._shootingStarTimer = 3 + Math.random() * 5;
+                this.shootingStars.push({
+                    x: Math.random() * CONFIG.WIDTH,
+                    y: Math.random() * CONFIG.HEIGHT * 0.6,
+                    vx: -(120 + Math.random() * 80),
+                    vy: 60 + Math.random() * 40,
+                    life: 0.6 + Math.random() * 0.4,
+                    maxLife: 0.6 + Math.random() * 0.4
+                });
+            }
+        }
+        for (let i = this.shootingStars.length - 1; i >= 0; i--) {
+            const ss = this.shootingStars[i];
+            ss.x += ss.vx * dt;
+            ss.y += ss.vy * dt;
+            ss.life -= dt;
+            if (ss.life <= 0) this.shootingStars.splice(i, 1);
+        }
     }
 
     draw(graphics) {
@@ -91,6 +119,21 @@ class Sky {
             for (const s of this.stars) {
                 graphics.fillStyle(0xffffff, s.alpha * spaceAlpha);
                 graphics.fillCircle(s.x, s.y, s.size);
+            }
+
+            // Shooting stars
+            for (const ss of this.shootingStars) {
+                const alpha = (ss.life / ss.maxLife) * spaceAlpha;
+                const tailLen = 18;
+                const nx = ss.vx / Math.sqrt(ss.vx * ss.vx + ss.vy * ss.vy);
+                const ny = ss.vy / Math.sqrt(ss.vx * ss.vx + ss.vy * ss.vy);
+                graphics.lineStyle(1.5, 0xffffff, alpha * 0.9);
+                graphics.beginPath();
+                graphics.moveTo(ss.x, ss.y);
+                graphics.lineTo(ss.x - nx * tailLen, ss.y - ny * tailLen);
+                graphics.strokePath();
+                graphics.fillStyle(0xffffff, alpha);
+                graphics.fillCircle(ss.x, ss.y, 1.5);
             }
 
             // --- EARTH CURVATURE at high altitude ---
@@ -172,6 +215,22 @@ class Sky {
                             blob.ry * 2
                         );
                     }
+                }
+            }
+
+            // Horizon glow — warm orange/pink bands near bottom
+            if (blend > 0.5) {
+                const glowAlpha = (blend - 0.5) * 2; // 0→1 as blend goes 0.5→1
+                const glowY = oy + h * 0.82;
+                const glowH = h * 0.18;
+                const glowBands = [
+                    { offset: 0, color: Phaser.Display.Color.GetColor(255, 160, 80), a: 0.06 },
+                    { offset: 0.3, color: Phaser.Display.Color.GetColor(255, 120, 70), a: 0.04 },
+                    { offset: 0.6, color: Phaser.Display.Color.GetColor(220, 100, 80), a: 0.03 }
+                ];
+                for (const band of glowBands) {
+                    graphics.fillStyle(band.color, band.a * glowAlpha);
+                    graphics.fillRect(ox - 100, glowY + band.offset * glowH, w + 200, glowH * (1 - band.offset));
                 }
             }
         }

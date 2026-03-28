@@ -48,6 +48,17 @@ class GameScene extends Phaser.Scene {
             : 0;
         this.rocket = new Rocket(this, startX, CONFIG.START_Y || -120);
         this.rocket.fuel = CONFIG.FUEL_MAX * (1 - fuelPenalty);
+
+        // Entry angle progression — higher levels approach at an angle
+        if (this.level >= lvl.ENTRY_ANGLE_START_LEVEL) {
+            const angleLevels = this.level - lvl.ENTRY_ANGLE_START_LEVEL + 1;
+            const entryAngle = Math.min(angleLevels * lvl.ENTRY_ANGLE_PER_LEVEL, lvl.ENTRY_ANGLE_MAX);
+            const entryVx = Math.min(angleLevels * lvl.ENTRY_VX_PER_LEVEL, lvl.ENTRY_VX_MAX);
+            const dir = Math.random() > 0.5 ? 1 : -1;
+            this.rocket.angle = entryAngle * dir;
+            this.rocket.vx = entryVx * dir;
+        }
+
         this.rocketGraphics = this.add.graphics().setDepth(4);
 
         // --- VFX ---
@@ -199,11 +210,12 @@ class GameScene extends Phaser.Scene {
 
         // --- DYNAMIC CAMERA ZOOM ---
         const cam = this.cameras.main;
+        const camCfg = CONFIG.CAMERA;
         const targetZoom = Phaser.Math.Clamp(
-            Phaser.Math.Linear(1.35, 0.45, altitude / 8000),
-            0.45, 1.35
+            Phaser.Math.Linear(camCfg.ZOOM_MAX, camCfg.ZOOM_MIN, altitude / camCfg.ZOOM_ALT_REF),
+            camCfg.ZOOM_MIN, camCfg.ZOOM_MAX
         );
-        const newZoom = cam.zoom + (targetZoom - cam.zoom) * 0.025;
+        const newZoom = cam.zoom + (targetZoom - cam.zoom) * camCfg.ZOOM_LERP;
         cam.setZoom(newZoom);
         cam.centerOn(rocket.x, rocket.y);
 
