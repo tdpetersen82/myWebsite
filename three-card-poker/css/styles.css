@@ -1,4 +1,4 @@
-/* ── Blackjack Game Styles ──────────────────────────── */
+/* ── Three Card Poker Game Styles ───────────────────── */
 
 * { box-sizing: border-box; margin: 0; padding: 0; }
 
@@ -19,7 +19,7 @@
 }
 
 /* ── Header ──────────────────────────────────────── */
-.bj-header {
+.tcp-header {
     display: flex;
     align-items: center;
     justify-content: space-between;
@@ -27,16 +27,16 @@
     background: rgba(0,0,0,0.15);
     color: #fff;
 }
-.bj-header h1 {
+.tcp-header h1 {
     font-size: 22px;
     font-weight: 700;
     text-shadow: 0 1px 3px rgba(0,0,0,0.3);
 }
-.bj-bankroll {
+.tcp-bankroll {
     font-size: 18px;
     font-weight: 600;
 }
-.bj-bankroll span { color: #f1c40f; }
+.tcp-bankroll span { color: #f1c40f; }
 
 .btn-hints {
     background: rgba(255,255,255,0.2);
@@ -52,11 +52,11 @@
 .btn-hints.active { background: #3498db; border-color: #3498db; }
 
 /* ── Table Area ──────────────────────────────────── */
-.bj-table {
+.tcp-table {
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 8px 24px;
+    padding: 6px 24px;
     height: calc(100% - 48px);
     justify-content: space-between;
 }
@@ -64,26 +64,27 @@
 /* ── Card Areas ──────────────────────────────────── */
 .hand-area {
     text-align: center;
-    min-height: 100px;
+    min-height: 90px;
     position: relative;
     border-radius: 12px;
-    padding: 4px 12px 8px;
+    padding: 2px 12px 4px;
     width: 100%;
 }
 .hand-label {
     font-size: 13px;
     font-weight: 600;
     color: rgba(255,255,255,0.85);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
     text-transform: uppercase;
     letter-spacing: 1px;
 }
 .hand-value {
-    font-size: 20px;
+    font-size: 18px;
     font-weight: 700;
     color: #fff;
     text-shadow: 0 1px 3px rgba(0,0,0,0.3);
-    margin-bottom: 4px;
+    margin-bottom: 2px;
+    min-height: 22px;
 }
 .cards-row {
     display: flex;
@@ -160,39 +161,63 @@
     color: rgba(255,255,255,0.3);
 }
 
-/* ── Split Hands ──────────────────────────────────── */
-.split-hands {
+/* ── Bet Circles ─────────────────────────────────── */
+.bet-circles {
     display: flex;
-    gap: 16px;
+    gap: 32px;
     justify-content: center;
-    width: 100%;
+    align-items: center;
+    margin: 2px 0;
 }
-.split-hand {
-    border: 2px solid transparent;
-    border-radius: 10px;
-    padding: 4px 8px;
-    transition: border-color 0.2s;
+.bet-circle {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    border: 3px solid rgba(255,255,255,0.4);
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    background: rgba(0,0,0,0.15);
+    transition: border-color 0.2s, box-shadow 0.2s;
 }
-.split-hand.active-hand {
+.bet-circle.has-bet {
     border-color: #f1c40f;
-    background: rgba(241,196,15,0.1);
+    box-shadow: 0 0 12px rgba(241,196,15,0.4);
+}
+.bet-circle.active-target {
+    border-color: #3498db;
+    box-shadow: 0 0 12px rgba(52,152,219,0.5);
+}
+.bet-circle-label {
+    font-size: 9px;
+    font-weight: 700;
+    color: rgba(255,255,255,0.8);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+.bet-circle-amount {
+    font-size: 14px;
+    font-weight: 700;
+    color: #f1c40f;
+    min-height: 18px;
 }
 
 /* ── Action Buttons ──────────────────────────────── */
 .action-bar {
     display: flex;
-    gap: 10px;
+    gap: 16px;
     justify-content: center;
     flex-wrap: wrap;
     position: relative;
     z-index: 6;
 }
 .btn-action {
-    padding: 8px 22px;
+    padding: 10px 32px;
     border: none;
     border-radius: 20px;
     color: #fff;
-    font-size: 15px;
+    font-size: 16px;
     font-weight: 700;
     cursor: pointer;
     text-transform: uppercase;
@@ -204,12 +229,8 @@
 .btn-action:active { transform: translateY(0); }
 .btn-action:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
 
-.btn-hit       { background: linear-gradient(135deg, #3498db, #2980b9); }
-.btn-stand     { background: linear-gradient(135deg, #f39c12, #e67e22); }
-.btn-double    { background: linear-gradient(135deg, #2ecc71, #27ae60); }
-.btn-split     { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
-.btn-insurance { background: linear-gradient(135deg, #1abc9c, #16a085); }
-.btn-surrender { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+.btn-play { background: linear-gradient(135deg, #2ecc71, #27ae60); }
+.btn-fold { background: linear-gradient(135deg, #e74c3c, #c0392b); }
 
 /* ── Hint Panel ──────────────────────────────────── */
 .hint-panel {
@@ -277,11 +298,34 @@
     text-align: center;
     width: 100%;
 }
+.bet-selector {
+    display: flex;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 6px;
+}
+.bet-target {
+    padding: 4px 16px;
+    border: 2px solid rgba(255,255,255,0.4);
+    border-radius: 14px;
+    background: rgba(255,255,255,0.1);
+    color: #fff;
+    font-size: 12px;
+    font-weight: 700;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: background 0.2s, border-color 0.2s;
+}
+.bet-target:hover { background: rgba(255,255,255,0.25); }
+.bet-target.active {
+    background: #3498db;
+    border-color: #3498db;
+}
 .chip-rack {
     display: flex;
     gap: 12px;
     justify-content: center;
-    margin-bottom: 8px;
+    margin-bottom: 6px;
 }
 .chip {
     width: 52px;
@@ -305,20 +349,20 @@
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 16px;
+    gap: 12px;
     color: #fff;
-    font-size: 15px;
+    font-size: 14px;
 }
 .bet-amount {
-    font-size: 22px;
+    font-size: 18px;
     font-weight: 700;
     color: #f1c40f;
 }
 .btn-deal, .btn-clear, .btn-rebet {
-    padding: 8px 24px;
+    padding: 8px 20px;
     border: none;
     border-radius: 20px;
-    font-size: 14px;
+    font-size: 13px;
     font-weight: 700;
     cursor: pointer;
     text-transform: uppercase;
@@ -348,7 +392,7 @@
     justify-content: center;
     font-size: 12px;
     color: rgba(255,255,255,0.7);
-    padding: 4px 0;
+    padding: 2px 0;
 }
 .stats-bar span { white-space: nowrap; }
 
@@ -358,7 +402,7 @@
     top: 50%;
     left: 50%;
     transform: translate(-50%, -50%) scale(0);
-    font-size: 32px;
+    font-size: 28px;
     font-weight: 800;
     color: #fff;
     text-shadow: 0 2px 8px rgba(0,0,0,0.4);
@@ -368,7 +412,7 @@
     white-space: nowrap;
 }
 .result-banner.show {
-    animation: resultPop 1.2s ease forwards;
+    animation: resultPop 1.4s ease forwards;
 }
 @keyframes resultPop {
     0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
@@ -380,10 +424,27 @@
 
 /* ── Message area ────────────────────────────────── */
 .message-area {
-    font-size: 16px;
+    font-size: 15px;
     font-weight: 600;
     color: #fff;
     text-align: center;
-    min-height: 24px;
+    min-height: 22px;
     text-shadow: 0 1px 2px rgba(0,0,0,0.2);
+}
+
+/* ── Payout Toast ────────────────────────────────── */
+.payout-toast {
+    position: absolute;
+    font-size: 16px;
+    font-weight: 700;
+    color: #f1c40f;
+    text-shadow: 0 1px 4px rgba(0,0,0,0.4);
+    pointer-events: none;
+    z-index: 11;
+    animation: toastUp 1.2s ease forwards;
+}
+@keyframes toastUp {
+    0% { opacity: 1; transform: translateY(0); }
+    80% { opacity: 1; transform: translateY(-30px); }
+    100% { opacity: 0; transform: translateY(-40px); }
 }

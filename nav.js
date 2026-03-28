@@ -47,7 +47,17 @@
                 { name: 'Connect 4', icon: '\u{1F534}', url: 'connect-4/' },
                 { name: 'Dots & Boxes', icon: '\u{1F535}', url: 'connect-dots/' },
                 { name: 'Hex Defense', icon: '\u{1F6E1}\uFE0F', url: 'hex-defense/' },
+            ]
+        },
+        {
+            name: 'Casino', icon: '\u{1F3B0}',
+            games: [
                 { name: 'Blackjack', icon: '\u{1F0CF}', url: 'blackjack/' },
+                { name: 'Roulette', icon: '\u{1F3A1}', url: 'roulette/' },
+                { name: 'Video Poker', icon: '\u{1F0CF}', url: 'video-poker/' },
+                { name: 'Baccarat', icon: '\u{1F0A0}', url: 'baccarat/' },
+                { name: 'Craps', icon: '\u{1F3B2}', url: 'craps/' },
+                { name: 'Three Card Poker', icon: '\u{1F0A1}', url: 'three-card-poker/' },
             ]
         },
         {

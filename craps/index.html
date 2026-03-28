@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Craps</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+</head>
+<body>
+    <div class="container">
+        <h1>&#x1F3B2; Craps</h1>
+        <div id="game-wrapper">
+
+            <!-- Header -->
+            <div class="craps-header">
+                <h1>&#x1F3B2; Craps</h1>
+                <div class="craps-bankroll">Bankroll: <span id="bankroll-value">$1,000</span></div>
+                <button class="btn-hints" id="btn-hints">Hints: OFF</button>
+            </div>
+
+            <!-- Table -->
+            <div class="craps-table" id="craps-table">
+
+                <!-- Point Numbers Row -->
+                <div class="point-row">
+                    <div class="point-cell" id="point-4" data-point="4">
+                        <div class="point-number">4</div>
+                        <div class="place-label">PLACE</div>
+                        <div class="bet-chip-display" id="place4-bet" style="display:none"></div>
+                    </div>
+                    <div class="point-cell" id="point-5" data-point="5">
+                        <div class="point-number">5</div>
+                        <div class="place-label">PLACE</div>
+                        <div class="bet-chip-display" id="place5-bet" style="display:none"></div>
+                    </div>
+                    <div class="point-cell clickable" id="zone-place-6" data-point="6">
+                        <div class="point-number">6</div>
+                        <div class="place-label">PLACE</div>
+                        <div class="bet-chip-display" id="place6-bet" style="display:none"></div>
+                    </div>
+                    <div class="point-cell clickable" id="zone-place-8" data-point="8">
+                        <div class="point-number">8</div>
+                        <div class="place-label">PLACE</div>
+                        <div class="bet-chip-display" id="place8-bet" style="display:none"></div>
+                    </div>
+                    <div class="point-cell" id="point-9" data-point="9">
+                        <div class="point-number">9</div>
+                        <div class="place-label">PLACE</div>
+                        <div class="bet-chip-display" id="place9-bet" style="display:none"></div>
+                    </div>
+                    <div class="point-cell" id="point-10" data-point="10">
+                        <div class="point-number">10</div>
+                        <div class="place-label">PLACE</div>
+                        <div class="bet-chip-display" id="place10-bet" style="display:none"></div>
+                    </div>
+                    <div class="puck-home" id="puck-home">
+                        <div class="puck puck-off" id="puck">OFF</div>
+                    </div>
+                </div>
+
+                <!-- Field Zone -->
+                <div class="bet-zone field-zone clickable" id="zone-field">
+                    <div class="zone-label">FIELD</div>
+                    <div class="zone-numbers">2 &bull; 3 &bull; 4 &bull; 9 &bull; 10 &bull; 11 &bull; 12</div>
+                    <div class="zone-detail">2 pays 2:1 &bull; 12 pays 3:1</div>
+                    <div class="bet-chip-display" id="field-bet" style="display:none"></div>
+                </div>
+
+                <!-- Dice Area -->
+                <div class="dice-area" id="dice-area">
+                    <div class="die">
+                        <div class="die-dot" style="left:50%;top:50%"></div>
+                    </div>
+                    <div class="die">
+                        <div class="die-dot" style="left:50%;top:50%"></div>
+                    </div>
+                </div>
+
+                <!-- Message -->
+                <div class="message-area" id="message">Come-Out Roll &#8212; Place your bets!</div>
+
+                <!-- Result Banner -->
+                <div class="result-banner" id="result-banner"></div>
+
+                <!-- Hint Panel -->
+                <div class="hint-panel" id="hint-panel">
+                    <div class="hint-header">
+                        <span class="hint-action" id="hint-action"></span>
+                        <span class="hint-risk" id="hint-risk"></span>
+                    </div>
+                    <div class="hint-explanation" id="hint-explanation"></div>
+                    <div class="hint-detail-toggle" id="hint-detail-toggle">Learn More &#9656;</div>
+                    <div class="hint-detail" id="hint-detail"></div>
+                </div>
+
+                <!-- Odds Zone (hidden until point set) -->
+                <div class="bet-zone odds-zone clickable" id="zone-odds" style="display:none">
+                    <div class="zone-label">ODDS</div>
+                    <div class="zone-detail">0% house edge &bull; Up to 3x</div>
+                    <div class="bet-chip-display" id="odds-bet" style="display:none"></div>
+                </div>
+
+                <!-- Don't Pass Zone -->
+                <div class="bet-zone dontpass-zone clickable" id="zone-dontpass">
+                    <div class="zone-label">DON'T PASS</div>
+                    <div class="zone-detail">Bar 12</div>
+                    <div class="bet-chip-display" id="dontpass-bet" style="display:none"></div>
+                </div>
+
+                <!-- Pass Line Zone -->
+                <div class="bet-zone pass-zone clickable" id="zone-pass">
+                    <div class="zone-label">PASS LINE</div>
+                    <div class="bet-chip-display" id="pass-bet" style="display:none"></div>
+                </div>
+
+                <!-- Controls -->
+                <div class="controls-bar">
+                    <div class="chip-rack" id="chip-rack">
+                        <div class="chip chip-selected" data-value="5" style="background: #e74c3c; border-color: #c0392b;">$5</div>
+                        <div class="chip" data-value="25" style="background: #27ae60; border-color: #1e8449;">$25</div>
+                        <div class="chip" data-value="100" style="background: #2980b9; border-color: #1f6fa5;">$100</div>
+                        <div class="chip" data-value="500" style="background: #8e44ad; border-color: #6c3483;">$500</div>
+                    </div>
+                    <div class="controls-right">
+                        <span class="selected-label">Chip: <span id="selected-chip">$5</span></span>
+                        <button class="btn-clear-bets" id="btn-clear-bets">Clear</button>
+                        <button class="btn-roll" id="btn-roll" disabled>Roll Dice</button>
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="stats-bar" id="stats-bar">
+                    <span>Rolls: 0</span>
+                    <span>Pass Wins: 0</span>
+                    <span>Don't Pass Wins: 0</span>
+                    <span>Best: $1,000</span>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- JS modules in dependency order -->
+    <script src="js/config.js"></script>
+    <script src="js/dice.js"></script>
+    <script src="js/strategy.js"></script>
+    <script src="js/audio.js"></script>
+    <script src="js/animations.js"></script>
+    <script src="js/ui.js"></script>
+    <script src="js/game.js"></script>
+
+    <!-- Auto-scaling -->
+    <script>
+    (function() {
+        var wrapper = document.getElementById('game-wrapper');
+        function resize() {
+            var W = 960, H = 640;
+            var s = Math.min(window.innerWidth / W, (window.innerHeight * 0.85) / H, 1);
+            wrapper.style.transform = 'scale(' + s + ')';
+            wrapper.style.transformOrigin = 'top center';
+            wrapper.style.marginTop = Math.max(0, (window.innerHeight * 0.85 - H * s) / 2) + 'px';
+        }
+        window.addEventListener('resize', resize);
+        resize();
+    })();
+    </script>
+
+    <script src="../nav.js"></script>
+</body>
+</html>

@@ -3,31 +3,44 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Blackjack</title>
+    <title>Baccarat</title>
     <link rel="stylesheet" href="../styles.css">
     <link rel="stylesheet" href="css/styles.css">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 </head>
 <body>
     <div class="container">
-        <h1>&#x1F0CF; Blackjack</h1>
+        <h1>&#x1F0CF; Baccarat</h1>
         <div id="game-wrapper">
 
             <!-- Header -->
-            <div class="bj-header">
-                <h1>&#x2660; Blackjack</h1>
-                <div class="bj-bankroll">Bankroll: <span id="bankroll-value">$1,000</span></div>
+            <div class="bacc-header">
+                <h1>&#x1F0CF; Baccarat</h1>
+                <div class="bacc-bankroll">
+                    Bankroll: <span id="bankroll-value">$1,000</span>
+                    <span class="bacc-commission">Commission: <span id="commission-value">$0</span></span>
+                </div>
                 <button class="btn-hints" id="btn-hints">Hints: OFF</button>
             </div>
 
             <!-- Table -->
-            <div class="bj-table">
+            <div class="bacc-table">
 
-                <!-- Dealer Hand -->
-                <div class="hand-area" id="dealer-area">
-                    <div class="hand-label">Dealer</div>
-                    <div class="hand-value" id="dealer-value"></div>
-                    <div class="cards-row" id="dealer-cards"></div>
+                <!-- Two Hands Side by Side -->
+                <div class="hands-row">
+                    <!-- Player Hand -->
+                    <div class="hand-area" id="player-area">
+                        <div class="hand-label">Player</div>
+                        <div class="hand-value" id="player-value"></div>
+                        <div class="cards-row" id="player-cards"></div>
+                    </div>
+
+                    <!-- Banker Hand -->
+                    <div class="hand-area" id="banker-area">
+                        <div class="hand-label">Banker</div>
+                        <div class="hand-value" id="banker-value"></div>
+                        <div class="cards-row" id="banker-cards"></div>
+                    </div>
                 </div>
 
                 <!-- Message -->
@@ -35,13 +48,6 @@
 
                 <!-- Result Banner -->
                 <div class="result-banner" id="result-banner"></div>
-
-                <!-- Player Hand -->
-                <div class="hand-area" id="player-area">
-                    <div class="hand-label">Player</div>
-                    <div class="hand-value" id="player-value"></div>
-                    <div class="cards-row" id="player-cards"></div>
-                </div>
 
                 <!-- Hint Panel -->
                 <div class="hint-panel" id="hint-panel">
@@ -54,24 +60,32 @@
                     <div class="hint-detail" id="hint-detail"></div>
                 </div>
 
-                <!-- Action Buttons -->
-                <div class="action-bar" id="action-bar" style="display:none">
-                    <button class="btn-action btn-hit" id="btn-hit">Hit</button>
-                    <button class="btn-action btn-stand" id="btn-stand">Stand</button>
-                    <button class="btn-action btn-double" id="btn-double">Double</button>
-                    <button class="btn-action btn-split" id="btn-split">Split</button>
-                    <button class="btn-action btn-insurance" id="btn-insurance">Insurance</button>
-                    <button class="btn-action btn-surrender" id="btn-surrender">Surrender</button>
-                </div>
-
                 <!-- Betting Area -->
                 <div class="betting-area" id="betting-area">
+                    <!-- Bet Zones -->
+                    <div class="bet-zones" id="bet-zones">
+                        <div class="bet-zone" id="zone-player">
+                            <div class="bet-zone-label">Player</div>
+                            <div class="bet-zone-payout">Pays 1:1</div>
+                        </div>
+                        <div class="bet-zone zone-tie" id="zone-tie">
+                            <div class="bet-zone-label">Tie</div>
+                            <div class="bet-zone-payout">Pays 8:1</div>
+                        </div>
+                        <div class="bet-zone" id="zone-banker">
+                            <div class="bet-zone-label">Banker</div>
+                            <div class="bet-zone-payout">Pays 1:1 (5% comm.)</div>
+                        </div>
+                    </div>
+
+                    <!-- Chip Rack -->
                     <div class="chip-rack" id="chip-rack">
                         <div class="chip" data-value="5" style="background: #e74c3c; border-color: #c0392b;">$5</div>
                         <div class="chip" data-value="25" style="background: #27ae60; border-color: #1e8449;">$25</div>
                         <div class="chip" data-value="100" style="background: #2980b9; border-color: #1f6fa5;">$100</div>
                         <div class="chip" data-value="500" style="background: #8e44ad; border-color: #6c3483;">$500</div>
                     </div>
+
                     <div class="bet-display">
                         <button class="btn-clear" id="btn-clear">Clear</button>
                         <span>Bet: <span class="bet-amount" id="bet-amount">$0</span></span>
@@ -83,8 +97,8 @@
                 <!-- Stats -->
                 <div class="stats-bar" id="stats-bar">
                     <span>Played: 0</span>
-                    <span>Won: 0</span>
-                    <span>BJ: 0</span>
+                    <span>Player: 0</span>
+                    <span>Banker: 0</span>
                     <span>Best: $1,000</span>
                 </div>
             </div>
@@ -94,7 +108,7 @@
     <!-- JS modules in dependency order -->
     <script src="js/config.js"></script>
     <script src="js/deck.js"></script>
-    <script src="js/hand.js"></script>
+    <script src="js/rules.js"></script>
     <script src="js/strategy.js"></script>
     <script src="js/audio.js"></script>
     <script src="js/animations.js"></script>
