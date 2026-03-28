@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PGP Key Generator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+</head>
+<body>
+    <div class="container">
+        <h1>🔏 PGP Key Generator</h1>
+        <p class="subtitle">Generate PGP/GPG key pairs using OpenPGP.js. Keys are generated entirely in your browser.</p>
+
+        <div class="tool-area">
+            <div class="tool-row">
+                <div>
+                    <label for="pgpName">Name</label>
+                    <input type="text" id="pgpName" placeholder="John Doe" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                </div>
+                <div>
+                    <label for="pgpEmail">Email</label>
+                    <input type="email" id="pgpEmail" placeholder="john@example.com" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                </div>
+            </div>
+
+            <div class="tool-row" style="margin-top:10px;">
+                <div>
+                    <label for="pgpPassphrase">Passphrase (optional)</label>
+                    <input type="password" id="pgpPassphrase" placeholder="Optional passphrase..." style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                </div>
+                <div>
+                    <label for="pgpKeyType">Key Type</label>
+                    <select id="pgpKeyType" style="width:100%;padding:10px;border:2px solid #e0e0e0;border-radius:8px;font-size:1em;">
+                        <option value="ecc-curve25519">ECC Curve25519</option>
+                        <option value="rsa-2048">RSA 2048</option>
+                        <option value="rsa-4096">RSA 4096</option>
+                    </select>
+                </div>
+            </div>
+
+            <div style="text-align:center;margin:12px 0;">
+                <button class="copy-btn" onclick="generatePGP()" id="genBtn">Generate Key Pair</button>
+            </div>
+
+            <div id="loading" style="display:none;text-align:center;margin:16px 0;color:#666;">
+                <span>Generating PGP keys... This may take a moment for RSA 4096.</span>
+            </div>
+
+            <div id="results" style="display:none;">
+                <div style="margin-top:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <label for="pubKey">Public Key (Armored)</label>
+                        <div style="display:flex;gap:4px;">
+                            <button class="copy-btn" onclick="copyEl('pubKey')" style="font-size:0.8em;">📋 Copy</button>
+                            <button class="copy-btn" onclick="downloadKey('pubKey', 'public-key.asc')" style="font-size:0.8em;">💾 Download</button>
+                        </div>
+                    </div>
+                    <textarea id="pubKey" readonly style="height:220px;font-family:monospace;font-size:0.75em;"></textarea>
+                </div>
+                <div style="margin-top:12px;">
+                    <div style="display:flex;justify-content:space-between;align-items:center;">
+                        <label for="privKey">Private Key (Armored)</label>
+                        <div style="display:flex;gap:4px;">
+                            <button class="copy-btn" onclick="copyEl('privKey')" style="font-size:0.8em;">📋 Copy</button>
+                            <button class="copy-btn" onclick="downloadKey('privKey', 'private-key.asc')" style="font-size:0.8em;">💾 Download</button>
+                        </div>
+                    </div>
+                    <textarea id="privKey" readonly style="height:220px;font-family:monospace;font-size:0.75em;"></textarea>
+                </div>
+
+                <div class="tool-output" style="margin-top:12px;">
+                    <div class="tool-grid" id="keyInfo"></div>
+                </div>
+            </div>
+
+            <div id="errorMsg" style="color:#e74c3c;margin-top:8px;font-size:0.9em;text-align:center;"></div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/openpgp@5.11.0/dist/openpgp.min.js"></script>
+    <script>
+        const errorMsg = document.getElementById('errorMsg');
+
+        async function generatePGP() {
+            errorMsg.textContent = '';
+            const name = document.getElementById('pgpName').value.trim();
+            const email = document.getElementById('pgpEmail').value.trim();
+            const passphrase = document.getElementById('pgpPassphrase').value;
+            const keyType = document.getElementById('pgpKeyType').value;
+
+            if (!name || !email) {
+                errorMsg.textContent = 'Please enter both name and email.';
+                return;
+            }
+
+            document.getElementById('loading').style.display = '';
+            document.getElementById('results').style.display = 'none';
+            document.getElementById('genBtn').disabled = true;
+
+            try {
+                let keyOptions = {
+                    userIDs: [{ name, email }],
+                    passphrase: passphrase || undefined,
+                };
+
+                if (keyType === 'ecc-curve25519') {
+                    keyOptions.type = 'ecc';
+                    keyOptions.curve = 'curve25519';
+                } else if (keyType === 'rsa-2048') {
+                    keyOptions.type = 'rsa';
+                    keyOptions.rsaBits = 2048;
+                } else {
+                    keyOptions.type = 'rsa';
+                    keyOptions.rsaBits = 4096;
+                }
+
+                const { privateKey, publicKey } = await openpgp.generateKey(keyOptions);
+
+                document.getElementById('pubKey').value = publicKey;
+                document.getElementById('privKey').value = privateKey;
+
+                // Show key info
+                const pubKeyObj = await openpgp.readKey({ armoredKey: publicKey });
+                const keyId = pubKeyObj.getKeyID().toHex().toUpperCase();
+                const fingerprint = pubKeyObj.getFingerprint().toUpperCase();
+                const created = pubKeyObj.getCreationTime().toUTCString();
+                const algo = pubKeyObj.getAlgorithmInfo();
+
+                let infoHtml = '';
+                infoHtml += '<div class="info-item"><span class="info-label">Key ID</span><span class="info-value" style="font-family:monospace;">' + keyId + '</span></div>';
+                infoHtml += '<div class="info-item"><span class="info-label">Fingerprint</span><span class="info-value" style="font-family:monospace;font-size:0.85em;word-break:break-all;">' + fingerprint + '</span></div>';
+                infoHtml += '<div class="info-item"><span class="info-label">Algorithm</span><span class="info-value">' + (algo.algorithm || keyType) + (algo.bits ? ' (' + algo.bits + ' bits)' : '') + (algo.curve ? ' (' + algo.curve + ')' : '') + '</span></div>';
+                infoHtml += '<div class="info-item"><span class="info-label">Created</span><span class="info-value">' + created + '</span></div>';
+                infoHtml += '<div class="info-item"><span class="info-label">User ID</span><span class="info-value">' + esc(name + ' <' + email + '>') + '</span></div>';
+
+                document.getElementById('keyInfo').innerHTML = infoHtml;
+                document.getElementById('results').style.display = '';
+            } catch (e) {
+                errorMsg.textContent = 'Error generating keys: ' + e.message;
+            }
+
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('genBtn').disabled = false;
+        }
+
+        function copyEl(id) {
+            navigator.clipboard.writeText(document.getElementById(id).value).then(() => {
+                const btn = event.target;
+                const orig = btn.textContent;
+                btn.textContent = '✓ Copied!';
+                setTimeout(() => btn.textContent = orig, 1500);
+            });
+        }
+
+        function downloadKey(id, filename) {
+            const content = document.getElementById(id).value;
+            const blob = new Blob([content], { type: 'text/plain' });
+            const a = document.createElement('a');
+            a.href = URL.createObjectURL(blob);
+            a.download = filename;
+            a.click();
+            URL.revokeObjectURL(a.href);
+        }
+
+        function esc(s) {
+            return s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;');
+        }
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

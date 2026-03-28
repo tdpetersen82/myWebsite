@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UTM Link Builder — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .form-group { text-align:left; margin-bottom:10px; }
+        .form-group label { font-weight:600; font-size:0.88em; color:#444; display:block; margin-bottom:3px; }
+        .form-group label .req { color:#e74c3c; }
+        .form-group input { width:100%; padding:9px 11px; border:2px solid #e0e0e0; border-radius:8px; font-size:0.92em; }
+        .form-group input:focus { border-color:#667eea; outline:none; }
+        .url-output { background:#1a1a2e; color:#6ec96e; border-radius:10px; padding:16px; font-family:'Courier New',monospace; font-size:0.9em; word-break:break-all; margin-top:12px; text-align:left; min-height:40px; }
+        .error { color:#e74c3c; font-size:0.85em; margin-top:4px; display:none; text-align:left; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔗 UTM Link Builder</h1>
+        <p class="subtitle">Build campaign URLs with UTM parameters for tracking in Google Analytics.</p>
+
+        <div class="tool-area">
+            <div class="form-group">
+                <label>Base URL <span class="req">*</span></label>
+                <input type="url" id="baseUrl" placeholder="https://example.com/landing-page">
+            </div>
+            <div class="form-group">
+                <label>Campaign Source <span class="req">*</span></label>
+                <input type="text" id="utmSource" placeholder="e.g. google, newsletter, facebook">
+            </div>
+            <div class="form-group">
+                <label>Campaign Medium <span class="req">*</span></label>
+                <input type="text" id="utmMedium" placeholder="e.g. cpc, email, social">
+            </div>
+            <div class="form-group">
+                <label>Campaign Name <span class="req">*</span></label>
+                <input type="text" id="utmCampaign" placeholder="e.g. spring_sale, product_launch">
+            </div>
+            <div class="form-group">
+                <label>Campaign Term (optional)</label>
+                <input type="text" id="utmTerm" placeholder="e.g. running+shoes">
+            </div>
+            <div class="form-group">
+                <label>Campaign Content (optional)</label>
+                <input type="text" id="utmContent" placeholder="e.g. logolink, textlink">
+            </div>
+
+            <div class="error" id="errorMsg">Please fill in the base URL, source, medium, and campaign name.</div>
+
+            <div class="url-output" id="output">Your UTM URL will appear here...</div>
+            <button class="copy-btn" id="copyBtn" style="margin-top:10px;">Copy URL</button>
+        </div>
+    </div>
+
+    <script>
+    (function() {
+        'use strict';
+        const ids = ['baseUrl','utmSource','utmMedium','utmCampaign','utmTerm','utmContent'];
+
+        function build() {
+            const base = document.getElementById('baseUrl').value.trim();
+            const source = document.getElementById('utmSource').value.trim();
+            const medium = document.getElementById('utmMedium').value.trim();
+            const campaign = document.getElementById('utmCampaign').value.trim();
+            const term = document.getElementById('utmTerm').value.trim();
+            const content = document.getElementById('utmContent').value.trim();
+            const err = document.getElementById('errorMsg');
+
+            if (!base || !source || !medium || !campaign) {
+                err.style.display = 'block';
+                document.getElementById('output').textContent = 'Your UTM URL will appear here...';
+                return;
+            }
+            err.style.display = 'none';
+
+            const params = [];
+            params.push('utm_source=' + encodeURIComponent(source));
+            params.push('utm_medium=' + encodeURIComponent(medium));
+            params.push('utm_campaign=' + encodeURIComponent(campaign));
+            if (term) params.push('utm_term=' + encodeURIComponent(term));
+            if (content) params.push('utm_content=' + encodeURIComponent(content));
+
+            const sep = base.includes('?') ? '&' : '?';
+            document.getElementById('output').textContent = base + sep + params.join('&');
+        }
+
+        ids.forEach(id => document.getElementById(id).addEventListener('input', build));
+
+        document.getElementById('copyBtn').addEventListener('click', function() {
+            const txt = document.getElementById('output').textContent;
+            if (!txt || txt.includes('will appear')) return;
+            navigator.clipboard.writeText(txt).then(() => {
+                this.textContent = 'Copied!';
+                setTimeout(() => this.textContent = 'Copy URL', 1200);
+            });
+        });
+    })();
+    </script>
+    <script src="../../nav.js"></script>
+</body>
+</html>

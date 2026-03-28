@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Compound Interest Calculator — Free Online Tool</title>
+    <link rel="stylesheet" href="../../styles.css">
+    <style>
+        .result-big { font-size: 2em; font-weight: bold; color: #667eea; margin: 12px 0; }
+        .breakdown-table { width: 100%; border-collapse: collapse; margin-top: 12px; font-size: 0.85em; }
+        .breakdown-table th, .breakdown-table td { padding: 6px 10px; border-bottom: 1px solid #e0e0e0; text-align: right; }
+        .breakdown-table th { background: #f0f0f5; font-weight: 600; position: sticky; top: 0; }
+        .table-wrap { max-height: 300px; overflow-y: auto; border-radius: 8px; border: 1px solid #e0e0e0; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📈 Compound Interest Calculator</h1>
+        <p class="subtitle">See how your investments grow over time with compound interest.</p>
+        <div class="tool-area">
+            <div class="tool-row">
+                <div><label for="principal">Initial Principal ($):</label><input type="number" id="principal" placeholder="10000" min="0" oninput="calc()"></div>
+                <div><label for="monthly">Monthly Contribution ($):</label><input type="number" id="monthly" placeholder="500" min="0" oninput="calc()"></div>
+            </div>
+            <div class="tool-row">
+                <div><label for="rate">Annual Interest Rate (%):</label><input type="number" id="rate" placeholder="7" min="0" step="0.01" oninput="calc()"></div>
+                <div><label for="years">Years:</label><input type="number" id="years" placeholder="20" min="1" max="100" oninput="calc()"></div>
+            </div>
+            <div class="result-big" id="finalBal">$0.00</div>
+            <div class="tool-grid" id="summary"></div>
+            <div class="table-wrap" id="tableWrap" style="display:none">
+                <table class="breakdown-table" id="breakdownTable"></table>
+            </div>
+        </div>
+    </div>
+    <script src="../../nav.js"></script>
+    <script>
+        function fmt(n) { return '$' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+        function calc() {
+            const P = parseFloat(document.getElementById('principal').value) || 0;
+            const M = parseFloat(document.getElementById('monthly').value) || 0;
+            const annualRate = parseFloat(document.getElementById('rate').value) || 0;
+            const years = parseInt(document.getElementById('years').value) || 0;
+            if (years <= 0) { document.getElementById('finalBal').textContent = '$0.00'; document.getElementById('summary').innerHTML = ''; document.getElementById('tableWrap').style.display = 'none'; return; }
+            const r = annualRate / 100 / 12;
+            let balance = P;
+            let totalContrib = P;
+            let html = '<thead><tr><th>Year</th><th>Contributions</th><th>Interest</th><th>Balance</th></tr></thead><tbody>';
+            for (let y = 1; y <= years; y++) {
+                let yearInterest = 0;
+                for (let m = 0; m < 12; m++) {
+                    const interest = balance * r;
+                    yearInterest += interest;
+                    balance += interest + M;
+                    totalContrib += M;
+                }
+                html += '<tr><td>' + y + '</td><td>' + fmt(totalContrib) + '</td><td>' + fmt(balance - totalContrib) + '</td><td>' + fmt(balance) + '</td></tr>';
+            }
+            html += '</tbody>';
+            const totalInterest = balance - totalContrib;
+            document.getElementById('finalBal').textContent = fmt(balance);
+            document.getElementById('summary').innerHTML =
+                '<div class="info-item"><span class="info-label">Total Contributions</span><span class="info-value">' + fmt(totalContrib) + '</span></div>' +
+                '<div class="info-item"><span class="info-label">Total Interest</span><span class="info-value">' + fmt(totalInterest) + '</span></div>' +
+                '<div class="info-item"><span class="info-label">Final Balance</span><span class="info-value">' + fmt(balance) + '</span></div>';
+            document.getElementById('breakdownTable').innerHTML = html;
+            document.getElementById('tableWrap').style.display = '';
+        }
+    </script>
+</body>
+</html>
