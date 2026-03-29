@@ -39,6 +39,16 @@
             <p>Score: <span id="score">0</span></p>
             <p>Best: <span id="highScore">0</span></p>
         </div>
+        <div id="charSelect" style="margin:10px 0;">
+            <p style="margin-bottom:8px;font-weight:bold;">Choose your bird:</p>
+            <div style="display:flex;gap:12px;justify-content:center;flex-wrap:wrap;">
+                <button class="bird-btn" data-bird="classic" style="padding:8px 16px;border:2px solid #FFD700;border-radius:8px;background:#FFF8DC;cursor:pointer;font-weight:bold;">🐤 Classic</button>
+                <button class="bird-btn" data-bird="bluebird" style="padding:8px 16px;border:2px solid #4FC3F7;border-radius:8px;background:#E1F5FE;cursor:pointer;font-weight:bold;">🐦 Blue Jay</button>
+                <button class="bird-btn" data-bird="cardinal" style="padding:8px 16px;border:2px solid #EF5350;border-radius:8px;background:#FFEBEE;cursor:pointer;font-weight:bold;">🔴 Cardinal</button>
+                <button class="bird-btn" data-bird="parrot" style="padding:8px 16px;border:2px solid #66BB6A;border-radius:8px;background:#E8F5E9;cursor:pointer;font-weight:bold;">🦜 Parrot</button>
+                <button class="bird-btn" data-bird="purple" style="padding:8px 16px;border:2px solid #AB47BC;border-radius:8px;background:#F3E5F5;cursor:pointer;font-weight:bold;">🟣 Purple</button>
+            </div>
+        </div>
         <canvas id="gameCanvas" width="400" height="600"></canvas>
         <div class="controls">
             <p>Press Spacebar or Click to Flap</p>
@@ -86,14 +96,35 @@
             setTimeout(() => playSound(150, 0.3, 'sawtooth'), 150);
         }
 
+        // Bird character definitions
+        const BIRD_CHARS = {
+            classic:  { body: '#FFD700', wing: '#FFA500', beak: '#FF6347', eye: '#000' },
+            bluebird: { body: '#4FC3F7', wing: '#0288D1', beak: '#FF8F00', eye: '#000' },
+            cardinal: { body: '#EF5350', wing: '#C62828', beak: '#FFB74D', eye: '#000' },
+            parrot:   { body: '#66BB6A', wing: '#2E7D32', beak: '#FFEE58', eye: '#000' },
+            purple:   { body: '#AB47BC', wing: '#7B1FA2', beak: '#FFB74D', eye: '#FFF' }
+        };
+        let selectedBird = 'classic';
+
+        // Character selection
+        document.querySelectorAll('.bird-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                selectedBird = btn.dataset.bird;
+                document.querySelectorAll('.bird-btn').forEach(b => b.style.outline = 'none');
+                btn.style.outline = '3px solid #333';
+            });
+        });
+        // Default selection highlight
+        document.querySelector('[data-bird="classic"]').style.outline = '3px solid #333';
+
         const bird = {
             x: 80,
             y: canvas.height / 2,
             width: 34,
             height: 24,
             velocity: 0,
-            gravity: 0.5,
-            jump: -8
+            gravity: 0.45,
+            jump: -6.5
         };
 
         const pipes = [];
@@ -112,29 +143,36 @@
         highScoreElement.textContent = highScore;
 
         function drawBird() {
+            const c = BIRD_CHARS[selectedBird] || BIRD_CHARS.classic;
             // Body
-            ctx.fillStyle = '#FFD700';
+            ctx.fillStyle = c.body;
             ctx.beginPath();
             ctx.arc(bird.x + 17, bird.y + 12, 12, 0, Math.PI * 2);
             ctx.fill();
 
-            // Wing
-            ctx.fillStyle = '#FFA500';
+            // Wing (flap animation based on velocity)
+            const wingAngle = Math.PI / 4 + Math.sin(Date.now() / 60) * 0.3;
+            ctx.fillStyle = c.wing;
             ctx.beginPath();
-            ctx.ellipse(bird.x + 12, bird.y + 15, 8, 5, Math.PI / 4, 0, Math.PI * 2);
+            ctx.ellipse(bird.x + 12, bird.y + 15, 8, 5, wingAngle, 0, Math.PI * 2);
             ctx.fill();
 
-            // Eye
-            ctx.fillStyle = '#000';
+            // Eye white
+            ctx.fillStyle = '#fff';
             ctx.beginPath();
-            ctx.arc(bird.x + 23, bird.y + 8, 3, 0, Math.PI * 2);
+            ctx.arc(bird.x + 23, bird.y + 8, 3.5, 0, Math.PI * 2);
+            ctx.fill();
+            // Eye pupil
+            ctx.fillStyle = c.eye;
+            ctx.beginPath();
+            ctx.arc(bird.x + 24, bird.y + 8, 2, 0, Math.PI * 2);
             ctx.fill();
 
             // Beak
-            ctx.fillStyle = '#FF6347';
+            ctx.fillStyle = c.beak;
             ctx.beginPath();
             ctx.moveTo(bird.x + 28, bird.y + 12);
-            ctx.lineTo(bird.x + 34, bird.y + 10);
+            ctx.lineTo(bird.x + 36, bird.y + 10);
             ctx.lineTo(bird.x + 28, bird.y + 14);
             ctx.closePath();
             ctx.fill();

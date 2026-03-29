@@ -23,7 +23,9 @@ class GameScene extends Phaser.Scene {
     create() {
         const w = CONFIG.WIDTH;
         const h = CONFIG.HEIGHT;
-        const lvl = CONFIG.LEVEL;
+
+        // Get themed level definition
+        this.levelDef = CONFIG.getLevelDef(this.level);
 
         // Audio
         this.audio = window.audioManager;
@@ -43,20 +45,20 @@ class GameScene extends Phaser.Scene {
 
         // --- ROCKET ---
         const startX = 100 + Math.random() * (w - 200);
-        const fuelPenalty = this.level >= lvl.FUEL_PENALTY_START_LEVEL
-            ? Math.min(lvl.FUEL_PENALTY_MAX, (this.level - lvl.FUEL_PENALTY_START_LEVEL) * lvl.FUEL_PENALTY_PER_LEVEL)
-            : 0;
-        this.rocket = new Rocket(this, startX, CONFIG.START_Y || -120);
+        const fuelPenalty = this.levelDef.fuelPenalty || 0;
+        this.rocket = new Rocket(this, startX, CONFIG.START_Y || -4800);
         this.rocket.fuel = CONFIG.FUEL_MAX * (1 - fuelPenalty);
 
-        // Entry angle progression — higher levels approach at an angle
-        if (this.level >= lvl.ENTRY_ANGLE_START_LEVEL) {
-            const angleLevels = this.level - lvl.ENTRY_ANGLE_START_LEVEL + 1;
-            const entryAngle = Math.min(angleLevels * lvl.ENTRY_ANGLE_PER_LEVEL, lvl.ENTRY_ANGLE_MAX);
-            const entryVx = Math.min(angleLevels * lvl.ENTRY_VX_PER_LEVEL, lvl.ENTRY_VX_MAX);
+        // Extra start velocity for certain levels
+        if (this.levelDef.extraStartVY) {
+            this.rocket.vy = CONFIG.START_VY + this.levelDef.extraStartVY;
+        }
+
+        // Entry angle from level definition
+        if (this.levelDef.entryAngle > 0) {
             const dir = Math.random() > 0.5 ? 1 : -1;
-            this.rocket.angle = entryAngle * dir;
-            this.rocket.vx = entryVx * dir;
+            this.rocket.angle = this.levelDef.entryAngle * dir;
+            this.rocket.vx = (this.levelDef.entryVx || 0) * dir;
         }
 
         this.rocketGraphics = this.add.graphics().setDepth(4);
@@ -66,10 +68,8 @@ class GameScene extends Phaser.Scene {
 
         // --- WIND ---
         this.wind = 0;
-        if (this.level >= lvl.WIND_START_LEVEL) {
-            const maxWind = CONFIG.LEVEL.WIND_MAX;
-            const windForce = Math.min(maxWind, (this.level - lvl.WIND_START_LEVEL + 1) * lvl.WIND_PER_LEVEL);
-            this.wind = (Math.random() - 0.5) * 2 * windForce;
+        if (this.levelDef.wind > 0) {
+            this.wind = (Math.random() > 0.5 ? 1 : -1) * this.levelDef.wind;
         }
         this.windGraphics = this.add.graphics().setDepth(6);
 
@@ -113,6 +113,10 @@ class GameScene extends Phaser.Scene {
         this._legsAutoDeployed = false;
         this._phaseTextTimer = null;
 
+        // Sound barrier tracking
+        this._wasSuperSonic = true; // starts supersonic at Mach 7+
+        this._sonicBoomCooldown = 0;
+
         // Handover countdown text (upper area, clear of rocket)
         this._handoverText = this.add.text(w / 2, h * 0.28 + 30, '', {
             fontSize: '52px',
@@ -129,9 +133,13 @@ class GameScene extends Phaser.Scene {
             letterSpacing: 4
         }).setOrigin(0.5).setDepth(16);
 
+        // --- NIGHT MODE OVERLAY ---
+        this._nightOverlay = null;
+        if (this.levelDef.nightMode) {
+            this._nightOverlay = this.add.graphics().setDepth(5);
+        }
+
         // --- DUAL CAMERA SETUP ---
-        // HUD camera: never zooms/scrolls, renders only HUD elements
-        // Main camera: zooms/scrolls, renders only game world
         this.hudCamera = this.cameras.add(0, 0, w, h);
         this.hudCamera.setName('hud');
 
@@ -150,6 +158,7 @@ class GameScene extends Phaser.Scene {
             this.skyGraphics, this.oceanGraphics,
             this.shipGraphics, this.rocketGraphics
         ];
+        if (this._nightOverlay) this._worldObjects.push(this._nightOverlay);
 
         // HUD objects: hide from main camera
         this._hudObjects.forEach(obj => this.cameras.main.ignore(obj));
@@ -177,6 +186,9 @@ class GameScene extends Phaser.Scene {
 
         // Phase overlay text (must be after camera setup)
         this._showPhaseText('RE-ENTRY', CONFIG.COLORS.HUD_PHASE_1);
+
+        // Show level goal
+        this._showLevelGoal();
     }
 
     // --- UPDATE LOOP ---
@@ -211,8 +223,12 @@ class GameScene extends Phaser.Scene {
         // --- DYNAMIC CAMERA ZOOM ---
         const cam = this.cameras.main;
         const camCfg = CONFIG.CAMERA;
+        // Use a power curve for smoother zoom progression:
+        // zooms in quickly near the ground, zooms out gradually at high altitude
+        const altRatio = Phaser.Math.Clamp(altitude / camCfg.ZOOM_ALT_REF, 0, 1);
+        const easedRatio = Math.pow(altRatio, 0.6); // power < 1 = faster zoom-in near ground
         const targetZoom = Phaser.Math.Clamp(
-            Phaser.Math.Linear(camCfg.ZOOM_MAX, camCfg.ZOOM_MIN, altitude / camCfg.ZOOM_ALT_REF),
+            camCfg.ZOOM_MAX - (camCfg.ZOOM_MAX - camCfg.ZOOM_MIN) * easedRatio,
             camCfg.ZOOM_MIN, camCfg.ZOOM_MAX
         );
         const newZoom = cam.zoom + (targetZoom - cam.zoom) * camCfg.ZOOM_LERP;
@@ -236,6 +252,9 @@ class GameScene extends Phaser.Scene {
             if (this.audio) this.audio.playLegDeploy();
         }
 
+        // --- SOUND BARRIER CHECK ---
+        this._checkSoundBarrier(delta);
+
         // --- THRUST VFX ---
         if (rocket.thrusting) {
             if (this.audio && !this.audio.thrustNode) {
@@ -243,7 +262,6 @@ class GameScene extends Phaser.Scene {
             }
             const nozzles = rocket.getNozzlePositions();
             if (rocket.engineMode === 'entry') {
-                // Use center nozzle for entry burn VFX
                 const center = nozzles[Math.floor(nozzles.length / 2)];
                 this.vfx.startEntryBurn(center.x, center.y, rocket.angle);
                 this.vfx.stopLandingBurn();
@@ -307,16 +325,45 @@ class GameScene extends Phaser.Scene {
         this.rocketGraphics.clear();
         rocket.draw(this.rocketGraphics);
 
+        // --- NIGHT MODE ---
+        if (this._nightOverlay) {
+            this._drawNightOverlay();
+        }
+
         this._drawWind();
         this._updateHUD();
     }
 
+    _checkSoundBarrier(delta) {
+        if (!CONFIG.SOUND_BARRIER) return;
+
+        const rocket = this.rocket;
+        const speed = Math.sqrt(rocket.vx * rocket.vx + rocket.vy * rocket.vy);
+        const mach1 = CONFIG.SOUND_BARRIER.MACH_1_SPEED;
+        const isSuperSonic = speed > mach1;
+
+        // Update cooldown
+        if (this._sonicBoomCooldown > 0) {
+            this._sonicBoomCooldown -= delta;
+        }
+
+        // Check for crossing Mach 1 (either direction)
+        if (isSuperSonic !== this._wasSuperSonic && this._sonicBoomCooldown <= 0) {
+            // Sonic boom!
+            this.vfx.emitSonicBoom(rocket.x, rocket.y);
+            if (this.audio) this.audio.playSonicBoom();
+            this.cameras.main.shake(300, 0.010);
+            this._sonicBoomCooldown = CONFIG.SOUND_BARRIER.COOLDOWN;
+        }
+
+        this._wasSuperSonic = isSuperSonic;
+    }
+
     _updatePhase(altitude) {
-        if (altitude > CONFIG.PHASE_2_ALTITUDE) {
-            this.currentPhase = 1;
-        } else if (altitude > CONFIG.PHASE_3_ALTITUDE) {
+        // Only allow forward phase transitions (1->2->3), never backward
+        if (this.currentPhase === 1 && altitude <= CONFIG.PHASE_2_ALTITUDE) {
             this.currentPhase = 2;
-        } else {
+        } else if (this.currentPhase === 2 && altitude <= CONFIG.PHASE_3_ALTITUDE) {
             this.currentPhase = 3;
         }
 
@@ -332,9 +379,6 @@ class GameScene extends Phaser.Scene {
 
         if (to === 2) {
             this._showPhaseText('DESCENT', CONFIG.COLORS.HUD_PHASE_2);
-            // Sonic boom on phase 1→2 transition
-            if (this.audio) this.audio.playSonicBoom();
-            this.vfx.emitSonicBoom(this.rocket.x, this.rocket.y);
             this.cameras.main.shake(250, 0.008);
             // Switch audio mode
             if (this.audio) {
@@ -450,6 +494,102 @@ class GameScene extends Phaser.Scene {
         }
     }
 
+    _showLevelGoal() {
+        const w = CONFIG.WIDTH;
+        const h = CONFIG.HEIGHT;
+        const def = this.levelDef;
+
+        // Level name
+        const nameText = this.add.text(w / 2, h * 0.65, def.name.toUpperCase(), {
+            fontSize: '20px',
+            fontFamily: 'Courier New, monospace',
+            color: '#ffffff',
+            fontStyle: 'bold',
+            letterSpacing: 3
+        }).setOrigin(0.5).setDepth(16).setAlpha(0);
+        if (this.hudCamera) this.cameras.main.ignore(nameText);
+
+        // Goal text
+        const goalText = this.add.text(w / 2, h * 0.65 + 28, def.goal, {
+            fontSize: '13px',
+            fontFamily: 'Courier New, monospace',
+            color: '#88aacc',
+            letterSpacing: 1
+        }).setOrigin(0.5).setDepth(16).setAlpha(0);
+        if (this.hudCamera) this.cameras.main.ignore(goalText);
+
+        // Fade in
+        this.tweens.add({
+            targets: [nameText, goalText],
+            alpha: 1,
+            duration: 400,
+            delay: 300
+        });
+
+        // Fade out after 5 seconds
+        this.tweens.add({
+            targets: [nameText, goalText],
+            alpha: 0,
+            y: '-=10',
+            delay: 5000,
+            duration: 600,
+            onComplete: () => {
+                nameText.destroy();
+                goalText.destroy();
+            }
+        });
+    }
+
+    _drawNightOverlay() {
+        const g = this._nightOverlay;
+        g.clear();
+
+        const cam = this.cameras.main;
+        const wv = cam.worldView;
+        const rocket = this.rocket;
+
+        // Dark overlay with circular cutout around rocket
+        const visRadius = 180; // visibility radius in world units
+        const outerMargin = 500;
+
+        // Draw darkness as a large dark rectangle with a bright circle cut out
+        // We simulate this by drawing dark rectangles around the visibility circle
+        g.fillStyle(0x000000, 0.75);
+
+        // Top
+        g.fillRect(wv.x - outerMargin, wv.y - outerMargin,
+            wv.width + outerMargin * 2, (rocket.y - visRadius) - (wv.y - outerMargin));
+        // Bottom
+        g.fillRect(wv.x - outerMargin, rocket.y + visRadius,
+            wv.width + outerMargin * 2, (wv.y + wv.height + outerMargin) - (rocket.y + visRadius));
+        // Left
+        g.fillRect(wv.x - outerMargin, rocket.y - visRadius,
+            (rocket.x - visRadius) - (wv.x - outerMargin), visRadius * 2);
+        // Right
+        g.fillRect(rocket.x + visRadius, rocket.y - visRadius,
+            (wv.x + wv.width + outerMargin) - (rocket.x + visRadius), visRadius * 2);
+
+        // Corners (fill the square corners that the circle would cut)
+        // Use radial gradient approximation with concentric dark rings
+        for (let r = visRadius; r > visRadius * 0.6; r -= 3) {
+            const alpha = 0.75 * (1 - (r - visRadius * 0.6) / (visRadius * 0.4));
+            g.fillStyle(0x000000, alpha);
+            g.fillCircle(rocket.x, rocket.y, r);
+        }
+
+        // Clear inner circle (draw over with transparent - actually draw a lighter circle)
+        // Phaser graphics can't truly cut out, so we use a gradient approach:
+        // Draw increasingly transparent rings from outer to inner
+        for (let r = visRadius; r > 0; r -= 4) {
+            const t = r / visRadius;
+            const alpha = t > 0.7 ? 0.75 * ((t - 0.7) / 0.3) : 0;
+            if (alpha > 0.01) {
+                g.lineStyle(5, 0x000000, alpha);
+                g.strokeCircle(rocket.x, rocket.y, r);
+            }
+        }
+    }
+
     _checkCollision() {
         const rocket = this.rocket;
         if (!rocket.alive || rocket.landed) return;
@@ -554,7 +694,8 @@ class GameScene extends Phaser.Scene {
             angle: Math.abs(rocket.angle).toFixed(1),
             fuelRemaining: Math.floor(rocket.fuel),
             totalGameScore: this.score,
-            onTarget: ship.isOnTarget(rocket.x)
+            onTarget: ship.isOnTarget(rocket.x),
+            levelName: this.levelDef.name
         };
 
         this.time.delayedCall(2500, () => {
@@ -616,7 +757,8 @@ class GameScene extends Phaser.Scene {
             angle: Math.abs(rocket.angle).toFixed(1),
             legsDeployed: rocket.legsDeployed,
             totalGameScore: this.score,
-            livesRemaining: this.lives
+            livesRemaining: this.lives,
+            levelName: this.levelDef.name
         };
 
         this.time.delayedCall(2500, () => {
@@ -682,6 +824,18 @@ class GameScene extends Phaser.Scene {
             color: '#88aacc'
         }).setOrigin(0.5, 0).setDepth(12);
 
+        // Mach number display
+        this.hudTexts.machDisplay = this.add.text(w / 2, 50, '', {
+            fontSize: '11px',
+            fontFamily: 'Courier New, monospace',
+            color: '#ff8844'
+        }).setOrigin(0.5, 0).setDepth(12);
+
+        // Level name in HUD
+        this.hudTexts.levelName = this.add.text(CONFIG.WIDTH - 10, 104, '', {
+            ...rStyle, fontSize: '10px', color: '#667788'
+        }).setOrigin(1, 0).setDepth(10);
+
         // Altitude bar (right edge, vertical)
         this._altBarBg = this.add.rectangle(w - 6, h / 2, 8, h - 20, 0x222233, 0.6)
             .setStrokeStyle(1, 0x444466, 0.5).setDepth(10);
@@ -714,8 +868,24 @@ class GameScene extends Phaser.Scene {
         this.hudTexts.vSpeedBig.setText(`${rocket.vy.toFixed(0)} m/s`);
         this.hudTexts.vSpeedBig.setColor(Math.abs(rocket.vy) > CONFIG.LAND_MAX_VY ? '#ff4444' : '#88aacc');
 
+        // Mach number display
+        if (CONFIG.SOUND_BARRIER) {
+            const speed = Math.sqrt(rocket.vx * rocket.vx + rocket.vy * rocket.vy);
+            const mach = speed / CONFIG.SOUND_BARRIER.MACH_1_SPEED;
+            if (mach > 0.5) {
+                this.hudTexts.machDisplay.setText(`MACH ${mach.toFixed(1)}`);
+                let machColor = '#4488ff'; // subsonic blue
+                if (mach > 1.15) machColor = '#ff8844'; // supersonic orange
+                else if (mach > 0.85) machColor = '#ffcc44'; // transonic yellow
+                this.hudTexts.machDisplay.setColor(machColor);
+                this.hudTexts.machDisplay.setVisible(true);
+            } else {
+                this.hudTexts.machDisplay.setVisible(false);
+            }
+        }
+
         // Altitude bar
-        const startAlt = (CONFIG.OCEAN.WATER_LEVEL - (CONFIG.START_Y || -900)) * CONFIG.ALTITUDE_SCALE;
+        const startAlt = (CONFIG.OCEAN.WATER_LEVEL - (CONFIG.START_Y || -4800)) * CONFIG.ALTITUDE_SCALE;
         const altPct = Phaser.Math.Clamp(alt / startAlt, 0, 1);
         const barH = this._altBarMax * altPct;
         this._altBarFg.height = barH;
@@ -743,6 +913,7 @@ class GameScene extends Phaser.Scene {
         this.hudTexts.score.setText(`SCORE: ${this.score}`);
         this.hudTexts.level.setText(`LEVEL: ${this.level}`);
         this.hudTexts.lives.setText(`LIVES: ${this.lives}`);
+        this.hudTexts.levelName.setText(this.levelDef.name);
 
         // Legs
         this.hudTexts.legs.setText(`LEGS: ${rocket.legsDeployed ? 'DEPLOYED' : 'STOWED'}`)

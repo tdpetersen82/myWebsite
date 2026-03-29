@@ -192,14 +192,14 @@
         const DOT_RADIUS = 6;
         const LINE_THICKNESS = 5;
         const HOVER_THICKNESS = 7;
-        const CLICK_THRESHOLD = 18;
+        const CLICK_THRESHOLD = 30;
 
         const PLAYER_COLOR = '#42A5F5';
         const PLAYER_COLOR_LIGHT = 'rgba(66, 165, 245, 0.25)';
         const COMPUTER_COLOR = '#EF5350';
         const COMPUTER_COLOR_LIGHT = 'rgba(239, 83, 80, 0.25)';
-        const EMPTY_LINE_COLOR = 'rgba(255, 255, 255, 0.15)';
-        const HOVER_COLOR = 'rgba(66, 165, 245, 0.5)';
+        const EMPTY_LINE_COLOR = 'rgba(255, 255, 255, 0.3)';
+        const HOVER_COLOR = 'rgba(66, 165, 245, 0.7)';
         const DOT_COLOR = '#e0e0e0';
 
         function showDifficulty() {
@@ -245,6 +245,8 @@
             gameOverMsgEl.textContent = '';
             updateUI();
             draw();
+            // Recalculate canvas scale now that it's visible
+            requestAnimationFrame(() => { if (_scaleCanvas) _scaleCanvas(); });
         }
 
         function updateUI() {
@@ -289,7 +291,8 @@
 
             // Draw empty line guides
             ctx.strokeStyle = EMPTY_LINE_COLOR;
-            ctx.lineWidth = 2;
+            ctx.lineWidth = 3;
+            ctx.lineCap = 'round';
             for (let r = 0; r <= rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     if (horizontalLines[r][c] === 0) {
@@ -682,25 +685,45 @@
             }
         });
 
+        // Touch support
+        canvas.addEventListener('touchstart', (e) => {
+            e.preventDefault();
+            if (gameOver || currentTurn !== 'player' || computerThinking) return;
+            const touch = e.touches[0];
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const mx = (touch.clientX - rect.left) * scaleX;
+            const my = (touch.clientY - rect.top) * scaleY;
+            const line = getNearestLine(mx, my);
+            if (line) {
+                hoveredLine = null;
+                makeMove(line.type, line.row, line.col, 'player');
+            }
+        }, { passive: false });
+
         // Initial draw
         draw();
 
         // Auto-scale canvas to fit viewport
-        (function() {
+        const _scaleCanvas = (function() {
             const c = document.getElementById('gameCanvas');
             const bw = c.width, bh = c.height;
             function sc() {
                 const par = c.parentElement;
+                if (!par || par.offsetWidth === 0) return; // Skip if hidden
                 const ps = getComputedStyle(par);
                 const mw = par.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
                 const mh = window.innerHeight * 0.75;
-                const s = Math.min(mw / bw, mh / bh, 1);
+                const s = Math.max(0.1, Math.min(mw / bw, mh / bh, 1));
+                if (isNaN(s)) return;
                 c.style.transformOrigin = 'top center';
                 c.style.transform = 'scale(' + s + ')';
                 c.style.marginBottom = (-(bh * (1 - s))) + 'px';
             }
             window.addEventListener('resize', sc);
             sc();
+            return sc;
         })();
     </script>
     <script src="../nav.js"></script>

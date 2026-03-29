@@ -5,13 +5,14 @@ class Sky {
         this.scene = scene;
         this.atmosphereBlend = 0; // 0 = space, 1 = full atmosphere
 
-        // Pre-generate stars
+        // Pre-generate stars (in world-relative offsets, spread across a large area)
         this.stars = [];
+        const starArea = 6000; // spread stars across a large world area
         CONFIG.VFX.STAR_LAYERS.forEach(layer => {
             for (let i = 0; i < layer.count; i++) {
                 this.stars.push({
-                    x: Math.random() * CONFIG.WIDTH,
-                    y: Math.random() * CONFIG.HEIGHT,
+                    x: (Math.random() - 0.5) * starArea,
+                    y: -5000 + Math.random() * starArea,
                     size: layer.sizeMin + Math.random() * (layer.sizeMax - layer.sizeMin),
                     alpha: layer.alphaMin + Math.random() * (layer.alphaMax - layer.alphaMin),
                     speed: layer.speed
@@ -23,12 +24,13 @@ class Sky {
         this.shootingStars = [];
         this._shootingStarTimer = 0;
 
-        // Pre-generate clouds
+        // Pre-generate clouds (positioned near the ocean surface)
         this.clouds = [];
-        for (let i = 0; i < 5; i++) {
+        const oceanY = CONFIG.OCEAN.WATER_LEVEL;
+        for (let i = 0; i < 8; i++) {
             this.clouds.push({
-                x: Math.random() * CONFIG.WIDTH,
-                y: 200 + Math.random() * 250,
+                x: -200 + Math.random() * (CONFIG.WIDTH + 400),
+                y: oceanY - 300 - Math.random() * 400, // clouds 300-700px above ocean
                 width: 60 + Math.random() * 80,
                 height: 20 + Math.random() * 15,
                 speed: 0.1 + Math.random() * 0.2,
@@ -52,11 +54,11 @@ class Sky {
     }
 
     update(delta, altitude) {
-        // Blend based on altitude
-        if (altitude > 3000) {
+        // Blend based on altitude — smooth transition over the large descent range
+        if (altitude > 6000) {
             this.atmosphereBlend = 0;
-        } else if (altitude > 1000) {
-            this.atmosphereBlend = 1 - (altitude - 1000) / 2000;
+        } else if (altitude > 2000) {
+            this.atmosphereBlend = 1 - (altitude - 2000) / 4000;
         } else {
             this.atmosphereBlend = 1;
         }
@@ -64,13 +66,12 @@ class Sky {
         // Drift stars slowly
         for (const s of this.stars) {
             s.x -= s.speed;
-            if (s.x < -5) s.x = CONFIG.WIDTH + 5;
         }
 
         // Drift clouds
         for (const c of this.clouds) {
             c.x -= c.speed;
-            if (c.x < -100) c.x = CONFIG.WIDTH + 100;
+            if (c.x < -200) c.x = CONFIG.WIDTH + 200;
         }
 
         // Shooting stars (only in space)
@@ -79,9 +80,11 @@ class Sky {
             this._shootingStarTimer -= dt;
             if (this._shootingStarTimer <= 0) {
                 this._shootingStarTimer = 3 + Math.random() * 5;
+                const cam = this.scene.cameras.main;
+                const wv = cam.worldView;
                 this.shootingStars.push({
-                    x: Math.random() * CONFIG.WIDTH,
-                    y: Math.random() * CONFIG.HEIGHT * 0.6,
+                    x: wv.x + Math.random() * wv.width,
+                    y: wv.y + Math.random() * wv.height * 0.6,
                     vx: -(120 + Math.random() * 80),
                     vy: 60 + Math.random() * 40,
                     life: 0.6 + Math.random() * 0.4,
@@ -115,18 +118,22 @@ class Sky {
             graphics.fillStyle(CONFIG.COLORS.SPACE, spaceAlpha);
             graphics.fillRect(ox - 100, oy - 100, w + 200, h + 200);
 
-            // Stars
+            // Stars — drawn at world positions, only those visible in camera view
             for (const s of this.stars) {
-                graphics.fillStyle(0xffffff, s.alpha * spaceAlpha);
-                graphics.fillCircle(s.x, s.y, s.size);
+                if (s.x >= ox - 10 && s.x <= ox + w + 10 &&
+                    s.y >= oy - 10 && s.y <= oy + h + 10) {
+                    graphics.fillStyle(0xffffff, s.alpha * spaceAlpha);
+                    graphics.fillCircle(s.x, s.y, s.size);
+                }
             }
 
             // Shooting stars
             for (const ss of this.shootingStars) {
                 const alpha = (ss.life / ss.maxLife) * spaceAlpha;
                 const tailLen = 18;
-                const nx = ss.vx / Math.sqrt(ss.vx * ss.vx + ss.vy * ss.vy);
-                const ny = ss.vy / Math.sqrt(ss.vx * ss.vx + ss.vy * ss.vy);
+                const speed = Math.sqrt(ss.vx * ss.vx + ss.vy * ss.vy);
+                const nx = ss.vx / speed;
+                const ny = ss.vy / speed;
                 graphics.lineStyle(1.5, 0xffffff, alpha * 0.9);
                 graphics.beginPath();
                 graphics.moveTo(ss.x, ss.y);
@@ -138,12 +145,11 @@ class Sky {
 
             // --- EARTH CURVATURE at high altitude ---
             if (blend < 0.6) {
-                const curveFade = 1 - blend / 0.6; // 1 at full space, 0 at atmosphere
+                const curveFade = 1 - blend / 0.6;
                 const curveY = oy + h * 0.85;
                 const curveRadius = 2000;
                 const centerX = ox + w / 2;
 
-                // Atmospheric haze bands above the curve
                 const hazeColors = [
                     { r: 10, g: 40, b: 100, a: 0.5 },
                     { r: 30, g: 80, b: 160, a: 0.35 },
@@ -157,7 +163,6 @@ class Sky {
                     const color = Phaser.Display.Color.GetColor(haze.r, haze.g, haze.b);
                     graphics.fillStyle(color, haze.a * curveFade);
                     graphics.beginPath();
-                    // Draw a curved arc
                     for (let x = ox - 100; x <= ox + w + 100; x += 8) {
                         const dx = x - centerX;
                         const curveOffset = (dx * dx) / (curveRadius * 2);
@@ -171,7 +176,6 @@ class Sky {
                     graphics.fillPath();
                 }
 
-                // Earth's limb — bright blue-white line
                 graphics.lineStyle(2, 0x4499dd, 0.6 * curveFade);
                 graphics.beginPath();
                 for (let x = ox - 100; x <= ox + w + 100; x += 8) {
@@ -202,25 +206,28 @@ class Sky {
                 graphics.fillRect(ox - 100, y, w + 200, segH);
             }
 
-            // Clouds
+            // Clouds — drawn at world positions near the ocean
             if (blend > 0.3) {
                 const cloudAlpha = Math.min(1, (blend - 0.3) / 0.7) * 0.35;
                 for (const cloud of this.clouds) {
-                    for (const blob of cloud.blobs) {
-                        graphics.fillStyle(0xffffff, cloudAlpha * 0.6);
-                        graphics.fillEllipse(
-                            cloud.x + blob.ox,
-                            cloud.y + blob.oy,
-                            blob.rx * 2,
-                            blob.ry * 2
-                        );
+                    // Only draw clouds visible in the camera view
+                    if (cloud.y >= oy - 50 && cloud.y <= oy + h + 50) {
+                        for (const blob of cloud.blobs) {
+                            graphics.fillStyle(0xffffff, cloudAlpha * 0.6);
+                            graphics.fillEllipse(
+                                cloud.x + blob.ox,
+                                cloud.y + blob.oy,
+                                blob.rx * 2,
+                                blob.ry * 2
+                            );
+                        }
                     }
                 }
             }
 
             // Horizon glow — warm orange/pink bands near bottom
             if (blend > 0.5) {
-                const glowAlpha = (blend - 0.5) * 2; // 0→1 as blend goes 0.5→1
+                const glowAlpha = (blend - 0.5) * 2;
                 const glowY = oy + h * 0.82;
                 const glowH = h * 0.18;
                 const glowBands = [

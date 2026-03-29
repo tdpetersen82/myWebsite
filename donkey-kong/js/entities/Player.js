@@ -89,6 +89,9 @@ class Player {
         const ladder = ladderManager.getLadderAt(this.x, this.y, 18);
 
         if (this.isClimbing) {
+            // Disable platform collision so player can climb through girders
+            if (this.scene.platformCollider) this.scene.platformCollider.active = false;
+
             body.setGravityY(0);
             body.setVelocityX(0);
 
@@ -103,16 +106,22 @@ class Player {
             // Check if we've left the ladder
             if (this.currentLadder) {
                 if (this.y < this.currentLadder.yTop - 5) {
-                    // Reached top of ladder
+                    // Reached top of ladder — snap above platform, re-enable collider, then land
+                    const topY = this.currentLadder.yTop;
                     this.isClimbing = false;
                     this.currentLadder = null;
+                    // Re-enable collider FIRST, then position above it
+                    if (this.scene.platformCollider) this.scene.platformCollider.active = true;
+                    // Place player on top of the platform (girder thickness is 8px)
+                    this.sprite.y = topY - 8 - this.height / 2;
+                    body.setVelocityY(10); // tiny downward to trigger ground detection
                     body.setGravityY(cfg.GRAVITY);
-                    body.setVelocityY(0);
                 } else if (this.y > this.currentLadder.yBottom + 5) {
                     // Reached bottom of ladder
                     this.isClimbing = false;
                     this.currentLadder = null;
                     body.setGravityY(cfg.GRAVITY);
+                    if (this.scene.platformCollider) this.scene.platformCollider.active = true;
                 }
             }
 
@@ -122,10 +131,13 @@ class Player {
                     this.isClimbing = false;
                     this.currentLadder = null;
                     body.setGravityY(cfg.GRAVITY);
+                    if (this.scene.platformCollider) this.scene.platformCollider.active = true;
                 }
             }
 
         } else {
+            // Re-enable platform collision when not climbing
+            if (this.scene.platformCollider) this.scene.platformCollider.active = true;
             // Normal movement
             body.setGravityY(cfg.GRAVITY);
 

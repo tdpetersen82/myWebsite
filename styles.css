@@ -71,6 +71,40 @@ body {
     margin-top: 10px;
 }
 
+/* Category Navigation Bar */
+.category-nav {
+    margin-bottom: 24px;
+}
+
+.category-nav-list {
+    display: flex;
+    list-style: none;
+    gap: 8px;
+    justify-content: center;
+    flex-wrap: wrap;
+    margin: 0;
+    padding: 0;
+}
+
+.category-nav-link {
+    display: inline-block;
+    padding: 8px 18px;
+    border-radius: 25px;
+    background: rgba(102, 126, 234, 0.08);
+    color: #667eea;
+    text-decoration: none;
+    font-size: 0.9em;
+    font-weight: 600;
+    transition: all 0.2s ease;
+    border: 2px solid transparent;
+    white-space: nowrap;
+}
+
+.category-nav-link:hover {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: #fff;
+}
+
 /* Category sections */
 .category {
     margin-bottom: 30px;
@@ -130,6 +164,11 @@ body {
     justify-content: center;
     font-size: 2em;
     margin-bottom: 12px;
+}
+
+.game-icon-wrap svg {
+    width: 36px;
+    height: 36px;
 }
 
 .game-card h2 {
@@ -472,6 +511,15 @@ canvas {
 
     .game-grid {
         grid-template-columns: 1fr;
+    }
+
+    .category-nav-list {
+        gap: 6px;
+    }
+
+    .category-nav-link {
+        padding: 6px 14px;
+        font-size: 0.82em;
     }
 
     .container {

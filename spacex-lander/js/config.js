@@ -6,7 +6,7 @@ const CONFIG = {
     HEIGHT: 600,
 
     // Physics
-    GRAVITY: 40,                    // Earth gravity (px/sec^2)
+    GRAVITY: 30,                    // Earth gravity (px/sec^2) — reduced for longer descent
     ENTRY_THRUST_POWER: 120,        // Multi-engine entry burn
     LANDING_THRUST_POWER: 90,       // Single-engine precision
     GRID_FIN_ROTATION_RATE: 90,     // Degrees/sec at max effectiveness
@@ -19,10 +19,10 @@ const CONFIG = {
     MAX_VELOCITY: 400,
 
     // Fuel (single pool)
-    FUEL_MAX: 1800,
+    FUEL_MAX: 2400,
     ENTRY_BURN_RATE: 2.0,
     LANDING_BURN_RATE: 0.8,
-    LOW_FUEL_THRESHOLD: 300,
+    LOW_FUEL_THRESHOLD: 400,
 
     // Landing thresholds
     LAND_MAX_VY: 35,
@@ -30,16 +30,22 @@ const CONFIG = {
     LAND_MAX_ANGLE: 12,
 
     // Phase altitude thresholds
-    PHASE_2_ALTITUDE: 3500,
-    PHASE_3_ALTITUDE: 800,
-    LEG_DEPLOY_ALTITUDE: 600,
+    PHASE_2_ALTITUDE: 2800,
+    PHASE_3_ALTITUDE: 600,
+    LEG_DEPLOY_ALTITUDE: 400,
 
     // Starting conditions
-    START_VY: 100,                  // Initial downward velocity (gentle re-entry, builds with gravity)
-    START_Y: -900,                  // Start extremely high for long generous descent (~11,000m)
+    START_VY: 320,                  // Initial downward velocity — Mach 7+ re-entry
+    START_Y: -4800,                 // Very high start for 3-4 screens of descent
     ALTITUDE_SCALE: 8,              // Pixel-to-altitude unit scale
     STARTING_LIVES: 3,
     HANDOVER_COUNTDOWN: 2,          // Seconds of auto-descent before human control
+
+    // Sound barrier
+    SOUND_BARRIER: {
+        MACH_1_SPEED: 43,           // Game units for Mach 1 (~343 m/s / ALTITUDE_SCALE)
+        COOLDOWN: 3000,             // ms cooldown between sonic boom triggers
+    },
 
     // Scoring
     BASE_LANDING_SCORE: 200,
@@ -54,10 +60,10 @@ const CONFIG = {
 
     // Camera
     CAMERA: {
-        ZOOM_MIN: 0.45,
+        ZOOM_MIN: 0.38,
         ZOOM_MAX: 1.05,
-        ZOOM_ALT_REF: 8000,
-        ZOOM_LERP: 0.025
+        ZOOM_ALT_REF: 6000,
+        ZOOM_LERP: 0.03
     },
 
     // Ocean
@@ -79,7 +85,7 @@ const CONFIG = {
         GUIDE_LIGHT_HEIGHT: 60
     },
 
-    // Level scaling
+    // Level scaling (legacy fallback for levels beyond LEVELS array)
     LEVEL: {
         // Sea state
         WAVE_AMP_BASE: 2,
@@ -111,6 +117,115 @@ const CONFIG = {
         ENTRY_VX_PER_LEVEL: 8,
         ENTRY_VX_MAX: 60
     },
+
+    // 15 Themed Levels
+    LEVELS: [
+        {
+            name: 'First Landing',
+            goal: 'Land safely on the drone ship',
+            wind: 0, rockAngle: 0, drift: 0, fuelPenalty: 0,
+            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 2,
+            nightMode: false
+        },
+        {
+            name: 'Crosswind',
+            goal: 'Land in steady crosswind',
+            wind: 10, rockAngle: 0, drift: 0, fuelPenalty: 0,
+            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 3,
+            nightMode: false
+        },
+        {
+            name: 'Rough Seas',
+            goal: 'Land on a rocking ship',
+            wind: 0, rockAngle: 3, drift: 0, fuelPenalty: 0,
+            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 6,
+            nightMode: false
+        },
+        {
+            name: 'Storm Warning',
+            goal: 'Handle wind and waves together',
+            wind: 12, rockAngle: 4, drift: 0, fuelPenalty: 0,
+            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 7,
+            nightMode: false
+        },
+        {
+            name: 'Off-Axis Entry',
+            goal: 'Correct your approach angle',
+            wind: 0, rockAngle: 0, drift: 0, fuelPenalty: 0,
+            shipShrink: 1.0, entryAngle: 12, entryVx: 25, waveAmp: 3,
+            nightMode: false
+        },
+        {
+            name: 'Moving Target',
+            goal: 'Land on a drifting ship',
+            wind: 0, rockAngle: 0, drift: 12, fuelPenalty: 0,
+            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 4,
+            nightMode: false
+        },
+        {
+            name: 'Fuel Critical',
+            goal: 'Land with limited fuel — be efficient',
+            wind: 0, rockAngle: 0, drift: 0, fuelPenalty: 0.25,
+            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 3,
+            nightMode: false
+        },
+        {
+            name: 'Gale Force',
+            goal: 'Fight strong wind at an angle',
+            wind: 18, rockAngle: 0, drift: 0, fuelPenalty: 0,
+            shipShrink: 1.0, entryAngle: 15, entryVx: 35, waveAmp: 5,
+            nightMode: false
+        },
+        {
+            name: 'Rolling Deck',
+            goal: 'Ship rocks hard and drifts',
+            wind: 0, rockAngle: 6, drift: 15, fuelPenalty: 0,
+            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 10,
+            nightMode: false
+        },
+        {
+            name: 'Precision Landing',
+            goal: 'Hit a smaller deck with less fuel',
+            wind: 5, rockAngle: 2, drift: 0, fuelPenalty: 0.15,
+            shipShrink: 0.85, entryAngle: 0, entryVx: 0, waveAmp: 4,
+            nightMode: false
+        },
+        {
+            name: 'Typhoon',
+            goal: 'Everything at once — moderate intensity',
+            wind: 14, rockAngle: 4, drift: 10, fuelPenalty: 0.10,
+            shipShrink: 0.95, entryAngle: 10, entryVx: 20, waveAmp: 8,
+            nightMode: false
+        },
+        {
+            name: 'Emergency Descent',
+            goal: 'Fast entry, low fuel, strong wind',
+            wind: 15, rockAngle: 2, drift: 5, fuelPenalty: 0.30,
+            shipShrink: 1.0, entryAngle: 8, entryVx: 15, waveAmp: 5,
+            extraStartVY: 50, nightMode: false
+        },
+        {
+            name: 'Night Landing',
+            goal: 'Land with reduced visibility',
+            wind: 10, rockAngle: 3, drift: 8, fuelPenalty: 0.05,
+            shipShrink: 1.0, entryAngle: 5, entryVx: 10, waveAmp: 5,
+            nightMode: true
+        },
+        {
+            name: 'The Gauntlet',
+            goal: 'All challenges at high intensity',
+            wind: 20, rockAngle: 6, drift: 18, fuelPenalty: 0.20,
+            shipShrink: 0.90, entryAngle: 18, entryVx: 40, waveAmp: 12,
+            nightMode: false
+        },
+        {
+            name: 'The Impossible',
+            goal: 'Survive maximum everything',
+            wind: 25, rockAngle: 8, drift: 25, fuelPenalty: 0.35,
+            shipShrink: 0.85, entryAngle: 25, entryVx: 60, waveAmp: 15,
+            nightMode: false
+        }
+    ],
 
     // Colors
     COLORS: {
@@ -227,4 +342,21 @@ const CONFIG = {
 
     // LocalStorage
     HIGH_SCORE_KEY: 'spacexLanderHighScore'
+};
+
+// Helper to get level definition (themed or fallback to legacy scaling)
+CONFIG.getLevelDef = function(level) {
+    if (level <= CONFIG.LEVELS.length) {
+        return CONFIG.LEVELS[level - 1];
+    }
+    // Fallback for levels beyond 15: scale from last level
+    const base = CONFIG.LEVELS[CONFIG.LEVELS.length - 1];
+    const extra = level - CONFIG.LEVELS.length;
+    return {
+        ...base,
+        name: `Level ${level}`,
+        goal: 'Push your limits',
+        wind: Math.min(30, base.wind + extra * 2),
+        fuelPenalty: Math.min(0.45, base.fuelPenalty + extra * 0.03),
+    };
 };

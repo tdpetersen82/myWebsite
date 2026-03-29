@@ -97,6 +97,8 @@ class GameScene extends Phaser.Scene {
             CONFIG.TUBE_INNER_RADIUS
         );
         this.blaster = new Blaster(this.tube);
+        this.blaster.invincible = true;
+        this.blaster.invincibleTimer = 2000;
         this.enemies = [];
         this.bullets = [];
         this.explosions = [];

@@ -76,21 +76,22 @@ const DK_CONFIG = {
     ],
 
     // Ladders — each is { x, yTop, yBottom }
+    // yTop/yBottom adjusted to match actual sloped platform Y at each ladder's X
     LADDERS: [
-        // Between bottom and girder 1
-        { x: 700, yTop: 468, yBottom: 568 },
-        { x: 380, yTop: 468, yBottom: 568 },
-        // Between girder 1 and girder 2
-        { x: 120, yTop: 368, yBottom: 468 },
-        { x: 500, yTop: 368, yBottom: 468 },
-        // Between girder 2 and girder 3
-        { x: 680, yTop: 268, yBottom: 368 },
-        { x: 300, yTop: 268, yBottom: 368 },
-        // Between girder 3 and girder 4
-        { x: 140, yTop: 188, yBottom: 268 },
-        { x: 550, yTop: 188, yBottom: 268 },
-        // Between girder 4 and top platform
-        { x: 200, yTop: 120, yBottom: 188 },
+        // Between bottom (flat y=568) and girder 1 (slope -0.04)
+        { x: 700, yTop: 442, yBottom: 568 },   // 468+(700-40)*-0.04 = 442
+        { x: 380, yTop: 454, yBottom: 568 },   // 468+(380-40)*-0.04 = 454
+        // Between girder 1 (slope -0.04) and girder 2 (slope 0.04)
+        { x: 120, yTop: 371, yBottom: 465 },   // top: 368+(120-40)*0.04=371, bot: 468+(120-40)*-0.04=465
+        { x: 500, yTop: 386, yBottom: 450 },   // top: 368+(500-40)*0.04=386, bot: 468+(500-40)*-0.04=450
+        // Between girder 2 (slope 0.04) and girder 3 (slope -0.04)
+        { x: 680, yTop: 242, yBottom: 394 },   // top: 268+(680-40)*-0.04=242, bot: 368+(680-40)*0.04=394
+        { x: 300, yTop: 258, yBottom: 378 },   // top: 268+(300-40)*-0.04=258, bot: 368+(300-40)*0.04=378
+        // Between girder 3 (slope -0.04) and girder 4 (slope 0.04)
+        { x: 140, yTop: 192, yBottom: 264 },   // top: 188+(140-40)*0.04=192, bot: 268+(140-40)*-0.04=264
+        { x: 550, yTop: 208, yBottom: 248 },   // top: 188+(550-40)*0.04=208, bot: 268+(550-40)*-0.04=248
+        // Between girder 4 (slope 0.04) and top platform (flat y=120)
+        { x: 200, yTop: 120, yBottom: 194 },   // top: flat 120, bot: 188+(200-40)*0.04=194
     ],
 
     // Hammer pickup positions (platform index, x)

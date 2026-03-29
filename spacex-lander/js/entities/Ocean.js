@@ -6,12 +6,18 @@ class Ocean {
         this.waterLevel = CONFIG.OCEAN.WATER_LEVEL;
         this.waveOffset = 0;
 
-        // Level-based wave intensity
-        const lvl = CONFIG.LEVEL;
-        this.waveAmplitude = Math.min(
-            lvl.WAVE_AMP_BASE + (level - 1) * lvl.WAVE_AMP_PER_LEVEL,
-            lvl.WAVE_AMP_MAX
-        );
+        // Use themed level definition if available
+        const levelDef = CONFIG.getLevelDef ? CONFIG.getLevelDef(level) : null;
+
+        if (levelDef && levelDef.waveAmp !== undefined) {
+            this.waveAmplitude = levelDef.waveAmp;
+        } else {
+            const lvl = CONFIG.LEVEL;
+            this.waveAmplitude = Math.min(
+                lvl.WAVE_AMP_BASE + (level - 1) * lvl.WAVE_AMP_PER_LEVEL,
+                lvl.WAVE_AMP_MAX
+            );
+        }
         this.waveFreq = CONFIG.OCEAN.WAVE_FREQ;
         this.waveSpeed = CONFIG.OCEAN.WAVE_SPEED;
         this.swellAmplitude = this.waveAmplitude * CONFIG.OCEAN.SWELL_RATIO;
@@ -41,33 +47,22 @@ class Ocean {
         const bottom = wv.y + wv.height + 100;
         const step = 4;
 
-        // Water body — gradient bands
-        const bands = [
-            { y: this.waterLevel, h: 30, color: CONFIG.COLORS.OCEAN_SURFACE, alpha: 0.9 },
-            { y: this.waterLevel + 30, h: 40, color: CONFIG.COLORS.OCEAN_MID, alpha: 0.95 },
-            { y: this.waterLevel + 70, h: bottom - this.waterLevel - 70, color: CONFIG.COLORS.OCEAN_DEEP, alpha: 1.0 }
-        ];
+        // Deep water base fill (covers entire ocean area, no seams)
+        graphics.fillStyle(CONFIG.COLORS.OCEAN_DEEP, 1.0);
+        graphics.fillRect(left, this.waterLevel - 20, right - left, bottom - this.waterLevel + 20);
 
-        for (const band of bands) {
-            graphics.fillStyle(band.color, band.alpha);
-            graphics.fillRect(left, band.y, right - left, band.h);
-        }
-
-        // Wave surface polyline fill (over the bands)
-        graphics.fillStyle(CONFIG.COLORS.OCEAN_SURFACE, 0.95);
+        // Mid-depth layer (wave-relative polyline, no flat edges)
+        graphics.fillStyle(CONFIG.COLORS.OCEAN_MID, 0.6);
         graphics.beginPath();
         graphics.moveTo(left, bottom);
-
         for (let x = left; x <= right; x += step) {
-            const y = this.getHeightAt(x);
-            graphics.lineTo(x, y);
+            graphics.lineTo(x, this.getHeightAt(x) + 40);
         }
-
         graphics.lineTo(right, bottom);
         graphics.closePath();
         graphics.fillPath();
 
-        // Darker depth below the surface
+        // Surface-depth layer (wave-relative)
         graphics.fillStyle(CONFIG.COLORS.OCEAN_MID, 0.4);
         graphics.beginPath();
         graphics.moveTo(left, bottom);
@@ -78,11 +73,12 @@ class Ocean {
         graphics.closePath();
         graphics.fillPath();
 
-        graphics.fillStyle(CONFIG.COLORS.OCEAN_DEEP, 0.5);
+        // Surface layer (wave-relative)
+        graphics.fillStyle(CONFIG.COLORS.OCEAN_SURFACE, 0.95);
         graphics.beginPath();
         graphics.moveTo(left, bottom);
         for (let x = left; x <= right; x += step) {
-            graphics.lineTo(x, this.getHeightAt(x) + 40);
+            graphics.lineTo(x, this.getHeightAt(x));
         }
         graphics.lineTo(right, bottom);
         graphics.closePath();

@@ -1399,6 +1399,7 @@
             const boosted = b.speedBoost > currentTs;
             const magnetActive = b.magnet > currentTs;
             const wideActive = b.wide > currentTs;
+            const megaWideActive = b.megaWide > currentTs;
             const bw = getBasketWidth(b);
 
             ctx.save();
@@ -1578,7 +1579,6 @@
             }
 
             // Power-up timer bars
-            const megaWideActive = b.megaWide > currentTs;
             const barDefs = [
                 { active: boosted,      expiry: b.speedBoost, dur: 3200,  color: '#FDE047' },
                 { active: magnetActive, expiry: b.magnet,     dur: 4000,  color: '#94A3B8' },

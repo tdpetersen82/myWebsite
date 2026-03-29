@@ -145,8 +145,9 @@ class Rocket {
         if (this.x > CONFIG.WIDTH + 30) this.x = -30;
 
         // Ceiling
-        if (this.y < 0) {
-            this.y = 0;
+        const ceiling = (CONFIG.START_Y || -4800) - 200;
+        if (this.y < ceiling) {
+            this.y = ceiling;
             this.vy = Math.abs(this.vy) * 0.2;
         }
 

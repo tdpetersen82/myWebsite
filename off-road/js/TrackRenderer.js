@@ -14,8 +14,8 @@ class TrackRenderer {
         this.terrainMap = null;
         this.maskResolution = 4;
 
-        this.worldWidth = CONFIG.WIDTH;
-        this.worldHeight = CONFIG.HEIGHT;
+        this.worldWidth = CONFIG.WORLD_WIDTH || CONFIG.WIDTH;
+        this.worldHeight = CONFIG.WORLD_HEIGHT || CONFIG.HEIGHT;
 
         this.groundGfx = null;
         this.trackGfx = null;
@@ -137,6 +137,52 @@ class TrackRenderer {
     }
 
     getTrackBoundary() { return { left: this.leftEdge, right: this.rightEdge }; }
+
+    // Compute the track tangent angle at a given center point index
+    getTangentAngle(index) {
+        const n = this.centerPoints.length;
+        const prev = this.centerPoints[(index - 1 + n) % n];
+        const next = this.centerPoints[(index + 1) % n];
+        return Math.atan2(next.y - prev.y, next.x - prev.x);
+    }
+
+    // Get the start angle for vehicles at the start/finish line
+    getStartAngle() {
+        // Find the center point nearest to checkpoint 0
+        const cp0 = this.trackData.checkpoints[0];
+        let bestIdx = 0, bestDist = Infinity;
+        for (let i = 0; i < this.centerPoints.length; i++) {
+            const d = Math.hypot(this.centerPoints[i].x - cp0.x, this.centerPoints[i].y - cp0.y);
+            if (d < bestDist) { bestDist = d; bestIdx = i; }
+        }
+        return this.getTangentAngle(bestIdx);
+    }
+
+    // Find the nearest center line index to a world position
+    getNearestCenterIndex(x, y) {
+        let bestIdx = 0, bestDist = Infinity;
+        // Sample every 2nd point for speed
+        for (let i = 0; i < this.centerPoints.length; i += 2) {
+            const d = Math.hypot(this.centerPoints[i].x - x, this.centerPoints[i].y - y);
+            if (d < bestDist) { bestDist = d; bestIdx = i; }
+        }
+        return bestIdx;
+    }
+
+    // Get a point ahead on the center line from a given index
+    getPointAhead(index, distance) {
+        const n = this.centerPoints.length;
+        let accumulated = 0;
+        let i = index;
+        while (accumulated < distance) {
+            const next = (i + 1) % n;
+            const dx = this.centerPoints[next].x - this.centerPoints[i].x;
+            const dy = this.centerPoints[next].y - this.centerPoints[i].y;
+            accumulated += Math.hypot(dx, dy);
+            i = next;
+        }
+        return this.centerPoints[i];
+    }
 
     // =============================================
     // === PREMIUM RENDERING ===

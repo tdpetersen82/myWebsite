@@ -192,6 +192,8 @@
             this.gameOver = false;
             this.playerAlive = true;
             this.respawnTimer = 0;
+            this.playerInvincible = true;
+            this.invincibilityTimer = 180;
             this.isDualFighter = false;
             this.capturedShip = null;
             this.tractorBeamActive = false;
@@ -452,7 +454,10 @@
         }
 
         update(time, delta) {
-            if (this.gameOver) return;
+            if (this.gameOver) {
+                this.drawAll();
+                return;
+            }
 
             const dt = delta / 1000;
             this.formationBobTime += dt;
@@ -560,9 +565,17 @@
                 this.respawnTimer--;
                 if (this.respawnTimer <= 0) {
                     this.playerAlive = true;
+                    this.playerInvincible = true;
+                    this.invincibilityTimer = 180;
                     this.player.x = GAME_W / 2;
                     this.player.y = GAME_H - 60;
                 }
+            }
+
+            // Invincibility timer
+            if (this.playerInvincible) {
+                this.invincibilityTimer--;
+                if (this.invincibilityTimer <= 0) this.playerInvincible = false;
             }
 
             // Bullets
@@ -602,6 +615,16 @@
                             }
 
                             this.updateHUD();
+                            // Clean up tractor beam if this boss was beaming
+                            if (this.tractorBeamBoss === enemy) {
+                                this.tractorBeamActive = false;
+                                this.tractorBeamBoss = null;
+                                if (this.playerBeingCaptured) {
+                                    this.playerBeingCaptured = false;
+                                    this.captureAnimDone = false;
+                                    this.player.y = GAME_H - 60;
+                                }
+                            }
                             // Remove from diving
                             const dIdx = this.divingEnemies.indexOf(enemy);
                             if (dIdx >= 0) this.divingEnemies.splice(dIdx, 1);
@@ -802,7 +825,7 @@
         }
 
         playerHit() {
-            if (!this.playerAlive) return;
+            if (!this.playerAlive || this.playerInvincible) return;
             playPlayerDeath();
             this.addExplosion(this.player.x, this.player.y);
             this.playerAlive = false;
@@ -868,9 +891,12 @@
 
             // Player
             if (this.playerAlive && !this.playerBeingCaptured) {
-                this.drawPlayer(g, this.player.x, this.player.y, false);
-                if (this.isDualFighter) {
-                    this.drawPlayer(g, this.player.x + 20, this.player.y, true);
+                // Flicker during invincibility
+                if (!this.playerInvincible || Math.floor(this.invincibilityTimer / 4) % 2 === 0) {
+                    this.drawPlayer(g, this.player.x, this.player.y, false);
+                    if (this.isDualFighter) {
+                        this.drawPlayer(g, this.player.x + 20, this.player.y, true);
+                    }
                 }
             } else if (this.playerBeingCaptured) {
                 // Flash while being captured

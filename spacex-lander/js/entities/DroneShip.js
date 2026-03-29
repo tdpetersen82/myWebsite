@@ -5,8 +5,10 @@ class DroneShip {
         this.scene = scene;
         this.level = level;
 
-        const lvl = CONFIG.LEVEL;
-        const shrink = Math.pow(lvl.SHIP_SHRINK_FACTOR, level - 1);
+        // Use themed level definition if available
+        const levelDef = CONFIG.getLevelDef ? CONFIG.getLevelDef(level) : null;
+
+        const shrink = levelDef ? (levelDef.shipShrink || 1.0) : Math.pow(CONFIG.LEVEL.SHIP_SHRINK_FACTOR, level - 1);
         this.width = CONFIG.DRONE_SHIP.WIDTH * shrink;
         this.height = CONFIG.DRONE_SHIP.HEIGHT;
         this.targetZoneWidth = this.width * CONFIG.DRONE_SHIP.TARGET_ZONE_RATIO;
@@ -17,23 +19,26 @@ class DroneShip {
         this.y = this.baseY;
 
         // Rocking
-        this.rockAngle = 0; // degrees
-        this.maxRockAngle = 0;
-        if (level >= lvl.ROCK_START_LEVEL) {
+        this.rockAngle = 0;
+        this.maxRockAngle = levelDef ? (levelDef.rockAngle || 0) : 0;
+        if (!levelDef && level >= CONFIG.LEVEL.ROCK_START_LEVEL) {
             this.maxRockAngle = Math.min(
-                (level - lvl.ROCK_START_LEVEL + 1) * lvl.ROCK_ANGLE_PER_LEVEL,
-                lvl.ROCK_ANGLE_MAX
+                (level - CONFIG.LEVEL.ROCK_START_LEVEL + 1) * CONFIG.LEVEL.ROCK_ANGLE_PER_LEVEL,
+                CONFIG.LEVEL.ROCK_ANGLE_MAX
             );
         }
-        this.rockFreq = lvl.ROCK_FREQ_BASE;
+        this.rockFreq = CONFIG.LEVEL.ROCK_FREQ_BASE;
         this.rockTime = Math.random() * Math.PI * 2;
 
         // Horizontal drift
         this.driftVx = 0;
-        if (level >= lvl.DRIFT_START_LEVEL) {
+        if (levelDef && levelDef.drift > 0) {
+            this.driftVx = levelDef.drift;
+            if (Math.random() > 0.5) this.driftVx *= -1;
+        } else if (!levelDef && level >= CONFIG.LEVEL.DRIFT_START_LEVEL) {
             this.driftVx = Math.min(
-                (level - lvl.DRIFT_START_LEVEL + 1) * lvl.DRIFT_SPEED_PER_LEVEL,
-                lvl.DRIFT_SPEED_MAX
+                (level - CONFIG.LEVEL.DRIFT_START_LEVEL + 1) * CONFIG.LEVEL.DRIFT_SPEED_PER_LEVEL,
+                CONFIG.LEVEL.DRIFT_SPEED_MAX
             );
             if (Math.random() > 0.5) this.driftVx *= -1;
         }
