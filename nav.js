@@ -7,74 +7,104 @@
     'use strict';
 
     // ── Game Catalog ────────────────────────────────────────
+    // SVG icon helper — compact inline SVGs for each game
+    var I = {
+        snake: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 26c0-6 6-6 6-12S6 8 6 4c0-1.5 1-3 3-3h6c2 0 3 1.5 3 3 0 4-6 6-6 10s6 6 6 12c0 2-1.5 3.5-3.5 3.5S11 28 11 26" stroke="#4ade80" stroke-width="2.5" stroke-linecap="round"/><circle cx="8" cy="3" r="1" fill="#ef4444"/><circle cx="10" cy="3" r="1" fill="#ef4444"/></svg>',
+        pong: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="8" width="3" height="12" rx="1.5" fill="#667eea"/><rect x="25" y="12" width="3" height="12" rx="1.5" fill="#764ba2"/><circle cx="16" cy="16" r="2.5" fill="#fff" stroke="#667eea" stroke-width="1.5"/><line x1="16" y1="2" x2="16" y2="30" stroke="#667eea" stroke-width="0.5" stroke-dasharray="2 2" opacity="0.4"/></svg>',
+        breakout: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="6" height="3" rx="1" fill="#ef4444"/><rect x="11" y="4" width="6" height="3" rx="1" fill="#f59e0b"/><rect x="19" y="4" width="6" height="3" rx="1" fill="#22c55e"/><rect x="27" y="4" width="2" height="3" rx="1" fill="#3b82f6"/><rect x="3" y="9" width="6" height="3" rx="1" fill="#8b5cf6"/><rect x="11" y="9" width="6" height="3" rx="1" fill="#ec4899"/><rect x="19" y="9" width="6" height="3" rx="1" fill="#06b6d4"/><rect x="10" y="27" width="12" height="3" rx="1.5" fill="#667eea"/><circle cx="16" cy="22" r="2" fill="#764ba2"/></svg>',
+        spaceinvaders: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M8 8h2v2H8zM22 8h2v2h-2zM6 10h20v8H6zM4 14h2v6H4zM26 14h2v6h-2zM8 18h4v4H8zM20 18h4v4h-4zM10 22h2v4h-2zM20 22h2v4h-2z" fill="#4ade80"/><rect x="12" y="12" width="3" height="3" fill="#0f0c29"/><rect x="18" y="12" width="3" height="3" fill="#0f0c29"/></svg>',
+        flappy: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="14" cy="16" rx="8" ry="6" fill="#facc15"/><circle cx="18" cy="14" r="2.5" fill="#fff"/><circle cx="19" cy="13.5" r="1" fill="#1e293b"/><path d="M22 16l4 1-4 1z" fill="#ef4444"/><path d="M6 12c-2-3 0-6 3-5" stroke="#facc15" stroke-width="2" stroke-linecap="round"/><rect x="26" y="0" width="4" height="12" rx="2" fill="#22c55e"/><rect x="26" y="22" width="4" height="10" rx="2" fill="#22c55e"/></svg>',
+        blockpuzzle: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="20" width="6" height="6" rx="1" fill="#06b6d4"/><rect x="10" y="20" width="6" height="6" rx="1" fill="#06b6d4"/><rect x="10" y="14" width="6" height="6" rx="1" fill="#06b6d4"/><rect x="16" y="20" width="6" height="6" rx="1" fill="#8b5cf6"/><rect x="22" y="20" width="6" height="6" rx="1" fill="#8b5cf6"/><rect x="16" y="14" width="6" height="6" rx="1" fill="#8b5cf6"/><rect x="10" y="6" width="6" height="6" rx="1" fill="#f59e0b" opacity="0.6"/><path d="M13 3v3" stroke="#f59e0b" stroke-width="1" stroke-dasharray="1 1"/></svg>',
+        asteroids: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="16,4 12,10 4,12 8,20 6,28 16,24 26,28 24,20 28,12 20,10" stroke="#a78bfa" stroke-width="2" fill="none"/><polygon points="16,20 14,24 16,28 18,24" fill="#ef4444"/><polygon points="16,12 14,16 16,20 18,16" stroke="#667eea" stroke-width="1.5" fill="none"/></svg>',
+        pacman: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M28 16a12 12 0 1 1-6-10.4L16 16z" fill="#facc15"/><circle cx="18" cy="10" r="1.5" fill="#1e293b"/><circle cx="5" cy="16" r="1.5" fill="#667eea" opacity="0.5"/><circle cx="0" cy="16" r="1.5" fill="#667eea" opacity="0.3"/></svg>',
+        frogger: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="18" rx="8" ry="6" fill="#22c55e"/><circle cx="11" cy="12" r="3" fill="#22c55e"/><circle cx="21" cy="12" r="3" fill="#22c55e"/><circle cx="11" cy="11" r="1.5" fill="#fff"/><circle cx="21" cy="11" r="1.5" fill="#fff"/><circle cx="11.5" cy="10.5" r="0.8" fill="#1e293b"/><circle cx="21.5" cy="10.5" r="0.8" fill="#1e293b"/><path d="M12 21a4 4 0 0 0 8 0" stroke="#15803d" stroke-width="1.5" fill="none"/></svg>',
+        missile: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="24" width="8" height="6" rx="1" fill="#667eea"/><rect x="20" y="24" width="8" height="6" rx="1" fill="#667eea"/><path d="M8 24l4-10" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="2 2"/><path d="M24 24l-4-8" stroke="#a78bfa" stroke-width="1.5" stroke-dasharray="2 2"/><circle cx="12" cy="14" r="3" fill="none" stroke="#ef4444" stroke-width="1.5"/><line x1="18" y1="4" x2="16" y2="10" stroke="#ef4444" stroke-width="1.5"/><line x1="22" y1="2" x2="20" y2="8" stroke="#ef4444" stroke-width="1"/></svg>',
+        galaga: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 28l-4-6h-4l4-8h-2l6-12 6 12h-2l4 8h-4z" fill="#667eea"/><path d="M14 22h4v4h-4z" fill="#a78bfa"/><circle cx="8" cy="6" r="2" fill="#ef4444"/><circle cx="16" cy="4" r="2" fill="#ef4444"/><circle cx="24" cy="6" r="2" fill="#ef4444"/><circle cx="12" cy="8" r="1.5" fill="#f59e0b"/><circle cx="20" cy="8" r="1.5" fill="#f59e0b"/></svg>',
+        centipede: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="10" r="3.5" fill="#22c55e"/><circle cx="12" cy="12" r="3" fill="#16a34a"/><circle cx="18" cy="10" r="3" fill="#22c55e"/><circle cx="24" cy="12" r="3" fill="#16a34a"/><circle cx="5" cy="8" r="1" fill="#ef4444"/><circle cx="7" cy="8" r="1" fill="#ef4444"/><path d="M6 14l-2 4M12 15l-1 4M18 13l1 4M24 15l2 4" stroke="#15803d" stroke-width="1.5" stroke-linecap="round"/><rect x="8" y="22" width="4" height="4" rx="2" fill="#a78bfa" opacity="0.4"/><rect x="20" y="20" width="4" height="4" rx="2" fill="#a78bfa" opacity="0.4"/></svg>',
+        lunar: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 6l-3 10h-4l2 4-2 2h14l-2-2 2-4h-4z" stroke="#a78bfa" stroke-width="2" fill="none"/><path d="M14 22l-1 4M18 22l1 4M13 26h6" stroke="#a78bfa" stroke-width="1.5" stroke-linecap="round"/><path d="M15 22h2v3h-2z" fill="#ef4444" opacity="0.7"/><path d="M14 25c0 2 2 4 2 4s2-2 2-4" stroke="#f59e0b" stroke-width="1" fill="none"/><circle cx="8" cy="28" r="1.5" fill="#667eea" opacity="0.3"/><circle cx="24" cy="26" r="1" fill="#667eea" opacity="0.3"/></svg>',
+        spacex: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="13" y="2" width="6" height="18" rx="3" fill="#e2e8f0"/><path d="M13 8l-3 6v6h3zM19 8l3 6v6h-3z" fill="#94a3b8"/><rect x="11" y="20" width="2" height="4" fill="#64748b"/><rect x="19" y="20" width="2" height="4" fill="#64748b"/><path d="M14 24c0 3 2 6 2 6s2-3 2-6" fill="#ef4444" opacity="0.8"/><path d="M15 24c0 2 1 4 1 4s1-2 1-4" fill="#facc15" opacity="0.8"/><rect x="6" y="26" width="20" height="4" rx="1" fill="#475569"/><text x="16" y="29.5" text-anchor="middle" font-size="3" fill="#a78bfa" font-weight="bold">OCISLY</text></svg>',
+        joust: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="20" rx="7" ry="5" fill="#f5f5f4"/><ellipse cx="16" cy="15" rx="4" ry="3.5" fill="#fbbf24"/><circle cx="14" cy="14" r="1" fill="#1e293b"/><path d="M20 15l6-2" stroke="#a78bfa" stroke-width="2" stroke-linecap="round"/><path d="M26 13l2-1" stroke="#667eea" stroke-width="1.5" stroke-linecap="round"/><path d="M11 22l-2 6M16 24v5M21 22l2 6" stroke="#f59e0b" stroke-width="1.5" stroke-linecap="round"/></svg>',
+        bomberman: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="18" r="9" fill="#1e293b"/><path d="M16 9c0-3 2-5 4-6" stroke="#a78bfa" stroke-width="2" stroke-linecap="round"/><circle cx="22" cy="3" r="2.5" fill="#ef4444"/><circle cx="22" cy="3" r="1.5" fill="#f59e0b"/><rect x="12" y="14" width="3" height="3" rx="0.5" fill="#fff"/><rect x="17" y="14" width="3" height="3" rx="0.5" fill="#fff"/><path d="M13 22c1.5 1.5 4.5 1.5 6 0" stroke="#fff" stroke-width="1.5" stroke-linecap="round" fill="none"/></svg>',
+        qbert: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 4l12 7v14l-12 7L4 25V11z" fill="none" stroke="#f59e0b" stroke-width="2"/><path d="M16 4l12 7-12 7L4 11z" fill="#f59e0b" opacity="0.3"/><path d="M4 11l12 7v14" stroke="#f59e0b" stroke-width="1" opacity="0.5"/><path d="M28 11l-12 7" stroke="#f59e0b" stroke-width="1" opacity="0.5"/><circle cx="13" cy="14" r="2" fill="#fff"/><circle cx="19" cy="14" r="2" fill="#fff"/><circle cx="13" cy="14" r="0.8" fill="#1e293b"/><circle cx="19" cy="14" r="0.8" fill="#1e293b"/><path d="M16 18v2" stroke="#ef4444" stroke-width="2" stroke-linecap="round"/></svg>',
+        donkeykong: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="12" r="8" fill="#92400e"/><circle cx="13" cy="10" r="2" fill="#fef3c7"/><circle cx="19" cy="10" r="2" fill="#fef3c7"/><circle cx="13" cy="10" r="0.8" fill="#1e293b"/><circle cx="19" cy="10" r="0.8" fill="#1e293b"/><ellipse cx="16" cy="15" rx="3" ry="2" fill="#d97706"/><path d="M14 15.5c0.5 0.5 3.5 0.5 4 0" stroke="#1e293b" stroke-width="0.8"/><rect x="10" y="20" width="12" height="6" rx="2" fill="#78350f"/><path d="M8 16l-3 6M24 16l3 6" stroke="#92400e" stroke-width="2.5" stroke-linecap="round"/><ellipse cx="16" cy="28" rx="2" ry="1.5" fill="#ef4444" opacity="0.5"/></svg>',
+        digdug: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="10" width="28" height="20" rx="2" fill="#92400e" opacity="0.3"/><circle cx="12" cy="18" r="4" fill="#3b82f6"/><circle cx="11" cy="17" r="1" fill="#fff"/><path d="M16 18h8" stroke="#a78bfa" stroke-width="2" stroke-linecap="round" stroke-dasharray="2 1"/><circle cx="26" cy="18" r="3" fill="#ef4444" opacity="0.6"/><circle cx="8" cy="26" r="2.5" fill="#a3a3a3" opacity="0.5"/><circle cx="22" cy="26" r="2.5" fill="#a3a3a3" opacity="0.5"/></svg>',
+        tempest: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><polygon points="16,2 28,10 28,22 16,30 4,22 4,10" fill="none" stroke="#06b6d4" stroke-width="1.5"/><polygon points="16,8 22,12 22,20 16,24 10,20 10,12" fill="none" stroke="#a78bfa" stroke-width="1.5"/><polygon points="16,13 18,14.5 18,17.5 16,19 14,17.5 14,14.5" fill="#667eea"/><line x1="16" y1="2" x2="16" y2="8" stroke="#06b6d4" stroke-width="0.8" opacity="0.5"/><line x1="28" y1="10" x2="22" y2="12" stroke="#06b6d4" stroke-width="0.8" opacity="0.5"/><line x1="28" y1="22" x2="22" y2="20" stroke="#06b6d4" stroke-width="0.8" opacity="0.5"/><line x1="4" y1="10" x2="10" y2="12" stroke="#06b6d4" stroke-width="0.8" opacity="0.5"/><line x1="4" y1="22" x2="10" y2="20" stroke="#06b6d4" stroke-width="0.8" opacity="0.5"/><line x1="16" y1="30" x2="16" y2="24" stroke="#06b6d4" stroke-width="0.8" opacity="0.5"/></svg>',
+        defender: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M4 16h6l3-4h6l3 4h6" stroke="#22c55e" stroke-width="2" stroke-linecap="round"/><path d="M8 16l2 4h12l2-4" fill="#22c55e" opacity="0.3"/><path d="M4 16l2-2" stroke="#ef4444" stroke-width="1.5"/><circle cx="2" cy="14" r="1" fill="#ef4444"/><line x1="2" y1="24" x2="30" y2="24" stroke="#667eea" stroke-width="1" opacity="0.3"/><rect x="10" y="24" width="3" height="4" rx="0.5" fill="#667eea" opacity="0.4"/><rect x="20" y="24" width="3" height="4" rx="0.5" fill="#667eea" opacity="0.4"/></svg>',
+        tron: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M6 26V10h8v8h6V6" stroke="#06b6d4" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="6" cy="26" r="2.5" fill="#06b6d4"/><path d="M26 6V22h-8v-6h-6v10" stroke="#f59e0b" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/><circle cx="26" cy="6" r="2.5" fill="#f59e0b"/></svg>',
+        simon: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 2a14 14 0 0 1 0 28" fill="none"/><path d="M4 16a12 12 0 0 1 12-12v12z" fill="#ef4444"/><path d="M16 4a12 12 0 0 1 12 12H16z" fill="#3b82f6"/><path d="M28 16a12 12 0 0 1-12 12V16z" fill="#22c55e"/><path d="M16 28a12 12 0 0 1-12-12h12z" fill="#facc15"/><circle cx="16" cy="16" r="4" fill="#1e293b"/></svg>',
+        connect4: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="6" width="28" height="24" rx="3" fill="#3b82f6"/><circle cx="8" cy="12" r="3" fill="#e2e8f0"/><circle cx="16" cy="12" r="3" fill="#e2e8f0"/><circle cx="24" cy="12" r="3" fill="#facc15"/><circle cx="8" cy="20" r="3" fill="#ef4444"/><circle cx="16" cy="20" r="3" fill="#ef4444"/><circle cx="24" cy="20" r="3" fill="#ef4444"/><circle cx="8" cy="26" r="2" fill="#e2e8f0" opacity="0.3"/><circle cx="16" cy="26" r="2" fill="#facc15" opacity="0.3"/><circle cx="24" cy="26" r="2" fill="#e2e8f0" opacity="0.3"/></svg>',
+        dots: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6" cy="6" r="2" fill="#667eea"/><circle cx="16" cy="6" r="2" fill="#667eea"/><circle cx="26" cy="6" r="2" fill="#667eea"/><circle cx="6" cy="16" r="2" fill="#667eea"/><circle cx="16" cy="16" r="2" fill="#667eea"/><circle cx="26" cy="16" r="2" fill="#667eea"/><circle cx="6" cy="26" r="2" fill="#667eea"/><circle cx="16" cy="26" r="2" fill="#667eea"/><circle cx="26" cy="26" r="2" fill="#667eea"/><line x1="6" y1="6" x2="16" y2="6" stroke="#ef4444" stroke-width="2"/><line x1="6" y1="6" x2="6" y2="16" stroke="#ef4444" stroke-width="2"/><line x1="16" y1="6" x2="16" y2="16" stroke="#ef4444" stroke-width="2"/><line x1="6" y1="16" x2="16" y2="16" stroke="#ef4444" stroke-width="2"/><rect x="7" y="7" width="8" height="8" fill="#ef4444" opacity="0.15"/><line x1="16" y1="16" x2="26" y2="16" stroke="#3b82f6" stroke-width="2"/></svg>',
+        hexdefense: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M16 3l11 6.5v13L16 29 5 22.5v-13z" fill="none" stroke="#667eea" stroke-width="2"/><path d="M16 9l6 3.5v7L16 23l-6-3.5v-7z" fill="#667eea" opacity="0.15"/><circle cx="16" cy="16" r="3" fill="none" stroke="#ef4444" stroke-width="2"/><line x1="16" y1="13" x2="16" y2="7" stroke="#ef4444" stroke-width="1.5"/><circle cx="16" cy="6" r="1.5" fill="#ef4444"/></svg>',
+        blackjack: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3" y="4" width="16" height="22" rx="2" fill="#fff" stroke="#1e293b" stroke-width="1.5"/><text x="7" y="14" font-size="8" font-weight="bold" fill="#1e293b">A</text><text x="6" y="22" font-size="8" fill="#1e293b">\u2660</text><rect x="13" y="6" width="16" height="22" rx="2" fill="#1e293b"/><text x="17" y="16" font-size="8" font-weight="bold" fill="#ef4444">K</text><text x="16" y="24" font-size="8" fill="#ef4444">\u2665</text></svg>',
+        roulette: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="16" cy="16" r="13" fill="none" stroke="#667eea" stroke-width="2"/><circle cx="16" cy="16" r="9" fill="none" stroke="#a78bfa" stroke-width="1.5"/><path d="M16 3v4M16 25v4M3 16h4M25 16h4" stroke="#667eea" stroke-width="1.5"/><circle cx="16" cy="7" r="2" fill="#ef4444"/><circle cx="23" cy="11" r="2" fill="#1e293b"/><circle cx="23" cy="21" r="2" fill="#ef4444"/><circle cx="9" cy="11" r="2" fill="#1e293b"/><circle cx="9" cy="21" r="2" fill="#ef4444"/><circle cx="16" cy="25" r="2" fill="#1e293b"/><circle cx="16" cy="16" r="2" fill="#22c55e"/></svg>',
+        videopoker: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1" y="8" width="10" height="16" rx="1.5" fill="#fff" stroke="#667eea" stroke-width="1.2"/><text x="3.5" y="18" font-size="7" font-weight="bold" fill="#ef4444">J</text><rect x="11" y="6" width="10" height="16" rx="1.5" fill="#fff" stroke="#667eea" stroke-width="1.2"/><text x="13.5" y="16" font-size="7" font-weight="bold" fill="#ef4444">\u2665</text><rect x="21" y="8" width="10" height="16" rx="1.5" fill="#fff" stroke="#667eea" stroke-width="1.2"/><text x="23" y="18" font-size="7" font-weight="bold" fill="#1e293b">\u2660</text><rect x="4" y="26" width="24" height="3" rx="1" fill="#667eea" opacity="0.3"/></svg>',
+        baccarat: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="6" width="12" height="18" rx="2" fill="#1e293b"/><text x="5" y="17" font-size="6" font-weight="bold" fill="#fbbf24">P</text><rect x="18" y="6" width="12" height="18" rx="2" fill="#7c2d12"/><text x="21" y="17" font-size="6" font-weight="bold" fill="#fbbf24">B</text><text x="16" y="30" text-anchor="middle" font-size="5" fill="#667eea" font-weight="bold">VS</text></svg>',
+        craps: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="8" width="12" height="12" rx="2.5" fill="#ef4444" transform="rotate(-15 8 14)"/><circle cx="6" cy="11" r="1.2" fill="#fff"/><circle cx="10" cy="11" r="1.2" fill="#fff"/><circle cx="6" cy="15" r="1.2" fill="#fff"/><circle cx="10" cy="15" r="1.2" fill="#fff"/><circle cx="8" cy="13" r="1.2" fill="#fff"/><rect x="16" y="10" width="12" height="12" rx="2.5" fill="#fff" stroke="#1e293b" stroke-width="1.5" transform="rotate(10 22 16)"/><circle cx="20" cy="14" r="1.2" fill="#1e293b"/><circle cx="24" cy="14" r="1.2" fill="#1e293b"/><circle cx="20" cy="18" r="1.2" fill="#1e293b"/><circle cx="24" cy="18" r="1.2" fill="#1e293b"/></svg>',
+        threecardpoker: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="8" width="10" height="16" rx="1.5" fill="#fff" stroke="#667eea" stroke-width="1.2" transform="rotate(-8 7 16)"/><rect x="11" y="6" width="10" height="16" rx="1.5" fill="#fff" stroke="#667eea" stroke-width="1.2"/><rect x="20" y="8" width="10" height="16" rx="1.5" fill="#fff" stroke="#667eea" stroke-width="1.2" transform="rotate(8 25 16)"/><text x="5" y="18" font-size="6" fill="#ef4444" font-weight="bold">A</text><text x="14" y="16" font-size="6" fill="#1e293b" font-weight="bold">K</text><text x="22" y="18" font-size="6" fill="#ef4444" font-weight="bold">Q</text></svg>',
+        fruitcatcher: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="6" fill="#ef4444"/><path d="M12 6c-1-3 1-5 3-4" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/><ellipse cx="10" cy="10" rx="1.5" ry="2" fill="#fff" opacity="0.3"/><circle cx="24" cy="10" r="4" fill="#f59e0b"/><path d="M24 6c0-2 1-3 2-3" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/><path d="M6 26c0-2 4-3 10-3s10 1 10 3v2H6z" fill="#92400e"/><path d="M8 26c0-1.5 3.5-2.5 8-2.5s8 1 8 2.5" stroke="#78350f" stroke-width="1"/></svg>',
+        streetbrawl: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#fbbf24"/><rect x="9" y="12" width="6" height="10" rx="1" fill="#3b82f6"/><path d="M9 16l-4 2M15 16l6-4" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/><path d="M21 12l4-2" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/><circle cx="26" cy="9" r="2.5" fill="none" stroke="#ef4444" stroke-width="1.5"/><text x="25" y="11" text-anchor="middle" font-size="4" fill="#ef4444" font-weight="bold">!</text><path d="M10 22l-2 6M14 22l2 6" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/></svg>',
+        offroad: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="16" rx="14" ry="10" fill="none" stroke="#92400e" stroke-width="3"/><ellipse cx="16" cy="16" rx="8" ry="5" fill="none" stroke="#a3a3a3" stroke-width="1" stroke-dasharray="2 2"/><rect x="6" y="12" width="5" height="3" rx="1" fill="#ef4444"/><rect x="20" y="18" width="5" height="3" rx="1" fill="#3b82f6"/><rect x="13" y="7" width="5" height="3" rx="1" fill="#22c55e"/><circle cx="8.5" cy="13.5" r="1.5" fill="#1e293b"/><circle cx="22.5" cy="19.5" r="1.5" fill="#1e293b"/><circle cx="15.5" cy="8.5" r="1.5" fill="#1e293b"/></svg>',
+    };
+
     const GAME_CATALOG = [
         {
             name: 'Classic Arcade', icon: '\u{1F47E}',
             games: [
-                { name: 'Snake', icon: '\u{1F40D}', url: 'snake/' },
-                { name: 'Pong', icon: '\u{1F3D3}', url: 'pong/' },
-                { name: 'Breakout', icon: '\u{1F9F1}', url: 'breakout/' },
-                { name: 'Space Invaders', icon: '\u{1F47E}', url: 'space-invaders/' },
-                { name: 'Flappy Bird', icon: '\u{1F426}', url: 'flappy-bird/' },
-                { name: 'Block Puzzle', icon: '\u{1F7E6}', url: 'block-puzzle/' },
+                { name: 'Snake', icon: I.snake, url: 'snake/' },
+                { name: 'Pong', icon: I.pong, url: 'pong/' },
+                { name: 'Breakout', icon: I.breakout, url: 'breakout/' },
+                { name: 'Space Invaders', icon: I.spaceinvaders, url: 'space-invaders/' },
+                { name: 'Flappy Bird', icon: I.flappy, url: 'flappy-bird/' },
+                { name: 'Block Puzzle', icon: I.blockpuzzle, url: 'block-puzzle/' },
             ]
         },
         {
             name: 'Retro Arcade', icon: '\u{1F579}\uFE0F',
             games: [
-                { name: 'Asteroids', icon: '\u2604\uFE0F', url: 'asteroids/' },
-                { name: 'Pac-Man', icon: '\u{1F7E1}', url: 'pac-man/' },
-                { name: 'Frogger', icon: '\u{1F438}', url: 'frogger/' },
-                { name: 'Missile Command', icon: '\u{1F680}', url: 'missile-command/' },
-                { name: 'Galaga', icon: '\u{1F6F8}', url: 'galaga/' },
-                { name: 'Centipede', icon: '\u{1F41B}', url: 'centipede/' },
-                { name: 'Lunar Lander', icon: '\u{1F315}', url: 'lunar-lander/' },
-                { name: 'SpaceX Lander', icon: '\u{1F680}', url: 'spacex-lander/' },
-                { name: 'Joust', icon: '\u2694\uFE0F', url: 'joust/' },
-                { name: 'Bomberman', icon: '\u{1F4A3}', url: 'bomberman/' },
-                { name: 'Q*bert', icon: '\u{1F536}', url: 'qbert/' },
-                { name: 'Donkey Kong', icon: '\u{1F412}', url: 'donkey-kong/' },
-                { name: 'Dig Dug', icon: '\u26CF\uFE0F', url: 'dig-dug/' },
-                { name: 'Tempest', icon: '\u{1F300}', url: 'tempest/' },
-                { name: 'Defender', icon: '\u{1F6E1}\uFE0F', url: 'defender/' },
-                { name: 'Tron Light Cycles', icon: '\u{1F3CD}\uFE0F', url: 'tron/' },
-                { name: 'Simon', icon: '\u{1F534}', url: 'simon/' },
+                { name: 'Asteroids', icon: I.asteroids, url: 'asteroids/' },
+                { name: 'Pac-Man', icon: I.pacman, url: 'pac-man/' },
+                { name: 'Frogger', icon: I.frogger, url: 'frogger/' },
+                { name: 'Missile Command', icon: I.missile, url: 'missile-command/' },
+                { name: 'Galaga', icon: I.galaga, url: 'galaga/' },
+                { name: 'Centipede', icon: I.centipede, url: 'centipede/' },
+                { name: 'Lunar Lander', icon: I.lunar, url: 'lunar-lander/' },
+                { name: 'SpaceX Lander', icon: I.spacex, url: 'spacex-lander/' },
+                { name: 'Joust', icon: I.joust, url: 'joust/' },
+                { name: 'Bomberman', icon: I.bomberman, url: 'bomberman/' },
+                { name: 'Q*bert', icon: I.qbert, url: 'qbert/' },
+                { name: 'Donkey Kong', icon: I.donkeykong, url: 'donkey-kong/' },
+                { name: 'Dig Dug', icon: I.digdug, url: 'dig-dug/' },
+                { name: 'Tempest', icon: I.tempest, url: 'tempest/' },
+                { name: 'Defender', icon: I.defender, url: 'defender/' },
+                { name: 'Tron Light Cycles', icon: I.tron, url: 'tron/' },
+                { name: 'Simon', icon: I.simon, url: 'simon/' },
             ]
         },
         {
             name: 'Strategy & Puzzles', icon: '\u{1F9E9}',
             games: [
-                { name: 'Connect 4', icon: '\u{1F534}', url: 'connect-4/' },
-                { name: 'Dots & Boxes', icon: '\u{1F535}', url: 'connect-dots/' },
-                { name: 'Hex Defense', icon: '\u{1F6E1}\uFE0F', url: 'hex-defense/' },
+                { name: 'Connect 4', icon: I.connect4, url: 'connect-4/' },
+                { name: 'Dots & Boxes', icon: I.dots, url: 'connect-dots/' },
+                { name: 'Hex Defense', icon: I.hexdefense, url: 'hex-defense/' },
             ]
         },
         {
             name: 'Casino', icon: '\u{1F3B0}',
             games: [
-                { name: 'Blackjack', icon: '\u{1F0CF}', url: 'blackjack/' },
-                { name: 'Roulette', icon: '\u{1F3A1}', url: 'roulette/' },
-                { name: 'Video Poker', icon: '\u{1F0CF}', url: 'video-poker/' },
-                { name: 'Baccarat', icon: '\u{1F0A0}', url: 'baccarat/' },
-                { name: 'Craps', icon: '\u{1F3B2}', url: 'craps/' },
-                { name: 'Three Card Poker', icon: '\u{1F0A1}', url: 'three-card-poker/' },
+                { name: 'Blackjack', icon: I.blackjack, url: 'blackjack/' },
+                { name: 'Roulette', icon: I.roulette, url: 'roulette/' },
+                { name: 'Video Poker', icon: I.videopoker, url: 'video-poker/' },
+                { name: 'Baccarat', icon: I.baccarat, url: 'baccarat/' },
+                { name: 'Craps', icon: I.craps, url: 'craps/' },
+                { name: 'Three Card Poker', icon: I.threecardpoker, url: 'three-card-poker/' },
             ]
         },
         {
             name: 'Action & More', icon: '\u{1F3AF}',
             games: [
-                { name: 'Fruit Catcher', icon: '\u{1F34E}', url: 'fruit-catcher/' },
-                { name: 'Street Brawl', icon: '\u{1F44A}', url: 'beat-em-up/' },
-                { name: 'Super Off Road', icon: '\u{1F3CE}', url: 'off-road/' },
-            ]
-        },
-        {
-            name: 'Web Games', icon: '\u{1F310}',
-            games: [
-                { name: 'Bubble Shooter HD', icon: '\u{1FAE7}', url: 'bubble-shooter-hd/' },
-                { name: 'Merge Fruit', icon: '\u{1F349}', url: 'merge-fruit/' },
-                { name: 'Drift Boss', icon: '\u{1F697}', url: 'drift-boss/' },
-                { name: 'Slope Run', icon: '\u{1F3D4}\uFE0F', url: 'slope-run/' },
+                { name: 'Fruit Catcher', icon: I.fruitcatcher, url: 'fruit-catcher/' },
+                { name: 'Street Brawl', icon: I.streetbrawl, url: 'beat-em-up/' },
+                { name: 'Super Off Road', icon: I.offroad, url: 'off-road/' },
             ]
         },
     ];
@@ -330,6 +360,7 @@
 .site-nav-dropdown a:hover{background:rgba(102,126,234,0.15);color:#fff}\
 .site-nav-dropdown a.active{color:#a78bfa;background:rgba(102,126,234,0.1);font-weight:600}\
 .site-nav-dropdown .game-icon{width:22px;text-align:center;flex-shrink:0}\
+.site-nav-dropdown .game-icon svg,.site-nav-search-results .game-icon svg,.mobile-game-list .game-icon svg{width:16px;height:16px;vertical-align:middle}\
 \
 /* Wide dropdown for Retro Arcade (16 games) */\
 .site-nav-dropdown.wide{min-width:380px;display:grid;grid-template-columns:1fr 1fr;gap:2px}\
@@ -361,8 +392,8 @@
 .site-nav-size-dropdown{position:absolute;top:100%;right:0;width:220px;background:rgba(15,12,41,0.98);backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px);border:1px solid rgba(255,255,255,0.1);border-radius:12px;padding:12px;box-shadow:0 12px 40px rgba(0,0,0,0.5);opacity:0;visibility:hidden;transition:opacity .15s,visibility .15s;margin-top:4px}\
 .site-nav-size.open .site-nav-size-dropdown{opacity:1;visibility:visible}\
 .nav-size-label{display:block;color:rgba(255,255,255,0.5);font-size:0.75em;font-weight:600;text-transform:uppercase;letter-spacing:0.8px;margin-bottom:8px}\
-.nav-size-buttons{display:flex;gap:6px}\
-.nav-size-btn{flex:1;padding:6px 4px;border:1px solid rgba(255,255,255,0.15);border-radius:8px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);font-size:0.78em;cursor:pointer;transition:all .2s;font-family:inherit}\
+.nav-size-buttons{display:grid;grid-template-columns:1fr 1fr;gap:6px}\
+.nav-size-btn{padding:8px 6px;border:1px solid rgba(255,255,255,0.15);border-radius:8px;background:rgba(255,255,255,0.05);color:rgba(255,255,255,0.6);font-size:0.78em;cursor:pointer;transition:all .2s;font-family:inherit}\
 .nav-size-btn:hover{background:rgba(255,255,255,0.1);color:#fff}\
 .nav-size-btn.active{background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;border-color:transparent;font-weight:600}\
 \
@@ -441,6 +472,14 @@ body.mobile-nav-open{overflow:hidden}\
     homeLink.className = 'site-nav-home';
     homeLink.innerHTML = '<span class="site-nav-home-icon">\u{1F3AE}</span> <span>Arcade Hub</span>';
     inner.appendChild(homeLink);
+
+    // All Games link (desktop)
+    var allGamesLink = document.createElement('a');
+    allGamesLink.href = basePath + 'index.html#all-games';
+    allGamesLink.className = 'site-nav-home';
+    allGamesLink.style.cssText = 'font-size:0.85em;padding:6px 12px';
+    allGamesLink.innerHTML = '<span>\u{1F3AE}</span> <span>All Games</span>';
+    inner.appendChild(allGamesLink);
 
     // Category triggers (desktop)
     var catList = document.createElement('ul');
@@ -618,6 +657,37 @@ body.mobile-nav-open{overflow:hidden}\
     var mobileNoResults = document.createElement('div');
     mobileNoResults.className = 'mobile-no-results';
     mobileNoResults.textContent = 'No games found';
+
+    // Mobile "All Games" section
+    var mobileAllDiv = document.createElement('div');
+    mobileAllDiv.className = 'mobile-cat collapsed';
+    var mobileAllHeader = document.createElement('div');
+    mobileAllHeader.className = 'mobile-cat-header';
+    mobileAllHeader.innerHTML = '<span>\u{1F3AE}</span> All Games A\u2013Z <span class="chevron">\u25BC</span>';
+    var mobileAllList = document.createElement('ul');
+    mobileAllList.className = 'mobile-game-list';
+    var mobileAllGames = [];
+    GAME_CATALOG.forEach(function (cat) {
+        cat.games.forEach(function (game) {
+            mobileAllGames.push(game);
+        });
+    });
+    mobileAllGames.sort(function (a, b) { return a.name.localeCompare(b.name); });
+    mobileAllGames.forEach(function (game) {
+        var li = document.createElement('li');
+        var a = document.createElement('a');
+        a.href = basePath + game.url;
+        if (currentPage === game.url) a.className = 'active';
+        a.innerHTML = '<span class="game-icon">' + game.icon + '</span> ' + game.name;
+        li.appendChild(a);
+        mobileAllList.appendChild(li);
+    });
+    mobileAllHeader.addEventListener('click', function () {
+        mobileAllDiv.classList.toggle('collapsed');
+    });
+    mobileAllDiv.appendChild(mobileAllHeader);
+    mobileAllDiv.appendChild(mobileAllList);
+    mobilePanel.appendChild(mobileAllDiv);
 
     // Mobile categories
     GAME_CATALOG.forEach(function (cat) {
@@ -867,6 +937,28 @@ body.mobile-nav-open{overflow:hidden}\
     var countBadge = document.querySelector('.game-count');
     if (countBadge) {
         countBadge.textContent = totalGames + ' Games';
+    }
+
+    // ── Populate "All Games A-Z" grid on hub page ──────────
+    var allGamesGrid = document.getElementById('all-games-grid');
+    if (allGamesGrid) {
+        var allGames = [];
+        GAME_CATALOG.forEach(function (cat) {
+            cat.games.forEach(function (game) {
+                allGames.push(game);
+            });
+        });
+        allGames.sort(function (a, b) {
+            return a.name.localeCompare(b.name);
+        });
+        allGames.forEach(function (game) {
+            var card = document.createElement('div');
+            card.className = 'game-card';
+            card.innerHTML = '<div class="game-icon-wrap">' + game.icon + '</div>' +
+                '<h2>' + game.name + '</h2>' +
+                '<a href="' + game.url + '" class="play-button">Play</a>';
+            allGamesGrid.appendChild(card);
+        });
     }
 
     // ── Viewport Size Control ─────────────────────────────
