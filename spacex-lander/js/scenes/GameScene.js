@@ -134,12 +134,6 @@ class GameScene extends Phaser.Scene {
             letterSpacing: 4
         }).setOrigin(0.5).setDepth(16);
 
-        // --- NIGHT MODE OVERLAY ---
-        this._nightOverlay = null;
-        if (this.levelDef.nightMode) {
-            this._nightOverlay = this.add.graphics().setDepth(5);
-        }
-
         // --- DUAL CAMERA SETUP ---
         this.hudCamera = this.cameras.add(0, 0, w, h);
         this.hudCamera.setName('hud');
@@ -159,7 +153,6 @@ class GameScene extends Phaser.Scene {
             this.skyGraphics, this.oceanGraphics,
             this.shipGraphics, this.rocketGraphics
         ];
-        if (this._nightOverlay) this._worldObjects.push(this._nightOverlay);
 
         // HUD objects: hide from main camera
         this._hudObjects.forEach(obj => this.cameras.main.ignore(obj));
@@ -262,13 +255,14 @@ class GameScene extends Phaser.Scene {
                 this.audio.startThrust(rocket.engineMode);
             }
             const nozzles = rocket.getNozzlePositions();
+            const gimbalOffset = rocket.gridFinAngle * 15; // visual exhaust tilt
             if (rocket.engineMode === 'entry') {
                 const center = nozzles[Math.floor(nozzles.length / 2)];
-                this.vfx.startEntryBurn(center.x, center.y, rocket.angle);
+                this.vfx.startEntryBurn(center.x, center.y, rocket.angle + gimbalOffset);
                 this.vfx.stopLandingBurn();
             } else {
                 const center = nozzles[0];
-                this.vfx.startLandingBurn(center.x, center.y, rocket.angle);
+                this.vfx.startLandingBurn(center.x, center.y, rocket.angle + gimbalOffset);
                 this.vfx.stopEntryBurn();
             }
         } else {
@@ -326,11 +320,6 @@ class GameScene extends Phaser.Scene {
         this.rocketGraphics.clear();
         rocket.draw(this.rocketGraphics);
 
-        // --- NIGHT MODE ---
-        if (this._nightOverlay) {
-            this._drawNightOverlay();
-        }
-
         this._drawWind();
         this._updateHUD();
     }
@@ -342,15 +331,16 @@ class GameScene extends Phaser.Scene {
         const speed = Math.sqrt(rocket.vx * rocket.vx + rocket.vy * rocket.vy);
         const mach1 = CONFIG.SOUND_BARRIER.MACH_1_SPEED;
         const isSuperSonic = speed > mach1;
+        const altitude = rocket.getAltitude(this.ocean, this.droneShip);
+        const minAlt = CONFIG.SOUND_BARRIER.MIN_ALTITUDE || 2000;
 
         // Update cooldown
         if (this._sonicBoomCooldown > 0) {
             this._sonicBoomCooldown -= delta;
         }
 
-        // Check for crossing Mach 1 (either direction)
-        if (isSuperSonic !== this._wasSuperSonic && this._sonicBoomCooldown <= 0) {
-            // Sonic boom!
+        // Only trigger sonic booms at high altitude during fast descent
+        if (isSuperSonic !== this._wasSuperSonic && this._sonicBoomCooldown <= 0 && altitude > minAlt) {
             this.vfx.emitSonicBoom(rocket.x, rocket.y);
             if (this.audio) this.audio.playSonicBoom();
             this.cameras.main.shake(300, 0.010);
@@ -541,56 +531,6 @@ class GameScene extends Phaser.Scene {
                 goalText.destroy();
             }
         });
-    }
-
-    _drawNightOverlay() {
-        const g = this._nightOverlay;
-        g.clear();
-
-        const cam = this.cameras.main;
-        const wv = cam.worldView;
-        const rocket = this.rocket;
-
-        // Dark overlay with circular cutout around rocket
-        const visRadius = 180; // visibility radius in world units
-        const outerMargin = 500;
-
-        // Draw darkness as a large dark rectangle with a bright circle cut out
-        // We simulate this by drawing dark rectangles around the visibility circle
-        g.fillStyle(0x000000, 0.75);
-
-        // Top
-        g.fillRect(wv.x - outerMargin, wv.y - outerMargin,
-            wv.width + outerMargin * 2, (rocket.y - visRadius) - (wv.y - outerMargin));
-        // Bottom
-        g.fillRect(wv.x - outerMargin, rocket.y + visRadius,
-            wv.width + outerMargin * 2, (wv.y + wv.height + outerMargin) - (rocket.y + visRadius));
-        // Left
-        g.fillRect(wv.x - outerMargin, rocket.y - visRadius,
-            (rocket.x - visRadius) - (wv.x - outerMargin), visRadius * 2);
-        // Right
-        g.fillRect(rocket.x + visRadius, rocket.y - visRadius,
-            (wv.x + wv.width + outerMargin) - (rocket.x + visRadius), visRadius * 2);
-
-        // Corners (fill the square corners that the circle would cut)
-        // Use radial gradient approximation with concentric dark rings
-        for (let r = visRadius; r > visRadius * 0.6; r -= 3) {
-            const alpha = 0.75 * (1 - (r - visRadius * 0.6) / (visRadius * 0.4));
-            g.fillStyle(0x000000, alpha);
-            g.fillCircle(rocket.x, rocket.y, r);
-        }
-
-        // Clear inner circle (draw over with transparent - actually draw a lighter circle)
-        // Phaser graphics can't truly cut out, so we use a gradient approach:
-        // Draw increasingly transparent rings from outer to inner
-        for (let r = visRadius; r > 0; r -= 4) {
-            const t = r / visRadius;
-            const alpha = t > 0.7 ? 0.75 * ((t - 0.7) / 0.3) : 0;
-            if (alpha > 0.01) {
-                g.lineStyle(5, 0x000000, alpha);
-                g.strokeCircle(rocket.x, rocket.y, r);
-            }
-        }
     }
 
     _checkCollision() {
@@ -867,15 +807,31 @@ class GameScene extends Phaser.Scene {
         }
         this.hudTexts.altBig.setColor(altColor);
 
-        // V-speed under altitude — with speed guidance in Phase 2+
-        if (this.currentPhase >= 2) {
-            const safeVy = alt > 2000 ? 80 : alt > 800 ? 50 : CONFIG.LAND_MAX_VY;
-            const speedOk = Math.abs(rocket.vy) <= safeVy;
-            this.hudTexts.vSpeedBig.setText(`${rocket.vy.toFixed(0)} / ${safeVy} m/s`);
-            this.hudTexts.vSpeedBig.setColor(speedOk ? '#44ff88' : '#ff4444');
+        // V-speed under altitude — always show speed guidance with safe threshold
+        const totalSpeed = Math.sqrt(rocket.vx * rocket.vx + rocket.vy * rocket.vy);
+        const displayVy = Math.abs(rocket.vy);
+        const safeVy = alt > 3000 ? 150 : alt > 2000 ? 80 : alt > 800 ? 50 : CONFIG.LAND_MAX_VY;
+        const speedOk = displayVy <= safeVy;
+        const dangerousSpeed = displayVy > safeVy * 1.5;
+
+        this.hudTexts.vSpeedBig.setText(`${rocket.vy.toFixed(0)} / ${safeVy} m/s`);
+        this.hudTexts.vSpeedBig.setColor(speedOk ? '#44ff88' : '#ff4444');
+
+        // Prominent SLOW DOWN warning when approaching too fast
+        if (!this._slowDownText) {
+            this._slowDownText = this.add.text(CONFIG.WIDTH / 2, CONFIG.HEIGHT * 0.42, 'SLOW DOWN', {
+                fontSize: '32px',
+                fontFamily: 'Courier New, monospace',
+                color: '#ff2222',
+                fontStyle: 'bold'
+            }).setOrigin(0.5).setDepth(16).setAlpha(0);
+            if (this.hudCamera) this.cameras.main.ignore(this._slowDownText);
+        }
+        if (dangerousSpeed && alt < 4000 && alt > 200) {
+            const flash = 0.6 + Math.sin(Date.now() / 150) * 0.4;
+            this._slowDownText.setAlpha(flash);
         } else {
-            this.hudTexts.vSpeedBig.setText(`${rocket.vy.toFixed(0)} m/s`);
-            this.hudTexts.vSpeedBig.setColor(Math.abs(rocket.vy) > CONFIG.LAND_MAX_VY ? '#ff4444' : '#88aacc');
+            this._slowDownText.setAlpha(0);
         }
 
         // Mach number display

@@ -176,7 +176,9 @@ class Sky {
                     graphics.fillPath();
                 }
 
-                graphics.lineStyle(2, 0x4499dd, 0.6 * curveFade);
+                // Soft edge glow instead of hard line
+                const edgeColor = Phaser.Display.Color.GetColor(40, 100, 180);
+                graphics.fillStyle(edgeColor, 0.15 * curveFade);
                 graphics.beginPath();
                 for (let x = ox - 100; x <= ox + w + 100; x += 8) {
                     const dx = x - centerX;
@@ -185,17 +187,20 @@ class Sky {
                     if (x === ox - 100) graphics.moveTo(x, py);
                     else graphics.lineTo(x, py);
                 }
-                graphics.strokePath();
+                graphics.lineTo(ox + w + 100, curveY + 6);
+                graphics.lineTo(ox - 100, curveY + 6);
+                graphics.closePath();
+                graphics.fillPath();
             }
         }
 
-        // Atmosphere gradient (fades in)
+        // Atmosphere gradient (fades in) — high step count to avoid visible banding
         if (blend > 0) {
-            const steps = 60;
+            const steps = 200;
+            const segH = h / steps + 1;
             for (let i = 0; i < steps; i++) {
                 const t = i / steps;
                 const y = oy + t * h;
-                const segH = h / steps + 2;
 
                 const r = Math.floor(this._lerp(10, 106, t));
                 const g = Math.floor(this._lerp(40, 170, t));

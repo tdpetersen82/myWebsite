@@ -35,16 +35,20 @@ const CONFIG = {
     LEG_DEPLOY_ALTITUDE: 800,
 
     // Starting conditions
-    START_VY: 200,                  // Initial downward velocity — fast but manageable
+    START_VY: 350,                  // Initial downward velocity — fast entry requiring active braking
     START_Y: -1100,                 // Compact altitude — less boring dead space
     ALTITUDE_SCALE: 8,              // Pixel-to-altitude unit scale
     STARTING_LIVES: 3,
-    HANDOVER_COUNTDOWN: 1,          // Seconds of auto-descent before human control
+    HANDOVER_COUNTDOWN: 3,          // Seconds of auto-descent before human control
+
+    // Thrust
+    BASE_THRUST_RATIO: 0.35,        // Idle descent thrust as fraction of full thrust (always on)
 
     // Sound barrier
     SOUND_BARRIER: {
         MACH_1_SPEED: 43,           // Game units for Mach 1 (~343 m/s / ALTITUDE_SCALE)
-        COOLDOWN: 3000,             // ms cooldown between sonic boom triggers
+        COOLDOWN: 10000,            // ms cooldown between sonic boom triggers
+        MIN_ALTITUDE: 2000,         // Only trigger sonic booms above this altitude
     },
 
     // Scoring
@@ -125,105 +129,97 @@ const CONFIG = {
             goal: 'Land safely on the drone ship',
             wind: 0, rockAngle: 0, drift: 0, fuelPenalty: 0,
             shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 2,
-            nightMode: false
+
         },
         {
             name: 'Crosswind',
             goal: 'Land in steady crosswind',
             wind: 8, rockAngle: 0, drift: 0, fuelPenalty: 0,
             shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 3,
-            nightMode: false
+
         },
         {
             name: 'Rough Seas',
             goal: 'Land on a rocking ship',
             wind: 0, rockAngle: 3, drift: 0, fuelPenalty: 0,
             shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 6,
-            nightMode: false
+
         },
         {
             name: 'Storm Warning',
             goal: 'Handle wind and waves together',
             wind: 10, rockAngle: 4, drift: 0, fuelPenalty: 0,
             shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 7,
-            nightMode: false
+
         },
         {
             name: 'Off-Axis Entry',
             goal: 'Correct your approach angle',
             wind: 0, rockAngle: 0, drift: 0, fuelPenalty: 0,
             shipShrink: 1.0, entryAngle: 9, entryVx: 20, waveAmp: 3,
-            nightMode: false
+
         },
         {
             name: 'Moving Target',
             goal: 'Land on a drifting ship',
-            wind: 0, rockAngle: 0, drift: 10, fuelPenalty: 0,
-            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 4,
-            nightMode: false
+            wind: 0, rockAngle: 0, drift: 35, fuelPenalty: 0,
+            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 4
         },
         {
             name: 'Fuel Critical',
             goal: 'Land with limited fuel — be efficient',
             wind: 0, rockAngle: 0, drift: 0, fuelPenalty: 0.25,
             shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 3,
-            nightMode: false
+
         },
         {
             name: 'Gale Force',
             goal: 'Fight strong wind at an angle',
             wind: 14, rockAngle: 0, drift: 0, fuelPenalty: 0,
             shipShrink: 1.0, entryAngle: 11, entryVx: 25, waveAmp: 5,
-            nightMode: false
+
         },
         {
             name: 'Rolling Deck',
             goal: 'Ship rocks hard and drifts',
-            wind: 0, rockAngle: 6, drift: 12, fuelPenalty: 0,
+            wind: 0, rockAngle: 6, drift: 40, fuelPenalty: 0,
             shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 10,
-            nightMode: false
+
         },
         {
             name: 'Precision Landing',
             goal: 'Hit a smaller deck with less fuel',
             wind: 4, rockAngle: 2, drift: 0, fuelPenalty: 0.15,
             shipShrink: 0.85, entryAngle: 0, entryVx: 0, waveAmp: 4,
-            nightMode: false
+
         },
         {
             name: 'Typhoon',
             goal: 'Everything at once — moderate intensity',
-            wind: 11, rockAngle: 4, drift: 8, fuelPenalty: 0.10,
+            wind: 11, rockAngle: 4, drift: 25, fuelPenalty: 0.10,
             shipShrink: 0.95, entryAngle: 8, entryVx: 15, waveAmp: 8,
-            nightMode: false
+
         },
         {
             name: 'Emergency Descent',
             goal: 'Fast entry, low fuel, strong wind',
             wind: 12, rockAngle: 2, drift: 5, fuelPenalty: 0.30,
             shipShrink: 1.0, entryAngle: 6, entryVx: 12, waveAmp: 5,
-            extraStartVY: 50, nightMode: false
-        },
-        {
-            name: 'Night Landing',
-            goal: 'Land with reduced visibility',
-            wind: 8, rockAngle: 3, drift: 6, fuelPenalty: 0.05,
-            shipShrink: 1.0, entryAngle: 4, entryVx: 8, waveAmp: 5,
-            nightMode: true
+            extraStartVY: 50
         },
         {
             name: 'The Gauntlet',
             goal: 'All challenges at high intensity',
-            wind: 16, rockAngle: 6, drift: 14, fuelPenalty: 0.20,
+            wind: 16, rockAngle: 6, drift: 45, fuelPenalty: 0.20,
             shipShrink: 0.90, entryAngle: 14, entryVx: 30, waveAmp: 12,
-            nightMode: false
+
         },
         {
             name: 'The Impossible',
             goal: 'Survive maximum everything',
-            wind: 20, rockAngle: 8, drift: 20, fuelPenalty: 0.35,
+            wind: 20, rockAngle: 8, drift: 55, fuelPenalty: 0.35,
             shipShrink: 0.85, entryAngle: 20, entryVx: 45, waveAmp: 15,
-            nightMode: false
+
         }
     ],
 
@@ -337,7 +333,7 @@ const CONFIG = {
     MISSIONS: [
         'CRS-1', 'CRS-2', 'SES-8', 'Thaicom 6', 'Orbcomm OG2',
         'DSCOVR', 'TurkmenAlem', 'Jason-3', 'SES-9', 'CRS-8',
-        'JCSAT-14', 'Thaicom 8', 'CRS-9', 'JCSAT-16', 'Amos-6'
+        'JCSAT-14', 'Thaicom 8', 'CRS-9', 'JCSAT-16'
     ],
 
     // LocalStorage
