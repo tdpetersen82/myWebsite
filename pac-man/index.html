@@ -310,6 +310,8 @@
             this.dotsEaten = 0;
             this.totalDots = 0;
             this.ghostsEatenThisPower = 0;
+            this.eatPauseTimer = 0;
+            this.eatScoreDisplay = null;
             this.gameOver = false;
             this.gameWon = false;
             this.paused = false;
@@ -546,6 +548,16 @@
             this.showReady = false;
 
             if (this.dying) return;
+
+            // Ghost eat freeze
+            if (this.eatPauseTimer > 0) {
+                this.eatPauseTimer -= delta;
+                if (this.eatScoreDisplay) {
+                    this.eatScoreDisplay.timer -= delta;
+                    if (this.eatScoreDisplay.timer <= 0) this.eatScoreDisplay = null;
+                }
+                return;
+            }
 
             // Handle input
             this.handleInput();
@@ -855,8 +867,10 @@
 
         moveGhost(ghost, dt) {
             if (ghost.inHouse) {
-                // Bob up and down in house
-                ghost.pixelY += Math.sin(Date.now() / 200) * 0.5;
+                // Bob up and down in house around tile center
+                const baseY = this.tileCenter(ghost.tileY);
+                ghost.pixelY = baseY + Math.sin(Date.now() / 200) * 4;
+                ghost.pixelX = this.tileCenter(ghost.tileX);
                 return;
             }
 
@@ -959,6 +973,7 @@
         }
 
         checkGhostCollisions() {
+            if (this.eatPauseTimer > 0) return; // Frozen during ghost eat display
             const pac = this.pacman;
             for (const ghost of this.ghosts) {
                 if (ghost.inHouse) continue;
@@ -968,13 +983,16 @@
                 );
                 if (dist < TILE_SIZE * 0.8) {
                     if (ghost.mode === MODE_FRIGHTENED) {
-                        // Eat ghost
+                        // Eat ghost — classic freeze + score popup
                         ghost.mode = MODE_EATEN;
                         const pts = GHOST_SCORES[Math.min(this.ghostsEatenThisPower, 3)];
                         this.score += pts;
                         this.ghostsEatenThisPower++;
                         sound.playGhostEat();
                         this.updateHUD();
+                        // Brief freeze to show score
+                        this.eatPauseTimer = 500;
+                        this.eatScoreDisplay = { x: ghost.pixelX, y: ghost.pixelY, pts: pts, timer: 500 };
                     } else if (ghost.mode !== MODE_EATEN) {
                         this.pacmanDie();
                     }
@@ -1189,6 +1207,25 @@
                 } else {
                     this.drawGhostEyes(g, gx, gy, ghost.dir);
                 }
+            }
+
+            // Ghost eat score popup
+            if (this.eatScoreDisplay) {
+                const sd = this.eatScoreDisplay;
+                const sx = OFFSET_X + sd.x;
+                const sy = OFFSET_Y + sd.y;
+                if (!this._eatScoreText) {
+                    this._eatScoreText = this.add.text(sx, sy, sd.pts.toString(), {
+                        fontSize: '12px', fontFamily: 'monospace', color: '#00ffff',
+                        stroke: '#000000', strokeThickness: 2
+                    }).setOrigin(0.5).setDepth(50);
+                } else {
+                    this._eatScoreText.setText(sd.pts.toString());
+                    this._eatScoreText.setPosition(sx, sy);
+                    this._eatScoreText.setVisible(true);
+                }
+            } else if (this._eatScoreText) {
+                this._eatScoreText.setVisible(false);
             }
 
             // Ready text

@@ -86,6 +86,16 @@ class GameOverScene extends Phaser.Scene {
             accentG.fillRect(0, 2 + i, w, 1);
         }
 
+        // Level name
+        if (r.levelName) {
+            this.add.text(w / 2, 22, r.levelName.toUpperCase(), {
+                fontSize: '9px',
+                fontFamily: 'Courier New, monospace',
+                color: '#667788',
+                letterSpacing: 3
+            }).setOrigin(0.5);
+        }
+
         // Status indicator
         this.add.text(w / 2, 35, 'MISSION STATUS', {
             fontSize: '9px',
@@ -240,6 +250,16 @@ class GameOverScene extends Phaser.Scene {
         for (let i = 0; i < 15; i++) {
             accentG.fillStyle(accentColor, 0.03 * (1 - i / 15));
             accentG.fillRect(0, 2 + i, w, 1);
+        }
+
+        // Level name
+        if (r.levelName) {
+            this.add.text(w / 2, 22, r.levelName.toUpperCase(), {
+                fontSize: '9px',
+                fontFamily: 'Courier New, monospace',
+                color: '#667788',
+                letterSpacing: 3
+            }).setOrigin(0.5);
         }
 
         this.add.text(w / 2, 35, 'MISSION STATUS', {

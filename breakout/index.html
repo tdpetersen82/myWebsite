@@ -139,16 +139,41 @@
         const frameDelay = 1000 / targetFPS;
 
         const BRICK_COLORS = ['#FF6B6B', '#4ECDC4', '#45B7D1', '#FFA07A', '#98D8C8'];
+        const HARD_BRICK_COLOR = '#FFD700';
+        const HARD_BRICK_COLOR2 = '#C0C0C0';
 
         function initBricks() {
+            // More rows at higher levels (5 base, +1 every 2 levels, max 8)
+            const rows = Math.min(8, 5 + Math.floor((level - 1) / 2));
             bricks = [];
-            for (let row = 0; row < brick.rows; row++) {
+            const pattern = (level - 1) % 4; // Cycle through 4 patterns
+            for (let row = 0; row < rows; row++) {
                 bricks[row] = [];
                 for (let col = 0; col < brick.cols; col++) {
+                    let active = true;
+                    // Different patterns per level
+                    if (pattern === 1) {
+                        // Checkerboard
+                        active = (row + col) % 2 === 0;
+                    } else if (pattern === 2) {
+                        // Diamond shape
+                        const centerR = (rows - 1) / 2;
+                        const centerC = (brick.cols - 1) / 2;
+                        active = Math.abs(row - centerR) / centerR + Math.abs(col - centerC) / centerC <= 1.2;
+                    } else if (pattern === 3) {
+                        // Alternating rows offset
+                        active = row % 2 === 0 ? col < brick.cols - 1 : col > 0;
+                    }
+                    // Multi-hit bricks starting level 3
+                    let hits = 1;
+                    if (level >= 3 && row <= 1) hits = 2;
+                    if (level >= 6 && row === 0) hits = 3;
+
                     bricks[row][col] = {
                         x: brick.offsetX + col * (brick.width + brick.padding),
                         y: brick.offsetY + row * (brick.height + brick.padding),
-                        status: 1,
+                        status: active ? hits : 0,
+                        maxHits: hits,
                         color: BRICK_COLORS[row % BRICK_COLORS.length]
                     };
                 }
@@ -158,11 +183,22 @@
         function drawBricks() {
             bricks.forEach(row => {
                 row.forEach(b => {
-                    if (b.status === 1) {
-                        ctx.fillStyle = b.color;
+                    if (b.status > 0) {
+                        // Color based on remaining hits
+                        if (b.status >= 3) ctx.fillStyle = HARD_BRICK_COLOR;
+                        else if (b.status === 2) ctx.fillStyle = HARD_BRICK_COLOR2;
+                        else ctx.fillStyle = b.color;
                         ctx.fillRect(b.x, b.y, brick.width, brick.height);
                         ctx.strokeStyle = '#000';
                         ctx.strokeRect(b.x, b.y, brick.width, brick.height);
+                        // Show hit indicator for multi-hit bricks
+                        if (b.maxHits > 1 && b.status > 1) {
+                            ctx.fillStyle = 'rgba(0,0,0,0.4)';
+                            ctx.font = 'bold 12px Arial';
+                            ctx.textAlign = 'center';
+                            ctx.textBaseline = 'middle';
+                            ctx.fillText(b.status, b.x + brick.width / 2, b.y + brick.height / 2);
+                        }
                     }
                 });
             });
@@ -197,7 +233,7 @@
         function collisionDetection() {
             bricks.forEach(row => {
                 row.forEach(b => {
-                    if (b.status === 1) {
+                    if (b.status > 0) {
                         if (ball.x + ball.radius > b.x &&
                             ball.x - ball.radius < b.x + brick.width &&
                             ball.y + ball.radius > b.y &&
@@ -216,7 +252,7 @@
                             } else {
                                 ball.dy = -ball.dy;
                             }
-                            b.status = 0;
+                            b.status--;
                             score += 10;
                             scoreElement.textContent = score;
                             playBrickBreakSound();
@@ -235,6 +271,8 @@
             level++;
             levelElement.textContent = level;
             ball.speed += 0.5;
+            // Shrink paddle slightly each level (min 60px)
+            paddle.width = Math.max(60, 100 - (level - 1) * 5);
             playLevelUpSound();
             initBricks();
             resetBall();

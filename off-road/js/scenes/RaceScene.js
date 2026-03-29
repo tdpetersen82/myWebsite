@@ -51,8 +51,27 @@ class RaceScene extends Phaser.Scene {
         this._createHUD();
 
         // === CAMERA ===
-        this.cameras.main.setBounds(0, 0, this.trackRenderer.worldWidth, this.trackRenderer.worldHeight);
+        const ww = this.trackRenderer.worldWidth;
+        const wh = this.trackRenderer.worldHeight;
+        this.cameras.main.setBounds(-50, -50, ww + 100, wh + 100);
         this.cameras.main.setZoom(CONFIG.CAMERA.ZOOM);
+
+        // === SPEED LINES overlay ===
+        this.speedLinesGfx = this.add.graphics().setScrollFactor(0).setDepth(35);
+
+        // === LAP NOTIFICATION ===
+        this.lapNotifyText = this.add.text(CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2 - 60, '', {
+            fontSize: '36px', fontFamily: '"Press Start 2P", monospace',
+            color: '#33FF88', stroke: '#000000', strokeThickness: 5,
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(45).setAlpha(0);
+
+        // === WRONG WAY ===
+        this.wrongWayText = this.add.text(CONFIG.WIDTH / 2, 80, 'WRONG WAY!', {
+            fontSize: '28px', fontFamily: '"Press Start 2P", monospace',
+            color: '#FF3333', stroke: '#000000', strokeThickness: 4,
+        }).setOrigin(0.5).setScrollFactor(0).setDepth(45).setAlpha(0);
+        this.wrongWayTimer = 0;
+        this.lastCenterIdx = -1;
 
         // === SCREEN SHAKE ===
         this.shakeIntensity = 0;
@@ -90,38 +109,66 @@ class RaceScene extends Phaser.Scene {
 
     _setupSinglePlayerVehicle() {
         const trackData = CONFIG.TRACKS[this.trackIndex];
-        const startPos = trackData.startPositions[0];
-        const vConfig = CONFIG.VEHICLES[0];
+        const startAngle = this.trackRenderer.getStartAngle();
 
-        const pv = this.physicsEngine.addVehicle('local', startPos);
+        // Player vehicle
+        const startPos = trackData.startPositions[0];
+        const pv = this.physicsEngine.addVehicle('local', { x: startPos.x, y: startPos.y, angle: startAngle });
         pv.lapStartTime = performance.now();
 
-        const vehicle = new Vehicle(this, vConfig, 0);
+        const vehicle = new Vehicle(this, CONFIG.VEHICLES[0], 0);
         vehicle.isLocal = true;
         vehicle.setName(this.playerName);
         vehicle.displayX = startPos.x;
         vehicle.displayY = startPos.y;
-        vehicle.displayAngle = startPos.angle;
+        vehicle.displayAngle = startAngle;
         this.vehicles.set('local', vehicle);
         this.localVehicleId = 'local';
+
+        // AI opponents
+        this.aiVehicles = [];
+        const aiCount = CONFIG.AI.COUNT;
+        for (let i = 0; i < aiCount; i++) {
+            const sp = trackData.startPositions[i + 1] || trackData.startPositions[0];
+            const aiId = 'ai_' + i;
+            const colorIdx = i + 1;
+            const aiPv = this.physicsEngine.addVehicle(aiId, { x: sp.x, y: sp.y, angle: startAngle });
+            aiPv.lapStartTime = performance.now();
+
+            const aiVehicle = new Vehicle(this, CONFIG.VEHICLES[colorIdx % CONFIG.VEHICLES.length], colorIdx);
+            const name = CONFIG.AI.NAMES[i % CONFIG.AI.NAMES.length];
+            aiVehicle.setName(name);
+            aiVehicle.displayX = sp.x;
+            aiVehicle.displayY = sp.y;
+            aiVehicle.displayAngle = startAngle;
+            this.vehicles.set(aiId, aiVehicle);
+
+            this.aiVehicles.push({
+                id: aiId,
+                speedMult: CONFIG.AI.SPEED_BASE + (Math.random() - 0.5) * CONFIG.AI.SPEED_VARIANCE * 2,
+                currentCenterIdx: 0,
+                powerUpTimer: 0,
+            });
+        }
     }
 
     _setupMultiplayerVehicles() {
         const trackData = CONFIG.TRACKS[this.trackIndex];
         const net = window.networkManager;
+        const startAngle = this.trackRenderer.getStartAngle();
 
         this.playersList.forEach((player, index) => {
             const startPos = trackData.startPositions[index] || trackData.startPositions[0];
             const vConfig = CONFIG.VEHICLES[player.colorIndex || index];
 
-            const pv = this.physicsEngine.addVehicle(player.id, startPos);
+            const pv = this.physicsEngine.addVehicle(player.id, { x: startPos.x, y: startPos.y, angle: startAngle });
             pv.lapStartTime = performance.now();
 
             const vehicle = new Vehicle(this, vConfig, player.colorIndex || index);
             vehicle.setName(player.name);
             vehicle.displayX = startPos.x;
             vehicle.displayY = startPos.y;
-            vehicle.displayAngle = startPos.angle;
+            vehicle.displayAngle = startAngle;
 
             if (player.id === net.localId) {
                 vehicle.isLocal = true;
@@ -459,6 +506,11 @@ class RaceScene extends Phaser.Scene {
                 this._usePowerUp();
             }
 
+            // === AI INPUT ===
+            if (!this.isMultiplayer && this.aiVehicles) {
+                this._updateAI(dt);
+            }
+
             // === PHYSICS ===
             if (!this.isMultiplayer || this.isHost) {
                 this.physicsEngine.step(dt);
@@ -526,6 +578,9 @@ class RaceScene extends Phaser.Scene {
             }
             if (pv._lapComplete) {
                 window.gameAudio.lapComplete();
+                if (pv.id === this.localVehicleId) {
+                    this._showLapNotification(pv.lap);
+                }
                 pv._lapComplete = false;
             }
             if (pv._raceFinish) {
@@ -560,6 +615,12 @@ class RaceScene extends Phaser.Scene {
 
         // === HUD ===
         this._updateHUD();
+
+        // === SPEED LINES ===
+        this._updateSpeedLines();
+
+        // === WRONG WAY DETECTION ===
+        this._updateWrongWay();
 
         // === FINISH TIMEOUT ===
         if (this.raceState === 'finished') {
@@ -941,8 +1002,157 @@ class RaceScene extends Phaser.Scene {
         });
     }
 
+    // === AI LOGIC ===
+
+    _updateAI(dt) {
+        if (!this.aiVehicles || this.raceState !== 'racing') return;
+
+        for (const ai of this.aiVehicles) {
+            const pv = this.physicsEngine.getVehicle(ai.id);
+            if (!pv || pv.finished) continue;
+
+            // Find where we are on the track
+            ai.currentCenterIdx = this.trackRenderer.getNearestCenterIndex(pv.x, pv.y);
+
+            // Get target point ahead on the center line
+            const lookAhead = CONFIG.AI.STEER_LOOKAHEAD + Math.abs(pv.speed) * 0.15;
+            const target = this.trackRenderer.getPointAhead(ai.currentCenterIdx, lookAhead);
+
+            // Steer toward target
+            const dx = target.x - pv.x, dy = target.y - pv.y;
+            const targetAngle = Math.atan2(dy, dx);
+            let angleDiff = targetAngle - pv.angle;
+            while (angleDiff > Math.PI) angleDiff -= Math.PI * 2;
+            while (angleDiff < -Math.PI) angleDiff += Math.PI * 2;
+
+            let steer = Math.max(-1, Math.min(1, angleDiff * 3));
+            steer += (Math.random() - 0.5) * CONFIG.AI.STEER_NOISE;
+
+            // Speed control
+            const speedRatio = Math.abs(pv.speed) / CONFIG.PHYSICS.MAX_SPEED;
+            const shouldBrake = Math.abs(angleDiff) > 0.8 && speedRatio > 0.6;
+            const gas = !shouldBrake;
+            const brake = shouldBrake;
+
+            // Random nitro/drift
+            const nitro = Math.random() < CONFIG.AI.NITRO_CHANCE && speedRatio < 0.9 && pv.nitro > 30;
+            const drift = Math.abs(angleDiff) > 0.5 && speedRatio > 0.5 && Math.random() < CONFIG.AI.DRIFT_CHANCE * 10;
+
+            // Use held power-up
+            let usePowerUp = false;
+            if (pv.powerUp) {
+                ai.powerUpTimer += dt;
+                if (ai.powerUpTimer > CONFIG.AI.POWERUP_USE_DELAY) {
+                    usePowerUp = true;
+                    ai.powerUpTimer = 0;
+                }
+            }
+
+            this.physicsEngine.setInput(ai.id, {
+                steer: steer * ai.speedMult * 1.3,
+                gas: gas,
+                brake: brake,
+                nitro: nitro,
+                drift: drift,
+                usePowerUp: usePowerUp,
+            });
+
+            // Handle AI power-up use
+            if (usePowerUp && pv.powerUp) {
+                const type = pv.powerUp;
+                pv.powerUp = null;
+                if (type === 'MISSILE') {
+                    this.physicsEngine.fireMissile(pv);
+                } else if (type === 'OIL_SLICK') {
+                    this.physicsEngine.dropOilSlick(pv);
+                }
+            }
+        }
+    }
+
+    // === SPEED LINES ===
+
+    _updateSpeedLines() {
+        this.speedLinesGfx.clear();
+        const localPV = this.physicsEngine.getVehicle(this.localVehicleId);
+        if (!localPV) return;
+
+        const speedRatio = Math.abs(localPV.speed) / CONFIG.PHYSICS.MAX_SPEED;
+        if (speedRatio < 0.6) return;
+
+        const alpha = (speedRatio - 0.6) * 0.4; // 0 to 0.16
+        const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
+
+        this.speedLinesGfx.lineStyle(1, 0xFFFFFF, alpha);
+        for (let i = 0; i < 12; i++) {
+            const angle = (i / 12) * Math.PI * 2;
+            const innerR = 250 + Math.random() * 50;
+            const outerR = innerR + 40 + speedRatio * 60;
+            const cx = W / 2, cy = H / 2;
+            this.speedLinesGfx.beginPath();
+            this.speedLinesGfx.moveTo(cx + Math.cos(angle) * innerR, cy + Math.sin(angle) * innerR);
+            this.speedLinesGfx.lineTo(cx + Math.cos(angle) * outerR, cy + Math.sin(angle) * outerR);
+            this.speedLinesGfx.strokePath();
+        }
+    }
+
+    // === WRONG WAY DETECTION ===
+
+    _updateWrongWay() {
+        const localPV = this.physicsEngine.getVehicle(this.localVehicleId);
+        if (!localPV || this.raceState !== 'racing') return;
+
+        const currentIdx = this.trackRenderer.getNearestCenterIndex(localPV.x, localPV.y);
+        if (this.lastCenterIdx >= 0 && Math.abs(localPV.speed) > 30) {
+            const n = this.trackRenderer.centerPoints.length;
+            const diff = (currentIdx - this.lastCenterIdx + n) % n;
+            // If moving backwards along the center line
+            if (diff > n * 0.4 && diff < n * 0.9) {
+                this.wrongWayTimer = 1.5;
+            }
+        }
+        this.lastCenterIdx = currentIdx;
+
+        if (this.wrongWayTimer > 0) {
+            this.wrongWayTimer -= 1/60;
+            this.wrongWayText.setAlpha(0.6 + Math.sin(Date.now() / 150) * 0.4);
+        } else {
+            this.wrongWayText.setAlpha(0);
+        }
+    }
+
+    // === LAP NOTIFICATION ===
+
+    _showLapNotification(lapNumber) {
+        const trackData = CONFIG.TRACKS[this.trackIndex];
+        const totalLaps = trackData.laps || CONFIG.RACE.DEFAULT_LAPS;
+        if (lapNumber >= totalLaps) return; // Don't show on finish
+
+        const text = lapNumber === totalLaps - 1 ? 'FINAL LAP!' : 'LAP ' + (lapNumber + 1) + '/' + totalLaps;
+        const color = lapNumber === totalLaps - 1 ? '#FF3333' : '#33FF88';
+
+        this.lapNotifyText.setText(text);
+        this.lapNotifyText.setColor(color);
+        this.lapNotifyText.setAlpha(1);
+        this.lapNotifyText.setScale(1.5);
+
+        this.tweens.add({
+            targets: this.lapNotifyText,
+            scaleX: 1, scaleY: 1,
+            duration: 300, ease: 'Cubic.easeOut',
+        });
+        this.tweens.add({
+            targets: this.lapNotifyText,
+            alpha: 0, delay: 1200,
+            duration: 500,
+        });
+
+        this._triggerShake({ intensity: 3, duration: 200 });
+    }
+
     shutdown() {
         window.gameAudio.stopEngine();
+        window.gameAudio.stopMusic();
         this.particles.destroy();
         for (const [, v] of this.vehicles) v.destroy();
         for (const [, p] of this.projectileEntities) p.destroy();

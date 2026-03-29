@@ -41,8 +41,8 @@ class GameScene extends Phaser.Scene {
         // Create player
         this.player = new Player(this);
 
-        // Platform collision for player
-        this.physics.add.collider(this.player.sprite, this.platformManager.platformGroup);
+        // Platform collision for player (stored so we can disable during climbing)
+        this.platformCollider = this.physics.add.collider(this.player.sprite, this.platformManager.platformGroup);
 
         // Create DK
         this.dk = new DonkeyKong(this);

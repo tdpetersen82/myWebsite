@@ -57,7 +57,6 @@
         const tileCount = canvas.width / gridSize;
 
         let snake = [{ x: 10, y: 10 }];
-        let food = { x: 15, y: 15 };
         let dx = 0;
         let dy = 0;
         let score = 0;
@@ -96,29 +95,57 @@
 
         highScoreElement.textContent = highScore;
 
+        // Multiple food items
+        let foods = [];
+        const MAX_FOOD = 3;
+
         function drawGame() {
             // Clear canvas
             ctx.fillStyle = '#111';
             ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+            // Subtle grid
+            ctx.strokeStyle = 'rgba(255,255,255,0.03)';
+            ctx.lineWidth = 0.5;
+            for (let i = 0; i <= tileCount; i++) {
+                ctx.beginPath();
+                ctx.moveTo(i * gridSize, 0);
+                ctx.lineTo(i * gridSize, canvas.height);
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(0, i * gridSize);
+                ctx.lineTo(canvas.width, i * gridSize);
+                ctx.stroke();
+            }
 
             // Move snake
             if (dx !== 0 || dy !== 0) {
                 const head = { x: snake[0].x + dx, y: snake[0].y + dy };
                 snake.unshift(head);
 
-                // Check if snake ate food
-                if (head.x === food.x && head.y === food.y) {
-                    score++;
-                    scoreElement.textContent = score;
-                    playEatSound();
-                    if (score > highScore) {
-                        highScore = score;
-                        highScoreElement.textContent = highScore;
-                        localStorage.setItem('snakeHighScore', highScore);
+                // Check if snake ate any food
+                let ate = false;
+                for (let i = foods.length - 1; i >= 0; i--) {
+                    if (head.x === foods[i].x && head.y === foods[i].y) {
+                        score++;
+                        scoreElement.textContent = score;
+                        playEatSound();
+                        if (score > highScore) {
+                            highScore = score;
+                            highScoreElement.textContent = highScore;
+                            localStorage.setItem('snakeHighScore', highScore);
+                        }
+                        foods.splice(i, 1);
+                        ate = true;
+                        break;
                     }
-                    placeFood();
-                } else {
+                }
+                if (!ate) {
                     snake.pop();
+                }
+                // Keep food count up
+                while (foods.length < MAX_FOOD) {
+                    placeFood();
                 }
 
                 // Check collisions
@@ -135,32 +162,96 @@
                 }
             }
 
-            // Draw snake
+            // Draw snake with rounded segments and gradient
             snake.forEach((segment, index) => {
-                ctx.fillStyle = index === 0 ? '#4CAF50' : '#8BC34A';
-                ctx.fillRect(
-                    segment.x * gridSize,
-                    segment.y * gridSize,
-                    gridSize - 2,
-                    gridSize - 2
-                );
+                const x = segment.x * gridSize + 1;
+                const y = segment.y * gridSize + 1;
+                const size = gridSize - 2;
+                const r = 4;
+
+                // Color gradient from head to tail
+                const t = snake.length > 1 ? index / (snake.length - 1) : 0;
+                const green = Math.floor(76 + (140 - 76) * (1 - t));
+                const red = Math.floor(175 * t * 0.3);
+                ctx.fillStyle = index === 0 ? '#2E7D32' : `rgb(${red}, ${green + 60}, ${red + 40})`;
+
+                // Rounded rect
+                ctx.beginPath();
+                ctx.moveTo(x + r, y);
+                ctx.lineTo(x + size - r, y);
+                ctx.quadraticCurveTo(x + size, y, x + size, y + r);
+                ctx.lineTo(x + size, y + size - r);
+                ctx.quadraticCurveTo(x + size, y + size, x + size - r, y + size);
+                ctx.lineTo(x + r, y + size);
+                ctx.quadraticCurveTo(x, y + size, x, y + size - r);
+                ctx.lineTo(x, y + r);
+                ctx.quadraticCurveTo(x, y, x + r, y);
+                ctx.closePath();
+                ctx.fill();
+
+                // Head details
+                if (index === 0) {
+                    const cx = x + size / 2;
+                    const cy = y + size / 2;
+                    // Eyes
+                    const eyeOffX = dx * 3;
+                    const eyeOffY = dy * 3;
+                    ctx.fillStyle = '#fff';
+                    ctx.beginPath();
+                    ctx.arc(cx - 4 + eyeOffX, cy - 3 + eyeOffY, 3, 0, Math.PI * 2);
+                    ctx.arc(cx + 4 + eyeOffX, cy - 3 + eyeOffY, 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Pupils
+                    ctx.fillStyle = '#111';
+                    ctx.beginPath();
+                    ctx.arc(cx - 4 + eyeOffX * 1.3, cy - 3 + eyeOffY * 1.3, 1.5, 0, Math.PI * 2);
+                    ctx.arc(cx + 4 + eyeOffX * 1.3, cy - 3 + eyeOffY * 1.3, 1.5, 0, Math.PI * 2);
+                    ctx.fill();
+                }
             });
 
-            // Draw food
-            ctx.fillStyle = '#FF5252';
-            ctx.fillRect(
-                food.x * gridSize,
-                food.y * gridSize,
-                gridSize - 2,
-                gridSize - 2
-            );
+            // Draw food as apples
+            foods.forEach(f => {
+                const cx = f.x * gridSize + gridSize / 2;
+                const cy = f.y * gridSize + gridSize / 2;
+                const r = gridSize / 2 - 2;
+                // Apple body
+                ctx.fillStyle = '#FF3B30';
+                ctx.beginPath();
+                ctx.arc(cx, cy + 1, r, 0, Math.PI * 2);
+                ctx.fill();
+                // Highlight
+                ctx.fillStyle = 'rgba(255,255,255,0.3)';
+                ctx.beginPath();
+                ctx.arc(cx - 2, cy - 2, r * 0.4, 0, Math.PI * 2);
+                ctx.fill();
+                // Stem
+                ctx.strokeStyle = '#5D4037';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(cx, cy - r + 2);
+                ctx.lineTo(cx + 1, cy - r - 3);
+                ctx.stroke();
+                // Leaf
+                ctx.fillStyle = '#4CAF50';
+                ctx.beginPath();
+                ctx.ellipse(cx + 3, cy - r - 1, 3, 1.5, Math.PI / 4, 0, Math.PI * 2);
+                ctx.fill();
+            });
         }
 
         function placeFood() {
+            let f;
             do {
-                food.x = Math.floor(Math.random() * tileCount);
-                food.y = Math.floor(Math.random() * tileCount);
-            } while (snake.some(segment => segment.x === food.x && segment.y === food.y));
+                f = {
+                    x: Math.floor(Math.random() * tileCount),
+                    y: Math.floor(Math.random() * tileCount)
+                };
+            } while (
+                snake.some(s => s.x === f.x && s.y === f.y) ||
+                foods.some(e => e.x === f.x && e.y === f.y)
+            );
+            foods.push(f);
         }
 
         function gameOver() {
@@ -179,17 +270,18 @@
 
         function startGame() {
             if (gameRunning) return;
-            
+
             snake = [{ x: 10, y: 10 }];
             dx = 1;
             dy = 0;
             score = 0;
             scoreElement.textContent = score;
-            placeFood();
+            foods = [];
+            for (let i = 0; i < MAX_FOOD; i++) placeFood();
             gameRunning = true;
-            
+
             clearInterval(gameLoop);
-            gameLoop = setInterval(drawGame, 100);
+            gameLoop = setInterval(drawGame, 130);
         }
 
         document.addEventListener('keydown', (e) => {

@@ -1,6 +1,9 @@
 const CONFIG = {
     WIDTH: 1200,
     HEIGHT: 800,
+    WORLD_WIDTH: 1400,
+    WORLD_HEIGHT: 950,
+    WORLD_PAD: 100,   // padding around track data
     STORAGE_KEY: 'superOffRoadBestTimes',
     SETTINGS_KEY: 'superOffRoadSettings',
 
@@ -20,8 +23,8 @@ const CONFIG = {
         DRIFT_MIN_SPEED_RATIO: 0.35,
         NITRO_MULT: 2.5,
         NITRO_MAX: 100,
-        NITRO_DRAIN: 40,       // per second
-        NITRO_RECHARGE: 6,     // per second (passive)
+        NITRO_DRAIN: 40,
+        NITRO_RECHARGE: 6,
         SPINOUT_DURATION: 1.5,
         SPINOUT_SPIN_RATE: 12,
         JUMP_DURATION: 0.8,
@@ -32,6 +35,19 @@ const CONFIG = {
         VEHICLE_PUSH_FORCE: 200,
         OFF_TRACK_SPEED_CAP: 0.4,
         CHECKPOINT_RADIUS: 60,
+    },
+
+    // AI settings
+    AI: {
+        COUNT: 5,                  // number of AI bots in practice mode
+        SPEED_BASE: 0.7,          // fraction of max speed (varies per bot)
+        SPEED_VARIANCE: 0.2,      // random variance per bot
+        STEER_LOOKAHEAD: 80,      // how far ahead on track to steer toward
+        STEER_NOISE: 0.15,        // random steering jitter
+        NITRO_CHANCE: 0.003,      // chance per frame to use nitro
+        DRIFT_CHANCE: 0.002,      // chance per frame to drift
+        POWERUP_USE_DELAY: 3,     // seconds before using a collected power-up
+        NAMES: ['Racer', 'Speedy', 'Turbo', 'Flash', 'Blaze', 'Nitro', 'Drift'],
     },
 
     // Terrain friction and traction
@@ -67,12 +83,11 @@ const CONFIG = {
         CASH:        { icon: 'coin',       color: 0xFFCC00, duration: 0,  label: '$$$' },
     },
 
-    POWERUP_SPAWN_COOLDOWN: 15,   // seconds after collection before respawn
+    POWERUP_SPAWN_COOLDOWN: 15,
     POWERUP_BOB_SPEED: 2.5,
     POWERUP_BOB_AMOUNT: 4,
     POWERUP_COLLECT_RADIUS: 22,
 
-    // Projectiles
     MISSILE_SPEED: 500,
     MISSILE_MAX_DIST: 600,
     MISSILE_TURN_RATE: 4.0,
@@ -81,35 +96,19 @@ const CONFIG = {
 
     // Network
     NETWORK: {
-        SYNC_RATE: 20,           // Hz
-        INPUT_SEND_RATE: 60,     // Hz
-        INTERP_DELAY: 100,       // ms
-        RECONNECT_WINDOW: 10,    // seconds
-        PING_INTERVAL: 2000,     // ms
-        LOBBY_HEARTBEAT: 5000,   // ms
-        ROOM_CODE_LENGTH: 6,
-        HOST_INPUT_DELAY: 50,    // ms (fairness equalization)
-        MAX_RETRIES: 3,
-        RETRY_BASE_DELAY: 1000,  // ms (exponential backoff)
-        SNAP_THRESHOLD: 80,      // pixels - snap instead of lerp if beyond
-        LERP_RATE: 0.15,
+        SYNC_RATE: 20, INPUT_SEND_RATE: 60, INTERP_DELAY: 100,
+        RECONNECT_WINDOW: 10, PING_INTERVAL: 2000, LOBBY_HEARTBEAT: 5000,
+        ROOM_CODE_LENGTH: 6, HOST_INPUT_DELAY: 50, MAX_RETRIES: 3,
+        RETRY_BASE_DELAY: 1000, SNAP_THRESHOLD: 80, LERP_RATE: 0.15,
     },
 
-    // Visual
     COLORS: {
-        BG: 0x1a1a2e,
-        TRACK_EDGE: 0xFFFFFF,
-        TRACK_EDGE_ALT: 0xFF0000,
-        CHECKPOINT: 0xFFFF00,
-        FINISH_LINE: 0xFFFFFF,
-        HUD_BG: 0x000000,
-        HUD_TEXT: 0xFFFFFF,
-        HUD_ACCENT: 0xFF6600,
-        MINIMAP_BG: 0x111111,
-        MINIMAP_TRACK: 0x444444,
+        BG: 0x1a1a2e, TRACK_EDGE: 0xFFFFFF, TRACK_EDGE_ALT: 0xFF0000,
+        CHECKPOINT: 0xFFFF00, FINISH_LINE: 0xFFFFFF,
+        HUD_BG: 0x000000, HUD_TEXT: 0xFFFFFF, HUD_ACCENT: 0xFF6600,
+        MINIMAP_BG: 0x111111, MINIMAP_TRACK: 0x444444,
     },
 
-    // Particles
     PARTICLES: {
         MAX_COUNT: 300,
         DIRT: { count: 4, life: 0.35, speed: 80, size: 3, gravity: 200, color: 0x8B7355 },
@@ -129,74 +128,52 @@ const CONFIG = {
         COUNTDOWN: { intensity: 4, duration: 200 },
     },
 
-    // Camera
+    // Camera — zoomed in so the car is big and you feel speed
     CAMERA: {
-        LERP: 0.08,
-        LOOKAHEAD: 0.4,
-        ZOOM: 1.0,
+        LERP: 0.07,
+        LOOKAHEAD: 0.35,
+        ZOOM: 1.8,
     },
 
-    // Race settings
     RACE: {
         COUNTDOWN_SECS: 3,
         DEFAULT_LAPS: 3,
-        FINISH_TIMEOUT: 60,     // seconds after winner finishes
+        FINISH_TIMEOUT: 60,
         MAX_PLAYERS: 8,
     },
 
     // === TRACK DATA ===
+    // All coordinates are in world space (WORLD_PAD offset applied by TrackRenderer)
     TRACKS: [
         {
             name: 'Desert Canyon',
             laps: 3,
             theme: {
-                ground: 0xC4A265,
-                trackSurface: 0x9E8B6E,
-                trackEdge: 0xFFFFFF,
-                skyColor: 0xE8D5A3,
-                ambient: 0xFFE4B5,
+                ground: 0xC4A265, trackSurface: 0x9E8B6E, trackEdge: 0xFFFFFF,
+                skyColor: 0xE8D5A3, ambient: 0xFFE4B5,
             },
             trackWidth: 160,
-            // Control points define the center line (closed loop)
-            // Format: {x, y} - we'll use Catmull-Rom interpolation
             centerLine: [
-                { x: 600, y: 720 },   // Start/finish (bottom center)
-                { x: 300, y: 680 },   // Left bottom
-                { x: 100, y: 550 },   // Far left
-                { x: 80,  y: 350 },   // Left side climb
-                { x: 150, y: 180 },   // Top left
-                { x: 350, y: 100 },   // Top
-                { x: 550, y: 80 },    // Top center
-                { x: 750, y: 120 },   // Top right approach
-                { x: 950, y: 180 },   // Top right
-                { x: 1080, y: 320 },  // Right side
-                { x: 1100, y: 500 },  // Right mid
-                { x: 1000, y: 650 },  // Right bottom
-                { x: 850, y: 720 },   // Bottom right
+                { x: 600, y: 720 }, { x: 300, y: 680 }, { x: 100, y: 550 },
+                { x: 80,  y: 350 }, { x: 150, y: 180 }, { x: 350, y: 100 },
+                { x: 550, y: 80 },  { x: 750, y: 120 }, { x: 950, y: 180 },
+                { x: 1080, y: 320 },{ x: 1100, y: 500 },{ x: 1000, y: 650 },
+                { x: 850, y: 720 },
             ],
             terrainZones: [
-                // Mud pit shortcut (cuts the top-left corner)
                 { type: 'MUD', center: { x: 250, y: 140 }, radius: 70 },
-                // Water crossing on the right
                 { type: 'WATER', center: { x: 1090, y: 410 }, radius: 55 },
-                // Jump ramp on the straight
                 { type: 'RAMP', center: { x: 600, y: 720 }, radius: 30, direction: -Math.PI / 2 },
             ],
             checkpoints: [
-                { x: 600, y: 720, angle: 0 },         // 0: start/finish
-                { x: 80,  y: 350, angle: Math.PI/2 },  // 1: left side
-                { x: 550, y: 80,  angle: 0 },           // 2: top
-                { x: 1100, y: 500, angle: Math.PI/2 }, // 3: right side
+                { x: 600, y: 720 }, { x: 80,  y: 350 },
+                { x: 550, y: 80 },  { x: 1100, y: 500 },
             ],
             startPositions: [
-                { x: 570, y: 740, angle: -Math.PI * 0.15 },
-                { x: 630, y: 740, angle: -Math.PI * 0.15 },
-                { x: 560, y: 760, angle: -Math.PI * 0.15 },
-                { x: 640, y: 760, angle: -Math.PI * 0.15 },
-                { x: 550, y: 780, angle: -Math.PI * 0.15 },
-                { x: 650, y: 780, angle: -Math.PI * 0.15 },
-                { x: 540, y: 800, angle: -Math.PI * 0.15 },
-                { x: 660, y: 800, angle: -Math.PI * 0.15 },
+                { x: 570, y: 740 }, { x: 630, y: 740 },
+                { x: 560, y: 760 }, { x: 640, y: 760 },
+                { x: 550, y: 780 }, { x: 650, y: 780 },
+                { x: 540, y: 800 }, { x: 660, y: 800 },
             ],
             powerUpSpawns: [
                 { x: 200, y: 600, types: ['NITRO', 'SHIELD', 'SPEED_BOOST'] },
@@ -207,23 +184,17 @@ const CONFIG = {
                 { x: 750, y: 700, types: ['MISSILE', 'CASH', 'NITRO'] },
             ],
             decorations: [
-                { type: 'cactus', x: 450, y: 200 },
-                { type: 'cactus', x: 700, y: 250 },
-                { type: 'cactus', x: 350, y: 350 },
-                { type: 'cactus', x: 850, y: 300 },
-                { type: 'rock', x: 200, y: 450 },
-                { type: 'rock', x: 900, y: 400 },
-                { type: 'rock', x: 500, y: 400 },
-                { type: 'rock', x: 700, y: 500 },
-                { type: 'rock', x: 350, y: 550 },
-                { type: 'tireStack', x: 480, y: 680 },
-                { type: 'tireStack', x: 720, y: 680 },
-                { type: 'tireStack', x: 150, y: 620 },
-                { type: 'tireStack', x: 1000, y: 320 },
+                { type: 'cactus', x: 450, y: 200 }, { type: 'cactus', x: 700, y: 250 },
+                { type: 'cactus', x: 350, y: 350 }, { type: 'cactus', x: 850, y: 300 },
+                { type: 'cactus', x: 250, y: 500 },
+                { type: 'rock', x: 200, y: 450 }, { type: 'rock', x: 900, y: 400 },
+                { type: 'rock', x: 500, y: 400 }, { type: 'rock', x: 700, y: 500 },
+                { type: 'rock', x: 350, y: 550 }, { type: 'rock', x: 600, y: 300 },
+                { type: 'tireStack', x: 480, y: 680 }, { type: 'tireStack', x: 720, y: 680 },
+                { type: 'tireStack', x: 150, y: 620 }, { type: 'tireStack', x: 1000, y: 320 },
                 { type: 'spectatorStand', x: 600, y: 640, width: 200 },
                 { type: 'spectatorStand', x: 200, y: 250, width: 100 },
-                { type: 'bush', x: 550, y: 500 },
-                { type: 'bush', x: 650, y: 450 },
+                { type: 'bush', x: 550, y: 500 }, { type: 'bush', x: 650, y: 450 },
                 { type: 'bush', x: 400, y: 480 },
             ],
         },
@@ -231,29 +202,16 @@ const CONFIG = {
             name: 'Arctic Circuit',
             laps: 3,
             theme: {
-                ground: 0xD6EAF8,
-                trackSurface: 0x85929E,
-                trackEdge: 0xE74C3C,
-                skyColor: 0xAED6F1,
-                ambient: 0xD4E6F1,
+                ground: 0xD6EAF8, trackSurface: 0x85929E, trackEdge: 0xE74C3C,
+                skyColor: 0xAED6F1, ambient: 0xD4E6F1,
             },
             trackWidth: 140,
             centerLine: [
-                { x: 600, y: 720 },
-                { x: 400, y: 700 },
-                { x: 200, y: 600 },
-                { x: 120, y: 450 },
-                { x: 200, y: 300 },
-                { x: 350, y: 200 },
-                { x: 300, y: 100 },
-                { x: 500, y: 80 },
-                { x: 700, y: 100 },
-                { x: 800, y: 200 },
-                { x: 900, y: 100 },
-                { x: 1050, y: 200 },
-                { x: 1080, y: 400 },
-                { x: 1000, y: 550 },
-                { x: 900, y: 650 },
+                { x: 600, y: 720 }, { x: 400, y: 700 }, { x: 200, y: 600 },
+                { x: 120, y: 450 }, { x: 200, y: 300 }, { x: 350, y: 200 },
+                { x: 300, y: 100 }, { x: 500, y: 80 },  { x: 700, y: 100 },
+                { x: 800, y: 200 }, { x: 900, y: 100 }, { x: 1050, y: 200 },
+                { x: 1080, y: 400 },{ x: 1000, y: 550 },{ x: 900, y: 650 },
                 { x: 800, y: 720 },
             ],
             terrainZones: [
@@ -264,20 +222,14 @@ const CONFIG = {
                 { type: 'RAMP', center: { x: 500, y: 80 }, radius: 25, direction: 0 },
             ],
             checkpoints: [
-                { x: 600, y: 720, angle: 0 },
-                { x: 120, y: 450, angle: Math.PI/2 },
-                { x: 500, y: 80, angle: 0 },
-                { x: 1080, y: 400, angle: Math.PI/2 },
+                { x: 600, y: 720 }, { x: 120, y: 450 },
+                { x: 500, y: 80 },  { x: 1080, y: 400 },
             ],
             startPositions: [
-                { x: 570, y: 735, angle: -Math.PI * 0.1 },
-                { x: 630, y: 735, angle: -Math.PI * 0.1 },
-                { x: 560, y: 755, angle: -Math.PI * 0.1 },
-                { x: 640, y: 755, angle: -Math.PI * 0.1 },
-                { x: 550, y: 775, angle: -Math.PI * 0.1 },
-                { x: 650, y: 775, angle: -Math.PI * 0.1 },
-                { x: 540, y: 795, angle: -Math.PI * 0.1 },
-                { x: 660, y: 795, angle: -Math.PI * 0.1 },
+                { x: 570, y: 735 }, { x: 630, y: 735 },
+                { x: 560, y: 755 }, { x: 640, y: 755 },
+                { x: 550, y: 775 }, { x: 650, y: 775 },
+                { x: 540, y: 795 }, { x: 660, y: 795 },
             ],
             powerUpSpawns: [
                 { x: 160, y: 530, types: ['NITRO', 'SHIELD', 'SPEED_BOOST'] },
@@ -288,44 +240,35 @@ const CONFIG = {
                 { x: 850, y: 690, types: ['MISSILE', 'CASH', 'NITRO'] },
             ],
             decorations: [
-                { type: 'pine', x: 450, y: 300 },
-                { type: 'pine', x: 650, y: 350 },
-                { type: 'pine', x: 500, y: 500 },
-                { type: 'snowman', x: 350, y: 400 },
-                { type: 'rock', x: 700, y: 500 },
+                { type: 'pine', x: 450, y: 300 }, { type: 'pine', x: 650, y: 350 },
+                { type: 'pine', x: 500, y: 500 }, { type: 'pine', x: 350, y: 550 },
+                { type: 'pine', x: 750, y: 450 }, { type: 'pine', x: 900, y: 350 },
+                { type: 'pine', x: 250, y: 180 }, { type: 'pine', x: 850, y: 500 },
+                { type: 'snowman', x: 350, y: 400 }, { type: 'snowman', x: 550, y: 350 },
+                { type: 'snowman', x: 700, y: 550 },
+                { type: 'rock', x: 700, y: 500 }, { type: 'rock', x: 400, y: 450 },
+                { type: 'rock', x: 950, y: 500 }, { type: 'rock', x: 300, y: 650 },
+                { type: 'tireStack', x: 500, y: 680 }, { type: 'tireStack', x: 750, y: 680 },
+                { type: 'tireStack', x: 150, y: 350 },
                 { type: 'spectatorStand', x: 600, y: 650, width: 160 },
+                { type: 'spectatorStand', x: 400, y: 150, width: 80 },
             ],
         },
         {
             name: 'Jungle Rally',
             laps: 3,
             theme: {
-                ground: 0x2D5F2D,
-                trackSurface: 0x6B4423,
-                trackEdge: 0xFFFF00,
-                skyColor: 0x4A7C3F,
-                ambient: 0x7CCD7C,
+                ground: 0x2D5F2D, trackSurface: 0x6B4423, trackEdge: 0xFFFF00,
+                skyColor: 0x4A7C3F, ambient: 0x7CCD7C,
             },
             trackWidth: 130,
             centerLine: [
-                { x: 600, y: 720 },
-                { x: 350, y: 700 },
-                { x: 150, y: 620 },
-                { x: 80,  y: 480 },
-                { x: 150, y: 350 },
-                { x: 280, y: 250 },
-                { x: 200, y: 140 },
-                { x: 380, y: 80 },
-                { x: 550, y: 140 },
-                { x: 650, y: 250 },
-                { x: 800, y: 180 },
-                { x: 950, y: 100 },
-                { x: 1080, y: 200 },
-                { x: 1100, y: 380 },
-                { x: 1020, y: 520 },
-                { x: 900, y: 600 },
-                { x: 1000, y: 700 },
-                { x: 850, y: 740 },
+                { x: 600, y: 720 }, { x: 350, y: 700 }, { x: 150, y: 620 },
+                { x: 80,  y: 480 }, { x: 150, y: 350 }, { x: 280, y: 250 },
+                { x: 200, y: 140 }, { x: 380, y: 80 },  { x: 550, y: 140 },
+                { x: 650, y: 250 }, { x: 800, y: 180 }, { x: 950, y: 100 },
+                { x: 1080, y: 200 },{ x: 1100, y: 380 },{ x: 1020, y: 520 },
+                { x: 900, y: 600 }, { x: 1000, y: 700 },{ x: 850, y: 740 },
             ],
             terrainZones: [
                 { type: 'MUD', center: { x: 80, y: 480 }, radius: 55 },
@@ -336,20 +279,14 @@ const CONFIG = {
                 { type: 'RAMP', center: { x: 900, y: 600 }, radius: 25, direction: -Math.PI/4 },
             ],
             checkpoints: [
-                { x: 600, y: 720, angle: 0 },
-                { x: 80, y: 480, angle: Math.PI/2 },
-                { x: 380, y: 80, angle: 0 },
-                { x: 1080, y: 200, angle: Math.PI * 0.75 },
+                { x: 600, y: 720 }, { x: 80, y: 480 },
+                { x: 380, y: 80 },  { x: 1080, y: 200 },
             ],
             startPositions: [
-                { x: 575, y: 735, angle: -Math.PI * 0.05 },
-                { x: 625, y: 735, angle: -Math.PI * 0.05 },
-                { x: 565, y: 755, angle: -Math.PI * 0.05 },
-                { x: 635, y: 755, angle: -Math.PI * 0.05 },
-                { x: 555, y: 775, angle: -Math.PI * 0.05 },
-                { x: 645, y: 775, angle: -Math.PI * 0.05 },
-                { x: 545, y: 795, angle: -Math.PI * 0.05 },
-                { x: 655, y: 795, angle: -Math.PI * 0.05 },
+                { x: 575, y: 735 }, { x: 625, y: 735 },
+                { x: 565, y: 755 }, { x: 635, y: 755 },
+                { x: 555, y: 775 }, { x: 645, y: 775 },
+                { x: 545, y: 795 }, { x: 655, y: 795 },
             ],
             powerUpSpawns: [
                 { x: 250, y: 650, types: ['NITRO', 'SHIELD', 'SPEED_BOOST'] },
@@ -360,13 +297,19 @@ const CONFIG = {
                 { x: 950, y: 650, types: ['MISSILE', 'CASH', 'NITRO'] },
             ],
             decorations: [
-                { type: 'palm', x: 400, y: 400 },
-                { type: 'palm', x: 700, y: 450 },
-                { type: 'palm', x: 500, y: 550 },
-                { type: 'bush', x: 300, y: 500 },
-                { type: 'bush', x: 800, y: 400 },
-                { type: 'rock', x: 600, y: 350 },
+                { type: 'palm', x: 400, y: 400 }, { type: 'palm', x: 700, y: 450 },
+                { type: 'palm', x: 500, y: 550 }, { type: 'palm', x: 300, y: 300 },
+                { type: 'palm', x: 850, y: 350 }, { type: 'palm', x: 200, y: 500 },
+                { type: 'palm', x: 950, y: 450 }, { type: 'palm', x: 750, y: 600 },
+                { type: 'bush', x: 300, y: 500 }, { type: 'bush', x: 800, y: 400 },
+                { type: 'bush', x: 450, y: 300 }, { type: 'bush', x: 650, y: 550 },
+                { type: 'bush', x: 550, y: 450 }, { type: 'bush', x: 900, y: 300 },
+                { type: 'rock', x: 600, y: 350 }, { type: 'rock', x: 400, y: 600 },
+                { type: 'rock', x: 750, y: 300 }, { type: 'rock', x: 1000, y: 400 },
+                { type: 'tireStack', x: 500, y: 680 }, { type: 'tireStack', x: 800, y: 700 },
+                { type: 'tireStack', x: 130, y: 550 },
                 { type: 'spectatorStand', x: 600, y: 650, width: 140 },
+                { type: 'spectatorStand', x: 850, y: 150, width: 100 },
             ],
         },
     ],

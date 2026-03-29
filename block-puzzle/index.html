@@ -306,6 +306,8 @@
         }
 
         document.addEventListener('keydown', (e) => {
+            if (e.key.startsWith('Arrow')) e.preventDefault();
+
             if (!gameRunning && e.key.startsWith('Arrow')) {
                 startGame();
                 return;

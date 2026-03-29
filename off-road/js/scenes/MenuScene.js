@@ -202,6 +202,9 @@ class MenuScene extends Phaser.Scene {
     _showNameDialog(mode) {
         if (this._overlay) return;
         const w = CONFIG.WIDTH, h = CONFIG.HEIGHT;
+        const isPractice = mode === 'practice';
+        const panelH = isPractice ? 310 : 240;
+        this._selectedTrack = 0;
 
         this._overlay = this.add.container(w / 2, h / 2).setDepth(100);
 
@@ -215,43 +218,80 @@ class MenuScene extends Phaser.Scene {
         // Dialog panel
         const panel = this.add.graphics();
         panel.fillStyle(0x1a1a3a, 1);
-        panel.fillRoundedRect(-200, -120, 400, 240, 16);
+        panel.fillRoundedRect(-210, -panelH/2, 420, panelH, 16);
         panel.lineStyle(2, mode === 'create' ? 0x33AA33 : 0xFF6600, 0.8);
-        panel.strokeRoundedRect(-200, -120, 400, 240, 16);
-        // Panel gradient
+        panel.strokeRoundedRect(-210, -panelH/2, 420, panelH, 16);
         panel.fillStyle(0x222244, 0.5);
-        panel.fillRoundedRect(-200, -120, 400, 60, { tl: 16, tr: 16, bl: 0, br: 0 });
+        panel.fillRoundedRect(-210, -panelH/2, 420, 55, { tl: 16, tr: 16, bl: 0, br: 0 });
         this._overlay.add(panel);
 
         // Title
         const titleText = mode === 'create' ? 'Create Room' : 'Practice Mode';
         const titleColor = mode === 'create' ? '#33AA33' : '#FF6600';
-        this._overlay.add(this.add.text(0, -95, titleText, {
+        this._overlay.add(this.add.text(0, -panelH/2 + 28, titleText, {
             fontSize: '18px', fontFamily: '"Press Start 2P", monospace', color: titleColor,
         }).setOrigin(0.5));
 
-        // Label
-        this._overlay.add(this.add.text(0, -45, 'Enter Your Name', {
-            fontSize: '12px', fontFamily: 'monospace', color: '#8888AA',
+        // Name label + input
+        this._overlay.add(this.add.text(0, -panelH/2 + 75, 'Your Name', {
+            fontSize: '11px', fontFamily: 'monospace', color: '#8888AA',
         }).setOrigin(0.5));
 
-        // DOM input
         const nameInput = this._createDOMInput({
-            value: this._getPlayerName(), maxLength: 12, yOffset: -10,
+            value: this._getPlayerName(), maxLength: 12,
+            yOffset: -panelH/2 + 105 - h/2 + h/2,
             width: 220, borderColor: mode === 'create' ? '#33AA33' : '#FF6600',
         });
+        // Recalculate position properly
+        const pos = this._getInputPosition();
+        const inputOffsetY = (-panelH/2 + 105) * pos.scaleY;
+        nameInput.style.top = (pos.centerY + inputOffsetY) + 'px';
         nameInput.focus();
         nameInput.select();
 
+        // Track selection (practice only)
+        let trackNameText = null;
+        if (isPractice) {
+            this._overlay.add(this.add.text(0, 20, 'Select Track', {
+                fontSize: '11px', fontFamily: 'monospace', color: '#8888AA',
+            }).setOrigin(0.5));
+
+            trackNameText = this.add.text(0, 48, CONFIG.TRACKS[0].name, {
+                fontSize: '14px', fontFamily: '"Press Start 2P", monospace', color: '#FFFFFF',
+            }).setOrigin(0.5);
+            this._overlay.add(trackNameText);
+
+            // Left arrow
+            const leftArr = this.add.text(-120, 48, '<', {
+                fontSize: '24px', fontFamily: 'monospace', color: '#FF6600',
+            }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+            leftArr.on('pointerdown', () => {
+                this._selectedTrack = (this._selectedTrack - 1 + CONFIG.TRACKS.length) % CONFIG.TRACKS.length;
+                trackNameText.setText(CONFIG.TRACKS[this._selectedTrack].name);
+            });
+            this._overlay.add(leftArr);
+
+            // Right arrow
+            const rightArr = this.add.text(120, 48, '>', {
+                fontSize: '24px', fontFamily: 'monospace', color: '#FF6600',
+            }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+            rightArr.on('pointerdown', () => {
+                this._selectedTrack = (this._selectedTrack + 1) % CONFIG.TRACKS.length;
+                trackNameText.setText(CONFIG.TRACKS[this._selectedTrack].name);
+            });
+            this._overlay.add(rightArr);
+        }
+
         // GO button
-        const goBtn = this.add.container(0, 65);
+        const goY = isPractice ? 95 : 40;
+        const goBtn = this.add.container(0, goY);
         const goBg = this.add.graphics();
         const btnColor = mode === 'create' ? 0x33AA33 : 0xFF6600;
         goBg.fillStyle(btnColor, 1);
         goBg.fillRoundedRect(-70, -20, 140, 40, 10);
         goBg.lineStyle(1, 0xFFFFFF, 0.2);
         goBg.strokeRoundedRect(-70, -20, 140, 40, 10);
-        const goLabel = this.add.text(0, 0, 'GO!', {
+        const goLabel = this.add.text(0, 0, isPractice ? 'RACE!' : 'GO!', {
             fontSize: '18px', fontFamily: '"Press Start 2P", monospace', color: '#FFFFFF',
         }).setOrigin(0.5);
         goBtn.add([goBg, goLabel]);
@@ -260,7 +300,7 @@ class MenuScene extends Phaser.Scene {
         this._overlay.add(goBtn);
 
         // Cancel button
-        const cancelBtn = this.add.text(0, 108, 'Cancel', {
+        const cancelBtn = this.add.text(0, goY + 40, 'Cancel', {
             fontSize: '12px', fontFamily: 'monospace', color: '#666688',
         }).setOrigin(0.5).setInteractive({ useHandCursor: true });
         cancelBtn.on('pointerover', () => cancelBtn.setColor('#AAAACC'));
@@ -276,7 +316,7 @@ class MenuScene extends Phaser.Scene {
                 this.scene.start('LobbyScene', { isHost: true, playerName: name });
             } else {
                 this.scene.start('RaceScene', {
-                    isMultiplayer: false, trackIndex: 0, playerName: name,
+                    isMultiplayer: false, trackIndex: this._selectedTrack, playerName: name,
                 });
             }
         };

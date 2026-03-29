@@ -99,6 +99,35 @@ class LaunchScene extends Phaser.Scene {
             color: '#6688aa'
         }).setOrigin(1, 0).setDepth(10);
 
+        // Level name and goal (centered, below top bar)
+        const levelDef = CONFIG.getLevelDef ? CONFIG.getLevelDef(this.level) : null;
+        if (levelDef) {
+            this._levelNameText = this.add.text(w / 2, 75, levelDef.name.toUpperCase(), {
+                fontSize: '24px',
+                fontFamily: 'Courier New, monospace',
+                color: '#ffffff',
+                fontStyle: 'bold',
+                letterSpacing: 4
+            }).setOrigin(0.5).setDepth(10);
+
+            this._levelGoalText = this.add.text(w / 2, 105, levelDef.goal, {
+                fontSize: '13px',
+                fontFamily: 'Courier New, monospace',
+                color: '#88aacc',
+                letterSpacing: 1
+            }).setOrigin(0.5).setDepth(10);
+
+            // Fade out level info at liftoff
+            this.time.delayedCall(5800, () => {
+                if (this._skipped) return;
+                this.tweens.add({
+                    targets: [this._levelNameText, this._levelGoalText],
+                    alpha: 0,
+                    duration: 400
+                });
+            });
+        }
+
         // Countdown text (clean sans-serif)
         this.countdownText = this.add.text(w / 2, h / 2 - 40, '', {
             fontSize: '72px',
@@ -214,8 +243,9 @@ class LaunchScene extends Phaser.Scene {
         if (this._launchSpeed !== undefined && this.phase !== 'countdown') {
             this._launchSpeed = Math.min(this._launchSpeed + dt * 200, 2200);
             this._launchAlt = Math.min(this._launchAlt + this._launchSpeed * dt * 0.3, 120);
+            const mach = (this._launchSpeed / 343).toFixed(1);
             if (this._telemetry) {
-                this._telemetry.setText(`SPD: ${Math.floor(this._launchSpeed)} m/s\nALT: ${this._launchAlt.toFixed(1)} km`);
+                this._telemetry.setText(`SPD: ${Math.floor(this._launchSpeed)} m/s  MACH ${mach}\nALT: ${this._launchAlt.toFixed(1)} km`);
             }
         }
 

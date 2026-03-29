@@ -94,6 +94,11 @@
             setTimeout(() => playSound(150, 0.2), 100);
         }
 
+        function playHitSound() {
+            playSound(300, 0.08, 'sawtooth');
+            setTimeout(() => playSound(250, 0.06, 'sawtooth'), 50);
+        }
+
         const player = {
             x: canvas.width / 2 - 20,
             y: canvas.height - 60,
@@ -109,6 +114,8 @@
         let score = 0;
         let lives = 3;
         let level = 1;
+        let shield = 3;
+        const MAX_SHIELD = 3;
         let gameRunning = false;
         let alienDirection = 1;
         let alienSpeed = 1;
@@ -119,25 +126,53 @@
         const targetFPS = 60;
         const frameDelay = 1000 / targetFPS;
 
+        // Formation patterns
+        const FORMATIONS = [
+            // 0: Standard grid
+            (r, c, rows, cols) => true,
+            // 1: V-shape
+            (r, c, rows, cols) => {
+                const mid = (cols - 1) / 2;
+                return c >= mid - r && c <= mid + r && r < rows;
+            },
+            // 2: Diamond
+            (r, c, rows, cols) => {
+                const midR = (rows - 1) / 2;
+                const midC = (cols - 1) / 2;
+                return Math.abs(r - midR) + Math.abs(c - midC) <= Math.max(midR, midC);
+            },
+            // 3: Zigzag (alternating offset rows)
+            (r, c, rows, cols) => r % 2 === 0 ? c < cols - 1 : c > 0,
+            // 4: Inverted pyramid
+            (r, c, rows, cols) => {
+                const mid = (cols - 1) / 2;
+                const spread = Math.floor(mid * (1 - r / rows));
+                return c >= mid - spread && c <= mid + spread;
+            }
+        ];
+
         function createAliens() {
             aliens = [];
-            const rows = 4 + level;
+            const rows = Math.min(7, 4 + level);
             const cols = 8;
             const alienWidth = 40;
             const alienHeight = 30;
             const padding = 10;
             const offsetX = 80;
             const offsetY = 50;
+            const pattern = FORMATIONS[(level - 1) % FORMATIONS.length];
 
-            for (let row = 0; row < Math.min(rows, 7); row++) {
+            for (let row = 0; row < rows; row++) {
                 for (let col = 0; col < cols; col++) {
-                    aliens.push({
-                        x: offsetX + col * (alienWidth + padding),
-                        y: offsetY + row * (alienHeight + padding),
-                        width: alienWidth,
-                        height: alienHeight,
-                        alive: true
-                    });
+                    if (pattern(row, col, rows, cols)) {
+                        aliens.push({
+                            x: offsetX + col * (alienWidth + padding),
+                            y: offsetY + row * (alienHeight + padding),
+                            width: alienWidth,
+                            height: alienHeight,
+                            alive: true
+                        });
+                    }
                 }
             }
         }
@@ -204,6 +239,23 @@
             drawPlayer();
             drawAliens();
             drawBullets();
+
+            // Shield/damage bar
+            const barW = 120;
+            const barH = 8;
+            const barX = canvas.width / 2 - barW / 2;
+            const barY = canvas.height - 10;
+            ctx.fillStyle = '#333';
+            ctx.fillRect(barX, barY, barW, barH);
+            const pct = shield / MAX_SHIELD;
+            ctx.fillStyle = pct > 0.5 ? '#4CAF50' : pct > 0.25 ? '#FF9800' : '#F44336';
+            ctx.fillRect(barX, barY, barW * pct, barH);
+            ctx.strokeStyle = '#666';
+            ctx.strokeRect(barX, barY, barW, barH);
+            ctx.fillStyle = '#fff';
+            ctx.font = '10px Arial';
+            ctx.textAlign = 'center';
+            ctx.fillText('SHIELD', canvas.width / 2, barY - 2);
         }
 
         function update(timestamp) {
@@ -325,14 +377,21 @@
             alienSpeed += 0.3;
             alienBullets = [];
             bullets = [];
+            shield = Math.min(shield + 1, MAX_SHIELD); // Restore 1 shield per level
             playLevelUpSound();
             createAliens();
         }
 
         function loseLife() {
+            // Shield absorbs hit first
+            if (shield > 0) {
+                shield--;
+                playHitSound();
+                return;
+            }
             lives--;
             livesElement.textContent = lives;
-            
+
             if (lives === 0) {
                 gameOver();
             }
@@ -357,6 +416,7 @@
             score = 0;
             lives = 3;
             level = 1;
+            shield = MAX_SHIELD;
             alienSpeed = 1;
             alienDirection = 1;
             bullets = [];

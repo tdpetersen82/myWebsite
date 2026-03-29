@@ -522,9 +522,9 @@
         // ===================== Wave Spawning =====================
         spawnWave() {
             this.wave++;
-            this.speedMultiplier = Math.min(2.5, 1.0 + (this.wave - 1) * 0.1);
+            this.speedMultiplier = Math.min(1.8, 1.0 + (this.wave - 1) * 0.08);
 
-            const count = Math.min(12, 3 + this.wave);
+            const count = Math.min(8, 3 + this.wave);
             for (let i = 0; i < count; i++) {
                 let x, y;
                 do {
@@ -585,7 +585,7 @@
             g.strokePath();
 
             // Physics with progressive speed
-            const baseSpeed = size === 'large' ? 1.2 : size === 'medium' ? 1.8 : 2.5;
+            const baseSpeed = size === 'large' ? 0.9 : size === 'medium' ? 1.4 : 2.0;
             const speed = baseSpeed * this.speedMultiplier;
             const angle = Math.random() * Math.PI * 2;
             g.velX = Math.cos(angle) * speed * (0.8 + Math.random() * 0.4);
@@ -965,7 +965,7 @@
             // Thrust
             const thrusting = (this.cursors.up.isDown || this.keyW.isDown) && ship.visible;
             if (thrusting) {
-                const thrust = 0.14;
+                const thrust = 0.11;
                 ship.velX += Math.cos(ship.rotation) * thrust;
                 ship.velY += Math.sin(ship.rotation) * thrust;
 
@@ -1142,7 +1142,6 @@
             } else if (size === 'medium') {
                 this.spawnAsteroid(x, y, 'small');
                 this.spawnAsteroid(x, y, 'small');
-                this.spawnAsteroid(x, y, 'small');
             }
 
             // Remove
@@ -1183,7 +1182,8 @@
 
         updateParticles() {
             const toRemove = [];
-            this.particles.getChildren().forEach(p => {
+            const children = this.particles.getChildren();
+            children.forEach(p => {
                 p.x += p.velX;
                 p.y += p.velY;
                 p.life--;
@@ -1191,6 +1191,11 @@
                 if (p.life <= 0) toRemove.push(p);
             });
             toRemove.forEach(p => p.destroy());
+            // Cap particles to prevent memory issues
+            const remaining = this.particles.getChildren();
+            while (remaining.length > 80) {
+                remaining[0].destroy();
+            }
         }
     }
 
