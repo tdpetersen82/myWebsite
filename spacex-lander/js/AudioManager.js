@@ -103,13 +103,18 @@ class AudioManager {
     }
 
     stopThrust() {
+        if (this.thrustGain && this.ctx) {
+            this.thrustGain.gain.linearRampToValueAtTime(0, this.ctx.currentTime + 0.05);
+        }
         if (this.thrustNode) {
-            this.thrustNode.oscs.forEach(o => { try { o.stop(); } catch (e) {} });
+            const oscs = this.thrustNode.oscs;
+            setTimeout(() => { oscs.forEach(o => { try { o.stop(); } catch (e) {} }); }, 60);
             this.thrustNode = null;
         }
         if (this.thrustGain) {
-            this.thrustGain.disconnect();
+            const gain = this.thrustGain;
             this.thrustGain = null;
+            setTimeout(() => { try { gain.disconnect(); } catch (e) {} }, 70);
         }
     }
 

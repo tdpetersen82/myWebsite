@@ -54,11 +54,11 @@ class Sky {
     }
 
     update(delta, altitude) {
-        // Blend based on altitude — smooth transition over the large descent range
-        if (altitude > 6000) {
+        // Blend based on altitude — smooth transition over the descent range
+        if (altitude > 4000) {
             this.atmosphereBlend = 0;
-        } else if (altitude > 2000) {
-            this.atmosphereBlend = 1 - (altitude - 2000) / 4000;
+        } else if (altitude > 1500) {
+            this.atmosphereBlend = 1 - (altitude - 1500) / 2500;
         } else {
             this.atmosphereBlend = 1;
         }

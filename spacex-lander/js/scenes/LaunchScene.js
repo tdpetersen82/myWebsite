@@ -142,9 +142,9 @@ class LaunchScene extends Phaser.Scene {
         skipG.fillRect(0, h - 28, w, 28);
 
         this.add.text(w / 2, h - 14, 'PRESS SPACE TO SKIP', {
-            fontSize: '9px',
+            fontSize: '12px',
             fontFamily: 'Arial, Helvetica, sans-serif',
-            color: '#445566',
+            color: '#8899aa',
             letterSpacing: 2
         }).setOrigin(0.5).setDepth(10);
 
