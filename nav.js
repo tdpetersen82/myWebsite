@@ -364,6 +364,9 @@
 \
 /* Wide dropdown for Retro Arcade (16 games) */\
 .site-nav-dropdown.wide{min-width:380px;display:grid;grid-template-columns:1fr 1fr;gap:2px}\
+.site-nav-dropdown::-webkit-scrollbar{width:5px}\
+.site-nav-dropdown::-webkit-scrollbar-thumb{background:rgba(102,126,234,0.3);border-radius:3px}\
+.site-nav-dropdown{scrollbar-width:thin;scrollbar-color:rgba(102,126,234,0.3) transparent}\
 \
 /* Tools area (right side) */\
 .site-nav-tools{display:flex;align-items:center;gap:4px;flex-shrink:0}\
@@ -473,14 +476,6 @@ body.mobile-nav-open{overflow:hidden}\
     homeLink.innerHTML = '<span class="site-nav-home-icon">\u{1F3AE}</span> <span>Arcade Hub</span>';
     inner.appendChild(homeLink);
 
-    // All Games link (desktop)
-    var allGamesLink = document.createElement('a');
-    allGamesLink.href = basePath + 'index.html#all-games';
-    allGamesLink.className = 'site-nav-home';
-    allGamesLink.style.cssText = 'font-size:0.85em;padding:6px 12px';
-    allGamesLink.innerHTML = '<span>\u{1F3AE}</span> <span>All Games</span>';
-    inner.appendChild(allGamesLink);
-
     // Category triggers (desktop)
     var catList = document.createElement('ul');
     catList.className = 'site-nav-cats';
@@ -493,6 +488,65 @@ body.mobile-nav-open{overflow:hidden}\
         all.forEach(function (el) { el.classList.remove('open'); });
         currentOpenCat = null;
     }
+
+    // "All Games" dropdown (desktop)
+    (function () {
+        var li = document.createElement('li');
+        li.className = 'site-nav-cat';
+
+        var trigger = document.createElement('button');
+        trigger.className = 'site-nav-cat-btn';
+        trigger.innerHTML = '<span>\u{1F3AE}</span> All Games <span class="chevron">\u25BE</span>';
+
+        var dropdown = document.createElement('div');
+        dropdown.className = 'site-nav-dropdown wide';
+        dropdown.style.cssText = 'max-height:400px;overflow-y:auto;left:0;transform:none';
+
+        var sorted = [];
+        GAME_CATALOG.forEach(function (cat) {
+            cat.games.forEach(function (game) { sorted.push(game); });
+        });
+        sorted.sort(function (a, b) { return a.name.localeCompare(b.name); });
+        sorted.forEach(function (game) {
+            var a = document.createElement('a');
+            a.href = basePath + game.url;
+            if (currentPage === game.url) a.className = 'active';
+            a.innerHTML = '<span class="game-icon">' + game.icon + '</span> ' + game.name;
+            dropdown.appendChild(a);
+        });
+
+        li.appendChild(trigger);
+        li.appendChild(dropdown);
+
+        li.addEventListener('mouseenter', function () {
+            clearTimeout(closeCatTimer);
+            if (currentOpenCat && currentOpenCat !== li) {
+                currentOpenCat.classList.remove('open');
+            }
+            openCatTimer = setTimeout(function () {
+                li.classList.add('open');
+                currentOpenCat = li;
+            }, 50);
+        });
+        li.addEventListener('mouseleave', function () {
+            clearTimeout(openCatTimer);
+            closeCatTimer = setTimeout(function () {
+                li.classList.remove('open');
+                if (currentOpenCat === li) currentOpenCat = null;
+            }, 200);
+        });
+        trigger.addEventListener('click', function (e) {
+            e.stopPropagation();
+            var isOpen = li.classList.contains('open');
+            closeAllCats();
+            if (!isOpen) {
+                li.classList.add('open');
+                currentOpenCat = li;
+            }
+        });
+
+        catList.appendChild(li);
+    })();
 
     GAME_CATALOG.forEach(function (cat, catIdx) {
         var li = document.createElement('li');
@@ -939,26 +993,80 @@ body.mobile-nav-open{overflow:hidden}\
         countBadge.textContent = totalGames + ' Games';
     }
 
-    // ── Populate "All Games A-Z" grid on hub page ──────────
-    var allGamesGrid = document.getElementById('all-games-grid');
-    if (allGamesGrid) {
-        var allGames = [];
+    // ── Similar Games section on game pages ─────────────────
+    if (inSubfolder && !isUtilityPage) {
+        var currentGame = null;
+        var currentCat = null;
         GAME_CATALOG.forEach(function (cat) {
             cat.games.forEach(function (game) {
-                allGames.push(game);
+                if (currentPage === game.url) {
+                    currentGame = game;
+                    currentCat = cat;
+                }
             });
         });
-        allGames.sort(function (a, b) {
-            return a.name.localeCompare(b.name);
-        });
-        allGames.forEach(function (game) {
-            var card = document.createElement('div');
-            card.className = 'game-card';
-            card.innerHTML = '<div class="game-icon-wrap">' + game.icon + '</div>' +
-                '<h2>' + game.name + '</h2>' +
-                '<a href="' + game.url + '" class="play-button">Play</a>';
-            allGamesGrid.appendChild(card);
-        });
+
+        if (currentGame && currentCat) {
+            // Get games from same category, excluding current
+            var siblings = currentCat.games.filter(function (g) {
+                return g.url !== currentGame.url;
+            });
+
+            // Shuffle
+            for (var si = siblings.length - 1; si > 0; si--) {
+                var sj = Math.floor(Math.random() * (si + 1));
+                var tmp = siblings[si];
+                siblings[si] = siblings[sj];
+                siblings[sj] = tmp;
+            }
+
+            var picks = siblings.slice(0, 4);
+
+            // If not enough from same category, fill from others
+            if (picks.length < 3) {
+                var others = [];
+                GAME_CATALOG.forEach(function (cat) {
+                    if (cat !== currentCat) {
+                        cat.games.forEach(function (g) { others.push(g); });
+                    }
+                });
+                for (var oi = others.length - 1; oi > 0; oi--) {
+                    var oj = Math.floor(Math.random() * (oi + 1));
+                    var otmp = others[oi];
+                    others[oi] = others[oj];
+                    others[oj] = otmp;
+                }
+                while (picks.length < 4 && others.length > 0) {
+                    picks.push(others.shift());
+                }
+            }
+
+            if (picks.length > 0) {
+                var section = document.createElement('div');
+                section.className = 'similar-games-section';
+                section.innerHTML = '<h2>\u{1F3AE} Similar Games</h2>';
+
+                var grid = document.createElement('div');
+                grid.className = 'similar-games-grid';
+
+                picks.forEach(function (game) {
+                    var card = document.createElement('a');
+                    card.href = basePath + game.url;
+                    card.className = 'similar-game-card';
+                    card.innerHTML = '<div class="game-icon-wrap">' + game.icon + '</div>' +
+                        '<span class="game-name">' + game.name + '</span>' +
+                        '<span class="play-tag">PLAY \u25B6</span>';
+                    grid.appendChild(card);
+                });
+
+                section.appendChild(grid);
+
+                var container = document.querySelector('.container');
+                if (container && container.parentNode) {
+                    container.parentNode.insertBefore(section, container.nextSibling);
+                }
+            }
+        }
     }
 
     // ── Viewport Size Control ─────────────────────────────

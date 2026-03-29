@@ -13,7 +13,8 @@ body {
     background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
     min-height: 100vh;
     display: flex;
-    justify-content: center;
+    flex-direction: column;
+    align-items: center;
     padding: 10px;
 }
 
@@ -25,6 +26,7 @@ body {
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
     max-width: 900px;
     width: 100%;
+    margin: 0 auto;
     overflow: hidden;
 }
 
@@ -540,5 +542,90 @@ canvas {
     .controls p {
         font-size: 0.85em;
         margin: 2px 0;
+    }
+}
+
+/* Wide viewports: reserve gutters for ad sidebars */
+@media (min-width: 1400px) {
+    body {
+        padding-left: 160px;
+        padding-right: 160px;
+    }
+}
+
+/* Similar Games section on game pages */
+.similar-games-section {
+    max-width: 900px;
+    width: 100%;
+    margin: 20px auto 0;
+    padding: 24px 20px;
+    background: rgba(255, 255, 255, 0.95);
+    border-radius: 16px;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.15);
+}
+
+.similar-games-section h2 {
+    font-size: 1.1em;
+    color: #555;
+    margin-bottom: 16px;
+    border-bottom: 3px solid #667eea;
+    padding-bottom: 8px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.similar-games-grid {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 14px;
+}
+
+.similar-game-card {
+    background: white;
+    border-radius: 12px;
+    padding: 16px 12px;
+    text-align: center;
+    text-decoration: none;
+    border: 1px solid #f0f0f0;
+    transition: transform 0.3s ease, box-shadow 0.3s ease;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+}
+
+.similar-game-card:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 8px 24px rgba(102, 126, 234, 0.2);
+    border-color: #667eea;
+}
+
+.similar-game-card .game-icon-wrap {
+    width: 48px;
+    height: 48px;
+    font-size: 1.5em;
+}
+
+.similar-game-card .game-icon-wrap svg {
+    width: 28px;
+    height: 28px;
+}
+
+.similar-game-card .game-name {
+    color: #333;
+    font-weight: 600;
+    font-size: 0.85em;
+}
+
+.similar-game-card .play-tag {
+    color: #667eea;
+    font-size: 0.75em;
+    font-weight: 700;
+}
+
+@media (max-width: 768px) {
+    .similar-games-grid {
+        grid-template-columns: repeat(2, 1fr);
     }
 }
