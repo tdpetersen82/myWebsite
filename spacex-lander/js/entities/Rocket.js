@@ -88,18 +88,29 @@ class Rocket {
             }
         }
 
-        // Thrust
+        // Thrust — engine is always lit during descent, UP arrow boosts to full
         const thrustPower = phase === 1 ? CONFIG.ENTRY_THRUST_POWER : CONFIG.LANDING_THRUST_POWER;
         const burnRate = phase === 1 ? CONFIG.ENTRY_BURN_RATE : CONFIG.LANDING_BURN_RATE;
+        const baseRatio = CONFIG.BASE_THRUST_RATIO || 0.35;
 
-        this.thrusting = thrustPressed && this.fuel > 0;
+        const fullThrust = thrustPressed && this.fuel > 0;
+        const descending = this.vy > 0;
+        const hasBaseThrust = descending && this.fuel > 0;
+
+        this.thrusting = fullThrust || hasBaseThrust;
+        this.thrustLevel = fullThrust ? 1.0 : (hasBaseThrust ? baseRatio : 0);
 
         if (this.thrusting) {
             this.engineMode = phase === 1 ? 'entry' : 'single';
-            const thrustAngle = Phaser.Math.DegToRad(this.angle - 90);
-            this.vx += Math.cos(thrustAngle) * thrustPower * dt;
-            this.vy += Math.sin(thrustAngle) * thrustPower * dt;
-            this.fuel = Math.max(0, this.fuel - burnRate * dt);
+            const effectivePower = thrustPower * this.thrustLevel;
+            const effectiveBurn = burnRate * (fullThrust ? 1.0 : baseRatio * 0.5);
+
+            // Gimbal offset: tilt exhaust direction when steering
+            const gimbalOffset = this.gridFinAngle * 15; // degrees of exhaust tilt
+            const thrustAngle = Phaser.Math.DegToRad(this.angle - 90 + gimbalOffset);
+            this.vx += Math.cos(thrustAngle) * effectivePower * dt;
+            this.vy += Math.sin(thrustAngle) * effectivePower * dt;
+            this.fuel = Math.max(0, this.fuel - effectiveBurn * dt);
 
             // Thrust vectoring also helps with rotation at low speeds
             if (phase >= 2) {
@@ -108,6 +119,7 @@ class Rocket {
             }
         } else {
             this.engineMode = 'off';
+            this.thrustLevel = 0;
         }
 
         // Gravity
@@ -292,28 +304,32 @@ class Rocket {
         graphics.closePath();
         graphics.fillPath();
 
-        // Engine bells (3 circles for entry, 1 for landing)
-        const nozzle = rotate(0, engBot + 2);
+        // Engine bells — gimbal offset follows steering input
+        const gimbalPx = this.gridFinAngle * 3; // visual nozzle offset
+        const nozzle = rotate(gimbalPx, engBot + 2);
+        const thrustAlpha = this.thrustLevel || 0;
         if (this.engineMode === 'entry') {
-            // 3 engines
+            // 3 engines with gimbal
             for (const ox of [-4, 0, 4]) {
-                const np = rotate(ox, engBot + 2);
+                const np = rotate(ox + gimbalPx, engBot + 2);
                 graphics.fillStyle(0x444444, 1);
                 graphics.fillCircle(np.x, np.y, 2.5);
                 if (this.thrusting) {
-                    graphics.fillStyle(0xff8800, 0.5 + Math.sin(Date.now() / 40) * 0.3);
-                    graphics.fillCircle(np.x, np.y, 4);
+                    const glow = (0.3 + thrustAlpha * 0.4) + Math.sin(Date.now() / 40) * 0.2;
+                    graphics.fillStyle(0xff8800, glow);
+                    graphics.fillCircle(np.x, np.y, 3 + thrustAlpha * 2);
                 }
             }
         } else {
-            // Single center engine
+            // Single center engine with gimbal
             graphics.fillStyle(0x444444, 1);
             graphics.fillCircle(nozzle.x, nozzle.y, 3);
             if (this.thrusting) {
-                graphics.fillStyle(0x6699ff, 0.4 + Math.sin(Date.now() / 50) * 0.2);
-                graphics.fillCircle(nozzle.x, nozzle.y, 5);
-                graphics.fillStyle(0xaaddff, 0.2);
-                graphics.fillCircle(nozzle.x, nozzle.y, 8);
+                const glow = (0.2 + thrustAlpha * 0.4) + Math.sin(Date.now() / 50) * 0.15;
+                graphics.fillStyle(0x6699ff, glow);
+                graphics.fillCircle(nozzle.x, nozzle.y, 3 + thrustAlpha * 3);
+                graphics.fillStyle(0xaaddff, thrustAlpha * 0.2);
+                graphics.fillCircle(nozzle.x, nozzle.y, 5 + thrustAlpha * 4);
             }
         }
 
@@ -384,21 +400,17 @@ class Rocket {
     }
 
     _drawRcsPuffs(graphics, rotate, w, h) {
-        // Puffs appear on the OPPOSITE side of steering direction
+        // Subtle RCS puffs — only visible at very low speed when fins are ineffective
         const side = -Math.sign(this.gridFinAngle);
         if (side === 0) return;
 
-        const puffX = side * (w / 2 + 4);
-        const flicker = 0.5 + Math.sin(Date.now() / 30) * 0.3;
+        const puffX = side * (w / 2 + 3);
+        const flicker = 0.3 + Math.sin(Date.now() / 30) * 0.15;
 
-        // Two puff positions along body
-        for (const py of [-h * 0.15, h * 0.2]) {
-            const p = rotate(puffX, py);
-            graphics.fillStyle(0xccddff, 0.35 * flicker);
-            graphics.fillCircle(p.x, p.y, 3.5);
-            graphics.fillStyle(0xffffff, 0.5 * flicker);
-            graphics.fillCircle(p.x, p.y, 1.5);
-        }
+        // Single small puff
+        const p = rotate(puffX, 0);
+        graphics.fillStyle(0xccddff, 0.15 * flicker);
+        graphics.fillCircle(p.x, p.y, 2);
     }
 
     _drawLegs(graphics, rotate, w, h) {
@@ -558,6 +570,7 @@ class Rocket {
         const cos = Math.cos(rad);
         const sin = Math.sin(rad);
         const h = this.height;
+        const gimbalPx = this.gridFinAngle * 3;
 
         const rotate = (px, py) => ({
             x: this.x + px * cos - py * sin,
@@ -566,12 +579,12 @@ class Rocket {
 
         if (this.engineMode === 'entry') {
             return [
-                rotate(-4, h / 2 + 3),
-                rotate(0, h / 2 + 3),
-                rotate(4, h / 2 + 3)
+                rotate(-4 + gimbalPx, h / 2 + 3),
+                rotate(gimbalPx, h / 2 + 3),
+                rotate(4 + gimbalPx, h / 2 + 3)
             ];
         }
-        return [rotate(0, h / 2 + 3)];
+        return [rotate(gimbalPx, h / 2 + 3)];
     }
 
     getAltitude(ocean, droneShip) {
@@ -592,6 +605,7 @@ class Rocket {
         this.alive = true;
         this.landed = false;
         this.thrusting = false;
+        this.thrustLevel = 0;
         this.engineMode = 'off';
         this.gridFinAngle = 0;
         this.legsDeployed = false;
