@@ -42,7 +42,7 @@ const CONFIG = {
     HANDOVER_COUNTDOWN: 3,          // Seconds of auto-descent before human control
 
     // Thrust
-    BASE_THRUST_RATIO: 0.35,        // Idle descent thrust as fraction of full thrust (always on)
+    BASE_THRUST_RATIO: 0.22,        // Idle descent thrust as fraction of full thrust (slows but can't hover)
 
     // Sound barrier
     SOUND_BARRIER: {

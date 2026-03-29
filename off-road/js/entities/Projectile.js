@@ -8,16 +8,31 @@ class Projectile {
         this.ownerId = ownerId;
         this.id = type + '_' + Date.now() + '_' + Math.random().toString(36).substr(2, 4);
 
+        this.useAtlas = scene.textures.exists('particles');
+
         this.container = scene.add.container(x, y);
         this.container.setDepth(9);
-        this.gfx = scene.add.graphics();
-        this.container.add(this.gfx);
 
-        if (type === 'missile') {
-            this._drawMissile();
-            this.trailTimer = 0;
+        if (this.useAtlas) {
+            if (type === 'missile') {
+                this.sprite = scene.add.sprite(0, 0, 'particles', 'missile');
+                this.container.add(this.sprite);
+                this.trailTimer = 0;
+            } else {
+                this.sprite = scene.add.sprite(0, 0, 'particles', 'oil_slick');
+                this.container.add(this.sprite);
+            }
         } else {
-            this._drawOilSlick();
+            // Fallback: procedural graphics
+            this.gfx = scene.add.graphics();
+            this.container.add(this.gfx);
+
+            if (type === 'missile') {
+                this._drawMissile();
+                this.trailTimer = 0;
+            } else {
+                this._drawOilSlick();
+            }
         }
     }
 

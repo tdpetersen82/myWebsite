@@ -1,4 +1,14 @@
 class PowerUp {
+    // Map CONFIG.POWERUPS keys to atlas frame prefixes
+    static FRAME_MAP = {
+        NITRO: 'nitro',
+        MISSILE: 'missile',
+        OIL_SLICK: 'oil_slick',
+        SHIELD: 'shield',
+        SPEED_BOOST: 'speed_boost',
+        CASH: 'cash',
+    };
+
     constructor(scene, id, type, x, y) {
         this.scene = scene;
         this.id = id;
@@ -9,6 +19,10 @@ class PowerUp {
         this.cooldownTimer = 0;
         this.bobOffset = Math.random() * Math.PI * 2;
         this.config = CONFIG.POWERUPS[type];
+
+        this.useAtlas = scene.textures.exists('powerups');
+        this.animFrame = 0;
+        this.animTimer = 0;
 
         this.container = scene.add.container(x, y);
         this.container.setDepth(8);
@@ -21,9 +35,15 @@ class PowerUp {
         this.glowGfx = scene.add.graphics();
         this.container.add(this.glowGfx);
 
-        // Main icon
-        this.gfx = scene.add.graphics();
-        this.container.add(this.gfx);
+        if (this.useAtlas) {
+            const framePrefix = PowerUp.FRAME_MAP[type];
+            this.sprite = scene.add.sprite(0, 0, 'powerups', `${framePrefix}_0`);
+            this.container.add(this.sprite);
+        } else {
+            // Fallback: procedural graphics
+            this.gfx = scene.add.graphics();
+            this.container.add(this.gfx);
+        }
 
         // Sparkle effect
         this.sparkleGfx = scene.add.graphics();
@@ -40,8 +60,6 @@ class PowerUp {
     }
 
     _draw() {
-        const g = this.gfx;
-        g.clear();
         this.glowGfx.clear();
         this.shadowGfx.clear();
 
@@ -59,6 +77,18 @@ class PowerUp {
         this.glowGfx.fillCircle(0, 0, r + 12);
         this.glowGfx.fillStyle(color, 0.1);
         this.glowGfx.fillCircle(0, 0, r + 6);
+
+        if (!this.useAtlas) {
+            this._drawProcedural();
+        }
+    }
+
+    _drawProcedural() {
+        const g = this.gfx;
+        g.clear();
+
+        const color = this.config.color;
+        const r = CONFIG.POWERUP_COLLECT_RADIUS;
 
         // Base sphere (gradient effect - dark edge, bright center)
         g.fillStyle(this._darken(color, 0.5), 1);
@@ -152,6 +182,17 @@ class PowerUp {
         // Bob
         const bob = Math.sin(time / 1000 * CONFIG.POWERUP_BOB_SPEED + this.bobOffset) * CONFIG.POWERUP_BOB_AMOUNT;
         this.container.setY(this.y + bob);
+
+        // Atlas frame animation (cycle through 4 frames at ~8 fps)
+        if (this.useAtlas) {
+            this.animTimer += delta;
+            if (this.animTimer >= 125) {
+                this.animTimer -= 125;
+                this.animFrame = (this.animFrame + 1) % 4;
+                const framePrefix = PowerUp.FRAME_MAP[this.type];
+                this.sprite.setFrame(`${framePrefix}_${this.animFrame}`);
+            }
+        }
 
         // Rotating sparkles
         this.sparkleGfx.clear();

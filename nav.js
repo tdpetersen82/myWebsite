@@ -1042,28 +1042,26 @@ body.mobile-nav-open{overflow:hidden}\
             }
 
             if (picks.length > 0) {
-                var section = document.createElement('div');
-                section.className = 'similar-games-section';
-                section.innerHTML = '<h2>\u{1F3AE} Similar Games</h2>';
-
-                var grid = document.createElement('div');
-                grid.className = 'similar-games-grid';
+                var sidebar = document.createElement('aside');
+                sidebar.className = 'similar-games-section';
+                sidebar.innerHTML = '<h3 class="similar-games-title">Similar Games</h3>';
 
                 picks.forEach(function (game) {
                     var card = document.createElement('a');
                     card.href = basePath + game.url;
                     card.className = 'similar-game-card';
                     card.innerHTML = '<div class="game-icon-wrap">' + game.icon + '</div>' +
-                        '<span class="game-name">' + game.name + '</span>' +
-                        '<span class="play-tag">PLAY \u25B6</span>';
-                    grid.appendChild(card);
+                        '<span class="game-name">' + game.name + '</span>';
+                    sidebar.appendChild(card);
                 });
-
-                section.appendChild(grid);
 
                 var container = document.querySelector('.container');
                 if (container && container.parentNode) {
-                    container.parentNode.insertBefore(section, container.nextSibling);
+                    var wrapper = document.createElement('div');
+                    wrapper.className = 'game-page-wrapper';
+                    container.parentNode.insertBefore(wrapper, container);
+                    wrapper.appendChild(container);
+                    wrapper.appendChild(sidebar);
                 }
             }
         }

@@ -1,0 +1,20 @@
+{
+  "name": "off-road-asset-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Asset generation pipeline for Super Off Road",
+  "scripts": {
+    "generate:vehicles": "node generate-vehicles.js",
+    "generate:tracks": "node generate-tracks.js",
+    "generate:decorations": "node generate-decorations.js",
+    "generate:powerups": "node generate-powerups.js",
+    "generate:particles": "node generate-particles.js",
+    "generate:ui": "node generate-ui.js",
+    "generate:audio": "node generate-audio.js",
+    "generate:all": "npm run generate:vehicles && npm run generate:tracks && npm run generate:decorations && npm run generate:powerups && npm run generate:particles && npm run generate:ui && npm run generate:audio"
+  },
+  "dependencies": {
+    "canvas": "^3.1.0",
+    "jsfxr": "^1.4.0"
+  }
+}
