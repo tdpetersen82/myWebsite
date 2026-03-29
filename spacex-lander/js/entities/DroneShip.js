@@ -87,7 +87,10 @@ class DroneShip {
     }
 
     containsX(x) {
-        return x >= this.x - this.width / 2 && x <= this.x + this.width / 2;
+        // Account for rocking angle — effective width narrows as ship tilts
+        const rad = Phaser.Math.DegToRad(this.rockAngle);
+        const effectiveHalfW = (this.width / 2) * Math.cos(rad);
+        return x >= this.x - effectiveHalfW && x <= this.x + effectiveHalfW;
     }
 
     isOnTarget(x) {

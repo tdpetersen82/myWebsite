@@ -99,7 +99,7 @@ class Rocket {
             const thrustAngle = Phaser.Math.DegToRad(this.angle - 90);
             this.vx += Math.cos(thrustAngle) * thrustPower * dt;
             this.vy += Math.sin(thrustAngle) * thrustPower * dt;
-            this.fuel = Math.max(0, this.fuel - burnRate);
+            this.fuel = Math.max(0, this.fuel - burnRate * dt);
 
             // Thrust vectoring also helps with rotation at low speeds
             if (phase >= 2) {

@@ -6,40 +6,40 @@ const CONFIG = {
     HEIGHT: 600,
 
     // Physics
-    GRAVITY: 30,                    // Earth gravity (px/sec^2) — reduced for longer descent
+    GRAVITY: 40,                    // Earth gravity (px/sec^2) — tuned for snappy descent
     ENTRY_THRUST_POWER: 120,        // Multi-engine entry burn
-    LANDING_THRUST_POWER: 90,       // Single-engine precision
+    LANDING_THRUST_POWER: 130,      // Single-engine precision — strong enough for comfortable braking
     GRID_FIN_ROTATION_RATE: 90,     // Degrees/sec at max effectiveness
     GRID_FIN_LATERAL_FORCE: 30,     // Lateral push from fins
-    FIN_MAX_SPEED_REF: 200,         // Speed where fins are 100% effective
+    FIN_MAX_SPEED_REF: 120,         // Speed where fins are 100% effective — responsive at lower speeds
     THRUST_GIMBAL_RATE: 80,         // Rotation from thrust vectoring (deg/sec)
     RCS_ROTATION_RATE: 45,          // Cold-gas RCS rotation (deg/sec) — fills gap at low speed w/o thrust
-    RCS_LATERAL_FORCE: 15,          // RCS lateral push (px/s^2)
-    DRAG_COEFFICIENT: 0.001,        // Atmospheric drag (gentle)
+    RCS_LATERAL_FORCE: 25,          // RCS lateral push (px/s^2) — stronger low-speed steering
+    DRAG_COEFFICIENT: 0.002,        // Atmospheric drag — helps naturally slow descent
     MAX_VELOCITY: 400,
 
-    // Fuel (single pool)
-    FUEL_MAX: 2400,
-    ENTRY_BURN_RATE: 2.0,
-    LANDING_BURN_RATE: 0.8,
-    LOW_FUEL_THRESHOLD: 400,
+    // Fuel (single pool) — burn rates are per-second (multiplied by dt in Rocket.update)
+    FUEL_MAX: 100,
+    ENTRY_BURN_RATE: 18,
+    LANDING_BURN_RATE: 8,
+    LOW_FUEL_THRESHOLD: 20,
 
     // Landing thresholds
-    LAND_MAX_VY: 35,
-    LAND_MAX_VX: 20,
-    LAND_MAX_ANGLE: 12,
+    LAND_MAX_VY: 50,
+    LAND_MAX_VX: 30,
+    LAND_MAX_ANGLE: 15,
 
     // Phase altitude thresholds
-    PHASE_2_ALTITUDE: 2800,
-    PHASE_3_ALTITUDE: 600,
-    LEG_DEPLOY_ALTITUDE: 400,
+    PHASE_2_ALTITUDE: 3500,
+    PHASE_3_ALTITUDE: 1200,
+    LEG_DEPLOY_ALTITUDE: 800,
 
     // Starting conditions
-    START_VY: 320,                  // Initial downward velocity — Mach 7+ re-entry
-    START_Y: -4800,                 // Very high start for 3-4 screens of descent
+    START_VY: 200,                  // Initial downward velocity — fast but manageable
+    START_Y: -1100,                 // Compact altitude — less boring dead space
     ALTITUDE_SCALE: 8,              // Pixel-to-altitude unit scale
     STARTING_LIVES: 3,
-    HANDOVER_COUNTDOWN: 2,          // Seconds of auto-descent before human control
+    HANDOVER_COUNTDOWN: 1,          // Seconds of auto-descent before human control
 
     // Sound barrier
     SOUND_BARRIER: {
@@ -49,7 +49,7 @@ const CONFIG = {
 
     // Scoring
     BASE_LANDING_SCORE: 200,
-    FUEL_BONUS_MULTIPLIER: 2,
+    FUEL_BONUS_MULTIPLIER: 40,
     PRECISION_BONUS_MAX: 150,
     PHASE_TRANSITION_BONUS: 50,
     SPEED_BONUS_MULTIPLIER: 3,
@@ -60,10 +60,10 @@ const CONFIG = {
 
     // Camera
     CAMERA: {
-        ZOOM_MIN: 0.38,
+        ZOOM_MIN: 0.45,
         ZOOM_MAX: 1.05,
-        ZOOM_ALT_REF: 6000,
-        ZOOM_LERP: 0.03
+        ZOOM_ALT_REF: 4000,
+        ZOOM_LERP: 0.035
     },
 
     // Ocean
@@ -130,7 +130,7 @@ const CONFIG = {
         {
             name: 'Crosswind',
             goal: 'Land in steady crosswind',
-            wind: 10, rockAngle: 0, drift: 0, fuelPenalty: 0,
+            wind: 8, rockAngle: 0, drift: 0, fuelPenalty: 0,
             shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 3,
             nightMode: false
         },
@@ -144,7 +144,7 @@ const CONFIG = {
         {
             name: 'Storm Warning',
             goal: 'Handle wind and waves together',
-            wind: 12, rockAngle: 4, drift: 0, fuelPenalty: 0,
+            wind: 10, rockAngle: 4, drift: 0, fuelPenalty: 0,
             shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 7,
             nightMode: false
         },
@@ -152,13 +152,13 @@ const CONFIG = {
             name: 'Off-Axis Entry',
             goal: 'Correct your approach angle',
             wind: 0, rockAngle: 0, drift: 0, fuelPenalty: 0,
-            shipShrink: 1.0, entryAngle: 12, entryVx: 25, waveAmp: 3,
+            shipShrink: 1.0, entryAngle: 9, entryVx: 20, waveAmp: 3,
             nightMode: false
         },
         {
             name: 'Moving Target',
             goal: 'Land on a drifting ship',
-            wind: 0, rockAngle: 0, drift: 12, fuelPenalty: 0,
+            wind: 0, rockAngle: 0, drift: 10, fuelPenalty: 0,
             shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 4,
             nightMode: false
         },
@@ -172,57 +172,57 @@ const CONFIG = {
         {
             name: 'Gale Force',
             goal: 'Fight strong wind at an angle',
-            wind: 18, rockAngle: 0, drift: 0, fuelPenalty: 0,
-            shipShrink: 1.0, entryAngle: 15, entryVx: 35, waveAmp: 5,
+            wind: 14, rockAngle: 0, drift: 0, fuelPenalty: 0,
+            shipShrink: 1.0, entryAngle: 11, entryVx: 25, waveAmp: 5,
             nightMode: false
         },
         {
             name: 'Rolling Deck',
             goal: 'Ship rocks hard and drifts',
-            wind: 0, rockAngle: 6, drift: 15, fuelPenalty: 0,
+            wind: 0, rockAngle: 6, drift: 12, fuelPenalty: 0,
             shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 10,
             nightMode: false
         },
         {
             name: 'Precision Landing',
             goal: 'Hit a smaller deck with less fuel',
-            wind: 5, rockAngle: 2, drift: 0, fuelPenalty: 0.15,
+            wind: 4, rockAngle: 2, drift: 0, fuelPenalty: 0.15,
             shipShrink: 0.85, entryAngle: 0, entryVx: 0, waveAmp: 4,
             nightMode: false
         },
         {
             name: 'Typhoon',
             goal: 'Everything at once — moderate intensity',
-            wind: 14, rockAngle: 4, drift: 10, fuelPenalty: 0.10,
-            shipShrink: 0.95, entryAngle: 10, entryVx: 20, waveAmp: 8,
+            wind: 11, rockAngle: 4, drift: 8, fuelPenalty: 0.10,
+            shipShrink: 0.95, entryAngle: 8, entryVx: 15, waveAmp: 8,
             nightMode: false
         },
         {
             name: 'Emergency Descent',
             goal: 'Fast entry, low fuel, strong wind',
-            wind: 15, rockAngle: 2, drift: 5, fuelPenalty: 0.30,
-            shipShrink: 1.0, entryAngle: 8, entryVx: 15, waveAmp: 5,
+            wind: 12, rockAngle: 2, drift: 5, fuelPenalty: 0.30,
+            shipShrink: 1.0, entryAngle: 6, entryVx: 12, waveAmp: 5,
             extraStartVY: 50, nightMode: false
         },
         {
             name: 'Night Landing',
             goal: 'Land with reduced visibility',
-            wind: 10, rockAngle: 3, drift: 8, fuelPenalty: 0.05,
-            shipShrink: 1.0, entryAngle: 5, entryVx: 10, waveAmp: 5,
+            wind: 8, rockAngle: 3, drift: 6, fuelPenalty: 0.05,
+            shipShrink: 1.0, entryAngle: 4, entryVx: 8, waveAmp: 5,
             nightMode: true
         },
         {
             name: 'The Gauntlet',
             goal: 'All challenges at high intensity',
-            wind: 20, rockAngle: 6, drift: 18, fuelPenalty: 0.20,
-            shipShrink: 0.90, entryAngle: 18, entryVx: 40, waveAmp: 12,
+            wind: 16, rockAngle: 6, drift: 14, fuelPenalty: 0.20,
+            shipShrink: 0.90, entryAngle: 14, entryVx: 30, waveAmp: 12,
             nightMode: false
         },
         {
             name: 'The Impossible',
             goal: 'Survive maximum everything',
-            wind: 25, rockAngle: 8, drift: 25, fuelPenalty: 0.35,
-            shipShrink: 0.85, entryAngle: 25, entryVx: 60, waveAmp: 15,
+            wind: 20, rockAngle: 8, drift: 20, fuelPenalty: 0.35,
+            shipShrink: 0.85, entryAngle: 20, entryVx: 45, waveAmp: 15,
             nightMode: false
         }
     ],

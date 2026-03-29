@@ -84,13 +84,14 @@ class GameScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-P', () => this._togglePause());
         this.input.keyboard.on('keydown-ESC', () => this._togglePause());
         this.input.keyboard.on('keydown-M', () => this._toggleMute());
+        this.input.keyboard.on('keydown-R', () => this._quickRestart());
 
         // --- HUD ---
         this._createHUD();
 
         // --- PAUSE OVERLAY ---
         this.pauseOverlay = this.add.graphics().setDepth(20).setVisible(false);
-        this.pauseText = this.add.text(w / 2, h / 2, 'PAUSED\n\nPress P or ESC to resume', {
+        this.pauseText = this.add.text(w / 2, h / 2, 'PAUSED\n\nPress P or ESC to resume\nPress R to restart', {
             fontSize: '28px',
             fontFamily: 'Courier New, monospace',
             color: '#ffffff',
@@ -509,8 +510,10 @@ class GameScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(16).setAlpha(0);
         if (this.hudCamera) this.cameras.main.ignore(nameText);
 
-        // Goal text
-        const goalText = this.add.text(w / 2, h * 0.65 + 28, def.goal, {
+        // Goal text — include fuel penalty if applicable
+        let goalStr = def.goal;
+        if (def.fuelPenalty > 0) goalStr += ` (${Math.round((1 - def.fuelPenalty) * 100)}% fuel)`;
+        const goalText = this.add.text(w / 2, h * 0.65 + 28, goalStr, {
             fontSize: '13px',
             fontFamily: 'Courier New, monospace',
             color: '#88aacc',
@@ -698,7 +701,7 @@ class GameScene extends Phaser.Scene {
             levelName: this.levelDef.name
         };
 
-        this.time.delayedCall(2500, () => {
+        this.time.delayedCall(1500, () => {
             this.scene.start('GameOverScene', {
                 result: this.landingResult,
                 level: this.level,
@@ -761,7 +764,7 @@ class GameScene extends Phaser.Scene {
             levelName: this.levelDef.name
         };
 
-        this.time.delayedCall(2500, () => {
+        this.time.delayedCall(1200, () => {
             this.scene.start('GameOverScene', {
                 result: this.landingResult,
                 level: this.level,
@@ -864,9 +867,16 @@ class GameScene extends Phaser.Scene {
         }
         this.hudTexts.altBig.setColor(altColor);
 
-        // V-speed under altitude
-        this.hudTexts.vSpeedBig.setText(`${rocket.vy.toFixed(0)} m/s`);
-        this.hudTexts.vSpeedBig.setColor(Math.abs(rocket.vy) > CONFIG.LAND_MAX_VY ? '#ff4444' : '#88aacc');
+        // V-speed under altitude — with speed guidance in Phase 2+
+        if (this.currentPhase >= 2) {
+            const safeVy = alt > 2000 ? 80 : alt > 800 ? 50 : CONFIG.LAND_MAX_VY;
+            const speedOk = Math.abs(rocket.vy) <= safeVy;
+            this.hudTexts.vSpeedBig.setText(`${rocket.vy.toFixed(0)} / ${safeVy} m/s`);
+            this.hudTexts.vSpeedBig.setColor(speedOk ? '#44ff88' : '#ff4444');
+        } else {
+            this.hudTexts.vSpeedBig.setText(`${rocket.vy.toFixed(0)} m/s`);
+            this.hudTexts.vSpeedBig.setColor(Math.abs(rocket.vy) > CONFIG.LAND_MAX_VY ? '#ff4444' : '#88aacc');
+        }
 
         // Mach number display
         if (CONFIG.SOUND_BARRIER) {
@@ -897,13 +907,19 @@ class GameScene extends Phaser.Scene {
         this._altBarFg.setFillStyle(barColor, 0.8);
 
         const vyDanger = Math.abs(rocket.vy) > CONFIG.LAND_MAX_VY;
-        this.hudTexts.vSpeed.setText(`V-SPD: ${rocket.vy.toFixed(1)}`).setColor(vyDanger ? CONFIG.COLORS.HUD_WARNING : CONFIG.COLORS.HUD_TEXT);
-
         const vxDanger = Math.abs(rocket.vx) > CONFIG.LAND_MAX_VX;
-        this.hudTexts.hSpeed.setText(`H-SPD: ${rocket.vx.toFixed(1)}`).setColor(vxDanger ? CONFIG.COLORS.HUD_WARNING : CONFIG.COLORS.HUD_TEXT);
-
         const angDanger = Math.abs(rocket.angle) > CONFIG.LAND_MAX_ANGLE;
-        this.hudTexts.angle.setText(`ANG: ${rocket.angle.toFixed(1)}`).setColor(angDanger ? CONFIG.COLORS.HUD_WARNING : CONFIG.COLORS.HUD_TEXT);
+
+        // In Phase 3: show landing limits inline
+        if (this.currentPhase === 3) {
+            this.hudTexts.vSpeed.setText(`V-SPD: ${rocket.vy.toFixed(1)} / ${CONFIG.LAND_MAX_VY}`).setColor(vyDanger ? CONFIG.COLORS.HUD_WARNING : CONFIG.COLORS.HUD_TEXT);
+            this.hudTexts.hSpeed.setText(`H-SPD: ${rocket.vx.toFixed(1)} / ${CONFIG.LAND_MAX_VX}`).setColor(vxDanger ? CONFIG.COLORS.HUD_WARNING : CONFIG.COLORS.HUD_TEXT);
+            this.hudTexts.angle.setText(`ANG: ${rocket.angle.toFixed(1)} / ${CONFIG.LAND_MAX_ANGLE}`).setColor(angDanger ? CONFIG.COLORS.HUD_WARNING : CONFIG.COLORS.HUD_TEXT);
+        } else {
+            this.hudTexts.vSpeed.setText(`V-SPD: ${rocket.vy.toFixed(1)}`).setColor(vyDanger ? CONFIG.COLORS.HUD_WARNING : CONFIG.COLORS.HUD_TEXT);
+            this.hudTexts.hSpeed.setText(`H-SPD: ${rocket.vx.toFixed(1)}`).setColor(vxDanger ? CONFIG.COLORS.HUD_WARNING : CONFIG.COLORS.HUD_TEXT);
+            this.hudTexts.angle.setText(`ANG: ${rocket.angle.toFixed(1)}`).setColor(angDanger ? CONFIG.COLORS.HUD_WARNING : CONFIG.COLORS.HUD_TEXT);
+        }
 
         // Phase
         const phaseNames = { 1: 'RE-ENTRY', 2: 'DESCENT', 3: 'LANDING BURN' };
@@ -964,6 +980,22 @@ class GameScene extends Phaser.Scene {
             if (this.hudCamera) this.cameras.main.ignore(this._windLabel);
         }
         this._windLabel.setText(`WIND ${Math.abs(this.wind).toFixed(1)}`);
+    }
+
+    _quickRestart() {
+        if (this.audio) {
+            this.audio.stopThrust();
+            this.audio.stopLowFuelWarning();
+            this.audio.stopReentryWhoosh();
+            this.audio.stopWindRush();
+        }
+        if (this.vfx) this.vfx.destroy();
+        if (this.hudCamera) {
+            this.cameras.remove(this.hudCamera);
+            this.hudCamera = null;
+        }
+        this.timeScale = 1;
+        this.scene.restart({ level: this.level, score: this.score, lives: this.lives });
     }
 
     _togglePause() {
