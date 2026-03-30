@@ -241,8 +241,7 @@ class Bike {
         }
 
         // Crash check: too tilted while on ground
-        if (!this.airborne && (normAngle > CONFIG.CRASH_ANGLE_THRESHOLD &&
-            normAngle < (Math.PI * 2 - CONFIG.CRASH_ANGLE_THRESHOLD))) {
+        if (!this.airborne && absAngle > CONFIG.CRASH_ANGLE_THRESHOLD) {
             this.crash();
         }
 
