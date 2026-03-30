@@ -228,9 +228,9 @@ class Bike {
         }
         this.lastAngle = currentAngle;
 
-        // Wheelie detection
-        const normAngle = ((currentAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
-        this.isWheelie = !this.airborne && (normAngle > 0.3 && normAngle < 1.0);
+        // Wheelie detection — front wheel up when angle is negative (leaning back)
+        const absAngle = Math.abs(currentAngle);
+        this.isWheelie = !this.airborne && this.groundedCount > 0 && absAngle > 0.25 && absAngle < 1.2;
         if (this.isWheelie) {
             this.wheelieTime += delta / 1000;
         } else {
