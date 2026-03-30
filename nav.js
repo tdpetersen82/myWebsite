@@ -44,6 +44,7 @@
         fruitcatcher: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="12" r="6" fill="#ef4444"/><path d="M12 6c-1-3 1-5 3-4" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/><ellipse cx="10" cy="10" rx="1.5" ry="2" fill="#fff" opacity="0.3"/><circle cx="24" cy="10" r="4" fill="#f59e0b"/><path d="M24 6c0-2 1-3 2-3" stroke="#22c55e" stroke-width="1.5" stroke-linecap="round"/><path d="M6 26c0-2 4-3 10-3s10 1 10 3v2H6z" fill="#92400e"/><path d="M8 26c0-1.5 3.5-2.5 8-2.5s8 1 8 2.5" stroke="#78350f" stroke-width="1"/></svg>',
         streetbrawl: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="12" cy="8" r="4" fill="#fbbf24"/><rect x="9" y="12" width="6" height="10" rx="1" fill="#3b82f6"/><path d="M9 16l-4 2M15 16l6-4" stroke="#fbbf24" stroke-width="2" stroke-linecap="round"/><path d="M21 12l4-2" stroke="#fbbf24" stroke-width="2.5" stroke-linecap="round"/><circle cx="26" cy="9" r="2.5" fill="none" stroke="#ef4444" stroke-width="1.5"/><text x="25" y="11" text-anchor="middle" font-size="4" fill="#ef4444" font-weight="bold">!</text><path d="M10 22l-2 6M14 22l2 6" stroke="#1e293b" stroke-width="2" stroke-linecap="round"/></svg>',
         offroad: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="16" rx="14" ry="10" fill="none" stroke="#92400e" stroke-width="3"/><ellipse cx="16" cy="16" rx="8" ry="5" fill="none" stroke="#a3a3a3" stroke-width="1" stroke-dasharray="2 2"/><rect x="6" y="12" width="5" height="3" rx="1" fill="#ef4444"/><rect x="20" y="18" width="5" height="3" rx="1" fill="#3b82f6"/><rect x="13" y="7" width="5" height="3" rx="1" fill="#22c55e"/><circle cx="8.5" cy="13.5" r="1.5" fill="#1e293b"/><circle cx="22.5" cy="19.5" r="1.5" fill="#1e293b"/><circle cx="15.5" cy="8.5" r="1.5" fill="#1e293b"/></svg>',
+        hillclimb: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="9" cy="24" r="5" stroke="#666" stroke-width="2"/><circle cx="23" cy="24" r="5" stroke="#666" stroke-width="2"/><path d="M9 24l4-10h8l2 10" stroke="#c22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><path d="M13 14l3-8 5 3" stroke="#c22" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="9" cy="24" r="1.5" fill="#999"/><circle cx="23" cy="24" r="1.5" fill="#999"/></svg>',
     };
 
     const GAME_CATALOG = [
@@ -105,6 +106,7 @@
                 { name: 'Fruit Catcher', icon: I.fruitcatcher, url: 'fruit-catcher/' },
                 { name: 'Street Brawl', icon: I.streetbrawl, url: 'beat-em-up/' },
                 { name: 'Super Off Road', icon: I.offroad, url: 'off-road/' },
+                { name: 'Dirt Bike Hill Climb', icon: I.hillclimb, url: 'hill-climb/' },
             ]
         },
     ];

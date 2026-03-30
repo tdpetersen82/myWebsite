@@ -93,6 +93,9 @@ class RaceScene extends Phaser.Scene {
             this._setupNetworkCallbacks();
         }
 
+        // === WEATHER PARTICLES ===
+        this._createWeatherParticles();
+
         // === AUDIO ===
         window.gameAudio.startEngine();
         window.gameAudio.startMusic();
@@ -232,18 +235,46 @@ class RaceScene extends Phaser.Scene {
     }
 
     _countdownTick() {
+        const hasUI = this.textures.exists('ui');
         if (this.countdownValue > 0) {
-            const colors = ['#FF3333', '#FFCC00', '#33CC33'];
-            this.countdownText.setText(this.countdownValue.toString());
-            this.countdownText.setColor(colors[CONFIG.RACE.COUNTDOWN_SECS - this.countdownValue] || '#FFFFFF');
-            this.countdownText.setScale(1.5);
-            this.tweens.add({
-                targets: this.countdownText,
-                scaleX: 1,
-                scaleY: 1,
-                duration: 700,
-                ease: 'Cubic.easeOut',
-            });
+            const spriteKey = 'countdown_' + this.countdownValue;
+            const useSprite = hasUI && this.textures.get('ui').has(spriteKey);
+
+            if (useSprite) {
+                // Use sprite for countdown number
+                this.countdownText.setVisible(false);
+                if (this._countdownSprite) this._countdownSprite.destroy();
+                this._countdownSprite = this.add.image(CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2, 'ui', spriteKey)
+                    .setScrollFactor(0).setDepth(50).setScale(2).setAlpha(1);
+                this.tweens.add({
+                    targets: this._countdownSprite,
+                    scaleX: 1, scaleY: 1,
+                    duration: 400, ease: 'Cubic.easeOut',
+                });
+                this.tweens.add({
+                    targets: this._countdownSprite,
+                    alpha: 0.3,
+                    duration: 800, ease: 'Linear',
+                });
+            } else {
+                // Fallback to text
+                const colors = ['#FF3333', '#FFCC00', '#33CC33'];
+                this.countdownText.setVisible(true);
+                this.countdownText.setText(this.countdownValue.toString());
+                this.countdownText.setColor(colors[CONFIG.RACE.COUNTDOWN_SECS - this.countdownValue] || '#FFFFFF');
+                this.countdownText.setScale(2).setAlpha(1);
+                this.tweens.add({
+                    targets: this.countdownText,
+                    scaleX: 1, scaleY: 1,
+                    duration: 400, ease: 'Cubic.easeOut',
+                });
+                this.tweens.add({
+                    targets: this.countdownText,
+                    alpha: 0.3,
+                    duration: 800, ease: 'Linear',
+                });
+            }
+
             window.gameAudio.countdown(this.countdownValue);
             this._triggerShake(CONFIG.SCREEN_SHAKE.COUNTDOWN);
 
@@ -251,20 +282,36 @@ class RaceScene extends Phaser.Scene {
             this.time.delayedCall(1000, () => this._countdownTick());
         } else {
             // GO!
-            this.countdownText.setText('GO!');
-            this.countdownText.setColor('#33FF33');
-            this.countdownText.setScale(2);
-            window.gameAudio.countdown(0);
-            this._triggerShake({ intensity: 6, duration: 300 });
+            if (this._countdownSprite) { this._countdownSprite.destroy(); this._countdownSprite = null; }
 
-            this.tweens.add({
-                targets: this.countdownText,
-                scaleX: 3,
-                scaleY: 3,
-                alpha: 0,
-                duration: 600,
-                onComplete: () => this.countdownText.destroy(),
-            });
+            const goSpriteKey = 'countdown_go';
+            const useGoSprite = hasUI && this.textures.get('ui').has(goSpriteKey);
+
+            if (useGoSprite) {
+                this.countdownText.setVisible(false);
+                const goSprite = this.add.image(CONFIG.WIDTH / 2, CONFIG.HEIGHT / 2, 'ui', goSpriteKey)
+                    .setScrollFactor(0).setDepth(50).setScale(2).setAlpha(1);
+                this.tweens.add({
+                    targets: goSprite,
+                    scaleX: 3, scaleY: 3, alpha: 0,
+                    duration: 600,
+                    onComplete: () => goSprite.destroy(),
+                });
+            } else {
+                this.countdownText.setVisible(true);
+                this.countdownText.setText('GO!');
+                this.countdownText.setColor('#33FF33');
+                this.countdownText.setScale(2).setAlpha(1);
+                this.tweens.add({
+                    targets: this.countdownText,
+                    scaleX: 3, scaleY: 3, alpha: 0,
+                    duration: 600,
+                    onComplete: () => this.countdownText.destroy(),
+                });
+            }
+
+            window.gameAudio.countdown(0);
+            this._triggerShake({ intensity: 8, duration: 400 });
 
             this.raceState = 'racing';
             this.raceStartTime = performance.now();
@@ -375,9 +422,23 @@ class RaceScene extends Phaser.Scene {
         this.hudNitroBar = this.add.graphics();
         this.hudContainer.add(this.hudNitroBar);
 
+        // Nitro bar frame sprite overlay (if ui atlas available)
+        if (this.textures.exists('ui') && this.textures.get('ui').has('nitro_bar_frame')) {
+            this.hudNitroFrame = this.add.image(72 + 85, H - 38, 'ui', 'nitro_bar_frame')
+                .setOrigin(0.5).setDisplaySize(174, 20);
+            this.hudContainer.add(this.hudNitroFrame);
+        }
+
         // Power-up indicator
         this.hudPowerUpBg = this.add.graphics();
         this.hudContainer.add(this.hudPowerUpBg);
+
+        // Power-up slot sprite overlay (if ui atlas available)
+        if (this.textures.exists('ui') && this.textures.get('ui').has('powerup_slot')) {
+            this.hudPowerUpSlot = this.add.image(W / 2, H - 34, 'ui', 'powerup_slot')
+                .setOrigin(0.5).setAlpha(0.8);
+            this.hudContainer.add(this.hudPowerUpSlot);
+        }
         this.hudPowerUp = this.add.text(W / 2, H - 34, '', {
             fontSize: '12px', fontFamily: '"Press Start 2P", monospace', color: '#FFFFFF',
             stroke: '#000000', strokeThickness: 3,
@@ -388,6 +449,13 @@ class RaceScene extends Phaser.Scene {
         this.minimapGfx = this.add.graphics();
         this.minimapGfx.setScrollFactor(0);
         this.minimapGfx.setDepth(41);
+
+        // Minimap frame sprite overlay (if ui atlas available)
+        if (this.textures.exists('ui') && this.textures.get('ui').has('minimap_frame')) {
+            const mmX = W - 175, mmY = H - 135, mmW = 160, mmH = 120;
+            this.minimapFrame = this.add.image(mmX + mmW / 2, mmY + mmH / 2, 'ui', 'minimap_frame')
+                .setDisplaySize(mmW + 12, mmH + 12).setScrollFactor(0).setDepth(42).setAlpha(0.9);
+        }
     }
 
     _updateHUD() {
@@ -458,6 +526,7 @@ class RaceScene extends Phaser.Scene {
             const puConfig = CONFIG.POWERUPS[localPV.powerUp];
             this.hudPowerUp.setText('[E] ' + (puConfig ? puConfig.label : localPV.powerUp));
             this.hudPowerUp.setVisible(true);
+            if (this.hudPowerUpSlot) this.hudPowerUpSlot.setVisible(true);
             // Styled background
             const tw = this.hudPowerUp.width + 20;
             this.hudPowerUpBg.fillStyle(0x0A0A1A, 0.7);
@@ -466,6 +535,7 @@ class RaceScene extends Phaser.Scene {
             this.hudPowerUpBg.strokeRoundedRect(W/2 - tw/2, H - 50, tw, 30, 6);
         } else {
             this.hudPowerUp.setVisible(false);
+            if (this.hudPowerUpSlot) this.hudPowerUpSlot.setVisible(false);
         }
 
         // Minimap
@@ -618,6 +688,9 @@ class RaceScene extends Phaser.Scene {
 
         // === SPEED LINES ===
         this._updateSpeedLines();
+
+        // === WEATHER ===
+        this._updateWeatherParticles();
 
         // === WRONG WAY DETECTION ===
         this._updateWrongWay();
@@ -797,6 +870,15 @@ class RaceScene extends Phaser.Scene {
         const cam = this.cameras.main;
         cam.scrollX += (targetX - cam.width / 2 - cam.scrollX) * CONFIG.CAMERA.LERP;
         cam.scrollY += (targetY - cam.height / 2 - cam.scrollY) * CONFIG.CAMERA.LERP;
+
+        // Dynamic zoom: slight zoom out at high speeds for a sense of velocity
+        const localPV = this.physicsEngine.getVehicle(this.localVehicleId);
+        if (localPV) {
+            const speedRatio = Math.min(1, Math.abs(localPV.speed) / CONFIG.PHYSICS.MAX_SPEED);
+            const targetZoom = CONFIG.CAMERA.ZOOM - (speedRatio * 0.15);
+            const currentZoom = cam.zoom;
+            cam.setZoom(currentZoom + (targetZoom - currentZoom) * 0.05);
+        }
     }
 
     // === SCREEN SHAKE ===
@@ -1070,6 +1152,77 @@ class RaceScene extends Phaser.Scene {
         }
     }
 
+    // === WEATHER PARTICLES ===
+
+    _createWeatherParticles() {
+        this.weatherGfx = this.add.graphics().setScrollFactor(0).setDepth(35);
+        this.weatherParticles = [];
+
+        // Track 0 = Desert (dust), Track 1 = Arctic (snow), Track 2 = Jungle (rain)
+        const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
+        const count = this.trackIndex === 2 ? 35 : 25;
+
+        for (let i = 0; i < count; i++) {
+            const p = { x: Math.random() * W, y: Math.random() * H };
+            if (this.trackIndex === 0) {
+                // Desert dust motes
+                p.vx = (Math.random() - 0.5) * 15;
+                p.vy = (Math.random() - 0.3) * 8;
+                p.size = 1.5 + Math.random() * 2;
+                p.alpha = 0.15 + Math.random() * 0.15;
+                p.color = 0xD2B48C;
+            } else if (this.trackIndex === 1) {
+                // Arctic snowfall
+                p.vx = (Math.random() - 0.5) * 20;
+                p.vy = 15 + Math.random() * 25;
+                p.size = 1 + Math.random() * 2.5;
+                p.alpha = 0.2 + Math.random() * 0.25;
+                p.color = 0xFFFFFF;
+            } else {
+                // Jungle rain
+                p.vx = -5 + Math.random() * 3;
+                p.vy = 80 + Math.random() * 60;
+                p.size = 1;
+                p.length = 4 + Math.random() * 6;
+                p.alpha = 0.12 + Math.random() * 0.15;
+                p.color = 0xAABBDD;
+            }
+            this.weatherParticles.push(p);
+        }
+    }
+
+    _updateWeatherParticles() {
+        if (!this.weatherGfx || !this.weatherParticles) return;
+        this.weatherGfx.clear();
+
+        const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
+        const dt = 1 / 60;
+
+        for (const p of this.weatherParticles) {
+            p.x += p.vx * dt;
+            p.y += p.vy * dt;
+
+            // Wrap around screen
+            if (p.x < -10) p.x = W + 10;
+            if (p.x > W + 10) p.x = -10;
+            if (p.y > H + 10) { p.y = -10; p.x = Math.random() * W; }
+            if (p.y < -10) { p.y = H + 10; p.x = Math.random() * W; }
+
+            if (this.trackIndex === 2) {
+                // Rain: draw as thin lines
+                this.weatherGfx.lineStyle(p.size, p.color, p.alpha);
+                this.weatherGfx.beginPath();
+                this.weatherGfx.moveTo(p.x, p.y);
+                this.weatherGfx.lineTo(p.x + p.vx * dt * 2, p.y + p.length);
+                this.weatherGfx.strokePath();
+            } else {
+                // Dust / Snow: draw as circles
+                this.weatherGfx.fillStyle(p.color, p.alpha);
+                this.weatherGfx.fillCircle(p.x, p.y, p.size);
+            }
+        }
+    }
+
     // === SPEED LINES ===
 
     _updateSpeedLines() {
@@ -1078,21 +1231,56 @@ class RaceScene extends Phaser.Scene {
         if (!localPV) return;
 
         const speedRatio = Math.abs(localPV.speed) / CONFIG.PHYSICS.MAX_SPEED;
-        if (speedRatio < 0.6) return;
+        if (speedRatio < 0.6) {
+            if (this._speedLineSprites) {
+                for (const s of this._speedLineSprites) s.setAlpha(0);
+            }
+            return;
+        }
 
         const alpha = (speedRatio - 0.6) * 0.4; // 0 to 0.16
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
+        const cx = W / 2, cy = H / 2;
 
-        this.speedLinesGfx.lineStyle(1, 0xFFFFFF, alpha);
-        for (let i = 0; i < 12; i++) {
-            const angle = (i / 12) * Math.PI * 2;
-            const innerR = 250 + Math.random() * 50;
-            const outerR = innerR + 40 + speedRatio * 60;
-            const cx = W / 2, cy = H / 2;
-            this.speedLinesGfx.beginPath();
-            this.speedLinesGfx.moveTo(cx + Math.cos(angle) * innerR, cy + Math.sin(angle) * innerR);
-            this.speedLinesGfx.lineTo(cx + Math.cos(angle) * outerR, cy + Math.sin(angle) * outerR);
-            this.speedLinesGfx.strokePath();
+        // Use particle sprites if available, otherwise procedural lines
+        const hasParticles = this.textures.exists('particles') && this.textures.get('particles').has('speed_line');
+        if (hasParticles) {
+            // Lazy-create speed line sprite pool
+            if (!this._speedLineSprites) {
+                this._speedLineSprites = [];
+                for (let i = 0; i < 16; i++) {
+                    const s = this.add.image(0, 0, 'particles', 'speed_line')
+                        .setScrollFactor(0).setDepth(35).setAlpha(0).setOrigin(0.5);
+                    this._speedLineSprites.push(s);
+                }
+            }
+            for (let i = 0; i < this._speedLineSprites.length; i++) {
+                const angle = (i / this._speedLineSprites.length) * Math.PI * 2;
+                const r = 260 + Math.random() * 40;
+                const s = this._speedLineSprites[i];
+                s.setPosition(cx + Math.cos(angle) * r, cy + Math.sin(angle) * r);
+                s.setRotation(angle);
+                s.setAlpha(alpha);
+                s.setScale(0.5 + speedRatio * 1.0, 0.3);
+            }
+        } else {
+            // Hide sprite pool if it exists but we're below threshold
+            if (this._speedLineSprites) {
+                for (const s of this._speedLineSprites) s.setAlpha(0);
+            }
+
+            // Procedural speed lines
+            const lineCount = 12 + Math.floor(speedRatio * 8);
+            this.speedLinesGfx.lineStyle(1 + speedRatio, 0xFFFFFF, alpha);
+            for (let i = 0; i < lineCount; i++) {
+                const angle = (i / lineCount) * Math.PI * 2;
+                const innerR = 250 + Math.random() * 50;
+                const outerR = innerR + 40 + speedRatio * 60;
+                this.speedLinesGfx.beginPath();
+                this.speedLinesGfx.moveTo(cx + Math.cos(angle) * innerR, cy + Math.sin(angle) * innerR);
+                this.speedLinesGfx.lineTo(cx + Math.cos(angle) * outerR, cy + Math.sin(angle) * outerR);
+                this.speedLinesGfx.strokePath();
+            }
         }
     }
 
@@ -1157,5 +1345,11 @@ class RaceScene extends Phaser.Scene {
         for (const [, v] of this.vehicles) v.destroy();
         for (const [, p] of this.projectileEntities) p.destroy();
         for (const pu of this.powerUps) pu.destroy();
+        if (this.weatherGfx) this.weatherGfx.destroy();
+        if (this._speedLineSprites) {
+            for (const s of this._speedLineSprites) s.destroy();
+            this._speedLineSprites = null;
+        }
+        if (this.minimapFrame) this.minimapFrame.destroy();
     }
 }

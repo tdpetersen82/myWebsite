@@ -1,0 +1,19 @@
+{
+  "name": "hill-climb-asset-tools",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Asset generation pipeline for Dirt Bike Hill Climb",
+  "scripts": {
+    "generate:bike": "node generate-bike.js",
+    "generate:terrain": "node generate-terrain.js",
+    "generate:backgrounds": "node generate-backgrounds.js",
+    "generate:pickups": "node generate-pickups.js",
+    "generate:ui": "node generate-ui.js",
+    "generate:audio": "node generate-audio.js",
+    "generate:all": "npm run generate:bike && npm run generate:terrain && npm run generate:backgrounds && npm run generate:pickups && npm run generate:ui && npm run generate:audio"
+  },
+  "dependencies": {
+    "canvas": "^3.1.0",
+    "jsfxr": "^1.4.0"
+  }
+}

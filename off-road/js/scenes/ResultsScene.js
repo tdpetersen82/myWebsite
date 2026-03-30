@@ -107,13 +107,19 @@ class ResultsScene extends Phaser.Scene {
             }).setOrigin(0.5);
 
             // Car on podium
-            const carGfx = this.add.graphics();
-            carGfx.fillStyle(vConfig.color, 1);
-            carGfx.fillRoundedRect(pos.x - 14, pos.y - 18, 28, 16, 3);
-            carGfx.fillStyle(vConfig.stripe, 1);
-            carGfx.fillRect(pos.x - 10, pos.y - 11, 20, 2);
-            carGfx.fillStyle(0x88CCFF, 0.7);
-            carGfx.fillRect(pos.x + 6, pos.y - 16, 5, 12);
+            const carAtlasKey = `vehicle_${result.colorIndex || i}`;
+            if (this.textures.exists(carAtlasKey)) {
+                const carSprite = this.add.sprite(pos.x, pos.y - 12, carAtlasKey, 'normal_0');
+                carSprite.setScale(0.5);
+            } else {
+                const carGfx = this.add.graphics();
+                carGfx.fillStyle(vConfig.color, 1);
+                carGfx.fillRoundedRect(pos.x - 14, pos.y - 18, 28, 16, 3);
+                carGfx.fillStyle(vConfig.stripe, 1);
+                carGfx.fillRect(pos.x - 10, pos.y - 11, 20, 2);
+                carGfx.fillStyle(0x88CCFF, 0.7);
+                carGfx.fillRect(pos.x + 6, pos.y - 16, 5, 12);
+            }
 
             // Name
             this.add.text(pos.x, pos.y - 32, result.name, {
@@ -181,21 +187,49 @@ class ResultsScene extends Phaser.Scene {
                 fontSize: '13px', fontFamily: 'monospace', color: '#FFFFFF',
             }).setOrigin(0, 0.5);
 
-            // Time
-            this.add.text(startX + colX[2], y + 8, result.time ? this._formatTime(result.time) : 'DNF', {
+            // Time (with count-up animation)
+            const timeText = this.add.text(startX + colX[2], y + 8, result.time ? '0:00.00' : 'DNF', {
                 fontSize: '13px', fontFamily: 'monospace',
                 color: result.time ? '#33CC33' : '#FF3333',
             }).setOrigin(0, 0.5);
+            if (result.time) {
+                this._animateCountUp(timeText, result.time, i * 200, 'time');
+            }
 
-            // Best lap
-            this.add.text(startX + colX[3], y + 8, result.bestLap ? this._formatTime(result.bestLap) : '-', {
+            // Best lap (with count-up animation)
+            const lapText = this.add.text(startX + colX[3], y + 8, result.bestLap ? '0:00.00' : '-', {
                 fontSize: '13px', fontFamily: 'monospace', color: '#AAAAAA',
             }).setOrigin(0, 0.5);
+            if (result.bestLap) {
+                this._animateCountUp(lapText, result.bestLap, i * 200 + 100, 'time');
+            }
 
-            // Top speed
-            this.add.text(startX + colX[4], y + 8, result.topSpeed ? result.topSpeed + ' km/h' : '-', {
+            // Top speed (with count-up animation)
+            const speedText = this.add.text(startX + colX[4], y + 8, result.topSpeed ? '0 km/h' : '-', {
                 fontSize: '13px', fontFamily: 'monospace', color: '#AAAAAA',
             }).setOrigin(0, 0.5);
+            if (result.topSpeed) {
+                this._animateCountUp(speedText, result.topSpeed, i * 200 + 150, 'speed');
+            }
+        });
+    }
+
+    _animateCountUp(textObj, finalValue, delay, type) {
+        this.time.delayedCall(delay, () => {
+            const counter = { val: 0 };
+            this.tweens.add({
+                targets: counter,
+                val: finalValue,
+                duration: 500,
+                ease: 'Cubic.easeOut',
+                onUpdate: () => {
+                    if (type === 'time') {
+                        textObj.setText(this._formatTime(counter.val));
+                    } else {
+                        textObj.setText(Math.round(counter.val) + ' km/h');
+                    }
+                },
+            });
         });
     }
 

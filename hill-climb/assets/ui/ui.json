@@ -1,0 +1,129 @@
+{
+  "frames": {
+    "fuel_gauge_bg": {
+      "frame": {
+        "x": 10,
+        "y": 10,
+        "w": 160,
+        "h": 30
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 160,
+        "h": 30
+      },
+      "sourceSize": {
+        "w": 160,
+        "h": 30
+      }
+    },
+    "fuel_gauge_fill": {
+      "frame": {
+        "x": 10,
+        "y": 50,
+        "w": 124,
+        "h": 14
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 124,
+        "h": 14
+      },
+      "sourceSize": {
+        "w": 124,
+        "h": 14
+      }
+    },
+    "btn_pause": {
+      "frame": {
+        "x": 200,
+        "y": 10,
+        "w": 36,
+        "h": 36
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 36
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 36
+      }
+    },
+    "btn_mute": {
+      "frame": {
+        "x": 245,
+        "y": 10,
+        "w": 36,
+        "h": 36
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 36,
+        "h": 36
+      },
+      "sourceSize": {
+        "w": 36,
+        "h": 36
+      }
+    },
+    "score_panel": {
+      "frame": {
+        "x": 10,
+        "y": 80,
+        "w": 200,
+        "h": 40
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 200,
+        "h": 40
+      },
+      "sourceSize": {
+        "w": 200,
+        "h": 40
+      }
+    },
+    "trick_popup": {
+      "frame": {
+        "x": 10,
+        "y": 130,
+        "w": 180,
+        "h": 36
+      },
+      "rotated": false,
+      "trimmed": false,
+      "spriteSourceSize": {
+        "x": 0,
+        "y": 0,
+        "w": 180,
+        "h": 36
+      },
+      "sourceSize": {
+        "w": 180,
+        "h": 36
+      }
+    }
+  },
+  "meta": {
+    "image": "ui.png",
+    "format": "RGBA8888",
+    "scale": "1"
+  }
+}

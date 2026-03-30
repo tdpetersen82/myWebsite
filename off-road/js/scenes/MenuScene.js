@@ -23,14 +23,29 @@ class MenuScene extends Phaser.Scene {
         this.bgCars = [];
         const carColors = [0xFF3333, 0x3388FF, 0x33CC33, 0xFFCC00, 0xAA33FF, 0xFF8833];
         for (let i = 0; i < 6; i++) {
-            const car = this.add.graphics();
-            car.fillStyle(carColors[i], 0.12);
-            car.fillRoundedRect(-18, -9, 36, 18, 4);
-            car.fillStyle(carColors[i], 0.06);
-            car.fillRoundedRect(-14, -6, 28, 12, 2);
-            car.setPosition(-80 + Math.random() * (w + 160), 280 + i * 65 + (Math.random() - 0.5) * 30);
-            car.setDepth(0);
-            this.bgCars.push({ gfx: car, speed: 0.8 + Math.random() * 1.5 });
+            const atlasKey = `vehicle_${i % 8}`;
+            const hasAtlas = this.textures.exists(atlasKey);
+            const xPos = -80 + Math.random() * (w + 160);
+            const yPos = 280 + i * 65 + (Math.random() - 0.5) * 30;
+            let gfx;
+
+            if (hasAtlas) {
+                // Use vehicle sprite from atlas - pick an angle frame based on direction
+                const frame = `normal_${(i * 4) % 24}`;
+                gfx = this.add.sprite(xPos, yPos, atlasKey, frame);
+                gfx.setAlpha(0.15);
+                gfx.setScale(0.6);
+            } else {
+                // Fallback to Graphics rectangles
+                gfx = this.add.graphics();
+                gfx.fillStyle(carColors[i], 0.12);
+                gfx.fillRoundedRect(-18, -9, 36, 18, 4);
+                gfx.fillStyle(carColors[i], 0.06);
+                gfx.fillRoundedRect(-14, -6, 28, 12, 2);
+                gfx.setPosition(xPos, yPos);
+            }
+            gfx.setDepth(0);
+            this.bgCars.push({ gfx: gfx, speed: 0.8 + Math.random() * 1.5, hasAtlas: hasAtlas, frameBase: (i * 4) % 24 });
         }
 
         // Title
@@ -44,7 +59,15 @@ class MenuScene extends Phaser.Scene {
             color: '#FF6600', stroke: '#000000', strokeThickness: 8,
         }).setOrigin(0.5);
 
-        // Glow under OFF ROAD text
+        // Pulsing glow behind title (animated in update())
+        this._titleGlow = this.add.graphics();
+        this._titleGlow.fillStyle(0xFF6600, 0.06);
+        this._titleGlow.fillCircle(w / 2, 140, 200);
+        this._titleGlow.fillStyle(0xFF8800, 0.04);
+        this._titleGlow.fillCircle(w / 2, 140, 280);
+        this._titleGlow.setDepth(-1);
+
+        // Static glow bar under OFF ROAD text
         const glow = this.add.graphics();
         glow.fillStyle(0xFF6600, 0.06);
         glow.fillRoundedRect(w / 2 - 280, 120, 560, 80, 20);
@@ -101,10 +124,22 @@ class MenuScene extends Phaser.Scene {
         this._domInputs = [];
     }
 
-    update() {
+    update(time) {
         for (const car of this.bgCars) {
             car.gfx.x += car.speed;
             if (car.gfx.x > CONFIG.WIDTH + 80) car.gfx.x = -80;
+            // Slowly rotate sprite frame to animate the vehicle as it scrolls
+            if (car.hasAtlas) {
+                const frameIndex = (car.frameBase + Math.floor(time / 400) % 4) % 24;
+                car.gfx.setFrame(`normal_${frameIndex}`);
+            }
+        }
+
+        // Pulse the title glow
+        if (this._titleGlow) {
+            const pulse = 0.8 + Math.sin(time / 800) * 0.2;
+            this._titleGlow.setScale(pulse, pulse * 0.7);
+            this._titleGlow.setAlpha(0.04 + Math.sin(time / 600) * 0.025);
         }
     }
 
@@ -136,10 +171,23 @@ class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
         container.add(label);
 
+        // Hover glow effect
+        const hoverGlow = this.add.graphics();
+        hoverGlow.fillStyle(lightColor, 0.15);
+        hoverGlow.fillRoundedRect(-bw / 2 - 4, -bh / 2 - 4, bw + 8, bh + 8, 14);
+        hoverGlow.setAlpha(0);
+        container.addAt(hoverGlow, 0); // behind shadow
+
         container.setSize(bw, bh);
         container.setInteractive({ useHandCursor: true });
-        container.on('pointerover', () => container.setScale(1.04));
-        container.on('pointerout', () => container.setScale(1));
+        container.on('pointerover', () => {
+            container.setScale(1.04);
+            hoverGlow.setAlpha(1);
+        });
+        container.on('pointerout', () => {
+            container.setScale(1);
+            hoverGlow.setAlpha(0);
+        });
         container.on('pointerdown', () => { window.gameAudio.buttonClick(); callback(); });
     }
 

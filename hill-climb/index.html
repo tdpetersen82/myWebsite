@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dirt Bike Hill Climb — Free Online Physics Racing | Arcade Game Hub</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        #game-container canvas {
+            border: 2px solid #333;
+            background-color: #87CEEB;
+            display: block;
+            margin: 0 auto;
+            border-radius: 10px;
+        }
+        #game-container {
+            margin: 10px auto;
+            max-width: 804px;
+            width: 100%;
+            aspect-ratio: 800 / 600;
+        }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <meta name="description" content="Play Dirt Bike Hill Climb free in your browser. Race a dirt bike over procedural hills, do flips and wheelies, collect coins and fuel. Physics-based side-scrolling action!">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Dirt Bike Hill Climb","description":"Physics-based dirt bike racing over procedural hills. Do flips, wheelies, and collect coins as you travel as far as possible!","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Arcade Game Hub"}}</script>
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+</head>
+<body>
+    <div class="container">
+        <h1>🏍️ Dirt Bike Hill Climb</h1>
+        <div class="game-info">
+            <p>Distance: <span id="distance">0m</span></p>
+            <p>Best: <span id="highScore">0m</span></p>
+        </div>
+        <div id="game-container"></div>
+        <div class="controls-info">
+            <p><strong>Controls:</strong> UP/W = Gas | LEFT/A = Lean Back | RIGHT/D = Lean Forward | DOWN/S = Brake | P = Pause | M = Mute</p>
+            <p><strong>Touch:</strong> Left side = Lean Back | Right side = Gas</p>
+            <p>Race your dirt bike over procedural hills! Do flips and wheelies for bonus points. Collect fuel to keep going and coins for extra score. How far can you go?</p>
+        </div>
+    </div>
+
+    <!-- Game scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/AudioManager.js"></script>
+    <script src="js/entities/Bike.js"></script>
+    <script src="js/entities/Terrain.js"></script>
+    <script src="js/entities/Pickup.js"></script>
+    <script src="js/entities/ParticleManager.js"></script>
+    <script src="js/scenes/BootScene.js"></script>
+    <script src="js/scenes/MenuScene.js"></script>
+    <script src="js/scenes/GameScene.js"></script>
+    <script src="js/scenes/GameOverScene.js"></script>
+
+    <script>
+    // Update high score display
+    const bestDist = localStorage.getItem(CONFIG.LS_HIGH_SCORE) || 0;
+    document.getElementById('highScore').textContent = Math.floor(bestDist) + 'm';
+
+    const game = new Phaser.Game({
+        type: Phaser.AUTO,
+        width: CONFIG.WIDTH,
+        height: CONFIG.HEIGHT,
+        parent: 'game-container',
+        backgroundColor: '#87CEEB',
+        scale: {
+            mode: Phaser.Scale.FIT,
+            autoCenter: Phaser.Scale.CENTER_BOTH,
+        },
+        physics: {
+            default: 'matter',
+            matter: {
+                gravity: { y: CONFIG.GRAVITY },
+                debug: false,
+                constraintIterations: 4,
+            }
+        },
+        scene: [BootScene, MenuScene, GameScene, GameOverScene],
+        input: {
+            keyboard: true,
+            mouse: true,
+            touch: true,
+        },
+        render: {
+            pixelArt: true,
+            roundPixels: true,
+        },
+        autoFocus: false,
+    });
+    </script>
+
+    <script src="../nav.js"></script>
+</body>
+</html>
