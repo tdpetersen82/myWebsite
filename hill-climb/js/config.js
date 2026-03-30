@@ -21,8 +21,8 @@ const CONFIG = {
     FRONT_AXLE_OFFSET_Y: 22,
 
     // Controls
-    GAS_TORQUE: 0.08,
-    MAX_WHEEL_ANGULAR_VEL: 0.45,
+    GAS_TORQUE: 0.12,
+    MAX_WHEEL_ANGULAR_VEL: 0.55,
     LEAN_FORCE: 0.008,
     BRAKE_FACTOR: 0.85,
     MAX_SPEED: 14,
@@ -41,10 +41,10 @@ const CONFIG = {
     TERRAIN_DEPTH: 100,
 
     // Terrain generation - sine wave octaves
-    TERRAIN_WAVE_1: { freq: 0.0015, amp: 120 },  // Large rolling hills
-    TERRAIN_WAVE_2: { freq: 0.006, amp: 50 },     // Medium bumps
-    TERRAIN_WAVE_3: { freq: 0.02, amp: 15 },      // Small ripples
-    TERRAIN_DIFFICULTY_RAMP: 0.00003,              // Amplitude increase per pixel
+    TERRAIN_WAVE_1: { freq: 0.0012, amp: 80 },   // Large rolling hills (gentler)
+    TERRAIN_WAVE_2: { freq: 0.005, amp: 30 },     // Medium bumps
+    TERRAIN_WAVE_3: { freq: 0.02, amp: 10 },      // Small ripples
+    TERRAIN_DIFFICULTY_RAMP: 0.00002,              // Amplitude increase per pixel (slower ramp)
 
     // Fuel
     FUEL_MAX: 100,

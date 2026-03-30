@@ -146,10 +146,19 @@ class Bike {
         const wheel = this.rearWheel;
         const currentAV = wheel.angularVelocity;
 
-        // Apply torque to rear wheel — this is how real vehicles work
+        // Apply torque to rear wheel
         if (currentAV < CONFIG.MAX_WHEEL_ANGULAR_VEL) {
             Matter.Body.setAngularVelocity(wheel, currentAV + CONFIG.GAS_TORQUE);
         }
+
+        // Also apply a body-relative forward force to help climb hills
+        // This simulates the chain drive pushing the whole bike forward
+        const angle = this.chassis.angle;
+        const forceMag = 0.006;
+        Matter.Body.applyForce(this.chassis, this.chassis.position, {
+            x: Math.cos(angle) * forceMag,
+            y: Math.sin(angle) * forceMag,
+        });
 
         // Speed limit on chassis
         const vel = this.chassis.velocity;
