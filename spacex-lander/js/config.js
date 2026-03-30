@@ -6,9 +6,9 @@ const CONFIG = {
     HEIGHT: 600,
 
     // Physics
-    GRAVITY: 40,                    // Earth gravity (px/sec^2) — tuned for snappy descent
-    ENTRY_THRUST_POWER: 120,        // Multi-engine entry burn
-    LANDING_THRUST_POWER: 130,      // Single-engine precision — strong enough for comfortable braking
+    GRAVITY: 50,                    // Earth gravity (px/sec^2) — heavier feel, realistic TWR
+    ENTRY_THRUST_POWER: 90,         // Multi-engine entry burn (TWR 1.8x)
+    LANDING_THRUST_POWER: 100,      // Single-engine precision (TWR 2.0x)
     GRID_FIN_ROTATION_RATE: 90,     // Degrees/sec at max effectiveness
     GRID_FIN_LATERAL_FORCE: 30,     // Lateral push from fins
     FIN_MAX_SPEED_REF: 120,         // Speed where fins are 100% effective — responsive at lower speeds
@@ -35,14 +35,14 @@ const CONFIG = {
     LEG_DEPLOY_ALTITUDE: 800,
 
     // Starting conditions
-    START_VY: 350,                  // Initial downward velocity — fast entry requiring active braking
+    START_VY: 320,                  // Initial downward velocity — reduced for lower thrust budget
     START_Y: -1100,                 // Compact altitude — less boring dead space
     ALTITUDE_SCALE: 8,              // Pixel-to-altitude unit scale
     STARTING_LIVES: 3,
     HANDOVER_COUNTDOWN: 3,          // Seconds of auto-descent before human control
 
     // Thrust
-    BASE_THRUST_RATIO: 0.22,        // Idle descent thrust as fraction of full thrust (slows but can't hover)
+    BASE_THRUST_RATIO: 0.28,        // Idle descent thrust as fraction of full thrust (0.56x gravity — heavier idle fall)
 
     // Sound barrier
     SOUND_BARRIER: {

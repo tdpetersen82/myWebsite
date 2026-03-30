@@ -810,7 +810,7 @@ class GameScene extends Phaser.Scene {
         // V-speed under altitude — always show speed guidance with safe threshold
         const totalSpeed = Math.sqrt(rocket.vx * rocket.vx + rocket.vy * rocket.vy);
         const displayVy = Math.abs(rocket.vy);
-        const safeVy = alt > 3000 ? 150 : alt > 2000 ? 80 : alt > 800 ? 50 : CONFIG.LAND_MAX_VY;
+        const safeVy = alt > 3000 ? 120 : alt > 2000 ? 70 : alt > 800 ? 45 : CONFIG.LAND_MAX_VY;
         const speedOk = displayVy <= safeVy;
         const dangerousSpeed = displayVy > safeVy * 1.5;
 
