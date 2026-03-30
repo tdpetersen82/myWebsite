@@ -6,14 +6,14 @@ const CONFIG = {
     HEIGHT: 600,
 
     // Physics
-    GRAVITY: 50,                    // Earth gravity (px/sec^2) — heavier feel, realistic TWR
-    ENTRY_THRUST_POWER: 90,         // Multi-engine entry burn (TWR 1.8x)
-    LANDING_THRUST_POWER: 100,      // Single-engine precision (TWR 2.0x)
-    GRID_FIN_ROTATION_RATE: 90,     // Degrees/sec at max effectiveness
-    GRID_FIN_LATERAL_FORCE: 30,     // Lateral push from fins
+    GRAVITY: 55,                    // Earth gravity (px/sec^2) — heavier feel, realistic TWR
+    ENTRY_THRUST_POWER: 90,         // Multi-engine entry burn (TWR 1.64x)
+    LANDING_THRUST_POWER: 100,      // Single-engine precision (TWR 1.82x)
+    GRID_FIN_ROTATION_RATE: 65,     // Degrees/sec at max effectiveness — slower, weightier rotation
+    GRID_FIN_LATERAL_FORCE: 22,     // Lateral push from fins
     FIN_MAX_SPEED_REF: 120,         // Speed where fins are 100% effective — responsive at lower speeds
-    THRUST_GIMBAL_RATE: 80,         // Rotation from thrust vectoring (deg/sec)
-    RCS_ROTATION_RATE: 45,          // Cold-gas RCS rotation (deg/sec) — fills gap at low speed w/o thrust
+    THRUST_GIMBAL_RATE: 60,         // Rotation from thrust vectoring (deg/sec)
+    RCS_ROTATION_RATE: 35,          // Cold-gas RCS rotation (deg/sec) — fills gap at low speed w/o thrust
     RCS_LATERAL_FORCE: 25,          // RCS lateral push (px/s^2) — stronger low-speed steering
     DRAG_COEFFICIENT: 0.002,        // Atmospheric drag — helps naturally slow descent
     MAX_VELOCITY: 400,
@@ -42,7 +42,7 @@ const CONFIG = {
     HANDOVER_COUNTDOWN: 3,          // Seconds of auto-descent before human control
 
     // Thrust
-    BASE_THRUST_RATIO: 0.28,        // Idle descent thrust as fraction of full thrust (0.56x gravity — heavier idle fall)
+    BASE_THRUST_RATIO: 0.30,        // Idle descent thrust as fraction of full thrust (0.55x gravity — heavier idle fall)
 
     // Sound barrier
     SOUND_BARRIER: {

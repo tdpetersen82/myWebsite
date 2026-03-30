@@ -171,18 +171,11 @@ class LaunchScene extends Phaser.Scene {
             align: 'right'
         }).setOrigin(1, 0).setDepth(10);
 
-        // T-minus countdown (longer, more dramatic)
+        // T-minus countdown (short and punchy)
         const sequence = [
-            { t: 0,    text: 'T-10', callout: 'FLIGHT COMPUTER ACTIVE', beep: false },
-            { t: 600,  text: 'T-9',  callout: '', beep: false },
-            { t: 1200, text: 'T-8',  callout: '', beep: false },
-            { t: 1800, text: 'T-7',  callout: 'FUEL PRESSURIZATION', beep: false },
-            { t: 2400, text: 'T-6',  callout: '', beep: false },
-            { t: 3000, text: 'T-5',  callout: '', beep: true },
-            { t: 3600, text: 'T-4',  callout: '', beep: true },
-            { t: 4200, text: 'T-3',  callout: 'STARTUP', beep: true },
-            { t: 4800, text: 'T-2',  callout: '', beep: true },
-            { t: 5400, text: 'T-1',  callout: 'MAIN ENGINE START', beep: true },
+            { t: 0,    text: 'T-3',  callout: 'STARTUP', beep: true },
+            { t: 800,  text: 'T-2',  callout: '', beep: true },
+            { t: 1600, text: 'T-1',  callout: 'MAIN ENGINE START', beep: true },
         ];
 
         sequence.forEach(s => {
@@ -192,7 +185,7 @@ class LaunchScene extends Phaser.Scene {
                 this.countdownText.setFontSize('64px');
                 this.countdownText.setColor('#ffffff');
                 if (s.callout) this._callout.setText(`> ${s.callout}`);
-                if (s.beep && this.audio) this.audio.playCountdownBeep(s.t >= 4200);
+                if (s.beep && this.audio) this.audio.playCountdownBeep(s.t >= 800);
 
                 this.tweens.add({
                     targets: this.countdownText,
@@ -204,7 +197,7 @@ class LaunchScene extends Phaser.Scene {
         });
 
         // LIFTOFF
-        this.time.delayedCall(6000, () => {
+        this.time.delayedCall(2400, () => {
             if (this._skipped) return;
             this.countdownText.setText('LIFTOFF');
             this.countdownText.setFontSize('42px');
