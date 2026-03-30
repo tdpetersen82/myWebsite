@@ -43,11 +43,7 @@ class GameScene extends Phaser.Scene {
         // Particles
         this.particleManager = new ParticleManager(this);
 
-        // Camera
-        this.cameras.main.startFollow(
-            { x: this.startX, y: surfaceY },
-            false, CONFIG.CAM_LERP, CONFIG.CAM_LERP
-        );
+        // Camera — manually controlled in update() via scrollX/scrollY
 
         // Input
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -66,26 +62,43 @@ class GameScene extends Phaser.Scene {
             this.muteText.setText(muted ? 'MUTED' : '');
         });
 
-        // Touch controls
-        this.touchLeft = false;
-        this.touchRight = false;
-        this.input.on('pointerdown', (pointer) => {
-            if (pointer.x < CONFIG.WIDTH / 2) this.touchLeft = true;
-            else this.touchRight = true;
-        });
-        this.input.on('pointerup', (pointer) => {
-            if (pointer.x < CONFIG.WIDTH / 2) this.touchLeft = false;
-            else this.touchRight = false;
-        });
-        this.input.on('pointermove', (pointer) => {
+        // Touch controls — 4 zones: TL=lean back, TR=lean forward, BL=brake, BR=gas
+        this.touchGas = false;
+        this.touchBrake = false;
+        this.touchLeanBack = false;
+        this.touchLeanForward = false;
+        this.touchLeft = false;   // backward compat
+        this.touchRight = false;  // backward compat
+
+        const updateTouch = (pointer) => {
             if (!pointer.isDown) {
+                this.touchGas = false;
+                this.touchBrake = false;
+                this.touchLeanBack = false;
+                this.touchLeanForward = false;
                 this.touchLeft = false;
                 this.touchRight = false;
                 return;
             }
-            this.touchLeft = pointer.x < CONFIG.WIDTH / 2;
-            this.touchRight = pointer.x >= CONFIG.WIDTH / 2;
+            const left = pointer.x < CONFIG.WIDTH / 2;
+            const top = pointer.y < CONFIG.HEIGHT / 2;
+            this.touchGas = !left && !top;       // bottom-right
+            this.touchBrake = left && !top;      // bottom-left
+            this.touchLeanBack = left && top;    // top-left
+            this.touchLeanForward = !left && top; // top-right
+            this.touchRight = this.touchGas;
+            this.touchLeft = this.touchLeanBack;
+        };
+        this.input.on('pointerdown', updateTouch);
+        this.input.on('pointerup', (pointer) => {
+            this.touchGas = false;
+            this.touchBrake = false;
+            this.touchLeanBack = false;
+            this.touchLeanForward = false;
+            this.touchLeft = false;
+            this.touchRight = false;
         });
+        this.input.on('pointermove', updateTouch);
 
         // HUD
         this.createHUD();
@@ -167,6 +180,12 @@ class GameScene extends Phaser.Scene {
             fontStyle: 'bold', stroke: '#000000', strokeThickness: 3
         }).setOrigin(0.5).setScrollFactor(0).setDepth(depth).setAlpha(0);
 
+        // Biome indicator
+        this.biomeText = this.add.text(CONFIG.WIDTH / 2, CONFIG.HEIGHT - 15, 'GRASSLAND', {
+            fontSize: '12px', fontFamily: 'Arial', color: '#88aa66',
+            fontStyle: 'bold', stroke: '#000000', strokeThickness: 2
+        }).setOrigin(0.5, 1).setScrollFactor(0).setDepth(depth);
+
         // Mute indicator
         this.muteText = this.add.text(CONFIG.WIDTH - 15, CONFIG.HEIGHT - 15, '', {
             fontSize: '12px', fontFamily: 'Arial', color: '#ff4444'
@@ -202,10 +221,10 @@ class GameScene extends Phaser.Scene {
         const dt = Math.min(delta, 33); // cap at ~30fps equivalent
 
         // Input
-        const gasPressed = this.cursors.up.isDown || this.keyW.isDown || this.touchRight;
-        const brakePressed = this.cursors.down.isDown || this.keyS.isDown;
-        const leanBackPressed = this.cursors.left.isDown || this.keyA.isDown || this.touchLeft;
-        const leanForwardPressed = this.cursors.right.isDown || this.keyD.isDown;
+        const gasPressed = this.cursors.up.isDown || this.keyW.isDown || this.touchGas;
+        const brakePressed = this.cursors.down.isDown || this.keyS.isDown || this.touchBrake;
+        const leanBackPressed = this.cursors.left.isDown || this.keyA.isDown || this.touchLeanBack;
+        const leanForwardPressed = this.cursors.right.isDown || this.keyD.isDown || this.touchLeanForward;
 
         // Apply controls
         if (gasPressed) {
@@ -259,11 +278,21 @@ class GameScene extends Phaser.Scene {
             layer.tilePositionY = this.cameras.main.scrollY * layer._parallaxSpeed * 0.3;
         });
 
-        // Biome transitions
+        // Biome transitions — crossfade
         const newBiome = this.terrain.getBiome(bikePos.x);
         if (newBiome !== this.currentBiome) {
+            const oldLayers = [...this.bgLayers];
             this.currentBiome = newBiome;
             this.createBackgrounds(newBiome);
+            // Fade out old layers
+            oldLayers.forEach(layer => {
+                this.tweens.add({
+                    targets: layer,
+                    alpha: 0,
+                    duration: 2000,
+                    onComplete: () => layer.destroy()
+                });
+            });
         }
 
         // Terrain
@@ -279,7 +308,6 @@ class GameScene extends Phaser.Scene {
                 this.showTrick('+FUEL', '#44ff44');
             } else if (type === 'coin') {
                 this.coins++;
-                this.score += CONFIG.COIN_VALUE;
                 this.audioManager.play('coin');
             }
         });
@@ -331,8 +359,13 @@ class GameScene extends Phaser.Scene {
         this.coinsText.setText(`Coins: ${this.coins}`);
 
         // Speed
-        const speed = Math.floor(this.bike.getSpeed() * 15);
+        const speed = Math.floor(this.bike.getSpeed() * 3.6);
         this.speedText.setText(`${speed} km/h`);
+
+        // Biome
+        if (this.biomeText) {
+            this.biomeText.setText(this.currentBiome.toUpperCase());
+        }
 
         // Fuel bar
         const fuelPct = this.fuel / CONFIG.FUEL_MAX;

@@ -13,7 +13,7 @@ class PickupManager {
         // Spawn fuel cans ahead
         while (this.lastFuelX < rightBound) {
             this.lastFuelX += CONFIG.FUEL_PICKUP_INTERVAL * (0.7 + Math.random() * 0.6);
-            if (this.lastFuelX < 300) continue; // no pickups at start
+            if (this.lastFuelX < 900) continue; // no pickups at start — past the flat area
             const surfaceY = terrain.getSurfaceY(this.lastFuelX);
             this.spawnPickup(this.lastFuelX, surfaceY - 30, 'fuel');
         }
@@ -21,7 +21,7 @@ class PickupManager {
         // Spawn coins ahead
         while (this.lastCoinX < rightBound) {
             this.lastCoinX += CONFIG.COIN_INTERVAL * (0.5 + Math.random() * 1.0);
-            if (this.lastCoinX < 200) continue;
+            if (this.lastCoinX < 600) continue; // past the flat area
             const surfaceY = terrain.getSurfaceY(this.lastCoinX);
             // Some coins on ground, some in air
             const airOffset = Math.random() > 0.5 ? 30 + Math.random() * 60 : 0;

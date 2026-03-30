@@ -21,10 +21,16 @@ const CONFIG = {
     FRONT_AXLE_OFFSET_Y: 22,
 
     // Controls
-    GAS_TORQUE: 0.15,
-    MAX_WHEEL_ANGULAR_VEL: 0.35,
+    GAS_TORQUE: 0.08,
+    MAX_WHEEL_ANGULAR_VEL: 0.45,
     LEAN_FORCE: 0.008,
-    BRAKE_FACTOR: 0.92,
+    BRAKE_FACTOR: 0.85,
+    MAX_SPEED: 14,
+
+    // Suspension
+    SUSPENSION_STIFFNESS: 0.15,
+    SUSPENSION_DAMPING: 0.05,
+    SUSPENSION_LENGTH: 5,
 
     // Terrain
     TERRAIN_SEGMENT_WIDTH: 40,
@@ -32,7 +38,7 @@ const CONFIG = {
     TERRAIN_AHEAD: 4000,
     TERRAIN_BEHIND: 2000,
     TERRAIN_BASE_Y: 400,
-    TERRAIN_DEPTH: 600,
+    TERRAIN_DEPTH: 100,
 
     // Terrain generation - sine wave octaves
     TERRAIN_WAVE_1: { freq: 0.0015, amp: 120 },  // Large rolling hills
@@ -63,12 +69,12 @@ const CONFIG = {
     BIOMES: ['grassland', 'desert', 'arctic', 'volcanic'],
 
     // Camera
-    CAM_OFFSET_X: -120,
-    CAM_OFFSET_Y: -80,
+    CAM_OFFSET_X: -200,
+    CAM_OFFSET_Y: -150,
     CAM_LERP: 0.08,
 
     // Crash detection
-    CRASH_ANGLE_THRESHOLD: 2.8, // radians from upright before instant crash
+    CRASH_ANGLE_THRESHOLD: 1.6, // radians (~90 degrees) from upright before instant crash
 
     // LocalStorage key
     LS_HIGH_SCORE: 'hillClimbBestDistance',

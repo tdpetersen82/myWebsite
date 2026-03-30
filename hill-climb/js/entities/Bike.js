@@ -12,31 +12,86 @@ class Bike {
         this.rearGrounded = false;
         this.frontGrounded = false;
         this.leanState = 0;
-        this.wheelRotation = 0;
         this.groundedCount = 0;
 
-        this.createBody(x, y);
+        const Matter = Phaser.Physics.Matter.Matter;
+
+        this.createBodies(x, y, Matter);
         this.createSprites();
         this.setupCollisions();
     }
 
-    createBody(x, y) {
+    createBodies(x, y, Matter) {
         const C = CONFIG;
+        const collisionFilter = { category: 0x0002, mask: 0x0001 };
 
-        // Use Phaser's matter.add to create a simple game object with physics
-        // Single body approach - chassis rectangle is the main physics body
-        this.gameObj = this.scene.matter.add.rectangle(x, y, C.CHASSIS_WIDTH, C.CHASSIS_HEIGHT + C.WHEEL_RADIUS * 2, {
-            label: 'bike',
-            chamfer: { radius: C.WHEEL_RADIUS },
+        // Chassis — the main body
+        this.chassis = Matter.Bodies.rectangle(x, y, C.CHASSIS_WIDTH, C.CHASSIS_HEIGHT, {
+            label: 'bike_chassis',
             mass: C.CHASSIS_MASS,
-            friction: 0.6,        // Moderate - need grip for hills
-            frictionStatic: 0.3,
-            frictionAir: 0.015,   // Air drag limits top speed
-            restitution: 0.15,
-            collisionFilter: { category: 0x0002, mask: 0x0001 },
+            friction: 0.3,
+            frictionAir: 0.02,
+            restitution: 0.1,
+            collisionFilter: collisionFilter,
         });
-        // Moderate inertia for stability
-        Phaser.Physics.Matter.Matter.Body.setInertia(this.gameObj, this.gameObj.inertia * 1.5);
+
+        // Rear wheel — driven wheel
+        const rearX = x + C.REAR_AXLE_OFFSET_X;
+        const rearY = y + C.REAR_AXLE_OFFSET_Y;
+        this.rearWheel = Matter.Bodies.circle(rearX, rearY, C.WHEEL_RADIUS, {
+            label: 'bike_rear_wheel',
+            mass: C.WHEEL_MASS,
+            friction: 0.95,
+            frictionStatic: 0.8,
+            frictionAir: 0.005,
+            restitution: 0.1,
+            collisionFilter: collisionFilter,
+        });
+
+        // Front wheel
+        const frontX = x + C.FRONT_AXLE_OFFSET_X;
+        const frontY = y + C.FRONT_AXLE_OFFSET_Y;
+        this.frontWheel = Matter.Bodies.circle(frontX, frontY, C.WHEEL_RADIUS, {
+            label: 'bike_front_wheel',
+            mass: C.WHEEL_MASS,
+            friction: 0.8,
+            frictionStatic: 0.6,
+            frictionAir: 0.005,
+            restitution: 0.15,
+            collisionFilter: collisionFilter,
+        });
+
+        // Suspension constraints — connect chassis to wheels
+        this.rearAxle = Matter.Constraint.create({
+            bodyA: this.chassis,
+            pointA: { x: C.REAR_AXLE_OFFSET_X, y: C.REAR_AXLE_OFFSET_Y },
+            bodyB: this.rearWheel,
+            pointB: { x: 0, y: 0 },
+            length: C.SUSPENSION_LENGTH,
+            stiffness: C.SUSPENSION_STIFFNESS,
+            damping: C.SUSPENSION_DAMPING,
+        });
+
+        this.frontAxle = Matter.Constraint.create({
+            bodyA: this.chassis,
+            pointA: { x: C.FRONT_AXLE_OFFSET_X, y: C.FRONT_AXLE_OFFSET_Y },
+            bodyB: this.frontWheel,
+            pointB: { x: 0, y: 0 },
+            length: C.SUSPENSION_LENGTH,
+            stiffness: C.SUSPENSION_STIFFNESS,
+            damping: C.SUSPENSION_DAMPING,
+        });
+
+        // Add everything to the world
+        const world = this.scene.matter.world;
+        world.add(this.chassis);
+        world.add(this.rearWheel);
+        world.add(this.frontWheel);
+        world.add(this.rearAxle);
+        world.add(this.frontAxle);
+
+        // Alias for backward compat with GameScene position reads
+        this.gameObj = this.chassis;
     }
 
     createSprites() {
@@ -68,8 +123,9 @@ class Bike {
     }
 
     isBikePair(pair) {
-        return pair.bodyA === this.gameObj || pair.bodyB === this.gameObj ||
-               pair.bodyA.parent === this.gameObj || pair.bodyB.parent === this.gameObj;
+        const bodies = [this.chassis, this.rearWheel, this.frontWheel];
+        return bodies.includes(pair.bodyA) || bodies.includes(pair.bodyB) ||
+               bodies.includes(pair.bodyA.parent) || bodies.includes(pair.bodyB.parent);
     }
 
     isTerrainPair(pair) {
@@ -86,38 +142,48 @@ class Bike {
 
     applyGas(delta) {
         if (this.crashed) return;
-        // Strong horizontal force to overcome friction on hills
-        // Apply at bottom of body to simulate wheel drive (creates slight forward torque)
-        const body = this.gameObj;
-        const forceMag = 1.5;
-        const drivePoint = {
-            x: body.position.x - Math.sin(body.angle) * 10,
-            y: body.position.y + Math.cos(body.angle) * 10,
-        };
-        Phaser.Physics.Matter.Matter.Body.applyForce(body, drivePoint, {
-            x: forceMag,
-            y: 0,
-        });
+        const Matter = Phaser.Physics.Matter.Matter;
+        const wheel = this.rearWheel;
+        const currentAV = wheel.angularVelocity;
+
+        // Apply torque to rear wheel — this is how real vehicles work
+        if (currentAV < CONFIG.MAX_WHEEL_ANGULAR_VEL) {
+            Matter.Body.setAngularVelocity(wheel, currentAV + CONFIG.GAS_TORQUE);
+        }
+
+        // Speed limit on chassis
+        const vel = this.chassis.velocity;
+        const speed = Math.sqrt(vel.x * vel.x + vel.y * vel.y);
+        if (speed > CONFIG.MAX_SPEED) {
+            const scale = CONFIG.MAX_SPEED / speed;
+            Matter.Body.setVelocity(this.chassis, { x: vel.x * scale, y: vel.y * scale });
+        }
     }
 
     applyBrake() {
         if (this.crashed) return;
-        const vel = this.gameObj.velocity;
-        Phaser.Physics.Matter.Matter.Body.setVelocity(this.gameObj, {
-            x: vel.x * CONFIG.BRAKE_FACTOR,
-            y: vel.y,
-        });
+        const Matter = Phaser.Physics.Matter.Matter;
+
+        // Slow wheel rotation
+        Matter.Body.setAngularVelocity(this.rearWheel, this.rearWheel.angularVelocity * CONFIG.BRAKE_FACTOR);
+        Matter.Body.setAngularVelocity(this.frontWheel, this.frontWheel.angularVelocity * CONFIG.BRAKE_FACTOR);
+
+        // Slow chassis
+        const vel = this.chassis.velocity;
+        Matter.Body.setVelocity(this.chassis, { x: vel.x * 0.95, y: vel.y });
     }
 
     applyLean(direction) {
         if (this.crashed) return;
-        this.gameObj.torque = direction * CONFIG.LEAN_FORCE * 3;
+        const Matter = Phaser.Physics.Matter.Matter;
+        Matter.Body.setAngularVelocity(this.chassis,
+            this.chassis.angularVelocity + direction * CONFIG.LEAN_FORCE * 3);
         this.leanState = direction;
     }
 
     update(delta) {
         if (this.crashed) return;
-        if (!this.gameObj || Number.isNaN(this.gameObj.position.x)) return;
+        if (!this.chassis || Number.isNaN(this.chassis.position.x)) return;
 
         const wasAirborne = this.airborne;
         this.airborne = this.groundedCount === 0;
@@ -136,7 +202,7 @@ class Bike {
         }
 
         // Track rotation for flips
-        const currentAngle = this.gameObj.angle;
+        const currentAngle = this.chassis.angle;
         let angleDelta = currentAngle - this.lastAngle;
         if (angleDelta > Math.PI) angleDelta -= Math.PI * 2;
         if (angleDelta < -Math.PI) angleDelta += Math.PI * 2;
@@ -153,7 +219,7 @@ class Bike {
         }
         this.lastAngle = currentAngle;
 
-        // Wheelie detection (simplified - based on angle while grounded)
+        // Wheelie detection
         const normAngle = ((currentAngle % (Math.PI * 2)) + Math.PI * 2) % (Math.PI * 2);
         this.isWheelie = !this.airborne && (normAngle > 0.3 && normAngle < 1.0);
         if (this.isWheelie) {
@@ -171,16 +237,16 @@ class Bike {
             this.crash();
         }
 
-        // Gentle self-righting when grounded and no lean input
+        // Gentle angular damping when grounded and no lean input
         if (!this.scene.cursors) return;
         const noLeanInput = !this.scene.cursors.left.isDown && !this.scene.cursors.right.isDown &&
             !this.scene.keyA.isDown && !this.scene.keyD.isDown;
         if (noLeanInput) {
             this.leanState = 0;
-            // Subtle angular damping when on ground to prevent spin-outs
             if (!this.airborne) {
-                const av = this.gameObj.angularVelocity;
-                Phaser.Physics.Matter.Matter.Body.setAngularVelocity(this.gameObj, av * 0.92);
+                const Matter = Phaser.Physics.Matter.Matter;
+                const av = this.chassis.angularVelocity;
+                Matter.Body.setAngularVelocity(this.chassis, av * 0.92);
             }
         }
 
@@ -188,54 +254,45 @@ class Bike {
     }
 
     updateSprites() {
-        const pos = this.gameObj.position;
-        const angle = this.gameObj.angle;
+        const chassisPos = this.chassis.position;
+        const chassisAngle = this.chassis.angle;
 
-        // Bike body
-        this.bikeSprite.setPosition(pos.x, pos.y - 12);
-        this.bikeSprite.setRotation(angle);
+        // Bike body — offset up from chassis center
+        this.bikeSprite.setPosition(chassisPos.x, chassisPos.y - 14);
+        this.bikeSprite.setRotation(chassisAngle);
 
         if (this.leanState < 0) this.bikeSprite.setFrame('bike_lean_back');
         else if (this.leanState > 0) this.bikeSprite.setFrame('bike_lean_forward');
         else this.bikeSprite.setFrame('bike_neutral');
 
-        // Wheel positions (visual only - offset from body center)
-        const C = CONFIG;
-        const cos = Math.cos(angle);
-        const sin = Math.sin(angle);
-        const rearX = pos.x + C.REAR_AXLE_OFFSET_X * cos - (C.REAR_AXLE_OFFSET_Y + 5) * sin;
-        const rearY = pos.y + C.REAR_AXLE_OFFSET_X * sin + (C.REAR_AXLE_OFFSET_Y + 5) * cos;
-        this.rearWheelSprite.setPosition(rearX, rearY);
+        // Wheels — use actual physics body positions
+        this.rearWheelSprite.setPosition(this.rearWheel.position.x, this.rearWheel.position.y);
+        this.rearWheelSprite.setRotation(this.rearWheel.angle);
 
-        const frontX = pos.x + C.FRONT_AXLE_OFFSET_X * cos - (C.FRONT_AXLE_OFFSET_Y + 5) * sin;
-        const frontY = pos.y + C.FRONT_AXLE_OFFSET_X * sin + (C.FRONT_AXLE_OFFSET_Y + 5) * cos;
-        this.frontWheelSprite.setPosition(frontX, frontY);
-
-        // Wheel frame rotation
-        const speed = Math.abs(this.gameObj.velocity.x);
-        this.wheelRotation += speed * 0.15;
-        const frame = Math.floor(this.wheelRotation % 4);
-        this.rearWheelSprite.setFrame(`wheel_${frame}`);
-        this.frontWheelSprite.setFrame(`wheel_${frame}`);
-        this.rearWheelSprite.setRotation(angle + this.wheelRotation);
-        this.frontWheelSprite.setRotation(angle + this.wheelRotation);
+        this.frontWheelSprite.setPosition(this.frontWheel.position.x, this.frontWheel.position.y);
+        this.frontWheelSprite.setRotation(this.frontWheel.angle);
     }
 
     getPosition() {
-        return this.gameObj.position;
+        return this.chassis.position;
     }
 
     getVelocity() {
-        return this.gameObj.velocity;
+        return this.chassis.velocity;
     }
 
     getSpeed() {
-        const v = this.gameObj.velocity;
+        const v = this.chassis.velocity;
         return Math.sqrt(v.x * v.x + v.y * v.y);
     }
 
     destroy() {
-        this.scene.matter.world.remove(this.gameObj);
+        const world = this.scene.matter.world;
+        world.remove(this.rearAxle);
+        world.remove(this.frontAxle);
+        world.remove(this.chassis);
+        world.remove(this.rearWheel);
+        world.remove(this.frontWheel);
         this.bikeSprite.destroy();
         this.rearWheelSprite.destroy();
         this.frontWheelSprite.destroy();

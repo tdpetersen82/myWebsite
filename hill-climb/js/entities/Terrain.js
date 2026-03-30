@@ -24,10 +24,14 @@ class Terrain {
         height += Math.sin(worldX * w2.freq + 1.5) * w2.amp * ramp;
         height += Math.sin(worldX * w3.freq + 3.0) * w3.amp * Math.min(ramp, 3);
 
-        // Flatten the start area
-        if (worldX < 200) {
-            const t = worldX / 200;
-            height = CONFIG.TERRAIN_BASE_Y * (1 - t) + height * t;
+        // Flatten the start area — generous flat runway then smooth blend
+        if (worldX < 400) {
+            return CONFIG.TERRAIN_BASE_Y;
+        }
+        if (worldX < 800) {
+            const t = (worldX - 400) / 400;
+            const eased = t * t * (3 - 2 * t); // smoothstep
+            height = CONFIG.TERRAIN_BASE_Y * (1 - eased) + height * eased;
         }
 
         return height;
@@ -139,53 +143,70 @@ class Terrain {
         const leftBound = cam.scrollX - 50;
         const rightBound = cam.scrollX + CONFIG.WIDTH + 50;
 
-        // Draw filled terrain segments
         const visibleSegs = this.segments.filter(
             s => s.x2 >= leftBound && s.x <= rightBound
         );
 
         if (visibleSegs.length === 0) return;
 
-        // Determine biome at each segment for color blending
+        // Group segments by biome for batched drawing
+        const biomeGroups = {};
         for (const seg of visibleSegs) {
             const biome = this.getBiome(seg.x);
-            const colors = this.getBiomeColors(biome);
+            if (!biomeGroups[biome]) biomeGroups[biome] = [];
+            biomeGroups[biome].push(seg);
+        }
 
-            // Terrain fill polygon
+        // Draw each biome group as batched paths
+        for (const biome in biomeGroups) {
+            const segs = biomeGroups[biome];
+            const colors = this.getBiomeColors(biome);
+            const bottomY = cam.scrollY + CONFIG.HEIGHT + 200;
+
+            // Top layer — single batched path
             this.graphics.fillStyle(colors.top, 1);
             this.graphics.beginPath();
-            this.graphics.moveTo(seg.x, seg.y);
-            this.graphics.lineTo(seg.x2, seg.y2);
-            this.graphics.lineTo(seg.x2, seg.y2 + 800);
-            this.graphics.lineTo(seg.x, seg.y + 800);
+            this.graphics.moveTo(segs[0].x, segs[0].y);
+            for (const seg of segs) {
+                this.graphics.lineTo(seg.x2, seg.y2);
+            }
+            const last = segs[segs.length - 1];
+            this.graphics.lineTo(last.x2, bottomY);
+            this.graphics.lineTo(segs[0].x, bottomY);
             this.graphics.closePath();
             this.graphics.fill();
 
-            // Darker lower layer
+            // Mid layer
             this.graphics.fillStyle(colors.mid, 1);
             this.graphics.beginPath();
-            this.graphics.moveTo(seg.x, seg.y + 30);
-            this.graphics.lineTo(seg.x2, seg.y2 + 30);
-            this.graphics.lineTo(seg.x2, seg.y2 + 800);
-            this.graphics.lineTo(seg.x, seg.y + 800);
+            this.graphics.moveTo(segs[0].x, segs[0].y + 30);
+            for (const seg of segs) {
+                this.graphics.lineTo(seg.x2, seg.y2 + 30);
+            }
+            this.graphics.lineTo(last.x2, bottomY);
+            this.graphics.lineTo(segs[0].x, bottomY);
             this.graphics.closePath();
             this.graphics.fill();
 
-            // Even darker bottom
+            // Bottom layer
             this.graphics.fillStyle(colors.bottom, 1);
             this.graphics.beginPath();
-            this.graphics.moveTo(seg.x, seg.y + 80);
-            this.graphics.lineTo(seg.x2, seg.y2 + 80);
-            this.graphics.lineTo(seg.x2, seg.y2 + 800);
-            this.graphics.lineTo(seg.x, seg.y + 800);
+            this.graphics.moveTo(segs[0].x, segs[0].y + 80);
+            for (const seg of segs) {
+                this.graphics.lineTo(seg.x2, seg.y2 + 80);
+            }
+            this.graphics.lineTo(last.x2, bottomY);
+            this.graphics.lineTo(segs[0].x, bottomY);
             this.graphics.closePath();
             this.graphics.fill();
 
-            // Surface highlight line
+            // Surface highlight — single batched stroke
             this.graphics.lineStyle(3, colors.surface, 1);
             this.graphics.beginPath();
-            this.graphics.moveTo(seg.x, seg.y);
-            this.graphics.lineTo(seg.x2, seg.y2);
+            this.graphics.moveTo(segs[0].x, segs[0].y);
+            for (const seg of segs) {
+                this.graphics.lineTo(seg.x2, seg.y2);
+            }
             this.graphics.stroke();
         }
     }

@@ -1,447 +1,744 @@
 /**
- * Generate dirt bike sprites: chassis with rider, wheels, crash frame.
- * Larger, cleaner sprites with proper proportions.
+ * Generate dirt bike sprite sheet from hand-crafted SVG rendered to canvas.
+ * Creates a realistic-looking dirt bike with rider at game scale.
  */
 
-const { createCanvas, saveAtlas, hexToCSS, darken, lighten } = require('./atlas-utils');
+const { createCanvas, saveAtlas } = require('./atlas-utils');
 
-const SHEET_W = 512;
-const SHEET_H = 512;
+const SHEET_W = 560;
+const SHEET_H = 360;
 
-// Palette
-const FRAME_RED = 0xCC2222;
-const FRAME_RED_HI = 0xFF5544;
-const FRAME_RED_DK = 0x881111;
-const TANK_RED = 0xDD3333;
-const METAL = 0x999999;
-const METAL_DK = 0x666666;
-const METAL_VDK = 0x444444;
-const TIRE = 0x2A2A2A;
-const TIRE_HI = 0x3A3A3A;
-const RIM = 0x888888;
-const RIM_HI = 0xBBBBBB;
-const SPOKE = 0xAAAAAA;
-const HUB = 0x777777;
-const SEAT = 0x1A1A1A;
-const RIDER_JERSEY = 0x2266DD;
-const RIDER_JERSEY_HI = 0x4488FF;
-const RIDER_PANTS = 0x2A3344;
-const RIDER_BOOT = 0x1A1A1A;
-const RIDER_SKIN = 0xDDAA77;
-const HELMET = 0xDD3333;
-const HELMET_HI = 0xFF6655;
-const VISOR = 0x44CCFF;
-const VISOR_HI = 0xAAEEFF;
-const GLOVE = 0x1A1A1A;
-const EXHAUST = 0x777777;
-const EXHAUST_DK = 0x555555;
+// Render SVG string to canvas at specified position and size
+function renderSVG(ctx, svgString, x, y, w, h) {
+    // We'll use the canvas 2D API to trace the SVG paths manually
+    // This gives us pixel-perfect control
+}
 
 function drawWheel(ctx, cx, cy, r) {
-    // Outer tire
+    // Thick outer tire with tread
+    ctx.save();
+
+    // Tire body
+    ctx.fillStyle = '#1a1a1a';
     ctx.beginPath();
     ctx.arc(cx, cy, r, 0, Math.PI * 2);
-    ctx.fillStyle = hexToCSS(TIRE);
     ctx.fill();
 
-    // Tread pattern - knobby dirt bike tire
-    ctx.strokeStyle = hexToCSS(TIRE_HI);
-    ctx.lineWidth = 2;
-    for (let i = 0; i < 16; i++) {
-        const a = (i / 16) * Math.PI * 2;
-        const inner = r - 4;
-        const outer = r - 1;
+    // Tread pattern - alternating knobs
+    for (let i = 0; i < 20; i++) {
+        const a = (i / 20) * Math.PI * 2;
+        const kx = cx + Math.cos(a) * (r - 1.5);
+        const ky = cy + Math.sin(a) * (r - 1.5);
+        ctx.fillStyle = i % 2 === 0 ? '#2d2d2d' : '#1a1a1a';
         ctx.beginPath();
-        ctx.moveTo(cx + Math.cos(a) * inner, cy + Math.sin(a) * inner);
-        ctx.lineTo(cx + Math.cos(a + 0.08) * outer, cy + Math.sin(a + 0.08) * outer);
-        ctx.stroke();
+        ctx.arc(kx, ky, 2.5, 0, Math.PI * 2);
+        ctx.fill();
     }
 
-    // Rim
+    // Sidewall
+    ctx.strokeStyle = '#2a2a2a';
+    ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.arc(cx, cy, r * 0.58, 0, Math.PI * 2);
-    ctx.fillStyle = hexToCSS(METAL_DK);
-    ctx.fill();
+    ctx.arc(cx, cy, r - 4, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Rim outer
+    ctx.fillStyle = '#4a4a4a';
     ctx.beginPath();
-    ctx.arc(cx, cy, r * 0.52, 0, Math.PI * 2);
-    ctx.fillStyle = hexToCSS(RIM);
+    ctx.arc(cx, cy, r * 0.5, 0, Math.PI * 2);
     ctx.fill();
 
-    // Spokes
-    ctx.strokeStyle = hexToCSS(SPOKE);
-    ctx.lineWidth = 1.2;
-    for (let i = 0; i < 8; i++) {
-        const a = (i / 8) * Math.PI * 2;
+    // Rim inner (shiny)
+    ctx.fillStyle = '#999';
+    ctx.beginPath();
+    ctx.arc(cx, cy, r * 0.43, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Spokes - cross-laced pattern
+    ctx.strokeStyle = '#bbb';
+    ctx.lineWidth = 0.6;
+    for (let i = 0; i < 18; i++) {
+        const a = (i / 18) * Math.PI * 2;
+        const offset = (i % 2 === 0) ? 0.18 : -0.18;
         ctx.beginPath();
-        ctx.moveTo(cx + Math.cos(a) * 5, cy + Math.sin(a) * 5);
-        ctx.lineTo(cx + Math.cos(a) * (r * 0.5), cy + Math.sin(a) * (r * 0.5));
+        ctx.moveTo(cx + Math.cos(a) * 3, cy + Math.sin(a) * 3);
+        ctx.lineTo(cx + Math.cos(a + offset) * (r * 0.42), cy + Math.sin(a + offset) * (r * 0.42));
         ctx.stroke();
     }
 
     // Hub
+    ctx.fillStyle = '#666';
     ctx.beginPath();
-    ctx.arc(cx, cy, 5, 0, Math.PI * 2);
-    ctx.fillStyle = hexToCSS(HUB);
+    ctx.arc(cx, cy, 3.5, 0, Math.PI * 2);
     ctx.fill();
+    ctx.fillStyle = '#aaa';
     ctx.beginPath();
-    ctx.arc(cx, cy, 2.5, 0, Math.PI * 2);
-    ctx.fillStyle = hexToCSS(RIM_HI);
+    ctx.arc(cx, cy, 1.8, 0, Math.PI * 2);
     ctx.fill();
+
+    ctx.restore();
 }
 
-function drawBikeWithRider(ctx, ox, oy, lean) {
-    // lean: -1=back, 0=neutral, 1=forward
-    // Bike frame center reference point
-    const bx = ox;
-    const by = oy;
-
-    // --- REAR SUSPENSION / SWINGARM ---
-    ctx.strokeStyle = hexToCSS(METAL_DK);
-    ctx.lineWidth = 4;
+function drawDirtBike(ctx, ox, oy, lean) {
+    ctx.save();
+    ctx.translate(ox, oy);
     ctx.lineCap = 'round';
+    ctx.lineJoin = 'round';
+
+    const L = lean;
+
+    // ============ REAR SECTION ============
+
+    // Chain
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 1.5;
     ctx.beginPath();
-    ctx.moveTo(bx - 5, by + 8);
-    ctx.lineTo(bx - 32, by + 18);
+    ctx.moveTo(-6, 14);
+    ctx.lineTo(-30, 24);
+    ctx.stroke();
+
+    // Swingarm
+    ctx.strokeStyle = '#666';
+    ctx.lineWidth = 4.5;
+    ctx.beginPath();
+    ctx.moveTo(-4, 12);
+    ctx.lineTo(-32, 24);
+    ctx.stroke();
+    // Swingarm highlight
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(-4, 11);
+    ctx.lineTo(-30, 22.5);
     ctx.stroke();
 
     // Rear shock
-    ctx.strokeStyle = hexToCSS(METAL);
+    ctx.strokeStyle = '#999';
     ctx.lineWidth = 2.5;
     ctx.beginPath();
-    ctx.moveTo(bx - 10, by - 5);
-    ctx.lineTo(bx - 22, by + 14);
+    ctx.moveTo(-10, -2);
+    ctx.lineTo(-22, 16);
     ctx.stroke();
-    // Shock spring coils
-    ctx.strokeStyle = hexToCSS(0xCCCC44);
-    ctx.lineWidth = 1.5;
-    for (let i = 0; i < 4; i++) {
-        const t = 0.2 + i * 0.2;
-        const sx = bx - 10 + (-22 - -10) * t * 0.6;
-        const sy = by - 5 + (14 - -5) * t * 0.5;
+    // Spring
+    ctx.strokeStyle = '#ddcc00';
+    ctx.lineWidth = 1.8;
+    const springSegs = 6;
+    for (let i = 0; i < springSegs; i++) {
+        const t1 = (i + 0.15) / springSegs;
+        const t2 = (i + 0.85) / springSegs;
+        const x1 = -10 + (-22 + 10) * t1;
+        const y1 = -2 + (16 + 2) * t1;
+        const x2 = -10 + (-22 + 10) * t2;
+        const y2 = -2 + (16 + 2) * t2;
+        const offset = (i % 2 === 0) ? 3 : -3;
         ctx.beginPath();
-        ctx.moveTo(sx - 3, sy);
-        ctx.lineTo(sx + 3, sy + 2);
+        ctx.moveTo(x1 + offset, y1);
+        ctx.lineTo(x2 - offset, y2);
         ctx.stroke();
     }
 
-    // --- FRONT FORK ---
-    // Fork legs (double tube)
-    ctx.strokeStyle = hexToCSS(METAL);
-    ctx.lineWidth = 3.5;
+    // ============ FRONT FORK ============
+
+    // Outer fork tubes (upside-down fork)
+    ctx.strokeStyle = '#888';
+    ctx.lineWidth = 4;
     ctx.beginPath();
-    ctx.moveTo(bx + 34, by - 8);
-    ctx.lineTo(bx + 38, by + 18);
+    ctx.moveTo(30, -4);
+    ctx.lineTo(36, 24);
     ctx.stroke();
-    // Inner fork tube (chrome)
-    ctx.strokeStyle = hexToCSS(RIM_HI);
+    // Inner tubes (chrome, telescoping)
+    ctx.strokeStyle = '#ddd';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.moveTo(29, -8);
+    ctx.lineTo(31, 6);
+    ctx.stroke();
+    // Fork brace
+    ctx.strokeStyle = '#777';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(bx + 33, by - 12);
-    ctx.lineTo(bx + 35, by + 2);
+    ctx.moveTo(34, 14);
+    ctx.lineTo(38, 14);
     ctx.stroke();
 
-    // --- MAIN FRAME ---
-    ctx.strokeStyle = hexToCSS(FRAME_RED);
-    ctx.lineWidth = 5;
-    ctx.lineJoin = 'round';
+    // ============ FRAME ============
 
-    // Down tube
+    // Main cradle frame (thicker, more visible)
+    ctx.strokeStyle = '#cc2020';
+    ctx.lineWidth = 5;
+    // Head tube to bottom bracket
     ctx.beginPath();
-    ctx.moveTo(bx + 32, by - 10);
-    ctx.lineTo(bx + 5, by + 10);
+    ctx.moveTo(28, -6);
+    ctx.lineTo(4, 14);
     ctx.stroke();
     // Top tube
     ctx.beginPath();
-    ctx.moveTo(bx - 8, by - 15);
-    ctx.lineTo(bx + 32, by - 12);
+    ctx.moveTo(-10, -12);
+    ctx.lineTo(28, -8);
     ctx.stroke();
     // Seat tube
     ctx.beginPath();
-    ctx.moveTo(bx + 5, by + 10);
-    ctx.lineTo(bx - 8, by - 15);
+    ctx.moveTo(4, 14);
+    ctx.lineTo(-10, -12);
+    ctx.stroke();
+    // Subframe
+    ctx.strokeStyle = '#aa1818';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(-10, -12);
+    ctx.lineTo(-24, -6);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(-6, 10);
+    ctx.lineTo(-22, -4);
     ctx.stroke();
 
     // Frame highlight
-    ctx.strokeStyle = hexToCSS(FRAME_RED_HI);
-    ctx.lineWidth = 1.5;
+    ctx.strokeStyle = '#ee4040';
+    ctx.lineWidth = 1.2;
     ctx.beginPath();
-    ctx.moveTo(bx + 30, by - 11);
-    ctx.lineTo(bx + 7, by + 7);
+    ctx.moveTo(-8, -12);
+    ctx.lineTo(26, -8);
     ctx.stroke();
 
-    // --- ENGINE ---
-    // Engine block
-    ctx.fillStyle = hexToCSS(METAL_VDK);
-    const ex = bx + 2, ey = by + 1;
+    // ============ ENGINE ============
+
+    // Engine cases
+    ctx.fillStyle = '#2a2a2a';
     ctx.beginPath();
-    ctx.moveTo(ex, ey);
-    ctx.lineTo(ex + 22, ey - 2);
-    ctx.lineTo(ex + 24, ey + 14);
-    ctx.lineTo(ex - 2, ey + 14);
+    ctx.moveTo(-2, 3);
+    ctx.lineTo(22, 1);
+    ctx.lineTo(24, 17);
+    ctx.lineTo(-2, 17);
     ctx.closePath();
     ctx.fill();
 
-    // Engine detail - cylinder head fins
-    ctx.fillStyle = hexToCSS(METAL);
-    for (let i = 0; i < 5; i++) {
-        ctx.fillRect(ex + 1, ey + 1 + i * 2.8, 20, 1.5);
+    // Cylinder + head
+    ctx.fillStyle = '#383838';
+    ctx.beginPath();
+    ctx.moveTo(16, -2);
+    ctx.lineTo(26, -3);
+    ctx.lineTo(27, 8);
+    ctx.lineTo(16, 8);
+    ctx.closePath();
+    ctx.fill();
+
+    // Cooling fins
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 0.8;
+    for (let i = 0; i < 7; i++) {
+        const fy = -1 + i * 1.5;
+        ctx.beginPath();
+        ctx.moveTo(15, fy);
+        ctx.lineTo(28, fy - 0.5);
+        ctx.stroke();
     }
 
-    // Engine highlight
-    ctx.fillStyle = hexToCSS(METAL_DK);
-    ctx.fillRect(ex + 18, ey + 2, 5, 10);
-
-    // --- EXHAUST ---
-    ctx.strokeStyle = hexToCSS(EXHAUST);
-    ctx.lineWidth = 4.5;
-    ctx.lineCap = 'round';
+    // Clutch cover (circle on engine)
+    ctx.fillStyle = '#3a3a3a';
     ctx.beginPath();
-    ctx.moveTo(bx + 22, by + 12);
-    ctx.quadraticCurveTo(bx + 32, by + 18, bx + 42, by + 20);
+    ctx.arc(10, 10, 6, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.strokeStyle = '#4a4a4a';
+    ctx.lineWidth = 0.8;
     ctx.stroke();
-    // Exhaust highlight
-    ctx.strokeStyle = hexToCSS(EXHAUST_DK);
+
+    // Kick starter
+    ctx.strokeStyle = '#555';
     ctx.lineWidth = 2;
     ctx.beginPath();
-    ctx.moveTo(bx + 23, by + 13);
-    ctx.quadraticCurveTo(bx + 32, by + 19, bx + 42, by + 21);
+    ctx.moveTo(18, 16);
+    ctx.lineTo(24, 22);
     ctx.stroke();
-    // Exhaust tip
-    ctx.fillStyle = hexToCSS(METAL_VDK);
-    ctx.beginPath();
-    ctx.ellipse(bx + 43, by + 20, 4, 3, 0.2, 0, Math.PI * 2);
-    ctx.fill();
 
-    // --- GAS TANK ---
-    const tx = bx + 12, ty = by - 18;
-    const tankGrd = ctx.createLinearGradient(tx, ty - 6, tx + 24, ty + 8);
-    tankGrd.addColorStop(0, hexToCSS(FRAME_RED_HI));
-    tankGrd.addColorStop(0.4, hexToCSS(TANK_RED));
-    tankGrd.addColorStop(0.8, hexToCSS(FRAME_RED_DK));
-    ctx.fillStyle = tankGrd;
+    // ============ EXHAUST ============
+
+    // Header pipe
+    ctx.strokeStyle = '#8a7a60';
+    ctx.lineWidth = 3.5;
     ctx.beginPath();
-    ctx.moveTo(tx, ty);
-    ctx.quadraticCurveTo(tx + 12, ty - 8, tx + 24, ty - 2);
-    ctx.lineTo(tx + 24, ty + 6);
-    ctx.quadraticCurveTo(tx + 12, ty + 10, tx, ty + 4);
+    ctx.moveTo(24, 10);
+    ctx.quadraticCurveTo(30, 16, 34, 20);
+    ctx.stroke();
+
+    // Expansion chamber / silencer
+    ctx.fillStyle = '#777';
+    ctx.beginPath();
+    ctx.moveTo(34, 17);
+    ctx.lineTo(54, 16);
+    ctx.quadraticCurveTo(56, 20, 54, 24);
+    ctx.lineTo(34, 25);
+    ctx.quadraticCurveTo(32, 21, 34, 17);
     ctx.closePath();
     ctx.fill();
-    // Tank cap
-    ctx.fillStyle = hexToCSS(METAL);
-    ctx.beginPath();
-    ctx.arc(tx + 12, ty - 3, 3, 0, Math.PI * 2);
-    ctx.fill();
-    // Tank shine
-    ctx.strokeStyle = 'rgba(255,255,255,0.35)';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.moveTo(tx + 4, ty - 2);
-    ctx.quadraticCurveTo(tx + 12, ty - 6, tx + 20, ty - 2);
-    ctx.stroke();
-
-    // --- SEAT ---
-    ctx.fillStyle = hexToCSS(SEAT);
-    ctx.beginPath();
-    ctx.moveTo(bx - 12, by - 16);
-    ctx.lineTo(bx + 12, by - 16);
-    ctx.quadraticCurveTo(bx + 14, by - 14, bx + 12, by - 12);
-    ctx.lineTo(bx - 14, by - 12);
-    ctx.quadraticCurveTo(bx - 16, by - 14, bx - 12, by - 16);
-    ctx.fill();
-    // Seat stitch line
-    ctx.strokeStyle = hexToCSS(0x333333);
+    // Silencer highlight
+    ctx.strokeStyle = '#999';
     ctx.lineWidth = 0.8;
     ctx.beginPath();
-    ctx.moveTo(bx - 10, by - 14);
-    ctx.lineTo(bx + 10, by - 14);
+    ctx.moveTo(36, 18);
+    ctx.lineTo(52, 17);
     ctx.stroke();
-
-    // --- HANDLEBARS ---
-    ctx.strokeStyle = hexToCSS(METAL_VDK);
-    ctx.lineWidth = 3;
+    // End cap
+    ctx.fillStyle = '#555';
     ctx.beginPath();
-    ctx.moveTo(bx + 32, by - 12);
-    ctx.lineTo(bx + 38, by - 24);
-    ctx.stroke();
-    // Crossbar
-    ctx.strokeStyle = hexToCSS(METAL_DK);
-    ctx.lineWidth = 2;
-    ctx.beginPath();
-    ctx.moveTo(bx + 35, by - 22);
-    ctx.lineTo(bx + 42, by - 24);
-    ctx.stroke();
-    // Grips
-    ctx.fillStyle = hexToCSS(GLOVE);
-    ctx.fillRect(bx + 40, by - 26, 5, 5);
-
-    // --- FENDERS ---
-    ctx.strokeStyle = hexToCSS(FRAME_RED);
-    ctx.lineWidth = 3;
-    // Front fender
-    ctx.beginPath();
-    ctx.arc(bx + 38, by + 18, 22, -Math.PI * 0.85, -Math.PI * 0.15);
-    ctx.stroke();
-    // Rear fender
-    ctx.beginPath();
-    ctx.arc(bx - 32, by + 18, 22, -Math.PI * 0.85, -Math.PI * 0.15);
-    ctx.stroke();
-
-    // --- NUMBER PLATE ---
-    ctx.fillStyle = hexToCSS(0xFFFFFF);
-    ctx.beginPath();
-    ctx.ellipse(bx + 38, by - 4, 7, 9, 0.15, 0, Math.PI * 2);
+    ctx.ellipse(55, 20, 2, 4, 0, 0, Math.PI * 2);
     ctx.fill();
-    ctx.strokeStyle = hexToCSS(FRAME_RED);
+    // Heat shield rivets
+    ctx.fillStyle = '#888';
+    ctx.beginPath(); ctx.arc(40, 20, 1, 0, Math.PI * 2); ctx.fill();
+    ctx.beginPath(); ctx.arc(46, 20, 1, 0, Math.PI * 2); ctx.fill();
+
+    // ============ FUEL TANK ============
+
+    const tgrd = ctx.createLinearGradient(6, -22, 32, -4);
+    tgrd.addColorStop(0, '#ff5050');
+    tgrd.addColorStop(0.3, '#dd2020');
+    tgrd.addColorStop(0.7, '#bb1515');
+    tgrd.addColorStop(1, '#881010');
+    ctx.fillStyle = tgrd;
+    ctx.beginPath();
+    ctx.moveTo(6, -12);
+    ctx.quadraticCurveTo(12, -22, 24, -18);
+    ctx.lineTo(30, -12);
+    ctx.lineTo(30, -4);
+    ctx.quadraticCurveTo(18, 0, 6, -6);
+    ctx.closePath();
+    ctx.fill();
+
+    // Tank knee grip panels
+    ctx.fillStyle = 'rgba(0,0,0,0.15)';
+    ctx.beginPath();
+    ctx.moveTo(8, -10);
+    ctx.lineTo(14, -14);
+    ctx.lineTo(14, -6);
+    ctx.lineTo(8, -4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Tank highlight
+    ctx.strokeStyle = 'rgba(255,255,255,0.3)';
     ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.moveTo(10, -14);
+    ctx.quadraticCurveTo(16, -19, 22, -16);
     ctx.stroke();
-    ctx.fillStyle = hexToCSS(0x222222);
+
+    // Filler cap
+    ctx.fillStyle = '#bbb';
+    ctx.beginPath();
+    ctx.arc(18, -14, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#999';
+    ctx.beginPath();
+    ctx.arc(18, -14, 1.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ============ SEAT ============
+
+    ctx.fillStyle = '#0e0e0e';
+    ctx.beginPath();
+    ctx.moveTo(-22, -8);
+    ctx.quadraticCurveTo(-14, -14, 8, -12);
+    ctx.lineTo(8, -6);
+    ctx.quadraticCurveTo(-14, -4, -22, -8);
+    ctx.fill();
+    // Seat texture
+    ctx.strokeStyle = '#222';
+    ctx.lineWidth = 0.5;
+    ctx.beginPath();
+    ctx.moveTo(-18, -8);
+    ctx.lineTo(4, -9);
+    ctx.stroke();
+    // Gripper seat pattern
+    ctx.strokeStyle = '#1a1a1a';
+    ctx.lineWidth = 0.4;
+    for (let i = 0; i < 8; i++) {
+        const sx = -16 + i * 3;
+        ctx.beginPath();
+        ctx.moveTo(sx, -10);
+        ctx.lineTo(sx, -6);
+        ctx.stroke();
+    }
+
+    // ============ HANDLEBARS ============
+
+    // Steering stem
+    ctx.strokeStyle = '#555';
+    ctx.lineWidth = 3;
+    ctx.beginPath();
+    ctx.moveTo(28, -8);
+    ctx.lineTo(34, -20);
+    ctx.stroke();
+
+    // Bar pad
+    ctx.fillStyle = '#dd2020';
+    ctx.beginPath();
+    ctx.ellipse(34, -20, 4, 2.5, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Handlebars
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 2.5;
+    ctx.beginPath();
+    ctx.moveTo(30, -20);
+    ctx.lineTo(42, -24);
+    ctx.stroke();
+
+    // Grips
+    ctx.fillStyle = '#333';
+    ctx.beginPath();
+    ctx.ellipse(42.5, -24, 4, 2.5, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.ellipse(43, -24.5, 2.5, 1.8, 0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Brake lever
+    ctx.strokeStyle = '#999';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.moveTo(42, -22);
+    ctx.lineTo(46, -18);
+    ctx.stroke();
+
+    // ============ FENDERS ============
+
+    // Front fender
+    ctx.fillStyle = '#dd2020';
+    ctx.beginPath();
+    ctx.arc(36, 24, 22, -Math.PI * 0.78, -Math.PI * 0.22);
+    ctx.lineTo(36 + Math.cos(-Math.PI * 0.22) * 19, 24 + Math.sin(-Math.PI * 0.22) * 19);
+    ctx.arc(36, 24, 19, -Math.PI * 0.22, -Math.PI * 0.78, true);
+    ctx.closePath();
+    ctx.fill();
+
+    // Rear fender
+    ctx.fillStyle = '#dd2020';
+    ctx.beginPath();
+    ctx.arc(-32, 24, 22, -Math.PI * 0.78, -Math.PI * 0.18);
+    ctx.lineTo(-32 + Math.cos(-Math.PI * 0.18) * 19, 24 + Math.sin(-Math.PI * 0.18) * 19);
+    ctx.arc(-32, 24, 19, -Math.PI * 0.18, -Math.PI * 0.78, true);
+    ctx.closePath();
+    ctx.fill();
+
+    // Tail light
+    ctx.fillStyle = '#ff0000';
+    ctx.beginPath();
+    ctx.ellipse(-24, -4, 3, 2, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#ff4444';
+    ctx.beginPath();
+    ctx.ellipse(-24, -4, 1.5, 1, -0.3, 0, Math.PI * 2);
+    ctx.fill();
+
+    // ============ HEADLIGHT / NUMBER PLATE ============
+
+    // Number plate
+    ctx.fillStyle = '#fff';
+    ctx.beginPath();
+    ctx.moveTo(32, -2);
+    ctx.lineTo(44, -4);
+    ctx.lineTo(45, 8);
+    ctx.lineTo(33, 10);
+    ctx.closePath();
+    ctx.fill();
+    ctx.strokeStyle = '#cc2020';
+    ctx.lineWidth = 1.2;
+    ctx.stroke();
+    ctx.fillStyle = '#111';
     ctx.font = 'bold 10px Arial';
     ctx.textAlign = 'center';
     ctx.textBaseline = 'middle';
-    ctx.fillText('7', bx + 38, by - 3);
+    ctx.fillText('7', 38.5, 3);
 
-    // ========== RIDER ==========
-    const leanX = lean * 6;
-    const leanAngle = lean * 0.12;
-    const rx = bx + 2 + leanX * 0.3;
-    const ry = by - 16;
-
-    ctx.save();
-    ctx.translate(rx, ry);
-    ctx.rotate(leanAngle);
-
-    // --- LEGS ---
-    ctx.strokeStyle = hexToCSS(RIDER_PANTS);
-    ctx.lineWidth = 7;
-    ctx.lineCap = 'round';
-    // Rear leg (to rear peg)
+    // Headlight
+    ctx.fillStyle = '#ffee88';
     ctx.beginPath();
-    ctx.moveTo(-2, 12);
-    ctx.quadraticCurveTo(-12, 22, -18 + lean * 3, 28);
-    ctx.stroke();
-    // Front leg (to front peg)
-    ctx.beginPath();
-    ctx.moveTo(2, 12);
-    ctx.quadraticCurveTo(12, 22, 16 + lean * 2, 28);
-    ctx.stroke();
-
-    // Boots
-    ctx.fillStyle = hexToCSS(RIDER_BOOT);
-    // Rear boot
-    ctx.beginPath();
-    ctx.ellipse(-18 + lean * 3, 30, 6, 4, -0.2, 0, Math.PI * 2);
+    ctx.ellipse(38, -8, 3.5, 4.5, 0.15, 0, Math.PI * 2);
     ctx.fill();
-    // Front boot
+    ctx.fillStyle = '#ffffcc';
     ctx.beginPath();
-    ctx.ellipse(16 + lean * 2, 30, 6, 4, 0.2, 0, Math.PI * 2);
+    ctx.ellipse(38, -8, 1.8, 2.5, 0.15, 0, Math.PI * 2);
     ctx.fill();
-
-    // --- TORSO ---
-    const jerseyGrd = ctx.createLinearGradient(-8, -14, 8, 14);
-    jerseyGrd.addColorStop(0, hexToCSS(RIDER_JERSEY_HI));
-    jerseyGrd.addColorStop(0.5, hexToCSS(RIDER_JERSEY));
-    jerseyGrd.addColorStop(1, hexToCSS(darken(RIDER_JERSEY, 0.3)));
-    ctx.fillStyle = jerseyGrd;
-    ctx.beginPath();
-    ctx.moveTo(-9, -10);
-    ctx.lineTo(9, -10);
-    ctx.lineTo(7, 14);
-    ctx.lineTo(-7, 14);
-    ctx.closePath();
-    ctx.fill();
-
-    // Jersey stripe
-    ctx.fillStyle = 'rgba(255,255,255,0.2)';
-    ctx.fillRect(-1.5, -10, 3, 24);
-
-    // Jersey number on back
-    ctx.fillStyle = hexToCSS(0xFFFFFF);
-    ctx.font = 'bold 8px Arial';
-    ctx.textAlign = 'center';
-    ctx.fillText('7', 0, 4);
-
-    // --- ARMS ---
-    ctx.strokeStyle = hexToCSS(RIDER_JERSEY);
-    ctx.lineWidth = 6;
-    ctx.lineCap = 'round';
-    // Arms reaching to handlebars
-    const handleX = 36 + leanX * 0.5 - rx + bx;
-    const handleY = -24 - ry + by + 8;
-    ctx.beginPath();
-    ctx.moveTo(7, -6);
-    ctx.quadraticCurveTo(16 + leanX * 0.3, -12, handleX * 0.7, handleY * 0.6);
-    ctx.stroke();
-    // Forearm (skin color at wrist)
-    ctx.strokeStyle = hexToCSS(RIDER_SKIN);
-    ctx.lineWidth = 4;
-    ctx.beginPath();
-    ctx.moveTo(handleX * 0.55, handleY * 0.45);
-    ctx.lineTo(handleX * 0.7, handleY * 0.6);
-    ctx.stroke();
-    // Glove on handlebar
-    ctx.fillStyle = hexToCSS(GLOVE);
-    ctx.beginPath();
-    ctx.arc(handleX * 0.7, handleY * 0.6, 4, 0, Math.PI * 2);
-    ctx.fill();
-
-    // --- HELMET ---
-    const hx = 0 + leanX * 0.15;
-    const hy = -20;
-
-    // Main helmet shape
-    const helmetGrd = ctx.createRadialGradient(hx - 2, hy - 3, 2, hx, hy, 14);
-    helmetGrd.addColorStop(0, hexToCSS(HELMET_HI));
-    helmetGrd.addColorStop(0.6, hexToCSS(HELMET));
-    helmetGrd.addColorStop(1, hexToCSS(darken(HELMET, 0.3)));
-    ctx.fillStyle = helmetGrd;
-    ctx.beginPath();
-    ctx.ellipse(hx, hy, 12, 13, 0, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Helmet chin guard
-    ctx.fillStyle = hexToCSS(darken(HELMET, 0.2));
-    ctx.beginPath();
-    ctx.moveTo(hx + 6, hy + 4);
-    ctx.quadraticCurveTo(hx + 14, hy + 6, hx + 12, hy + 12);
-    ctx.quadraticCurveTo(hx + 8, hy + 14, hx + 4, hy + 10);
-    ctx.closePath();
-    ctx.fill();
-
-    // Helmet racing stripe
-    ctx.strokeStyle = hexToCSS(0xFFFFFF);
-    ctx.lineWidth = 2.5;
-    ctx.beginPath();
-    ctx.arc(hx, hy, 11, -Math.PI * 0.75, -Math.PI * 0.25);
-    ctx.stroke();
-
-    // Visor
-    ctx.fillStyle = hexToCSS(VISOR);
-    ctx.beginPath();
-    ctx.moveTo(hx + 5, hy - 5);
-    ctx.lineTo(hx + 13, hy - 1);
-    ctx.lineTo(hx + 12, hy + 5);
-    ctx.lineTo(hx + 5, hy + 3);
-    ctx.closePath();
-    ctx.fill();
-    // Visor glare
-    ctx.fillStyle = hexToCSS(VISOR_HI);
-    ctx.globalAlpha = 0.5;
-    ctx.beginPath();
-    ctx.moveTo(hx + 6, hy - 3);
-    ctx.lineTo(hx + 10, hy - 2);
-    ctx.lineTo(hx + 9, hy + 1);
-    ctx.lineTo(hx + 6, hy);
-    ctx.closePath();
-    ctx.fill();
-    ctx.globalAlpha = 1;
-
-    // Helmet edge
-    ctx.strokeStyle = hexToCSS(darken(HELMET, 0.4));
+    ctx.strokeStyle = '#666';
     ctx.lineWidth = 1;
     ctx.beginPath();
-    ctx.ellipse(hx, hy, 12, 13, 0, 0, Math.PI * 2);
+    ctx.ellipse(38, -8, 3.5, 4.5, 0.15, 0, Math.PI * 2);
     ctx.stroke();
 
-    ctx.restore();
+    // ============ FOOT PEGS ============
+    ctx.fillStyle = '#888';
+    ctx.fillRect(-14, 17, 7, 2.5);
+    ctx.fillRect(10, 17, 7, 2.5);
+    // Peg teeth
+    ctx.fillStyle = '#aaa';
+    for (let i = 0; i < 3; i++) {
+        ctx.fillRect(-13 + i * 2.5, 17, 1, 2.5);
+        ctx.fillRect(11 + i * 2.5, 17, 1, 2.5);
+    }
+
+    // ============ RIDER ============
+
+    const lx = L * 6;
+    const la = L * 0.1;
+
+    ctx.save();
+    ctx.translate(lx * 0.3, -14);
+    ctx.rotate(la);
+
+    // -- LEGS --
+    // Upper legs (riding pants)
+    ctx.strokeStyle = '#1a1a2e';
+    ctx.lineWidth = 8;
+    ctx.beginPath();
+    ctx.moveTo(-3, 14);
+    ctx.quadraticCurveTo(-12, 24, -18 + L * 3, 30);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(3, 14);
+    ctx.quadraticCurveTo(12, 24, 16 + L * 2, 30);
+    ctx.stroke();
+
+    // Knee guards
+    ctx.fillStyle = '#333';
+    ctx.strokeStyle = '#444';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.ellipse(-12 + L * 2, 22, 4.5, 3.5, -0.2, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+    ctx.beginPath();
+    ctx.ellipse(11 + L * 1.5, 22, 4.5, 3.5, 0.2, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+
+    // MX Boots (tall, with buckles and sole)
+    ctx.fillStyle = '#111';
+    [-20 + L * 3, 18 + L * 2].forEach((bx, idx) => {
+        const dir = idx === 0 ? -1 : 1;
+        ctx.beginPath();
+        ctx.moveTo(bx - 4, 28);
+        ctx.lineTo(bx + 6, 28);
+        ctx.lineTo(bx + 7, 35);
+        ctx.lineTo(bx - 5, 35);
+        ctx.closePath();
+        ctx.fill();
+        // Boot sole
+        ctx.fillStyle = '#2a2a2a';
+        ctx.fillRect(bx - 5, 34, 12, 2);
+        ctx.fillStyle = '#111';
+        // Buckles
+        ctx.fillStyle = '#666';
+        ctx.fillRect(bx - 2, 29.5, 5, 1.2);
+        ctx.fillRect(bx - 2, 31.5, 5, 1.2);
+        ctx.fillStyle = '#111';
+    });
+
+    // -- TORSO --
+    // Jersey
+    const jgrd = ctx.createLinearGradient(-12, -14, 12, 16);
+    jgrd.addColorStop(0, '#3388ff');
+    jgrd.addColorStop(0.3, '#2266dd');
+    jgrd.addColorStop(0.7, '#1a55bb');
+    jgrd.addColorStop(1, '#113399');
+    ctx.fillStyle = jgrd;
+    ctx.beginPath();
+    ctx.moveTo(-11, -12);
+    ctx.quadraticCurveTo(0, -14, 11, -12);
+    ctx.lineTo(9, 16);
+    ctx.lineTo(-9, 16);
+    ctx.closePath();
+    ctx.fill();
+
+    // Shoulder seams
+    ctx.strokeStyle = 'rgba(255,255,255,0.15)';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.moveTo(-10, -11);
+    ctx.lineTo(-10, -4);
+    ctx.stroke();
+    ctx.beginPath();
+    ctx.moveTo(10, -11);
+    ctx.lineTo(10, -4);
+    ctx.stroke();
+
+    // Side mesh panels
+    ctx.fillStyle = 'rgba(0,0,0,0.1)';
+    ctx.fillRect(-11, -6, 4, 16);
+    ctx.fillRect(7, -6, 4, 16);
+
+    // Center stripe
+    ctx.fillStyle = 'rgba(255,255,255,0.2)';
+    ctx.fillRect(-1.5, -12, 3, 28);
+
+    // Number
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 11px Arial';
+    ctx.textAlign = 'center';
+    ctx.textBaseline = 'middle';
+    ctx.fillText('7', 0, 3);
+
+    // Chest protector
+    ctx.strokeStyle = 'rgba(255,255,255,0.2)';
+    ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    ctx.moveTo(-8, -10);
+    ctx.lineTo(0, -5);
+    ctx.lineTo(8, -10);
+    ctx.stroke();
+
+    // -- ARMS --
+    const hbX = 42 + lx * 0.5 - lx * 0.3;
+    const hbY = -24 + 14 + 8;
+
+    // Upper arm
+    ctx.strokeStyle = '#2266dd';
+    ctx.lineWidth = 7;
+    ctx.beginPath();
+    ctx.moveTo(8, -8);
+    ctx.quadraticCurveTo(16 + lx * 0.2, -14, hbX * 0.45, hbY * 0.35);
+    ctx.stroke();
+
+    // Forearm
+    ctx.strokeStyle = '#3388ff';
+    ctx.lineWidth = 5.5;
+    ctx.beginPath();
+    ctx.moveTo(hbX * 0.38, hbY * 0.28);
+    ctx.lineTo(hbX * 0.62, hbY * 0.52);
+    ctx.stroke();
+
+    // Elbow guard
+    ctx.fillStyle = '#2a2a2a';
+    ctx.strokeStyle = '#3a3a3a';
+    ctx.lineWidth = 0.8;
+    ctx.beginPath();
+    ctx.ellipse(hbX * 0.33, hbY * 0.24, 4.5, 3, -0.5, 0, Math.PI * 2);
+    ctx.fill(); ctx.stroke();
+
+    // Gloves
+    ctx.fillStyle = '#1a1a1a';
+    ctx.beginPath();
+    ctx.arc(hbX * 0.62, hbY * 0.52, 4.5, 0, Math.PI * 2);
+    ctx.fill();
+    // Glove knuckle guard
+    ctx.fillStyle = '#333';
+    ctx.beginPath();
+    ctx.arc(hbX * 0.62, hbY * 0.5, 2.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // -- HELMET --
+    const hx = lx * 0.1;
+    const hy = -24;
+
+    // Main shell
+    const hgrd = ctx.createRadialGradient(hx - 3, hy - 4, 3, hx + 1, hy + 2, 18);
+    hgrd.addColorStop(0, '#ff5555');
+    hgrd.addColorStop(0.4, '#dd2222');
+    hgrd.addColorStop(0.8, '#aa1515');
+    hgrd.addColorStop(1, '#771010');
+    ctx.fillStyle = hgrd;
+    ctx.beginPath();
+    ctx.ellipse(hx, hy, 14, 15.5, 0, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Chin bar
+    ctx.fillStyle = '#881111';
+    ctx.beginPath();
+    ctx.moveTo(hx + 8, hy + 4);
+    ctx.quadraticCurveTo(hx + 17, hy + 8, hx + 15, hy + 16);
+    ctx.quadraticCurveTo(hx + 10, hy + 18, hx + 6, hy + 12);
+    ctx.closePath();
+    ctx.fill();
+
+    // Mouth vent
+    ctx.fillStyle = '#333';
+    ctx.beginPath();
+    ctx.ellipse(hx + 12, hy + 14, 3, 2, 0.2, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Peak/visor brim
+    ctx.fillStyle = '#991111';
+    ctx.beginPath();
+    ctx.moveTo(hx + 2, hy - 10);
+    ctx.lineTo(hx + 22, hy - 5);
+    ctx.lineTo(hx + 19, hy - 1);
+    ctx.lineTo(hx + 3, hy - 5);
+    ctx.closePath();
+    ctx.fill();
+    // Peak underside shadow
+    ctx.fillStyle = '#661010';
+    ctx.beginPath();
+    ctx.moveTo(hx + 4, hy - 5);
+    ctx.lineTo(hx + 18, hy - 2);
+    ctx.lineTo(hx + 17, hy);
+    ctx.lineTo(hx + 5, hy - 3);
+    ctx.closePath();
+    ctx.fill();
+
+    // Racing stripes on shell
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 2.2;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 12.5, -Math.PI * 0.78, -Math.PI * 0.32);
+    ctx.stroke();
+
+    ctx.strokeStyle = '#2266dd';
+    ctx.lineWidth = 1.5;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 10.5, -Math.PI * 0.72, -Math.PI * 0.38);
+    ctx.stroke();
+
+    // Goggles frame
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.moveTo(hx + 4, hy - 7);
+    ctx.lineTo(hx + 17, hy - 3);
+    ctx.lineTo(hx + 16, hy + 6);
+    ctx.lineTo(hx + 4, hy + 4);
+    ctx.closePath();
+    ctx.fill();
+
+    // Goggle lens
+    ctx.fillStyle = '#22aadd';
+    ctx.beginPath();
+    ctx.moveTo(hx + 5.5, hy - 5.5);
+    ctx.lineTo(hx + 15.5, hy - 2);
+    ctx.lineTo(hx + 14.5, hy + 4.5);
+    ctx.lineTo(hx + 5.5, hy + 2.5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Lens reflection
+    ctx.fillStyle = 'rgba(255,255,255,0.45)';
+    ctx.beginPath();
+    ctx.moveTo(hx + 6.5, hy - 4);
+    ctx.lineTo(hx + 11, hy - 2.5);
+    ctx.lineTo(hx + 10, hy + 0.5);
+    ctx.lineTo(hx + 6.5, hy - 0.5);
+    ctx.closePath();
+    ctx.fill();
+
+    // Goggle strap
+    ctx.strokeStyle = '#333';
+    ctx.lineWidth = 2;
+    ctx.beginPath();
+    ctx.arc(hx, hy, 13, -Math.PI * 0.15, Math.PI * 0.25);
+    ctx.stroke();
+
+    // Helmet edge detail
+    ctx.strokeStyle = '#661010';
+    ctx.lineWidth = 1;
+    ctx.beginPath();
+    ctx.ellipse(hx, hy, 14, 15.5, 0, 0, Math.PI * 2);
+    ctx.stroke();
+
+    // Neck brace hint
+    ctx.fillStyle = '#222';
+    ctx.beginPath();
+    ctx.ellipse(hx - 2, hy + 16, 8, 3, -0.1, 0, Math.PI);
+    ctx.fill();
+
+    ctx.restore(); // rider transform
+    ctx.restore(); // main transform
 }
 
 function generate() {
@@ -451,111 +748,118 @@ function generate() {
     const ctx = canvas.getContext('2d');
     const frames = [];
 
-    const BIKE_W = 120;
-    const BIKE_H = 90;
+    const BIKE_W = 160;
+    const BIKE_H = 120;
 
-    // --- Bike + rider in 3 lean states ---
-    const leanStates = [
+    // 3 lean states
+    [
         { name: 'bike_lean_back', lean: -1 },
         { name: 'bike_neutral', lean: 0 },
         { name: 'bike_lean_forward', lean: 1 },
-    ];
-
-    leanStates.forEach((state, i) => {
+    ].forEach((state, i) => {
         const ox = 5 + i * (BIKE_W + 5);
         const oy = 5;
-
         ctx.save();
         ctx.translate(ox, oy);
-        drawBikeWithRider(ctx, BIKE_W / 2, BIKE_H / 2 + 5, state.lean);
+        drawDirtBike(ctx, BIKE_W / 2, BIKE_H / 2 + 5, state.lean);
         ctx.restore();
-
         frames.push({ name: state.name, x: ox, y: oy, w: BIKE_W, h: BIKE_H });
     });
 
-    // --- Standalone wheel ---
-    const WHEEL_R = 20;
+    // Wheels (4 rotation frames)
+    const WHEEL_R = 22;
     const WHEEL_SIZE = WHEEL_R * 2 + 4;
     for (let i = 0; i < 4; i++) {
         const wx = 5 + i * (WHEEL_SIZE + 4);
-        const wy = 100;
-
+        const wy = 130;
         ctx.save();
-        ctx.translate(wx, wy);
-        // Rotate canvas for spoke variation
-        ctx.translate(WHEEL_SIZE / 2, WHEEL_SIZE / 2);
+        ctx.translate(wx + WHEEL_SIZE / 2, wy + WHEEL_SIZE / 2);
         ctx.rotate((i / 4) * Math.PI * 2);
         ctx.translate(-WHEEL_SIZE / 2, -WHEEL_SIZE / 2);
         drawWheel(ctx, WHEEL_SIZE / 2, WHEEL_SIZE / 2, WHEEL_R);
         ctx.restore();
-
         frames.push({ name: `wheel_${i}`, x: wx, y: wy, w: WHEEL_SIZE, h: WHEEL_SIZE });
     }
 
-    // --- Crash frame ---
-    const CX = 5, CY = 150, CW = 140, CH = 90;
+    // Crash frame
+    const CX = 5, CY = 190, CW = 160, CH = 110;
     ctx.save();
     ctx.translate(CX, CY);
 
-    // Scattered bike frame pieces
-    ctx.strokeStyle = hexToCSS(FRAME_RED);
+    // Wrecked frame
+    ctx.strokeStyle = '#cc2020';
     ctx.lineWidth = 4;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(20, 30);
-    ctx.lineTo(50, 20);
-    ctx.lineTo(40, 45);
+    ctx.moveTo(30, 35);
+    ctx.lineTo(60, 28);
+    ctx.lineTo(50, 50);
     ctx.stroke();
 
-    // Detached exhaust
-    ctx.strokeStyle = hexToCSS(EXHAUST);
-    ctx.lineWidth = 4;
+    // Exhaust piece
+    ctx.fillStyle = '#777';
     ctx.beginPath();
-    ctx.moveTo(70, 15);
-    ctx.lineTo(100, 10);
-    ctx.stroke();
-
-    // Wheel bouncing away
-    drawWheel(ctx, 110, 55, 16);
-
-    // Gas tank
-    ctx.fillStyle = hexToCSS(TANK_RED);
-    ctx.beginPath();
-    ctx.ellipse(55, 55, 12, 7, 0.4, 0, Math.PI * 2);
-    ctx.fill();
-
-    // Rider tumbling
-    ctx.fillStyle = hexToCSS(HELMET);
-    ctx.beginPath();
-    ctx.arc(30, 55, 10, 0, Math.PI * 2);
-    ctx.fill();
-    ctx.fillStyle = hexToCSS(VISOR);
-    ctx.beginPath();
-    ctx.moveTo(35, 50);
-    ctx.lineTo(40, 53);
-    ctx.lineTo(38, 57);
-    ctx.lineTo(34, 55);
+    ctx.moveTo(80, 18);
+    ctx.lineTo(110, 16);
+    ctx.lineTo(112, 24);
+    ctx.lineTo(80, 26);
     ctx.closePath();
     ctx.fill();
-    ctx.fillStyle = hexToCSS(RIDER_JERSEY);
-    ctx.fillRect(22, 64, 16, 20);
-    // Arms/legs
-    ctx.strokeStyle = hexToCSS(RIDER_PANTS);
-    ctx.lineWidth = 5;
+
+    // Loose wheel
+    drawWheel(ctx, 130, 55, 18);
+
+    // Tank
+    ctx.fillStyle = '#dd2020';
     ctx.beginPath();
-    ctx.moveTo(25, 80);
-    ctx.lineTo(15, 88);
-    ctx.moveTo(35, 80);
-    ctx.lineTo(42, 88);
+    ctx.ellipse(65, 55, 14, 8, 0.5, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Tumbling rider
+    ctx.fillStyle = '#cc2222';
+    ctx.beginPath();
+    ctx.arc(36, 55, 13, 0, Math.PI * 2);
+    ctx.fill();
+    ctx.fillStyle = '#22aadd';
+    ctx.beginPath();
+    ctx.moveTo(44, 50);
+    ctx.lineTo(50, 54);
+    ctx.lineTo(48, 59);
+    ctx.lineTo(42, 56);
+    ctx.closePath();
+    ctx.fill();
+    ctx.fillStyle = '#2266dd';
+    ctx.fillRect(26, 68, 20, 22);
+    ctx.fillStyle = '#fff';
+    ctx.font = 'bold 9px Arial';
+    ctx.textAlign = 'center';
+    ctx.fillText('7', 36, 80);
+
+    ctx.strokeStyle = '#1a1a2e';
+    ctx.lineWidth = 6;
+    ctx.beginPath();
+    ctx.moveTo(28, 86);
+    ctx.lineTo(18, 96);
+    ctx.moveTo(44, 86);
+    ctx.lineTo(52, 96);
     ctx.stroke();
 
-    // Spark particles
-    ctx.fillStyle = hexToCSS(0xFFDD00);
-    for (let i = 0; i < 6; i++) {
-        const sx = 40 + Math.random() * 60;
-        const sy = 25 + Math.random() * 30;
+    // Sparks
+    ctx.fillStyle = '#ffdd00';
+    for (let i = 0; i < 12; i++) {
+        const sx = 45 + Math.random() * 75;
+        const sy = 20 + Math.random() * 40;
+        const sr = 1 + Math.random() * 2.5;
         ctx.beginPath();
-        ctx.arc(sx, sy, 1.5 + Math.random() * 2, 0, Math.PI * 2);
+        ctx.arc(sx, sy, sr, 0, Math.PI * 2);
+        ctx.fill();
+    }
+    ctx.fillStyle = '#ff8800';
+    for (let i = 0; i < 6; i++) {
+        const sx = 50 + Math.random() * 60;
+        const sy = 25 + Math.random() * 35;
+        ctx.beginPath();
+        ctx.arc(sx, sy, 1 + Math.random() * 1.5, 0, Math.PI * 2);
         ctx.fill();
     }
 

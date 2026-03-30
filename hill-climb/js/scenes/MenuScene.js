@@ -25,15 +25,15 @@ class MenuScene extends Phaser.Scene {
             fontStyle: 'bold', stroke: '#000000', strokeThickness: 4
         }).setOrigin(0.5);
 
-        // Bike preview (static sprite)
-        const bikePreview = this.add.image(w / 2 - 30, h - 145, 'bike', 'bike_neutral');
-        bikePreview.setScale(1.8);
+        // Bike preview — body only (wheels are separate animated sprites)
+        const bikePreview = this.add.image(w / 2 - 25, h - 150, 'bike', 'bike_neutral');
+        bikePreview.setScale(1.5).setDepth(1);
 
-        // Wheel animation
+        // Animated wheels — positioned to match the bike sprite
         this.wheelAngle = 0;
         this.wheelFrame = 0;
-        this.rearWheel = this.add.image(w / 2 - 73, h - 110, 'bike', 'wheel_0').setScale(1.8);
-        this.frontWheel = this.add.image(w / 2 + 16, h - 110, 'bike', 'wheel_0').setScale(1.8);
+        this.rearWheel = this.add.image(w / 2 - 68, h - 110, 'bike', 'wheel_0').setScale(1.5).setDepth(0);
+        this.frontWheel = this.add.image(w / 2 + 18, h - 110, 'bike', 'wheel_0').setScale(1.5).setDepth(0);
 
         // High score
         const bestDistance = localStorage.getItem(CONFIG.LS_HIGH_SCORE) || 0;
