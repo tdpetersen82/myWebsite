@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Fantastic Contraption — Free Online Game | Arcade Game Hub</title>
+    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="css/styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/matter-js@0.20.0/build/matter.min.js"></script>
+    <style>
+        body {
+            margin: 0;
+            overflow: hidden;
+            background: #2d3436;
+            display: flex;
+            justify-content: center;
+            align-items: flex-start;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            padding-top: 50px;
+        }
+    </style>
+    <meta name="description" content="Play Fantastic Contraption free in your browser. Build machines from wheels and rods to transport the payload to the goal! 12 physics puzzle levels. No downloads, no installs.">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Fantastic Contraption","description":"Build machines from wheels and rods to solve physics puzzles. 12 levels of increasing difficulty.","playMode":"SinglePlayer","applicationCategory":"Game","genre":"Puzzle","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Arcade Game Hub"}}</script>
+    <link rel="canonical" href="https://example.com/fantastic-contraption/">
+    <link rel="manifest" href="../manifest.json">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag('js',new Date());gtag('config','G-DP6FGVETMV');</script>
+    <!-- AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-4325693268805498" crossorigin="anonymous"></script>
+</head>
+<body>
+    <div id="game-wrapper">
+        <canvas id="gameCanvas"></canvas>
+
+        <!-- Game UI overlay -->
+        <div id="game-ui">
+            <!-- Top bar -->
+            <div class="top-bar">
+                <button id="btn-back" title="Back to levels">←</button>
+                <span id="level-name"></span>
+                <button id="btn-mute" title="Toggle sound (M)">🔊</button>
+            </div>
+
+            <!-- Part palette -->
+            <div id="part-palette"></div>
+
+            <!-- Toolbar -->
+            <div class="toolbar">
+                <button id="btn-undo" title="Undo (Ctrl+Z)">↩ Undo</button>
+                <button id="btn-redo" title="Redo (Ctrl+Y)">↪ Redo</button>
+                <button id="btn-play" title="Play/Pause (Space)">▶ Play</button>
+                <button id="btn-reset" title="Reset (R)">⟲ Reset</button>
+                <button id="btn-clear" title="Clear All">🗑 Clear</button>
+            </div>
+        </div>
+
+        <!-- Level select overlay -->
+        <div id="level-select-overlay">
+            <div class="level-select-inner">
+                <h2>Fantastic Contraption</h2>
+                <p>Build machines to move the pink ball to the goal!</p>
+                <div id="level-grid"></div>
+            </div>
+        </div>
+
+        <!-- Level complete overlay -->
+        <div id="level-complete-overlay">
+            <div class="complete-inner">
+                <div class="complete-star">⭐</div>
+                <div id="complete-title">Level Complete!</div>
+                <div class="complete-buttons">
+                    <button id="btn-back-to-levels">Level Select</button>
+                    <button id="btn-next-level">Next Level →</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game scripts -->
+    <script src="js/config.js"></script>
+    <script src="js/PhysicsEngine.js"></script>
+    <script src="js/InputManager.js"></script>
+    <script src="js/PartFactory.js"></script>
+    <script src="js/BuildSystem.js"></script>
+    <script src="js/Renderer.js"></script>
+    <script src="js/levels.js"></script>
+    <script src="js/LevelManager.js"></script>
+    <script src="js/UIManager.js"></script>
+    <script src="js/AudioManager.js"></script>
+    <script src="js/Game.js"></script>
+
+    <script src="../nav.js"></script>
+
+    <!-- Ad Slot -->
+    <div class="ad-slot ad-slot-responsive" style="margin-top:10px;">
+        <ins class="adsbygoogle" style="display:block" data-ad-client="ca-pub-4325693268805498" data-ad-slot="auto" data-ad-format="auto" data-full-width-responsive="true"></ins>
+        <script>(adsbygoogle=window.adsbygoogle||[]).push({});</script>
+    </div>
+</body>
+</html>
