@@ -1,0 +1,195 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess AI Solver</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #0f0f23;
+            color: #e0e0e0;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+        }
+        h1 {
+            font-size: 2.5rem;
+            color: #e94560;
+            margin-bottom: 8px;
+            letter-spacing: 2px;
+        }
+        .subtitle {
+            color: #888;
+            margin-bottom: 40px;
+            font-size: 1.1rem;
+        }
+        .card {
+            background: #1a1a2e;
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 700px;
+            width: 100%;
+            margin-bottom: 24px;
+            box-shadow: 0 4px 24px rgba(0,0,0,0.4);
+        }
+        .card h2 {
+            color: #e94560;
+            margin-bottom: 16px;
+            font-size: 1.3rem;
+        }
+        .steps {
+            list-style: none;
+            counter-reset: step;
+        }
+        .steps li {
+            counter-increment: step;
+            padding: 12px 0;
+            padding-left: 48px;
+            position: relative;
+            line-height: 1.6;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .steps li:last-child { border-bottom: none; }
+        .steps li::before {
+            content: counter(step);
+            position: absolute;
+            left: 0;
+            top: 12px;
+            width: 32px;
+            height: 32px;
+            background: #e94560;
+            color: white;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 0.9rem;
+        }
+        a {
+            color: #16c79a;
+            text-decoration: none;
+        }
+        a:hover { text-decoration: underline; }
+        code {
+            background: rgba(255,255,255,0.08);
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'SF Mono', 'Fira Code', monospace;
+            font-size: 0.9em;
+        }
+        .bookmarklet-area {
+            margin-top: 16px;
+            padding: 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            text-align: center;
+        }
+        .bookmarklet-link {
+            display: inline-block;
+            padding: 12px 32px;
+            background: #e94560;
+            color: white !important;
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 1rem;
+            cursor: grab;
+            text-decoration: none !important;
+            transition: background 0.2s;
+        }
+        .bookmarklet-link:hover { background: #c73e54; }
+        .hint {
+            margin-top: 10px;
+            font-size: 0.85rem;
+            color: #666;
+        }
+        .features {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-top: 16px;
+        }
+        .feature {
+            padding: 16px;
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+        }
+        .feature strong {
+            color: #e94560;
+            display: block;
+            margin-bottom: 4px;
+        }
+        .feature span {
+            font-size: 0.9rem;
+            color: #aaa;
+        }
+        .back-link {
+            margin-top: 32px;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <h1>CHESS AI</h1>
+    <p class="subtitle">Minimax solver for cardgames.io/chess</p>
+
+    <div class="card">
+        <h2>How to Use</h2>
+        <ol class="steps">
+            <li>Go to <a href="https://cardgames.io/chess/" target="_blank">cardgames.io/chess</a> and start a game against any opponent.</li>
+            <li>Drag the bookmarklet below to your bookmarks bar, then click it on the chess page. <br><em>Or:</em> Open DevTools (<code>F12</code>), go to Console, paste the script from <code>solver.js</code>, and press Enter.</li>
+            <li>A floating <strong>Chess AI</strong> panel appears. Click <strong>AI Move</strong> to play the best move, or toggle <strong>Auto-Play</strong> to let it run.</li>
+            <li>Adjust the <strong>Depth</strong> slider (1-5) to trade speed for strength. Depth 3-4 is recommended.</li>
+        </ol>
+    </div>
+
+    <div class="card">
+        <h2>Bookmarklet</h2>
+        <div class="bookmarklet-area">
+            <a class="bookmarklet-link" id="bookmarklet" href="#">Chess AI</a>
+            <p class="hint">Drag this button to your bookmarks bar.</p>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>Features</h2>
+        <div class="features">
+            <div class="feature">
+                <strong>Minimax + Alpha-Beta</strong>
+                <span>Searches ahead with pruning for efficient play up to depth 5.</span>
+            </div>
+            <div class="feature">
+                <strong>Piece-Square Tables</strong>
+                <span>Positional evaluation encourages strong piece placement.</span>
+            </div>
+            <div class="feature">
+                <strong>Move Ordering</strong>
+                <span>Captures, checks, and promotions searched first for faster cutoffs.</span>
+            </div>
+            <div class="feature">
+                <strong>Auto-Play Mode</strong>
+                <span>Watches for your turn and plays automatically.</span>
+            </div>
+        </div>
+    </div>
+
+    <p class="back-link"><a href="/">&larr; Back to Game Hub</a></p>
+
+    <script>
+        // Build the bookmarklet from solver.js
+        fetch('solver.js')
+            .then(r => r.text())
+            .then(code => {
+                const encoded = 'javascript:' + encodeURIComponent(code);
+                document.getElementById('bookmarklet').href = encoded;
+            })
+            .catch(() => {
+                document.getElementById('bookmarklet').title = 'Could not load solver.js';
+            });
+    </script>
+</body>
+</html>
