@@ -38,7 +38,7 @@
       "@context": "https://schema.org",
       "@type": "ItemList",
       "name": "Free Browser Games",
-      "numberOfItems": 35,
+      "numberOfItems": 38,
       "itemListElement": [
         {"@type":"ListItem","position":1,"url":"https://example.com/snake/","name":"Snake"},
         {"@type":"ListItem","position":2,"url":"https://example.com/pong/","name":"Pong"},
@@ -75,7 +75,10 @@
         {"@type":"ListItem","position":33,"url":"https://example.com/fruit-catcher/","name":"Fruit Catcher"},
         {"@type":"ListItem","position":34,"url":"https://example.com/beat-em-up/","name":"Street Brawl"},
         {"@type":"ListItem","position":35,"url":"https://example.com/off-road/","name":"Super Off Road"},
-        {"@type":"ListItem","position":36,"url":"https://example.com/hill-climb/","name":"Dirt Bike Hill Climb"}
+        {"@type":"ListItem","position":36,"url":"https://example.com/hill-climb/","name":"Dirt Bike Hill Climb"},
+        {"@type":"ListItem","position":37,"url":"https://example.com/labyrinth-threejs/","name":"3D Labyrinth (Three.js)"},
+        {"@type":"ListItem","position":38,"url":"https://example.com/labyrinth-babylonjs/","name":"3D Labyrinth (Babylon.js)"},
+        {"@type":"ListItem","position":39,"url":"https://example.com/horse-feeding/","name":"Horse Feeding"}
       ]
     }</script>
 </head>
@@ -84,7 +87,7 @@
         <div class="hub-header">
             <h1>Arcade Game Hub</h1>
             <p class="subtitle">Classic arcade games right in your browser — no downloads, no installs.</p>
-            <span class="game-count">35 Games</span>
+            <span class="game-count">37 Games</span>
         </div>
 
         <!-- Category Navigation Bar -->
@@ -323,6 +326,14 @@
                     <a href="hex-defense/" class="play-button">Play</a>
                 </div>
 
+                <div class="game-card">
+                    <span class="badge-new">NEW</span>
+                    <div class="game-icon-wrap"><svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="22" r="6" fill="none" stroke="#00b894" stroke-width="2"/><line x1="10" y1="22" x2="10" y2="16" stroke="#00b894" stroke-width="1.5"/><circle cx="22" cy="22" r="6" fill="none" stroke="#0984e3" stroke-width="2"/><line x1="22" y1="22" x2="22" y2="16" stroke="#0984e3" stroke-width="1.5"/><line x1="10" y1="22" x2="22" y2="22" stroke="#b8956a" stroke-width="3" stroke-linecap="round"/><circle cx="6" cy="10" r="4" fill="#e84393" opacity="0.8"/><rect x="24" y="8" width="6" height="6" rx="1" fill="#ff7675" opacity="0.4" stroke="#ff7675" stroke-width="1" stroke-dasharray="2 1"/></svg></div>
+                    <h2>Fantastic Contraption</h2>
+                    <p>Build machines from wheels and rods to solve physics puzzles!</p>
+                    <a href="fantastic-contraption/" class="play-button">Play</a>
+                </div>
+
             </div>
         </div>
 
@@ -423,6 +434,30 @@
                     <h2>Dirt Bike Hill Climb</h2>
                     <p>Physics-based dirt bike racing! Do flips, wheelies, and collect coins over procedural hills.</p>
                     <a href="hill-climb/" class="play-button">Play</a>
+                </div>
+
+                <div class="game-card">
+                    <span class="badge-new">NEW</span>
+                    <div class="game-icon-wrap"><svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="10" width="24" height="18" rx="2" fill="#C4913B" stroke="#6B4226" stroke-width="1.5"/><circle cx="10" cy="18" r="2" fill="#111"/><circle cx="22" cy="22" r="2" fill="#111"/><circle cx="16" cy="15" r="2.5" fill="#ccc" stroke="#999" stroke-width="1"/><path d="M8 13h4v2H8zM14 20h6v2h-6zM20 13h4v2h-4z" fill="#5C4033"/><circle cx="25" cy="25" r="1.5" fill="#FFD700"/></svg></div>
+                    <h2>3D Labyrinth (Three.js)</h2>
+                    <p>Tilt the board to guide a marble through a 3D maze. Avoid holes and reach the goal!</p>
+                    <a href="labyrinth-threejs/" class="play-button">Play</a>
+                </div>
+
+                <div class="game-card">
+                    <span class="badge-new">NEW</span>
+                    <div class="game-icon-wrap"><svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="10" width="24" height="18" rx="2" fill="#C4913B" stroke="#6B4226" stroke-width="1.5"/><circle cx="10" cy="18" r="2" fill="#111"/><circle cx="22" cy="22" r="2" fill="#111"/><circle cx="16" cy="15" r="2.5" fill="#ccc" stroke="#999" stroke-width="1"/><path d="M8 13h4v2H8zM14 20h6v2h-6zM20 13h4v2h-4z" fill="#5C4033"/><circle cx="25" cy="25" r="1.5" fill="#FFD700"/><text x="16" y="8" text-anchor="middle" font-size="5" fill="#667eea" font-weight="bold">B</text></svg></div>
+                    <h2>3D Labyrinth (Babylon.js)</h2>
+                    <p>Same maze, different engine! Compare Babylon.js physics and rendering side by side.</p>
+                    <a href="labyrinth-babylonjs/" class="play-button">Play</a>
+                </div>
+
+                <div class="game-card">
+                    <span class="badge-new">NEW</span>
+                    <div class="game-icon-wrap"><svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="18" rx="8" ry="5" fill="#8B6914"/><ellipse cx="16" cy="14" rx="6" ry="4" fill="#A0782C"/><path d="M10 14c-2-4 0-6 2-8" stroke="#5C3A1E" stroke-width="2" stroke-linecap="round"/><path d="M14 14c-1-3 0-5 1-7" stroke="#5C3A1E" stroke-width="2" stroke-linecap="round"/><circle cx="22" cy="12" r="3" fill="#A0782C"/><circle cx="23" cy="11.5" r="1" fill="#1e293b"/><path d="M25 10l3-2M25 12l3 0" stroke="#5C3A1E" stroke-width="1.5" stroke-linecap="round"/><path d="M8 18c-1 3-1 6 0 8" stroke="#6B4226" stroke-width="2" stroke-linecap="round"/><path d="M12 20c0 3 0 5 0 7" stroke="#6B4226" stroke-width="2" stroke-linecap="round"/><path d="M20 20c0 3 0 5 0 7" stroke="#6B4226" stroke-width="2" stroke-linecap="round"/><path d="M24 18c1 3 1 6 0 8" stroke="#6B4226" stroke-width="2" stroke-linecap="round"/></svg></div>
+                    <h2>Horse Feeding</h2>
+                    <p>Feed and care for a 3D horse! Pick treats and watch it eat in real-time 3D.</p>
+                    <a href="horse-feeding/" class="play-button">Play</a>
                 </div>
             </div>
         </div>

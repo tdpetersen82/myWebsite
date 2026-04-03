@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>3D Labyrinth (Three.js) — Free Online Maze Game | Arcade Game Hub</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        #game-container {
+            margin: 10px auto;
+            max-width: 804px;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            position: relative;
+        }
+        #game-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+            border-radius: 10px;
+        }
+        .overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.7);
+            border-radius: 10px;
+            z-index: 10;
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .overlay h2 {
+            font-size: 2em;
+            margin-bottom: 0.3em;
+            color: #FFD700;
+        }
+        .overlay p {
+            margin: 0.3em 0;
+            font-size: 1.1em;
+            color: #ccc;
+        }
+        .overlay .btn {
+            display: inline-block;
+            margin: 8px 6px;
+            padding: 10px 24px;
+            background: #FFD700;
+            color: #1a1a2e;
+            border: none;
+            border-radius: 8px;
+            font-size: 1em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        .overlay .btn:hover {
+            background: #FFC107;
+        }
+        .btn-row { margin-top: 12px; }
+        #new-best {
+            color: #44ff44;
+            font-weight: bold;
+            font-size: 1.3em;
+            animation: pulse 0.6s ease-in-out infinite alternate;
+        }
+        @keyframes pulse {
+            from { transform: scale(1); }
+            to { transform: scale(1.1); }
+        }
+        .hud {
+            display: flex;
+            gap: 20px;
+            justify-content: center;
+            align-items: center;
+            padding: 6px 0;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            font-size: 1.05em;
+        }
+        .hud span { font-weight: bold; }
+        #lives { color: #ff6b6b; letter-spacing: 2px; }
+    </style>
+    <meta name="description" content="Play 3D Labyrinth free in your browser. Tilt the board to guide a marble through the maze. Avoid holes and reach the goal! Built with Three.js.">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"3D Labyrinth (Three.js)","description":"Tilt a 3D board to guide a marble through a maze. Avoid holes and reach the goal as fast as you can!","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Arcade Game Hub"}}</script>
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+</head>
+<body>
+    <div class="container">
+        <h1>🔮 3D Labyrinth <small style="font-size:0.5em;color:#888">(Three.js)</small></h1>
+        <div class="hud">
+            <div>Level: <span id="level">Beginner</span></div>
+            <div>Time: <span id="timer">0.0s</span></div>
+            <div>Lives: <span id="lives">♥♥♥</span></div>
+            <div>Best: <span id="bestTime">--</span></div>
+        </div>
+        <div id="game-container">
+            <!-- Menu overlay -->
+            <div class="overlay" id="menu-overlay">
+                <h2>3D Labyrinth</h2>
+                <p>Tilt the board to guide the marble to the gold goal.</p>
+                <p>Avoid the holes!</p>
+                <p style="font-size:0.9em; color:#999; margin-top:10px;">Arrow Keys / WASD or Click &amp; Drag to tilt</p>
+                <div class="btn-row">
+                    <button class="btn" id="btn-start">Start Game</button>
+                </div>
+            </div>
+            <!-- Win overlay -->
+            <div class="overlay" id="win-overlay" style="display:none">
+                <h2>Level Complete!</h2>
+                <p>Time: <span id="win-time"></span></p>
+                <p>Best: <span id="win-best"></span></p>
+                <p id="new-best" style="display:none">New Best Time!</p>
+                <div class="btn-row">
+                    <button class="btn" id="btn-next">Next Level</button>
+                    <button class="btn" id="btn-retry-win">Retry</button>
+                </div>
+            </div>
+            <!-- Game Over overlay -->
+            <div class="overlay" id="gameover-overlay" style="display:none">
+                <h2>Game Over</h2>
+                <p>You ran out of lives!</p>
+                <div class="btn-row">
+                    <button class="btn" id="btn-retry-go">Retry</button>
+                    <button class="btn" id="btn-menu-go">Menu</button>
+                </div>
+            </div>
+        </div>
+        <div class="controls-info">
+            <p><strong>Controls:</strong> Arrow Keys / WASD to tilt the board | Click &amp; drag for mouse/touch tilt</p>
+            <p>Guide the marble through the maze to the golden goal. Watch out for holes — you only have 3 lives!</p>
+        </div>
+    </div>
+
+    <script src="js/config.js?v=2"></script>
+    <script src="js/maze.js?v=2"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+            "cannon-es": "https://cdn.jsdelivr.net/npm/cannon-es@0.20.0/dist/cannon-es.js"
+        }
+    }
+    </script>
+    <script type="module" src="js/GameManager.js"></script>
+</body>
+</html>
