@@ -91,6 +91,7 @@
                 { name: 'Connect 4', icon: I.connect4, url: 'connect-4/' },
                 { name: 'Dots & Boxes', icon: I.dots, url: 'connect-dots/' },
                 { name: 'Hex Defense', icon: I.hexdefense, url: 'hex-defense/' },
+                { name: 'Fantastic Contraption', icon: I.contraption, url: 'fantastic-contraption/' },
             ]
         },
         {
