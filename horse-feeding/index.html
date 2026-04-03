@@ -1,0 +1,217 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Horse Feeding — Feed a 3D Horse | Arcade Game Hub</title>
+    <link rel="stylesheet" href="../styles.css">
+    <style>
+        #game-container {
+            margin: 10px auto;
+            max-width: 804px;
+            width: 100%;
+            aspect-ratio: 4 / 3;
+            position: relative;
+        }
+        #game-container canvas {
+            width: 100% !important;
+            height: 100% !important;
+            display: block;
+            border-radius: 10px;
+        }
+        .loading-overlay {
+            position: absolute;
+            top: 0; left: 0; right: 0; bottom: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(0,0,0,0.8);
+            border-radius: 10px;
+            z-index: 10;
+            color: #fff;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+        .loading-overlay h2 {
+            font-size: 1.8em;
+            margin-bottom: 0.5em;
+            color: #FFD700;
+        }
+        .loading-overlay .progress-bar {
+            width: 60%;
+            height: 8px;
+            background: #333;
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        .loading-overlay .progress-fill {
+            height: 100%;
+            width: 0%;
+            background: #FFD700;
+            border-radius: 4px;
+            transition: width 0.2s;
+        }
+        .loading-overlay p {
+            margin-top: 0.5em;
+            color: #aaa;
+            font-size: 0.95em;
+        }
+
+        .hud {
+            max-width: 804px;
+            margin: 0 auto 6px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            color: #eee;
+            padding: 0 4px;
+        }
+        .hud .horse-name {
+            font-size: 1.2em;
+            font-weight: bold;
+            color: #FFD700;
+        }
+        .hud .happiness-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .hud .happiness-label {
+            font-size: 0.9em;
+            color: #aaa;
+            white-space: nowrap;
+        }
+        .hud .happiness-bar {
+            flex: 1;
+            height: 14px;
+            background: #333;
+            border-radius: 7px;
+            overflow: hidden;
+            min-width: 80px;
+        }
+        .hud .happiness-fill {
+            height: 100%;
+            width: 50%;
+            background: #4CAF50;
+            border-radius: 7px;
+            transition: width 0.3s, background-color 0.3s;
+        }
+        .hud .feed-count {
+            font-size: 0.9em;
+            color: #aaa;
+        }
+        .hud .feed-count span {
+            color: #FFD700;
+            font-weight: bold;
+        }
+
+        .food-tray {
+            max-width: 804px;
+            margin: 8px auto 0;
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            flex-wrap: wrap;
+        }
+        .food-btn {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            padding: 10px 18px;
+            border: 2px solid #444;
+            background: #2a2a3e;
+            color: #eee;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            font-family: 'Segoe UI', Arial, sans-serif;
+            transition: all 0.2s;
+            user-select: none;
+        }
+        .food-btn:hover {
+            border-color: #FFD700;
+            background: #3a3a5e;
+        }
+        .food-btn.selected {
+            border-color: #FFD700;
+            background: #3a3a5e;
+            box-shadow: 0 0 10px rgba(255, 215, 0, 0.3);
+        }
+        .food-btn.cooldown {
+            opacity: 0.5;
+            pointer-events: none;
+        }
+        .food-btn .food-emoji {
+            font-size: 1.3em;
+        }
+
+        .controls-info {
+            max-width: 804px;
+            margin: 8px auto 0;
+            text-align: center;
+            color: #777;
+            font-size: 0.85em;
+            font-family: 'Segoe UI', Arial, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>Horse Feeding</h1>
+
+        <div class="hud">
+            <div class="horse-name">Maple</div>
+            <div class="happiness-wrap">
+                <span class="happiness-label">Happiness:</span>
+                <div class="happiness-bar">
+                    <div class="happiness-fill" id="happiness-fill"></div>
+                </div>
+            </div>
+            <div class="feed-count">Fed: <span id="feed-count">0</span></div>
+        </div>
+
+        <div id="game-container">
+            <div class="loading-overlay" id="loading-overlay">
+                <h2>Loading Horse...</h2>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="loading-progress"></div>
+                </div>
+                <p>Preparing your new friend</p>
+            </div>
+        </div>
+
+        <div class="food-tray" id="food-tray">
+            <button class="food-btn selected" data-food="apple">
+                <span class="food-emoji">🍎</span> Apple
+            </button>
+            <button class="food-btn" data-food="carrot">
+                <span class="food-emoji">🥕</span> Carrot
+            </button>
+            <button class="food-btn" data-food="hay">
+                <span class="food-emoji">🌾</span> Hay
+            </button>
+            <button class="food-btn" data-food="sugar">
+                <span class="food-emoji">🧊</span> Sugar Cube
+            </button>
+        </div>
+
+        <div class="controls-info">
+            <p>Click a food to select it, then click the horse to feed. Drag to rotate the camera.</p>
+        </div>
+    </div>
+
+    <script src="js/config.js"></script>
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.169.0/build/three.module.js",
+            "three/addons/": "https://cdn.jsdelivr.net/npm/three@0.169.0/examples/jsm/"
+        }
+    }
+    </script>
+    <script type="module" src="js/GameManager.js"></script>
+    <script src="../nav.js"></script>
+</body>
+</html>
