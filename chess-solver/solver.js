@@ -202,7 +202,7 @@
       const pieceDom = sourcePiece.guiPiece[0] || sourcePiece.guiPiece;
       pieceDom.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
 
-      // Step 3: After a brief delay, click the target square
+      // Step 3: After a brief delay, find and click the closest highlighted target square
       setTimeout(() => {
         const target = getSquareCenter(move.toFile, move.toRank);
         if (!target) {
@@ -211,32 +211,34 @@
           return;
         }
 
-        // Find the highlighted square at target coords and jQuery-click it
         const highlights = document.querySelectorAll('.highlight');
-        let found = false;
+        if (highlights.length === 0) {
+          console.error('No highlights appeared after selecting piece');
+          resolve(false);
+          return;
+        }
+
+        // Find the closest highlight to the target position
+        let bestHL = null, bestDist = Infinity;
         for (const h of highlights) {
           const rect = h.getBoundingClientRect();
           const cx = rect.left + rect.width / 2;
           const cy = rect.top + rect.height / 2;
-          if (Math.abs(cx - target.x) < 30 && Math.abs(cy - target.y) < 30) {
-            jQuery(h).trigger('click');
-            found = true;
-            break;
-          }
-        }
-        if (!found && highlights.length === 1) {
-          jQuery(highlights[0]).trigger('click');
-          found = true;
-        }
-        if (!found) {
-          console.error('Chess AI: No highlight near', target.x, target.y);
+          const dist = Math.abs(cx - target.x) + Math.abs(cy - target.y);
+          if (dist < bestDist) { bestDist = dist; bestHL = h; }
         }
 
-        // Verify the move happened after a delay
-        setTimeout(() => {
-          resolve(true);
-        }, 200);
-      }, 150);
+        if (bestHL && bestDist < 60) {
+          jQuery(bestHL).trigger('click');
+          setTimeout(() => resolve(true), 200);
+        } else {
+          console.error('Chess AI: Closest highlight dist:', bestDist, 'target:', target.x, target.y);
+          // Deselect piece to prevent stuck state on next retry
+          const board = document.querySelector('#board-and-header') || document.body;
+          board.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: 100, clientY: 100 }));
+          resolve(false);
+        }
+      }, 250);
     });
   }
 
@@ -246,8 +248,8 @@
   function si(h) { document.getElementById('ai-info').innerHTML = h; }
 
   const moveHistory = [];
-  let lastKnownFen = '';
   let moveNumber = 1;
+  let wasHumanTurn = false;
 
   function addToTimeline(moveStr, eval_, depth, time, isAI) {
     moveHistory.push({ moveStr, eval: eval_, depth, time, isAI, moveNum: moveNumber });
@@ -256,9 +258,9 @@
   }
 
   function checkOpponentMove() {
-    const fen = game.table.toFen();
-    if (fen !== lastKnownFen && lastKnownFen !== '') {
-      // Board changed while it wasn't our turn — opponent moved
+    // Only detect opponent move on turn transition (Beth finished → our turn)
+    const isHuman = game.humanTurn();
+    if (isHuman && !wasHumanTurn) {
       const lastMove = game.getLastMove ? game.getLastMove() : null;
       if (lastMove) {
         const oppStr = fl(lastMove.fromFile) + lastMove.fromRank +
@@ -267,7 +269,7 @@
         renderTimeline();
       }
     }
-    lastKnownFen = fen;
+    wasHumanTurn = isHuman;
   }
 
   function renderTimeline() {
@@ -379,11 +381,11 @@
     if (el) el.innerHTML = getStatusLine();
   }
 
-  // Poll for opponent moves and status updates
+  // Poll for turn transitions and status updates
   setInterval(() => {
-    checkOpponentMove();
+    checkOpponentMove(); // only logs on actual turn transition (wasHumanTurn flag)
     updateStatus();
-  }, 1000);
+  }, 500);
 
   function doAIMove() {
     if (game.finished) {
@@ -394,8 +396,6 @@
     }
     let h; try { h = game.humanTurn(); } catch (e) { return Promise.resolve(false); }
     if (!h) { si('<span class="l">Waiting for opponent...</span>'); updateStatus(); return Promise.resolve(false); }
-
-    checkOpponentMove(); // capture any opponent move we missed
 
     const tl = parseInt(document.getElementById('ai-time').value) * 1000;
     const btn = document.getElementById('ai-move-btn');
