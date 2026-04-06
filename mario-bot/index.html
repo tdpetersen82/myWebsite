@@ -19,6 +19,7 @@
             display: flex;
             gap: 12px;
             align-items: flex-start;
+            position: relative;
         }
         #game {
             width: 640px;
@@ -105,6 +106,26 @@
         #log .log-btn { color: #ff0; }
         #log .log-info { color: #88f; }
         #log .log-warn { color: #f88; }
+        #log .log-enemy { color: #f80; }
+        #log .log-ctx { color: #999; }
+
+        #ram-status {
+            display: none;
+            margin: 4px 0;
+            font-size: 8px;
+            line-height: 1.6;
+            color: #aaa;
+            border-bottom: 1px solid #333;
+            padding-bottom: 4px;
+        }
+        #ram-status .ram-label { color: #666; font-size: 7px; }
+        #ram-status .ram-val { color: #0ff; }
+        #ram-status .ram-pos { color: #8f8; }
+        #ram-status .ram-speed { color: #ff0; }
+        #ram-status .ram-enemy { color: #f80; }
+        #ram-status .ram-danger { color: #f22; font-weight: bold; }
+        #ram-status .ram-state { color: #c8f; }
+        #ram-status .ram-score { color: #fff; }
 
         #next-up {
             margin-top: 4px;
@@ -120,6 +141,7 @@
 <body>
     <div id="wrapper">
         <div id="game"></div>
+        <canvas id="jsnes-canvas" width="256" height="240" style="display:none; position:absolute; top:0; left:0; width:640px; height:480px; image-rendering:pixelated; z-index:10;"></canvas>
         <div id="bot-panel">
             <h3>SPEEDRUN BOT</h3>
             <div class="btn-row">
@@ -129,7 +151,8 @@
             </div>
             <div class="btn-row">
                 <button id="btn-start" disabled>REPLAY</button>
-                <button id="btn-load-best" disabled style="background:#3498db">LOAD BEST</button>
+                <button id="btn-load-best" disabled style="background:#3498db">BEST</button>
+                <button id="btn-hof" disabled style="background:#d4a017;font-size:8px">🏆 HOF</button>
             </div>
             <div id="bot-status">
                 <div><span class="label">STATUS:</span> <span id="status-text" class="value stopped">WAITING</span></div>
@@ -138,6 +161,14 @@
                 <div><span class="label">TIME:</span> <span id="time-text" class="value">0.0s</span></div>
                 <div><span class="label">EVENTS:</span> <span id="events-text" class="value">0</span></div>
                 <div><span class="label">INPUTS:</span> <span id="input-text" class="value">---</span></div>
+            </div>
+            <div id="ram-status">
+                <div><span class="ram-label">POS:</span> <span id="ram-pos" class="ram-pos">---</span></div>
+                <div><span class="ram-label">VEL:</span> <span id="ram-speed" class="ram-speed">---</span></div>
+                <div><span class="ram-label">STATE:</span> <span id="ram-state" class="ram-state">---</span></div>
+                <div><span class="ram-label">ENEMIES:</span> <span id="ram-enemies" class="ram-enemy">---</span></div>
+                <div><span class="ram-label">NEAREST:</span> <span id="ram-nearest" class="ram-enemy">---</span></div>
+                <div><span class="ram-label">SCORE:</span> <span id="ram-score" class="ram-score">---</span></div>
             </div>
             <div id="next-up">
                 <span class="next-label">NEXT:</span> <span id="next-text" class="next-value">---</span>
@@ -161,6 +192,7 @@
             document.getElementById('btn-record').disabled = false;
             document.getElementById('btn-start').disabled = false;
             document.getElementById('btn-load-best').disabled = false;
+            document.getElementById('btn-hof').disabled = false;
             document.getElementById('status-text').textContent = 'READY';
             if (window.botLog) {
                 window.botLog('Emulator ready', 'info');
@@ -171,6 +203,7 @@
         };
     </script>
     <script src="https://cdn.emulatorjs.org/stable/data/loader.js"></script>
+    <script src="https://unpkg.com/jsnes@1.2.1/dist/jsnes.min.js"></script>
     <script src="bot.js"></script>
 
     <script>
