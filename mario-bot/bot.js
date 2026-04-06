@@ -60,60 +60,6 @@
         return f >= 0 ? f - startFrame : 0;
     }
 
-    // ========== NES RAM READING ==========
-    // SMB1 RAM addresses (same as optimize.js uses via jsnes)
-
-    let ramPtr = 0;    // cached pointer to NES system RAM
-    let ramReady = false;
-    let prevMarioX = 0;
-    let marioSpeed = 0;
-
-    function initRAM() {
-        try {
-            const Module = EJS_emulator.gameManager.Module;
-            ramPtr = Module._retro_get_memory_data(2); // RETRO_MEMORY_SYSTEM_RAM
-            const size = Module._retro_get_memory_size(2);
-            if (ramPtr > 0 && size >= 0x800) {
-                ramReady = true;
-                log('RAM access ready (' + size + ' bytes at 0x' + ramPtr.toString(16) + ')', 'info');
-            } else {
-                log('RAM: unexpected ptr=' + ramPtr + ' size=' + size, 'warn');
-            }
-        } catch(e) {
-            log('RAM access failed: ' + e.message, 'warn');
-            log('Game state display will show N/A', 'warn');
-        }
-    }
-
-    function readRAM(addr) {
-        if (!ramReady) return -1;
-        try {
-            return EJS_emulator.gameManager.Module.HEAPU8[ramPtr + addr];
-        } catch(e) { return -1; }
-    }
-
-    function getMarioX() {
-        const page = readRAM(0x006D);
-        const xLow = readRAM(0x0086);
-        if (page < 0 || xLow < 0) return -1;
-        return page * 256 + xLow;
-    }
-
-    function getMarioY() {
-        const y = readRAM(0x00CE);
-        return y >= 0 ? y : -1;
-    }
-
-    function getPlayerState() {
-        const ps = readRAM(0x000E);
-        const y = getMarioY();
-        const levelDone = readRAM(0x001D);
-        if (levelDone === 3) return 'COMPLETE';
-        if (ps === 0x0B || ps === 0x06) return 'DEAD';
-        if (y > 240) return 'FALLING';
-        return 'ALIVE';
-    }
-
     // ========== INPUT ==========
 
     function press(btn) {
@@ -296,16 +242,10 @@
         log('Replay stopped at frame ' + relFrame(), 'info');
     }
 
-    function getFrameOffset() {
-        const el = document.getElementById('frame-offset');
-        return el ? parseInt(el.value, 10) || 0 : 0;
-    }
-
     function replayLoop() {
         if (mode !== 'replaying') return;
 
-        const offset = getFrameOffset();
-        const rf = relFrame() - offset; // shift: positive offset = start later
+        const rf = relFrame();
 
         // Apply all events up to current frame
         while (replayIndex < replaySequence.length &&
@@ -317,9 +257,7 @@
             else release(btn);
 
             const action = state ? 'PRESS' : 'REL  ';
-            const x = getMarioX();
-            const posTag = x >= 0 ? ' <span style="color:#0ff">@' + x + 'px</span>' : '';
-            log('<span class="log-frame">f' + evt[0] + '</span> <span class="log-action">' + action + '</span> <span class="log-btn">' + (BTN_NAME[btn] || btn) + '</span>' + posTag);
+            log('<span class="log-frame">f' + evt[0] + '</span> <span class="log-action">' + action + '</span> <span class="log-btn">' + (BTN_NAME[btn] || btn) + '</span>');
 
             replayIndex++;
         }
@@ -368,9 +306,7 @@
 
     function markDone(action) {
         if (action.el) {
-            const x = getMarioX();
-            const posTag = x >= 0 ? '  <span style="color:#0ff">@' + x + 'px</span>' : '';
-            action.el.innerHTML = '<span style="color:#2ecc71">f' + String(action.frame).padStart(5) + '  \u2713 ' + action.label + '</span>' + posTag;
+            action.el.innerHTML = '<span style="color:#2ecc71">f' + String(action.frame).padStart(5) + '  \u2713 ' + action.label + '</span>';
         }
         action.done = true;
         // Scroll to show current action
@@ -534,39 +470,6 @@
         } else {
             document.getElementById('next-text').textContent = '---';
         }
-
-        // Game state from NES RAM
-        if (ramReady) {
-            const x = getMarioX();
-            const y = getMarioY();
-            const state = getPlayerState();
-
-            document.getElementById('gs-x').textContent = x >= 0 ? x + ' px' : 'N/A';
-            document.getElementById('gs-y').textContent = y >= 0 ? y + ' px' : 'N/A';
-
-            // Speed = delta X per frame
-            if (x >= 0) {
-                marioSpeed = x - prevMarioX;
-                prevMarioX = x;
-            }
-            document.getElementById('gs-speed').textContent =
-                x >= 0 ? marioSpeed + ' px/f' : 'N/A';
-
-            const stateEl = document.getElementById('gs-state');
-            stateEl.textContent = state;
-            stateEl.className = 'gs-val' +
-                (state === 'DEAD' ? ' dead' : state === 'FALLING' ? ' falling' :
-                 state === 'COMPLETE' ? ' complete' : '');
-
-            // Progress bar (World 1-1 ~ 3264px)
-            if (x >= 0) {
-                const pct = Math.min(100, (x / 3264) * 100);
-                document.getElementById('progress-fill').style.width = pct + '%';
-            }
-        } else {
-            // Try to init RAM if not ready yet
-            if (getEmuFrame() > 0) initRAM();
-        }
     }
 
     // ========== WIRE UP ==========
@@ -592,9 +495,8 @@
                     log('Best distance: ' + data.bestX + ' px (did not complete)', 'info');
                 }
 
-                // Do the full GO setup: restart ROM → title screen → level load → replay
+                // Auto-restart ROM and replay
                 mode = 'going';
-                const logEl = document.getElementById('log');
 
                 document.getElementById('btn-go').disabled = true;
                 document.getElementById('btn-record').disabled = true;

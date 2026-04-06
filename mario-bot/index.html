@@ -106,32 +106,6 @@
         #log .log-info { color: #88f; }
         #log .log-warn { color: #f88; }
 
-        #game-state {
-            margin-top: 4px;
-            font-size: 9px;
-            line-height: 1.6;
-            border-top: 1px solid #333;
-            padding-top: 4px;
-        }
-        #game-state .gs-label { color: #666; }
-        #game-state .gs-val { color: #0ff; font-weight: bold; }
-        #game-state .gs-val.dead { color: #e74c3c; }
-        #game-state .gs-val.complete { color: #2ecc71; }
-        #game-state .gs-val.falling { color: #f39c12; }
-        #progress-bar {
-            margin-top: 3px;
-            height: 6px;
-            background: #222;
-            border: 1px solid #444;
-            border-radius: 3px;
-            overflow: hidden;
-        }
-        #progress-fill {
-            height: 100%;
-            width: 0%;
-            background: linear-gradient(90deg, #e74c3c, #f39c12, #2ecc71);
-            transition: width 0.1s;
-        }
         #next-up {
             margin-top: 4px;
             font-size: 8px;
@@ -141,29 +115,6 @@
         }
         #next-up .next-label { color: #666; }
         #next-up .next-value { color: #ff0; }
-        #calibration {
-            margin-top: 4px;
-            font-size: 8px;
-            color: #aaa;
-            border-top: 1px solid #333;
-            padding-top: 4px;
-            display: flex;
-            align-items: center;
-            gap: 4px;
-        }
-        #calibration label { color: #666; }
-        #calibration input {
-            width: 50px;
-            background: #1a1a1a;
-            color: #ff0;
-            border: 1px solid #555;
-            border-radius: 3px;
-            padding: 2px 4px;
-            font-family: inherit;
-            font-size: 8px;
-            text-align: center;
-        }
-        #calibration .cal-hint { color: #555; font-size: 7px; }
     </style>
 </head>
 <body>
@@ -188,20 +139,8 @@
                 <div><span class="label">EVENTS:</span> <span id="events-text" class="value">0</span></div>
                 <div><span class="label">INPUTS:</span> <span id="input-text" class="value">---</span></div>
             </div>
-            <div id="game-state">
-                <div><span class="gs-label">X POS:</span> <span id="gs-x" class="gs-val">---</span></div>
-                <div><span class="gs-label">Y POS:</span> <span id="gs-y" class="gs-val">---</span></div>
-                <div><span class="gs-label">SPEED:</span> <span id="gs-speed" class="gs-val">---</span></div>
-                <div><span class="gs-label">STATE:</span> <span id="gs-state" class="gs-val">---</span></div>
-                <div id="progress-bar"><div id="progress-fill"></div></div>
-            </div>
             <div id="next-up">
                 <span class="next-label">NEXT:</span> <span id="next-text" class="next-value">---</span>
-            </div>
-            <div id="calibration">
-                <label>OFFSET:</label>
-                <input type="number" id="frame-offset" value="0" step="5">
-                <span class="cal-hint">frames (+ = later, - = earlier)</span>
             </div>
             <div id="log-header">LOG</div>
             <div id="log"></div>
