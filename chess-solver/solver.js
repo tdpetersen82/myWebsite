@@ -245,22 +245,109 @@
   function fmt(m) { return fl(m.fromFile) + m.fromRank + (m.kills ? 'x' : '-') + fl(m.toFile) + m.toRank; }
   function si(h) { document.getElementById('ai-info').innerHTML = h; }
 
+  const moveHistory = [];
+  let lastKnownFen = '';
+  let moveNumber = 1;
+
+  function addToTimeline(moveStr, eval_, depth, time, isAI) {
+    moveHistory.push({ moveStr, eval: eval_, depth, time, isAI, moveNum: moveNumber });
+    if (isAI) moveNumber++;
+    renderTimeline();
+  }
+
+  function checkOpponentMove() {
+    const fen = game.table.toFen();
+    if (fen !== lastKnownFen && lastKnownFen !== '') {
+      // Board changed while it wasn't our turn — opponent moved
+      const lastMove = game.getLastMove ? game.getLastMove() : null;
+      if (lastMove) {
+        const oppStr = fl(lastMove.fromFile) + lastMove.fromRank +
+          (lastMove.kills ? 'x' : '-') + fl(lastMove.toFile) + lastMove.toRank;
+        moveHistory.push({ moveStr: oppStr, eval: null, depth: null, time: null, isAI: false, moveNum: moveNumber });
+        renderTimeline();
+      }
+    }
+    lastKnownFen = fen;
+  }
+
+  function renderTimeline() {
+    const tl = document.getElementById('ai-timeline');
+    if (!tl) return;
+
+    let html = '';
+    for (let i = moveHistory.length - 1; i >= Math.max(0, moveHistory.length - 20); i--) {
+      const m = moveHistory[i];
+      const evalStr = m.eval !== null ? (m.eval >= 0 ? '+' : '') + m.eval : '';
+      const depthStr = m.depth !== null ? 'd' + m.depth : '';
+      const timeStr = m.time !== null ? m.time + 's' : '';
+      const icon = m.isAI ? '<span style="color:#e94560">AI</span>' : '<span style="color:#888">OPP</span>';
+
+      // Eval bar: green = positive, red = negative, 50% = even
+      let barPct = 50;
+      if (m.eval !== null) {
+        const clamped = Math.max(-5, Math.min(5, parseFloat(m.eval)));
+        barPct = 50 + (clamped / 5) * 50;
+      }
+      const barColor = barPct >= 50 ? '#16c79a' : '#e94560';
+
+      html += `<div class="tl-row${i === moveHistory.length - 1 ? ' tl-latest' : ''}">
+        <div class="tl-num">${m.moveNum}.</div>
+        <div class="tl-who">${icon}</div>
+        <div class="tl-move"><b>${m.moveStr}</b></div>
+        <div class="tl-eval">${evalStr}</div>
+        <div class="tl-bar"><div class="tl-bar-fill" style="width:${barPct}%;background:${barColor}"></div></div>
+        <div class="tl-meta">${depthStr} ${timeStr}</div>
+      </div>`;
+    }
+    tl.innerHTML = html || '<div class="tl-empty">No moves yet</div>';
+    tl.scrollTop = 0;
+  }
+
+  function getStatusLine() {
+    if (game.finished) return '<span style="color:#e94560;font-weight:bold">GAME OVER</span>';
+    try {
+      if (game.humanTurn()) return '<span style="color:#16c79a">Your turn — AI thinking...</span>';
+      else return '<span style="color:#888">Opponent thinking...</span>';
+    } catch (e) {
+      return '<span style="color:#888">Waiting...</span>';
+    }
+  }
+
   const panel = document.createElement('div');
   panel.id = 'chess-ai-panel';
   panel.innerHTML = `
     <style>
-      #chess-ai-panel { position:fixed;top:10px;right:10px;z-index:99999;background:#1a1a2e;color:#eee;border-radius:12px;padding:16px;width:240px;font-family:system-ui,sans-serif;box-shadow:0 4px 24px rgba(0,0,0,0.5);font-size:14px;user-select:none }
-      #chess-ai-panel h3 { margin:0 0 12px;font-size:16px;color:#e94560;text-align:center;letter-spacing:1px;cursor:grab }
-      #chess-ai-panel button { width:100%;padding:10px;margin:4px 0;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600 }
+      #chess-ai-panel { position:fixed;top:10px;right:10px;z-index:99999;background:#1a1a2e;color:#eee;border-radius:12px;padding:16px;width:280px;font-family:system-ui,sans-serif;box-shadow:0 4px 24px rgba(0,0,0,0.5);font-size:14px;user-select:none }
+      #chess-ai-panel h3 { margin:0 0 10px;font-size:16px;color:#e94560;text-align:center;letter-spacing:1px;cursor:grab }
+      #chess-ai-panel button { width:100%;padding:10px;margin:3px 0;border:none;border-radius:8px;cursor:pointer;font-size:14px;font-weight:600 }
       #chess-ai-panel .bm { background:#e94560;color:#fff } #chess-ai-panel .bm:disabled { background:#555;cursor:wait }
       #chess-ai-panel .ba { background:#0f3460;color:#fff } #chess-ai-panel .ba.active { background:#16c79a;color:#1a1a2e }
-      #chess-ai-panel .dr { display:flex;align-items:center;gap:8px;margin:10px 0 6px }
+      #chess-ai-panel .dr { display:flex;align-items:center;gap:8px;margin:8px 0 4px }
       #chess-ai-panel .dr label { flex-shrink:0;font-size:13px } #chess-ai-panel .dr input { flex:1 }
       #chess-ai-panel .dr span { width:30px;text-align:center;font-size:13px }
-      #chess-ai-panel .nfo { margin-top:10px;padding:8px;background:rgba(255,255,255,.05);border-radius:6px;font-size:12px;line-height:1.6;min-height:60px }
+      #chess-ai-panel .nfo { margin-top:8px;padding:6px 8px;background:rgba(255,255,255,.05);border-radius:6px;font-size:12px;line-height:1.5;min-height:20px }
       #chess-ai-panel .nfo .l { color:#888 }
+      #chess-ai-panel .status { text-align:center;font-size:12px;margin:6px 0;min-height:16px }
+      #chess-ai-panel .tl-wrap { margin-top:8px }
+      #chess-ai-panel .tl-label { font-size:11px;color:#666;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px }
+      #chess-ai-panel .tl {
+        max-height:200px;overflow-y:auto;background:rgba(0,0,0,.2);border-radius:6px;padding:4px;
+        scrollbar-width:thin;scrollbar-color:#333 transparent
+      }
+      #chess-ai-panel .tl::-webkit-scrollbar { width:4px }
+      #chess-ai-panel .tl::-webkit-scrollbar-thumb { background:#444;border-radius:2px }
+      #chess-ai-panel .tl-row { display:grid;grid-template-columns:24px 26px 50px 42px 1fr 50px;align-items:center;gap:2px;padding:3px 4px;font-size:11px;border-bottom:1px solid rgba(255,255,255,.03) }
+      #chess-ai-panel .tl-latest { background:rgba(233,69,96,.1);border-radius:4px }
+      #chess-ai-panel .tl-num { color:#555;font-size:10px }
+      #chess-ai-panel .tl-who { font-size:9px;font-weight:700 }
+      #chess-ai-panel .tl-move { color:#eee }
+      #chess-ai-panel .tl-eval { color:#aaa;font-size:10px;text-align:right }
+      #chess-ai-panel .tl-bar { height:4px;background:#222;border-radius:2px;overflow:hidden }
+      #chess-ai-panel .tl-bar-fill { height:100%;border-radius:2px;transition:width .3s }
+      #chess-ai-panel .tl-meta { color:#555;font-size:9px;text-align:right }
+      #chess-ai-panel .tl-empty { color:#555;text-align:center;padding:8px;font-size:11px }
     </style>
-    <h3>CHESS AI v3</h3>
+    <h3>CHESS AI</h3>
     <button class="bm" id="ai-move-btn">AI Move</button>
     <button class="ba" id="ai-auto-btn">Auto-Play: OFF</button>
     <div class="dr">
@@ -268,7 +355,12 @@
       <input type="range" id="ai-time" min="1" max="15" value="5">
       <span id="ai-time-val">5s</span>
     </div>
+    <div class="status" id="ai-status"></div>
     <div class="nfo" id="ai-info"><span class="l">Ready. Click Auto-Play to start!</span></div>
+    <div class="tl-wrap">
+      <div class="tl-label">Move Timeline</div>
+      <div class="tl" id="ai-timeline"><div class="tl-empty">No moves yet</div></div>
+    </div>
   `;
   document.body.appendChild(panel);
 
@@ -282,15 +374,34 @@
   // ========== GAME LOGIC ==========
   let autoPlay = false, autoTimer = null;
 
+  function updateStatus() {
+    const el = document.getElementById('ai-status');
+    if (el) el.innerHTML = getStatusLine();
+  }
+
+  // Poll for opponent moves and status updates
+  setInterval(() => {
+    checkOpponentMove();
+    updateStatus();
+  }, 1000);
+
   function doAIMove() {
-    if (game.finished) { si('<span class="l">Game over!</span>'); stopAuto(); return Promise.resolve(false); }
+    if (game.finished) {
+      si('<span class="l">Game over!</span>');
+      updateStatus();
+      stopAuto();
+      return Promise.resolve(false);
+    }
     let h; try { h = game.humanTurn(); } catch (e) { return Promise.resolve(false); }
-    if (!h) { si('<span class="l">Waiting for opponent...</span>'); return Promise.resolve(false); }
+    if (!h) { si('<span class="l">Waiting for opponent...</span>'); updateStatus(); return Promise.resolve(false); }
+
+    checkOpponentMove(); // capture any opponent move we missed
 
     const tl = parseInt(document.getElementById('ai-time').value) * 1000;
     const btn = document.getElementById('ai-move-btn');
     btn.disabled = true; btn.textContent = 'Thinking...';
     si('<span class="l">Searching...</span>');
+    updateStatus();
 
     return new Promise(resolve => {
       setTimeout(() => {
@@ -308,9 +419,14 @@
             '<span class="l">Nodes:</span> ' + r.nodes.toLocaleString() + ' <span class="l">T:</span>' + r.time + 's'
           );
 
+          // Log to timeline
+          addToTimeline(fmt(r.move), ev, r.depth, r.time, true);
+
           // Execute the move via DOM clicks
           executeMove(r.move).then(ok => {
             if (!ok) si('<span class="l">Move execution failed. Try again.</span>');
+            lastKnownFen = game.table.toFen(); // update known FEN after our move
+            updateStatus();
             resolve(ok);
           });
         } catch (e) {
