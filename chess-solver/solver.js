@@ -257,6 +257,8 @@
     renderTimeline();
   }
 
+  let lastLoggedOppMove = '';
+
   function checkOpponentMove() {
     // Only detect opponent move on turn transition (Beth finished → our turn)
     const isHuman = game.humanTurn();
@@ -265,8 +267,12 @@
       if (lastMove) {
         const oppStr = fl(lastMove.fromFile) + lastMove.fromRank +
           (lastMove.kills ? 'x' : '-') + fl(lastMove.toFile) + lastMove.toRank;
-        moveHistory.push({ moveStr: oppStr, eval: null, depth: null, time: null, isAI: false, moveNum: moveNumber });
-        renderTimeline();
+        // Prevent duplicate: skip if last timeline entry is the same OPP move
+        if (oppStr !== lastLoggedOppMove) {
+          lastLoggedOppMove = oppStr;
+          moveHistory.push({ moveStr: oppStr, eval: null, depth: null, time: null, isAI: false, moveNum: moveNumber });
+          renderTimeline();
+        }
       }
     }
     wasHumanTurn = isHuman;
@@ -419,7 +425,8 @@
             '<span class="l">Nodes:</span> ' + r.nodes.toLocaleString() + ' <span class="l">T:</span>' + r.time + 's'
           );
 
-          // Log to timeline
+          // Log to timeline and reset OPP dedup
+          lastLoggedOppMove = '';
           addToTimeline(fmt(r.move), ev, r.depth, r.time, true);
 
           // Execute the move via DOM clicks
