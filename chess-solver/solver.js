@@ -427,13 +427,14 @@
             '<span class="l">Looked ' + r.depth + ' moves ahead in ' + r.time + 's</span>'
           );
 
-          // Log to timeline
-          addToTimeline(fmt(r.move), ev, r.depth, r.time, true);
-
-          // Execute the move via DOM clicks
+          // Execute the move via DOM clicks — only log to timeline on success
+          const moveStr = fmt(r.move);
           executeMove(r.move).then(ok => {
-            if (!ok) si('<span class="l">Move execution failed. Try again.</span>');
-            lastKnownFen = game.table.toFen(); // update known FEN after our move
+            if (ok) {
+              addToTimeline(moveStr, ev, r.depth, r.time, true);
+            } else {
+              si('<span class="l">Move failed, retrying...</span>');
+            }
             updateStatus();
             resolve(ok);
           });
