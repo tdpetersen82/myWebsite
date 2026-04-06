@@ -1,0 +1,8 @@
+{
+  "name": "mario-speedrun-optimizer",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "jsnes": "^1.2.1"
+  }
+}
