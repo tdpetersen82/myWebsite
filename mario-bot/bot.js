@@ -60,6 +60,60 @@
         return f >= 0 ? f - startFrame : 0;
     }
 
+    // ========== NES RAM READING ==========
+    // SMB1 RAM addresses (same as optimize.js uses via jsnes)
+
+    let ramPtr = 0;    // cached pointer to NES system RAM
+    let ramReady = false;
+    let prevMarioX = 0;
+    let marioSpeed = 0;
+
+    function initRAM() {
+        try {
+            const Module = EJS_emulator.gameManager.Module;
+            ramPtr = Module._retro_get_memory_data(2); // RETRO_MEMORY_SYSTEM_RAM
+            const size = Module._retro_get_memory_size(2);
+            if (ramPtr > 0 && size >= 0x800) {
+                ramReady = true;
+                log('RAM access ready (' + size + ' bytes at 0x' + ramPtr.toString(16) + ')', 'info');
+            } else {
+                log('RAM: unexpected ptr=' + ramPtr + ' size=' + size, 'warn');
+            }
+        } catch(e) {
+            log('RAM access failed: ' + e.message, 'warn');
+            log('Game state display will show N/A', 'warn');
+        }
+    }
+
+    function readRAM(addr) {
+        if (!ramReady) return -1;
+        try {
+            return EJS_emulator.gameManager.Module.HEAPU8[ramPtr + addr];
+        } catch(e) { return -1; }
+    }
+
+    function getMarioX() {
+        const page = readRAM(0x006D);
+        const xLow = readRAM(0x0086);
+        if (page < 0 || xLow < 0) return -1;
+        return page * 256 + xLow;
+    }
+
+    function getMarioY() {
+        const y = readRAM(0x00CE);
+        return y >= 0 ? y : -1;
+    }
+
+    function getPlayerState() {
+        const ps = readRAM(0x000E);
+        const y = getMarioY();
+        const levelDone = readRAM(0x001D);
+        if (levelDone === 3) return 'COMPLETE';
+        if (ps === 0x0B || ps === 0x06) return 'DEAD';
+        if (y > 240) return 'FALLING';
+        return 'ALIVE';
+    }
+
     // ========== INPUT ==========
 
     function press(btn) {
@@ -231,8 +285,10 @@
         if (animFrameId) { cancelAnimationFrame(animFrameId); animFrameId = null; }
         releaseAll();
 
+        document.getElementById('btn-go').disabled = false;
         document.getElementById('btn-record').disabled = false;
         document.getElementById('btn-start').disabled = false;
+        document.getElementById('btn-load-best').disabled = false;
         document.getElementById('btn-stop').disabled = true;
         document.getElementById('status-text').textContent = 'STOPPED';
         document.getElementById('status-text').className = 'value stopped';
@@ -240,10 +296,16 @@
         log('Replay stopped at frame ' + relFrame(), 'info');
     }
 
+    function getFrameOffset() {
+        const el = document.getElementById('frame-offset');
+        return el ? parseInt(el.value, 10) || 0 : 0;
+    }
+
     function replayLoop() {
         if (mode !== 'replaying') return;
 
-        const rf = relFrame();
+        const offset = getFrameOffset();
+        const rf = relFrame() - offset; // shift: positive offset = start later
 
         // Apply all events up to current frame
         while (replayIndex < replaySequence.length &&
@@ -255,7 +317,9 @@
             else release(btn);
 
             const action = state ? 'PRESS' : 'REL  ';
-            log('<span class="log-frame">f' + evt[0] + '</span> <span class="log-action">' + action + '</span> <span class="log-btn">' + (BTN_NAME[btn] || btn) + '</span>');
+            const x = getMarioX();
+            const posTag = x >= 0 ? ' <span style="color:#0ff">@' + x + 'px</span>' : '';
+            log('<span class="log-frame">f' + evt[0] + '</span> <span class="log-action">' + action + '</span> <span class="log-btn">' + (BTN_NAME[btn] || btn) + '</span>' + posTag);
 
             replayIndex++;
         }
@@ -304,7 +368,9 @@
 
     function markDone(action) {
         if (action.el) {
-            action.el.innerHTML = '<span style="color:#2ecc71">f' + String(action.frame).padStart(5) + '  \u2713 ' + action.label + '</span>';
+            const x = getMarioX();
+            const posTag = x >= 0 ? '  <span style="color:#0ff">@' + x + 'px</span>' : '';
+            action.el.innerHTML = '<span style="color:#2ecc71">f' + String(action.frame).padStart(5) + '  \u2713 ' + action.label + '</span>' + posTag;
         }
         action.done = true;
         // Scroll to show current action
@@ -438,6 +504,7 @@
             document.getElementById('btn-go').disabled = false;
             document.getElementById('btn-record').disabled = false;
             document.getElementById('btn-start').disabled = false;
+            document.getElementById('btn-load-best').disabled = false;
             document.getElementById('btn-stop').disabled = true;
             document.getElementById('status-text').textContent = 'STOPPED';
             document.getElementById('status-text').className = 'value stopped';
@@ -467,6 +534,39 @@
         } else {
             document.getElementById('next-text').textContent = '---';
         }
+
+        // Game state from NES RAM
+        if (ramReady) {
+            const x = getMarioX();
+            const y = getMarioY();
+            const state = getPlayerState();
+
+            document.getElementById('gs-x').textContent = x >= 0 ? x + ' px' : 'N/A';
+            document.getElementById('gs-y').textContent = y >= 0 ? y + ' px' : 'N/A';
+
+            // Speed = delta X per frame
+            if (x >= 0) {
+                marioSpeed = x - prevMarioX;
+                prevMarioX = x;
+            }
+            document.getElementById('gs-speed').textContent =
+                x >= 0 ? marioSpeed + ' px/f' : 'N/A';
+
+            const stateEl = document.getElementById('gs-state');
+            stateEl.textContent = state;
+            stateEl.className = 'gs-val' +
+                (state === 'DEAD' ? ' dead' : state === 'FALLING' ? ' falling' :
+                 state === 'COMPLETE' ? ' complete' : '');
+
+            // Progress bar (World 1-1 ~ 3264px)
+            if (x >= 0) {
+                const pct = Math.min(100, (x / 3264) * 100);
+                document.getElementById('progress-fill').style.width = pct + '%';
+            }
+        } else {
+            // Try to init RAM if not ready yet
+            if (getEmuFrame() > 0) initRAM();
+        }
     }
 
     // ========== WIRE UP ==========
@@ -474,6 +574,8 @@
     // ========== LOAD BEST SEQUENCE ==========
 
     function loadBestAndReplay() {
+        if (mode !== 'idle') { stop(); }
+
         log('Fetching best-sequence.json...', 'info');
         fetch('best-sequence.json')
             .then(r => {
@@ -489,7 +591,70 @@
                 } else if (data.bestX) {
                     log('Best distance: ' + data.bestX + ' px (did not complete)', 'info');
                 }
-                log('Click REPLAY to watch, or GO to auto-start + replay', 'info');
+
+                // Do the full GO setup: restart ROM → title screen → level load → replay
+                mode = 'going';
+                const logEl = document.getElementById('log');
+
+                document.getElementById('btn-go').disabled = true;
+                document.getElementById('btn-record').disabled = true;
+                document.getElementById('btn-start').disabled = true;
+                document.getElementById('btn-load-best').disabled = true;
+                document.getElementById('btn-stop').disabled = false;
+                document.getElementById('status-text').textContent = 'LOAD BEST';
+                document.getElementById('status-text').className = 'value running';
+                document.getElementById('mode-text').textContent = 'LOAD BEST';
+
+                const canvas = document.querySelector('canvas');
+                if (!canvas) { log('ERROR: No canvas found!', 'warn'); return; }
+
+                log('=== SETUP ===', 'info');
+                canvas.focus();
+                canvas.click();
+
+                log('Restarting ROM...', 'info');
+                try {
+                    EJS_emulator.gameManager.restart();
+                    log('ROM restarted', 'action');
+                } catch(e) {
+                    log('Restart failed: ' + e.message, 'warn');
+                }
+
+                log('Waiting 2s for title screen...', 'info');
+                setTimeout(() => {
+                    if (mode !== 'going') return;
+
+                    log('Pressing ENTER...', 'info');
+                    canvas.focus();
+                    canvas.dispatchEvent(new KeyboardEvent('keydown', {
+                        key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true
+                    }));
+                    setTimeout(() => {
+                        canvas.dispatchEvent(new KeyboardEvent('keyup', {
+                            key: 'Enter', code: 'Enter', keyCode: 13, bubbles: true
+                        }));
+                        log('Game started', 'action');
+
+                        log('Waiting 3.5s for level load...', 'info');
+                        setTimeout(() => {
+                            if (mode !== 'going') return;
+                            log('Level loaded!', 'action');
+                            log('=== REPLAYING BEST SEQUENCE ===', 'info');
+
+                            // Switch to replay mode
+                            mode = 'replaying';
+                            releaseAll();
+                            startFrame = getEmuFrame();
+                            replayIndex = 0;
+
+                            document.getElementById('status-text').textContent = 'REPLAYING';
+                            document.getElementById('status-text').className = 'value running';
+                            document.getElementById('mode-text').textContent = 'BEST';
+
+                            animFrameId = requestAnimationFrame(replayLoop);
+                        }, 3500);
+                    }, 150);
+                }, 2000);
             })
             .catch(err => {
                 log('Load failed: ' + err.message, 'warn');
