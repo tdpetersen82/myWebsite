@@ -276,6 +276,21 @@
     wasHumanTurn = isHuman;
   }
 
+  // Convert raw eval to a human-readable label + color
+  function evalLabel(evStr) {
+    if (evStr === null) return { text: '', color: '#888' };
+    const v = parseFloat(evStr);
+    if (v >= 9) return { text: 'Winning!', color: '#16c79a' };
+    if (v >= 3) return { text: 'Big lead', color: '#16c79a' };
+    if (v >= 1) return { text: 'Ahead', color: '#4ade80' };
+    if (v >= 0.3) return { text: 'Slight edge', color: '#86efac' };
+    if (v > -0.3) return { text: 'Even', color: '#888' };
+    if (v > -1) return { text: 'Slight trouble', color: '#fca5a5' };
+    if (v > -3) return { text: 'Behind', color: '#f87171' };
+    if (v > -9) return { text: 'Big trouble', color: '#e94560' };
+    return { text: 'Losing!', color: '#e94560' };
+  }
+
   function renderTimeline() {
     const tl = document.getElementById('ai-timeline');
     if (!tl) return;
@@ -283,26 +298,16 @@
     let html = '';
     for (let i = moveHistory.length - 1; i >= Math.max(0, moveHistory.length - 20); i--) {
       const m = moveHistory[i];
-      const evalStr = m.eval !== null ? (m.eval >= 0 ? '+' : '') + m.eval : '';
-      const depthStr = m.depth !== null ? 'd' + m.depth : '';
+      const label = evalLabel(m.eval);
       const timeStr = m.time !== null ? m.time + 's' : '';
       const icon = m.isAI ? '<span style="color:#e94560">AI</span>' : '<span style="color:#888">OPP</span>';
-
-      // Eval bar: green = positive, red = negative, 50% = even
-      let barPct = 50;
-      if (m.eval !== null) {
-        const clamped = Math.max(-5, Math.min(5, parseFloat(m.eval)));
-        barPct = 50 + (clamped / 5) * 50;
-      }
-      const barColor = barPct >= 50 ? '#16c79a' : '#e94560';
 
       html += `<div class="tl-row${i === moveHistory.length - 1 ? ' tl-latest' : ''}">
         <div class="tl-num">${m.moveNum}.</div>
         <div class="tl-who">${icon}</div>
         <div class="tl-move"><b>${m.moveStr}</b></div>
-        <div class="tl-eval">${evalStr}</div>
-        <div class="tl-bar"><div class="tl-bar-fill" style="width:${barPct}%;background:${barColor}"></div></div>
-        <div class="tl-meta">${depthStr} ${timeStr}</div>
+        <div class="tl-eval" style="color:${label.color}">${label.text}</div>
+        <div class="tl-meta">${timeStr}</div>
       </div>`;
     }
     tl.innerHTML = html || '<div class="tl-empty">No moves yet</div>';
@@ -342,7 +347,7 @@
       }
       #chess-ai-panel .tl::-webkit-scrollbar { width:4px }
       #chess-ai-panel .tl::-webkit-scrollbar-thumb { background:#444;border-radius:2px }
-      #chess-ai-panel .tl-row { display:grid;grid-template-columns:24px 26px 50px 42px 1fr 50px;align-items:center;gap:2px;padding:3px 4px;font-size:11px;border-bottom:1px solid rgba(255,255,255,.03) }
+      #chess-ai-panel .tl-row { display:grid;grid-template-columns:24px 26px 50px 1fr 40px;align-items:center;gap:2px;padding:3px 4px;font-size:11px;border-bottom:1px solid rgba(255,255,255,.03) }
       #chess-ai-panel .tl-latest { background:rgba(233,69,96,.1);border-radius:4px }
       #chess-ai-panel .tl-num { color:#555;font-size:10px }
       #chess-ai-panel .tl-who { font-size:9px;font-weight:700 }
@@ -416,11 +421,10 @@
           if (!r.move) { si('<span class="l">No moves found.</span>'); resolve(false); return; }
 
           const ev = (r.score / 100).toFixed(2);
-          const sg = r.score >= 0 ? '+' : '';
+          const label = evalLabel(ev);
           si(
-            '<span class="l">Move:</span> <b>' + fmt(r.move) + '</b><br>' +
-            '<span class="l">Eval:</span> ' + sg + ev + ' <span class="l">D:</span>' + r.depth + '<br>' +
-            '<span class="l">Nodes:</span> ' + r.nodes.toLocaleString() + ' <span class="l">T:</span>' + r.time + 's'
+            '<b>' + fmt(r.move) + '</b> &mdash; <span style="color:' + label.color + '">' + label.text + '</span><br>' +
+            '<span class="l">Looked ' + r.depth + ' moves ahead in ' + r.time + 's</span>'
           );
 
           // Log to timeline
