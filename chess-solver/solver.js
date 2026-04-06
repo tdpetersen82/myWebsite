@@ -153,34 +153,64 @@
   // ========== DOM MOVE EXECUTION ==========
   // Uses click simulation to properly trigger game turn management.
 
-  function getSquareCenter(file, rank) {
-    // Collect pieces by rank and file to get proper grid mapping
-    const byRank = {}, byFile = {};
+  // Derive full 8x8 board grid from a single piece anchor + square size.
+  function getBoardGeometry() {
+    // Find two pieces on different ranks to determine square size + orientation
+    let anchor = null, other = null;
     for (const [sq, p] of Object.entries(game.table.Pieces)) {
       if (!p || p.rank < 1 || !p.guiPiece) continue;
       const dom = p.guiPiece[0] || p.guiPiece;
       const rect = dom.getBoundingClientRect();
-      const cx = rect.left + rect.width / 2, cy = rect.top + rect.height / 2;
-      if (!byRank[p.rank]) byRank[p.rank] = { file: p.file, rank: p.rank, cx, cy, w: rect.width };
-      if (!byFile[p.file]) byFile[p.file] = { file: p.file, rank: p.rank, cx, cy };
+      if (rect.width < 10) continue; // skip invisible
+      const info = { file: p.file, rank: p.rank, cx: rect.left + rect.width / 2, cy: rect.top + rect.height / 2, size: rect.width };
+      if (!anchor) { anchor = info; continue; }
+      if (info.rank !== anchor.rank) { other = info; break; }
     }
-    const ranks = Object.keys(byRank).map(Number).sort((a, b) => a - b);
-    const files = Object.keys(byFile).map(Number).sort((a, b) => a - b);
-    if (ranks.length < 2 || files.length < 2) return null;
+    if (!anchor) return null;
 
-    const r0 = byRank[ranks[0]], r1 = byRank[ranks[ranks.length - 1]];
-    const f0 = byFile[files[0]], f1 = byFile[files[files.length - 1]];
-    const rankStep = (r1.cy - r0.cy) / (r1.rank - r0.rank);
-    const fileStep = (f1.cx - f0.cx) / (f1.file - f0.file);
+    const sz = anchor.size; // square size in pixels
+    // Determine file direction: find another piece on a different file
+    let fileDir = 1; // +1 = file increases rightward
+    for (const [sq, p] of Object.entries(game.table.Pieces)) {
+      if (!p || p.rank < 1 || !p.guiPiece || p.file === anchor.file) continue;
+      const dom = p.guiPiece[0] || p.guiPiece;
+      const rect = dom.getBoundingClientRect();
+      if (rect.width < 10) continue;
+      fileDir = (rect.left + rect.width / 2 - anchor.cx) > 0 === (p.file - anchor.file) > 0 ? 1 : -1;
+      break;
+    }
+    // Determine rank direction from the two pieces on different ranks
+    let rankDir = -1; // default: rank increases upward (y decreases)
+    if (other) {
+      rankDir = (other.cy - anchor.cy) > 0 === (other.rank - anchor.rank) > 0 ? 1 : -1;
+    }
 
     return {
-      x: Math.round(f0.cx + (file - f0.file) * fileStep),
-      y: Math.round(r0.cy + (rank - r0.rank) * rankStep)
+      // Convert board (file, rank) to pixel center
+      centerOf(file, rank) {
+        return {
+          x: anchor.cx + (file - anchor.file) * sz * fileDir,
+          y: anchor.cy + (rank - anchor.rank) * sz * rankDir
+        };
+      },
+      // Convert pixel position to board (file, rank) via grid-snap
+      squareOf(px, py) {
+        const f = Math.round((px - anchor.cx) / (sz * fileDir) + anchor.file);
+        const r = Math.round((py - anchor.cy) / (sz * rankDir) + anchor.rank);
+        return { file: Math.max(1, Math.min(8, f)), rank: Math.max(1, Math.min(8, r)) };
+      }
     };
+  }
+
+  function deselectPiece() {
+    const board = document.querySelector('#board-and-header') || document.body;
+    board.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: 50, clientY: 50 }));
   }
 
   function executeMove(move) {
     return new Promise((resolve) => {
+      const fenBefore = game.table.toFen();
+
       // Step 1: Find the piece to click
       const color = game.getCurrentPlayerColor();
       let sourcePiece = null;
@@ -191,54 +221,63 @@
           break;
         }
       }
+      if (!sourcePiece || !sourcePiece.guiPiece) { resolve(false); return; }
 
-      if (!sourcePiece || !sourcePiece.guiPiece) {
-        console.error('No GUI piece for', move.fromFile, move.fromRank);
-        resolve(false);
-        return;
-      }
-
-      // Step 2: Click the piece (mousedown to select it)
+      // Step 2: Select the piece via mousedown
       const pieceDom = sourcePiece.guiPiece[0] || sourcePiece.guiPiece;
       pieceDom.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true }));
 
-      // Step 3: After a brief delay, find and click the closest highlighted target square
-      setTimeout(() => {
-        const target = getSquareCenter(move.toFile, move.toRank);
-        if (!target) {
-          console.error('Could not calculate target square position');
-          resolve(false);
-          return;
-        }
+      // Step 3: Poll for highlights (up to 500ms), then match by board square
+      const geo = getBoardGeometry();
+      if (!geo) { deselectPiece(); resolve(false); return; }
 
+      let pollCount = 0;
+      const pollForHighlights = () => {
+        pollCount++;
         const highlights = document.querySelectorAll('.highlight');
-        if (highlights.length === 0) {
-          console.error('No highlights appeared after selecting piece');
-          resolve(false);
-          return;
-        }
 
-        // Find the closest highlight to the target position
-        let bestHL = null, bestDist = Infinity;
-        for (const h of highlights) {
-          const rect = h.getBoundingClientRect();
-          const cx = rect.left + rect.width / 2;
-          const cy = rect.top + rect.height / 2;
-          const dist = Math.abs(cx - target.x) + Math.abs(cy - target.y);
-          if (dist < bestDist) { bestDist = dist; bestHL = h; }
-        }
+        if (highlights.length > 0) {
+          // Map each highlight to a board square and find our target
+          let targetHL = null;
+          for (const h of highlights) {
+            const rect = h.getBoundingClientRect();
+            const sq = geo.squareOf(rect.left + rect.width / 2, rect.top + rect.height / 2);
+            if (sq.file === move.toFile && sq.rank === move.toRank) {
+              targetHL = h;
+              break;
+            }
+          }
 
-        if (bestHL && bestDist < 60) {
-          jQuery(bestHL).trigger('click');
-          setTimeout(() => resolve(true), 200);
+          if (targetHL) {
+            jQuery(targetHL).trigger('click');
+            // Step 4: Verify the board actually changed
+            let verifyCount = 0;
+            const verifyMove = () => {
+              verifyCount++;
+              if (game.table.toFen() !== fenBefore) {
+                resolve(true); // Board changed — move succeeded
+              } else if (verifyCount < 6) {
+                setTimeout(verifyMove, 50);
+              } else {
+                deselectPiece();
+                resolve(false); // Board didn't change — move failed
+              }
+            };
+            setTimeout(verifyMove, 50);
+          } else {
+            // No highlight matched our target square
+            deselectPiece();
+            resolve(false);
+          }
+        } else if (pollCount < 10) {
+          setTimeout(pollForHighlights, 50); // Keep polling
         } else {
-          console.error('Chess AI: Closest highlight dist:', bestDist, 'target:', target.x, target.y);
-          // Deselect piece to prevent stuck state on next retry
-          const board = document.querySelector('#board-and-header') || document.body;
-          board.dispatchEvent(new MouseEvent('mousedown', { bubbles: true, cancelable: true, clientX: 100, clientY: 100 }));
+          // No highlights appeared after 500ms
+          deselectPiece();
           resolve(false);
         }
-      }, 250);
+      };
+      setTimeout(pollForHighlights, 50);
     });
   }
 
@@ -250,25 +289,33 @@
   const moveHistory = [];
   let moveNumber = 1;
   let wasHumanTurn = false;
+  let lastLoggedFen = '';
 
   function addToTimeline(moveStr, eval_, depth, time, isAI) {
+    // Guard: don't add duplicate AI entries with same moveStr back-to-back
+    if (isAI && moveHistory.length > 0) {
+      const last = moveHistory[moveHistory.length - 1];
+      if (last.isAI && last.moveStr === moveStr) return;
+    }
     moveHistory.push({ moveStr, eval: eval_, depth, time, isAI, moveNum: moveNumber });
     if (isAI) moveNumber++;
+    lastLoggedFen = game.table.toFen();
     renderTimeline();
   }
 
   function checkOpponentMove() {
-    // Only detect opponent move on turn transition (Beth finished → our turn)
     const isHuman = game.humanTurn();
     if (isHuman && !wasHumanTurn) {
-      // Only log if the last timeline entry was an AI move (strict alternation)
+      const currentFen = game.table.toFen();
+      // Only log if: last entry was AI (strict alternation) AND FEN actually changed
       const lastEntry = moveHistory.length > 0 ? moveHistory[moveHistory.length - 1] : null;
-      if (!lastEntry || lastEntry.isAI) {
+      if ((!lastEntry || lastEntry.isAI) && currentFen !== lastLoggedFen) {
         const lastMove = game.getLastMove ? game.getLastMove() : null;
         if (lastMove) {
           const oppStr = fl(lastMove.fromFile) + lastMove.fromRank +
             (lastMove.kills ? 'x' : '-') + fl(lastMove.toFile) + lastMove.toRank;
           moveHistory.push({ moveStr: oppStr, eval: null, depth: null, time: null, isAI: false, moveNum: moveNumber });
+          lastLoggedFen = currentFen;
           renderTimeline();
         }
       }
@@ -420,20 +467,23 @@
 
           if (!r.move) { si('<span class="l">No moves found.</span>'); resolve(false); return; }
 
-          const ev = (r.score / 100).toFixed(2);
-          const label = evalLabel(ev);
-          si(
-            '<b>' + fmt(r.move) + '</b> &mdash; <span style="color:' + label.color + '">' + label.text + '</span><br>' +
-            '<span class="l">Looked ' + r.depth + ' moves ahead in ' + r.time + 's</span>'
-          );
-
-          // Execute the move via DOM clicks — only log to timeline on success
+          // Show pending status — do NOT show move details until confirmed
           const moveStr = fmt(r.move);
+          si('<span class="l">Playing ' + moveStr + '...</span>');
+
+          // Execute the move via DOM clicks
+          const ev = (r.score / 100).toFixed(2);
           executeMove(r.move).then(ok => {
             if (ok) {
+              // Move confirmed — NOW show details and log to timeline
+              const label = evalLabel(ev);
+              si(
+                '<b>' + moveStr + '</b> &mdash; <span style="color:' + label.color + '">' + label.text + '</span><br>' +
+                '<span class="l">Looked ' + r.depth + ' moves ahead in ' + r.time + 's</span>'
+              );
               addToTimeline(moveStr, ev, r.depth, r.time, true);
             } else {
-              si('<span class="l">Move failed, retrying...</span>');
+              si('<span class="l">Retrying...</span>');
             }
             updateStatus();
             resolve(ok);
