@@ -703,8 +703,20 @@
                 jsnesNes.frame();
                 jsnesFrame++;
 
-                // Check for death — stop replay immediately
+                // Check for level completion FIRST (flag sequence passes through "dead" states)
                 const mem = jsnesNes.cpu.mem;
+                if (mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0) {
+                    const finalGs = readGameState(jsnesNes);
+                    updateRAMDisplay(finalGs);
+                    log('LEVEL COMPLETE at frame ' + jsnesFrame + '! ' + contextString(finalGs), 'info');
+                    document.getElementById('frame-text').textContent = jsnesFrame;
+                    document.getElementById('time-text').textContent = (jsnesFrame / 60.098).toFixed(1) + 's';
+                    document.getElementById('events-text').textContent = jsnesEventIndex + '/' + jsnesEvents.length;
+                    stopJsnesReplay();
+                    return;
+                }
+
+                // Check for death — stop replay immediately
                 const ps = mem[0x000E];
                 if (ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240) {
                     const finalGs = readGameState(jsnesNes);
