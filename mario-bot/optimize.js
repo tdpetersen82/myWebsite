@@ -1,7 +1,6 @@
 #!/usr/bin/env node
-// Mario Speedrun Optimizer — Chunked Beam Search (Speed-Optimized)
-// Builds the optimal run 200px at a time, maintaining 3 diverse beams.
-// Each chunk starts from the actual game state — no clock shift.
+// Mario Speedrun Optimizer — Neuroevolution
+// Small neural networks learn to play Mario through natural selection.
 // Usage: node optimize.js
 // Press +/- to add/remove worker threads on the fly.
 
@@ -16,31 +15,21 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // ==================== CONFIG ====================
 
 const MAX_FRAMES = 8000;
-const STALL_LIMIT = 120;
-const MIN_VIABLE_DISTANCE = 300;
+const STALL_FRAMES = 90;
 const LEVEL_WIDTH = 3200;
-const CHECKPOINTS = [800, 1600, 2400];
-const CHECKPOINT_BONUS_WEIGHT = 10;
-const STUCK_PENALTY = 50;
 const NUM_WORKERS = Math.max(1, os.cpus().length - 1);
-
-// Segment generation
-const MIN_SEGMENT_DURATION = 3;
-const MAX_SEGMENT_DURATION = 240;
-
-// Chunked beam search
-const CHUNK_SIZE_PX = 200;
-const CHUNK_SIMS_PER_BEAM = 5000;    // sims per beam in thorough mode
-const NUM_BEAMS = 3;
-const FRAMES_PER_CHUNK = 200;
-const CHUNK_RETRY_SIMS = 100000;
-const MIN_CHUNK_SIZE_PX = 100;
-
-// Mutation-based search
-const NEAR_MISS_THRESHOLD = 0.15; // return near-miss if reached 15%+ of chunk distance (was 0.3)
-const TOP_NEAR_MISSES = 20;       // keep top N near-misses per chunk
-const MUTATION_RATIO = 0.5;       // 50% of sims are mutations when near-misses available
-const MUTATIONS_PER_PARENT = 5;   // how many children per parent input
+const POPULATION_SIZE = 200;
+const NUM_INPUTS = 142; // 5 mario + 128 tiles (16 cols × 8 rows, full screen) + 8 enemies (4×2) + 1 time
+const NUM_HIDDEN1 = 32; // first hidden layer: compress raw inputs into features
+const NUM_HIDDEN2 = 16; // second hidden layer: combine features into decisions
+const NUM_OUTPUTS = 6;
+const TOTAL_WEIGHTS = (NUM_INPUTS * NUM_HIDDEN1) + (NUM_HIDDEN1 * NUM_HIDDEN2) + (NUM_HIDDEN2 * NUM_OUTPUTS) + NUM_HIDDEN1 + NUM_HIDDEN2 + NUM_OUTPUTS; // 5206
+const ELITE_COUNT = 20;           // top 10%
+const MUTATION_RATE = 0.10;       // % of weights mutated per child
+const MUTATION_STRENGTH = 0.3;    // magnitude of weight perturbation
+const TOURNAMENT_SIZE = 5;
+const STAGNATION_THRESHOLD = 50;  // gens without improvement before boosting mutation
+const DIVERSITY_INJECTION_THRESHOLD = 200; // gens without improvement before mass reset
 
 // Hall of fame
 const GOLDEN_DIVERSITY_THRESHOLD = 30;
@@ -55,15 +44,6 @@ const BIT = { A: 1, B: 2, SELECT: 4, START: 8, UP: 16, DOWN: 32, LEFT: 64, RIGHT
 
 const BIT_TO_JSNES = [CBTNS.A, CBTNS.B, CBTNS.SELECT, CBTNS.START, CBTNS.UP, CBTNS.DOWN, CBTNS.LEFT, CBTNS.RIGHT];
 const JSNES_TO_BOT = { 0: 8, 1: 0, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7 };
-
-const BUTTON_WEIGHTS = [
-    { bit: BIT.RIGHT, weight: 0.92 },
-    { bit: BIT.B,     weight: 0.80 },
-    { bit: BIT.A,     weight: 0.35 },
-    { bit: BIT.LEFT,  weight: 0.03 },
-    { bit: BIT.DOWN,  weight: 0.03 },
-    { bit: BIT.UP,    weight: 0.02 },
-];
 
 // ================================================================
 //  Monkey-patch jsnes for lite save states (shared by both threads)
@@ -93,6 +73,145 @@ function patchJsnesLite(jsnes) {
         if (!state.romData) state.romData = this.rom?.data || [];
         origNESfromJSON.call(this, state);
     };
+}
+
+// ================================================================
+//  Neural Network — shared inference (used by both threads)
+// ================================================================
+
+function networkInfer(inputs, weights) {
+    // Two hidden layers: 142 → 32 → 16 → 6
+    // Layout: [I→H1 (142×32)] [H1→H2 (32×16)] [H2→O (16×6)] [H1 bias (32)] [H2 bias (16)] [O bias (6)]
+    const ih1End = NUM_INPUTS * NUM_HIDDEN1;                    // 4544
+    const h1h2End = ih1End + NUM_HIDDEN1 * NUM_HIDDEN2;         // 5056
+    const h2oEnd = h1h2End + NUM_HIDDEN2 * NUM_OUTPUTS;         // 5152
+    const h1bEnd = h2oEnd + NUM_HIDDEN1;                        // 5184
+    const h2bEnd = h1bEnd + NUM_HIDDEN2;                        // 5200
+    // obEnd = h2bEnd + NUM_OUTPUTS = 5206
+
+    // Hidden layer 1: compress inputs into features (ReLU activation)
+    const hidden1 = new Float32Array(NUM_HIDDEN1);
+    for (let h = 0; h < NUM_HIDDEN1; h++) {
+        let sum = weights[h2oEnd + h]; // H1 bias
+        for (let i = 0; i < NUM_INPUTS; i++) {
+            sum += inputs[i] * weights[i * NUM_HIDDEN1 + h];
+        }
+        hidden1[h] = sum > 0 ? sum : 0; // ReLU — preserves signal magnitude
+    }
+
+    // Hidden layer 2: combine features (ReLU activation)
+    const hidden2 = new Float32Array(NUM_HIDDEN2);
+    for (let h = 0; h < NUM_HIDDEN2; h++) {
+        let sum = weights[h1bEnd + h]; // H2 bias
+        for (let h1 = 0; h1 < NUM_HIDDEN1; h1++) {
+            sum += hidden1[h1] * weights[ih1End + h1 * NUM_HIDDEN2 + h];
+        }
+        hidden2[h] = sum > 0 ? sum : 0; // ReLU
+    }
+
+    // Output layer
+    const outputs = new Float32Array(NUM_OUTPUTS);
+    for (let o = 0; o < NUM_OUTPUTS; o++) {
+        let sum = weights[h2bEnd + o]; // O bias
+        for (let h = 0; h < NUM_HIDDEN2; h++) {
+            sum += hidden2[h] * weights[h1h2End + h * NUM_OUTPUTS + o];
+        }
+        outputs[o] = 1 / (1 + Math.exp(-Math.max(-10, Math.min(10, sum))));
+    }
+
+    return outputs;
+}
+
+function readNetworkInputs(nes, frame, maxFrames) {
+    const mem = nes.cpu.mem;
+    const inputs = new Float32Array(NUM_INPUTS);
+
+    // Mario state (5)
+    const marioX = mem[0x006D] * 256 + mem[0x0086];
+    const marioY = mem[0x00CE];
+    let velX = mem[0x0057]; if (velX > 127) velX -= 256;
+    let velY = mem[0x009F]; if (velY > 127) velY -= 256;
+
+    inputs[0] = marioY / 240;
+    inputs[1] = Math.max(0, Math.min(1, (velX + 40) / 80));
+    inputs[2] = Math.max(0, Math.min(1, (velY + 40) / 80));
+    inputs[3] = (mem[0x009F] === 0 && marioY >= 160) ? 1 : 0; // onGround
+    inputs[4] = mem[0x0756] > 0 ? 1 : 0; // isBig
+
+    // Tiles ahead: 16 columns x 8 rows = 128 values (full screen width, gameplay height)
+    // 8 rows covering the full gameplay area from underground to above platforms
+    // Rows (every 2 tile rows): 27(Y=216), 25(Y=200), 23(Y=184), 21(Y=168),
+    //                           19(Y=152), 17(Y=136), 15(Y=120), 13(Y=104)
+    // Columns: 16 at 16px spacing (one full screen ahead = 256px)
+    const EMPTY_TILE = 0x24;
+    const tileRows = [26, 24, 22, 20, 18, 16, 14, 12]; // bottom to top: ground surface up to sky
+    const tileCols = 16;
+
+    for (let col = 0; col < tileCols; col++) {
+        const checkWorldX = marioX + (col + 1) * 16;
+        const checkPage = Math.floor(checkWorldX / 256);
+        const checkLocalX = checkWorldX % 256;
+        const tileCol = Math.floor(checkLocalX / 8);
+        const ntIdx = checkPage % 2;
+        const nt = nes.ppu.nameTable[ntIdx * 2];
+        for (let rowIdx = 0; rowIdx < tileRows.length; rowIdx++) {
+            const tileRow = tileRows[rowIdx];
+            const tileVal = nt ? nt.tile[tileRow * 32 + tileCol] : 0;
+            inputs[5 + col * tileRows.length + rowIdx] = (tileVal !== EMPTY_TILE) ? 1 : 0;
+        }
+    }
+
+    // 4 nearest enemies AHEAD of Mario (only positive relativeX)
+    const enemies = [];
+    const ENEMY_SCREEN_X = [0x0087, 0x008B, 0x008F, 0x0093, 0x0097];
+    for (let e = 0; e < 5; e++) {
+        if (mem[0x000F + e] !== 0) {
+            const eX = mem[0x006E + e] * 256 + mem[ENEMY_SCREEN_X[e]];
+            const eY = mem[0x00CF + e];
+            if (eY <= 240) {
+                const relX = eX - marioX;
+                const relY = eY - marioY;
+                if (relX > -16 && relX < 256) { // only enemies ahead or barely behind (-16px to +256px)
+                    enemies.push({ relX, relY, dist: relX });
+                }
+            }
+        }
+    }
+    enemies.sort((a, b) => a.dist - b.dist);
+
+    for (let e = 0; e < 4; e++) {
+        const baseIdx = 133 + e * 2; // 5 mario + 128 tiles = 133
+        if (e < enemies.length) {
+            inputs[baseIdx] = Math.max(0, Math.min(1, enemies[e].relX / 256)); // 0=on top, 1=far ahead
+            inputs[baseIdx + 1] = Math.max(0, Math.min(1, (enemies[e].relY + 120) / 240)); // vertical offset
+        } else {
+            inputs[baseIdx] = 1.0;     // far away (no enemy)
+            inputs[baseIdx + 1] = 0.5; // neutral Y
+        }
+    }
+
+    // Time pressure (1)
+    inputs[NUM_INPUTS - 1] = Math.min(1, frame / maxFrames);
+
+    // Sanitize: replace any NaN/Infinity with 0 to prevent poison propagation
+    for (let i = 0; i < NUM_INPUTS; i++) {
+        if (!isFinite(inputs[i])) inputs[i] = 0;
+    }
+
+    return inputs;
+}
+
+function outputsToBitmask(outputs) {
+    let mask = 0;
+    if (outputs[0] > 0.5) mask |= BIT.RIGHT;
+    if (outputs[1] > 0.5) mask |= BIT.LEFT;
+    if (outputs[2] > 0.5) mask |= BIT.A;
+    if (outputs[3] > 0.5) mask |= BIT.B;
+    if (outputs[4] > 0.5) mask |= BIT.UP;
+    if (outputs[5] > 0.5) mask |= BIT.DOWN;
+    // Resolve LEFT+RIGHT conflict
+    if ((mask & BIT.LEFT) && (mask & BIT.RIGHT)) mask &= ~BIT.LEFT;
+    return mask;
 }
 
 // ================================================================
@@ -140,111 +259,21 @@ if (!isMainThread) {
         return { romData: s.romData, cpu, mmap: Object.assign({}, s.mmap), ppu };
     }
 
-    // ---- Full simulate (used for legacy messages and main-thread replay) ----
-    function simulate(inputBuf, targetX) {
-        nes.fromJSON(fastCloneState(saveState));
-
-        const startX = nes.cpu.mem[0x006D] * 256 + nes.cpu.mem[0x0086];
-        let bestX = startX;
-        let lastProgressFrame = 0;
-        let completed = false;
-        let completionFrame = 0;
-        let frame = 0;
-        let reason = 'timeout';
-        let velocityFrames = 0;
-        let stuckFrames = 0;
-        let prevX = startX;
-        const checkpoints = new Array(CHECKPOINTS.length).fill(null);
-
-        // Per-frame state trace — only collect Y for beam diversity selection
-        // Full traces are expensive to build and transfer; skip X/vel for chunk mode
-        const traceY = [];
-        const skipFullTrace = !!targetX; // chunk mode: only need traceY for diversity
-        const traceX = skipFullTrace ? null : [];
-        const traceVelX = skipFullTrace ? null : [];
-        const traceVelY = skipFullTrace ? null : [];
-
-        // Chunk-aware stall limit: much tighter when targeting a nearby X
-        const chunkStallLimit = targetX ? 40 : STALL_LIMIT;
-
-        let prevBitmask = 0;
-        const maxFrame = Math.min(inputBuf.length, MAX_FRAMES);
-
-        for (frame = 0; frame < maxFrame; frame++) {
-            const bitmask = inputBuf[frame] || 0;
-            if (bitmask !== prevBitmask) {
-                const changed = bitmask ^ prevBitmask;
-                for (let bit = 0; bit < 8; bit++) {
-                    if (changed & (1 << bit)) {
-                        if (bitmask & (1 << bit)) nes.buttonDown(1, BIT_TO_JSNES[bit]);
-                        else nes.buttonUp(1, BIT_TO_JSNES[bit]);
-                    }
-                }
-                prevBitmask = bitmask;
-            }
-
-            nes.frame();
-
-            const mem = nes.cpu.mem;
-            const x = mem[0x006D] * 256 + mem[0x0086];
-            const y = mem[0x00CE];
-            const velX = mem[0x0057];
-            const velY = mem[0x009F];
-
-            traceY.push(y);
-            if (!skipFullTrace) { traceX.push(x); traceVelX.push(velX); traceVelY.push(velY); }
-
-            if (x > bestX) { bestX = x; lastProgressFrame = frame; }
-
-            for (let ci = 0; ci < CHECKPOINTS.length; ci++) {
-                if (checkpoints[ci] === null && x >= CHECKPOINTS[ci]) checkpoints[ci] = frame;
-            }
-
-            if (velX > 0 && velX < 128) velocityFrames++;
-
-            const isAscending = (velY !== 0 && velY < 128);
-            if (x === prevX && frame > 0 && !isAscending) stuckFrames++;
-            prevX = x;
-
-            if (mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0) {
-                completed = true; completionFrame = frame; reason = 'completed'; break;
-            }
-            const ps = mem[0x000E];
-            if (ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240 || mem[0x0770] === 3) {
-                reason = 'dead'; break;
-            }
-            if (frame > 60 && x < startX) { reason = 'backwards'; break; }
-            // Chunk-aware early kill: if targeting 200px away and haven't moved 25% by frame 100, give up
-            if (targetX && frame === 100 && bestX < startX + (targetX - startX) * 0.25) { reason = 'too_slow'; break; }
-            if (!targetX && frame === 600 && bestX < MIN_VIABLE_DISTANCE) { reason = 'too_slow'; break; }
-            if (frame - lastProgressFrame > chunkStallLimit) { reason = 'stalled'; break; }
-            if (targetX && x >= targetX) { reason = 'reached_target'; break; }
-        }
-
-        return {
-            bestX, completed, completionFrame, frame, reason,
-            velocityFrames, stuckFrames, checkpoints,
-            traceX, traceY, traceVelX, traceVelY
-        };
-    }
-
-    // ---- simulateLite: bare minimum simulation for packed chunk mode ----
-    // Returns object with survived=true for survivors, survived=false+bestX for near-misses, null for junk.
-    // Aggressive early kill: most bad runs die within 15-20 frames.
-    function simulateLite(inputBuf, targetX) {
+    // ---- Neural network simulation ----
+    function simulateNeural(weights, maxFrames) {
         nes.fromJSONLite(fastCloneState(saveState));
         const startX = nes.cpu.mem[0x006D] * 256 + nes.cpu.mem[0x0086];
         let bestX = startX;
         let lastProgressFrame = 0;
-        let frame = 0;
-        let ySum = 0;
         let prevBitmask = 0;
-        const maxFrame = Math.min(inputBuf.length, MAX_FRAMES);
-        const chunkDist = targetX - startX;
-        const nearMissMin = startX + chunkDist * NEAR_MISS_THRESHOLD;
 
-        for (frame = 0; frame < maxFrame; frame++) {
-            const bitmask = inputBuf[frame] || 0;
+        for (let frame = 0; frame < maxFrames; frame++) {
+            // Read game state -> network inference -> apply buttons
+            const inputs = readNetworkInputs(nes, frame, maxFrames);
+            const outputs = networkInfer(inputs, weights);
+            const bitmask = outputsToBitmask(outputs);
+
+            // Apply button changes
             if (bitmask !== prevBitmask) {
                 const changed = bitmask ^ prevBitmask;
                 for (let bit = 0; bit < 8; bit++) {
@@ -255,92 +284,55 @@ if (!isMainThread) {
                 }
                 prevBitmask = bitmask;
             }
+
             nes.frame();
+
+            // Read position, check death/completion/stall
             const mem = nes.cpu.mem;
             const x = mem[0x006D] * 256 + mem[0x0086];
-            ySum += mem[0x00CE];
             if (x > bestX) { bestX = x; lastProgressFrame = frame; }
 
-            // Target reached — success!
-            if (x >= targetX) {
-                return { survived: true, frame: frame + 1, completed: false, avgY: Math.round(ySum / (frame + 1)) };
-            }
-            // Level complete
-            if (mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0) {
-                return { survived: true, frame: frame + 1, completed: true, avgY: Math.round(ySum / (frame + 1)) };
-            }
-            // Dead — return near-miss if got far enough, with death reason
+            // Death check FIRST
             const ps = mem[0x000E];
             if (ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240 || mem[0x0770] === 3) {
-                const reason = mem[0x00CE] > 240 ? 'fell' : 'enemy';
-                return bestX >= nearMissMin ? { survived: false, bestX, frame: frame + 1, reason } : { reason };
+                return { bestX, frame: frame + 1, completed: false, reason: 'dead' };
             }
-            if (frame > 15 && x < startX) return { reason: 'backwards' };
-            if (frame - lastProgressFrame > 35) {
-                return bestX >= nearMissMin ? { survived: false, bestX, frame: frame + 1, reason: 'stalled' } : { reason: 'stalled' };
+            // Completion
+            if (mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0) {
+                return { bestX, frame: frame + 1, completed: true, reason: 'completed' };
             }
-            if (frame > 0 && frame % 30 === 0) {
-                const expectedProgress = chunkDist * (frame / maxFrame) * 0.15; // 15% of linear pace (was 30%)
-                if (bestX - startX < expectedProgress) {
-                    return bestX >= nearMissMin ? { survived: false, bestX, frame: frame + 1, reason: 'too_slow' } : { reason: 'too_slow' };
-                }
+            // Backwards
+            if (frame > 60 && x < startX) {
+                return { bestX, frame: frame + 1, completed: false, reason: 'backwards' };
+            }
+            // Stalled
+            if (frame - lastProgressFrame > STALL_FRAMES) {
+                return { bestX, frame: frame + 1, completed: false, reason: 'stalled' };
             }
         }
-        return bestX >= nearMissMin ? { survived: false, bestX, frame, reason: 'timeout' } : { reason: 'timeout' };
+        return { bestX, frame: maxFrames, completed: false, reason: 'timeout' };
     }
 
+    // Message handler
     parentPort.on('message', (msg) => {
         if (msg.type === 'setSaveState') {
             saveState = JSON.parse(msg.saveStateStr);
             parentPort.postMessage('ack');
             return;
         }
-        if (msg.type === 'simulate_packed') {
-            const { inputBuf, numSims, framesPerSim, targetX } = msg;
-            const buf = Buffer.isBuffer(inputBuf) ? inputBuf : Buffer.from(inputBuf);
-            const survivors = [];
-            const nearMisses = [];
-            const deathStats = {};
-            for (let i = 0; i < numSims; i++) {
-                const offset = i * framesPerSim;
-                if (buf.byteOffset + offset + framesPerSim > buf.buffer.byteLength) break;
-                const slice = new Uint8Array(buf.buffer, buf.byteOffset + offset, framesPerSim);
-                const r = simulateLite(slice, targetX);
-                if (!r) continue;
-                if (r.survived === true) {
-                    survivors.push({ simIndex: i, ...r });
-                } else if (r.survived === false && r.bestX !== undefined) {
-                    // Near-miss: keep top 10 by bestX
-                    nearMisses.push({ simIndex: i, bestX: r.bestX });
-                    if (nearMisses.length > 10) {
-                        nearMisses.sort((a, b) => b.bestX - a.bestX);
-                        nearMisses.length = 10;
-                    }
-                    if (r.reason) deathStats[r.reason] = (deathStats[r.reason] || 0) + 1;
-                } else if (r.reason) {
-                    // Dead run with reason only
-                    deathStats[r.reason] = (deathStats[r.reason] || 0) + 1;
-                }
-            }
-            parentPort.postMessage({ survivors, nearMisses, deathStats });
-            return;
-        }
-        if (msg.type === 'simulate') {
+        if (msg.type === 'evaluate') {
+            // msg.weightsBuf: ArrayBuffer with all networks packed
+            // msg.numNetworks: count
+            // msg.maxFrames: max simulation length
+            const buf = new Float32Array(msg.weightsBuf);
             const results = [];
-            for (const inputArr of msg.inputs) {
-                const buf = inputArr instanceof Uint8Array ? inputArr : new Uint8Array(inputArr);
-                results.push(simulate(buf, msg.targetX));
+            for (let i = 0; i < msg.numNetworks; i++) {
+                const weights = buf.subarray(i * TOTAL_WEIGHTS, (i + 1) * TOTAL_WEIGHTS);
+                results.push(simulateNeural(weights, msg.maxFrames));
             }
             parentPort.postMessage(results);
             return;
         }
-        // Legacy: plain array batch (backwards compat)
-        const results = [];
-        for (const inputArr of msg) {
-            const buf = inputArr instanceof Uint8Array ? inputArr : new Uint8Array(inputArr);
-            results.push(simulate(buf));
-        }
-        parentPort.postMessage(results);
     });
     parentPort.postMessage('ready');
 }
@@ -362,592 +354,6 @@ const romPath = path.join(__dirname, 'super-mario-bros-1.nes');
 if (!fs.existsSync(romPath)) { console.error('ROM not found at', romPath); process.exit(1); }
 const romData = fs.readFileSync(romPath);
 const romString = Array.from(new Uint8Array(romData)).map(b => String.fromCharCode(b)).join('');
-
-// ==================== INPUT GENERATION ====================
-
-// Movement mask: everything except A (jump). Held for long durations.
-function randomMovementMask() {
-    let mask = 0;
-    if (Math.random() < 0.92) mask |= BIT.RIGHT;
-    if (Math.random() < 0.80) mask |= BIT.B;
-    if (Math.random() < 0.03) mask |= BIT.LEFT;
-    if (Math.random() < 0.03) mask |= BIT.DOWN;
-    if (Math.random() < 0.02) mask |= BIT.UP;
-    if (!(mask & BIT.RIGHT) && Math.random() < 0.85) mask |= BIT.RIGHT;
-    if ((mask & BIT.LEFT) && (mask & BIT.RIGHT)) mask &= ~BIT.LEFT;
-    if ((mask & BIT.UP) && (mask & BIT.DOWN)) mask &= ~BIT.DOWN;
-    return mask;
-}
-
-// Jump timing: realistic Mario jump durations
-function randomJumpDuration() {
-    const r = Math.random();
-    if (r < 0.25) return 0;                                           // no jump (25%)
-    if (r < 0.45) return 2 + Math.floor(Math.random() * 7);          // small hop: 2-8 frames (20%)
-    if (r < 0.70) return 10 + Math.floor(Math.random() * 11);        // medium jump: 10-20 frames (25%)
-    if (r < 0.90) return 20 + Math.floor(Math.random() * 15);        // big jump: 20-34 frames (20%)
-    return 0;                                                          // no jump (10%)
-}
-
-// Gap between jumps: how long to wait before next jump opportunity
-function randomJumpGap() {
-    const r = Math.random();
-    if (r < 0.3) return 5 + Math.floor(Math.random() * 16);          // short gap: 5-20 frames
-    if (r < 0.7) return 20 + Math.floor(Math.random() * 31);         // medium gap: 20-50 frames
-    return 50 + Math.floor(Math.random() * 80);                       // long gap: 50-129 frames
-}
-
-function randomMovementDuration() {
-    return MIN_SEGMENT_DURATION + Math.floor(Math.random() * (MAX_SEGMENT_DURATION - MIN_SEGMENT_DURATION));
-}
-
-// Legacy: combined bitmask for mutation compatibility
-function randomBitmask() {
-    return randomMovementMask() | (Math.random() < 0.35 ? BIT.A : 0);
-}
-
-function randomDuration() {
-    return randomMovementDuration();
-}
-
-function generateRandomInputs(maxFrames) {
-    const inputs = new Uint8Array(maxFrames);
-    // Two independent tracks: movement (long segments) + jump (short, precise)
-    let moveMask = randomMovementMask();
-    let moveHold = randomMovementDuration();
-    let moveElapsed = 0;
-
-    let jumpActive = false;
-    let jumpFramesLeft = 0;
-    let gapFramesLeft = randomJumpGap();
-
-    for (let f = 0; f < maxFrames; f++) {
-        // Movement track
-        if (moveElapsed >= moveHold) {
-            moveMask = randomMovementMask();
-            moveHold = randomMovementDuration();
-            moveElapsed = 0;
-        }
-        moveElapsed++;
-
-        // Jump track (independent timing)
-        let jumpBit = 0;
-        if (jumpActive) {
-            jumpBit = BIT.A;
-            jumpFramesLeft--;
-            if (jumpFramesLeft <= 0) {
-                jumpActive = false;
-                gapFramesLeft = randomJumpGap();
-            }
-        } else {
-            gapFramesLeft--;
-            if (gapFramesLeft <= 0) {
-                const dur = randomJumpDuration();
-                if (dur > 0) {
-                    jumpActive = true;
-                    jumpFramesLeft = dur;
-                    jumpBit = BIT.A;
-                } else {
-                    gapFramesLeft = randomJumpGap();
-                }
-            }
-        }
-
-        inputs[f] = moveMask | jumpBit;
-    }
-    return inputs;
-}
-
-function generatePackedInputs(numSims, framesPerSim) {
-    const buf = Buffer.alloc(numSims * framesPerSim);
-    for (let i = 0; i < numSims; i++) {
-        const offset = i * framesPerSim;
-        let moveMask = randomMovementMask();
-        let moveHold = randomMovementDuration();
-        let moveElapsed = 0;
-
-        let jumpActive = false;
-        let jumpFramesLeft = 0;
-        let gapFramesLeft = randomJumpGap();
-
-        for (let f = 0; f < framesPerSim; f++) {
-            if (moveElapsed >= moveHold) {
-                moveMask = randomMovementMask();
-                moveHold = randomMovementDuration();
-                moveElapsed = 0;
-            }
-            moveElapsed++;
-
-            let jumpBit = 0;
-            if (jumpActive) {
-                jumpBit = BIT.A;
-                jumpFramesLeft--;
-                if (jumpFramesLeft <= 0) {
-                    jumpActive = false;
-                    gapFramesLeft = randomJumpGap();
-                }
-            } else {
-                gapFramesLeft--;
-                if (gapFramesLeft <= 0) {
-                    const dur = randomJumpDuration();
-                    if (dur > 0) {
-                        jumpActive = true;
-                        jumpFramesLeft = dur;
-                        jumpBit = BIT.A;
-                    } else {
-                        gapFramesLeft = randomJumpGap();
-                    }
-                }
-            }
-
-            buf[offset + f] = moveMask | jumpBit;
-        }
-    }
-    return buf;
-}
-
-// ==================== SPRINT+JUMP SEEDING ====================
-
-function generateSprintJumpInputs(numSims, framesPerSim, direction = 'right') {
-    // All sims hold direction+B constantly, only vary jump (A) timing
-    const buf = Buffer.alloc(numSims * framesPerSim);
-    const BASE = (direction === 'left' ? BIT.LEFT : BIT.RIGHT) | BIT.B;
-
-    for (let i = 0; i < numSims; i++) {
-        const offset = i * framesPerSim;
-        let jumpActive = false;
-        let jumpFramesLeft = 0;
-        let gapFramesLeft = randomJumpGap();
-
-        for (let f = 0; f < framesPerSim; f++) {
-            let jumpBit = 0;
-            if (jumpActive) {
-                jumpBit = BIT.A;
-                jumpFramesLeft--;
-                if (jumpFramesLeft <= 0) { jumpActive = false; gapFramesLeft = randomJumpGap(); }
-            } else {
-                gapFramesLeft--;
-                if (gapFramesLeft <= 0) {
-                    const dur = randomJumpDuration();
-                    if (dur > 0) { jumpActive = true; jumpFramesLeft = dur; jumpBit = BIT.A; }
-                    else { gapFramesLeft = randomJumpGap(); }
-                }
-            }
-            buf[offset + f] = BASE | jumpBit;
-        }
-    }
-    return buf;
-}
-
-// ==================== MUTATION ====================
-
-function mutateInputs(parent, framesPerSim) {
-    const child = new Uint8Array(framesPerSim);
-    child.set(parent.length >= framesPerSim ? parent.slice(0, framesPerSim) : parent);
-
-    // Apply 1-3 random mutations
-    const numOps = 1 + Math.floor(Math.random() * 3);
-    for (let op = 0; op < numOps; op++) {
-        const r = Math.random();
-        if (r < 0.4) {
-            // Segment replace: replace 5-30 frames with a new random bitmask
-            const start = Math.floor(Math.random() * framesPerSim);
-            const len = 5 + Math.floor(Math.random() * 26);
-            const mask = randomBitmask();
-            for (let f = start; f < Math.min(start + len, framesPerSim); f++) child[f] = mask;
-        } else if (r < 0.7) {
-            // Segment shift: shift a block by +/- 1-5 frames
-            const pos = Math.floor(Math.random() * framesPerSim);
-            const shift = (Math.random() < 0.5 ? 1 : -1) * (1 + Math.floor(Math.random() * 5));
-            if (shift > 0) {
-                // Shift right: duplicate frames at pos
-                for (let f = framesPerSim - 1; f >= pos + shift; f--) child[f] = child[f - shift];
-            } else {
-                // Shift left: remove frames at pos
-                const absShift = -shift;
-                for (let f = pos; f < framesPerSim - absShift; f++) child[f] = child[f + absShift];
-            }
-        } else {
-            // Button flip: flip 1-3 random frame bits
-            const flips = 1 + Math.floor(Math.random() * 3);
-            for (let i = 0; i < flips; i++) {
-                const f = Math.floor(Math.random() * framesPerSim);
-                const bit = 1 << Math.floor(Math.random() * 8);
-                child[f] ^= bit;
-            }
-        }
-    }
-    return child;
-}
-
-function breedInputs(parentA, parentB, framesPerSim) {
-    const child = new Uint8Array(framesPerSim);
-    const r = Math.random();
-
-    if (r < 0.4) {
-        // Single-point crossover: take frames 0..cut from A, cut+1..end from B
-        const cut = Math.floor(Math.random() * framesPerSim);
-        child.set(parentA.slice(0, cut), 0);
-        child.set(parentB.slice(cut, framesPerSim), cut);
-    } else if (r < 0.7) {
-        // Two-point crossover: A..B..A sandwich
-        let cut1 = Math.floor(Math.random() * framesPerSim);
-        let cut2 = Math.floor(Math.random() * framesPerSim);
-        if (cut1 > cut2) [cut1, cut2] = [cut2, cut1];
-        child.set(parentA.slice(0, cut1), 0);
-        child.set(parentB.slice(cut1, cut2), cut1);
-        child.set(parentA.slice(cut2, framesPerSim), cut2);
-    } else {
-        // Uniform crossover: randomly pick each frame from A or B
-        for (let f = 0; f < framesPerSim; f++) {
-            child[f] = Math.random() < 0.5 ? parentA[f] : parentB[f];
-        }
-    }
-
-    // Light mutation on the offspring (50% chance)
-    if (Math.random() < 0.5) return mutateInputs(child, framesPerSim);
-    return child;
-}
-
-function generateMixedInputs(numSims, framesPerSim, nearMissInputs) {
-    // Generate a buffer with a mix of random, mutated, and bred inputs
-    const buf = Buffer.alloc(numSims * framesPerSim);
-    const n = nearMissInputs.length;
-
-    // Adaptive split based on near-miss pool size
-    let pctRandom, pctMutate, pctBreed;
-    if (n === 0)       { pctRandom = 1.0;  pctMutate = 0;    pctBreed = 0;    }
-    else if (n === 1)  { pctRandom = 0.60; pctMutate = 0.40; pctBreed = 0;    }
-    else if (n <= 5)   { pctRandom = 0.60; pctMutate = 0.25; pctBreed = 0.15; }
-    else if (n <= 15)  { pctRandom = 0.40; pctMutate = 0.30; pctBreed = 0.30; }
-    else               { pctRandom = 0.20; pctMutate = 0.35; pctBreed = 0.45; }
-
-    const numBred = Math.floor(numSims * pctBreed);
-    const numMutated = Math.floor(numSims * pctMutate);
-    const numRandom = numSims - numMutated - numBred;
-
-    // Fill random portion using two-track generation (movement + jump)
-    for (let i = 0; i < numRandom; i++) {
-        const offset = i * framesPerSim;
-        let moveMask = randomMovementMask();
-        let moveHold = randomMovementDuration();
-        let moveElapsed = 0;
-        let jumpActive = false, jumpFramesLeft = 0, gapFramesLeft = randomJumpGap();
-        for (let f = 0; f < framesPerSim; f++) {
-            if (moveElapsed >= moveHold) { moveMask = randomMovementMask(); moveHold = randomMovementDuration(); moveElapsed = 0; }
-            moveElapsed++;
-            let jumpBit = 0;
-            if (jumpActive) {
-                jumpBit = BIT.A; jumpFramesLeft--;
-                if (jumpFramesLeft <= 0) { jumpActive = false; gapFramesLeft = randomJumpGap(); }
-            } else {
-                gapFramesLeft--;
-                if (gapFramesLeft <= 0) {
-                    const dur = randomJumpDuration();
-                    if (dur > 0) { jumpActive = true; jumpFramesLeft = dur; jumpBit = BIT.A; }
-                    else { gapFramesLeft = randomJumpGap(); }
-                }
-            }
-            buf[offset + f] = moveMask | jumpBit;
-        }
-    }
-
-    // Fill mutated portion from near-miss parents
-    for (let i = 0; i < numMutated; i++) {
-        const parent = nearMissInputs[i % nearMissInputs.length];
-        const child = mutateInputs(parent, framesPerSim);
-        buf.set(child, (numRandom + i) * framesPerSim);
-    }
-
-    // Fill bred portion — crossover between two different parents
-    for (let i = 0; i < numBred; i++) {
-        const idxA = Math.floor(Math.random() * nearMissInputs.length);
-        let idxB = Math.floor(Math.random() * (nearMissInputs.length - 1));
-        if (idxB >= idxA) idxB++; // ensure different parents
-        const child = breedInputs(nearMissInputs[idxA], nearMissInputs[idxB], framesPerSim);
-        buf.set(child, (numRandom + numMutated + i) * framesPerSim);
-    }
-
-    return buf;
-}
-
-// ==================== FITNESS ====================
-
-function checkpointBonus(result) {
-    let bonus = 0;
-    if (result.checkpoints) {
-        for (const cpFrame of result.checkpoints) {
-            if (cpFrame !== null) bonus += (MAX_FRAMES - cpFrame) * CHECKPOINT_BONUS_WEIGHT;
-        }
-    }
-    return bonus;
-}
-
-function fitness(result) {
-    const cpBonus = checkpointBonus(result);
-    const speed = result.bestX / Math.max(result.frame, 1);
-    if (result.completed) {
-        return 10000000 + (MAX_FRAMES - result.completionFrame) * 10 + cpBonus;
-    }
-    if (result.bestX < MIN_VIABLE_DISTANCE) return result.bestX;
-    const stuckPen = (result.stuckFrames || 0) * STUCK_PENALTY;
-    return speed * 10000 + result.bestX * 10 - stuckPen + cpBonus;
-}
-
-function rateResult(result) {
-    if (result.completed) return 'S';
-    const pct = result.bestX / LEVEL_WIDTH;
-    const speed = result.bestX / Math.max(result.frame, 1);
-    if (pct > 0.8 && speed > 1.5) return 'A';
-    if (pct > 0.6 && speed > 1.2) return 'B';
-    if (pct > 0.4 || speed > 1.0) return 'C';
-    if (pct > 0.2) return 'D';
-    return 'F';
-}
-
-function formatCheckpointSplits(result) {
-    if (!result.checkpoints) return 'none';
-    const parts = [];
-    let prev = 0;
-    for (let i = 0; i < CHECKPOINTS.length; i++) {
-        if (result.checkpoints[i] !== null) {
-            const section = result.checkpoints[i] - prev;
-            parts.push(`${CHECKPOINTS[i]}@${result.checkpoints[i]}f(+${section})`);
-            prev = result.checkpoints[i];
-        }
-    }
-    return parts.length > 0 ? parts.join(' -> ') : 'none reached';
-}
-
-// ==================== RUN DATABASE (SQLite) ====================
-
-class RunDatabase {
-    constructor(dbPath) {
-        this.db = new Database(dbPath);
-        this.db.pragma('journal_mode = WAL');
-        this.db.pragma('synchronous = NORMAL');
-
-        this.db.exec(`
-            CREATE TABLE IF NOT EXISTS runs(
-                id INTEGER PRIMARY KEY,
-                inputs BLOB,
-                fitness REAL,
-                bestX INTEGER,
-                completed INTEGER,
-                completionFrame INTEGER,
-                totalFrames INTEGER,
-                reason TEXT,
-                checkpoints TEXT,
-                stuckFrames INTEGER,
-                traceX BLOB,
-                traceY BLOB,
-                traceVelX BLOB,
-                traceVelY BLOB,
-                source TEXT,
-                isGolden INTEGER DEFAULT 0,
-                createdAt TEXT
-            )
-        `);
-
-        this.db.exec(`
-            CREATE TABLE IF NOT EXISTS beam_chunks(
-                chunkIndex INTEGER,
-                beamIndex INTEGER,
-                targetX INTEGER,
-                frames INTEGER,
-                inputs BLOB,
-                saveStateStr TEXT,
-                avgY REAL,
-                createdAt TEXT,
-                PRIMARY KEY(chunkIndex, beamIndex)
-            )
-        `);
-
-        // Prepare statements
-        this._insertRun = this.db.prepare(`
-            INSERT INTO runs(inputs, fitness, bestX, completed, completionFrame, totalFrames, reason, checkpoints, stuckFrames, traceX, traceY, traceVelX, traceVelY, source, isGolden, createdAt)
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 0, ?)
-        `);
-
-        this._getRunById = this.db.prepare(`SELECT * FROM runs WHERE id = ?`);
-        this._getTopRuns = this.db.prepare(`SELECT * FROM runs ORDER BY fitness DESC LIMIT ?`);
-        this._getTopRunsByX = this.db.prepare(`SELECT * FROM runs ORDER BY bestX DESC LIMIT ?`);
-        this._getGoldenRuns = this.db.prepare(`SELECT * FROM runs WHERE isGolden = 1`);
-        this._markGolden = this.db.prepare(`UPDATE runs SET isGolden = 1 WHERE id = ?`);
-        this._getRecentRuns = this.db.prepare(`SELECT * FROM runs ORDER BY id DESC LIMIT ?`);
-        this._countRuns = this.db.prepare(`SELECT COUNT(*) as cnt, SUM(completed) as comps, MAX(bestX) as maxX FROM runs`);
-
-        // Beam chunks statements
-        this._insertBeamChunk = this.db.prepare(`
-            INSERT OR REPLACE INTO beam_chunks(chunkIndex, beamIndex, targetX, frames, inputs, saveStateStr, avgY, createdAt)
-            VALUES(?, ?, ?, ?, ?, ?, ?, ?)
-        `);
-        this._getBeamChunks = this.db.prepare(`SELECT * FROM beam_chunks WHERE chunkIndex = ? ORDER BY beamIndex ASC`);
-        this._getLastCompletedChunk = this.db.prepare(`SELECT MAX(chunkIndex) as maxChunk FROM beam_chunks`);
-        this._getBeam0Chunks = this.db.prepare(`SELECT * FROM beam_chunks WHERE beamIndex = 0 ORDER BY chunkIndex ASC`);
-
-        // LRU cache for deserialized runs
-        this._cache = new Map();
-        this._cacheMax = 200;
-
-        // Transaction state
-        this._inBatch = false;
-    }
-
-    addRun(inputs, result, source) {
-        if (result.bestX < MIN_VIABLE_DISTANCE) return null;
-        if (!result.traceX || result.traceX.length === 0) return null;
-
-        const trimmedInputs = new Uint8Array(inputs.slice(0, result.frame + 1));
-        const traceXArr = new Uint16Array(result.traceX);
-        const traceYArr = new Uint8Array(result.traceY);
-        const traceVelXArr = new Uint8Array(result.traceVelX);
-        const traceVelYArr = new Uint8Array(result.traceVelY);
-        const fit = fitness(result);
-
-        const info = this._insertRun.run(
-            Buffer.from(trimmedInputs.buffer, trimmedInputs.byteOffset, trimmedInputs.byteLength),
-            fit,
-            result.bestX,
-            result.completed ? 1 : 0,
-            result.completionFrame || 0,
-            result.frame,
-            result.reason,
-            JSON.stringify(result.checkpoints),
-            result.stuckFrames || 0,
-            Buffer.from(traceXArr.buffer, traceXArr.byteOffset, traceXArr.byteLength),
-            Buffer.from(traceYArr.buffer, traceYArr.byteOffset, traceYArr.byteLength),
-            Buffer.from(traceVelXArr.buffer, traceVelXArr.byteOffset, traceVelXArr.byteLength),
-            Buffer.from(traceVelYArr.buffer, traceVelYArr.byteOffset, traceVelYArr.byteLength),
-            source || 'unknown',
-            new Date().toISOString()
-        );
-
-        return Number(info.lastInsertRowid);
-    }
-
-    getRunById(id) {
-        if (this._cache.has(id)) {
-            const val = this._cache.get(id);
-            this._cache.delete(id);
-            this._cache.set(id, val);
-            return val;
-        }
-        const row = this._getRunById.get(id);
-        if (!row) return null;
-        const run = this._deserializeRun(row);
-        if (this._cache.size >= this._cacheMax) {
-            const firstKey = this._cache.keys().next().value;
-            this._cache.delete(firstKey);
-        }
-        this._cache.set(id, run);
-        return run;
-    }
-
-    _deserializeRun(row) {
-        const traceX = new Uint16Array(new Uint8Array(row.traceX).buffer.slice(0));
-        const traceY = new Uint8Array(row.traceY);
-        const traceVelX = new Uint8Array(row.traceVelX);
-        const traceVelY = new Uint8Array(row.traceVelY);
-        const inputs = new Uint8Array(row.inputs);
-
-        let checkpoints;
-        try { checkpoints = JSON.parse(row.checkpoints); } catch { checkpoints = []; }
-
-        return {
-            runId: row.id,
-            inputs,
-            fitness: row.fitness,
-            bestX: row.bestX,
-            completed: !!row.completed,
-            completionFrame: row.completionFrame,
-            totalFrames: row.totalFrames,
-            reason: row.reason,
-            checkpoints,
-            stuckFrames: row.stuckFrames,
-            traceX,
-            traceY,
-            traceVelX,
-            traceVelY,
-            isGolden: !!row.isGolden,
-        };
-    }
-
-    getTopRuns(n, orderBy = 'fitness') {
-        const rows = orderBy === 'bestX'
-            ? this._getTopRunsByX.all(n)
-            : this._getTopRuns.all(n);
-        return rows.map(r => this._deserializeRun(r));
-    }
-
-    getGoldenRuns() {
-        const rows = this._getGoldenRuns.all();
-        return rows.map(r => this._deserializeRun(r));
-    }
-
-    markGolden(runId) {
-        this._markGolden.run(runId);
-        if (this._cache.has(runId)) {
-            const run = this._cache.get(runId);
-            run.isGolden = true;
-        }
-    }
-
-    getRecentRuns(n) {
-        const rows = this._getRecentRuns.all(n);
-        return rows.map(r => this._deserializeRun(r));
-    }
-
-    stats() {
-        const row = this._countRuns.get();
-        return {
-            totalRuns: row.cnt || 0,
-            completions: row.comps || 0,
-            maxX: row.maxX || 0,
-        };
-    }
-
-    beginBatch() {
-        if (!this._inBatch) {
-            this.db.exec('BEGIN');
-            this._inBatch = true;
-        }
-    }
-
-    endBatch() {
-        if (this._inBatch) {
-            this.db.exec('COMMIT');
-            this._inBatch = false;
-        }
-    }
-
-    // Beam chunk operations
-    saveBeamChunk(chunkIndex, beamIndex, data) {
-        this._insertBeamChunk.run(
-            chunkIndex, beamIndex, data.targetX, data.frames,
-            Buffer.from(data.inputs.buffer, data.inputs.byteOffset, data.inputs.byteLength),
-            data.saveStateStr, data.avgY || 0,
-            new Date().toISOString()
-        );
-    }
-
-    getBeamChunks(chunkIndex) {
-        return this._getBeamChunks.all(chunkIndex);
-    }
-
-    getLastCompletedChunk() {
-        const row = this._getLastCompletedChunk.get();
-        return (row && row.maxChunk !== null) ? row.maxChunk : -1;
-    }
-
-    assembleFullRun() {
-        const rows = this._getBeam0Chunks.all();
-        if (rows.length === 0) return null;
-        // The last beam0 chunk has the full concatenated inputs
-        const lastRow = rows[rows.length - 1];
-        return new Uint8Array(lastRow.inputs);
-    }
-}
 
 // ==================== EVENTS <-> INPUTS CONVERSION ====================
 
@@ -997,17 +403,6 @@ function eventsToInputs(events, totalFrames) {
     return inputs;
 }
 
-// Get inputs from a HoF/donor entry (handles both old events-only and new inputs format)
-function getInputsFromEntry(entry) {
-    if (entry.inputs && entry.inputs.length > 0) {
-        return new Uint8Array(entry.inputs);
-    }
-    if (entry.events && entry.events.length > 0) {
-        return eventsToInputs(entry.events, entry.frame ? entry.frame + 1 : MAX_FRAMES);
-    }
-    return null;
-}
-
 // ==================== DISPLAY HELPERS ====================
 
 function makeProgressBar(x, maxX, w) {
@@ -1019,6 +414,103 @@ function makeProgressBar(x, maxX, w) {
 function formatTime(s) {
     if (s < 60) return `${s.toFixed(0)}s`;
     return `${Math.floor(s / 60)}m ${Math.round(s % 60)}s`;
+}
+
+// ==================== RUN DATABASE (SQLite) ====================
+
+class RunDatabase {
+    constructor(dbPath) {
+        this.db = new Database(dbPath);
+        this.db.pragma('journal_mode = WAL');
+        this.db.pragma('synchronous = NORMAL');
+
+        this.db.exec(`CREATE TABLE IF NOT EXISTS networks (
+            id INTEGER PRIMARY KEY, generation INTEGER, rank INTEGER,
+            weights BLOB, fitness REAL, bestX INTEGER, frame INTEGER,
+            completed INTEGER, createdAt TEXT
+        )`);
+
+        this.db.exec(`CREATE TABLE IF NOT EXISTS evolution_stats (
+            generation INTEGER PRIMARY KEY, bestFitness REAL, avgFitness REAL,
+            bestX INTEGER, avgX INTEGER, completions INTEGER,
+            wallInfo TEXT, mutationRate REAL, elapsed REAL
+        )`);
+
+        // Prepare statements
+        this._insertNetwork = this.db.prepare(`INSERT INTO networks (generation, rank, weights, fitness, bestX, frame, completed, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
+        this._insertStats = this.db.prepare(`INSERT OR REPLACE INTO evolution_stats VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+        this._getLastGeneration = this.db.prepare(`SELECT MAX(generation) as gen FROM evolution_stats`);
+        this._getTopNetworks = this.db.prepare(`SELECT * FROM networks WHERE generation = ? ORDER BY rank ASC LIMIT ?`);
+        this._getBestNetwork = this.db.prepare(`SELECT * FROM networks ORDER BY fitness DESC LIMIT 1`);
+    }
+
+    saveNetwork(gen, rank, weights, fitness, bestX, frame, completed) {
+        this._insertNetwork.run(gen, rank, Buffer.from(weights.buffer, weights.byteOffset, weights.byteLength), fitness, bestX, frame, completed ? 1 : 0, new Date().toISOString());
+    }
+
+    saveEvolutionStats(gen, bestFit, avgFit, bestX, avgX, comps, wallInfo, mutRate, elapsed) {
+        this._insertStats.run(gen, bestFit, avgFit, bestX, avgX, comps, wallInfo, mutRate, elapsed);
+    }
+
+    getLastGeneration() {
+        const row = this._getLastGeneration.get();
+        return row?.gen ?? -1;
+    }
+
+    getTopNetworks(generation, limit) {
+        return this._getTopNetworks.all(generation, limit);
+    }
+
+    getBestNetwork() {
+        return this._getBestNetwork.get();
+    }
+}
+
+// ==================== NEURAL NETWORK CLASS ====================
+
+class NeuralNetwork {
+    constructor(weights) {
+        this.weights = weights || NeuralNetwork.randomWeights();
+    }
+
+    static randomWeights() {
+        const w = new Float32Array(TOTAL_WEIGHTS);
+        const scale = Math.sqrt(2 / NUM_INPUTS);
+        for (let i = 0; i < TOTAL_WEIGHTS; i++) {
+            w[i] = (Math.random() * 2 - 1) * scale;
+        }
+        return w;
+    }
+
+    clone() {
+        return new NeuralNetwork(new Float32Array(this.weights));
+    }
+
+    mutate(rate, strength) {
+        for (let i = 0; i < TOTAL_WEIGHTS; i++) {
+            if (Math.random() < rate) {
+                this.weights[i] += (Math.random() * 2 - 1) * strength;
+            }
+        }
+        return this;
+    }
+
+    static crossover(a, b) {
+        const child = new Float32Array(TOTAL_WEIGHTS);
+        for (let i = 0; i < TOTAL_WEIGHTS; i++) {
+            child[i] = Math.random() < 0.5 ? a.weights[i] : b.weights[i];
+        }
+        return new NeuralNetwork(child);
+    }
+
+    static tournamentSelect(population, fitnesses, k) {
+        let bestIdx = Math.floor(Math.random() * population.length);
+        for (let i = 1; i < k; i++) {
+            const idx = Math.floor(Math.random() * population.length);
+            if (fitnesses[idx] > fitnesses[bestIdx]) bestIdx = idx;
+        }
+        return population[bestIdx];
+    }
 }
 
 // ==================== OUTPUT ====================
@@ -1042,8 +534,6 @@ function saveHallOfFame(hof) {
     fs.writeFileSync(hofPath, JSON.stringify(hof, null, 2));
 }
 
-// Compute checkpoint-based "strategy distance" between two entries.
-// Large distance = different paths through the level.
 function checkpointDistance(a, b) {
     const cpsA = a.checkpoints || [];
     const cpsB = b.checkpoints || [];
@@ -1062,17 +552,17 @@ function tryAddToHallOfFame(hof, inputs, result) {
     if (!result.completed) return false;
     const events = inputsToEvents(inputs);
     const entry = {
-        events, fitness: fitness(result),
+        events, fitness: result.bestX * 10000 + (MAX_FRAMES - result.frame),
         inputs: Array.from(inputs),
         bestX: result.bestX,
         speed: parseFloat((result.bestX / Math.max(result.frame, 1)).toFixed(2)),
-        completed: result.completed, completionFrame: result.completionFrame,
+        completed: result.completed, completionFrame: result.frame,
         frame: result.frame, reason: result.reason,
-        checkpoints: result.checkpoints, stuckFrames: result.stuckFrames || 0,
-        rating: rateResult(result), addedAt: new Date().toISOString(),
+        checkpoints: [], stuckFrames: 0,
+        rating: result.completed ? 'S' : 'F',
+        addedAt: new Date().toISOString(),
     };
 
-    // Diversity check: find the most similar existing entry
     let mostSimilarIdx = -1;
     let minDist = Infinity;
     for (let i = 0; i < hof.length; i++) {
@@ -1082,7 +572,6 @@ function tryAddToHallOfFame(hof, inputs, result) {
 
     let added = false;
 
-    // If too similar to an existing entry, only replace if strictly faster
     if (minDist < GOLDEN_DIVERSITY_THRESHOLD && mostSimilarIdx >= 0) {
         if (entry.fitness > hof[mostSimilarIdx].fitness) {
             hof[mostSimilarIdx] = entry;
@@ -1106,23 +595,23 @@ function tryAddToHallOfFame(hof, inputs, result) {
     return added;
 }
 
-let currentPhase = 'beam-search';
-let currentRound = 0;
+let currentPhase = 'neuroevolution';
+let currentGeneration = 0;
 
 function saveBest(inputs, result) {
     const events = inputsToEvents(inputs);
     const speed = result.bestX / Math.max(result.frame, 1);
-    const id = `${currentPhase}-R${currentRound}-${result.bestX}px-${speed.toFixed(2)}pf`;
+    const id = `${currentPhase}-G${currentGeneration}-${result.bestX}px-${speed.toFixed(2)}pf`;
     fs.writeFileSync(bestPath, JSON.stringify({
-        id, rating: rateResult(result),
-        phase: currentPhase, round: currentRound,
-        events, fitness: fitness(result),
-        completed: result.completed, completionFrame: result.completionFrame,
+        id, rating: result.completed ? 'S' : (result.bestX > LEVEL_WIDTH * 0.8 ? 'A' : 'C'),
+        phase: currentPhase, generation: currentGeneration,
+        events, fitness: result.bestX * 10000 + (MAX_FRAMES - result.frame),
+        completed: result.completed, completionFrame: result.completed ? result.frame : undefined,
         bestX: result.bestX, speed: parseFloat(speed.toFixed(2)),
         reason: result.reason, totalFrames: result.frame,
-        stuckFrames: result.stuckFrames || 0,
-        checkpoints: result.checkpoints, checkpointSplits: formatCheckpointSplits(result),
-        timeSeconds: result.completed ? (result.completionFrame / 60.098).toFixed(2) : null,
+        stuckFrames: 0,
+        checkpoints: [], checkpointSplits: 'none',
+        timeSeconds: result.completed ? (result.frame / 60.098).toFixed(2) : null,
     }, null, 2));
     fs.writeFileSync(saveStatePath, trainingSaveStateStr);
 }
@@ -1143,8 +632,6 @@ async function createWorkerPool(romString, saveStateStr, count) {
     return w;
 }
 
-// ==================== BEAM SEARCH FUNCTIONS ====================
-
 function broadcastSaveState(workers, saveStateStr) {
     return new Promise((resolve) => {
         let ackCount = 0;
@@ -1158,120 +645,67 @@ function broadcastSaveState(workers, saveStateStr) {
     });
 }
 
-function evaluateChunkBatch(workers, packedInputs, numSims, framesPerSim, targetX) {
+// ==================== EVALUATE POPULATION ====================
+
+async function evaluatePopulation(workers, population, maxFrames) {
     return new Promise((resolve) => {
-        const allSurvivors = [];
-        const allNearMisses = [];
-        const allDeathStats = {};
-        const simsPerWorker = Math.ceil(numSims / workers.length);
+        const numNetworks = population.length;
+        const totalFloats = numNetworks * TOTAL_WEIGHTS;
+        const weightsBuf = new Float32Array(totalFloats);
+
+        // Pack all weights
+        for (let i = 0; i < numNetworks; i++) {
+            weightsBuf.set(population[i].weights, i * TOTAL_WEIGHTS);
+        }
+
+        // Distribute across workers
+        const perWorker = Math.ceil(numNetworks / workers.length);
+        const allResults = new Array(numNetworks);
         let completed = 0;
 
         workers.forEach((worker, wi) => {
-            const start = wi * simsPerWorker;
-            const end = Math.min(start + simsPerWorker, numSims);
-            if (start >= numSims) {
+            const start = wi * perWorker;
+            const end = Math.min(start + perWorker, numNetworks);
+            if (start >= numNetworks) {
                 completed++;
-                if (completed === workers.length) resolve({ survivors: allSurvivors, nearMisses: allNearMisses, deathStats: allDeathStats });
+                if (completed === workers.length) resolve(allResults);
                 return;
             }
 
-            const byteStart = start * framesPerSim;
-            const byteEnd = end * framesPerSim;
-            const chunk = packedInputs.slice(byteStart, Math.min(byteEnd, packedInputs.length));
-            const actualSims = Math.floor(chunk.length / framesPerSim);
-            if (actualSims === 0) {
-                completed++;
-                if (completed === workers.length) resolve({ survivors: allSurvivors, nearMisses: allNearMisses, deathStats: allDeathStats });
-                return;
-            }
-
-            worker.once('message', (result) => {
-                const survivors = Array.isArray(result) ? result : result.survivors;
-                const nearMisses = Array.isArray(result) ? [] : (result.nearMisses || []);
-                const deathStats = Array.isArray(result) ? {} : (result.deathStats || {});
-                for (const s of survivors) s.simIndex += start;
-                for (const nm of nearMisses) nm.simIndex += start;
-                allSurvivors.push(...survivors);
-                allNearMisses.push(...nearMisses);
-                for (const [reason, count] of Object.entries(deathStats)) {
-                    allDeathStats[reason] = (allDeathStats[reason] || 0) + count;
+            const chunk = weightsBuf.slice(start * TOTAL_WEIGHTS, end * TOTAL_WEIGHTS);
+            worker.once('message', (results) => {
+                for (let i = 0; i < results.length; i++) {
+                    allResults[start + i] = results[i];
                 }
                 completed++;
-                if (completed === workers.length) resolve({ survivors: allSurvivors, nearMisses: allNearMisses, deathStats: allDeathStats });
+                if (completed === workers.length) resolve(allResults);
             });
-            worker.postMessage({ type: 'simulate_packed', inputBuf: chunk, numSims: actualSims, framesPerSim, targetX });
+            worker.postMessage({
+                type: 'evaluate',
+                weightsBuf: chunk.buffer,
+                numNetworks: end - start,
+                maxFrames,
+            });
         });
     });
 }
 
-function selectDiverseBeams(survivors, numBeams, packedInputs, framesPerSim) {
-    // survivors: array of { simIndex, survived, frame, completed, avgY }
-    if (survivors.length === 0) return [];
+// ==================== REPLAY BEST NETWORK ====================
 
-    // Sort by frames ascending (fastest first)
-    survivors.sort((a, b) => a.frame - b.frame);
+function replayBestNetwork(nes, network, saveStateStr) {
+    const state = JSON.parse(saveStateStr);
+    nes.fromJSONLite(state);
 
-    const winners = [];
-
-    // Beam 1: fastest (fewest frames)
-    winners.push(survivors[0]);
-
-    if (numBeams >= 2 && survivors.length > 1) {
-        // Beam 2: most different avg Y from beam 1
-        const beam1AvgY = survivors[0].avgY;
-        let bestYDiff = -1;
-        let beam2Idx = -1;
-        for (let i = 1; i < survivors.length; i++) {
-            const diff = Math.abs(survivors[i].avgY - beam1AvgY);
-            if (diff > bestYDiff) {
-                bestYDiff = diff;
-                beam2Idx = i;
-            }
-        }
-        if (beam2Idx >= 0) {
-            winners.push(survivors[beam2Idx]);
-        }
-    }
-
-    if (numBeams >= 3 && survivors.length > 2) {
-        // Beam 3: second fastest with >=5 frame difference from beam 1
-        const beam1Frames = survivors[0].frame;
-        for (let i = 1; i < survivors.length; i++) {
-            if (winners.includes(survivors[i])) continue;
-            if (Math.abs(survivors[i].frame - beam1Frames) >= 5) {
-                winners.push(survivors[i]);
-                break;
-            }
-        }
-        // If no candidate with 5-frame difference, just take the next fastest not already chosen
-        if (winners.length < 3) {
-            for (let i = 1; i < survivors.length; i++) {
-                if (!winners.includes(survivors[i])) {
-                    winners.push(survivors[i]);
-                    break;
-                }
-            }
-        }
-    }
-
-    // Extract inputs from packed buffer for each winner
-    return winners.slice(0, numBeams).map(w => ({
-        survivor: w,
-        inputs: new Uint8Array(packedInputs.buffer, packedInputs.byteOffset + w.simIndex * framesPerSim, framesPerSim),
-    }));
-}
-
-function captureBeamSaveState(nes, beam, romString) {
-    // beam.parentSaveStateStr is a lite JSON string
-    const parentState = JSON.parse(beam.parentSaveStateStr);
-    nes.fromJSONLite(parentState);
-
+    const inputsRecord = [];
     let prevBitmask = 0;
-    const framesToReplay = beam.frame;
-    const inputBuf = beam.inputs;
 
-    for (let frame = 0; frame < framesToReplay; frame++) {
-        const bitmask = inputBuf[frame] || 0;
+    for (let frame = 0; frame < MAX_FRAMES; frame++) {
+        const netInputs = readNetworkInputs(nes, frame, MAX_FRAMES);
+        const outputs = networkInfer(netInputs, network.weights);
+        const bitmask = outputsToBitmask(outputs);
+        inputsRecord.push(bitmask);
+
+        // Apply buttons
         if (bitmask !== prevBitmask) {
             const changed = bitmask ^ prevBitmask;
             for (let bit = 0; bit < 8; bit++) {
@@ -1283,9 +717,15 @@ function captureBeamSaveState(nes, beam, romString) {
             prevBitmask = bitmask;
         }
         nes.frame();
+
+        // Check termination
+        const mem = nes.cpu.mem;
+        const ps = mem[0x000E];
+        if (ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240) break;
+        if (mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0) break;
     }
 
-    return JSON.stringify(nes.toJSONLite());
+    return new Uint8Array(inputsRecord);
 }
 
 // ==================== MAIN ====================
@@ -1311,8 +751,8 @@ async function main() {
     };
 
     console.log(`${C.cyan}\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557${C.reset}`);
-    console.log(`${C.cyan}\u2551  MARIO SPEEDRUN \u2014 Chunked Beam Search Optimizer       \u2551${C.reset}`);
-    console.log(`${C.cyan}\u2551  Build optimal run 200px at a time, 3 diverse beams   \u2551${C.reset}`);
+    console.log(`${C.cyan}\u2551  MARIO SPEEDRUN \u2014 Neuroevolution Optimizer              \u2551${C.reset}`);
+    console.log(`${C.cyan}\u2551  Neural networks learn to play through natural selection \u2551${C.reset}`);
     console.log(`${C.cyan}\u255A\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255D${C.reset}`);
     console.log();
 
@@ -1349,16 +789,13 @@ async function main() {
             if (key === '-' || key === '_') pendingWorkerOps.push('-');
         });
     }
-    let currentBroadcastState = null; // track what save state workers have
     async function processWorkerOps() {
         for (const op of pendingWorkerOps) {
             if (op === '+') {
                 const w = await spawnWorker(romString, saveStateStr);
-                // Send current chunk's save state to the new worker
-                if (currentBroadcastState) {
-                    w.postMessage({ type: 'setSaveState', saveStateStr: currentBroadcastState });
-                    await new Promise(r => w.once('message', r));
-                }
+                // Send current save state to the new worker
+                w.postMessage({ type: 'setSaveState', saveStateStr: trainingSaveStateStr });
+                await new Promise(r => w.once('message', r));
                 workers.push(w);
                 console.log(`\n  ${C.green}+ Worker added${C.reset} (now ${workers.length})`);
             } else if (op === '-' && workers.length > 1) {
@@ -1382,791 +819,266 @@ async function main() {
     const dbPath = path.join(__dirname, 'runs.db');
     const db = new RunDatabase(dbPath);
     console.log(`${C.green}SQLite database: ${dbPath}${C.reset}`);
-
-    const dbStats = db.stats();
-    console.log(`${C.green}DB: ${dbStats.totalRuns} runs, ${dbStats.completions} completions, maxX ${dbStats.maxX}${C.reset}`);
     console.log();
 
     // Graceful shutdown
     let sigCount = 0;
-    let globalBestInputs = null;
-    let globalBestResult = null;
+    let bestEverNetwork = null;
+    let bestEverResult = null;
 
     process.on('SIGINT', () => {
         sigCount++; if (sigCount > 1) process.exit(1);
-        console.log('\n\nInterrupted! Saving...');
-        try { db.endBatch(); } catch {}
-        if (globalBestInputs) {
-            saveBest(globalBestInputs, globalBestResult);
-            const speed = (globalBestResult.bestX / Math.max(globalBestResult.frame, 1)).toFixed(2);
-            console.log(`Saved: ${globalBestResult.bestX}px ${speed}px/f ${globalBestResult.reason}`);
+        console.log('\n\nInterrupted! Saving best network...');
+        try {
+            if (bestEverNetwork) {
+                // Save best network weights to DB
+                const fit = bestEverResult ? bestEverResult.bestX * 10000 + (MAX_FRAMES - bestEverResult.frame) : 0;
+                db.saveNetwork(currentGeneration, 0, bestEverNetwork.weights, fit,
+                    bestEverResult?.bestX || 0, bestEverResult?.frame || 0, bestEverResult?.completed || false);
+
+                // Replay best network to capture inputs
+                const replayInputs = replayBestNetwork(nes, bestEverNetwork, trainingSaveStateStr);
+                const replayResult = bestEverResult || { bestX: 0, frame: replayInputs.length, completed: false, reason: 'interrupted' };
+                saveBest(replayInputs, replayResult);
+                tryAddToHallOfFame(hallOfFame, replayInputs, replayResult);
+
+                const speed = (replayResult.bestX / Math.max(replayResult.frame, 1)).toFixed(2);
+                console.log(`Saved: ${replayResult.bestX}px ${speed}px/f ${replayResult.reason}`);
+                console.log(`Network weights saved to DB (gen ${currentGeneration})`);
+            }
+        } catch (e) {
+            console.error('Error saving:', e.message);
         }
         for (const w of workers) w.terminate();
         if (process.stdin.isTTY) process.stdin.setRawMode(false);
         setTimeout(() => process.exit(0), 200);
     });
 
-    // ==================== CHUNKED BEAM SEARCH ====================
-
-    const CHUNK_START_X = 40; // Mario's starting X
-    const totalChunks = Math.ceil((LEVEL_WIDTH - CHUNK_START_X) / CHUNK_SIZE_PX);
-
     // ==================== INTERACTIVE STARTUP ====================
-    // Ask mode
-    let mode;
-    if (process.argv.includes('--fast')) {
-        mode = 'fast';
-    } else if (process.argv.includes('--thorough')) {
-        mode = 'thorough';
-    } else {
-        const modeAnswer = await ask(`${C.cyan}Mode?${C.reset} [${C.green}f${C.reset}]ast (first survivor) or [${C.yellow}t${C.reset}]horough (best of ${CHUNK_SIMS_PER_BEAM}): `);
-        mode = (modeAnswer === 't' || modeAnswer === 'thorough') ? 'thorough' : 'fast';
-    }
-    console.log(`  Mode: ${mode === 'fast' ? C.green + 'FAST' : C.yellow + 'THOROUGH'}${C.reset}\n`);
 
-    // Check for existing progress
-    const lastChunk = db.getLastCompletedChunk();
-    let startChunkIndex = 0;
-    let beams = [];
+    const lastGen = db.getLastGeneration();
+    let population;
+    let generation = 0;
+    let bestEverFitness = -1;
+    let bestEverX = 0;
+    let stagnationCount = 0;
+    let mutationRate = MUTATION_RATE;
 
-    if (lastChunk >= 0) {
-        const savedBeams = db.getBeamChunks(lastChunk);
-        const lastX = savedBeams[0]?.targetX || '?';
-        const lastFrames = savedBeams[0]?.frames || '?';
-        console.log(`${C.yellow}Found existing progress: chunk ${lastChunk + 1}/${totalChunks} (X=${lastX}, ${lastFrames}f)${C.reset}`);
-
+    if (lastGen >= 0) {
+        console.log(`${C.yellow}Found existing progress: generation ${lastGen}${C.reset}`);
         let resumeAnswer;
         if (process.argv.includes('--continue')) {
-            resumeAnswer = 'c';
+            resumeAnswer = 'r';
         } else if (process.argv.includes('--new')) {
             resumeAnswer = 'n';
         } else {
-            resumeAnswer = await ask(`${C.cyan}Continue${C.reset} from chunk ${lastChunk + 2} or ${C.cyan}start new${C.reset}? [${C.green}c${C.reset}]ontinue / [${C.red}n${C.reset}]ew: `);
+            resumeAnswer = await ask(`${C.cyan}Resume${C.reset} from generation ${lastGen} or ${C.cyan}start new${C.reset}? [${C.green}r${C.reset}]esume / [${C.red}n${C.reset}]ew: `);
         }
 
         if (resumeAnswer === 'n' || resumeAnswer === 'new') {
-            console.log(`  ${C.red}Starting fresh — clearing saved chunks and old runs${C.reset}\n`);
-            db.db.exec('DELETE FROM beam_chunks');
-            db.db.exec('DELETE FROM runs');
+            console.log(`  ${C.red}Starting fresh — clearing saved networks${C.reset}\n`);
+            db.db.exec('DELETE FROM networks');
+            db.db.exec('DELETE FROM evolution_stats');
             db.db.exec('VACUUM');
-            beams = [{
-                inputs: new Uint8Array(0),
-                saveStateStr: trainingSaveStateStr,
-                frames: 0,
-                targetX: CHUNK_START_X,
-            }];
+            population = Array.from({ length: POPULATION_SIZE }, () => new NeuralNetwork());
         } else {
-            beams = savedBeams.map(b => ({
-                inputs: new Uint8Array(b.inputs),
-                saveStateStr: b.saveStateStr,
-                frames: b.frames,
-                targetX: b.targetX,
-            }));
-            startChunkIndex = lastChunk + 1;
-            console.log(`  ${C.green}Resuming from chunk ${lastChunk + 2}${C.reset}\n`);
+            console.log(`  ${C.green}Resuming from generation ${lastGen}${C.reset}`);
+            generation = lastGen;
+
+            // Load top networks from the last generation
+            const savedNetworks = db.getTopNetworks(lastGen, ELITE_COUNT);
+            population = [];
+
+            for (const row of savedNetworks) {
+                const weightsBuf = new Float32Array(new Uint8Array(row.weights).buffer);
+                population.push(new NeuralNetwork(new Float32Array(weightsBuf)));
+            }
+
+            console.log(`  Loaded ${population.length} elite networks from DB`);
+
+            // Fill rest with mutations of loaded networks + fresh random
+            const loaded = population.length;
+            // Mutated copies of loaded networks
+            while (population.length < POPULATION_SIZE * 0.7 && loaded > 0) {
+                const parent = population[population.length % loaded].clone();
+                parent.mutate(MUTATION_RATE, MUTATION_STRENGTH);
+                population.push(parent);
+            }
+            // Fresh random for diversity
+            while (population.length < POPULATION_SIZE) {
+                population.push(new NeuralNetwork());
+            }
+
+            // Restore best ever from DB
+            const bestRow = db.getBestNetwork();
+            if (bestRow) {
+                bestEverFitness = bestRow.fitness;
+                bestEverX = bestRow.bestX;
+                const weightsBuf = new Float32Array(new Uint8Array(bestRow.weights).buffer);
+                bestEverNetwork = new NeuralNetwork(new Float32Array(weightsBuf));
+                bestEverResult = { bestX: bestRow.bestX, frame: bestRow.frame, completed: !!bestRow.completed, reason: bestRow.completed ? 'completed' : 'unknown' };
+                console.log(`  Best ever: ${bestEverX}px (fitness ${bestEverFitness.toFixed(0)})`);
+            }
+
+            console.log();
         }
     } else {
-        // Fresh start: single beam from initial save state
-        beams = [{
-            inputs: new Uint8Array(0),
-            saveStateStr: trainingSaveStateStr,
-            frames: 0,
-            targetX: CHUNK_START_X,
-        }];
+        population = Array.from({ length: POPULATION_SIZE }, () => new NeuralNetwork());
     }
 
-    let totalFrames = beams[0]?.frames || 0;
-    let levelCompleted = false;
-    const startTime = Date.now();
-    let previousChunkWinnerInputs = []; // seed inputs from last chunk's winners
-    let prevPrevChunkBeamState = null; // beam state before the PREVIOUS chunk (for backtracking 1 level)
-    let prevChunkBeamState = null; // beam state before current chunk
-    let backtracked = false; // prevent infinite backtrack loops
-
-    // Independent beam states for thorough mode
-    const initBeamState = () => ({
-        saveStateStr: trainingSaveStateStr,
-        inputs: new Uint8Array(0),
-        frames: 0,
-        targetX: CHUNK_START_X,
-        prevSaveState: null,
-        backtracked: false,
-        completed: false,
-    });
-    const beamStates = mode === 'thorough'
-        ? Array.from({ length: NUM_BEAMS }, initBeamState)
-        : [];
-
-    console.log(`${C.cyan}=== CHUNKED BEAM SEARCH (${mode.toUpperCase()}) ===${C.reset}`);
-    const modeDesc = mode === 'fast' ? 'stop on first survivor per chunk' : `${CHUNK_SIMS_PER_BEAM} sims/beam, ${NUM_BEAMS} beams`;
-    console.log(`${C.dim}${totalChunks} chunks of ${CHUNK_SIZE_PX}px | ${modeDesc}${C.reset}`);
-    console.log(`${C.dim}Strategy: sprint+jump seed -> random -> mutate -> breed (adaptive ratios)${C.reset}`);
-    console.log(`${C.dim}Fallback: progressive ${MIN_CHUNK_SIZE_PX}px sub-targets after ${100 * 500} failed attempts${C.reset}\n`);
-
-    for (let ci = startChunkIndex; ci < totalChunks + 5 && !levelCompleted; ci++) {
-        const chunkStart = Date.now();
-        await processWorkerOps();
-        currentRound = ci;
-
-        // Save beam states for backtracking (need 2 levels: prev chunk's start)
-        prevPrevChunkBeamState = prevChunkBeamState;
-        prevChunkBeamState = { ...beams[0] };
-
-        const targetX = CHUNK_START_X + (ci + 1) * CHUNK_SIZE_PX;
-        let chunkSims = mode === 'fast' ? 500 : CHUNK_SIMS_PER_BEAM; // fast: small batches
-        let currentChunkSize = CHUNK_SIZE_PX;
-        let allSurvivors = [];
-        let totalSimsThisChunk = 0;
-        let foundSurvivor = false;
-        let chunkDeathStats = {};
-
-        if (mode === 'fast') {
-            // FAST MODE: 1 beam, send batches of 500, stop on first survivor
-            // Uses mutation-based search: track near-misses and mutate their inputs
-            const beam = beams[0]; // only use the best beam
-            currentBroadcastState = beam.saveStateStr; await broadcastSaveState(workers, beam.saveStateStr);
-
-            // Adaptive batch: start with 1 sim per worker, scale up as chunk gets harder
-            let currentBatch = workers.length; // 1 sim per worker = minimum parallel unit
-            const FAST_MAX_SIMS = 50500; // total sim budget
-            let chunkNearMisses = []; // {simIndex, bestX, inputBuf} sorted by bestX desc
-            let prevStrategy = 'none';
-
-            while (totalSimsThisChunk < FAST_MAX_SIMS && !foundSurvivor) {
-                await processWorkerOps();
-
-                let packedInputs;
-                if (totalSimsThisChunk === 0) {
-                    // First batch: sprint+jump seed — hold RIGHT+B, vary only jump timing
-                    packedInputs = generateSprintJumpInputs(currentBatch, FRAMES_PER_CHUNK, 'right');
-                    console.log(`  ${C.cyan}-> Sprint+jump seed (${currentBatch} runs: RIGHT+B held, random A timing)${C.reset}`);
-                    prevStrategy = 'sprint';
-                } else {
-                    // Subsequent batches: adaptive mix of random + mutations/breeding
-                    const nearMissInputs2 = chunkNearMisses.map(nm => nm.inputBuf);
-                    packedInputs = generateMixedInputs(currentBatch, FRAMES_PER_CHUNK, nearMissInputs2);
-
-                    // Strategy transition logging
-                    const nmLen = nearMissInputs2.length;
-                    const strategy = nmLen >= 16 ? 'full-genetic' : nmLen >= 6 ? 'genetic' : nmLen >= 2 ? 'breed' : nmLen > 0 ? 'mutate' : 'random';
-                    if (strategy !== prevStrategy) {
-                        process.stdout.write('\x1b[2K');
-                        const bestNMX = chunkNearMisses[0]?.bestX || 0;
-                        if (nmLen >= 16) console.log(`  ${C.cyan}-> Full genetic (R20/M35/B45) from ${nmLen} near-misses (best X:${bestNMX})${C.reset}`);
-                        else if (nmLen >= 6) console.log(`  ${C.cyan}-> Genetic (R40/M30/B30) from ${nmLen} near-misses (best X:${bestNMX})${C.reset}`);
-                        else if (nmLen >= 2) console.log(`  ${C.cyan}-> Breeding+mutating (R60/M25/B15) from ${nmLen} near-misses (best X:${bestNMX})${C.reset}`);
-                        else if (nmLen > 0) console.log(`  ${C.cyan}-> Mutating (R60/M40) from ${nmLen} near-miss (best X:${bestNMX})${C.reset}`);
-                        else console.log(`  ${C.cyan}-> Random exploration${C.reset}`);
-                        prevStrategy = strategy;
-                    }
-
-                    // Scale up batch size as chunk gets harder
-                    // Scale up quickly: 15 -> 150 -> 500
-                    if (totalSimsThisChunk > 100) currentBatch = Math.min(500, workers.length * 10);
-                    if (totalSimsThisChunk > 1000) currentBatch = 500;
-                }
-                totalSimsThisChunk += currentBatch;
-
-                const { survivors, nearMisses, deathStats } = await evaluateChunkBatch(workers, packedInputs, currentBatch, FRAMES_PER_CHUNK, targetX);
-                for (const [r, c] of Object.entries(deathStats)) chunkDeathStats[r] = (chunkDeathStats[r] || 0) + c;
-
-                // Update near-miss pool
-                for (const nm of nearMisses) {
-                    nm.inputBuf = new Uint8Array(packedInputs.buffer, packedInputs.byteOffset + nm.simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK).slice();
-                }
-                chunkNearMisses.push(...nearMisses);
-                chunkNearMisses.sort((a, b) => b.bestX - a.bestX);
-                if (chunkNearMisses.length > TOP_NEAR_MISSES) chunkNearMisses.length = TOP_NEAR_MISSES;
-
-                for (const s of survivors) {
-                    s.beamIndex = 0;
-                    s.packedInputs = packedInputs;
-                    s.parentSaveStateStr = beam.saveStateStr;
-                    s.parentFrames = beam.frames;
-                    s.parentInputs = beam.inputs;
-                }
-                if (survivors.length > 0) {
-                    allSurvivors.push(...survivors);
-                    foundSurvivor = true;
-                    if (survivors.some(s => s.completed)) levelCompleted = true;
-                }
-                // Early backtrack: if after 5000 sims, zero near-misses and >95% same death, stop early
-                if (totalSimsThisChunk >= 5000 && chunkNearMisses.length === 0 && ci > 0 && !backtracked) {
-                    const totalDC = Object.values(chunkDeathStats).reduce((a, b) => a + b, 0);
-                    if (totalDC > 0) {
-                        const topDC = Math.max(...Object.values(chunkDeathStats));
-                        if (topDC / totalDC > 0.95) {
-                            process.stdout.write('\x1b[2K');
-                            console.log(`  ${C.yellow}Hopeless after ${totalSimsThisChunk} attempts (0 near-misses) — triggering early backtrack${C.reset}`);
-                            break;
-                        }
-                    }
-                }
-
-                // Progress feedback with near-miss, mutation, and death info
-                if (totalSimsThisChunk % (currentBatch * 3) === 0 && totalSimsThisChunk > 0) {
-                    const elapsed = (Date.now() - chunkStart) / 1000;
-                    const rate = Math.round(totalSimsThisChunk / elapsed);
-                    const bestNM = chunkNearMisses.length > 0 ? chunkNearMisses[0].bestX : 0;
-                    const nmCount = chunkNearMisses.length;
-                    const nmInfo = bestNM > 0 ? ` | ${nmCount} near-misses (best X:${bestNM})` : ' | no near-misses yet';
-                    const nmLen = chunkNearMisses.length;
-                    const mutInfo = nmLen >= 2 ? ` | R${nmLen<=5?60:nmLen<=15?40:20}/M${nmLen<=5?25:nmLen<=15?30:35}/B${nmLen<=5?15:nmLen<=15?30:45}` : nmLen > 0 ? ' | R60/M40' : ' | random';
-                    const totalDeaths = Object.values(chunkDeathStats).reduce((a, b) => a + b, 0);
-                    let deathInfo = '';
-                    if (totalDeaths > 0) {
-                        const top = Object.entries(chunkDeathStats).sort((a, b) => b[1] - a[1]).slice(0, 3)
-                            .map(([r, c]) => `${r}:${(c / totalDeaths * 100).toFixed(0)}%`).join(' ');
-                        deathInfo = ` | deaths: ${top}`;
-                    }
-                    process.stdout.write(`  ${C.dim}Chunk ${ci+1} X:${targetX-CHUNK_SIZE_PX}->${targetX} | ${totalSimsThisChunk} tried | ${rate}/s | ${workers.length}w | ${elapsed.toFixed(0)}s${nmInfo}${mutInfo}${deathInfo}${C.reset}\r`);
-                }
-            }
-            if (foundSurvivor) process.stdout.write('\x1b[2K'); // clear progress line
-        } else {
-            // ==================== THOROUGH MODE: FULLY INDEPENDENT BEAMS ====================
-            // Beams 1 & 2: 100% independent paths through the level
-            // Beam 3: breeds from beams 1 & 2's near-misses but maintains its own path
-
-            // Helper: run one beam's sims, pick its own winner, return {winner, nearMisses, survivors, deathStats}
-            async function solveChunkForBeam(bi, beamState, seedInputs) {
-                currentBroadcastState = beamState.saveStateStr;
-                await broadcastSaveState(workers, beamState.saveStateStr);
-
-                let beamNearMisses = [];
-                let beamSurvivors = [];
-                let beamDeathStats = {};
-                const simsPerRound = Math.min(500, chunkSims);
-                let beamSimsDone = 0;
-                let bestFrame = Infinity;
-                let prevBeamStrategy = 'none';
-
-                while (beamSimsDone < chunkSims) {
-                    await processWorkerOps();
-                    const batchSize = Math.min(simsPerRound, chunkSims - beamSimsDone);
-
-                    let packedInputs;
-                    if (beamSimsDone === 0) {
-                        packedInputs = generateSprintJumpInputs(batchSize, FRAMES_PER_CHUNK, 'right');
-                        console.log(`  ${C.cyan}-> Beam ${bi+1}: Sprint+jump seed (${batchSize} runs)${C.reset}`);
-                        prevBeamStrategy = 'sprint';
-                    } else {
-                        const nearMissInputs = beamNearMisses.map(nm => nm.inputBuf);
-                        const allSeeds = [...nearMissInputs, ...seedInputs];
-                        packedInputs = generateMixedInputs(batchSize, FRAMES_PER_CHUNK, allSeeds);
-
-                        const nmLen = allSeeds.length;
-                        const strategy = nmLen >= 16 ? 'full-genetic' : nmLen >= 6 ? 'genetic' : nmLen >= 2 ? 'breed' : nmLen > 0 ? 'mutate' : 'random';
-                        if (strategy !== prevBeamStrategy) {
-                            process.stdout.write('\x1b[2K');
-                            const bestNMX = beamNearMisses[0]?.bestX || 0;
-                            console.log(`  ${C.cyan}-> Beam ${bi+1}: ${strategy} from ${nmLen} seeds (best X:${bestNMX})${C.reset}`);
-                            prevBeamStrategy = strategy;
-                        }
-                    }
-
-                    beamSimsDone += batchSize;
-                    totalSimsThisChunk += batchSize;
-
-                    const { survivors, nearMisses, deathStats } = await evaluateChunkBatch(workers, packedInputs, batchSize, FRAMES_PER_CHUNK, targetX);
-                    for (const [r, c] of Object.entries(deathStats)) {
-                        beamDeathStats[r] = (beamDeathStats[r] || 0) + c;
-                        chunkDeathStats[r] = (chunkDeathStats[r] || 0) + c;
-                    }
-
-                    for (const nm of nearMisses) {
-                        nm.inputBuf = new Uint8Array(packedInputs.buffer, packedInputs.byteOffset + nm.simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK).slice();
-                    }
-                    beamNearMisses.push(...nearMisses);
-                    beamNearMisses.sort((a, b) => b.bestX - a.bestX);
-                    if (beamNearMisses.length > TOP_NEAR_MISSES) beamNearMisses.length = TOP_NEAR_MISSES;
-
-                    for (const s of survivors) {
-                        s.beamIndex = bi;
-                        s.packedInputs = packedInputs;
-                        s.parentSaveStateStr = beamState.saveStateStr;
-                        s.parentFrames = beamState.frames;
-                        s.parentInputs = beamState.inputs;
-                    }
-                    beamSurvivors.push(...survivors);
-                    for (const s of survivors) { if (s.frame < bestFrame) bestFrame = s.frame; }
-                    if (survivors.some(s => s.completed)) levelCompleted = true;
-
-                    if (beamSimsDone % (simsPerRound * 3) === 0) {
-                        const elapsed = (Date.now() - chunkStart) / 1000;
-                        const rate = Math.round(totalSimsThisChunk / elapsed);
-                        const bestNM = beamNearMisses.length > 0 ? beamNearMisses[0].bestX : 0;
-                        const nmInfo = bestNM > 0 ? ` | ${beamNearMisses.length} near-misses (best X:${bestNM})` : '';
-                        process.stdout.write(`  ${C.dim}Beam ${bi+1} | ${beamSimsDone}/${chunkSims} sims | ${rate}/s | ${workers.length}w${nmInfo}${C.reset}\r`);
-                    }
-                }
-
-                // Refinement: breed/mutate this beam's top survivors
-                if (beamSurvivors.length >= 2) {
-                    beamSurvivors.sort((a, b) => a.frame - b.frame);
-                    const topInputs = beamSurvivors.slice(0, 20).map(s =>
-                        new Uint8Array(s.packedInputs.buffer, s.packedInputs.byteOffset + s.simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK).slice()
-                    );
-                    const bestBefore = beamSurvivors[0].frame;
-                    for (let ri = 0; ri < 3; ri++) {
-                        const refBuf = Buffer.alloc(500 * FRAMES_PER_CHUNK);
-                        const nBreed = 300, nMut = 200;
-                        for (let i = 0; i < nMut; i++) {
-                            refBuf.set(mutateInputs(topInputs[i % topInputs.length], FRAMES_PER_CHUNK), i * FRAMES_PER_CHUNK);
-                        }
-                        for (let i = 0; i < nBreed; i++) {
-                            const a = Math.floor(Math.random() * topInputs.length);
-                            let b = Math.floor(Math.random() * (topInputs.length - 1)); if (b >= a) b++;
-                            refBuf.set(breedInputs(topInputs[a], topInputs[b], FRAMES_PER_CHUNK), (nMut + i) * FRAMES_PER_CHUNK);
-                        }
-                        totalSimsThisChunk += 500;
-                        const { survivors: refS } = await evaluateChunkBatch(workers, refBuf, 500, FRAMES_PER_CHUNK, targetX);
-                        for (const s of refS) {
-                            s.beamIndex = bi; s.packedInputs = refBuf;
-                            s.parentSaveStateStr = beamState.saveStateStr;
-                            s.parentFrames = beamState.frames; s.parentInputs = beamState.inputs;
-                        }
-                        beamSurvivors.push(...refS);
-                        beamSurvivors.sort((a, b) => a.frame - b.frame);
-                        for (let ti = 0; ti < Math.min(beamSurvivors.length, topInputs.length); ti++) {
-                            topInputs[ti] = new Uint8Array(beamSurvivors[ti].packedInputs.buffer, beamSurvivors[ti].packedInputs.byteOffset + beamSurvivors[ti].simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK).slice();
-                        }
-                    }
-                    bestFrame = beamSurvivors[0].frame;
-                }
-
-                process.stdout.write('\x1b[2K');
-                const bestNMX = beamNearMisses.length > 0 ? beamNearMisses[0].bestX : 0;
-                if (beamSurvivors.length > 0) {
-                    console.log(`  ${C.green}Beam ${bi+1}: ${beamSurvivors.length} survived | ${beamNearMisses.length} near-misses${bestNMX ? ` (best X:${bestNMX})` : ''}${C.reset}`);
-                } else {
-                    console.log(`  ${C.red}Beam ${bi+1}: 0 survived | ${beamNearMisses.length} near-misses${bestNMX ? ` (best X:${bestNMX})` : ''}${C.reset}`);
-                }
-
-                // Pick this beam's own winner
-                const beamWinners = selectDiverseFromAllSurvivors(beamSurvivors, 1);
-                return { winner: beamWinners[0] || null, nearMisses: beamNearMisses, survivors: beamSurvivors, deathStats: beamDeathStats };
-            }
-
-            // Solve chunk for each beam independently
-            const beamNearMissPool = [];
-
-            // Beam 1: independent
-            const b1 = await solveChunkForBeam(0, beamStates[0], previousChunkWinnerInputs);
-            beamNearMissPool.push(...b1.nearMisses.map(nm => nm.inputBuf));
-
-            // Beam 2: independent
-            const b2 = await solveChunkForBeam(1, beamStates[1], previousChunkWinnerInputs);
-            beamNearMissPool.push(...b2.nearMisses.map(nm => nm.inputBuf));
-
-            // Beam 3: offspring — seeded from beams 1 & 2's near-misses
-            console.log(`  ${C.cyan}-> Beam 3: Breeding offspring from beams 1 & 2 (${beamNearMissPool.length} parent inputs)${C.reset}`);
-            const b3 = await solveChunkForBeam(2, beamStates[2], beamNearMissPool);
-
-            // Each beam advances independently with its own winner
-            const beamResults = [b1, b2, b3];
-            let anyBeamCompleted = false;
-
-            for (let bi = 0; bi < NUM_BEAMS; bi++) {
-                const br = beamResults[bi];
-                if (br.winner) {
-                    const w = br.winner;
-                    const chunkFrames = w.survivor.frame;
-                    const ss = captureBeamSaveState(nes, {
-                        parentSaveStateStr: w.survivor.parentSaveStateStr,
-                        inputs: w.inputs,
-                        frame: chunkFrames,
-                    }, romString);
-                    const parentInputs = w.survivor.parentInputs;
-                    const fullInputs = new Uint8Array(parentInputs.length + chunkFrames);
-                    fullInputs.set(parentInputs, 0);
-                    fullInputs.set(w.inputs.slice(0, chunkFrames), parentInputs.length);
-                    const beamFrames = w.survivor.parentFrames + chunkFrames;
-
-                    beamStates[bi].prevSaveState = { ...beamStates[bi] };
-                    beamStates[bi].saveStateStr = ss;
-                    beamStates[bi].inputs = fullInputs;
-                    beamStates[bi].frames = beamFrames;
-                    beamStates[bi].targetX = targetX;
-                    beamStates[bi].completed = w.survivor.completed || false;
-                    beamStates[bi].backtracked = false;
-
-                    if (w.survivor.completed) anyBeamCompleted = true;
-
-                    db.saveBeamChunk(ci, bi, {
-                        targetX, frames: beamFrames, inputs: fullInputs,
-                        saveStateStr: bi === 0 ? ss : '', avgY: w.survivor.avgY,
-                    });
-                } else {
-                    // Beam failed this chunk — check for backtrack
-                    const bds = br.deathStats;
-                    const totalBD = Object.values(bds).reduce((a, b) => a + b, 0);
-                    if (totalBD > 0 && !beamStates[bi].backtracked && beamStates[bi].prevSaveState) {
-                        const topBD = Math.max(...Object.values(bds));
-                        if (topBD / totalBD > 0.95) {
-                            const topReason = Object.entries(bds).sort((a, b) => b[1] - a[1])[0][0];
-                            console.log(`  ${C.yellow}Beam ${bi+1}: ${(topBD/totalBD*100).toFixed(0)}% "${topReason}" — backtracking with +50px${C.reset}`);
-                            // Restore previous state and mark for retry
-                            const prev = beamStates[bi].prevSaveState;
-                            beamStates[bi].saveStateStr = prev.saveStateStr;
-                            beamStates[bi].inputs = prev.inputs;
-                            beamStates[bi].frames = prev.frames;
-                            beamStates[bi].targetX = prev.targetX;
-                            beamStates[bi].backtracked = true;
-                            // TODO: extended target on retry — for now just retry from prev position
-                        }
-                    }
-                    console.log(`  ${C.red}Beam ${bi+1}: no winner for chunk ${ci+1}${C.reset}`);
-                }
-            }
-
-            // Update beams array for compatibility with fast mode / shared code
-            beams = beamStates.map(bs => ({
-                inputs: bs.inputs, saveStateStr: bs.saveStateStr,
-                frames: bs.frames, targetX: bs.targetX,
-            }));
-
-            // Find fastest beam for global best tracking
-            const bestBeam = beamStates.reduce((best, bs) => bs.frames < best.frames ? bs : best, beamStates[0]);
-            totalFrames = bestBeam.frames;
-            globalBestInputs = bestBeam.inputs;
-            globalBestResult = {
-                bestX: targetX, completed: anyBeamCompleted,
-                completionFrame: anyBeamCompleted ? bestBeam.frames : 0,
-                frame: bestBeam.frames, reason: anyBeamCompleted ? 'completed' : 'in_progress',
-                checkpoints: [null, null, null], stuckFrames: 0,
-            };
-
-            // Chunk summary with per-beam status
-            const chunkTime = (Date.now() - chunkStart) / 1000;
-            const pct = Math.round(Math.min(targetX, LEVEL_WIDTH) / LEVEL_WIDTH * 100);
-            const bar = makeProgressBar(Math.min(targetX, LEVEL_WIDTH), LEVEL_WIDTH, 25);
-            console.log(`Chunk ${String(ci + 1).padStart(2)}/${totalChunks} | X:${targetX-CHUNK_SIZE_PX}-${targetX} | ${totalSimsThisChunk} attempts | took ${chunkTime.toFixed(0)}s`);
-            for (let bi = 0; bi < NUM_BEAMS; bi++) {
-                const bs = beamStates[bi];
-                const gt = (bs.frames / 60.098).toFixed(1);
-                const spd = (bs.targetX / bs.frames * 60.098).toFixed(0);
-                const status = bs.completed ? `${C.green}COMPLETE${C.reset}` : `${bs.targetX}px ${gt}s ${spd}px/s`;
-                console.log(`  Beam ${bi+1}: ${status}`);
-            }
-            console.log(`  ${bar} ${pct}% | ${totalChunks - ci - 1} chunks remaining`);
-            const totalDeaths = Object.values(chunkDeathStats).reduce((a, b) => a + b, 0);
-            if (totalDeaths > 0) {
-                const parts = Object.entries(chunkDeathStats).sort((a, b) => b[1] - a[1])
-                    .map(([reason, count]) => `${reason}: ${count} (${(count / totalDeaths * 100).toFixed(0)}%)`);
-                console.log(`  ${C.dim}Deaths: ${parts.join(' | ')}${C.reset}`);
-            }
-
-            saveBest(bestBeam.inputs, globalBestResult);
-
-            if (anyBeamCompleted) {
-                // Try adding all completed beams to hall of fame
-                const completedBeams = beamStates.filter(bs => bs.completed);
-                const fastest = completedBeams.reduce((best, bs) => bs.frames < best.frames ? bs : best);
-                console.log(`\n${C.green}LEVEL COMPLETE! ${completedBeams.length} beam(s) finished — fastest: ${(fastest.frames / 60.098).toFixed(1)}s${C.reset}`);
-                for (const cb of completedBeams) {
-                    const added = tryAddToHallOfFame(hallOfFame, cb.inputs, {
-                        completed: true, completionFrame: cb.frames, frame: cb.frames,
-                        bestX: LEVEL_WIDTH, reason: 'completed',
-                        checkpoints: [null, null, null], stuckFrames: 0,
-                    });
-                    if (added) console.log(`  ${C.green}Added to hall of fame: ${(cb.frames / 60.098).toFixed(1)}s${C.reset}`);
-                }
-                levelCompleted = true;
-            }
-            continue; // skip the shared code below (fast mode only)
-        }
-
-        // ==================== FAST MODE: shared winner/backtrack/progress code ====================
-
-        // Select beams from survivors
-        const numBeamsToSelect = 1;
-        let winners = selectDiverseFromAllSurvivors(allSurvivors, numBeamsToSelect);
-
-        // Backtrack: if >95% of deaths are the same cause, re-solve previous chunk with extended target
-        if (winners.length === 0 && ci > 0 && !backtracked) {
-            const totalDeathsCheck = Object.values(chunkDeathStats).reduce((a, b) => a + b, 0);
-            if (totalDeathsCheck > 0) {
-                const topDeathCount = Math.max(...Object.values(chunkDeathStats));
-                const topDeathPct = topDeathCount / totalDeathsCheck;
-                const topDeathReason = Object.entries(chunkDeathStats).sort((a, b) => b[1] - a[1])[0][0];
-                if (topDeathPct > 0.95 && prevPrevChunkBeamState) {
-                    const BACKTRACK_EXTRA = 50;
-                    const extendedTarget = beams[0].targetX + BACKTRACK_EXTRA;
-                    console.log(`\n  ${C.yellow}${(topDeathPct * 100).toFixed(0)}% dying to "${topDeathReason}" — bad starting position.${C.reset}`);
-                    console.log(`  ${C.yellow}Backtracking: re-solving chunk ${ci} with extended target X:${extendedTarget} (+${BACKTRACK_EXTRA}px)${C.reset}`);
-
-                    const prevBeam = prevPrevChunkBeamState;
-                    currentBroadcastState = prevBeam.saveStateStr;
-                    await broadcastSaveState(workers, prevBeam.saveStateStr);
-
-                    let btFound = false;
-                    let btSurvivors = [];
-                    let btNearMisses = [];
-                    let btSims = 0;
-                    const BT_MAX_SIMS = 50000;
-                    const BT_BATCH = 500;
-
-                    while (btSims < BT_MAX_SIMS && !btFound) {
-                        const btInputs = btNearMisses.length > 0
-                            ? generateMixedInputs(BT_BATCH, FRAMES_PER_CHUNK, btNearMisses.map(nm => nm.inputBuf))
-                            : generateSprintJumpInputs(BT_BATCH, FRAMES_PER_CHUNK);
-                        btSims += BT_BATCH;
-
-                        const { survivors: btS, nearMisses: btNM } = await evaluateChunkBatch(workers, btInputs, BT_BATCH, FRAMES_PER_CHUNK, extendedTarget);
-                        for (const nm of btNM) {
-                            nm.inputBuf = new Uint8Array(btInputs.buffer, btInputs.byteOffset + nm.simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK).slice();
-                        }
-                        btNearMisses.push(...btNM);
-                        btNearMisses.sort((a, b) => b.bestX - a.bestX);
-                        if (btNearMisses.length > TOP_NEAR_MISSES) btNearMisses.length = TOP_NEAR_MISSES;
-
-                        for (const s of btS) {
-                            s.packedInputs = btInputs;
-                            s.parentSaveStateStr = prevBeam.saveStateStr;
-                            s.parentFrames = prevBeam.frames;
-                            s.parentInputs = prevBeam.inputs;
-                        }
-                        if (btS.length > 0) { btSurvivors.push(...btS); btFound = true; }
-
-                        if (btSims % 1500 === 0 && !btFound) {
-                            const bestNM = btNearMisses.length > 0 ? btNearMisses[0].bestX : 0;
-                            process.stdout.write(`  ${C.dim}Backtrack: ${btSims} tried | target X:${extendedTarget} | best near-miss X:${bestNM}${C.reset}\r`);
-                        }
-                    }
-
-                    if (btFound) {
-                        process.stdout.write('\x1b[2K');
-                        const btWinners = selectDiverseFromAllSurvivors(btSurvivors, 1);
-                        const w = btWinners[0];
-                        const ss = captureBeamSaveState(nes, {
-                            parentSaveStateStr: w.survivor.parentSaveStateStr,
-                            inputs: w.inputs,
-                            frame: w.survivor.frame,
-                        }, romString);
-                        const parentInputs = w.survivor.parentInputs;
-                        const fullInputs = new Uint8Array(parentInputs.length + w.survivor.frame);
-                        fullInputs.set(parentInputs, 0);
-                        fullInputs.set(w.inputs.slice(0, w.survivor.frame), parentInputs.length);
-                        const btFrames = w.survivor.parentFrames + w.survivor.frame;
-
-                        beams = [{
-                            inputs: fullInputs, saveStateStr: ss,
-                            frames: btFrames, targetX: extendedTarget,
-                        }];
-                        totalFrames = btFrames;
-                        backtracked = true;
-
-                        console.log(`  ${C.green}Extended chunk ${ci} to X:${extendedTarget} — retrying chunk ${ci + 1}${C.reset}\n`);
-                        ci--;
-                        continue;
-                    } else {
-                        process.stdout.write('\x1b[2K');
-                        console.log(`  ${C.red}Backtrack failed — could not reach extended target X:${extendedTarget}${C.reset}`);
-                    }
-                }
-            }
-        }
-
-        // Progressive sub-targets fallback (fast mode)
-        if (winners.length === 0) {
-            const beam = beams[0];
-            const chunkStartX = targetX - CHUNK_SIZE_PX;
-            console.log(`  ${C.yellow}No survivors after ${totalSimsThisChunk} attempts. Falling back to progressive ${MIN_CHUNK_SIZE_PX}px sub-targets...${C.reset}`);
-
-            const SUB_STEP = Math.max(MIN_CHUNK_SIZE_PX, Math.floor(CHUNK_SIZE_PX / 2));
-            let subBeam = beam;
-            let subSuccess = true;
-
-            for (let subTarget = chunkStartX + SUB_STEP; subTarget <= targetX; subTarget += SUB_STEP) {
-                currentBroadcastState = subBeam.saveStateStr;
-                await broadcastSaveState(workers, subBeam.saveStateStr);
-
-                let subNearMisses = [];
-                let subFound = false;
-                let subAllSurvivors = [];
-                const subBatch = 500;
-                const subMaxAttempts = 200;
-
-                for (let sa = 0; sa < subMaxAttempts && !subFound; sa++) {
-                    await processWorkerOps();
-                    const nearMissInputs = subNearMisses.map(nm => nm.inputBuf);
-                    const packedInputs = generateMixedInputs(subBatch, FRAMES_PER_CHUNK, nearMissInputs);
-                    totalSimsThisChunk += subBatch;
-
-                    const { survivors, nearMisses } = await evaluateChunkBatch(workers, packedInputs, subBatch, FRAMES_PER_CHUNK, subTarget);
-                    for (const nm of nearMisses) {
-                        nm.inputBuf = new Uint8Array(packedInputs.buffer, packedInputs.byteOffset + nm.simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK).slice();
-                    }
-                    subNearMisses.push(...nearMisses);
-                    subNearMisses.sort((a, b) => b.bestX - a.bestX);
-                    if (subNearMisses.length > TOP_NEAR_MISSES) subNearMisses.length = TOP_NEAR_MISSES;
-
-                    for (const s of survivors) {
-                        s.beamIndex = 0; s.packedInputs = packedInputs;
-                        s.parentSaveStateStr = subBeam.saveStateStr;
-                        s.parentFrames = subBeam.frames; s.parentInputs = subBeam.inputs;
-                    }
-                    if (survivors.length > 0) { subAllSurvivors.push(...survivors); subFound = true; }
-                }
-
-                if (!subFound) { subSuccess = false; break; }
-                process.stdout.write('\x1b[2K');
-
-                if (subTarget < targetX) {
-                    const subWinners = selectDiverseFromAllSurvivors(subAllSurvivors, 1);
-                    if (subWinners.length > 0) {
-                        const w = subWinners[0];
-                        const ss = captureBeamSaveState(nes, { parentSaveStateStr: w.survivor.parentSaveStateStr, inputs: w.inputs, frame: w.survivor.frame }, romString);
-                        const pi = w.survivor.parentInputs;
-                        const fi = new Uint8Array(pi.length + w.survivor.frame);
-                        fi.set(pi, 0); fi.set(w.inputs.slice(0, w.survivor.frame), pi.length);
-                        subBeam = { inputs: fi, saveStateStr: ss, frames: w.survivor.parentFrames + w.survivor.frame, targetX: subTarget };
-                    }
-                } else {
-                    allSurvivors = subAllSurvivors;
-                }
-            }
-            if (subSuccess) winners = selectDiverseFromAllSurvivors(allSurvivors, numBeamsToSelect);
-        }
-
-        if (winners.length === 0) {
-            console.log(`${C.red}No survivors for chunk ${ci + 1}. Stopping.${C.reset}`);
-            break;
-        }
-
-        // Fast mode: update beam state
-        const w = winners[0];
-        const actualTargetX = w.survivor.completed ? LEVEL_WIDTH : targetX;
-        const chunkFrames = w.survivor.frame;
-        const ss = captureBeamSaveState(nes, { parentSaveStateStr: w.survivor.parentSaveStateStr, inputs: w.inputs, frame: chunkFrames }, romString);
-        const parentInputs = w.survivor.parentInputs;
-        const fullInputs = new Uint8Array(parentInputs.length + chunkFrames);
-        fullInputs.set(parentInputs, 0);
-        fullInputs.set(w.inputs.slice(0, chunkFrames), parentInputs.length);
-        const beamFrames = w.survivor.parentFrames + chunkFrames;
-
-        previousChunkWinnerInputs = [w.inputs.slice(0, chunkFrames)];
-
-        beams = [{ inputs: fullInputs, saveStateStr: ss, frames: beamFrames, targetX: actualTargetX }];
-        backtracked = false;
-        totalFrames = beamFrames;
-
-        globalBestInputs = fullInputs;
-        globalBestResult = {
-            bestX: actualTargetX, completed: w.survivor.completed || levelCompleted,
-            completionFrame: (w.survivor.completed || levelCompleted) ? totalFrames : 0,
-            frame: totalFrames, reason: (w.survivor.completed || levelCompleted) ? 'completed' : 'in_progress',
-            checkpoints: [null, null, null], stuckFrames: 0,
-        };
-
-        db.saveBeamChunk(ci, 0, { targetX: actualTargetX, frames: beamFrames, inputs: fullInputs, saveStateStr: ss, avgY: w.survivor.avgY });
-
-        const chunkTime = (Date.now() - chunkStart) / 1000;
-        const displayTargetX = actualTargetX;
-        const pct = Math.round(Math.min(displayTargetX, LEVEL_WIDTH) / LEVEL_WIDTH * 100);
-        const bar = makeProgressBar(Math.min(displayTargetX, LEVEL_WIDTH), LEVEL_WIDTH, 25);
-        const gameTime = (totalFrames / 60.098).toFixed(1);
-        const speed = (displayTargetX / totalFrames * 60.098).toFixed(0);
-
-        console.log(`Chunk ${String(ci + 1).padStart(2)}/${totalChunks} | X:${targetX-CHUNK_SIZE_PX}-${displayTargetX} | ${totalSimsThisChunk} attempts | ${allSurvivors.length} survived | ${gameTime}s game time | ${speed} px/s | took ${chunkTime.toFixed(0)}s`);
-        console.log(`  ${bar} ${pct}% | Mario at ${displayTargetX}/${LEVEL_WIDTH}px (${gameTime}s)`);
-        const totalDeaths = Object.values(chunkDeathStats).reduce((a, b) => a + b, 0);
-        if (totalDeaths > 0) {
-            const parts = Object.entries(chunkDeathStats).sort((a, b) => b[1] - a[1])
-                .map(([reason, count]) => `${reason}: ${count} (${(count / totalDeaths * 100).toFixed(0)}%)`);
-            console.log(`  ${C.dim}Deaths: ${parts.join(' | ')}${C.reset}`);
-        }
-
-        saveBest(fullInputs, globalBestResult);
-
-        if (w.survivor.completed || levelCompleted) {
-            levelCompleted = true;
-            console.log(`\n${C.green}LEVEL COMPLETE in ${(totalFrames / 60.098).toFixed(1)}s!${C.reset}`);
-            tryAddToHallOfFame(hallOfFame, fullInputs, {
-                completed: true, completionFrame: totalFrames, frame: totalFrames,
-                bestX: LEVEL_WIDTH, reason: 'completed',
-                checkpoints: [null, null, null], stuckFrames: 0,
-            });
-            break;
-        }
-    }
-
-    // Final summary
-    const elapsed = (Date.now() - startTime) / 1000;
+    // Broadcast save state to all workers
+    await broadcastSaveState(workers, trainingSaveStateStr);
+
+    console.log(`${C.cyan}=== NEUROEVOLUTION ===${C.reset}`);
+    console.log(`${C.dim}Population: ${POPULATION_SIZE} | Inputs: ${NUM_INPUTS} | Hidden: ${NUM_HIDDEN1}+${NUM_HIDDEN2} | Outputs: ${NUM_OUTPUTS} | Weights: ${TOTAL_WEIGHTS}${C.reset}`);
+    console.log(`${C.dim}Elite: ${ELITE_COUNT} | Mutation: ${(MUTATION_RATE*100).toFixed(0)}% @ ${MUTATION_STRENGTH} | Tournament: ${TOURNAMENT_SIZE}${C.reset}`);
+    console.log(`${C.dim}Stagnation boost: ${STAGNATION_THRESHOLD} gens | Diversity injection: ${DIVERSITY_INJECTION_THRESHOLD} gens${C.reset}`);
     console.log();
-    console.log(`${C.cyan}==========================================${C.reset}`);
-    console.log(`${C.bold}OPTIMIZATION COMPLETE${C.reset}`);
-    console.log(`Best run: ${(totalFrames / 60.098).toFixed(1)}s (${totalFrames} frames) | ${beams[0]?.targetX || 0}px`);
-    if (levelCompleted) {
-        console.log(`${C.green}Level completed!${C.reset}`);
-    } else {
-        console.log(`Reached X=${beams[0]?.targetX || '?'} of ${LEVEL_WIDTH}`);
+
+    const startTime = Date.now();
+
+    // ==================== EVOLUTION LOOP ====================
+
+    while (true) {
+        const genStart = Date.now();
+        await processWorkerOps();
+        generation++;
+        currentGeneration = generation;
+
+        // Evaluate all networks
+        const results = await evaluatePopulation(workers, population, MAX_FRAMES);
+
+        // Calculate fitness: bestX * 10000 + (MAX_FRAMES - frame)
+        const fitnesses = results.map(r => r.bestX * 10000 + (MAX_FRAMES - r.frame));
+
+        // Sort population by fitness
+        const indices = fitnesses.map((f, i) => i).sort((a, b) => fitnesses[b] - fitnesses[a]);
+        population = indices.map(i => population[i]);
+        const sortedResults = indices.map(i => results[i]);
+        const sortedFitnesses = indices.map(i => fitnesses[i]);
+
+        // Stats
+        const bestResult = sortedResults[0];
+        const bestFitness = sortedFitnesses[0];
+        const avgX = Math.round(results.reduce((s, r) => s + r.bestX, 0) / results.length);
+        const bestX = bestResult.bestX;
+        const genTime = (Date.now() - genStart) / 1000;
+
+        // Check for improvement
+        if (bestFitness > bestEverFitness) {
+            bestEverFitness = bestFitness;
+            bestEverX = bestX;
+            bestEverNetwork = population[0].clone();
+            bestEverResult = bestResult;
+            stagnationCount = 0;
+            mutationRate = MUTATION_RATE; // reset mutation on improvement
+        } else {
+            stagnationCount++;
+        }
+
+        // Wall detection: where do most networks die?
+        const deathXs = results.filter(r => !r.completed).map(r => r.bestX);
+        const wallBuckets = {};
+        for (const x of deathXs) {
+            const bucket = Math.floor(x / 20) * 20;
+            wallBuckets[bucket] = (wallBuckets[bucket] || 0) + 1;
+        }
+        const topWall = Object.entries(wallBuckets).sort((a, b) => b[1] - a[1])[0];
+        const wallStr = topWall ? `wall: X=${topWall[0]}(${Math.round(topWall[1]/POPULATION_SIZE*100)}%)` : '';
+
+        // Stagnation handling
+        if (stagnationCount > 0 && stagnationCount >= STAGNATION_THRESHOLD && stagnationCount % STAGNATION_THRESHOLD === 0) {
+            mutationRate = Math.min(0.5, mutationRate * 2);
+            console.log(`  ${C.yellow}STAGNATION: boosting mutation to ${(mutationRate*100).toFixed(0)}%${C.reset}`);
+        }
+        if (stagnationCount >= DIVERSITY_INJECTION_THRESHOLD) {
+            // Replace bottom 50% with fresh random
+            for (let i = Math.floor(POPULATION_SIZE / 2); i < POPULATION_SIZE; i++) {
+                population[i] = new NeuralNetwork();
+            }
+            stagnationCount = 0;
+            mutationRate = MUTATION_RATE;
+            console.log(`  ${C.magenta}DIVERSITY INJECTION: 50% fresh random${C.reset}`);
+        }
+
+        // Log every generation
+        const completions = results.filter(r => r.completed).length;
+        const bestTime = (bestResult.frame / 60.098).toFixed(1);
+        const elapsed = (Date.now() - startTime) / 1000;
+
+        console.log(
+            `Gen ${String(generation).padStart(4)} | ` +
+            `best: ${bestX}px (${bestTime}s) ${bestResult.completed ? C.green + 'COMPLETE!' + C.reset : bestResult.reason} | ` +
+            `avg: ${avgX}px | ${wallStr} | ` +
+            `mut: ${(mutationRate*100).toFixed(0)}% | stag: ${stagnationCount} | ` +
+            `${genTime.toFixed(1)}s/gen` +
+            (completions > 0 ? ` | ${C.green}${completions} completions!${C.reset}` : '')
+        );
+
+        if (generation % 10 === 0) {
+            const bar = makeProgressBar(bestEverX, LEVEL_WIDTH, 20);
+            console.log(`  ${bar} ${Math.round(bestEverX/LEVEL_WIDTH*100)}% | best ever: ${bestEverX}px | elapsed: ${formatTime(elapsed)}`);
+        }
+
+        // Save best to replay every 50 generations or on completion
+        if (generation % 50 === 0 || bestResult.completed) {
+            const replayInputs = replayBestNetwork(nes, population[0], trainingSaveStateStr);
+            saveBest(replayInputs, bestResult);
+            if (bestResult.completed) {
+                tryAddToHallOfFame(hallOfFame, replayInputs, bestResult);
+                console.log(`  ${C.green}${C.bold}LEVEL COMPLETE! Saved to hall of fame.${C.reset}`);
+            }
+        }
+
+        // Save to DB every 50 generations
+        if (generation % 50 === 0) {
+            // Save top ELITE_COUNT networks for resume capability
+            for (let i = 0; i < Math.min(ELITE_COUNT, population.length); i++) {
+                db.saveNetwork(generation, i, population[i].weights, sortedFitnesses[i],
+                    sortedResults[i].bestX, sortedResults[i].frame, sortedResults[i].completed);
+            }
+            db.saveEvolutionStats(generation, bestFitness,
+                sortedFitnesses.reduce((a,b)=>a+b,0)/sortedFitnesses.length,
+                bestX, avgX, completions, wallStr, mutationRate, genTime);
+            console.log(`  ${C.dim}DB checkpoint saved (gen ${generation})${C.reset}`);
+        }
+
+        // ==================== REPRODUCE ====================
+        const nextPop = [];
+
+        // Elite (top 10%) — copied unchanged
+        for (let i = 0; i < ELITE_COUNT; i++) {
+            nextPop.push(population[i].clone());
+        }
+
+        // Mutated elite (30%)
+        const numMutatedElite = Math.floor(POPULATION_SIZE * 0.30);
+        for (let i = 0; i < numMutatedElite; i++) {
+            const parent = population[i % ELITE_COUNT].clone();
+            parent.mutate(mutationRate, MUTATION_STRENGTH);
+            nextPop.push(parent);
+        }
+
+        // Crossover (40%)
+        const numCrossover = Math.floor(POPULATION_SIZE * 0.40);
+        for (let i = 0; i < numCrossover; i++) {
+            const a = NeuralNetwork.tournamentSelect(population, sortedFitnesses, TOURNAMENT_SIZE);
+            const b = NeuralNetwork.tournamentSelect(population, sortedFitnesses, TOURNAMENT_SIZE);
+            const child = NeuralNetwork.crossover(a, b);
+            // Light mutation on crossover children
+            if (Math.random() < 0.5) child.mutate(mutationRate * 0.5, MUTATION_STRENGTH * 0.5);
+            nextPop.push(child);
+        }
+
+        // Fresh random (fill remaining ~20%)
+        while (nextPop.length < POPULATION_SIZE) {
+            nextPop.push(new NeuralNetwork());
+        }
+
+        population = nextPop;
     }
-    console.log(`Elapsed: ${formatTime(elapsed)}`);
-    console.log(`Saved to: ${bestPath}`);
-    workers.forEach(w => w.terminate());
-    if (process.stdin.isTTY) process.stdin.setRawMode(false);
 }
 
-// Helper: select diverse beams from survivors that may come from different beams/packed buffers
-function selectDiverseFromAllSurvivors(survivors, numBeams) {
-    if (survivors.length === 0) return [];
-
-    // Sort by frames ascending (fastest first)
-    survivors.sort((a, b) => a.frame - b.frame);
-
-    const winners = [];
-
-    // Beam 1: fastest (fewest frames)
-    winners.push(survivors[0]);
-
-    if (numBeams >= 2 && survivors.length > 1) {
-        // Beam 2: most different avg Y from beam 1
-        const beam1AvgY = survivors[0].avgY;
-        let bestYDiff = -1;
-        let beam2Idx = -1;
-        for (let i = 1; i < survivors.length; i++) {
-            const diff = Math.abs(survivors[i].avgY - beam1AvgY);
-            if (diff > bestYDiff) {
-                bestYDiff = diff;
-                beam2Idx = i;
-            }
-        }
-        if (beam2Idx >= 0) {
-            winners.push(survivors[beam2Idx]);
-        }
-    }
-
-    if (numBeams >= 3 && survivors.length > 2) {
-        // Beam 3: second fastest with >=5 frame difference from beam 1
-        const beam1Frames = survivors[0].frame;
-        for (let i = 1; i < survivors.length; i++) {
-            if (winners.includes(survivors[i])) continue;
-            if (Math.abs(survivors[i].frame - beam1Frames) >= 5) {
-                winners.push(survivors[i]);
-                break;
-            }
-        }
-        if (winners.length < 3) {
-            for (let i = 1; i < survivors.length; i++) {
-                if (!winners.includes(survivors[i])) {
-                    winners.push(survivors[i]);
-                    break;
-                }
-            }
-        }
-    }
-
-    // Extract inputs from packed buffer for each winner
-    return winners.slice(0, numBeams).map(w => {
-        const inputs = new Uint8Array(FRAMES_PER_CHUNK);
-        const src = new Uint8Array(w.packedInputs.buffer, w.packedInputs.byteOffset + w.simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK);
-        inputs.set(src);
-        return { survivor: w, inputs };
-    });
-}
-
-main().catch(err => { console.error('Fatal:', err); process.exit(1); });
+main().catch(e => { console.error(e); process.exit(1); });
 
 } // end isMainThread

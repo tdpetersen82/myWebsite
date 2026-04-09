@@ -1,8 +1,8 @@
 {
-  "id": "beam-search-R20-4240px-41.57pf",
-  "rating": "A",
-  "phase": "beam-search",
-  "round": 20,
+  "id": "neuroevolution-G16-899px-1.31pf",
+  "rating": "C",
+  "phase": "neuroevolution",
+  "generation": 16,
   "events": [
     [
       0,
@@ -15,59 +15,134 @@
       1
     ],
     [
-      17,
-      6,
-      1
-    ],
-    [
-      18,
-      6,
-      0
-    ],
-    [
-      86,
+      45,
       8,
       1
     ],
     [
-      91,
+      58,
       8,
       0
     ],
     [
-      99,
+      83,
       8,
       1
     ],
     [
-      102,
+      173,
       8,
       0
     ],
     [
-      102,
+      192,
+      8,
+      1
+    ],
+    [
+      192,
+      4,
+      1
+    ],
+    [
+      198,
+      8,
+      0
+    ],
+    [
+      198,
+      4,
+      0
+    ],
+    [
+      205,
+      8,
+      1
+    ],
+    [
+      218,
+      4,
+      1
+    ],
+    [
+      225,
+      4,
+      0
+    ],
+    [
+      230,
+      8,
+      0
+    ],
+    [
+      235,
+      8,
+      1
+    ],
+    [
+      237,
+      8,
+      0
+    ],
+    [
+      238,
+      8,
+      1
+    ],
+    [
+      243,
+      8,
+      0
+    ],
+    [
+      262,
+      8,
+      1
+    ],
+    [
+      315,
+      8,
+      0
+    ],
+    [
+      333,
+      8,
+      1
+    ],
+    [
+      334,
+      8,
+      0
+    ],
+    [
+      336,
+      8,
+      1
+    ],
+    [
+      361,
+      8,
+      0
+    ],
+    [
+      361,
       0,
       0
     ],
     [
-      102,
+      361,
       7,
       0
     ]
   ],
-  "fitness": 458086.2745098039,
+  "fitness": 8997316,
   "completed": false,
-  "completionFrame": 0,
-  "bestX": 4240,
-  "speed": 41.57,
-  "reason": "in_progress",
-  "totalFrames": 102,
+  "bestX": 899,
+  "speed": 1.31,
+  "reason": "stalled",
+  "totalFrames": 684,
   "stuckFrames": 0,
-  "checkpoints": [
-    null,
-    null,
-    null
-  ],
-  "checkpointSplits": "none reached",
+  "checkpoints": [],
+  "checkpointSplits": "none",
   "timeSeconds": null
 }

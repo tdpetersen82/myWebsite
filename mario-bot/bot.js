@@ -32,6 +32,35 @@
         return ((byte >> 4) * 10) + (byte & 0x0F);
     }
 
+    // EJS NES RAM reader — reads from FCEUmm save state (fast: ~0.02ms per call)
+    let ejsRAMOffset = -1; // cached offset of NES RAM within save state
+
+    function findRAMOffset(state) {
+        // FCEUmm save state contains "RAM\0" + 4-byte LE size (0x0800) + 2KB data
+        for (let i = 16; i < Math.min(state.length, 200); i++) {
+            if (state[i] === 0x52 && state[i+1] === 0x41 && state[i+2] === 0x4D && state[i+3] === 0x00) {
+                const size = state[i+4] | (state[i+5] << 8);
+                if (size === 0x0800) return i + 8;
+            }
+        }
+        return -1;
+    }
+
+    // Read Mario's X/Y from EJS emulator
+    function readEJSPosition() {
+        try {
+            const state = EJS_emulator.gameManager.getState();
+            if (ejsRAMOffset < 0) ejsRAMOffset = findRAMOffset(state);
+            if (ejsRAMOffset < 0) return null;
+            const o = ejsRAMOffset;
+            const x = state[o + 0x006D] * 256 + state[o + 0x0086];
+            const y = state[o + 0x00CE];
+            return { x, y };
+        } catch(e) {
+            return null;
+        }
+    }
+
     function readGameState(nes) {
         const mem = nes.cpu.mem;
 
@@ -586,7 +615,8 @@
 
     function updateUI() {
         const rf = relFrame();
-        document.getElementById('frame-text').textContent = rf;
+        const pos = readEJSPosition();
+        document.getElementById('frame-text').textContent = pos ? ('X:' + pos.x + ' Y:' + pos.y) : rf;
         document.getElementById('time-text').textContent = (rf / 60.098).toFixed(1) + 's';
         document.getElementById('input-text').textContent = inputString();
 
@@ -607,6 +637,15 @@
     }
 
     // ========== WIRE UP ==========
+
+    // Background position display — always show X/Y when idle (manual play)
+    setInterval(function() {
+        if (mode !== 'idle') return; // recording/replaying modes handle their own UI
+        const pos = readEJSPosition();
+        if (pos) {
+            document.getElementById('frame-text').textContent = 'X:' + pos.x + ' Y:' + pos.y;
+        }
+    }, 100);
 
     // ========== LOAD BEST SEQUENCE (jsnes direct replay) ==========
 
@@ -749,8 +788,9 @@
                 }
             }
 
-            // Update basic UI
-            document.getElementById('frame-text').textContent = jsnesFrame;
+            // Update basic UI with X/Y position
+            const uiGs = readGameState(jsnesNes);
+            document.getElementById('frame-text').textContent = 'X:' + uiGs.marioX + ' Y:' + uiGs.marioY;
             document.getElementById('time-text').textContent = (jsnesFrame / 60.098).toFixed(1) + 's';
             document.getElementById('events-text').textContent = jsnesEventIndex + '/' + jsnesEvents.length;
 
