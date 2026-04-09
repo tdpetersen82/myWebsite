@@ -1860,15 +1860,18 @@ async function main() {
             saveBest(bestBeam.inputs, globalBestResult);
 
             if (anyBeamCompleted) {
-                // Find the fastest completed beam
+                // Try adding all completed beams to hall of fame
                 const completedBeams = beamStates.filter(bs => bs.completed);
                 const fastest = completedBeams.reduce((best, bs) => bs.frames < best.frames ? bs : best);
-                console.log(`\n${C.green}LEVEL COMPLETE in ${(fastest.frames / 60.098).toFixed(1)}s!${C.reset}`);
-                tryAddToHallOfFame(hallOfFame, fastest.inputs, {
-                    completed: true, completionFrame: fastest.frames, frame: fastest.frames,
-                    bestX: LEVEL_WIDTH, reason: 'completed',
-                    checkpoints: [null, null, null], stuckFrames: 0,
-                });
+                console.log(`\n${C.green}LEVEL COMPLETE! ${completedBeams.length} beam(s) finished — fastest: ${(fastest.frames / 60.098).toFixed(1)}s${C.reset}`);
+                for (const cb of completedBeams) {
+                    const added = tryAddToHallOfFame(hallOfFame, cb.inputs, {
+                        completed: true, completionFrame: cb.frames, frame: cb.frames,
+                        bestX: LEVEL_WIDTH, reason: 'completed',
+                        checkpoints: [null, null, null], stuckFrames: 0,
+                    });
+                    if (added) console.log(`  ${C.green}Added to hall of fame: ${(cb.frames / 60.098).toFixed(1)}s (${cb.frames}f)${C.reset}`);
+                }
                 levelCompleted = true;
             }
             continue; // skip the shared code below (fast mode only)
