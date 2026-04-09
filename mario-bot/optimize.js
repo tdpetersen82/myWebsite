@@ -1738,7 +1738,7 @@ async function main() {
                 process.stdout.write('\x1b[2K');
                 const bestNMX = beamNearMisses.length > 0 ? beamNearMisses[0].bestX : 0;
                 if (beamSurvivors.length > 0) {
-                    console.log(`  ${C.green}Beam ${bi+1}: ${beamSurvivors.length} survived (best: ${bestFrame}f) | ${beamNearMisses.length} near-misses${bestNMX ? ` (best X:${bestNMX})` : ''}${C.reset}`);
+                    console.log(`  ${C.green}Beam ${bi+1}: ${beamSurvivors.length} survived | ${beamNearMisses.length} near-misses${bestNMX ? ` (best X:${bestNMX})` : ''}${C.reset}`);
                 } else {
                     console.log(`  ${C.red}Beam ${bi+1}: 0 survived | ${beamNearMisses.length} near-misses${bestNMX ? ` (best X:${bestNMX})` : ''}${C.reset}`);
                 }
@@ -1847,7 +1847,7 @@ async function main() {
                 const gt = (bs.frames / 60.098).toFixed(1);
                 const spd = (bs.targetX / bs.frames * 60.098).toFixed(0);
                 const status = bs.completed ? `${C.green}COMPLETE${C.reset}` : `${bs.targetX}px ${gt}s ${spd}px/s`;
-                console.log(`  Beam ${bi+1}: ${status} (${bs.frames}f)`);
+                console.log(`  Beam ${bi+1}: ${status}`);
             }
             console.log(`  ${bar} ${pct}% | ${totalChunks - ci - 1} chunks remaining`);
             const totalDeaths = Object.values(chunkDeathStats).reduce((a, b) => a + b, 0);
@@ -1870,7 +1870,7 @@ async function main() {
                         bestX: LEVEL_WIDTH, reason: 'completed',
                         checkpoints: [null, null, null], stuckFrames: 0,
                     });
-                    if (added) console.log(`  ${C.green}Added to hall of fame: ${(cb.frames / 60.098).toFixed(1)}s (${cb.frames}f)${C.reset}`);
+                    if (added) console.log(`  ${C.green}Added to hall of fame: ${(cb.frames / 60.098).toFixed(1)}s${C.reset}`);
                 }
                 levelCompleted = true;
             }
