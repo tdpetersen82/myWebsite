@@ -34,7 +34,13 @@ const CHUNK_SIMS_PER_BEAM = 5000;    // sims per beam in thorough mode
 const NUM_BEAMS = 3;
 const FRAMES_PER_CHUNK = 200;
 const CHUNK_RETRY_SIMS = 100000;
-const MIN_CHUNK_SIZE_PX = 50;
+const MIN_CHUNK_SIZE_PX = 100;
+
+// Mutation-based search
+const NEAR_MISS_THRESHOLD = 0.15; // return near-miss if reached 15%+ of chunk distance (was 0.3)
+const TOP_NEAR_MISSES = 20;       // keep top N near-misses per chunk
+const MUTATION_RATIO = 0.5;       // 50% of sims are mutations when near-misses available
+const MUTATIONS_PER_PARENT = 5;   // how many children per parent input
 
 // Hall of fame
 const GOLDEN_DIVERSITY_THRESHOLD = 30;
@@ -223,7 +229,7 @@ if (!isMainThread) {
     }
 
     // ---- simulateLite: bare minimum simulation for packed chunk mode ----
-    // Returns null for dead runs (zero overhead), small object for survivors.
+    // Returns object with survived=true for survivors, survived=false+bestX for near-misses, null for junk.
     // Aggressive early kill: most bad runs die within 15-20 frames.
     function simulateLite(inputBuf, targetX) {
         nes.fromJSONLite(fastCloneState(saveState));
@@ -234,8 +240,8 @@ if (!isMainThread) {
         let ySum = 0;
         let prevBitmask = 0;
         const maxFrame = Math.min(inputBuf.length, MAX_FRAMES);
-        // Minimum expected speed: ~1 px/frame. If not meeting this, bail early.
         const chunkDist = targetX - startX;
+        const nearMissMin = startX + chunkDist * NEAR_MISS_THRESHOLD;
 
         for (frame = 0; frame < maxFrame; frame++) {
             const bitmask = inputBuf[frame] || 0;
@@ -263,20 +269,24 @@ if (!isMainThread) {
             if (mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0) {
                 return { survived: true, frame: frame + 1, completed: true, avgY: Math.round(ySum / (frame + 1)) };
             }
-            // Dead — return IMMEDIATELY
+            // Dead — return near-miss if got far enough, with death reason
             const ps = mem[0x000E];
-            if (ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240 || mem[0x0770] === 3) return null;
-            // Going backwards
-            if (frame > 15 && x < startX) return null;
-            // Stalled for 20 frames (was 40)
-            if (frame - lastProgressFrame > 20) return null;
-            // Progress checks every 20 frames: must be covering ground
-            if (frame > 0 && frame % 20 === 0) {
-                const expectedProgress = chunkDist * (frame / maxFrame) * 0.3; // 30% of linear pace
-                if (bestX - startX < expectedProgress) return null;
+            if (ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240 || mem[0x0770] === 3) {
+                const reason = mem[0x00CE] > 240 ? 'fell' : 'enemy';
+                return bestX >= nearMissMin ? { survived: false, bestX, frame: frame + 1, reason } : { reason };
+            }
+            if (frame > 15 && x < startX) return { reason: 'backwards' };
+            if (frame - lastProgressFrame > 35) {
+                return bestX >= nearMissMin ? { survived: false, bestX, frame: frame + 1, reason: 'stalled' } : { reason: 'stalled' };
+            }
+            if (frame > 0 && frame % 30 === 0) {
+                const expectedProgress = chunkDist * (frame / maxFrame) * 0.15; // 15% of linear pace (was 30%)
+                if (bestX - startX < expectedProgress) {
+                    return bestX >= nearMissMin ? { survived: false, bestX, frame: frame + 1, reason: 'too_slow' } : { reason: 'too_slow' };
+                }
             }
         }
-        return null; // timeout = dead
+        return bestX >= nearMissMin ? { survived: false, bestX, frame, reason: 'timeout' } : { reason: 'timeout' };
     }
 
     parentPort.on('message', (msg) => {
@@ -288,15 +298,31 @@ if (!isMainThread) {
         if (msg.type === 'simulate_packed') {
             const { inputBuf, numSims, framesPerSim, targetX } = msg;
             const buf = Buffer.isBuffer(inputBuf) ? inputBuf : Buffer.from(inputBuf);
-            // Results: for each sim, either null (dead) or {survived, frame, completed, avgY}
             const survivors = [];
+            const nearMisses = [];
+            const deathStats = {};
             for (let i = 0; i < numSims; i++) {
                 const offset = i * framesPerSim;
+                if (buf.byteOffset + offset + framesPerSim > buf.buffer.byteLength) break;
                 const slice = new Uint8Array(buf.buffer, buf.byteOffset + offset, framesPerSim);
                 const r = simulateLite(slice, targetX);
-                if (r) survivors.push({ simIndex: i, ...r });
+                if (!r) continue;
+                if (r.survived === true) {
+                    survivors.push({ simIndex: i, ...r });
+                } else if (r.survived === false && r.bestX !== undefined) {
+                    // Near-miss: keep top 10 by bestX
+                    nearMisses.push({ simIndex: i, bestX: r.bestX });
+                    if (nearMisses.length > 10) {
+                        nearMisses.sort((a, b) => b.bestX - a.bestX);
+                        nearMisses.length = 10;
+                    }
+                    if (r.reason) deathStats[r.reason] = (deathStats[r.reason] || 0) + 1;
+                } else if (r.reason) {
+                    // Dead run with reason only
+                    deathStats[r.reason] = (deathStats[r.reason] || 0) + 1;
+                }
             }
-            parentPort.postMessage(survivors);
+            parentPort.postMessage({ survivors, nearMisses, deathStats });
             return;
         }
         if (msg.type === 'simulate') {
@@ -339,34 +365,95 @@ const romString = Array.from(new Uint8Array(romData)).map(b => String.fromCharCo
 
 // ==================== INPUT GENERATION ====================
 
-function randomBitmask() {
+// Movement mask: everything except A (jump). Held for long durations.
+function randomMovementMask() {
     let mask = 0;
-    for (const { bit, weight } of BUTTON_WEIGHTS) {
-        if (Math.random() < weight) mask |= bit;
-    }
+    if (Math.random() < 0.92) mask |= BIT.RIGHT;
+    if (Math.random() < 0.80) mask |= BIT.B;
+    if (Math.random() < 0.03) mask |= BIT.LEFT;
+    if (Math.random() < 0.03) mask |= BIT.DOWN;
+    if (Math.random() < 0.02) mask |= BIT.UP;
     if (!(mask & BIT.RIGHT) && Math.random() < 0.85) mask |= BIT.RIGHT;
     if ((mask & BIT.LEFT) && (mask & BIT.RIGHT)) mask &= ~BIT.LEFT;
     if ((mask & BIT.UP) && (mask & BIT.DOWN)) mask &= ~BIT.DOWN;
     return mask;
 }
 
-function randomDuration() {
+// Jump timing: realistic Mario jump durations
+function randomJumpDuration() {
+    const r = Math.random();
+    if (r < 0.25) return 0;                                           // no jump (25%)
+    if (r < 0.45) return 2 + Math.floor(Math.random() * 7);          // small hop: 2-8 frames (20%)
+    if (r < 0.70) return 10 + Math.floor(Math.random() * 11);        // medium jump: 10-20 frames (25%)
+    if (r < 0.90) return 20 + Math.floor(Math.random() * 15);        // big jump: 20-34 frames (20%)
+    return 0;                                                          // no jump (10%)
+}
+
+// Gap between jumps: how long to wait before next jump opportunity
+function randomJumpGap() {
+    const r = Math.random();
+    if (r < 0.3) return 5 + Math.floor(Math.random() * 16);          // short gap: 5-20 frames
+    if (r < 0.7) return 20 + Math.floor(Math.random() * 31);         // medium gap: 20-50 frames
+    return 50 + Math.floor(Math.random() * 80);                       // long gap: 50-129 frames
+}
+
+function randomMovementDuration() {
     return MIN_SEGMENT_DURATION + Math.floor(Math.random() * (MAX_SEGMENT_DURATION - MIN_SEGMENT_DURATION));
+}
+
+// Legacy: combined bitmask for mutation compatibility
+function randomBitmask() {
+    return randomMovementMask() | (Math.random() < 0.35 ? BIT.A : 0);
+}
+
+function randomDuration() {
+    return randomMovementDuration();
 }
 
 function generateRandomInputs(maxFrames) {
     const inputs = new Uint8Array(maxFrames);
-    let bitmask = randomBitmask();
-    let hold = randomDuration();
-    let elapsed = 0;
+    // Two independent tracks: movement (long segments) + jump (short, precise)
+    let moveMask = randomMovementMask();
+    let moveHold = randomMovementDuration();
+    let moveElapsed = 0;
+
+    let jumpActive = false;
+    let jumpFramesLeft = 0;
+    let gapFramesLeft = randomJumpGap();
+
     for (let f = 0; f < maxFrames; f++) {
-        inputs[f] = bitmask;
-        elapsed++;
-        if (elapsed >= hold) {
-            bitmask = randomBitmask();
-            hold = randomDuration();
-            elapsed = 0;
+        // Movement track
+        if (moveElapsed >= moveHold) {
+            moveMask = randomMovementMask();
+            moveHold = randomMovementDuration();
+            moveElapsed = 0;
         }
+        moveElapsed++;
+
+        // Jump track (independent timing)
+        let jumpBit = 0;
+        if (jumpActive) {
+            jumpBit = BIT.A;
+            jumpFramesLeft--;
+            if (jumpFramesLeft <= 0) {
+                jumpActive = false;
+                gapFramesLeft = randomJumpGap();
+            }
+        } else {
+            gapFramesLeft--;
+            if (gapFramesLeft <= 0) {
+                const dur = randomJumpDuration();
+                if (dur > 0) {
+                    jumpActive = true;
+                    jumpFramesLeft = dur;
+                    jumpBit = BIT.A;
+                } else {
+                    gapFramesLeft = randomJumpGap();
+                }
+            }
+        }
+
+        inputs[f] = moveMask | jumpBit;
     }
     return inputs;
 }
@@ -375,19 +462,212 @@ function generatePackedInputs(numSims, framesPerSim) {
     const buf = Buffer.alloc(numSims * framesPerSim);
     for (let i = 0; i < numSims; i++) {
         const offset = i * framesPerSim;
-        let bitmask = randomBitmask();
-        let hold = randomDuration();
-        let elapsed = 0;
+        let moveMask = randomMovementMask();
+        let moveHold = randomMovementDuration();
+        let moveElapsed = 0;
+
+        let jumpActive = false;
+        let jumpFramesLeft = 0;
+        let gapFramesLeft = randomJumpGap();
+
         for (let f = 0; f < framesPerSim; f++) {
-            buf[offset + f] = bitmask;
-            elapsed++;
-            if (elapsed >= hold) {
-                bitmask = randomBitmask();
-                hold = randomDuration();
-                elapsed = 0;
+            if (moveElapsed >= moveHold) {
+                moveMask = randomMovementMask();
+                moveHold = randomMovementDuration();
+                moveElapsed = 0;
+            }
+            moveElapsed++;
+
+            let jumpBit = 0;
+            if (jumpActive) {
+                jumpBit = BIT.A;
+                jumpFramesLeft--;
+                if (jumpFramesLeft <= 0) {
+                    jumpActive = false;
+                    gapFramesLeft = randomJumpGap();
+                }
+            } else {
+                gapFramesLeft--;
+                if (gapFramesLeft <= 0) {
+                    const dur = randomJumpDuration();
+                    if (dur > 0) {
+                        jumpActive = true;
+                        jumpFramesLeft = dur;
+                        jumpBit = BIT.A;
+                    } else {
+                        gapFramesLeft = randomJumpGap();
+                    }
+                }
+            }
+
+            buf[offset + f] = moveMask | jumpBit;
+        }
+    }
+    return buf;
+}
+
+// ==================== SPRINT+JUMP SEEDING ====================
+
+function generateSprintJumpInputs(numSims, framesPerSim, direction = 'right') {
+    // All sims hold direction+B constantly, only vary jump (A) timing
+    const buf = Buffer.alloc(numSims * framesPerSim);
+    const BASE = (direction === 'left' ? BIT.LEFT : BIT.RIGHT) | BIT.B;
+
+    for (let i = 0; i < numSims; i++) {
+        const offset = i * framesPerSim;
+        let jumpActive = false;
+        let jumpFramesLeft = 0;
+        let gapFramesLeft = randomJumpGap();
+
+        for (let f = 0; f < framesPerSim; f++) {
+            let jumpBit = 0;
+            if (jumpActive) {
+                jumpBit = BIT.A;
+                jumpFramesLeft--;
+                if (jumpFramesLeft <= 0) { jumpActive = false; gapFramesLeft = randomJumpGap(); }
+            } else {
+                gapFramesLeft--;
+                if (gapFramesLeft <= 0) {
+                    const dur = randomJumpDuration();
+                    if (dur > 0) { jumpActive = true; jumpFramesLeft = dur; jumpBit = BIT.A; }
+                    else { gapFramesLeft = randomJumpGap(); }
+                }
+            }
+            buf[offset + f] = BASE | jumpBit;
+        }
+    }
+    return buf;
+}
+
+// ==================== MUTATION ====================
+
+function mutateInputs(parent, framesPerSim) {
+    const child = new Uint8Array(framesPerSim);
+    child.set(parent.length >= framesPerSim ? parent.slice(0, framesPerSim) : parent);
+
+    // Apply 1-3 random mutations
+    const numOps = 1 + Math.floor(Math.random() * 3);
+    for (let op = 0; op < numOps; op++) {
+        const r = Math.random();
+        if (r < 0.4) {
+            // Segment replace: replace 5-30 frames with a new random bitmask
+            const start = Math.floor(Math.random() * framesPerSim);
+            const len = 5 + Math.floor(Math.random() * 26);
+            const mask = randomBitmask();
+            for (let f = start; f < Math.min(start + len, framesPerSim); f++) child[f] = mask;
+        } else if (r < 0.7) {
+            // Segment shift: shift a block by +/- 1-5 frames
+            const pos = Math.floor(Math.random() * framesPerSim);
+            const shift = (Math.random() < 0.5 ? 1 : -1) * (1 + Math.floor(Math.random() * 5));
+            if (shift > 0) {
+                // Shift right: duplicate frames at pos
+                for (let f = framesPerSim - 1; f >= pos + shift; f--) child[f] = child[f - shift];
+            } else {
+                // Shift left: remove frames at pos
+                const absShift = -shift;
+                for (let f = pos; f < framesPerSim - absShift; f++) child[f] = child[f + absShift];
+            }
+        } else {
+            // Button flip: flip 1-3 random frame bits
+            const flips = 1 + Math.floor(Math.random() * 3);
+            for (let i = 0; i < flips; i++) {
+                const f = Math.floor(Math.random() * framesPerSim);
+                const bit = 1 << Math.floor(Math.random() * 8);
+                child[f] ^= bit;
             }
         }
     }
+    return child;
+}
+
+function breedInputs(parentA, parentB, framesPerSim) {
+    const child = new Uint8Array(framesPerSim);
+    const r = Math.random();
+
+    if (r < 0.4) {
+        // Single-point crossover: take frames 0..cut from A, cut+1..end from B
+        const cut = Math.floor(Math.random() * framesPerSim);
+        child.set(parentA.slice(0, cut), 0);
+        child.set(parentB.slice(cut, framesPerSim), cut);
+    } else if (r < 0.7) {
+        // Two-point crossover: A..B..A sandwich
+        let cut1 = Math.floor(Math.random() * framesPerSim);
+        let cut2 = Math.floor(Math.random() * framesPerSim);
+        if (cut1 > cut2) [cut1, cut2] = [cut2, cut1];
+        child.set(parentA.slice(0, cut1), 0);
+        child.set(parentB.slice(cut1, cut2), cut1);
+        child.set(parentA.slice(cut2, framesPerSim), cut2);
+    } else {
+        // Uniform crossover: randomly pick each frame from A or B
+        for (let f = 0; f < framesPerSim; f++) {
+            child[f] = Math.random() < 0.5 ? parentA[f] : parentB[f];
+        }
+    }
+
+    // Light mutation on the offspring (50% chance)
+    if (Math.random() < 0.5) return mutateInputs(child, framesPerSim);
+    return child;
+}
+
+function generateMixedInputs(numSims, framesPerSim, nearMissInputs) {
+    // Generate a buffer with a mix of random, mutated, and bred inputs
+    const buf = Buffer.alloc(numSims * framesPerSim);
+    const n = nearMissInputs.length;
+
+    // Adaptive split based on near-miss pool size
+    let pctRandom, pctMutate, pctBreed;
+    if (n === 0)       { pctRandom = 1.0;  pctMutate = 0;    pctBreed = 0;    }
+    else if (n === 1)  { pctRandom = 0.60; pctMutate = 0.40; pctBreed = 0;    }
+    else if (n <= 5)   { pctRandom = 0.60; pctMutate = 0.25; pctBreed = 0.15; }
+    else if (n <= 15)  { pctRandom = 0.40; pctMutate = 0.30; pctBreed = 0.30; }
+    else               { pctRandom = 0.20; pctMutate = 0.35; pctBreed = 0.45; }
+
+    const numBred = Math.floor(numSims * pctBreed);
+    const numMutated = Math.floor(numSims * pctMutate);
+    const numRandom = numSims - numMutated - numBred;
+
+    // Fill random portion using two-track generation (movement + jump)
+    for (let i = 0; i < numRandom; i++) {
+        const offset = i * framesPerSim;
+        let moveMask = randomMovementMask();
+        let moveHold = randomMovementDuration();
+        let moveElapsed = 0;
+        let jumpActive = false, jumpFramesLeft = 0, gapFramesLeft = randomJumpGap();
+        for (let f = 0; f < framesPerSim; f++) {
+            if (moveElapsed >= moveHold) { moveMask = randomMovementMask(); moveHold = randomMovementDuration(); moveElapsed = 0; }
+            moveElapsed++;
+            let jumpBit = 0;
+            if (jumpActive) {
+                jumpBit = BIT.A; jumpFramesLeft--;
+                if (jumpFramesLeft <= 0) { jumpActive = false; gapFramesLeft = randomJumpGap(); }
+            } else {
+                gapFramesLeft--;
+                if (gapFramesLeft <= 0) {
+                    const dur = randomJumpDuration();
+                    if (dur > 0) { jumpActive = true; jumpFramesLeft = dur; jumpBit = BIT.A; }
+                    else { gapFramesLeft = randomJumpGap(); }
+                }
+            }
+            buf[offset + f] = moveMask | jumpBit;
+        }
+    }
+
+    // Fill mutated portion from near-miss parents
+    for (let i = 0; i < numMutated; i++) {
+        const parent = nearMissInputs[i % nearMissInputs.length];
+        const child = mutateInputs(parent, framesPerSim);
+        buf.set(child, (numRandom + i) * framesPerSim);
+    }
+
+    // Fill bred portion — crossover between two different parents
+    for (let i = 0; i < numBred; i++) {
+        const idxA = Math.floor(Math.random() * nearMissInputs.length);
+        let idxB = Math.floor(Math.random() * (nearMissInputs.length - 1));
+        if (idxB >= idxA) idxB++; // ensure different parents
+        const child = breedInputs(nearMissInputs[idxA], nearMissInputs[idxB], framesPerSim);
+        buf.set(child, (numRandom + numMutated + i) * framesPerSim);
+    }
+
     return buf;
 }
 
@@ -881,6 +1161,8 @@ function broadcastSaveState(workers, saveStateStr) {
 function evaluateChunkBatch(workers, packedInputs, numSims, framesPerSim, targetX) {
     return new Promise((resolve) => {
         const allSurvivors = [];
+        const allNearMisses = [];
+        const allDeathStats = {};
         const simsPerWorker = Math.ceil(numSims / workers.length);
         let completed = 0;
 
@@ -889,24 +1171,35 @@ function evaluateChunkBatch(workers, packedInputs, numSims, framesPerSim, target
             const end = Math.min(start + simsPerWorker, numSims);
             if (start >= numSims) {
                 completed++;
-                if (completed === workers.length) resolve(allSurvivors);
+                if (completed === workers.length) resolve({ survivors: allSurvivors, nearMisses: allNearMisses, deathStats: allDeathStats });
                 return;
             }
 
             const byteStart = start * framesPerSim;
             const byteEnd = end * framesPerSim;
-            const chunk = packedInputs.slice(byteStart, byteEnd);
-
-            worker.once('message', (survivors) => {
-                // Adjust simIndex to global index
-                for (const s of survivors) {
-                    s.simIndex += start;
-                }
-                allSurvivors.push(...survivors);
+            const chunk = packedInputs.slice(byteStart, Math.min(byteEnd, packedInputs.length));
+            const actualSims = Math.floor(chunk.length / framesPerSim);
+            if (actualSims === 0) {
                 completed++;
-                if (completed === workers.length) resolve(allSurvivors);
+                if (completed === workers.length) resolve({ survivors: allSurvivors, nearMisses: allNearMisses, deathStats: allDeathStats });
+                return;
+            }
+
+            worker.once('message', (result) => {
+                const survivors = Array.isArray(result) ? result : result.survivors;
+                const nearMisses = Array.isArray(result) ? [] : (result.nearMisses || []);
+                const deathStats = Array.isArray(result) ? {} : (result.deathStats || {});
+                for (const s of survivors) s.simIndex += start;
+                for (const nm of nearMisses) nm.simIndex += start;
+                allSurvivors.push(...survivors);
+                allNearMisses.push(...nearMisses);
+                for (const [reason, count] of Object.entries(deathStats)) {
+                    allDeathStats[reason] = (allDeathStats[reason] || 0) + count;
+                }
+                completed++;
+                if (completed === workers.length) resolve({ survivors: allSurvivors, nearMisses: allNearMisses, deathStats: allDeathStats });
             });
-            worker.postMessage({ type: 'simulate_packed', inputBuf: chunk, numSims: end - start, framesPerSim, targetX });
+            worker.postMessage({ type: 'simulate_packed', inputBuf: chunk, numSims: actualSims, framesPerSim, targetX });
         });
     });
 }
@@ -1152,8 +1445,10 @@ async function main() {
         }
 
         if (resumeAnswer === 'n' || resumeAnswer === 'new') {
-            console.log(`  ${C.red}Starting fresh — clearing saved chunks${C.reset}\n`);
+            console.log(`  ${C.red}Starting fresh — clearing saved chunks and old runs${C.reset}\n`);
             db.db.exec('DELETE FROM beam_chunks');
+            db.db.exec('DELETE FROM runs');
+            db.db.exec('VACUUM');
             beams = [{
                 inputs: new Uint8Array(0),
                 saveStateStr: trainingSaveStateStr,
@@ -1183,15 +1478,25 @@ async function main() {
     let totalFrames = beams[0]?.frames || 0;
     let levelCompleted = false;
     const startTime = Date.now();
+    let previousChunkWinnerInputs = []; // seed inputs from last chunk's winners
+    let prevPrevChunkBeamState = null; // beam state before the PREVIOUS chunk (for backtracking 1 level)
+    let prevChunkBeamState = null; // beam state before current chunk
+    let backtracked = false; // prevent infinite backtrack loops
 
     console.log(`${C.cyan}=== CHUNKED BEAM SEARCH (${mode.toUpperCase()}) ===${C.reset}`);
     const modeDesc = mode === 'fast' ? 'stop on first survivor per chunk' : `${CHUNK_SIMS_PER_BEAM} sims/beam, ${NUM_BEAMS} beams`;
-    console.log(`${C.dim}${totalChunks} chunks of ${CHUNK_SIZE_PX}px | ${modeDesc}${C.reset}\n`);
+    console.log(`${C.dim}${totalChunks} chunks of ${CHUNK_SIZE_PX}px | ${modeDesc}${C.reset}`);
+    console.log(`${C.dim}Strategy: sprint+jump seed -> random -> mutate -> breed (adaptive ratios)${C.reset}`);
+    console.log(`${C.dim}Fallback: progressive ${MIN_CHUNK_SIZE_PX}px sub-targets after ${100 * 500} failed attempts${C.reset}\n`);
 
     for (let ci = startChunkIndex; ci < totalChunks + 5 && !levelCompleted; ci++) {
         const chunkStart = Date.now();
         await processWorkerOps();
         currentRound = ci;
+
+        // Save beam states for backtracking (need 2 levels: prev chunk's start)
+        prevPrevChunkBeamState = prevChunkBeamState;
+        prevChunkBeamState = { ...beams[0] };
 
         const targetX = CHUNK_START_X + (ci + 1) * CHUNK_SIZE_PX;
         let chunkSims = mode === 'fast' ? 500 : CHUNK_SIMS_PER_BEAM; // fast: small batches
@@ -1199,20 +1504,66 @@ async function main() {
         let allSurvivors = [];
         let totalSimsThisChunk = 0;
         let foundSurvivor = false;
+        let chunkDeathStats = {};
 
         if (mode === 'fast') {
             // FAST MODE: 1 beam, send batches of 500, stop on first survivor
+            // Uses mutation-based search: track near-misses and mutate their inputs
             const beam = beams[0]; // only use the best beam
             currentBroadcastState = beam.saveStateStr; await broadcastSaveState(workers, beam.saveStateStr);
 
-            const FAST_BATCH = 500;
-            const FAST_MAX_ATTEMPTS = 100; // up to 50,000 total if needed
-            for (let attempt = 0; attempt < FAST_MAX_ATTEMPTS && !foundSurvivor; attempt++) {
-                await processWorkerOps(); // pick up +/- worker changes mid-chunk
-                const packedInputs = generatePackedInputs(FAST_BATCH, FRAMES_PER_CHUNK);
-                totalSimsThisChunk += FAST_BATCH;
+            // Adaptive batch: start with 1 sim per worker, scale up as chunk gets harder
+            let currentBatch = workers.length; // 1 sim per worker = minimum parallel unit
+            const FAST_MAX_SIMS = 50500; // total sim budget
+            let chunkNearMisses = []; // {simIndex, bestX, inputBuf} sorted by bestX desc
+            let prevStrategy = 'none';
 
-                const survivors = await evaluateChunkBatch(workers, packedInputs, FAST_BATCH, FRAMES_PER_CHUNK, targetX);
+            while (totalSimsThisChunk < FAST_MAX_SIMS && !foundSurvivor) {
+                await processWorkerOps();
+
+                let packedInputs;
+                if (totalSimsThisChunk === 0) {
+                    // First batch: sprint+jump seed — hold RIGHT+B, vary only jump timing
+                    packedInputs = generateSprintJumpInputs(currentBatch, FRAMES_PER_CHUNK, 'right');
+                    console.log(`  ${C.cyan}-> Sprint+jump seed (${currentBatch} runs: RIGHT+B held, random A timing)${C.reset}`);
+                    prevStrategy = 'sprint';
+                } else {
+                    // Subsequent batches: adaptive mix of random + mutations/breeding
+                    const nearMissInputs2 = chunkNearMisses.map(nm => nm.inputBuf);
+                    packedInputs = generateMixedInputs(currentBatch, FRAMES_PER_CHUNK, nearMissInputs2);
+
+                    // Strategy transition logging
+                    const nmLen = nearMissInputs2.length;
+                    const strategy = nmLen >= 16 ? 'full-genetic' : nmLen >= 6 ? 'genetic' : nmLen >= 2 ? 'breed' : nmLen > 0 ? 'mutate' : 'random';
+                    if (strategy !== prevStrategy) {
+                        process.stdout.write('\x1b[2K');
+                        const bestNMX = chunkNearMisses[0]?.bestX || 0;
+                        if (nmLen >= 16) console.log(`  ${C.cyan}-> Full genetic (R20/M35/B45) from ${nmLen} near-misses (best X:${bestNMX})${C.reset}`);
+                        else if (nmLen >= 6) console.log(`  ${C.cyan}-> Genetic (R40/M30/B30) from ${nmLen} near-misses (best X:${bestNMX})${C.reset}`);
+                        else if (nmLen >= 2) console.log(`  ${C.cyan}-> Breeding+mutating (R60/M25/B15) from ${nmLen} near-misses (best X:${bestNMX})${C.reset}`);
+                        else if (nmLen > 0) console.log(`  ${C.cyan}-> Mutating (R60/M40) from ${nmLen} near-miss (best X:${bestNMX})${C.reset}`);
+                        else console.log(`  ${C.cyan}-> Random exploration${C.reset}`);
+                        prevStrategy = strategy;
+                    }
+
+                    // Scale up batch size as chunk gets harder
+                    // Scale up quickly: 15 -> 150 -> 500
+                    if (totalSimsThisChunk > 100) currentBatch = Math.min(500, workers.length * 10);
+                    if (totalSimsThisChunk > 1000) currentBatch = 500;
+                }
+                totalSimsThisChunk += currentBatch;
+
+                const { survivors, nearMisses, deathStats } = await evaluateChunkBatch(workers, packedInputs, currentBatch, FRAMES_PER_CHUNK, targetX);
+                for (const [r, c] of Object.entries(deathStats)) chunkDeathStats[r] = (chunkDeathStats[r] || 0) + c;
+
+                // Update near-miss pool
+                for (const nm of nearMisses) {
+                    nm.inputBuf = new Uint8Array(packedInputs.buffer, packedInputs.byteOffset + nm.simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK).slice();
+                }
+                chunkNearMisses.push(...nearMisses);
+                chunkNearMisses.sort((a, b) => b.bestX - a.bestX);
+                if (chunkNearMisses.length > TOP_NEAR_MISSES) chunkNearMisses.length = TOP_NEAR_MISSES;
+
                 for (const s of survivors) {
                     s.beamIndex = 0;
                     s.packedInputs = packedInputs;
@@ -1225,58 +1576,92 @@ async function main() {
                     foundSurvivor = true;
                     if (survivors.some(s => s.completed)) levelCompleted = true;
                 }
-                // Progress feedback
-                if ((attempt + 1) % 5 === 0) {
+                // Early backtrack: if after 5000 sims, zero near-misses and >95% same death, stop early
+                if (totalSimsThisChunk >= 5000 && chunkNearMisses.length === 0 && ci > 0 && !backtracked) {
+                    const totalDC = Object.values(chunkDeathStats).reduce((a, b) => a + b, 0);
+                    if (totalDC > 0) {
+                        const topDC = Math.max(...Object.values(chunkDeathStats));
+                        if (topDC / totalDC > 0.95) {
+                            process.stdout.write('\x1b[2K');
+                            console.log(`  ${C.yellow}Hopeless after ${totalSimsThisChunk} attempts (0 near-misses) — triggering early backtrack${C.reset}`);
+                            break;
+                        }
+                    }
+                }
+
+                // Progress feedback with near-miss, mutation, and death info
+                if (totalSimsThisChunk % (currentBatch * 3) === 0 && totalSimsThisChunk > 0) {
                     const elapsed = (Date.now() - chunkStart) / 1000;
                     const rate = Math.round(totalSimsThisChunk / elapsed);
-                    process.stdout.write(`  ${C.dim}Chunk ${ci+1} X:${targetX-CHUNK_SIZE_PX}->${targetX} | ${totalSimsThisChunk} tried | ${rate}/s | ${workers.length} workers | ${elapsed.toFixed(0)}s elapsed | searching...${C.reset}\r`);
+                    const bestNM = chunkNearMisses.length > 0 ? chunkNearMisses[0].bestX : 0;
+                    const nmCount = chunkNearMisses.length;
+                    const nmInfo = bestNM > 0 ? ` | ${nmCount} near-misses (best X:${bestNM})` : ' | no near-misses yet';
+                    const nmLen = chunkNearMisses.length;
+                    const mutInfo = nmLen >= 2 ? ` | R${nmLen<=5?60:nmLen<=15?40:20}/M${nmLen<=5?25:nmLen<=15?30:35}/B${nmLen<=5?15:nmLen<=15?30:45}` : nmLen > 0 ? ' | R60/M40' : ' | random';
+                    const totalDeaths = Object.values(chunkDeathStats).reduce((a, b) => a + b, 0);
+                    let deathInfo = '';
+                    if (totalDeaths > 0) {
+                        const top = Object.entries(chunkDeathStats).sort((a, b) => b[1] - a[1]).slice(0, 3)
+                            .map(([r, c]) => `${r}:${(c / totalDeaths * 100).toFixed(0)}%`).join(' ');
+                        deathInfo = ` | deaths: ${top}`;
+                    }
+                    process.stdout.write(`  ${C.dim}Chunk ${ci+1} X:${targetX-CHUNK_SIZE_PX}->${targetX} | ${totalSimsThisChunk} tried | ${rate}/s | ${workers.length}w | ${elapsed.toFixed(0)}s${nmInfo}${mutInfo}${deathInfo}${C.reset}\r`);
                 }
             }
             if (foundSurvivor) process.stdout.write('\x1b[2K'); // clear progress line
         } else {
-            // THOROUGH MODE: all beams, full sim count
-            for (let bi = 0; bi < beams.length; bi++) {
-                const beam = beams[bi];
-                currentBroadcastState = beam.saveStateStr; await broadcastSaveState(workers, beam.saveStateStr);
+            // THOROUGH MODE: Beams 1 & 2 independent, Beam 3 breeds from 1 & 2's near-misses
+            const beamNearMissPool = []; // collect near-miss inputs from beams 1 & 2
 
-                const packedInputs = generatePackedInputs(chunkSims, FRAMES_PER_CHUNK);
-                totalSimsThisChunk += chunkSims;
+            // Helper: run one beam's sims with sprint seed + genetic search
+            async function runBeamSims(bi, beam, seedInputs) {
+                currentBroadcastState = beam.saveStateStr;
+                await broadcastSaveState(workers, beam.saveStateStr);
 
-                const survivors = await evaluateChunkBatch(workers, packedInputs, chunkSims, FRAMES_PER_CHUNK, targetX);
-                for (const s of survivors) {
-                    s.beamIndex = bi;
-                    s.packedInputs = packedInputs;
-                    s.parentSaveStateStr = beam.saveStateStr;
-                    s.parentFrames = beam.frames;
-                    s.parentInputs = beam.inputs;
-                }
-                allSurvivors.push(...survivors);
-                if (survivors.some(s => s.completed)) levelCompleted = true;
-            }
-        }
+                let beamNearMisses = [];
+                const simsPerRound = Math.min(500, chunkSims);
+                let beamSimsDone = 0;
+                let beamSurvivors = 0;
+                let bestFrame = Infinity;
+                let prevBeamStrategy = 'none';
 
-        // Select beams from survivors
-        const numBeamsToSelect = mode === 'fast' ? 1 : NUM_BEAMS;
-        let winners = selectDiverseFromAllSurvivors(allSurvivors, numBeamsToSelect);
-
-        // Adaptive: if no survivors, retry with more sims or smaller chunks
-        if (winners.length === 0) {
-            const retryBeams = mode === 'fast' ? [beams[0]] : beams;
-            const retrySims = mode === 'fast' ? 500 : CHUNK_RETRY_SIMS;
-            const retryAttempts = mode === 'fast' ? 200 : 1; // fast: 200 batches of 500 = 100k total, stop on first
-            console.log(`  ${C.yellow}No survivors for chunk ${ci + 1}. Retrying (${mode === 'fast' ? 'batches of 500' : retrySims + ' sims'})...${C.reset}`);
-            allSurvivors = [];
-            let retryFound = false;
-            for (let bi = 0; bi < retryBeams.length && !retryFound; bi++) {
-                const beam = retryBeams[bi];
-                currentBroadcastState = beam.saveStateStr; await broadcastSaveState(workers, beam.saveStateStr);
-
-                for (let ra = 0; ra < retryAttempts && !retryFound; ra++) {
+                while (beamSimsDone < chunkSims) {
                     await processWorkerOps();
-                    const packedInputs = generatePackedInputs(retrySims, FRAMES_PER_CHUNK);
-                    totalSimsThisChunk += retrySims;
+                    const batchSize = Math.min(simsPerRound, chunkSims - beamSimsDone);
 
-                    const survivors = await evaluateChunkBatch(workers, packedInputs, retrySims, FRAMES_PER_CHUNK, targetX);
+                    let packedInputs;
+                    if (beamSimsDone === 0) {
+                        packedInputs = generateSprintJumpInputs(batchSize, FRAMES_PER_CHUNK, 'right');
+                        console.log(`  ${C.cyan}-> Beam ${bi+1}: Sprint+jump seed (${batchSize} runs)${C.reset}`);
+                        prevBeamStrategy = 'sprint';
+                    } else {
+                        const nearMissInputs = beamNearMisses.map(nm => nm.inputBuf);
+                        const allSeeds = [...nearMissInputs, ...seedInputs];
+                        packedInputs = generateMixedInputs(batchSize, FRAMES_PER_CHUNK, allSeeds);
+
+                        const nmLen = allSeeds.length;
+                        const strategy = nmLen >= 16 ? 'full-genetic' : nmLen >= 6 ? 'genetic' : nmLen >= 2 ? 'breed' : nmLen > 0 ? 'mutate' : 'random';
+                        if (strategy !== prevBeamStrategy) {
+                            process.stdout.write('\x1b[2K');
+                            const bestNMX = beamNearMisses[0]?.bestX || 0;
+                            console.log(`  ${C.cyan}-> Beam ${bi+1}: ${strategy} from ${nmLen} seeds (best X:${bestNMX})${C.reset}`);
+                            prevBeamStrategy = strategy;
+                        }
+                    }
+
+                    beamSimsDone += batchSize;
+                    totalSimsThisChunk += batchSize;
+
+                    const { survivors, nearMisses, deathStats } = await evaluateChunkBatch(workers, packedInputs, batchSize, FRAMES_PER_CHUNK, targetX);
+                    for (const [r, c] of Object.entries(deathStats)) chunkDeathStats[r] = (chunkDeathStats[r] || 0) + c;
+
+                    for (const nm of nearMisses) {
+                        nm.inputBuf = new Uint8Array(packedInputs.buffer, packedInputs.byteOffset + nm.simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK).slice();
+                    }
+                    beamNearMisses.push(...nearMisses);
+                    beamNearMisses.sort((a, b) => b.bestX - a.bestX);
+                    if (beamNearMisses.length > TOP_NEAR_MISSES) beamNearMisses.length = TOP_NEAR_MISSES;
+
                     for (const s of survivors) {
                         s.beamIndex = bi;
                         s.packedInputs = packedInputs;
@@ -1284,43 +1669,341 @@ async function main() {
                         s.parentFrames = beam.frames;
                         s.parentInputs = beam.inputs;
                     }
+                    beamSurvivors += survivors.length;
+                    for (const s of survivors) { if (s.frame < bestFrame) bestFrame = s.frame; }
                     allSurvivors.push(...survivors);
                     if (survivors.some(s => s.completed)) levelCompleted = true;
-                    if (survivors.length > 0 && mode === 'fast') retryFound = true;
-                    if ((ra + 1) % 5 === 0 && !retryFound) {
+
+                    if (beamSimsDone % (simsPerRound * 3) === 0) {
                         const elapsed = (Date.now() - chunkStart) / 1000;
                         const rate = Math.round(totalSimsThisChunk / elapsed);
-                        process.stdout.write(`  ${C.dim}Chunk ${ci+1} X:${targetX-currentChunkSize}->${targetX} | ${totalSimsThisChunk} tried | ${rate}/s | ${workers.length} workers | ${elapsed.toFixed(0)}s elapsed | searching...${C.reset}\r`);
+                        const bestNM = beamNearMisses.length > 0 ? beamNearMisses[0].bestX : 0;
+                        const nmInfo = bestNM > 0 ? ` | ${beamNearMisses.length} near-misses (best X:${bestNM})` : '';
+                        const totalDeaths = Object.values(chunkDeathStats).reduce((a, b) => a + b, 0);
+                        let deathInfo = '';
+                        if (totalDeaths > 0) {
+                            const top = Object.entries(chunkDeathStats).sort((a, b) => b[1] - a[1]).slice(0, 3)
+                                .map(([r, c]) => `${r}:${(c / totalDeaths * 100).toFixed(0)}%`).join(' ');
+                            deathInfo = ` | deaths: ${top}`;
+                        }
+                        process.stdout.write(`  ${C.dim}Beam ${bi+1}/${beams.length} | ${totalSimsThisChunk} tried | ${rate}/s | ${workers.length}w | ${elapsed.toFixed(0)}s${nmInfo}${deathInfo}${C.reset}\r`);
                     }
                 }
-                if (retryFound) process.stdout.write('\x1b[2K');
+                process.stdout.write('\x1b[2K');
+                const bestNMX = beamNearMisses.length > 0 ? beamNearMisses[0].bestX : 0;
+                if (beamSurvivors > 0) {
+                    console.log(`  ${C.green}Beam ${bi+1}: ${beamSurvivors} survived (best: ${bestFrame}f) | ${beamNearMisses.length} near-misses${bestNMX ? ` (best X:${bestNMX})` : ''}${C.reset}`);
+                } else {
+                    console.log(`  ${C.red}Beam ${bi+1}: 0 survived | ${beamNearMisses.length} near-misses${bestNMX ? ` (best X:${bestNMX})` : ''}${C.reset}`);
+                }
+                return beamNearMisses;
             }
-            winners = selectDiverseFromAllSurvivors(allSurvivors, numBeamsToSelect);
+
+            // Always run 3 beams — all start from beam 0's save state
+            const baseBeam = beams[0];
+
+            // Beam 1: independent
+            const beam1NM = await runBeamSims(0, baseBeam, previousChunkWinnerInputs);
+            beamNearMissPool.push(...beam1NM.map(nm => nm.inputBuf));
+
+            // Beam 2: independent
+            const beam2NM = await runBeamSims(1, beams.length >= 2 ? beams[1] : baseBeam, previousChunkWinnerInputs);
+            beamNearMissPool.push(...beam2NM.map(nm => nm.inputBuf));
+
+            // Beam 3: offspring — bred from beams 1 & 2's near-misses
+            console.log(`  ${C.cyan}-> Beam 3: Breeding offspring from beams 1 & 2 (${beamNearMissPool.length} parent inputs)${C.reset}`);
+            await runBeamSims(2, beams.length >= 3 ? beams[2] : baseBeam, beamNearMissPool);
+
+            // REFINEMENT PHASE: breed/mutate the top survivors to find faster times
+            if (allSurvivors.length >= 2) {
+                // Sort by frames (fastest first), take top 20 survivor inputs
+                allSurvivors.sort((a, b) => a.frame - b.frame);
+                const topSurvivorInputs = allSurvivors.slice(0, 20).map(s => {
+                    return new Uint8Array(s.packedInputs.buffer, s.packedInputs.byteOffset + s.simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK).slice();
+                });
+
+                const REFINE_ROUNDS = 3;
+                const REFINE_BATCH = 500;
+                const bestBefore = allSurvivors[0].frame;
+                console.log(`  ${C.magenta}-> Refinement: breeding top ${topSurvivorInputs.length} survivors (best: ${bestBefore}f)${C.reset}`);
+
+                // Use beam 0's save state for refinement
+                currentBroadcastState = beams[0].saveStateStr;
+                await broadcastSaveState(workers, beams[0].saveStateStr);
+
+                for (let ri = 0; ri < REFINE_ROUNDS; ri++) {
+                    await processWorkerOps();
+                    // Heavy breeding from top survivors: generate manually to minimize random
+                    const packedInputs = Buffer.alloc(REFINE_BATCH * FRAMES_PER_CHUNK);
+                    const numBreed = Math.floor(REFINE_BATCH * 0.6);
+                    const numMutate = REFINE_BATCH - numBreed;
+                    for (let i = 0; i < numMutate; i++) {
+                        const parent = topSurvivorInputs[i % topSurvivorInputs.length];
+                        const child = mutateInputs(parent, FRAMES_PER_CHUNK);
+                        packedInputs.set(child, i * FRAMES_PER_CHUNK);
+                    }
+                    for (let i = 0; i < numBreed; i++) {
+                        const idxA = Math.floor(Math.random() * topSurvivorInputs.length);
+                        let idxB = Math.floor(Math.random() * (topSurvivorInputs.length - 1));
+                        if (idxB >= idxA) idxB++;
+                        const child = breedInputs(topSurvivorInputs[idxA], topSurvivorInputs[idxB], FRAMES_PER_CHUNK);
+                        packedInputs.set(child, (numMutate + i) * FRAMES_PER_CHUNK);
+                    }
+                    totalSimsThisChunk += REFINE_BATCH;
+
+                    const { survivors } = await evaluateChunkBatch(workers, packedInputs, REFINE_BATCH, FRAMES_PER_CHUNK, targetX);
+                    for (const s of survivors) {
+                        s.beamIndex = 0;
+                        s.packedInputs = packedInputs;
+                        s.parentSaveStateStr = beams[0].saveStateStr;
+                        s.parentFrames = beams[0].frames;
+                        s.parentInputs = beams[0].inputs;
+                    }
+                    allSurvivors.push(...survivors);
+                    if (survivors.some(s => s.completed)) levelCompleted = true;
+
+                    // Update top survivor pool with any improvements
+                    allSurvivors.sort((a, b) => a.frame - b.frame);
+                    const newTop = allSurvivors.slice(0, 20);
+                    for (let ti = 0; ti < Math.min(newTop.length, topSurvivorInputs.length); ti++) {
+                        topSurvivorInputs[ti] = new Uint8Array(newTop[ti].packedInputs.buffer, newTop[ti].packedInputs.byteOffset + newTop[ti].simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK).slice();
+                    }
+                }
+
+                allSurvivors.sort((a, b) => a.frame - b.frame);
+                const bestAfter = allSurvivors[0].frame;
+                const improved = bestAfter < bestBefore;
+                console.log(`  ${improved ? C.green : C.dim}-> Refinement done: ${bestBefore}f -> ${bestAfter}f ${improved ? '(improved!)' : '(no improvement)'}${C.reset}`);
+            }
         }
 
-        // Retry 2: halve chunk size repeatedly
+        // Select beams from survivors
+        const numBeamsToSelect = mode === 'fast' ? 1 : NUM_BEAMS;
+        let winners = selectDiverseFromAllSurvivors(allSurvivors, numBeamsToSelect);
+
+        // Backtrack: if >95% of deaths are the same cause, re-solve previous chunk with extended target
+        if (winners.length === 0 && ci > 0 && !backtracked) {
+            const totalDeathsCheck = Object.values(chunkDeathStats).reduce((a, b) => a + b, 0);
+            if (totalDeathsCheck > 0) {
+                const topDeathCount = Math.max(...Object.values(chunkDeathStats));
+                const topDeathPct = topDeathCount / totalDeathsCheck;
+                const topDeathReason = Object.entries(chunkDeathStats).sort((a, b) => b[1] - a[1])[0][0];
+                if (topDeathPct > 0.95 && prevPrevChunkBeamState) {
+                    const BACKTRACK_EXTRA = 50; // push 50px further than original target
+                    const extendedTarget = beams[0].targetX + BACKTRACK_EXTRA;
+                    console.log(`\n  ${C.yellow}${(topDeathPct * 100).toFixed(0)}% dying to "${topDeathReason}" — bad starting position.${C.reset}`);
+                    console.log(`  ${C.yellow}Backtracking: re-solving chunk ${ci} with extended target X:${extendedTarget} (+${BACKTRACK_EXTRA}px)${C.reset}`);
+
+                    // Re-solve previous chunk from its starting state with extended target
+                    const prevBeam = prevPrevChunkBeamState;
+                    currentBroadcastState = prevBeam.saveStateStr;
+                    await broadcastSaveState(workers, prevBeam.saveStateStr);
+
+                    let btFound = false;
+                    let btSurvivors = [];
+                    let btNearMisses = [];
+                    let btSims = 0;
+                    const BT_MAX_SIMS = 50000;
+                    const BT_BATCH = 500;
+
+                    while (btSims < BT_MAX_SIMS && !btFound) {
+                        const btInputs = btNearMisses.length > 0
+                            ? generateMixedInputs(BT_BATCH, FRAMES_PER_CHUNK, btNearMisses.map(nm => nm.inputBuf))
+                            : generateSprintJumpInputs(BT_BATCH, FRAMES_PER_CHUNK);
+                        btSims += BT_BATCH;
+
+                        const { survivors: btS, nearMisses: btNM } = await evaluateChunkBatch(workers, btInputs, BT_BATCH, FRAMES_PER_CHUNK, extendedTarget);
+                        for (const nm of btNM) {
+                            nm.inputBuf = new Uint8Array(btInputs.buffer, btInputs.byteOffset + nm.simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK).slice();
+                        }
+                        btNearMisses.push(...btNM);
+                        btNearMisses.sort((a, b) => b.bestX - a.bestX);
+                        if (btNearMisses.length > TOP_NEAR_MISSES) btNearMisses.length = TOP_NEAR_MISSES;
+
+                        for (const s of btS) {
+                            s.packedInputs = btInputs;
+                            s.parentSaveStateStr = prevBeam.saveStateStr;
+                            s.parentFrames = prevBeam.frames;
+                            s.parentInputs = prevBeam.inputs;
+                        }
+                        if (btS.length > 0) { btSurvivors.push(...btS); btFound = true; }
+
+                        if (btSims % 1500 === 0 && !btFound) {
+                            const bestNM = btNearMisses.length > 0 ? btNearMisses[0].bestX : 0;
+                            process.stdout.write(`  ${C.dim}Backtrack: ${btSims} tried | target X:${extendedTarget} | best near-miss X:${bestNM}${C.reset}\r`);
+                        }
+                    }
+
+                    if (btFound) {
+                        process.stdout.write('\x1b[2K');
+                        const btWinners = selectDiverseFromAllSurvivors(btSurvivors, 1);
+                        const w = btWinners[0];
+                        const ss = captureBeamSaveState(nes, {
+                            parentSaveStateStr: w.survivor.parentSaveStateStr,
+                            inputs: w.inputs,
+                            frame: w.survivor.frame,
+                        }, romString);
+                        const parentInputs = w.survivor.parentInputs;
+                        const fullInputs = new Uint8Array(parentInputs.length + w.survivor.frame);
+                        fullInputs.set(parentInputs, 0);
+                        fullInputs.set(w.inputs.slice(0, w.survivor.frame), parentInputs.length);
+                        const btFrames = w.survivor.parentFrames + w.survivor.frame;
+
+                        beams = [{
+                            inputs: fullInputs,
+                            saveStateStr: ss,
+                            frames: btFrames,
+                            targetX: extendedTarget,
+                        }];
+                        totalFrames = btFrames;
+                        backtracked = true;
+
+                        console.log(`  ${C.green}Extended chunk ${ci} to X:${extendedTarget} — retrying chunk ${ci + 1}${C.reset}\n`);
+                        ci--; // re-run this chunk index
+                        continue;
+                    } else {
+                        process.stdout.write('\x1b[2K');
+                        console.log(`  ${C.red}Backtrack failed — could not reach extended target X:${extendedTarget}${C.reset}`);
+                    }
+                }
+            }
+        }
+
+        // Adaptive: if no survivors, use progressive sub-targets with mutations
+        if (winners.length === 0) {
+            const beam = beams[0];
+            const chunkStartX = targetX - CHUNK_SIZE_PX;
+            console.log(`  ${C.yellow}No survivors after ${totalSimsThisChunk} attempts. Falling back to progressive ${MIN_CHUNK_SIZE_PX}px sub-targets...${C.reset}`);
+
+            // Progressive: solve in 100px sub-steps
+            const SUB_STEP = Math.max(MIN_CHUNK_SIZE_PX, Math.floor(CHUNK_SIZE_PX / 2));
+            let subBeam = beam;
+            let subSuccess = true;
+            let subSurvivors = [];
+
+            for (let subTarget = chunkStartX + SUB_STEP; subTarget <= targetX; subTarget += SUB_STEP) {
+                currentBroadcastState = subBeam.saveStateStr;
+                await broadcastSaveState(workers, subBeam.saveStateStr);
+
+                let subNearMisses = [];
+                let subFound = false;
+                let subAllSurvivors = [];
+                const subBatch = 500;
+                const subMaxAttempts = 200; // up to 100k per sub-target
+
+                for (let sa = 0; sa < subMaxAttempts && !subFound; sa++) {
+                    await processWorkerOps();
+                    const nearMissInputs = subNearMisses.map(nm => nm.inputBuf);
+                    const packedInputs = generateMixedInputs(subBatch, FRAMES_PER_CHUNK, nearMissInputs);
+                    totalSimsThisChunk += subBatch;
+
+                    const { survivors, nearMisses, deathStats } = await evaluateChunkBatch(workers, packedInputs, subBatch, FRAMES_PER_CHUNK, subTarget);
+                    for (const [r, c] of Object.entries(deathStats)) chunkDeathStats[r] = (chunkDeathStats[r] || 0) + c;
+
+                    for (const nm of nearMisses) {
+                        nm.inputBuf = new Uint8Array(packedInputs.buffer, packedInputs.byteOffset + nm.simIndex * FRAMES_PER_CHUNK, FRAMES_PER_CHUNK).slice();
+                    }
+                    subNearMisses.push(...nearMisses);
+                    subNearMisses.sort((a, b) => b.bestX - a.bestX);
+                    if (subNearMisses.length > TOP_NEAR_MISSES) subNearMisses.length = TOP_NEAR_MISSES;
+
+                    for (const s of survivors) {
+                        s.beamIndex = 0;
+                        s.packedInputs = packedInputs;
+                        s.parentSaveStateStr = subBeam.saveStateStr;
+                        s.parentFrames = subBeam.frames;
+                        s.parentInputs = subBeam.inputs;
+                    }
+                    if (survivors.length > 0) {
+                        subAllSurvivors.push(...survivors);
+                        subFound = true;
+                        if (survivors.some(s => s.completed)) levelCompleted = true;
+                    }
+                    if ((sa + 1) % 3 === 0 && !subFound) {
+                        const elapsed = (Date.now() - chunkStart) / 1000;
+                        const rate = Math.round(totalSimsThisChunk / elapsed);
+                        const bestNM = subNearMisses.length > 0 ? subNearMisses[0].bestX : 0;
+                        const nmCount = subNearMisses.length;
+                        const nmInfo = bestNM > 0 ? ` | ${nmCount} near-misses (best X:${bestNM})` : ' | no near-misses';
+                        const subNMInputs = subNearMisses.map(nm => nm.inputBuf);
+                        const mutInfo = subNMInputs.length >= 2 ? ' | mutating+breeding' : subNMInputs.length > 0 ? ' | mutating' : ' | random';
+                        const totalDeaths = Object.values(chunkDeathStats).reduce((a, b) => a + b, 0);
+                        let deathInfo = '';
+                        if (totalDeaths > 0) {
+                            const top = Object.entries(chunkDeathStats).sort((a, b) => b[1] - a[1]).slice(0, 3)
+                                .map(([r, c]) => `${r}:${(c / totalDeaths * 100).toFixed(0)}%`).join(' ');
+                            deathInfo = ` | deaths: ${top}`;
+                        }
+                        process.stdout.write(`  ${C.dim}Sub X:${subTarget - SUB_STEP}->${subTarget} | ${totalSimsThisChunk} tried | ${rate}/s${nmInfo}${mutInfo}${deathInfo}${C.reset}\r`);
+                    }
+                }
+
+                if (!subFound) {
+                    subSuccess = false;
+                    process.stdout.write('\x1b[2K');
+                    console.log(`  ${C.red}Progressive sub-target X:${subTarget} failed after ${subMaxAttempts * subBatch} attempts${C.reset}`);
+                    break;
+                }
+                process.stdout.write('\x1b[2K');
+                console.log(`  ${C.green}Sub-target X:${subTarget} solved${C.reset}`);
+
+                // If this isn't the final sub-target, capture state and advance
+                if (subTarget < targetX) {
+                    const subWinners = selectDiverseFromAllSurvivors(subAllSurvivors, 1);
+                    if (subWinners.length > 0) {
+                        const w = subWinners[0];
+                        const ss = captureBeamSaveState(nes, {
+                            parentSaveStateStr: w.survivor.parentSaveStateStr,
+                            inputs: w.inputs,
+                            frame: w.survivor.frame,
+                        }, romString);
+                        const parentInputs = w.survivor.parentInputs;
+                        const fullInputs = new Uint8Array(parentInputs.length + w.survivor.frame);
+                        fullInputs.set(parentInputs, 0);
+                        fullInputs.set(w.inputs.slice(0, w.survivor.frame), parentInputs.length);
+                        subBeam = {
+                            inputs: fullInputs,
+                            saveStateStr: ss,
+                            frames: w.survivor.parentFrames + w.survivor.frame,
+                            targetX: subTarget,
+                        };
+                    }
+                } else {
+                    // Final sub-target reached — these are our real survivors
+                    // Re-tag them with original beam's parent info for the full chunk
+                    allSurvivors = subAllSurvivors;
+                }
+            }
+
+            if (subSuccess) {
+                winners = selectDiverseFromAllSurvivors(allSurvivors, numBeamsToSelect);
+            }
+        }
+
+        // Last resort: if progressive failed, reduce chunk size
         let reducedTargetX = targetX;
         while (winners.length === 0 && currentChunkSize > MIN_CHUNK_SIZE_PX) {
             currentChunkSize = Math.max(MIN_CHUNK_SIZE_PX, Math.floor(currentChunkSize / 2));
             reducedTargetX = (targetX - CHUNK_SIZE_PX) + currentChunkSize;
-            console.log(`  ${C.yellow}Still no survivors. Reducing chunk to ${currentChunkSize}px (target X:${reducedTargetX})...${C.reset}`);
+            console.log(`  ${C.yellow}Reducing chunk to ${currentChunkSize}px (target X:${reducedTargetX})...${C.reset}`);
 
             allSurvivors = [];
             const retryBeams2 = mode === 'fast' ? [beams[0]] : beams;
             for (let bi = 0; bi < retryBeams2.length; bi++) {
-                const beam = retryBeams2[bi];
-                currentBroadcastState = beam.saveStateStr; await broadcastSaveState(workers, beam.saveStateStr);
+                const beam2 = retryBeams2[bi];
+                currentBroadcastState = beam2.saveStateStr; await broadcastSaveState(workers, beam2.saveStateStr);
 
                 const packedInputs = generatePackedInputs(CHUNK_RETRY_SIMS, FRAMES_PER_CHUNK);
                 totalSimsThisChunk += CHUNK_RETRY_SIMS;
 
-                const survivors = await evaluateChunkBatch(workers, packedInputs, CHUNK_RETRY_SIMS, FRAMES_PER_CHUNK, reducedTargetX);
+                const { survivors, deathStats: retryDeathStats } = await evaluateChunkBatch(workers, packedInputs, CHUNK_RETRY_SIMS, FRAMES_PER_CHUNK, reducedTargetX);
+                for (const [r, c] of Object.entries(retryDeathStats)) chunkDeathStats[r] = (chunkDeathStats[r] || 0) + c;
                 for (const s of survivors) {
                     s.beamIndex = bi;
                     s.packedInputs = packedInputs;
-                    s.parentSaveStateStr = beam.saveStateStr;
-                    s.parentFrames = beam.frames;
-                    s.parentInputs = beam.inputs;
+                    s.parentSaveStateStr = beam2.saveStateStr;
+                    s.parentFrames = beam2.frames;
+                    s.parentInputs = beam2.inputs;
                 }
                 allSurvivors.push(...survivors);
                 if (survivors.some(s => s.completed)) levelCompleted = true;
@@ -1335,6 +2018,9 @@ async function main() {
 
         // The actual targetX used (may be reduced)
         const actualTargetX = winners[0].survivor.completed ? LEVEL_WIDTH : (currentChunkSize < CHUNK_SIZE_PX ? reducedTargetX : targetX);
+
+        // Save winner inputs for seeding next chunk
+        previousChunkWinnerInputs = winners.map(w => w.inputs.slice(0, w.survivor.frame));
 
         // Capture save states for winners on main thread
         const newBeams = [];
@@ -1375,6 +2061,7 @@ async function main() {
         }
 
         beams = newBeams;
+        backtracked = false; // reset for next chunk
         totalFrames = beams[0].frames;
 
         // Update global best
@@ -1402,6 +2089,14 @@ async function main() {
         const speed = (displayTargetX / totalFrames * 60.098).toFixed(0);
         console.log(`Chunk ${String(ci + 1).padStart(2)}/${totalChunks} | X:${displayStartX}-${displayTargetX} | ${totalSimsThisChunk} attempts | ${survived} survived | ${gameTime}s game time | ${speed} px/s | took ${chunkTime.toFixed(0)}s`);
         console.log(`  ${bar} ${pct}% | Mario at ${displayTargetX}/${LEVEL_WIDTH}px (${gameTime}s)`);
+        // Death stats for this chunk
+        const totalDeaths = Object.values(chunkDeathStats).reduce((a, b) => a + b, 0);
+        if (totalDeaths > 0) {
+            const parts = Object.entries(chunkDeathStats)
+                .sort((a, b) => b[1] - a[1])
+                .map(([reason, count]) => `${reason}: ${count} (${(count / totalDeaths * 100).toFixed(0)}%)`);
+            console.log(`  ${C.dim}Deaths: ${parts.join(' | ')}${C.reset}`);
+        }
 
         // Save best sequence so far
         saveBest(beams[0].inputs, globalBestResult);
