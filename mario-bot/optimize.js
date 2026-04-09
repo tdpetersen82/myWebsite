@@ -15,7 +15,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // ==================== CONFIG ====================
 
 const MAX_FRAMES = 8000;
-const STALL_FRAMES = 90;
+const STALL_FRAMES = 300;
 const LEVEL_WIDTH = 3200;
 const NUM_WORKERS = Math.max(1, os.cpus().length - 1);
 const POPULATION_SIZE = 200;
