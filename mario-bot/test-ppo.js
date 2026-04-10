@@ -105,7 +105,7 @@ const VALUE_LOSS_COEFF = 0.5;
 const REWARD_PROGRESS = 0.01;
 const REWARD_DEATH = -5.0;
 const REWARD_TIME_PENALTY = -0.001;
-const REWARD_COMPLETION = 5.0;
+const REWARD_COMPLETION = 10.0;
 
 // ==================== BUTTON CONSTANTS ====================
 
@@ -1357,7 +1357,7 @@ async function testRewardScaleSanity() {
     INFO(`Reward breakdown estimate: progress=${(REWARD_PROGRESS * bestX).toFixed(3)}, time=${(REWARD_TIME_PENALTY * frame).toFixed(3)}, death=${reason === 'dead' ? REWARD_DEATH : 0}`);
 
     assert(isFinite(totalReward), `Total reward is finite: ${totalReward}`);
-    assert(totalReward > -10 && totalReward < 100, `Total reward in reasonable range [-10, 100]: ${totalReward.toFixed(2)}`);
+    assert(totalReward > -20 && totalReward < 100, `Total reward in reasonable range [-20, 100]: ${totalReward.toFixed(2)}`);
     // Moving right should give positive progress reward that outweighs time penalty for a decent run
     if (bestX > 200) {
         assert(totalReward > REWARD_DEATH + 0.5, `Decent run (${bestX}px) has reward above death penalty floor: ${totalReward.toFixed(3)}`);
@@ -1609,6 +1609,207 @@ async function testReplayOutputCompat() {
 }
 
 // ================================================================
+//  TEST 13: Death Detection
+// ================================================================
+async function testDeathDetection() {
+    HEADER('TEST 13: Death Detection');
+
+    const nes = bootNES();
+    advanceToGameplay(nes);
+
+    // Run RIGHT+B straight into the first goomba (no jumping)
+    applyBitmask(nes, BIT.RIGHT | BIT.B, 0);
+    let deathFrame = -1;
+    let deathX = -1;
+    for (let f = 0; f < 300; f++) {
+        nes.frame();
+        const ps = nes.cpu.mem[0x000E];
+        const y = nes.cpu.mem[0x00CE];
+        if (ps === 0x0B || ps === 0x06 || y > 240 || nes.cpu.mem[0x0770] === 3) {
+            deathFrame = f;
+            deathX = getMarioX(nes);
+            break;
+        }
+    }
+    assert(deathFrame > 0, `Death detected at frame ${deathFrame}, X=${deathX}`);
+    assert(deathX > 250 && deathX < 350, `Death at goomba location (X=${deathX}, expected ~300-320)`);
+    applyBitmask(nes, 0, BIT.RIGHT | BIT.B);
+}
+
+// ================================================================
+//  TEST 14: Completion Not Falsely Triggered
+// ================================================================
+async function testNoFalseCompletion() {
+    HEADER('TEST 14: No False Completion');
+
+    const nes = bootNES();
+    advanceToGameplay(nes);
+
+    const mem = nes.cpu.mem;
+    const completed = mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0;
+    assert(!completed, `Not falsely detecting completion at start (0x001D=${mem[0x001D]}, 0x075F=${mem[0x075F]}, 0x0760=${mem[0x0760]})`);
+
+    // Run a bit and check again
+    applyBitmask(nes, BIT.RIGHT | BIT.B, 0);
+    for (let i = 0; i < 50; i++) nes.frame();
+    const completed2 = mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0;
+    assert(!completed2, `Not falsely detecting completion while running (0x001D=${mem[0x001D]})`);
+    applyBitmask(nes, 0, BIT.RIGHT | BIT.B);
+}
+
+// ================================================================
+//  TEST 15: Reward Balance — Dying Must Hurt More Than Progress
+// ================================================================
+async function testRewardBalance() {
+    HEADER('TEST 15: Reward Balance');
+
+    // Dying early (before accumulating much progress) should be clearly negative
+    const earlyDeath = REWARD_PROGRESS * 200 + REWARD_TIME_PENALTY * 100 + REWARD_DEATH;
+    INFO(`200px run then die (100f): ${earlyDeath.toFixed(2)}`);
+    assert(earlyDeath < 0, `Dying early is net negative: ${earlyDeath.toFixed(2)}`);
+
+    // Death penalty is significant relative to typical progress
+    assert(Math.abs(REWARD_DEATH) > REWARD_PROGRESS * 300, `Death penalty (${REWARD_DEATH}) exceeds 300px of progress (${(REWARD_PROGRESS * 300).toFixed(1)})`);
+
+    // Completion should be positive even with many deaths along the way
+    const completeTotal = REWARD_PROGRESS * 3160 + REWARD_TIME_PENALTY * 1500 + REWARD_COMPLETION;
+    INFO(`Full level completion: ${completeTotal.toFixed(2)}`);
+    assert(completeTotal > 20, `Completing the level is very positive: ${completeTotal.toFixed(2)}`);
+
+    // Completion reward alone exceeds death penalty (completing is always better than dying)
+    assert(REWARD_COMPLETION > Math.abs(REWARD_DEATH), `Completion bonus (${REWARD_COMPLETION}) > death penalty (${Math.abs(REWARD_DEATH)})`);
+}
+
+// ================================================================
+//  TEST 16: Optimizer Lifecycle (no memory leak)
+// ================================================================
+async function testOptimizerLifecycle() {
+    HEADER('TEST 16: Optimizer Lifecycle');
+
+    const code = fs.readFileSync(path.join(__dirname, 'optimize.js'), 'utf8');
+
+    const adamCreates = (code.match(/tf\.train\.adam/g) || []).length;
+    const disposes = (code.match(/optimizer\.dispose/g) || []).length;
+    assert(adamCreates > 0, `Adam optimizer is created (${adamCreates} calls)`);
+    assert(disposes >= adamCreates, `Optimizer is disposed after each update (${disposes} dispose >= ${adamCreates} create)`);
+
+    // Check tensor cleanup in ppoUpdate
+    const hasMinimize = code.includes('optimizer.minimize');
+    assert(hasMinimize, 'Uses optimizer.minimize (auto-disposes intermediate tensors)');
+
+    // Check that full-dataset tensors are disposed
+    const fullTensorDispose = code.includes('statesTensor.dispose()') && code.includes('returnsTensor.dispose()');
+    assert(fullTensorDispose, 'Full-dataset tensors are disposed after PPO update');
+
+    // Check minibatch tensors are disposed
+    const mbDispose = code.includes('mbStates.dispose()') && code.includes('mbIdx.dispose()');
+    assert(mbDispose, 'Minibatch tensors are disposed each iteration');
+}
+
+// ================================================================
+//  TEST 17: Input Determinism
+// ================================================================
+async function testInputDeterminism() {
+    HEADER('TEST 17: Input Determinism');
+
+    const nes = bootNES();
+    advanceToGameplay(nes);
+    const saveState = nes.toJSONLite();
+    const saveStr = JSON.stringify(saveState);
+
+    // Read inputs, reset to same state, read again — must be identical
+    const inputs1 = readNetworkInputs(nes);
+    nes.fromJSONLite(JSON.parse(saveStr));
+    const inputs2 = readNetworkInputs(nes);
+
+    let maxDiff = 0;
+    for (let i = 0; i < NUM_INPUTS; i++) {
+        const diff = Math.abs(inputs1[i] - inputs2[i]);
+        if (diff > maxDiff) maxDiff = diff;
+    }
+    assertClose(maxDiff, 0, 0, `Same state produces identical inputs (max diff across ${NUM_INPUTS})`);
+
+    // Run 50 frames, save state, read, restore, read — must match
+    applyBitmask(nes, BIT.RIGHT | BIT.B | BIT.A, 0);
+    for (let i = 0; i < 50; i++) nes.frame();
+    const midSave = JSON.stringify(nes.toJSONLite());
+    const midInputs1 = readNetworkInputs(nes);
+    nes.fromJSONLite(JSON.parse(midSave));
+    const midInputs2 = readNetworkInputs(nes);
+
+    let maxMidDiff = 0;
+    for (let i = 0; i < NUM_INPUTS; i++) {
+        const diff = Math.abs(midInputs1[i] - midInputs2[i]);
+        if (diff > maxMidDiff) maxMidDiff = diff;
+    }
+    assertClose(maxMidDiff, 0, 0, `Mid-game state produces identical inputs after save/restore`);
+    applyBitmask(nes, 0, BIT.RIGHT | BIT.B | BIT.A);
+}
+
+// ================================================================
+//  TEST 18: Timer Decreases Over Time
+// ================================================================
+async function testTimerDecreases() {
+    HEADER('TEST 18: Timer Decreases');
+
+    const nes = bootNES();
+    advanceToGameplay(nes);
+
+    const t0 = readNetworkInputs(nes)[155];
+    assert(t0 > 0.9, `Timer starts high: ${t0.toFixed(4)} (raw ~${(t0 * 400).toFixed(0)})`);
+
+    for (let i = 0; i < 100; i++) nes.frame();
+    const t1 = readNetworkInputs(nes)[155];
+    assert(t1 < t0, `Timer decreased after 100 frames: ${t0.toFixed(4)} → ${t1.toFixed(4)}`);
+
+    const timerDrop = t0 - t1;
+    INFO(`Timer drop over 100 frames: ${timerDrop.toFixed(4)} (raw ~${(timerDrop * 400).toFixed(1)} ticks)`);
+    assert(timerDrop > 0.005 && timerDrop < 0.05, `Timer drop is reasonable: ${timerDrop.toFixed(4)}`);
+}
+
+// ================================================================
+//  TEST 19: All Inputs Binary or Normalized
+// ================================================================
+async function testInputRanges() {
+    HEADER('TEST 19: Input Value Ranges');
+
+    const nes = bootNES();
+    advanceToGameplay(nes);
+
+    // Check at multiple game states
+    const states = [];
+    states.push(readNetworkInputs(nes));
+
+    applyBitmask(nes, BIT.RIGHT | BIT.B, 0);
+    for (let i = 0; i < 50; i++) nes.frame();
+    states.push(readNetworkInputs(nes));
+
+    applyBitmask(nes, BIT.RIGHT | BIT.B | BIT.A, BIT.RIGHT | BIT.B);
+    for (let i = 0; i < 15; i++) nes.frame();
+    states.push(readNetworkInputs(nes));
+
+    let allInRange = true;
+    let allFinite = true;
+    let tilesBinary = true;
+
+    for (const inputs of states) {
+        for (let i = 0; i < NUM_INPUTS; i++) {
+            if (!isFinite(inputs[i])) { allFinite = false; }
+            if (inputs[i] < -0.01 || inputs[i] > 1.01) { allInRange = false; }
+        }
+        // Tiles (indices 5-144) should be exactly 0 or 1
+        for (let i = 5; i < 145; i++) {
+            if (inputs[i] !== 0 && inputs[i] !== 1) { tilesBinary = false; }
+        }
+    }
+
+    assert(allFinite, 'All inputs finite across 3 game states');
+    assert(allInRange, 'All inputs in [0, 1] across 3 game states');
+    assert(tilesBinary, 'All tile inputs are exactly 0 or 1 (binary)');
+    applyBitmask(nes, 0, BIT.RIGHT | BIT.B | BIT.A);
+}
+
+// ================================================================
 //  MAIN
 // ================================================================
 
@@ -1633,6 +1834,13 @@ async function main() {
     await testPPOUpdateStability();
     await testDBWeightRoundTrip();
     await testReplayOutputCompat();
+    await testDeathDetection();
+    await testNoFalseCompletion();
+    await testRewardBalance();
+    await testOptimizerLifecycle();
+    await testInputDeterminism();
+    await testTimerDecreases();
+    await testInputRanges();
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 

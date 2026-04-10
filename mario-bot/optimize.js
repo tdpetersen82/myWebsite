@@ -54,9 +54,9 @@ const MAX_GRAD_NORM = 0.5;
 
 // Reward design (from GOAL.md: progress good, dying bad, timer bad)
 const REWARD_PROGRESS = 0.01;    // per pixel of rightward movement
-const REWARD_DEATH = -5.0;       // dying must hurt more than the progress earned reaching that point
+const REWARD_DEATH = -5.0;       // dying is bad
 const REWARD_TIME_PENALTY = -0.001;  // per frame — standing still costs
-const REWARD_COMPLETION = 5.0;
+const REWARD_COMPLETION = 10.0;
 
 // Hall of fame
 const GOLDEN_DIVERSITY_THRESHOLD = 30;
