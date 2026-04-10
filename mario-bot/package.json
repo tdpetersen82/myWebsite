@@ -3,6 +3,7 @@
   "private": true,
   "type": "module",
   "dependencies": {
+    "@tensorflow/tfjs": "^4.22.0",
     "better-sqlite3": "^12.8.0",
     "jsnes": "^1.2.1"
   }

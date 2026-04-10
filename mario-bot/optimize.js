@@ -1,7 +1,7 @@
 #!/usr/bin/env node
-// Mario Speedrun Optimizer — Neuroevolution
-// Small neural networks learn to play Mario through natural selection.
-// Usage: node optimize.js
+// Mario PPO — Neural network learns to play Mario via reinforcement learning.
+// See GOAL.md for what we're building, FAILED-APPROACHES.md for what doesn't work.
+// Usage: node optimize.js [--new | --continue]
 // Press +/- to add/remove worker threads on the fly.
 
 import fs from 'fs';
@@ -15,19 +15,48 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // ==================== CONFIG ====================
 
 const MAX_FRAMES = 8000;
-const STALL_FRAMES = 120; // 2 seconds — fast eval, tight feedback loop
+const STALL_FRAMES = 360; // 6 seconds
 const LEVEL_WIDTH = 3200;
 const NUM_WORKERS = Math.max(1, os.cpus().length - 1);
-const POPULATION_SIZE = 500;
-const NUM_INPUTS = 16;  // 5 mario + 3 gap/wall/ceiling + 4 enemies (2×2) + 3 ground profile + 1 time
-const NUM_HIDDEN1 = 8;  // first hidden layer
-const NUM_HIDDEN2 = 6;  // second hidden layer
-const NUM_OUTPUTS = 6;
-const TOTAL_WEIGHTS = (NUM_INPUTS * NUM_HIDDEN1) + (NUM_HIDDEN1 * NUM_HIDDEN2) + (NUM_HIDDEN2 * NUM_OUTPUTS) + NUM_HIDDEN1 + NUM_HIDDEN2 + NUM_OUTPUTS; // 232
-const ELITE_COUNT = 50;           // top 10% survive unchanged
-const MUTATION_RATE = 0.08;       // % of weights mutated per child
-const MUTATION_STRENGTH = 0.5;    // magnitude of weight perturbation
-const TOURNAMENT_SIZE = 5;
+
+// Network architecture: shared-trunk actor-critic
+// 156 inputs → 64 hidden (ReLU) → 32 hidden (ReLU) → 6 actor (sigmoid) + 1 critic (linear)
+const NUM_INPUTS = 156;   // 5 mario + 140 tiles (10 cols × 14 rows) + 10 enemies (5×2) + 1 timer
+const H1 = 64;
+const H2 = 32;
+const NUM_OUTPUTS = 6;    // RIGHT, LEFT, A, B, UP, DOWN
+
+// Weight layout for flat Float32Array (must match TF.js extraction order)
+// TF.js dense layers store [kernel, bias] pairs in creation order
+const W = {};
+W.ih1_k = 0;                                       // input→h1 kernel: NUM_INPUTS×H1
+W.ih1_b = W.ih1_k + NUM_INPUTS * H1;               // input→h1 bias: H1
+W.h1h2_k = W.ih1_b + H1;                           // h1→h2 kernel: H1×H2
+W.h1h2_b = W.h1h2_k + H1 * H2;                     // h1→h2 bias: H2
+W.actor_k = W.h1h2_b + H2;                          // h2→actor kernel: H2×NUM_OUTPUTS
+W.actor_b = W.actor_k + H2 * NUM_OUTPUTS;           // h2→actor bias: NUM_OUTPUTS
+W.critic_k = W.actor_b + NUM_OUTPUTS;               // h2→critic kernel: H2×1
+W.critic_b = W.critic_k + H2;                       // h2→critic bias: 1
+const TOTAL_WEIGHTS = W.critic_b + 1;
+// = 156*64 + 64 + 64*32 + 32 + 32*6 + 6 + 32 + 1 = 9984+64+2048+32+192+6+32+1 = 12359
+
+// PPO hyperparameters
+const ROLLOUT_LENGTH = 512;    // frames per worker per rollout
+const PPO_EPOCHS = 4;
+const MINIBATCH_SIZE = 256;
+const CLIP_EPSILON = 0.2;
+const GAE_LAMBDA = 0.95;
+const DISCOUNT_GAMMA = 0.99;
+const LEARNING_RATE = 3e-4;
+const ENTROPY_COEFF = 0.01;
+const VALUE_LOSS_COEFF = 0.5;
+const MAX_GRAD_NORM = 0.5;
+
+// Reward design (from GOAL.md: progress good, dying bad, timer bad)
+const REWARD_PROGRESS = 0.01;    // per pixel of rightward movement
+const REWARD_DEATH = -1.0;
+const REWARD_TIME_PENALTY = -0.001;  // per frame — standing still costs
+const REWARD_COMPLETION = 5.0;
 
 // Hall of fame
 const GOLDEN_DIVERSITY_THRESHOLD = 30;
@@ -36,12 +65,10 @@ const HOF_SIZE = 10;
 // ==================== BUTTON CONSTANTS ====================
 
 const CBTNS = { A: 0, B: 1, SELECT: 2, START: 3, UP: 4, DOWN: 5, LEFT: 6, RIGHT: 7 };
-
-// Bitmask encoding: 1 byte per frame
 const BIT = { A: 1, B: 2, SELECT: 4, START: 8, UP: 16, DOWN: 32, LEFT: 64, RIGHT: 128 };
-
 const BIT_TO_JSNES = [CBTNS.A, CBTNS.B, CBTNS.SELECT, CBTNS.START, CBTNS.UP, CBTNS.DOWN, CBTNS.LEFT, CBTNS.RIGHT];
 const JSNES_TO_BOT = { 0: 8, 1: 0, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7 };
+const BUTTON_BITS = [BIT.RIGHT, BIT.LEFT, BIT.A, BIT.B, BIT.UP, BIT.DOWN];
 
 // ================================================================
 //  Monkey-patch jsnes for lite save states (shared by both threads)
@@ -52,17 +79,16 @@ function patchJsnesLite(jsnes) {
 
     jsnes.NES.prototype.toJSONLite = function() {
         const state = origNEStoJSON.call(this);
-        delete state.romData;  // 101KB — already loaded
+        delete state.romData;
         if (state.ppu) {
-            delete state.ppu.buffer;       // 473KB — rendering only
-            delete state.ppu.bgbuffer;     // 350KB — rendering only
-            delete state.ppu.pixrendered;  // 196KB — rendering only
+            delete state.ppu.buffer;
+            delete state.ppu.bgbuffer;
+            delete state.ppu.pixrendered;
         }
         return state;
     };
 
     jsnes.NES.prototype.fromJSONLite = function(state) {
-        // Temporarily add empty arrays for the fields fromJSON expects
         if (state.ppu) {
             if (!state.ppu.buffer) state.ppu.buffer = new Array(256 * 240).fill(0);
             if (!state.ppu.bgbuffer) state.ppu.bgbuffer = new Array(256 * 240).fill(0);
@@ -74,56 +100,60 @@ function patchJsnesLite(jsnes) {
 }
 
 // ================================================================
-//  Neural Network — shared inference (used by both threads)
+//  Forward pass — manual matrix multiply (used by workers)
+//  Must produce identical output to the TF.js model on main thread.
 // ================================================================
 
-function networkInfer(inputs, weights) {
-    // Two hidden layers: 16 → 8 → 6 → 6
-    // Layout: [I→H1 (16×8)] [H1→H2 (8×6)] [H2→O (6×6)] [H1 bias (8)] [H2 bias (6)] [O bias (6)]
-    const ih1End = NUM_INPUTS * NUM_HIDDEN1;                    // 128
-    const h1h2End = ih1End + NUM_HIDDEN1 * NUM_HIDDEN2;         // 176
-    const h2oEnd = h1h2End + NUM_HIDDEN2 * NUM_OUTPUTS;         // 212
-    const h1bEnd = h2oEnd + NUM_HIDDEN1;                        // 220
-    const h2bEnd = h1bEnd + NUM_HIDDEN2;                        // 226
-    // obEnd = h2bEnd + NUM_OUTPUTS = 232
-
-    // Hidden layer 1: compress inputs into features (ReLU activation)
-    const hidden1 = new Float32Array(NUM_HIDDEN1);
-    for (let h = 0; h < NUM_HIDDEN1; h++) {
-        let sum = weights[h2oEnd + h]; // H1 bias
+function forwardPass(inputs, weights) {
+    // Hidden layer 1: ReLU
+    const h1 = new Float32Array(H1);
+    for (let j = 0; j < H1; j++) {
+        let sum = weights[W.ih1_b + j];
         for (let i = 0; i < NUM_INPUTS; i++) {
-            sum += inputs[i] * weights[i * NUM_HIDDEN1 + h];
+            sum += inputs[i] * weights[W.ih1_k + i * H1 + j];
         }
-        hidden1[h] = sum > 0 ? sum : sum * 0.01; // Leaky ReLU — neurons never fully die
+        h1[j] = sum > 0 ? sum : 0; // ReLU
     }
 
-    // Hidden layer 2: combine features (Leaky ReLU activation)
-    const hidden2 = new Float32Array(NUM_HIDDEN2);
-    for (let h = 0; h < NUM_HIDDEN2; h++) {
-        let sum = weights[h1bEnd + h]; // H2 bias
-        for (let h1 = 0; h1 < NUM_HIDDEN1; h1++) {
-            sum += hidden1[h1] * weights[ih1End + h1 * NUM_HIDDEN2 + h];
+    // Hidden layer 2: ReLU
+    const h2 = new Float32Array(H2);
+    for (let j = 0; j < H2; j++) {
+        let sum = weights[W.h1h2_b + j];
+        for (let i = 0; i < H1; i++) {
+            sum += h1[i] * weights[W.h1h2_k + i * H2 + j];
         }
-        hidden2[h] = sum > 0 ? sum : sum * 0.01; // Leaky ReLU
+        h2[j] = sum > 0 ? sum : 0; // ReLU
     }
 
-    // Output layer
-    const outputs = new Float32Array(NUM_OUTPUTS);
-    for (let o = 0; o < NUM_OUTPUTS; o++) {
-        let sum = weights[h2bEnd + o]; // O bias
-        for (let h = 0; h < NUM_HIDDEN2; h++) {
-            sum += hidden2[h] * weights[h1h2End + h * NUM_OUTPUTS + o];
+    // Actor head: sigmoid (independent per-button probability)
+    const probs = new Float32Array(NUM_OUTPUTS);
+    for (let j = 0; j < NUM_OUTPUTS; j++) {
+        let sum = weights[W.actor_b + j];
+        for (let i = 0; i < H2; i++) {
+            sum += h2[i] * weights[W.actor_k + i * NUM_OUTPUTS + j];
         }
-        outputs[o] = 1 / (1 + Math.exp(-Math.max(-10, Math.min(10, sum))));
+        sum = Math.max(-10, Math.min(10, sum));
+        probs[j] = 1 / (1 + Math.exp(-sum));
     }
 
-    return outputs;
+    // Critic head: linear (state value)
+    let value = weights[W.critic_b];
+    for (let i = 0; i < H2; i++) {
+        value += h2[i] * weights[W.critic_k + i];
+    }
+
+    return { probs, value };
 }
 
-function readNetworkInputs(nes, frame, maxFrames) {
+// ================================================================
+//  Read game state — 146 raw inputs, no precomputation
+// ================================================================
+
+function readNetworkInputs(nes) {
     const mem = nes.cpu.mem;
     const inputs = new Float32Array(NUM_INPUTS);
     const EMPTY_TILE = 0x24;
+    let idx = 0;
 
     // === Mario state (5) ===
     const marioX = mem[0x006D] * 256 + mem[0x0086];
@@ -131,126 +161,86 @@ function readNetworkInputs(nes, frame, maxFrames) {
     let velX = mem[0x0057]; if (velX > 127) velX -= 256;
     let velY = mem[0x009F]; if (velY > 127) velY -= 256;
 
-    inputs[0] = marioY / 240;                                    // Y position
-    inputs[1] = Math.max(0, Math.min(1, (velX + 40) / 80));      // horizontal velocity
-    inputs[2] = Math.max(0, Math.min(1, (velY + 40) / 80));      // vertical velocity
-    inputs[3] = (mem[0x009F] === 0 && marioY >= 160) ? 1 : 0;    // on ground?
-    inputs[4] = mem[0x0756] > 0 ? 1 : 0;                         // is big?
+    inputs[idx++] = marioY / 240;
+    inputs[idx++] = Math.max(0, Math.min(1, (velX + 40) / 80));
+    inputs[idx++] = Math.max(0, Math.min(1, (velY + 40) / 80));
+    inputs[idx++] = (mem[0x009F] === 0 && marioY >= 160) ? 1 : 0;
+    inputs[idx++] = mem[0x0756] > 0 ? 1 : 0;
 
-    // === Summarized terrain ahead (3) ===
-    // Scan tiles at Mario's foot level and head level for the next 4 columns (64px ahead)
-    function getTile(worldX, tileRow) {
-        const page = Math.floor(worldX / 256);
-        const localX = worldX % 256;
-        const tileCol = Math.floor(localX / 8);
-        const nt = nes.ppu.nameTable[(page % 2) * 2];
-        return nt ? nt.tile[tileRow * 32 + tileCol] : 0;
-    }
-
-    const marioTileRow = Math.floor(marioY / 8);
-    const groundRow = 26; // ground level tile row
-
-    // Gap ahead: is there a gap in the ground within 64px?
-    let gapAhead = 0;
-    for (let col = 1; col <= 4; col++) {
-        const wx = marioX + col * 16;
-        if (getTile(wx, groundRow) === EMPTY_TILE && getTile(wx, groundRow - 2) === EMPTY_TILE) {
-            gapAhead = 1 - (col - 1) / 4; // closer gap = higher value
-            break;
+    // === Raw tiles: 10 columns × 14 rows (140) ===
+    // Columns 1-10 ahead of Mario (16px to 160px, skipping col 0 which is at the scroll seam)
+    // Rows 14-27 (Y=112 to Y=216, covers overhead blocks through ground)
+    for (let r = 14; r <= 27; r++) {
+        for (let c = 1; c <= 10; c++) {
+            const worldX = marioX + c * 16;
+            const page = Math.floor(worldX / 256);
+            const localX = worldX % 256;
+            const tileCol = Math.floor(localX / 8);
+            const nt = nes.ppu.nameTable[(page % 2) * 2];
+            const tile = nt ? nt.tile[r * 32 + tileCol] : 0;
+            inputs[idx++] = tile !== EMPTY_TILE ? 1 : 0;
         }
     }
-    inputs[5] = gapAhead;
 
-    // Wall ahead: solid tile at Mario's height within 48px?
-    let wallAhead = 0;
-    for (let col = 1; col <= 3; col++) {
-        const wx = marioX + col * 16;
-        const row = Math.min(29, Math.max(0, marioTileRow));
-        if (getTile(wx, row) !== EMPTY_TILE) {
-            wallAhead = 1 - (col - 1) / 3;
-            break;
-        }
-    }
-    inputs[6] = wallAhead;
-
-    // Ceiling above: solid tile above Mario within 32px?
-    let ceilingAbove = 0;
-    for (let row = marioTileRow - 1; row >= Math.max(0, marioTileRow - 4); row--) {
-        if (getTile(marioX, row) !== EMPTY_TILE) {
-            ceilingAbove = 1;
-            break;
-        }
-    }
-    inputs[7] = ceilingAbove;
-
-    // === 2 nearest enemies ahead (4) ===
-    const enemies = [];
+    // === Raw enemies: 5 slots × (relX, relY) (10) ===
     const ENEMY_SCREEN_X = [0x0087, 0x008B, 0x008F, 0x0093, 0x0097];
     for (let e = 0; e < 5; e++) {
         if (mem[0x000F + e] !== 0) {
             const eX = mem[0x006E + e] * 256 + mem[ENEMY_SCREEN_X[e]];
             const eY = mem[0x00CF + e];
-            if (eY <= 240) {
-                const relX = eX - marioX;
-                if (relX > -16 && relX < 256) {
-                    enemies.push({ relX, relY: eY - marioY });
-                }
-            }
-        }
-    }
-    enemies.sort((a, b) => a.relX - b.relX);
-
-    for (let e = 0; e < 2; e++) {
-        const baseIdx = 8 + e * 2;
-        if (e < enemies.length) {
-            inputs[baseIdx] = Math.max(0, Math.min(1, enemies[e].relX / 256));
-            inputs[baseIdx + 1] = Math.max(0, Math.min(1, (enemies[e].relY + 120) / 240));
+            inputs[idx++] = Math.max(0, Math.min(1, (eX - marioX + 128) / 384));
+            inputs[idx++] = Math.max(0, Math.min(1, eY / 240));
         } else {
-            inputs[baseIdx] = 1.0;
-            inputs[baseIdx + 1] = 0.5;
+            inputs[idx++] = 0;
+            inputs[idx++] = 0;
         }
     }
 
-    // === Ground profile ahead (3) ===
-    // Height of ground at 32px, 64px, 96px ahead (normalized)
-    for (let i = 0; i < 3; i++) {
-        const wx = marioX + (i + 1) * 32;
-        let groundHeight = 0;
-        for (let row = 28; row >= 10; row--) {
-            if (getTile(wx, row) !== EMPTY_TILE) {
-                groundHeight = (28 - row) / 18; // 0 = ground level, 1 = high platform
-                break;
-            }
-        }
-        inputs[12 + i] = groundHeight;
-    }
-
-    // === Time pressure (1) ===
-    inputs[15] = Math.min(1, frame / maxFrames);
+    // === Game timer (1) ===
+    const timer = ((mem[0x07F8] >> 4) * 10 + (mem[0x07F8] & 0xF)) * 100
+                + ((mem[0x07F9] >> 4) * 10 + (mem[0x07F9] & 0xF)) * 10
+                + ((mem[0x07FA] >> 4) * 10 + (mem[0x07FA] & 0xF));
+    inputs[idx++] = timer / 400;
 
     // Sanitize
     for (let i = 0; i < NUM_INPUTS; i++) {
         if (!isFinite(inputs[i])) inputs[i] = 0;
     }
-
     return inputs;
 }
 
-function outputsToBitmask(outputs) {
+function probsToBitmask(probs) {
     let mask = 0;
-    if (outputs[0] > 0.5) mask |= BIT.RIGHT;
-    if (outputs[1] > 0.5) mask |= BIT.LEFT;
-    if (outputs[2] > 0.5) mask |= BIT.A;
-    if (outputs[3] > 0.5) mask |= BIT.B;
-    if (outputs[4] > 0.5) mask |= BIT.UP;
-    if (outputs[5] > 0.5) mask |= BIT.DOWN;
-    // Resolve LEFT+RIGHT conflict
+    for (let i = 0; i < NUM_OUTPUTS; i++) {
+        if (probs[i] > 0.5) mask |= BUTTON_BITS[i];
+    }
     if ((mask & BIT.LEFT) && (mask & BIT.RIGHT)) mask &= ~BIT.LEFT;
     return mask;
 }
 
+function sampleActions(probs) {
+    // Sample each button independently from Bernoulli(p)
+    let mask = 0;
+    for (let i = 0; i < NUM_OUTPUTS; i++) {
+        if (Math.random() < probs[i]) mask |= BUTTON_BITS[i];
+    }
+    if ((mask & BIT.LEFT) && (mask & BIT.RIGHT)) mask &= ~BIT.LEFT;
+    return mask;
+}
+
+function computeLogProb(probs, actionMask) {
+    // Sum of log probabilities for each button's Bernoulli
+    let logProb = 0;
+    for (let i = 0; i < NUM_OUTPUTS; i++) {
+        const p = Math.max(1e-8, Math.min(1 - 1e-8, probs[i]));
+        const pressed = (actionMask & BUTTON_BITS[i]) ? 1 : 0;
+        logProb += pressed * Math.log(p) + (1 - pressed) * Math.log(1 - p);
+    }
+    return logProb;
+}
+
 // ================================================================
-//  WORKER THREAD
+//  WORKER THREAD — collect rollout trajectories
 // ================================================================
 if (!isMainThread) {
     const { createRequire } = await import('module');
@@ -259,18 +249,16 @@ if (!isMainThread) {
     const { NES, Controller } = jsnes;
     const { romString, saveStateStr } = workerData;
 
-    // Apply lite save state monkey-patch
     patchJsnesLite(jsnes);
 
     let saveState = JSON.parse(saveStateStr);
+    let currentWeights = null;
     const nes = new NES({ onFrame: () => {}, onAudioSample: () => {}, emulateSound: false });
     nes.loadROM(romString);
 
-    // ---- Fast clone: deep-clone lite save state using .slice() on all arrays ----
     function fastCloneState(s) {
         const cpu = Object.assign({}, s.cpu);
         cpu.mem = s.cpu.mem.slice();
-
         const ppu = Object.assign({}, s.ppu);
         ppu.vramMem = s.ppu.vramMem.slice();
         ppu.vramMirrorTable = s.ppu.vramMirrorTable.slice();
@@ -283,96 +271,158 @@ if (!isMainThread) {
         if (s.ppu.bgbuffer) ppu.bgbuffer = s.ppu.bgbuffer.slice();
         if (s.ppu.pixrendered) ppu.pixrendered = s.ppu.pixrendered.slice();
         ppu.nameTable = s.ppu.nameTable.map(nt => ({
-            tile: nt.tile.slice(),
-            attrib: nt.attrib.slice(),
+            tile: nt.tile.slice(), attrib: nt.attrib.slice(),
         }));
         ppu.ptTile = s.ppu.ptTile.map(t => ({
-            opaque: t.opaque.slice(),
-            pix: t.pix.slice(),
+            opaque: t.opaque.slice(), pix: t.pix.slice(),
         }));
-
         return { romData: s.romData, cpu, mmap: Object.assign({}, s.mmap), ppu };
     }
 
-    // ---- Neural network simulation ----
-    function simulateNeural(weights, maxFrames) {
+    function resetToStart() {
         nes.fromJSONLite(fastCloneState(saveState));
-        const startX = nes.cpu.mem[0x006D] * 256 + nes.cpu.mem[0x0086];
-        let bestX = startX;
+    }
+
+    function collectRollout(rolloutLen) {
+        const weights = currentWeights;
+        if (!weights) return null;
+
+        // Pre-allocate rollout buffers
+        const states = new Float32Array(rolloutLen * NUM_INPUTS);
+        const actions = new Uint8Array(rolloutLen);
+        const rewards = new Float32Array(rolloutLen);
+        const logProbs = new Float32Array(rolloutLen);
+        const values = new Float32Array(rolloutLen);
+        const dones = new Uint8Array(rolloutLen);
+
+        // Episode tracking
+        let episodes = 0;
+        let bestX = 0;
+        let completions = 0;
+        let totalReward = 0;
+        let episodeBestX = 0;
         let lastProgressFrame = 0;
         let prevBitmask = 0;
+        let prevX = 0;
+        let inEpisode = false;
 
-        let cumX = 0; // cumulative position — dense reward signal
-        for (let frame = 0; frame < maxFrames; frame++) {
-            // Read game state -> network inference -> apply buttons
-            const inputs = readNetworkInputs(nes, frame, maxFrames);
-            const outputs = networkInfer(inputs, weights);
-            const bitmask = outputsToBitmask(outputs);
+        // Start first episode
+        resetToStart();
+        prevX = nes.cpu.mem[0x006D] * 256 + nes.cpu.mem[0x0086];
+        episodeBestX = prevX;
+        lastProgressFrame = 0;
+        prevBitmask = 0;
+        inEpisode = true;
 
-            // Apply button changes
-            if (bitmask !== prevBitmask) {
-                const changed = bitmask ^ prevBitmask;
+        for (let t = 0; t < rolloutLen; t++) {
+            // Read state
+            const state = readNetworkInputs(nes);
+            states.set(state, t * NUM_INPUTS);
+
+            // Forward pass
+            const { probs, value } = forwardPass(state, weights);
+            values[t] = value;
+
+            // Sample action
+            const actionMask = sampleActions(probs);
+            actions[t] = actionMask;
+            logProbs[t] = computeLogProb(probs, actionMask);
+
+            // Apply buttons
+            if (actionMask !== prevBitmask) {
+                const changed = actionMask ^ prevBitmask;
                 for (let bit = 0; bit < 8; bit++) {
                     if (changed & (1 << bit)) {
-                        if (bitmask & (1 << bit)) nes.buttonDown(1, BIT_TO_JSNES[bit]);
+                        if (actionMask & (1 << bit)) nes.buttonDown(1, BIT_TO_JSNES[bit]);
                         else nes.buttonUp(1, BIT_TO_JSNES[bit]);
                     }
                 }
-                prevBitmask = bitmask;
+                prevBitmask = actionMask;
             }
 
+            // Step emulator
             nes.frame();
 
-            // Read position and velocity
+            // Read new state
             const mem = nes.cpu.mem;
             const x = mem[0x006D] * 256 + mem[0x0086];
-            cumX += x; // accumulate position every frame
-            if (x > bestX) { bestX = x; lastProgressFrame = frame; }
+            const deltaX = x - prevX;
+            if (x > episodeBestX) { episodeBestX = x; lastProgressFrame = t; }
 
-            // Read game timer (BCD: hundreds, tens, ones)
-            const timer = ((mem[0x07F8] >> 4) * 10 + (mem[0x07F8] & 0xF)) * 100
-                        + ((mem[0x07F9] >> 4) * 10 + (mem[0x07F9] & 0xF)) * 10
-                        + ((mem[0x07FA] >> 4) * 10 + (mem[0x07FA] & 0xF));
+            // Compute reward
+            let reward = REWARD_PROGRESS * deltaX + REWARD_TIME_PENALTY;
 
-            // Death check FIRST
+            // Check death
             const ps = mem[0x000E];
-            if (ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240 || mem[0x0770] === 3) {
-                return { bestX, frame: frame + 1, completed: false, reason: 'dead', timer, cumX };
-            }
-            // Completion
-            if (mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0) {
-                return { bestX, frame: frame + 1, completed: true, reason: 'completed', timer, cumX };
-            }
-            // Backwards
-            if (frame > 60 && x < startX) {
-                return { bestX, frame: frame + 1, completed: false, reason: 'backwards', timer, cumX };
-            }
-            // Stalled
-            if (frame - lastProgressFrame > STALL_FRAMES) {
-                return { bestX, frame: frame + 1, completed: false, reason: 'stalled', timer, cumX };
+            const dead = ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240 || mem[0x0770] === 3;
+
+            // Check completion
+            const completed = mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0;
+
+            // Check stall
+            const stalled = (t - lastProgressFrame) > STALL_FRAMES;
+
+            if (dead) reward += REWARD_DEATH;
+            if (completed) reward += REWARD_COMPLETION;
+
+            rewards[t] = reward;
+            totalReward += reward;
+            prevX = x;
+
+            const done = dead || completed || stalled;
+            dones[t] = done ? 1 : 0;
+
+            if (done) {
+                if (episodeBestX > bestX) bestX = episodeBestX;
+                if (completed) completions++;
+                episodes++;
+
+                // Reset for next episode
+                resetToStart();
+                prevX = nes.cpu.mem[0x006D] * 256 + nes.cpu.mem[0x0086];
+                episodeBestX = prevX;
+                lastProgressFrame = t + 1;
+                prevBitmask = 0;
             }
         }
-        return { bestX, frame: maxFrames, completed: false, reason: 'timeout', timer: 0, cumX };
+        if (episodeBestX > bestX) bestX = episodeBestX;
+
+        // Get bootstrap value for last state (for GAE)
+        const lastState = readNetworkInputs(nes);
+        const { value: lastValue } = forwardPass(lastState, weights);
+
+        return {
+            states: states.buffer,
+            actions: actions.buffer,
+            rewards: rewards.buffer,
+            logProbs: logProbs.buffer,
+            values: values.buffer,
+            dones: dones.buffer,
+            lastValue,
+            metadata: { episodes, bestX, completions, totalReward, frames: rolloutLen }
+        };
     }
 
     // Message handler
     parentPort.on('message', (msg) => {
         if (msg.type === 'setSaveState') {
             saveState = JSON.parse(msg.saveStateStr);
-            parentPort.postMessage('ack');
+            parentPort.postMessage({ type: 'ack' });
             return;
         }
-        if (msg.type === 'evaluate') {
-            // msg.weightsBuf: ArrayBuffer with all networks packed
-            // msg.numNetworks: count
-            // msg.maxFrames: max simulation length
-            const buf = new Float32Array(msg.weightsBuf);
-            const results = [];
-            for (let i = 0; i < msg.numNetworks; i++) {
-                const weights = buf.subarray(i * TOTAL_WEIGHTS, (i + 1) * TOTAL_WEIGHTS);
-                results.push(simulateNeural(weights, msg.maxFrames));
-            }
-            parentPort.postMessage(results);
+        if (msg.type === 'setWeights') {
+            currentWeights = new Float32Array(msg.weightsBuf);
+            parentPort.postMessage({ type: 'ack' });
+            return;
+        }
+        if (msg.type === 'collectRollout') {
+            const result = collectRollout(msg.rolloutLen || ROLLOUT_LENGTH);
+            // Transfer buffers for zero-copy
+            parentPort.postMessage(
+                { type: 'rollout', ...result },
+                [result.states, result.actions, result.rewards,
+                 result.logProbs, result.values, result.dones]
+            );
             return;
         }
     });
@@ -389,13 +439,201 @@ const require = createRequire(import.meta.url);
 const Database = require('better-sqlite3');
 const jsnes = require('jsnes');
 
-// Apply lite save state monkey-patch on main thread
+// Import TF.js (pure JS — no native bindings, works everywhere)
+const tf = await import('@tensorflow/tfjs');
+
 patchJsnesLite(jsnes);
 
 const romPath = path.join(__dirname, 'super-mario-bros-1.nes');
 if (!fs.existsSync(romPath)) { console.error('ROM not found at', romPath); process.exit(1); }
 const romData = fs.readFileSync(romPath);
 const romString = Array.from(new Uint8Array(romData)).map(b => String.fromCharCode(b)).join('');
+
+// ==================== TF.JS MODEL ====================
+
+function createModel() {
+    const input = tf.input({ shape: [NUM_INPUTS] });
+    const h1 = tf.layers.dense({ units: H1, activation: 'relu', kernelInitializer: 'heNormal', name: 'h1' }).apply(input);
+    const h2 = tf.layers.dense({ units: H2, activation: 'relu', kernelInitializer: 'heNormal', name: 'h2' }).apply(h1);
+    const actorOut = tf.layers.dense({ units: NUM_OUTPUTS, activation: 'sigmoid', name: 'actor' }).apply(h2);
+    const criticOut = tf.layers.dense({ units: 1, name: 'critic' }).apply(h2);
+    return tf.model({ inputs: input, outputs: [actorOut, criticOut] });
+}
+
+function extractWeights(model) {
+    // Extract all weights into a flat Float32Array matching the W layout
+    const flat = new Float32Array(TOTAL_WEIGHTS);
+    const tensors = model.getWeights();
+    // TF.js order: h1/kernel, h1/bias, h2/kernel, h2/bias, actor/kernel, actor/bias, critic/kernel, critic/bias
+    const data = tensors.map(t => t.dataSync());
+    flat.set(data[0], W.ih1_k);     // h1 kernel
+    flat.set(data[1], W.ih1_b);     // h1 bias
+    flat.set(data[2], W.h1h2_k);    // h2 kernel
+    flat.set(data[3], W.h1h2_b);    // h2 bias
+    flat.set(data[4], W.actor_k);   // actor kernel
+    flat.set(data[5], W.actor_b);   // actor bias
+    flat.set(data[6], W.critic_k);  // critic kernel
+    flat.set(data[7], W.critic_b);  // critic bias
+    return flat;
+}
+
+function loadWeightsIntoModel(model, flat) {
+    const tensors = model.getWeights();
+    const shapes = tensors.map(t => t.shape);
+    const newTensors = [
+        tf.tensor(flat.slice(W.ih1_k, W.ih1_k + NUM_INPUTS * H1), shapes[0]),
+        tf.tensor(flat.slice(W.ih1_b, W.ih1_b + H1), shapes[1]),
+        tf.tensor(flat.slice(W.h1h2_k, W.h1h2_k + H1 * H2), shapes[2]),
+        tf.tensor(flat.slice(W.h1h2_b, W.h1h2_b + H2), shapes[3]),
+        tf.tensor(flat.slice(W.actor_k, W.actor_k + H2 * NUM_OUTPUTS), shapes[4]),
+        tf.tensor(flat.slice(W.actor_b, W.actor_b + NUM_OUTPUTS), shapes[5]),
+        tf.tensor(flat.slice(W.critic_k, W.critic_k + H2), shapes[6]),
+        tf.tensor(flat.slice(W.critic_b, W.critic_b + 1), shapes[7]),
+    ];
+    model.setWeights(newTensors);
+    newTensors.forEach(t => t.dispose());
+}
+
+// ==================== GAE (Generalized Advantage Estimation) ====================
+
+function computeGAE(rewards, values, dones, lastValue) {
+    const T = rewards.length;
+    const advantages = new Float32Array(T);
+    const returns = new Float32Array(T);
+    let lastAdv = 0;
+
+    for (let t = T - 1; t >= 0; t--) {
+        const nextValue = (t === T - 1) ? lastValue : values[t + 1];
+        const nextNonTerminal = (t === T - 1) ? (1 - dones[T - 1]) : (1 - dones[t]);
+        // When dones[t]=1, we don't bootstrap from the next state (episode ended)
+        // But the next value should be 0 if the episode ended at t
+        const delta = rewards[t] + DISCOUNT_GAMMA * nextValue * nextNonTerminal - values[t];
+        lastAdv = delta + DISCOUNT_GAMMA * GAE_LAMBDA * nextNonTerminal * lastAdv;
+        advantages[t] = lastAdv;
+        returns[t] = advantages[t] + values[t];
+    }
+
+    return { advantages, returns };
+}
+
+// ==================== PPO UPDATE ====================
+
+function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
+    const optimizer = tf.train.adam(LEARNING_RATE);
+    const T = advantages.length;
+
+    // Normalize advantages
+    let advMean = 0, advStd = 0;
+    for (let i = 0; i < T; i++) advMean += advantages[i];
+    advMean /= T;
+    for (let i = 0; i < T; i++) advStd += (advantages[i] - advMean) ** 2;
+    advStd = Math.sqrt(advStd / T + 1e-8);
+    const normAdv = new Float32Array(T);
+    for (let i = 0; i < T; i++) normAdv[i] = (advantages[i] - advMean) / advStd;
+
+    // Pre-convert action bitmasks to per-button arrays
+    const actionBits = new Float32Array(T * NUM_OUTPUTS);
+    for (let t = 0; t < T; t++) {
+        for (let b = 0; b < NUM_OUTPUTS; b++) {
+            actionBits[t * NUM_OUTPUTS + b] = (actions[t] & BUTTON_BITS[b]) ? 1 : 0;
+        }
+    }
+
+    let totalPolicyLoss = 0, totalValueLoss = 0, totalEntropy = 0, totalClipFrac = 0;
+    let batchCount = 0;
+
+    // Create tensors for full dataset
+    const statesTensor = tf.tensor2d(states, [T, NUM_INPUTS]);
+    const actionsTensor = tf.tensor2d(actionBits, [T, NUM_OUTPUTS]);
+    const oldLogProbsTensor = tf.tensor1d(oldLogProbs);
+    const advTensor = tf.tensor1d(normAdv);
+    const returnsTensor = tf.tensor1d(returns);
+
+    for (let epoch = 0; epoch < PPO_EPOCHS; epoch++) {
+        // Shuffle indices
+        const indices = Array.from({ length: T }, (_, i) => i);
+        for (let i = indices.length - 1; i > 0; i--) {
+            const j = Math.floor(Math.random() * (i + 1));
+            [indices[i], indices[j]] = [indices[j], indices[i]];
+        }
+
+        for (let start = 0; start < T; start += MINIBATCH_SIZE) {
+            const end = Math.min(start + MINIBATCH_SIZE, T);
+            const mbIdx = tf.tensor1d(indices.slice(start, end), 'int32');
+
+            const mbStates = tf.gather(statesTensor, mbIdx);
+            const mbActions = tf.gather(actionsTensor, mbIdx);
+            const mbOldLogProbs = tf.gather(oldLogProbsTensor, mbIdx);
+            const mbAdv = tf.gather(advTensor, mbIdx);
+            const mbReturns = tf.gather(returnsTensor, mbIdx);
+
+            const grads = optimizer.minimize(() => {
+                const [actorOut, criticOut] = model.apply(mbStates, { training: true });
+
+                // Clamp probabilities
+                const probs = actorOut.clipByValue(1e-8, 1 - 1e-8);
+                const values = criticOut.squeeze([-1]);
+
+                // Bernoulli log prob: sum over buttons of [a*log(p) + (1-a)*log(1-p)]
+                const logP = mbActions.mul(probs.log()).add(
+                    mbActions.mul(-1).add(1).mul(probs.mul(-1).add(1).log())
+                ).sum(-1); // sum across buttons
+
+                // Ratio
+                const ratio = logP.sub(mbOldLogProbs).exp();
+
+                // Clipped surrogate loss
+                const surr1 = ratio.mul(mbAdv);
+                const surr2 = ratio.clipByValue(1 - CLIP_EPSILON, 1 + CLIP_EPSILON).mul(mbAdv);
+                const policyLoss = surr1.minimum(surr2).mean().mul(-1);
+
+                // Value loss
+                const valueLoss = mbReturns.sub(values).square().mean().mul(VALUE_LOSS_COEFF);
+
+                // Entropy bonus (Bernoulli entropy: -p*log(p) - (1-p)*log(1-p))
+                const entropy = probs.mul(probs.log()).add(
+                    probs.mul(-1).add(1).mul(probs.mul(-1).add(1).log())
+                ).mul(-1).mean();
+
+                // Clip fraction for monitoring
+                const clipFrac = ratio.sub(1).abs().greater(CLIP_EPSILON).mean();
+
+                // Store stats (sync to avoid memory leaks)
+                totalPolicyLoss += policyLoss.dataSync()[0];
+                totalValueLoss += valueLoss.dataSync()[0];
+                totalEntropy += entropy.dataSync()[0];
+                totalClipFrac += clipFrac.dataSync()[0];
+                batchCount++;
+
+                const loss = policyLoss.add(valueLoss).sub(entropy.mul(ENTROPY_COEFF));
+                return loss;
+            }, true);
+
+            // Clean up
+            mbIdx.dispose();
+            mbStates.dispose();
+            mbActions.dispose();
+            mbOldLogProbs.dispose();
+            mbAdv.dispose();
+            mbReturns.dispose();
+        }
+    }
+
+    // Clean up full-dataset tensors
+    statesTensor.dispose();
+    actionsTensor.dispose();
+    oldLogProbsTensor.dispose();
+    advTensor.dispose();
+    returnsTensor.dispose();
+    optimizer.dispose();
+
+    return {
+        policyLoss: totalPolicyLoss / batchCount,
+        valueLoss: totalValueLoss / batchCount,
+        entropy: totalEntropy / batchCount,
+        clipFraction: totalClipFrac / batchCount,
+    };
+}
 
 // ==================== EVENTS <-> INPUTS CONVERSION ====================
 
@@ -424,27 +662,6 @@ function inputsToEvents(inputs) {
     return events;
 }
 
-const BOT_TO_BIT = { 8: 0, 0: 1, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7 }; // bot button -> bit position
-
-function eventsToInputs(events, totalFrames) {
-    const inputs = new Uint8Array(totalFrames || MAX_FRAMES);
-    let bitmask = 0;
-    let eventIdx = 0;
-    for (let f = 0; f < inputs.length; f++) {
-        while (eventIdx < events.length && events[eventIdx][0] <= f) {
-            const [, botBtn, state] = events[eventIdx];
-            const bitPos = BOT_TO_BIT[botBtn];
-            if (bitPos !== undefined) {
-                if (state) bitmask |= (1 << bitPos);
-                else bitmask &= ~(1 << bitPos);
-            }
-            eventIdx++;
-        }
-        inputs[f] = bitmask;
-    }
-    return inputs;
-}
-
 // ==================== DISPLAY HELPERS ====================
 
 function makeProgressBar(x, maxX, w) {
@@ -466,92 +683,52 @@ class RunDatabase {
         this.db.pragma('journal_mode = WAL');
         this.db.pragma('synchronous = NORMAL');
 
+        // Legacy tables (keep for history)
         this.db.exec(`CREATE TABLE IF NOT EXISTS networks (
             id INTEGER PRIMARY KEY, generation INTEGER, rank INTEGER,
             weights BLOB, fitness REAL, bestX INTEGER, frame INTEGER,
             completed INTEGER, createdAt TEXT
         )`);
-
         this.db.exec(`CREATE TABLE IF NOT EXISTS evolution_stats (
             generation INTEGER PRIMARY KEY, bestFitness REAL, avgFitness REAL,
             bestX INTEGER, avgX INTEGER, completions INTEGER,
             wallInfo TEXT, mutationRate REAL, elapsed REAL
         )`);
 
-        // Prepare statements
-        this._insertNetwork = this.db.prepare(`INSERT INTO networks (generation, rank, weights, fitness, bestX, frame, completed, createdAt) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`);
-        this._insertStats = this.db.prepare(`INSERT OR REPLACE INTO evolution_stats VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`);
-        this._getLastGeneration = this.db.prepare(`SELECT MAX(generation) as gen FROM evolution_stats`);
-        this._getTopNetworks = this.db.prepare(`SELECT * FROM networks WHERE generation = ? ORDER BY rank ASC LIMIT ?`);
-        this._getBestNetwork = this.db.prepare(`SELECT * FROM networks ORDER BY fitness DESC LIMIT 1`);
+        // PPO tables
+        this.db.exec(`CREATE TABLE IF NOT EXISTS ppo_updates (
+            update_id INTEGER PRIMARY KEY,
+            total_frames INTEGER, policy_loss REAL, value_loss REAL,
+            entropy REAL, clip_fraction REAL,
+            mean_reward REAL, best_x INTEGER, completions INTEGER,
+            elapsed REAL, created_at TEXT
+        )`);
+        this.db.exec(`CREATE TABLE IF NOT EXISTS ppo_weights (
+            update_id INTEGER PRIMARY KEY,
+            weights BLOB
+        )`);
+
+        this._insertPPOUpdate = this.db.prepare(`INSERT INTO ppo_updates VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`);
+        this._insertPPOWeights = this.db.prepare(`INSERT OR REPLACE INTO ppo_weights VALUES (?, ?)`);
+        this._getLastPPOUpdate = this.db.prepare(`SELECT MAX(update_id) as id FROM ppo_updates`);
+        this._getLatestPPOWeights = this.db.prepare(`SELECT * FROM ppo_weights ORDER BY update_id DESC LIMIT 1`);
     }
 
-    saveNetwork(gen, rank, weights, fitness, bestX, frame, completed) {
-        this._insertNetwork.run(gen, rank, Buffer.from(weights.buffer, weights.byteOffset, weights.byteLength), fitness, bestX, frame, completed ? 1 : 0, new Date().toISOString());
+    savePPOUpdate(id, totalFrames, pLoss, vLoss, entropy, clipFrac, meanReward, bestX, comps, elapsed) {
+        this._insertPPOUpdate.run(id, totalFrames, pLoss, vLoss, entropy, clipFrac, meanReward, bestX, comps, elapsed, new Date().toISOString());
     }
 
-    saveEvolutionStats(gen, bestFit, avgFit, bestX, avgX, comps, wallInfo, mutRate, elapsed) {
-        this._insertStats.run(gen, bestFit, avgFit, bestX, avgX, comps, wallInfo, mutRate, elapsed);
+    savePPOWeights(updateId, weightsFloat32) {
+        this._insertPPOWeights.run(updateId, Buffer.from(weightsFloat32.buffer, weightsFloat32.byteOffset, weightsFloat32.byteLength));
     }
 
-    getLastGeneration() {
-        const row = this._getLastGeneration.get();
-        return row?.gen ?? -1;
+    getLastPPOUpdate() {
+        const row = this._getLastPPOUpdate.get();
+        return row?.id ?? -1;
     }
 
-    getTopNetworks(generation, limit) {
-        return this._getTopNetworks.all(generation, limit);
-    }
-
-    getBestNetwork() {
-        return this._getBestNetwork.get();
-    }
-}
-
-// ==================== NEURAL NETWORK CLASS ====================
-
-class NeuralNetwork {
-    constructor(weights) {
-        this.weights = weights || NeuralNetwork.randomWeights();
-    }
-
-    static randomWeights() {
-        const w = new Float32Array(TOTAL_WEIGHTS);
-        const scale = Math.sqrt(2 / NUM_INPUTS);
-        for (let i = 0; i < TOTAL_WEIGHTS; i++) {
-            w[i] = (Math.random() * 2 - 1) * scale;
-        }
-        return w;
-    }
-
-    clone() {
-        return new NeuralNetwork(new Float32Array(this.weights));
-    }
-
-    mutate(rate, strength) {
-        for (let i = 0; i < TOTAL_WEIGHTS; i++) {
-            if (Math.random() < rate) {
-                this.weights[i] += (Math.random() * 2 - 1) * strength;
-            }
-        }
-        return this;
-    }
-
-    static crossover(a, b) {
-        const child = new Float32Array(TOTAL_WEIGHTS);
-        for (let i = 0; i < TOTAL_WEIGHTS; i++) {
-            child[i] = Math.random() < 0.5 ? a.weights[i] : b.weights[i];
-        }
-        return new NeuralNetwork(child);
-    }
-
-    static tournamentSelect(population, fitnesses, k) {
-        let bestIdx = Math.floor(Math.random() * population.length);
-        for (let i = 1; i < k; i++) {
-            const idx = Math.floor(Math.random() * population.length);
-            if (fitnesses[idx] > fitnesses[bestIdx]) bestIdx = idx;
-        }
-        return population[bestIdx];
+    getLatestPPOWeights() {
+        return this._getLatestPPOWeights.get();
     }
 }
 
@@ -605,54 +782,44 @@ function tryAddToHallOfFame(hof, inputs, result) {
         addedAt: new Date().toISOString(),
     };
 
-    let mostSimilarIdx = -1;
-    let minDist = Infinity;
+    let mostSimilarIdx = -1, minDist = Infinity;
     for (let i = 0; i < hof.length; i++) {
         const d = checkpointDistance(entry, hof[i]);
         if (d < minDist) { minDist = d; mostSimilarIdx = i; }
     }
 
     let added = false;
-
     if (minDist < GOLDEN_DIVERSITY_THRESHOLD && mostSimilarIdx >= 0) {
         if (entry.fitness > hof[mostSimilarIdx].fitness) {
             hof[mostSimilarIdx] = entry;
             hof.sort((a, b) => b.fitness - a.fitness);
-            saveHallOfFame(hof);
-            added = true;
+            saveHallOfFame(hof); added = true;
         }
     } else if (hof.length < HOF_SIZE) {
-        hof.push(entry);
-        hof.sort((a, b) => b.fitness - a.fitness);
-        saveHallOfFame(hof);
-        added = true;
+        hof.push(entry); hof.sort((a, b) => b.fitness - a.fitness);
+        saveHallOfFame(hof); added = true;
     } else if (entry.fitness > hof[hof.length - 1].fitness) {
-        hof.pop();
-        hof.push(entry);
-        hof.sort((a, b) => b.fitness - a.fitness);
-        saveHallOfFame(hof);
-        added = true;
+        hof.pop(); hof.push(entry); hof.sort((a, b) => b.fitness - a.fitness);
+        saveHallOfFame(hof); added = true;
     }
-
     return added;
 }
 
-let currentPhase = 'neuroevolution';
-let currentGeneration = 0;
+let currentPhase = 'ppo';
+let currentUpdateId = 0;
 
 function saveBest(inputs, result) {
     const events = inputsToEvents(inputs);
     const speed = result.bestX / Math.max(result.frame, 1);
-    const id = `${currentPhase}-G${currentGeneration}-${result.bestX}px-${speed.toFixed(2)}pf`;
+    const id = `ppo-U${currentUpdateId}-${result.bestX}px-${speed.toFixed(2)}pf`;
     fs.writeFileSync(bestPath, JSON.stringify({
         id, rating: result.completed ? 'S' : (result.bestX > LEVEL_WIDTH * 0.8 ? 'A' : 'C'),
-        phase: currentPhase, generation: currentGeneration,
+        phase: 'ppo', generation: currentUpdateId,
         events, fitness: result.bestX * 1000 + (result.timer || 0),
         completed: result.completed, completionFrame: result.completed ? result.frame : undefined,
         bestX: result.bestX, speed: parseFloat(speed.toFixed(2)),
         reason: result.reason, totalFrames: result.frame,
-        stuckFrames: 0,
-        checkpoints: [], checkpointSplits: 'none',
+        stuckFrames: 0, checkpoints: [], checkpointSplits: 'none',
         timeSeconds: result.completed ? (result.frame / 60.098).toFixed(2) : null,
     }, null, 2));
     fs.writeFileSync(saveStatePath, trainingSaveStateStr);
@@ -678,63 +845,42 @@ function broadcastSaveState(workers, saveStateStr) {
     return new Promise((resolve) => {
         let ackCount = 0;
         for (const worker of workers) {
-            worker.once('message', () => {
-                ackCount++;
-                if (ackCount === workers.length) resolve();
-            });
+            worker.once('message', () => { ackCount++; if (ackCount === workers.length) resolve(); });
             worker.postMessage({ type: 'setSaveState', saveStateStr });
         }
     });
 }
 
-// ==================== EVALUATE POPULATION ====================
-
-async function evaluatePopulation(workers, population, maxFrames) {
+function broadcastWeights(workers, weightsFlat) {
     return new Promise((resolve) => {
-        const numNetworks = population.length;
-        const totalFloats = numNetworks * TOTAL_WEIGHTS;
-        const weightsBuf = new Float32Array(totalFloats);
-
-        // Pack all weights
-        for (let i = 0; i < numNetworks; i++) {
-            weightsBuf.set(population[i].weights, i * TOTAL_WEIGHTS);
+        let ackCount = 0;
+        for (const worker of workers) {
+            worker.once('message', () => { ackCount++; if (ackCount === workers.length) resolve(); });
+            // Send a copy of the buffer to each worker
+            const copy = new Float32Array(weightsFlat);
+            worker.postMessage({ type: 'setWeights', weightsBuf: copy.buffer }, [copy.buffer]);
         }
-
-        // Distribute across workers
-        const perWorker = Math.ceil(numNetworks / workers.length);
-        const allResults = new Array(numNetworks);
-        let completed = 0;
-
-        workers.forEach((worker, wi) => {
-            const start = wi * perWorker;
-            const end = Math.min(start + perWorker, numNetworks);
-            if (start >= numNetworks) {
-                completed++;
-                if (completed === workers.length) resolve(allResults);
-                return;
-            }
-
-            const chunk = weightsBuf.slice(start * TOTAL_WEIGHTS, end * TOTAL_WEIGHTS);
-            worker.once('message', (results) => {
-                for (let i = 0; i < results.length; i++) {
-                    allResults[start + i] = results[i];
-                }
-                completed++;
-                if (completed === workers.length) resolve(allResults);
-            });
-            worker.postMessage({
-                type: 'evaluate',
-                weightsBuf: chunk.buffer,
-                numNetworks: end - start,
-                maxFrames,
-            });
-        });
     });
 }
 
-// ==================== REPLAY BEST NETWORK ====================
+function collectRollouts(workers) {
+    return new Promise((resolve) => {
+        const rollouts = [];
+        let completed = 0;
+        for (const worker of workers) {
+            worker.once('message', (msg) => {
+                rollouts.push(msg);
+                completed++;
+                if (completed === workers.length) resolve(rollouts);
+            });
+            worker.postMessage({ type: 'collectRollout', rolloutLen: ROLLOUT_LENGTH });
+        }
+    });
+}
 
-function replayBestNetwork(nes, network, saveStateStr) {
+// ==================== REPLAY ====================
+
+function replayBestPolicy(nes, weights, saveStateStr) {
     const state = JSON.parse(saveStateStr);
     nes.fromJSONLite(state);
 
@@ -742,12 +888,11 @@ function replayBestNetwork(nes, network, saveStateStr) {
     let prevBitmask = 0;
 
     for (let frame = 0; frame < MAX_FRAMES; frame++) {
-        const netInputs = readNetworkInputs(nes, frame, MAX_FRAMES);
-        const outputs = networkInfer(netInputs, network.weights);
-        const bitmask = outputsToBitmask(outputs);
+        const netInputs = readNetworkInputs(nes);
+        const { probs } = forwardPass(netInputs, weights);
+        const bitmask = probsToBitmask(probs); // deterministic: p > 0.5
         inputsRecord.push(bitmask);
 
-        // Apply buttons
         if (bitmask !== prevBitmask) {
             const changed = bitmask ^ prevBitmask;
             for (let bit = 0; bit < 8; bit++) {
@@ -760,7 +905,6 @@ function replayBestNetwork(nes, network, saveStateStr) {
         }
         nes.frame();
 
-        // Check termination
         const mem = nes.cpu.mem;
         const ps = mem[0x000E];
         if (ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240) break;
@@ -792,10 +936,10 @@ async function main() {
         blue: '\x1b[34m', magenta: '\x1b[35m', cyan: '\x1b[36m',
     };
 
-    console.log(`${C.cyan}\u2554\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2557${C.reset}`);
-    console.log(`${C.cyan}\u2551  MARIO SPEEDRUN \u2014 Neuroevolution Optimizer              \u2551${C.reset}`);
-    console.log(`${C.cyan}\u2551  Neural networks learn to play through natural selection \u2551${C.reset}`);
-    console.log(`${C.cyan}\u255A\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u2550\u255D${C.reset}`);
+    console.log(`${C.cyan}╔══════════════════════════════════════════════════════╗${C.reset}`);
+    console.log(`${C.cyan}║  MARIO PPO — Reinforcement Learning                 ║${C.reset}`);
+    console.log(`${C.cyan}║  Neural network learns to play from experience       ║${C.reset}`);
+    console.log(`${C.cyan}╚══════════════════════════════════════════════════════╝${C.reset}`);
     console.log();
 
     console.log('Creating title screen save state...');
@@ -807,14 +951,12 @@ async function main() {
     for (let i = 0; i < 2; i++) nes.frame();
     nes.buttonUp(1, Controller.BUTTON_START);
     for (let i = 0; i < 200; i++) nes.frame();
-    // Use lite save state for smaller serialization
     const saveStateStr = JSON.stringify(nes.toJSONLite());
     trainingSaveStateStr = saveStateStr;
     console.log(`  Mario at X=${nes.cpu.mem[0x006D] * 256 + nes.cpu.mem[0x0086]}, Y=${nes.cpu.mem[0x00CE]}`);
     console.log(`  Save state size: ${(saveStateStr.length / 1024).toFixed(0)}KB (lite)`);
     console.log();
 
-    // Save training save state for replay compatibility
     fs.writeFileSync(saveStatePath, trainingSaveStateStr);
 
     console.log(`Spawning ${NUM_WORKERS} worker threads...`);
@@ -835,9 +977,13 @@ async function main() {
         for (const op of pendingWorkerOps) {
             if (op === '+') {
                 const w = await spawnWorker(romString, saveStateStr);
-                // Send current save state to the new worker
                 w.postMessage({ type: 'setSaveState', saveStateStr: trainingSaveStateStr });
                 await new Promise(r => w.once('message', r));
+                if (currentWeightsFlat) {
+                    const copy = new Float32Array(currentWeightsFlat);
+                    w.postMessage({ type: 'setWeights', weightsBuf: copy.buffer }, [copy.buffer]);
+                    await new Promise(r => w.once('message', r));
+                }
                 workers.push(w);
                 console.log(`\n  ${C.green}+ Worker added${C.reset} (now ${workers.length})`);
             } else if (op === '-' && workers.length > 1) {
@@ -857,37 +1003,58 @@ async function main() {
         }
     }
 
-    // Open/create SQLite database
+    // Database
     const dbPath = path.join(__dirname, 'runs.db');
     const db = new RunDatabase(dbPath);
     console.log(`${C.green}SQLite database: ${dbPath}${C.reset}`);
     console.log();
 
+    // Create TF.js model
+    const model = createModel();
+    let currentWeightsFlat = extractWeights(model);
+    let updateCount = 0;
+    let bestEverX = 0;
+    let bestEverWeights = null;
+
+    // Check for resume
+    const lastUpdate = db.getLastPPOUpdate();
+    if (lastUpdate >= 0) {
+        console.log(`${C.yellow}Found existing PPO progress: update ${lastUpdate}${C.reset}`);
+        let resumeAnswer;
+        if (process.argv.includes('--continue')) resumeAnswer = 'r';
+        else if (process.argv.includes('--new')) resumeAnswer = 'n';
+        else resumeAnswer = await ask(`${C.cyan}Resume${C.reset} or ${C.cyan}start new${C.reset}? [${C.green}r${C.reset}]esume / [${C.red}n${C.reset}]ew: `);
+
+        if (resumeAnswer === 'n' || resumeAnswer === 'new') {
+            console.log(`  ${C.red}Starting fresh${C.reset}\n`);
+            db.db.exec('DELETE FROM ppo_updates');
+            db.db.exec('DELETE FROM ppo_weights');
+            db.db.exec('VACUUM');
+        } else {
+            const saved = db.getLatestPPOWeights();
+            if (saved) {
+                const loadedWeights = new Float32Array(new Uint8Array(saved.weights).buffer);
+                loadWeightsIntoModel(model, loadedWeights);
+                currentWeightsFlat = extractWeights(model);
+                updateCount = saved.update_id;
+                console.log(`  ${C.green}Resumed from update ${updateCount}${C.reset}\n`);
+            }
+        }
+    }
+
     // Graceful shutdown
     let sigCount = 0;
-    let bestEverNetwork = null;
-    let bestEverResult = null;
-
     process.on('SIGINT', () => {
         sigCount++; if (sigCount > 1) process.exit(1);
-        console.log('\n\nInterrupted! Saving best network...');
+        console.log('\n\nInterrupted! Saving...');
         try {
-            if (bestEverNetwork) {
-                // Save best network weights to DB
-                const fit = bestEverResult ? bestEverResult.bestX * 1000 + (bestEverResult.timer || 0) : 0;
-                db.saveNetwork(currentGeneration, 0, bestEverNetwork.weights, fit,
-                    bestEverResult?.bestX || 0, bestEverResult?.frame || 0, bestEverResult?.completed || false);
-
-                // Replay best network to capture inputs
-                const replayInputs = replayBestNetwork(nes, bestEverNetwork, trainingSaveStateStr);
-                const replayResult = bestEverResult || { bestX: 0, frame: replayInputs.length, completed: false, reason: 'interrupted' };
-                saveBest(replayInputs, replayResult);
-                tryAddToHallOfFame(hallOfFame, replayInputs, replayResult);
-
-                const speed = (replayResult.bestX / Math.max(replayResult.frame, 1)).toFixed(2);
-                console.log(`Saved: ${replayResult.bestX}px ${speed}px/f ${replayResult.reason}`);
-                console.log(`Network weights saved to DB (gen ${currentGeneration})`);
-            }
+            const weights = bestEverWeights || currentWeightsFlat;
+            db.savePPOWeights(updateCount, weights);
+            const replayInputs = replayBestPolicy(nes, weights, trainingSaveStateStr);
+            const replayResult = { bestX: bestEverX, frame: replayInputs.length, completed: false, reason: 'interrupted', timer: 0 };
+            saveBest(replayInputs, replayResult);
+            tryAddToHallOfFame(hallOfFame, replayInputs, replayResult);
+            console.log(`Saved: update ${updateCount}, best ${bestEverX}px`);
         } catch (e) {
             console.error('Error saving:', e.message);
         }
@@ -896,194 +1063,136 @@ async function main() {
         setTimeout(() => process.exit(0), 200);
     });
 
-    // ==================== INTERACTIVE STARTUP ====================
-
-    const lastGen = db.getLastGeneration();
-    let population;
-    let generation = 0;
-    let bestEverFitness = -1;
-    let bestEverX = 0;
-
-    if (lastGen >= 0) {
-        console.log(`${C.yellow}Found existing progress: generation ${lastGen}${C.reset}`);
-        let resumeAnswer;
-        if (process.argv.includes('--continue')) {
-            resumeAnswer = 'r';
-        } else if (process.argv.includes('--new')) {
-            resumeAnswer = 'n';
-        } else {
-            resumeAnswer = await ask(`${C.cyan}Resume${C.reset} from generation ${lastGen} or ${C.cyan}start new${C.reset}? [${C.green}r${C.reset}]esume / [${C.red}n${C.reset}]ew: `);
-        }
-
-        if (resumeAnswer === 'n' || resumeAnswer === 'new') {
-            console.log(`  ${C.red}Starting fresh — clearing saved networks${C.reset}\n`);
-            db.db.exec('DELETE FROM networks');
-            db.db.exec('DELETE FROM evolution_stats');
-            db.db.exec('VACUUM');
-            population = Array.from({ length: POPULATION_SIZE }, () => new NeuralNetwork());
-        } else {
-            console.log(`  ${C.green}Resuming from generation ${lastGen}${C.reset}`);
-            generation = lastGen;
-
-            const savedNetworks = db.getTopNetworks(lastGen, ELITE_COUNT);
-            population = [];
-            for (const row of savedNetworks) {
-                const weightsBuf = new Float32Array(new Uint8Array(row.weights).buffer);
-                population.push(new NeuralNetwork(new Float32Array(weightsBuf)));
-            }
-            console.log(`  Loaded ${population.length} elite networks from DB`);
-
-            const loaded = population.length;
-            while (population.length < POPULATION_SIZE * 0.7 && loaded > 0) {
-                const parent = population[population.length % loaded].clone();
-                parent.mutate(MUTATION_RATE, MUTATION_STRENGTH);
-                population.push(parent);
-            }
-            while (population.length < POPULATION_SIZE) {
-                population.push(new NeuralNetwork());
-            }
-
-            const bestRow = db.getBestNetwork();
-            if (bestRow) {
-                bestEverFitness = bestRow.fitness;
-                bestEverX = bestRow.bestX;
-                const weightsBuf = new Float32Array(new Uint8Array(bestRow.weights).buffer);
-                bestEverNetwork = new NeuralNetwork(new Float32Array(weightsBuf));
-                bestEverResult = { bestX: bestRow.bestX, frame: bestRow.frame, completed: !!bestRow.completed, reason: bestRow.completed ? 'completed' : 'unknown' };
-                console.log(`  Best ever: ${bestEverX}px (fitness ${bestEverFitness.toFixed(0)})`);
-            }
-            console.log();
-        }
-    } else {
-        population = Array.from({ length: POPULATION_SIZE }, () => new NeuralNetwork());
-    }
-
-    // Broadcast save state to all workers
+    // Broadcast save state and initial weights
     await broadcastSaveState(workers, trainingSaveStateStr);
+    await broadcastWeights(workers, currentWeightsFlat);
 
-    console.log(`${C.cyan}=== NEUROEVOLUTION ===${C.reset}`);
-    console.log(`${C.dim}Population: ${POPULATION_SIZE} | Arch: ${NUM_INPUTS}→${NUM_HIDDEN1}→${NUM_HIDDEN2}→${NUM_OUTPUTS} | Weights: ${TOTAL_WEIGHTS}${C.reset}`);
-    console.log(`${C.dim}Elite: ${ELITE_COUNT} | Mutation: ${(MUTATION_RATE*100).toFixed(0)}% @ ${MUTATION_STRENGTH} | Tournament: ${TOURNAMENT_SIZE}${C.reset}`);
-    console.log(`${C.dim}Fitness: milestone bonuses (100px steps) + bestX gradient + timer${C.reset}`);
-    console.log(`${C.dim}Workers: ${workers.length} | Stall: ${STALL_FRAMES} frames (${(STALL_FRAMES/60).toFixed(1)}s)${C.reset}`);
+    console.log(`${C.cyan}=== PPO TRAINING ===${C.reset}`);
+    console.log(`${C.dim}Arch: ${NUM_INPUTS}→${H1}→${H2}→${NUM_OUTPUTS}+1 | Weights: ${TOTAL_WEIGHTS}${C.reset}`);
+    console.log(`${C.dim}Rollout: ${ROLLOUT_LENGTH}f × ${workers.length} workers = ${ROLLOUT_LENGTH * workers.length} frames/update${C.reset}`);
+    console.log(`${C.dim}PPO: epochs=${PPO_EPOCHS} minibatch=${MINIBATCH_SIZE} clip=${CLIP_EPSILON} lr=${LEARNING_RATE}${C.reset}`);
+    console.log(`${C.dim}Reward: progress=${REWARD_PROGRESS}/px death=${REWARD_DEATH} time=${REWARD_TIME_PENALTY}/f completion=${REWARD_COMPLETION}${C.reset}`);
     console.log();
 
     const startTime = Date.now();
+    let totalFrames = 0;
 
-    // ==================== EVOLUTION LOOP ====================
-    // Dense fitness: cumX (sum of X every frame) provides smooth gradient.
-    // Networks that move right at ALL get higher cumX than networks that sit still.
-    // This lets evolution discover "press RIGHT" much faster than sparse bestX-only fitness.
+    // ==================== PPO TRAINING LOOP ====================
 
     while (true) {
-        const genStart = Date.now();
+        const updateStart = Date.now();
         await processWorkerOps();
-        generation++;
-        currentGeneration = generation;
+        updateCount++;
+        currentUpdateId = updateCount;
 
-        // Evaluate all networks
-        const results = await evaluatePopulation(workers, population, MAX_FRAMES);
+        // 1. Collect rollouts from all workers
+        const rollouts = await collectRollouts(workers);
 
-        // Milestone-based fitness: huge cliffs every 100px + fine gradient between
-        // floor(bestX/100) * 100000 = massive bonus per 100px milestone (creates selection pressure to pass obstacles)
-        // bestX * 100 = fine-grained gradient between milestones (discriminates 590px vs 594px)
-        // timer = speed bonus (faster completions rank higher)
-        const fitnesses = results.map(r => {
-            const milestones = Math.floor(r.bestX / 100);
-            return milestones * 100000 + r.bestX * 100 + (r.timer || 0);
-        });
+        // 2. Concatenate rollout data
+        const batchSize = ROLLOUT_LENGTH * workers.length;
+        const allStates = new Float32Array(batchSize * NUM_INPUTS);
+        const allActions = new Uint8Array(batchSize);
+        const allRewards = new Float32Array(batchSize);
+        const allLogProbs = new Float32Array(batchSize);
+        const allValues = new Float32Array(batchSize);
+        const allDones = new Uint8Array(batchSize);
+        const allLastValues = [];
 
-        // Sort population by fitness
-        const indices = fitnesses.map((f, i) => i).sort((a, b) => fitnesses[b] - fitnesses[a]);
-        population = indices.map(i => population[i]);
-        const sortedResults = indices.map(i => results[i]);
-        const sortedFitnesses = indices.map(i => fitnesses[i]);
+        let totalEpisodes = 0, totalCompletions = 0, batchBestX = 0, batchTotalReward = 0;
 
-        // Stats
-        const bestResult = sortedResults[0];
-        const bestFitness = sortedFitnesses[0];
-        const bestX = bestResult.bestX;
-        const avgX = Math.round(results.reduce((s, r) => s + r.bestX, 0) / results.length);
-
-        // Track best ever (by distance, not cumX)
-        const distFitness = bestX * 10000 + (bestResult.timer || 0);
-        if (distFitness > bestEverFitness) {
-            bestEverFitness = distFitness;
-            bestEverX = bestX;
-            bestEverNetwork = population[0].clone();
-            bestEverResult = bestResult;
+        for (let w = 0; w < rollouts.length; w++) {
+            const r = rollouts[w];
+            const offset = w * ROLLOUT_LENGTH;
+            allStates.set(new Float32Array(r.states), offset * NUM_INPUTS);
+            allActions.set(new Uint8Array(r.actions), offset);
+            allRewards.set(new Float32Array(r.rewards), offset);
+            allLogProbs.set(new Float32Array(r.logProbs), offset);
+            allValues.set(new Float32Array(r.values), offset);
+            allDones.set(new Uint8Array(r.dones), offset);
+            allLastValues.push(r.lastValue);
+            totalEpisodes += r.metadata.episodes;
+            totalCompletions += r.metadata.completions;
+            if (r.metadata.bestX > batchBestX) batchBestX = r.metadata.bestX;
+            batchTotalReward += r.metadata.totalReward;
         }
 
-        // Wall detection
-        const deathXs = results.filter(r => !r.completed).map(r => r.bestX);
-        const wallBuckets = {};
-        for (const x of deathXs) {
-            const bucket = Math.floor(x / 20) * 20;
-            wallBuckets[bucket] = (wallBuckets[bucket] || 0) + 1;
-        }
-        const topWall = Object.entries(wallBuckets).sort((a, b) => b[1] - a[1])[0];
-        const wallStr = topWall ? `wall: X=${topWall[0]}(${Math.round(topWall[1]/POPULATION_SIZE*100)}%)` : '';
+        totalFrames += batchSize;
 
-        // ==================== REPRODUCE ====================
-        // Standard evolutionary algorithm: tournament selection + mutation
-        // Elite: top ELITE_COUNT survive unchanged
-        // Rest: tournament-selected parent, mutated
-
-        const nextPop = new Array(POPULATION_SIZE);
-
-        // Elite: copy top networks unchanged
-        for (let i = 0; i < ELITE_COUNT; i++) {
-            nextPop[i] = population[i];
+        // 3. Compute GAE per worker segment (respecting episode boundaries)
+        const allAdvantages = new Float32Array(batchSize);
+        const allReturns = new Float32Array(batchSize);
+        for (let w = 0; w < rollouts.length; w++) {
+            const offset = w * ROLLOUT_LENGTH;
+            const segRewards = allRewards.subarray(offset, offset + ROLLOUT_LENGTH);
+            const segValues = allValues.subarray(offset, offset + ROLLOUT_LENGTH);
+            const segDones = allDones.subarray(offset, offset + ROLLOUT_LENGTH);
+            const { advantages, returns } = computeGAE(segRewards, segValues, segDones, allLastValues[w]);
+            allAdvantages.set(advantages, offset);
+            allReturns.set(returns, offset);
         }
 
-        // Rest: tournament selection + mutation
-        for (let i = ELITE_COUNT; i < POPULATION_SIZE; i++) {
-            const parent = NeuralNetwork.tournamentSelect(population, sortedFitnesses, TOURNAMENT_SIZE);
-            const child = parent.clone();
-            child.mutate(MUTATION_RATE, MUTATION_STRENGTH);
-            nextPop[i] = child;
-        }
+        // 4. PPO gradient update
+        const stats = ppoUpdate(model, allStates, allActions, allLogProbs, allAdvantages, allReturns);
 
-        population = nextPop;
+        // 5. Extract new weights and broadcast
+        currentWeightsFlat = extractWeights(model);
+        await broadcastWeights(workers, currentWeightsFlat);
+
+        // Track best
+        if (batchBestX > bestEverX) {
+            bestEverX = batchBestX;
+            bestEverWeights = new Float32Array(currentWeightsFlat);
+        }
 
         // ==================== LOGGING ====================
-        const genTime = (Date.now() - genStart) / 1000;
-        const completions = results.filter(r => r.completed).length;
-        const bestTime = (bestResult.frame / 60.098).toFixed(1);
+        const updateTime = (Date.now() - updateStart) / 1000;
         const elapsed = (Date.now() - startTime) / 1000;
+        const meanReward = batchTotalReward / Math.max(totalEpisodes, 1);
+        const fps = Math.round(batchSize / updateTime);
+
         console.log(
-            `Gen ${String(generation).padStart(4)} | ` +
-            `best: ${bestX}px (${bestTime}s) ${bestResult.completed ? C.green + 'COMPLETE!' + C.reset : bestResult.reason} | ` +
-            `avg: ${avgX}px | ${wallStr} | ` +
-            `${genTime.toFixed(1)}s/gen` +
-            (completions > 0 ? ` | ${C.green}${completions} completions!${C.reset}` : '')
+            `Update ${String(updateCount).padStart(4)} | ` +
+            `best: ${batchBestX}px | avg reward: ${meanReward.toFixed(2)} | ` +
+            `episodes: ${totalEpisodes} | ` +
+            `π_loss: ${stats.policyLoss.toFixed(4)} v_loss: ${stats.valueLoss.toFixed(4)} ` +
+            `ent: ${stats.entropy.toFixed(4)} clip: ${stats.clipFraction.toFixed(3)} | ` +
+            `${fps} fps | ${updateTime.toFixed(1)}s` +
+            (totalCompletions > 0 ? ` | ${C.green}${totalCompletions} completions!${C.reset}` : '')
         );
 
-        if (generation % 10 === 0) {
+        if (updateCount % 10 === 0) {
             const bar = makeProgressBar(bestEverX, LEVEL_WIDTH, 20);
-            console.log(`  ${bar} ${Math.round(bestEverX/LEVEL_WIDTH*100)}% | best ever: ${bestEverX}px | elapsed: ${formatTime(elapsed)}`);
+            console.log(`  ${bar} ${Math.round(bestEverX/LEVEL_WIDTH*100)}% | best ever: ${bestEverX}px | ${(totalFrames/1000).toFixed(0)}K frames | ${formatTime(elapsed)}`);
         }
 
-        // Save best to replay every 20 generations or on completion
-        if (generation % 20 === 0 || bestResult.completed) {
-            const replayInputs = replayBestNetwork(nes, population[0], trainingSaveStateStr);
-            saveBest(replayInputs, bestResult);
-            if (bestResult.completed) {
-                tryAddToHallOfFame(hallOfFame, replayInputs, bestResult);
+        // Save replay every 10 updates or on completion
+        if (updateCount % 10 === 0 || totalCompletions > 0) {
+            const replayInputs = replayBestPolicy(nes, currentWeightsFlat, trainingSaveStateStr);
+            // Quick eval of replay
+            const replayX = (() => {
+                let maxX = 0;
+                const tmpState = JSON.parse(trainingSaveStateStr);
+                nes.fromJSONLite(tmpState);
+                for (let f = 0; f < replayInputs.length; f++) {
+                    const x = nes.cpu.mem[0x006D] * 256 + nes.cpu.mem[0x0086];
+                    if (x > maxX) maxX = x;
+                }
+                return maxX;
+            })();
+            const replayResult = { bestX: Math.max(replayX, batchBestX), frame: replayInputs.length, completed: totalCompletions > 0, reason: totalCompletions > 0 ? 'completed' : 'replay', timer: 0 };
+            saveBest(replayInputs, replayResult);
+            if (totalCompletions > 0) {
+                tryAddToHallOfFame(hallOfFame, replayInputs, replayResult);
                 console.log(`  ${C.green}${C.bold}LEVEL COMPLETE! Saved to hall of fame.${C.reset}`);
             }
         }
 
-        // Save to DB every 50 generations
-        if (generation % 50 === 0) {
-            for (let i = 0; i < Math.min(ELITE_COUNT, population.length); i++) {
-                db.saveNetwork(generation, i, population[i].weights, sortedFitnesses[i],
-                    sortedResults[i].bestX, sortedResults[i].frame, sortedResults[i].completed);
-            }
-            db.saveEvolutionStats(generation, bestFitness,
-                sortedFitnesses.reduce((a,b)=>a+b,0)/sortedFitnesses.length,
-                bestX, avgX, completions, wallStr, MUTATION_RATE, genTime);
-            console.log(`  ${C.dim}DB checkpoint saved (gen ${generation})${C.reset}`);
+        // DB checkpoint every 25 updates
+        if (updateCount % 25 === 0) {
+            db.savePPOUpdate(updateCount, totalFrames, stats.policyLoss, stats.valueLoss,
+                stats.entropy, stats.clipFraction, meanReward, batchBestX, totalCompletions, updateTime);
+            db.savePPOWeights(updateCount, currentWeightsFlat);
+            console.log(`  ${C.dim}DB checkpoint saved (update ${updateCount})${C.reset}`);
         }
     }
 }
