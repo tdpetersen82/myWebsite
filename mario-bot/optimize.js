@@ -15,7 +15,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // ==================== CONFIG ====================
 
 const MAX_FRAMES = 8000;
-const STALL_FRAMES = 300;
+const STALL_FRAMES = 600; // 10 seconds — learning should figure out stalling is bad
 const LEVEL_WIDTH = 3200;
 const NUM_WORKERS = Math.max(1, os.cpus().length - 1);
 const POPULATION_SIZE = 200;
@@ -1088,32 +1088,35 @@ async function main() {
         }
 
         // ==================== REPRODUCE ====================
+        // For each network: mutate it, test the child, keep whichever is better.
+        // Only improvements survive. Bad mutations are discarded, parent is kept.
         const nextPop = [];
+        const childInputs = [];
 
-        // Elite (top 10%) — copied unchanged
-        for (let i = 0; i < ELITE_COUNT; i++) {
-            nextPop.push(population[i].clone());
+        // Generate mutated children for every network
+        for (let i = 0; i < POPULATION_SIZE; i++) {
+            const child = population[i].clone();
+            child.mutate(mutationRate, MUTATION_STRENGTH);
+            nextPop.push(child);
+            childInputs.push(child);
         }
 
-        // Mutated elite — light mutations on top performers (45%)
-        const numMutatedElite = Math.floor(POPULATION_SIZE * 0.45);
-        for (let i = 0; i < numMutatedElite; i++) {
-            const parent = population[i % ELITE_COUNT].clone();
-            parent.mutate(mutationRate, MUTATION_STRENGTH);
-            nextPop.push(parent);
+        // Evaluate all children
+        const childResults = await evaluatePopulation(workers, nextPop, MAX_FRAMES);
+        const childFitnesses = childResults.map(r => r.bestX * 1000 + (r.timer || 0));
+
+        // Keep child only if better than parent, otherwise keep parent
+        for (let i = 0; i < POPULATION_SIZE; i++) {
+            if (childFitnesses[i] <= sortedFitnesses[i]) {
+                nextPop[i] = population[i]; // parent was better, keep it
+            }
+            // else child stays (it's already in nextPop[i])
         }
 
-        // Tournament mutants — pick good networks from broader population, mutate (40%)
-        const numTournamentMutants = Math.floor(POPULATION_SIZE * 0.40);
-        for (let i = 0; i < numTournamentMutants; i++) {
-            const parent = NeuralNetwork.tournamentSelect(population, sortedFitnesses, TOURNAMENT_SIZE).clone();
-            parent.mutate(mutationRate, MUTATION_STRENGTH);
-            nextPop.push(parent);
-        }
-
-        // Fresh random (fill remaining ~5%)
-        while (nextPop.length < POPULATION_SIZE) {
-            nextPop.push(new NeuralNetwork());
+        // Replace bottom 5% with fresh random (maintain some exploration)
+        const numFresh = Math.max(2, Math.floor(POPULATION_SIZE * 0.05));
+        for (let i = POPULATION_SIZE - numFresh; i < POPULATION_SIZE; i++) {
+            nextPop[i] = new NeuralNetwork();
         }
 
         population = nextPop;
