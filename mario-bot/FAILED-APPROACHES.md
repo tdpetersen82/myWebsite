@@ -62,12 +62,30 @@ Every approach failed for one of two reasons:
 
 2. **Wrong learning algorithm** (methods 4-8): Neuroevolution is random search. It doesn't compute gradients. Each simulation gives ONE fitness number regardless of how many frames were played. A 2000-frame run that dies at a goomba teaches the algorithm exactly as much as a 2000-frame run that almost clears a pipe — both just get a distance score. No frame-level learning happens.
 
-## What We Haven't Tried
+---
 
-**Reinforcement learning with backpropagation** (PPO, DQN). These algorithms:
-- Compute actual gradients through the network (not random perturbation)
-- Learn from EVERY frame of experience (not just final fitness)
-- Can handle thousands of inputs (full screen tile data)
-- Are what every successful game-playing AI actually uses (DeepMind Atari, OpenAI Five)
+## 9. PPO — First Attempt (current)
 
-This is the obvious next step and probably should have been the first step.
+Switched to Proximal Policy Optimization with TensorFlow.js. Actor-critic architecture (156 inputs → 64 → 32 → 6 actor + 1 critic, ~12,000 weights). Workers collect rollout trajectories, main thread does gradient updates.
+
+**Status**: Running but not yet producing good results. Multiple bugs found and fixed:
+
+### Bugs Found
+
+1. **Wrong nametable mapping** (`nameTable[(page % 2) * 2]` → `nameTable[page % 2]`). With horizontal mirroring, nameTable[2] mirrors nameTable[0], so page 1 was reading from the same physical nametable as page 0. The network couldn't see tiles on the second nametable page.
+
+2. **Uninitialized nametable tiles (0x00) treated as solid**. The NES fills unwritten nametable memory with 0x00. Our code treated everything ≠ 0x24 as solid. Result: the entire ahead view was a wall of solid tiles whenever columns crossed into unscrolled territory. The network was completely blind to level geometry.
+
+3. **No stall penalty**. Stalling at an obstacle triggered `done=1` but no reward penalty. 85% of episodes ended by stalling at the first pipe (X=594) — the network learned "run to pipe, stop, collect free timeout" as the optimal strategy because it wasn't punished. Fixed: stall now costs the same as dying (REWARD_DEATH).
+
+4. **Velocity Y normalization too compressed**. VelY was normalized to [-40, 40] range but actual NES values are [-5, +5]. Jumping mapped to 0.45, falling to 0.51 — the network couldn't tell the difference. Fixed: normalize to [-5, +5] → [0, 1]. Now jumping=0.2, falling=0.9.
+
+5. **Adam optimizer recreated every PPO update**. `tf.train.adam()` was called inside `ppoUpdate()` and disposed after each call. Adam's entire value is its per-weight momentum and variance accumulators — destroying them each update reduces it to basic SGD. The network couldn't learn context-dependent behavior (when to jump vs when not to) because gradient momentum never built up. Fixed: optimizer persists at module level.
+
+### Lessons
+
+- **Test your inputs visually**. Print the tile grid as ASCII art. We would have caught bugs 1-2 immediately if we'd looked at what the network actually sees instead of trusting the code.
+- **Run sample episodes and watch the behavior**. The X=112 "stuck" problem was the network holding A constantly, bouncing Mario under question blocks. Nothing is at X=112 — we already knew this from neuroevolution.
+- **Check your optimizer lifecycle**. Creating and destroying Adam per batch is a silent killer — the code "works" but can't converge.
+- **Log per-button probabilities**, not just which buttons are pressed. Seeing A=0.65 constantly told us the network hadn't learned when to jump vs when not to.
+- **The reward balance matters**. Progress reward of 0.01/px × 594px = 5.94, death penalty = -5. Dying at the pipe was net positive (+0.94). The network had no incentive to survive.
