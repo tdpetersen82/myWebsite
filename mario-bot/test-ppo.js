@@ -76,7 +76,7 @@ const MAX_FRAMES = 8000;
 const STALL_FRAMES = 360;
 const LEVEL_WIDTH = 3200;
 
-const NUM_INPUTS = 146;
+const NUM_INPUTS = 156;
 const H1 = 64;
 const H2 = 32;
 const NUM_OUTPUTS = 6;
@@ -198,8 +198,8 @@ function readNetworkInputs(nes) {
     inputs[idx++] = (mem[0x009F] === 0 && marioY >= 160) ? 1 : 0;
     inputs[idx++] = mem[0x0756] > 0 ? 1 : 0;
 
-    for (let r = 12; r <= 21; r++) {
-        for (let c = 0; c < 13; c++) {
+    for (let r = 14; r <= 27; r++) {
+        for (let c = 1; c <= 10; c++) {
             const worldX = marioX + c * 16;
             const page = Math.floor(worldX / 256);
             const localX = worldX % 256;
@@ -386,29 +386,29 @@ function printInputs(inputs, label) {
     console.log(`    On ground:          ${inputs[3].toFixed(0)}`);
     console.log(`    Is big:             ${inputs[4].toFixed(0)}`);
 
-    // Tile grid (indices 5-134): 10 rows x 13 cols
-    console.log(`    Tile grid (10 rows x 13 cols, rows 12-21 of nametable):`);
-    console.log(`    Col offsets:   ${Array.from({length: 13}, (_, c) => `+${(c * 16).toString().padStart(3)}`).join(' ')}`);
-    for (let r = 0; r < 10; r++) {
+    // Tile grid (indices 5-144): 14 rows x 10 cols
+    console.log(`    Tile grid (14 rows x 10 cols, rows 14-27 of nametable, cols 1-10 ahead):`);
+    console.log(`    Col offsets:  ${Array.from({length: 10}, (_, c) => `+${((c+1) * 16).toString().padStart(3)}`).join(' ')}`);
+    for (let r = 0; r < 14; r++) {
         const row = [];
-        for (let c = 0; c < 13; c++) {
-            const val = inputs[5 + r * 13 + c];
+        for (let c = 0; c < 10; c++) {
+            const val = inputs[5 + r * 10 + c];
             row.push(val > 0.5 ? '\u2588' : '\u00b7');
         }
-        console.log(`    Row ${(r + 12).toString().padStart(2)}: ${row.join(' ')}`);
+        console.log(`    Row ${(r + 14).toString().padStart(2)}: ${row.join(' ')}`);
     }
 
-    // Enemies (indices 135-144): 5 slots x 2
+    // Enemies (indices 145-154): 5 slots x 2
     console.log(`    Enemies (5 slots x relX,relY):`);
     for (let e = 0; e < 5; e++) {
-        const relX = inputs[135 + e * 2];
-        const relY = inputs[135 + e * 2 + 1];
+        const relX = inputs[145 + e * 2];
+        const relY = inputs[145 + e * 2 + 1];
         const active = (relX !== 0 || relY !== 0) ? 'ACTIVE' : 'empty';
         console.log(`      Slot ${e}: relX=${relX.toFixed(4)} relY=${relY.toFixed(4)}  [${active}]`);
     }
 
-    // Timer (index 145)
-    console.log(`    Timer (norm):       ${inputs[145].toFixed(4)}  (raw = ${(inputs[145] * 400).toFixed(0)})`);
+    // Timer (index 155)
+    console.log(`    Timer (norm):       ${inputs[155].toFixed(4)}  (raw = ${(inputs[155] * 400).toFixed(0)})`);
 }
 
 // ================================================================
@@ -424,7 +424,7 @@ async function testInputReading() {
     const startInputs = readNetworkInputs(nes);
     assert(startInputs.length === NUM_INPUTS, `Input vector has ${NUM_INPUTS} elements (got ${startInputs.length})`);
     assert(startInputs[0] >= 0 && startInputs[0] <= 1, `Mario Y is normalized [0,1]: ${startInputs[0].toFixed(4)}`);
-    assert(startInputs[145] > 0, `Timer is nonzero: ${startInputs[145].toFixed(4)} (raw=${(startInputs[145]*400).toFixed(0)})`);
+    assert(startInputs[155] > 0, `Timer is nonzero: ${startInputs[155].toFixed(4)} (raw=${(startInputs[155]*400).toFixed(0)})`);
 
     const startX = getMarioX(nes);
     const startY = getMarioY(nes);
@@ -440,14 +440,14 @@ async function testInputReading() {
     assert(allFinite, 'All inputs are finite');
     assert(allBounded, 'All inputs are in [0, 1] range (within tolerance)');
 
-    printInputs(startInputs, 'Starting position inputs (all 146 values):');
+    printInputs(startInputs, `Starting position inputs (all ${NUM_INPUTS} values):`);
 
     // Count solid tiles at start (World 1-1 has ground and some blocks)
     let solidTiles = 0;
-    for (let i = 5; i < 135; i++) {
+    for (let i = 5; i < 145; i++) {
         if (startInputs[i] > 0.5) solidTiles++;
     }
-    INFO(`Solid tiles at start: ${solidTiles} out of 130`);
+    INFO(`Solid tiles at start: ${solidTiles} out of 140`);
     assert(solidTiles > 0, `At least some solid tiles visible at start (found ${solidTiles})`);
 
     SUBHEADER('1b: Inputs after 100 frames of RIGHT+B');
@@ -493,10 +493,10 @@ async function testInputReading() {
 
     const pipeInputs = readNetworkInputs(nes);
     let pipeSolidTiles = 0;
-    for (let i = 5; i < 135; i++) {
+    for (let i = 5; i < 145; i++) {
         if (pipeInputs[i] > 0.5) pipeSolidTiles++;
     }
-    INFO(`Solid tiles near pipe area: ${pipeSolidTiles} out of 130`);
+    INFO(`Solid tiles near pipe area: ${pipeSolidTiles} out of 140`);
     // Near the first pipe, we should see pipe blocks as solid
     assert(pipeSolidTiles > solidTiles, `More solid tiles visible when further in level (${pipeSolidTiles} > ${solidTiles})`);
 
@@ -1085,12 +1085,432 @@ async function testRolloutSanity() {
 }
 
 // ================================================================
+//  TEST 7: Tile Grid Correctness at Known Positions
+// ================================================================
+async function testTileGridCorrectness() {
+    HEADER('TEST 7: Tile Grid Correctness at Known Positions');
+
+    const nes = bootNES();
+    advanceToGameplay(nes);
+
+    SUBHEADER('7a: Ground visible at starting position');
+    const startInputs = readNetworkInputs(nes);
+    // Rows 26-27 (indices in grid: row 12-13, since grid starts at row 14)
+    // Row 26 = grid row 12, Row 27 = grid row 13
+    // Each row has 10 columns (indices 5 + rowIdx*10 + col)
+    let groundRow26Solid = 0;
+    let groundRow27Solid = 0;
+    for (let c = 0; c < 10; c++) {
+        if (startInputs[5 + 12 * 10 + c] > 0.5) groundRow26Solid++;
+        if (startInputs[5 + 13 * 10 + c] > 0.5) groundRow27Solid++;
+    }
+    assert(groundRow26Solid >= 8, `Row 26 (ground) is mostly solid at start: ${groundRow26Solid}/10`);
+    assert(groundRow27Solid >= 8, `Row 27 (sub-ground) is mostly solid at start: ${groundRow27Solid}/10`);
+
+    SUBHEADER('7b: Sky rows are mostly empty at start');
+    // Row 14 = grid row 0, Row 18 = grid row 4 — should be sky
+    let skyRow14Solid = 0;
+    let skyRow18Solid = 0;
+    for (let c = 0; c < 10; c++) {
+        if (startInputs[5 + 0 * 10 + c] > 0.5) skyRow14Solid++;
+        if (startInputs[5 + 4 * 10 + c] > 0.5) skyRow18Solid++;
+    }
+    assert(skyRow14Solid <= 2, `Row 14 (sky) is mostly empty at start: ${skyRow14Solid}/10 solid`);
+    assert(skyRow18Solid <= 2, `Row 18 (sky) is mostly empty at start: ${skyRow18Solid}/10 solid`);
+
+    SUBHEADER('7c: Pipe visible near X=434');
+    // Advance to pipe area
+    applyBitmask(nes, BIT.RIGHT | BIT.B, 0);
+    for (let i = 0; i < 95; i++) nes.frame();
+    applyBitmask(nes, BIT.RIGHT | BIT.B | BIT.A, BIT.RIGHT | BIT.B);
+    for (let i = 0; i < 20; i++) nes.frame();
+    applyBitmask(nes, BIT.RIGHT | BIT.B, BIT.RIGHT | BIT.B | BIT.A);
+    for (let i = 0; i < 100; i++) nes.frame();
+
+    const pipeX = getMarioX(nes);
+    const ps = nes.cpu.mem[0x000E];
+    if (ps !== 0x0B && ps !== 0x06 && pipeX > 350) {
+        const pipeInputs = readNetworkInputs(nes);
+        INFO(`Mario at X=${pipeX}, checking for pipe tiles`);
+
+        // The pipe at X≈594 should appear as a vertical column of solid tiles
+        // Count tiles that form a vertical stripe (same column, multiple rows solid)
+        let maxVerticalStripe = 0;
+        for (let c = 0; c < 10; c++) {
+            let stripe = 0;
+            for (let r = 0; r < 14; r++) {
+                if (pipeInputs[5 + r * 10 + c] > 0.5) stripe++;
+            }
+            if (stripe > maxVerticalStripe) maxVerticalStripe = stripe;
+        }
+        // A pipe should create at least 4 solid tiles in a vertical column (above ground)
+        assert(maxVerticalStripe >= 4, `Vertical structure (pipe) visible: ${maxVerticalStripe} rows in tallest column (need ≥4)`);
+        printInputs(pipeInputs, `Tile grid near pipe (X=${pipeX}):`);
+    } else {
+        WARN(`Mario died or didn't reach pipe (X=${pipeX}, ps=0x${ps.toString(16)}), skipping pipe test`);
+    }
+    applyBitmask(nes, 0, BIT.RIGHT | BIT.B);
+}
+
+// ================================================================
+//  TEST 8: Episode Reset Integrity
+// ================================================================
+async function testEpisodeReset() {
+    HEADER('TEST 8: Episode Reset Integrity');
+
+    const nes = bootNES();
+    advanceToGameplay(nes);
+    const saveState = nes.toJSONLite();
+    const saveStateStr = JSON.stringify(saveState);
+
+    // Record starting state
+    const startX = getMarioX(nes);
+    const startY = getMarioY(nes);
+    const startVelX = nes.cpu.mem[0x0057];
+    const startTimer = ((nes.cpu.mem[0x07F8] >> 4) * 10 + (nes.cpu.mem[0x07F8] & 0xF)) * 100
+                     + ((nes.cpu.mem[0x07F9] >> 4) * 10 + (nes.cpu.mem[0x07F9] & 0xF)) * 10
+                     + ((nes.cpu.mem[0x07FA] >> 4) * 10 + (nes.cpu.mem[0x07FA] & 0xF));
+
+    INFO(`Starting state: X=${startX}, Y=${startY}, velX=${startVelX}, timer=${startTimer}`);
+
+    // Run for a while to change state
+    applyBitmask(nes, BIT.RIGHT | BIT.B, 0);
+    for (let i = 0; i < 50; i++) nes.frame();
+    const midX = getMarioX(nes);
+    INFO(`After 50 frames: X=${midX}`);
+    assert(midX > startX, `Mario moved from start: ${startX} → ${midX}`);
+
+    // Reset via fromJSONLite
+    const restored = JSON.parse(saveStateStr);
+    nes.fromJSONLite(restored);
+
+    const resetX = getMarioX(nes);
+    const resetY = getMarioY(nes);
+    const resetVelX = nes.cpu.mem[0x0057];
+    const resetTimer = ((nes.cpu.mem[0x07F8] >> 4) * 10 + (nes.cpu.mem[0x07F8] & 0xF)) * 100
+                     + ((nes.cpu.mem[0x07F9] >> 4) * 10 + (nes.cpu.mem[0x07F9] & 0xF)) * 10
+                     + ((nes.cpu.mem[0x07FA] >> 4) * 10 + (nes.cpu.mem[0x07FA] & 0xF));
+
+    assert(resetX === startX, `X reset correctly: ${resetX} === ${startX}`);
+    assert(resetY === startY, `Y reset correctly: ${resetY} === ${startY}`);
+    assert(resetVelX === startVelX, `VelX reset correctly: ${resetVelX} === ${startVelX}`);
+    assert(resetTimer === startTimer, `Timer reset correctly: ${resetTimer} === ${startTimer}`);
+
+    // Verify inputs match after reset
+    const resetInputs = readNetworkInputs(nes);
+    const origNes = bootNES();
+    advanceToGameplay(origNes);
+    const origInputs = readNetworkInputs(origNes);
+
+    let maxInputDiff = 0;
+    for (let i = 0; i < NUM_INPUTS; i++) {
+        const diff = Math.abs(resetInputs[i] - origInputs[i]);
+        if (diff > maxInputDiff) maxInputDiff = diff;
+    }
+    assertClose(maxInputDiff, 0, 1e-6, `All ${NUM_INPUTS} inputs match after reset (max diff)`);
+}
+
+// ================================================================
+//  TEST 9: Reward Scale Sanity
+// ================================================================
+async function testRewardScaleSanity() {
+    HEADER('TEST 9: Reward Scale Sanity');
+
+    const nes = bootNES();
+    advanceToGameplay(nes);
+
+    // Run a full episode pressing RIGHT+B until death or stall
+    let totalReward = 0;
+    let prevX = getMarioX(nes);
+    let bestX = prevX;
+    let lastProgressFrame = 0;
+    let prevMask = 0;
+    const runMask = BIT.RIGHT | BIT.B;
+    applyBitmask(nes, runMask, 0);
+    prevMask = runMask;
+
+    let frame = 0;
+    let reason = 'timeout';
+    for (frame = 0; frame < 2000; frame++) {
+        nes.frame();
+        const x = getMarioX(nes);
+        const deltaX = x - prevX;
+        let reward = REWARD_PROGRESS * deltaX + REWARD_TIME_PENALTY;
+        if (x > bestX) { bestX = x; lastProgressFrame = frame; }
+
+        const ps = nes.cpu.mem[0x000E];
+        const dead = ps === 0x0B || ps === 0x06 || nes.cpu.mem[0x00CE] > 240;
+        const stalled = (frame - lastProgressFrame) > STALL_FRAMES;
+
+        if (dead) { reward += REWARD_DEATH; totalReward += reward; reason = 'dead'; break; }
+        if (stalled) { totalReward += reward; reason = 'stalled'; break; }
+        totalReward += reward;
+        prevX = x;
+    }
+
+    INFO(`Episode: ${frame} frames, bestX=${bestX}px, reason=${reason}`);
+    INFO(`Total reward: ${totalReward.toFixed(4)}`);
+    INFO(`Reward breakdown estimate: progress=${(REWARD_PROGRESS * bestX).toFixed(3)}, time=${(REWARD_TIME_PENALTY * frame).toFixed(3)}, death=${reason === 'dead' ? REWARD_DEATH : 0}`);
+
+    assert(isFinite(totalReward), `Total reward is finite: ${totalReward}`);
+    assert(totalReward > -10 && totalReward < 100, `Total reward in reasonable range [-10, 100]: ${totalReward.toFixed(2)}`);
+    // Moving right should give positive progress reward that outweighs time penalty for a decent run
+    if (bestX > 200) {
+        assert(totalReward > REWARD_DEATH + 0.5, `Decent run (${bestX}px) has reward above death penalty floor: ${totalReward.toFixed(3)}`);
+    }
+}
+
+// ================================================================
+//  TEST 10: PPO Update Doesn't Explode
+// ================================================================
+async function testPPOUpdateStability() {
+    HEADER('TEST 10: PPO Update Stability');
+
+    const model = createModel();
+    const weightsBefore = extractWeights(model);
+
+    // Create a small synthetic rollout (64 frames)
+    const T = 64;
+    const states = new Float32Array(T * NUM_INPUTS);
+    const actions = new Uint8Array(T);
+    const rewards = new Float32Array(T);
+    const logProbs = new Float32Array(T);
+    const values = new Float32Array(T);
+    const dones = new Uint8Array(T);
+
+    // Fill with random but valid data
+    for (let t = 0; t < T; t++) {
+        // Random state in [0,1]
+        for (let i = 0; i < NUM_INPUTS; i++) {
+            states[t * NUM_INPUTS + i] = Math.random();
+        }
+        // Random action
+        actions[t] = sampleActions(new Float32Array([0.5, 0.5, 0.5, 0.5, 0.5, 0.5]));
+        rewards[t] = (Math.random() - 0.5) * 0.1;
+        logProbs[t] = -3 - Math.random() * 2; // typical log prob range
+        values[t] = Math.random() * 0.5 - 0.25;
+        dones[t] = Math.random() < 0.05 ? 1 : 0; // 5% done rate
+    }
+
+    const { advantages, returns } = computeGAE(rewards, values, dones, 0.1);
+
+    // Run ONE epoch of PPO on this data (using a simplified version)
+    const optimizer = tf.train.adam(LEARNING_RATE);
+
+    const statesTensor = tf.tensor2d(states, [T, NUM_INPUTS]);
+    const oldLogProbsTensor = tf.tensor1d(logProbs);
+
+    // Normalize advantages
+    let advMean = 0;
+    for (let i = 0; i < T; i++) advMean += advantages[i];
+    advMean /= T;
+    let advStd = 0;
+    for (let i = 0; i < T; i++) advStd += (advantages[i] - advMean) ** 2;
+    advStd = Math.sqrt(advStd / T + 1e-8);
+    const normAdv = new Float32Array(T);
+    for (let i = 0; i < T; i++) normAdv[i] = (advantages[i] - advMean) / advStd;
+
+    const actionBits = new Float32Array(T * NUM_OUTPUTS);
+    for (let t = 0; t < T; t++) {
+        for (let b = 0; b < NUM_OUTPUTS; b++) {
+            actionBits[t * NUM_OUTPUTS + b] = (actions[t] & BUTTON_BITS[b]) ? 1 : 0;
+        }
+    }
+    const actionsTensor = tf.tensor2d(actionBits, [T, NUM_OUTPUTS]);
+    const advTensor = tf.tensor1d(normAdv);
+    const returnsTensor = tf.tensor1d(returns);
+
+    let lossValue = null;
+    optimizer.minimize(() => {
+        const [actorOut, criticOut] = model.apply(statesTensor, { training: true });
+        const probs = actorOut.clipByValue(1e-8, 1 - 1e-8);
+        const vals = criticOut.squeeze([-1]);
+        const logP = actionsTensor.mul(probs.log()).add(
+            actionsTensor.mul(-1).add(1).mul(probs.mul(-1).add(1).log())
+        ).sum(-1);
+        const ratio = logP.sub(oldLogProbsTensor).exp();
+        const surr1 = ratio.mul(advTensor);
+        const surr2 = ratio.clipByValue(1 - CLIP_EPSILON, 1 + CLIP_EPSILON).mul(advTensor);
+        const policyLoss = surr1.minimum(surr2).mean().mul(-1);
+        const valueLoss = returnsTensor.sub(vals).square().mean().mul(VALUE_LOSS_COEFF);
+        const entropy = probs.mul(probs.log()).add(
+            probs.mul(-1).add(1).mul(probs.mul(-1).add(1).log())
+        ).mul(-1).mean();
+        const loss = policyLoss.add(valueLoss).sub(entropy.mul(ENTROPY_COEFF));
+        lossValue = loss.dataSync()[0];
+        return loss;
+    }, true);
+
+    assert(isFinite(lossValue), `Loss is finite after PPO update: ${lossValue.toFixed(6)}`);
+
+    const weightsAfter = extractWeights(model);
+    let maxWeightChange = 0;
+    let nanCount = 0;
+    for (let i = 0; i < TOTAL_WEIGHTS; i++) {
+        if (!isFinite(weightsAfter[i])) nanCount++;
+        const change = Math.abs(weightsAfter[i] - weightsBefore[i]);
+        if (change > maxWeightChange) maxWeightChange = change;
+    }
+    assert(nanCount === 0, `No NaN/Infinity in weights after update (${nanCount} bad values)`);
+    assert(maxWeightChange > 0, `Weights actually changed: max change = ${maxWeightChange.toExponential(3)}`);
+    assert(maxWeightChange < 1.0, `Weight changes are reasonable (max ${maxWeightChange.toExponential(3)} < 1.0)`);
+    INFO(`Loss: ${lossValue.toFixed(6)}, max weight change: ${maxWeightChange.toExponential(3)}`);
+
+    // Cleanup
+    statesTensor.dispose(); oldLogProbsTensor.dispose(); actionsTensor.dispose();
+    advTensor.dispose(); returnsTensor.dispose(); optimizer.dispose(); model.dispose();
+}
+
+// ================================================================
+//  TEST 11: DB Weight Save/Load Round-Trip
+// ================================================================
+async function testDBWeightRoundTrip() {
+    HEADER('TEST 11: DB Weight Save/Load Round-Trip');
+
+    const Database = require('better-sqlite3');
+    const dbPath = path.join(__dirname, 'test-roundtrip.db');
+
+    // Clean up any previous test DB
+    if (fs.existsSync(dbPath)) fs.unlinkSync(dbPath);
+
+    const db = new Database(dbPath);
+    db.exec(`CREATE TABLE IF NOT EXISTS ppo_weights (update_id INTEGER PRIMARY KEY, weights BLOB)`);
+    const insert = db.prepare('INSERT OR REPLACE INTO ppo_weights VALUES (?, ?)');
+    const get = db.prepare('SELECT * FROM ppo_weights ORDER BY update_id DESC LIMIT 1');
+
+    // Create model, get weights
+    const model = createModel();
+    const originalWeights = extractWeights(model);
+
+    // Save to DB
+    const buf = Buffer.from(originalWeights.buffer, originalWeights.byteOffset, originalWeights.byteLength);
+    insert.run(1, buf);
+    INFO(`Saved ${originalWeights.length} weights to DB (${buf.length} bytes)`);
+
+    // Load from DB
+    const row = get.get();
+    const loadedWeights = new Float32Array(new Uint8Array(row.weights).buffer);
+
+    assert(loadedWeights.length === originalWeights.length, `Loaded weight count matches: ${loadedWeights.length}`);
+
+    let maxDiff = 0;
+    for (let i = 0; i < originalWeights.length; i++) {
+        const diff = Math.abs(originalWeights[i] - loadedWeights[i]);
+        if (diff > maxDiff) maxDiff = diff;
+    }
+    assertClose(maxDiff, 0, 1e-7, `Weights survive DB round-trip (max diff)`);
+
+    // Load back into a fresh model and verify outputs match
+    const model2 = createModel();
+    loadWeightsIntoModel(model2, loadedWeights);
+
+    const testInput = new Float32Array(NUM_INPUTS).fill(0.3);
+    const out1 = forwardPass(testInput, originalWeights);
+    const out2 = forwardPass(testInput, extractWeights(model2));
+
+    let maxProbDiff = 0;
+    for (let i = 0; i < NUM_OUTPUTS; i++) {
+        const diff = Math.abs(out1.probs[i] - out2.probs[i]);
+        if (diff > maxProbDiff) maxProbDiff = diff;
+    }
+    assertClose(maxProbDiff, 0, 1e-6, `Model output matches after DB round-trip`);
+    assertClose(out1.value, out2.value, 1e-5, `Value output matches after DB round-trip`);
+
+    // Cleanup
+    model.dispose(); model2.dispose();
+    db.close();
+    fs.unlinkSync(dbPath);
+}
+
+// ================================================================
+//  TEST 12: Replay Output Compatibility
+// ================================================================
+async function testReplayOutputCompat() {
+    HEADER('TEST 12: Replay Output Compatibility (bot.js format)');
+
+    const nes = bootNES();
+    advanceToGameplay(nes);
+    const saveStateStr = JSON.stringify(nes.toJSONLite());
+
+    // Create a model and replay
+    const model = createModel();
+    const weights = extractWeights(model);
+
+    // Run deterministic replay for 100 frames
+    const state = JSON.parse(saveStateStr);
+    nes.fromJSONLite(state);
+    const inputsRecord = [];
+    let prevBitmask = 0;
+    for (let f = 0; f < 100; f++) {
+        const netInputs = readNetworkInputs(nes);
+        const { probs } = forwardPass(netInputs, weights);
+        const bitmask = probsToBitmask(probs);
+        inputsRecord.push(bitmask);
+        if (bitmask !== prevBitmask) {
+            const changed = bitmask ^ prevBitmask;
+            for (let bit = 0; bit < 8; bit++) {
+                if (changed & (1 << bit)) {
+                    if (bitmask & (1 << bit)) nes.buttonDown(1, BIT_TO_JSNES[bit]);
+                    else nes.buttonUp(1, BIT_TO_JSNES[bit]);
+                }
+            }
+            prevBitmask = bitmask;
+        }
+        nes.frame();
+    }
+    const replayInputs = new Uint8Array(inputsRecord);
+
+    // Convert to events (the format bot.js expects)
+    const JSNES_TO_BOT = { 0: 8, 1: 0, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7 };
+    const events = [];
+    let prev = 0;
+    for (let f = 0; f < replayInputs.length; f++) {
+        const cur = replayInputs[f];
+        const changed = cur ^ prev;
+        if (changed === 0) continue;
+        for (let bit = 0; bit < 8; bit++) {
+            if (changed & (1 << bit)) {
+                const pressed = (cur & (1 << bit)) ? 1 : 0;
+                events.push([f, JSNES_TO_BOT[BIT_TO_JSNES[bit]], pressed]);
+            }
+        }
+        prev = cur;
+    }
+
+    assert(Array.isArray(events), 'Events is an array');
+    assert(events.length > 0, `Events has entries: ${events.length}`);
+
+    // Check event format: [frame, button, pressed]
+    let allValid = true;
+    for (const evt of events) {
+        if (!Array.isArray(evt) || evt.length !== 3) { allValid = false; break; }
+        if (typeof evt[0] !== 'number' || typeof evt[1] !== 'number' || typeof evt[2] !== 'number') { allValid = false; break; }
+        if (evt[0] < 0 || evt[0] >= 100) { allValid = false; break; }
+        if (evt[2] !== 0 && evt[2] !== 1) { allValid = false; break; }
+    }
+    assert(allValid, 'All events have valid [frame, button, pressed] format');
+
+    // Build the JSON structure that saveBest would write
+    const bestSeq = {
+        id: 'test-replay',
+        phase: 'ppo',
+        events,
+        bestX: getMarioX(nes),
+        completed: false,
+    };
+    assert(typeof JSON.stringify(bestSeq) === 'string', 'best-sequence.json structure is JSON-serializable');
+    INFO(`Replay: ${events.length} events, final X=${bestSeq.bestX}`);
+
+    model.dispose();
+}
+
+// ================================================================
 //  MAIN
 // ================================================================
 
 async function main() {
     console.log(`\n${C.bold}${C.white}  Mario PPO Pipeline Diagnostic Test${C.reset}`);
-    console.log(`${C.dim}  Testing: inputs, forward pass, actions, rewards, GAE, rollout${C.reset}\n`);
+    console.log(`${C.dim}  Testing: inputs, forward pass, actions, rewards, GAE, rollout, tiles, reset, PPO stability, DB, replay${C.reset}\n`);
 
     const startTime = Date.now();
 
@@ -1100,6 +1520,12 @@ async function main() {
     await testRewardComputation();
     await testGAE();
     await testRolloutSanity();
+    await testTileGridCorrectness();
+    await testEpisodeReset();
+    await testRewardScaleSanity();
+    await testPPOUpdateStability();
+    await testDBWeightRoundTrip();
+    await testReplayOutputCompat();
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
