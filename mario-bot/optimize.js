@@ -162,8 +162,8 @@ function readNetworkInputs(nes) {
     let velY = mem[0x009F]; if (velY > 127) velY -= 256;
 
     inputs[idx++] = marioY / 240;
-    inputs[idx++] = Math.max(0, Math.min(1, (velX + 40) / 80));
-    inputs[idx++] = Math.max(0, Math.min(1, (velY + 40) / 80));
+    inputs[idx++] = Math.max(0, Math.min(1, (velX + 5) / 50));    // velX: -5 to 45 → 0 to 1
+    inputs[idx++] = Math.max(0, Math.min(1, (velY + 5) / 10));    // velY: -5 to +5 → 0 to 1
     inputs[idx++] = (mem[0x009F] === 0 && marioY >= 160) ? 1 : 0;
     inputs[idx++] = mem[0x0756] > 0 ? 1 : 0;
 

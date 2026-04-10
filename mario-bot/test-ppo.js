@@ -193,8 +193,8 @@ function readNetworkInputs(nes) {
     let velY = mem[0x009F]; if (velY > 127) velY -= 256;
 
     inputs[idx++] = marioY / 240;
-    inputs[idx++] = Math.max(0, Math.min(1, (velX + 40) / 80));
-    inputs[idx++] = Math.max(0, Math.min(1, (velY + 40) / 80));
+    inputs[idx++] = Math.max(0, Math.min(1, (velX + 5) / 50));
+    inputs[idx++] = Math.max(0, Math.min(1, (velY + 5) / 10));
     inputs[idx++] = (mem[0x009F] === 0 && marioY >= 160) ? 1 : 0;
     inputs[idx++] = mem[0x0756] > 0 ? 1 : 0;
 
@@ -381,8 +381,8 @@ function printInputs(inputs, label) {
 
     // Mario state (indices 0-4)
     console.log(`    Mario Y (norm):     ${inputs[0].toFixed(4)}  (raw Y = ${(inputs[0] * 240).toFixed(0)})`);
-    console.log(`    VelX (norm):        ${inputs[1].toFixed(4)}  (raw velX = ${(inputs[1] * 80 - 40).toFixed(1)})`);
-    console.log(`    VelY (norm):        ${inputs[2].toFixed(4)}  (raw velY = ${(inputs[2] * 80 - 40).toFixed(1)})`);
+    console.log(`    VelX (norm):        ${inputs[1].toFixed(4)}  (raw velX = ${(inputs[1] * 50 - 5).toFixed(1)})`);
+    console.log(`    VelY (norm):        ${inputs[2].toFixed(4)}  (raw velY = ${(inputs[2] * 10 - 5).toFixed(1)})`);
     console.log(`    On ground:          ${inputs[3].toFixed(0)}`);
     console.log(`    Is big:             ${inputs[4].toFixed(0)}`);
 
@@ -1153,7 +1153,50 @@ async function testTileGridCorrectness() {
 }
 
 // ================================================================
-//  TEST 7d: Nametable boundary — tiles correct across page boundary
+//  TEST 7d: Velocity normalization covers actual game ranges
+// ================================================================
+async function testVelocityNormalization() {
+    HEADER('TEST 7d: Velocity Normalization');
+
+    const nes = bootNES();
+    advanceToGameplay(nes);
+
+    // Standing still
+    const standInputs = readNetworkInputs(nes);
+    INFO(`Standing: velX=${standInputs[1].toFixed(3)} velY=${standInputs[2].toFixed(3)} onGround=${standInputs[3]}`);
+    assert(standInputs[3] === 1, 'onGround=1 when standing');
+
+    // Run right for 20 frames to build speed
+    applyBitmask(nes, BIT.RIGHT | BIT.B, 0);
+    for (let i = 0; i < 20; i++) nes.frame();
+    const runInputs = readNetworkInputs(nes);
+    INFO(`Running: velX=${runInputs[1].toFixed(3)} velY=${runInputs[2].toFixed(3)} onGround=${runInputs[3]}`);
+    assert(runInputs[1] > 0.3, `VelX > 0.3 when running right: ${runInputs[1].toFixed(3)}`);
+    assert(runInputs[1] < 0.95, `VelX < 0.95 (not clipped at max): ${runInputs[1].toFixed(3)}`);
+
+    // Jump
+    applyBitmask(nes, BIT.RIGHT | BIT.B | BIT.A, BIT.RIGHT | BIT.B);
+    for (let i = 0; i < 10; i++) nes.frame();
+    const jumpInputs = readNetworkInputs(nes);
+    INFO(`Jumping: velX=${jumpInputs[1].toFixed(3)} velY=${jumpInputs[2].toFixed(3)} onGround=${jumpInputs[3]}`);
+    assert(jumpInputs[2] < 0.3, `VelY < 0.3 when jumping upward: ${jumpInputs[2].toFixed(3)}`);
+    assert(jumpInputs[3] === 0, 'onGround=0 during jump');
+
+    // Wait for falling phase (release A, wait ~18 frames — past apex but before landing)
+    applyBitmask(nes, BIT.RIGHT | BIT.B, BIT.RIGHT | BIT.B | BIT.A);
+    for (let i = 0; i < 18; i++) nes.frame();
+    const fallInputs = readNetworkInputs(nes);
+    INFO(`Falling: velX=${fallInputs[1].toFixed(3)} velY=${fallInputs[2].toFixed(3)} onGround=${fallInputs[3]}`);
+    assert(fallInputs[2] > 0.55, `VelY > 0.55 when falling: ${fallInputs[2].toFixed(3)}`);
+
+    // Key: jump vs fall must be clearly distinguishable
+    const jumpFallDiff = Math.abs(jumpInputs[2] - fallInputs[2]);
+    assert(jumpFallDiff > 0.2, `Jump vs fall velY clearly different: diff=${jumpFallDiff.toFixed(3)} (need > 0.2)`);
+    applyBitmask(nes, 0, BIT.RIGHT | BIT.B);
+}
+
+// ================================================================
+//  TEST 7e: Nametable boundary — tiles correct across page boundary
 // ================================================================
 async function testNametableBoundary() {
     HEADER('TEST 7d: Nametable Boundary Correctness');
@@ -1582,6 +1625,7 @@ async function main() {
     await testGAE();
     await testRolloutSanity();
     await testTileGridCorrectness();
+    await testVelocityNormalization();
     await testNametableBoundary();
     await testStallPenalty();
     await testEpisodeReset();
