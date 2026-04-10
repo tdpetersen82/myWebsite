@@ -48,13 +48,13 @@ const CLIP_EPSILON = 0.2;
 const GAE_LAMBDA = 0.95;
 const DISCOUNT_GAMMA = 0.99;
 const LEARNING_RATE = 3e-4;
-const ENTROPY_COEFF = 0.01;
+const ENTROPY_COEFF = 0.05;       // keep exploring — 0.01 converged before learning to jump
 const VALUE_LOSS_COEFF = 0.5;
 const MAX_GRAD_NORM = 0.5;
 
 // Reward design (from GOAL.md: progress good, dying bad, timer bad)
 const REWARD_PROGRESS = 0.01;    // per pixel of rightward movement
-const REWARD_DEATH = -1.0;
+const REWARD_DEATH = -5.0;       // dying must hurt more than the progress earned reaching that point
 const REWARD_TIME_PENALTY = -0.001;  // per frame — standing still costs
 const REWARD_COMPLETION = 5.0;
 
@@ -176,9 +176,9 @@ function readNetworkInputs(nes) {
             const page = Math.floor(worldX / 256);
             const localX = worldX % 256;
             const tileCol = Math.floor(localX / 8);
-            const nt = nes.ppu.nameTable[(page % 2) * 2];
+            const nt = nes.ppu.nameTable[page % 2];
             const tile = nt ? nt.tile[r * 32 + tileCol] : 0;
-            inputs[idx++] = tile !== EMPTY_TILE ? 1 : 0;
+            inputs[idx++] = (tile !== 0x24 && tile !== 0x00) ? 1 : 0;
         }
     }
 
