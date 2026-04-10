@@ -1689,9 +1689,11 @@ async function testOptimizerLifecycle() {
     const code = fs.readFileSync(path.join(__dirname, 'optimize.js'), 'utf8');
 
     const adamCreates = (code.match(/tf\.train\.adam/g) || []).length;
-    const disposes = (code.match(/optimizer\.dispose/g) || []).length;
     assert(adamCreates > 0, `Adam optimizer is created (${adamCreates} calls)`);
-    assert(disposes >= adamCreates, `Optimizer is disposed after each update (${disposes} dispose >= ${adamCreates} create)`);
+
+    // Optimizer must persist across updates (not created/destroyed each call)
+    const persistentOptimizer = code.includes('let ppoOptimizer') || code.includes('var ppoOptimizer');
+    assert(persistentOptimizer, 'Optimizer persists across updates (module-level variable)');
 
     // Check tensor cleanup in ppoUpdate
     const hasMinimize = code.includes('optimizer.minimize');

@@ -519,8 +519,13 @@ function computeGAE(rewards, values, dones, lastValue) {
 
 // ==================== PPO UPDATE ====================
 
+// Persistent optimizer — Adam accumulates momentum/variance across all updates.
+// Creating a new one per call was resetting these statistics, making it essentially SGD.
+let ppoOptimizer = null;
+
 function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
-    const optimizer = tf.train.adam(LEARNING_RATE);
+    if (!ppoOptimizer) ppoOptimizer = tf.train.adam(LEARNING_RATE);
+    const optimizer = ppoOptimizer;
     const T = advantages.length;
 
     // Normalize advantages
@@ -626,7 +631,7 @@ function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
     oldLogProbsTensor.dispose();
     advTensor.dispose();
     returnsTensor.dispose();
-    optimizer.dispose();
+    // Don't dispose optimizer — it persists across updates for momentum accumulation
 
     return {
         policyLoss: totalPolicyLoss / batchCount,
