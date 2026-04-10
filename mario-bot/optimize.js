@@ -19,13 +19,13 @@ const STALL_FRAMES = 300;
 const LEVEL_WIDTH = 3200;
 const NUM_WORKERS = Math.max(1, os.cpus().length - 1);
 const POPULATION_SIZE = 200;
-const NUM_INPUTS = 142; // 5 mario + 128 tiles (16 cols × 8 rows, full screen) + 8 enemies (4×2) + 1 time
-const NUM_HIDDEN1 = 32; // first hidden layer: compress raw inputs into features
-const NUM_HIDDEN2 = 16; // second hidden layer: combine features into decisions
+const NUM_INPUTS = 16;  // 5 mario + 3 gap/wall/ceiling + 4 enemies (2×2) + 3 ground profile + 1 time
+const NUM_HIDDEN1 = 8;  // first hidden layer
+const NUM_HIDDEN2 = 6;  // second hidden layer
 const NUM_OUTPUTS = 6;
-const TOTAL_WEIGHTS = (NUM_INPUTS * NUM_HIDDEN1) + (NUM_HIDDEN1 * NUM_HIDDEN2) + (NUM_HIDDEN2 * NUM_OUTPUTS) + NUM_HIDDEN1 + NUM_HIDDEN2 + NUM_OUTPUTS; // 5206
+const TOTAL_WEIGHTS = (NUM_INPUTS * NUM_HIDDEN1) + (NUM_HIDDEN1 * NUM_HIDDEN2) + (NUM_HIDDEN2 * NUM_OUTPUTS) + NUM_HIDDEN1 + NUM_HIDDEN2 + NUM_OUTPUTS; // 232
 const ELITE_COUNT = 20;           // top 10%
-const MUTATION_RATE = 0.10;       // % of weights mutated per child
+const MUTATION_RATE = 0.05;       // % of weights mutated per child (~12 weights at 232 total)
 const MUTATION_STRENGTH = 0.3;    // magnitude of weight perturbation
 const TOURNAMENT_SIZE = 5;
 const STAGNATION_THRESHOLD = 50;  // gens without improvement before boosting mutation
@@ -80,14 +80,14 @@ function patchJsnesLite(jsnes) {
 // ================================================================
 
 function networkInfer(inputs, weights) {
-    // Two hidden layers: 142 → 32 → 16 → 6
-    // Layout: [I→H1 (142×32)] [H1→H2 (32×16)] [H2→O (16×6)] [H1 bias (32)] [H2 bias (16)] [O bias (6)]
-    const ih1End = NUM_INPUTS * NUM_HIDDEN1;                    // 4544
-    const h1h2End = ih1End + NUM_HIDDEN1 * NUM_HIDDEN2;         // 5056
-    const h2oEnd = h1h2End + NUM_HIDDEN2 * NUM_OUTPUTS;         // 5152
-    const h1bEnd = h2oEnd + NUM_HIDDEN1;                        // 5184
-    const h2bEnd = h1bEnd + NUM_HIDDEN2;                        // 5200
-    // obEnd = h2bEnd + NUM_OUTPUTS = 5206
+    // Two hidden layers: 16 → 8 → 6 → 6
+    // Layout: [I→H1 (16×8)] [H1→H2 (8×6)] [H2→O (6×6)] [H1 bias (8)] [H2 bias (6)] [O bias (6)]
+    const ih1End = NUM_INPUTS * NUM_HIDDEN1;                    // 128
+    const h1h2End = ih1End + NUM_HIDDEN1 * NUM_HIDDEN2;         // 176
+    const h2oEnd = h1h2End + NUM_HIDDEN2 * NUM_OUTPUTS;         // 212
+    const h1bEnd = h2oEnd + NUM_HIDDEN1;                        // 220
+    const h2bEnd = h1bEnd + NUM_HIDDEN2;                        // 226
+    // obEnd = h2bEnd + NUM_OUTPUTS = 232
 
     // Hidden layer 1: compress inputs into features (ReLU activation)
     const hidden1 = new Float32Array(NUM_HIDDEN1);
@@ -96,17 +96,17 @@ function networkInfer(inputs, weights) {
         for (let i = 0; i < NUM_INPUTS; i++) {
             sum += inputs[i] * weights[i * NUM_HIDDEN1 + h];
         }
-        hidden1[h] = sum > 0 ? sum : 0; // ReLU — preserves signal magnitude
+        hidden1[h] = sum > 0 ? sum : sum * 0.01; // Leaky ReLU — neurons never fully die
     }
 
-    // Hidden layer 2: combine features (ReLU activation)
+    // Hidden layer 2: combine features (Leaky ReLU activation)
     const hidden2 = new Float32Array(NUM_HIDDEN2);
     for (let h = 0; h < NUM_HIDDEN2; h++) {
         let sum = weights[h1bEnd + h]; // H2 bias
         for (let h1 = 0; h1 < NUM_HIDDEN1; h1++) {
             sum += hidden1[h1] * weights[ih1End + h1 * NUM_HIDDEN2 + h];
         }
-        hidden2[h] = sum > 0 ? sum : 0; // ReLU
+        hidden2[h] = sum > 0 ? sum : sum * 0.01; // Leaky ReLU
     }
 
     // Output layer
@@ -125,43 +125,67 @@ function networkInfer(inputs, weights) {
 function readNetworkInputs(nes, frame, maxFrames) {
     const mem = nes.cpu.mem;
     const inputs = new Float32Array(NUM_INPUTS);
+    const EMPTY_TILE = 0x24;
 
-    // Mario state (5)
+    // === Mario state (5) ===
     const marioX = mem[0x006D] * 256 + mem[0x0086];
     const marioY = mem[0x00CE];
     let velX = mem[0x0057]; if (velX > 127) velX -= 256;
     let velY = mem[0x009F]; if (velY > 127) velY -= 256;
 
-    inputs[0] = marioY / 240;
-    inputs[1] = Math.max(0, Math.min(1, (velX + 40) / 80));
-    inputs[2] = Math.max(0, Math.min(1, (velY + 40) / 80));
-    inputs[3] = (mem[0x009F] === 0 && marioY >= 160) ? 1 : 0; // onGround
-    inputs[4] = mem[0x0756] > 0 ? 1 : 0; // isBig
+    inputs[0] = marioY / 240;                                    // Y position
+    inputs[1] = Math.max(0, Math.min(1, (velX + 40) / 80));      // horizontal velocity
+    inputs[2] = Math.max(0, Math.min(1, (velY + 40) / 80));      // vertical velocity
+    inputs[3] = (mem[0x009F] === 0 && marioY >= 160) ? 1 : 0;    // on ground?
+    inputs[4] = mem[0x0756] > 0 ? 1 : 0;                         // is big?
 
-    // Tiles ahead: 16 columns x 8 rows = 128 values (full screen width, gameplay height)
-    // 8 rows covering the full gameplay area from underground to above platforms
-    // Rows (every 2 tile rows): 27(Y=216), 25(Y=200), 23(Y=184), 21(Y=168),
-    //                           19(Y=152), 17(Y=136), 15(Y=120), 13(Y=104)
-    // Columns: 16 at 16px spacing (one full screen ahead = 256px)
-    const EMPTY_TILE = 0x24;
-    const tileRows = [26, 24, 22, 20, 18, 16, 14, 12]; // bottom to top: ground surface up to sky
-    const tileCols = 16;
-
-    for (let col = 0; col < tileCols; col++) {
-        const checkWorldX = marioX + (col + 1) * 16;
-        const checkPage = Math.floor(checkWorldX / 256);
-        const checkLocalX = checkWorldX % 256;
-        const tileCol = Math.floor(checkLocalX / 8);
-        const ntIdx = checkPage % 2;
-        const nt = nes.ppu.nameTable[ntIdx * 2];
-        for (let rowIdx = 0; rowIdx < tileRows.length; rowIdx++) {
-            const tileRow = tileRows[rowIdx];
-            const tileVal = nt ? nt.tile[tileRow * 32 + tileCol] : 0;
-            inputs[5 + col * tileRows.length + rowIdx] = (tileVal !== EMPTY_TILE) ? 1 : 0;
-        }
+    // === Summarized terrain ahead (3) ===
+    // Scan tiles at Mario's foot level and head level for the next 4 columns (64px ahead)
+    function getTile(worldX, tileRow) {
+        const page = Math.floor(worldX / 256);
+        const localX = worldX % 256;
+        const tileCol = Math.floor(localX / 8);
+        const nt = nes.ppu.nameTable[(page % 2) * 2];
+        return nt ? nt.tile[tileRow * 32 + tileCol] : 0;
     }
 
-    // 4 nearest enemies AHEAD of Mario (only positive relativeX)
+    const marioTileRow = Math.floor(marioY / 8);
+    const groundRow = 26; // ground level tile row
+
+    // Gap ahead: is there a gap in the ground within 64px?
+    let gapAhead = 0;
+    for (let col = 1; col <= 4; col++) {
+        const wx = marioX + col * 16;
+        if (getTile(wx, groundRow) === EMPTY_TILE && getTile(wx, groundRow - 2) === EMPTY_TILE) {
+            gapAhead = 1 - (col - 1) / 4; // closer gap = higher value
+            break;
+        }
+    }
+    inputs[5] = gapAhead;
+
+    // Wall ahead: solid tile at Mario's height within 48px?
+    let wallAhead = 0;
+    for (let col = 1; col <= 3; col++) {
+        const wx = marioX + col * 16;
+        const row = Math.min(29, Math.max(0, marioTileRow));
+        if (getTile(wx, row) !== EMPTY_TILE) {
+            wallAhead = 1 - (col - 1) / 3;
+            break;
+        }
+    }
+    inputs[6] = wallAhead;
+
+    // Ceiling above: solid tile above Mario within 32px?
+    let ceilingAbove = 0;
+    for (let row = marioTileRow - 1; row >= Math.max(0, marioTileRow - 4); row--) {
+        if (getTile(marioX, row) !== EMPTY_TILE) {
+            ceilingAbove = 1;
+            break;
+        }
+    }
+    inputs[7] = ceilingAbove;
+
+    // === 2 nearest enemies ahead (4) ===
     const enemies = [];
     const ENEMY_SCREEN_X = [0x0087, 0x008B, 0x008F, 0x0093, 0x0097];
     for (let e = 0; e < 5; e++) {
@@ -170,30 +194,43 @@ function readNetworkInputs(nes, frame, maxFrames) {
             const eY = mem[0x00CF + e];
             if (eY <= 240) {
                 const relX = eX - marioX;
-                const relY = eY - marioY;
-                if (relX > -16 && relX < 256) { // only enemies ahead or barely behind (-16px to +256px)
-                    enemies.push({ relX, relY, dist: relX });
+                if (relX > -16 && relX < 256) {
+                    enemies.push({ relX, relY: eY - marioY });
                 }
             }
         }
     }
-    enemies.sort((a, b) => a.dist - b.dist);
+    enemies.sort((a, b) => a.relX - b.relX);
 
-    for (let e = 0; e < 4; e++) {
-        const baseIdx = 133 + e * 2; // 5 mario + 128 tiles = 133
+    for (let e = 0; e < 2; e++) {
+        const baseIdx = 8 + e * 2;
         if (e < enemies.length) {
-            inputs[baseIdx] = Math.max(0, Math.min(1, enemies[e].relX / 256)); // 0=on top, 1=far ahead
-            inputs[baseIdx + 1] = Math.max(0, Math.min(1, (enemies[e].relY + 120) / 240)); // vertical offset
+            inputs[baseIdx] = Math.max(0, Math.min(1, enemies[e].relX / 256));
+            inputs[baseIdx + 1] = Math.max(0, Math.min(1, (enemies[e].relY + 120) / 240));
         } else {
-            inputs[baseIdx] = 1.0;     // far away (no enemy)
-            inputs[baseIdx + 1] = 0.5; // neutral Y
+            inputs[baseIdx] = 1.0;
+            inputs[baseIdx + 1] = 0.5;
         }
     }
 
-    // Time pressure (1)
-    inputs[NUM_INPUTS - 1] = Math.min(1, frame / maxFrames);
+    // === Ground profile ahead (3) ===
+    // Height of ground at 32px, 64px, 96px ahead (normalized)
+    for (let i = 0; i < 3; i++) {
+        const wx = marioX + (i + 1) * 32;
+        let groundHeight = 0;
+        for (let row = 28; row >= 10; row--) {
+            if (getTile(wx, row) !== EMPTY_TILE) {
+                groundHeight = (28 - row) / 18; // 0 = ground level, 1 = high platform
+                break;
+            }
+        }
+        inputs[12 + i] = groundHeight;
+    }
 
-    // Sanitize: replace any NaN/Infinity with 0 to prevent poison propagation
+    // === Time pressure (1) ===
+    inputs[15] = Math.min(1, frame / maxFrames);
+
+    // Sanitize
     for (let i = 0; i < NUM_INPUTS; i++) {
         if (!isFinite(inputs[i])) inputs[i] = 0;
     }
@@ -931,7 +968,7 @@ async function main() {
 
     console.log(`${C.cyan}=== NEUROEVOLUTION ===${C.reset}`);
     console.log(`${C.dim}Population: ${POPULATION_SIZE} | Inputs: ${NUM_INPUTS} | Hidden: ${NUM_HIDDEN1}+${NUM_HIDDEN2} | Outputs: ${NUM_OUTPUTS} | Weights: ${TOTAL_WEIGHTS}${C.reset}`);
-    console.log(`${C.dim}Elite: ${ELITE_COUNT} | Mutation: ${(MUTATION_RATE*100).toFixed(0)}% @ ${MUTATION_STRENGTH} | Tournament: ${TOURNAMENT_SIZE}${C.reset}`);
+    console.log(`${C.dim}Elite: ${ELITE_COUNT} | Mutation-only (no crossover) | Rate: ${(MUTATION_RATE*100).toFixed(0)}% @ ${MUTATION_STRENGTH} | Tournament: ${TOURNAMENT_SIZE}${C.reset}`);
     console.log(`${C.dim}Stagnation boost: ${STAGNATION_THRESHOLD} gens | Diversity injection: ${DIVERSITY_INJECTION_THRESHOLD} gens${C.reset}`);
     console.log();
 
@@ -1051,26 +1088,23 @@ async function main() {
             nextPop.push(population[i].clone());
         }
 
-        // Mutated elite (30%)
-        const numMutatedElite = Math.floor(POPULATION_SIZE * 0.30);
+        // Mutated elite — light mutations on top performers (45%)
+        const numMutatedElite = Math.floor(POPULATION_SIZE * 0.45);
         for (let i = 0; i < numMutatedElite; i++) {
             const parent = population[i % ELITE_COUNT].clone();
             parent.mutate(mutationRate, MUTATION_STRENGTH);
             nextPop.push(parent);
         }
 
-        // Crossover (40%)
-        const numCrossover = Math.floor(POPULATION_SIZE * 0.40);
-        for (let i = 0; i < numCrossover; i++) {
-            const a = NeuralNetwork.tournamentSelect(population, sortedFitnesses, TOURNAMENT_SIZE);
-            const b = NeuralNetwork.tournamentSelect(population, sortedFitnesses, TOURNAMENT_SIZE);
-            const child = NeuralNetwork.crossover(a, b);
-            // Light mutation on crossover children
-            if (Math.random() < 0.5) child.mutate(mutationRate * 0.5, MUTATION_STRENGTH * 0.5);
-            nextPop.push(child);
+        // Tournament mutants — pick good networks from broader population, mutate (40%)
+        const numTournamentMutants = Math.floor(POPULATION_SIZE * 0.40);
+        for (let i = 0; i < numTournamentMutants; i++) {
+            const parent = NeuralNetwork.tournamentSelect(population, sortedFitnesses, TOURNAMENT_SIZE).clone();
+            parent.mutate(mutationRate, MUTATION_STRENGTH);
+            nextPop.push(parent);
         }
 
-        // Fresh random (fill remaining ~20%)
+        // Fresh random (fill remaining ~5%)
         while (nextPop.length < POPULATION_SIZE) {
             nextPop.push(new NeuralNetwork());
         }
