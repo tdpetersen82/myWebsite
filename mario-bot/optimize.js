@@ -363,6 +363,7 @@ if (!isMainThread) {
             const stalled = (t - lastProgressFrame) > STALL_FRAMES;
 
             if (dead) reward += REWARD_DEATH;
+            if (stalled) reward += REWARD_DEATH;  // stalling = giving up = as bad as dying
             if (completed) reward += REWARD_COMPLETION;
 
             rewards[t] = reward;
