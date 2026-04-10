@@ -15,21 +15,19 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // ==================== CONFIG ====================
 
 const MAX_FRAMES = 8000;
-const STALL_FRAMES = 600; // 10 seconds — learning should figure out stalling is bad
+const STALL_FRAMES = 120; // 2 seconds — fast eval, tight feedback loop
 const LEVEL_WIDTH = 3200;
 const NUM_WORKERS = Math.max(1, os.cpus().length - 1);
-const POPULATION_SIZE = 200;
+const POPULATION_SIZE = 500;
 const NUM_INPUTS = 16;  // 5 mario + 3 gap/wall/ceiling + 4 enemies (2×2) + 3 ground profile + 1 time
 const NUM_HIDDEN1 = 8;  // first hidden layer
 const NUM_HIDDEN2 = 6;  // second hidden layer
 const NUM_OUTPUTS = 6;
 const TOTAL_WEIGHTS = (NUM_INPUTS * NUM_HIDDEN1) + (NUM_HIDDEN1 * NUM_HIDDEN2) + (NUM_HIDDEN2 * NUM_OUTPUTS) + NUM_HIDDEN1 + NUM_HIDDEN2 + NUM_OUTPUTS; // 232
-const ELITE_COUNT = 20;           // top 10%
-const MUTATION_RATE = 0.05;       // % of weights mutated per child (~12 weights at 232 total)
-const MUTATION_STRENGTH = 0.3;    // magnitude of weight perturbation
+const ELITE_COUNT = 50;           // top 10% survive unchanged
+const MUTATION_RATE = 0.08;       // % of weights mutated per child
+const MUTATION_STRENGTH = 0.5;    // magnitude of weight perturbation
 const TOURNAMENT_SIZE = 5;
-const STAGNATION_THRESHOLD = 50;  // gens without improvement before boosting mutation
-const DIVERSITY_INJECTION_THRESHOLD = 200; // gens without improvement before mass reset
 
 // Hall of fame
 const GOLDEN_DIVERSITY_THRESHOLD = 30;
@@ -304,6 +302,7 @@ if (!isMainThread) {
         let lastProgressFrame = 0;
         let prevBitmask = 0;
 
+        let cumX = 0; // cumulative position — dense reward signal
         for (let frame = 0; frame < maxFrames; frame++) {
             // Read game state -> network inference -> apply buttons
             const inputs = readNetworkInputs(nes, frame, maxFrames);
@@ -327,6 +326,7 @@ if (!isMainThread) {
             // Read position and velocity
             const mem = nes.cpu.mem;
             const x = mem[0x006D] * 256 + mem[0x0086];
+            cumX += x; // accumulate position every frame
             if (x > bestX) { bestX = x; lastProgressFrame = frame; }
 
             // Read game timer (BCD: hundreds, tens, ones)
@@ -337,22 +337,22 @@ if (!isMainThread) {
             // Death check FIRST
             const ps = mem[0x000E];
             if (ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240 || mem[0x0770] === 3) {
-                return { bestX, frame: frame + 1, completed: false, reason: 'dead', timer };
+                return { bestX, frame: frame + 1, completed: false, reason: 'dead', timer, cumX };
             }
             // Completion
             if (mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0) {
-                return { bestX, frame: frame + 1, completed: true, reason: 'completed', timer };
+                return { bestX, frame: frame + 1, completed: true, reason: 'completed', timer, cumX };
             }
             // Backwards
             if (frame > 60 && x < startX) {
-                return { bestX, frame: frame + 1, completed: false, reason: 'backwards', timer };
+                return { bestX, frame: frame + 1, completed: false, reason: 'backwards', timer, cumX };
             }
             // Stalled
             if (frame - lastProgressFrame > STALL_FRAMES) {
-                return { bestX, frame: frame + 1, completed: false, reason: 'stalled', timer };
+                return { bestX, frame: frame + 1, completed: false, reason: 'stalled', timer, cumX };
             }
         }
-        return { bestX, frame: maxFrames, completed: false, reason: 'timeout', timer: 0 };
+        return { bestX, frame: maxFrames, completed: false, reason: 'timeout', timer: 0, cumX };
     }
 
     // Message handler
@@ -903,8 +903,6 @@ async function main() {
     let generation = 0;
     let bestEverFitness = -1;
     let bestEverX = 0;
-    let stagnationCount = 0;
-    let mutationRate = MUTATION_RATE;
 
     if (lastGen >= 0) {
         console.log(`${C.yellow}Found existing progress: generation ${lastGen}${C.reset}`);
@@ -927,31 +925,24 @@ async function main() {
             console.log(`  ${C.green}Resuming from generation ${lastGen}${C.reset}`);
             generation = lastGen;
 
-            // Load top networks from the last generation
             const savedNetworks = db.getTopNetworks(lastGen, ELITE_COUNT);
             population = [];
-
             for (const row of savedNetworks) {
                 const weightsBuf = new Float32Array(new Uint8Array(row.weights).buffer);
                 population.push(new NeuralNetwork(new Float32Array(weightsBuf)));
             }
-
             console.log(`  Loaded ${population.length} elite networks from DB`);
 
-            // Fill rest with mutations of loaded networks + fresh random
             const loaded = population.length;
-            // Mutated copies of loaded networks
             while (population.length < POPULATION_SIZE * 0.7 && loaded > 0) {
                 const parent = population[population.length % loaded].clone();
                 parent.mutate(MUTATION_RATE, MUTATION_STRENGTH);
                 population.push(parent);
             }
-            // Fresh random for diversity
             while (population.length < POPULATION_SIZE) {
                 population.push(new NeuralNetwork());
             }
 
-            // Restore best ever from DB
             const bestRow = db.getBestNetwork();
             if (bestRow) {
                 bestEverFitness = bestRow.fitness;
@@ -961,7 +952,6 @@ async function main() {
                 bestEverResult = { bestX: bestRow.bestX, frame: bestRow.frame, completed: !!bestRow.completed, reason: bestRow.completed ? 'completed' : 'unknown' };
                 console.log(`  Best ever: ${bestEverX}px (fitness ${bestEverFitness.toFixed(0)})`);
             }
-
             console.log();
         }
     } else {
@@ -972,14 +962,18 @@ async function main() {
     await broadcastSaveState(workers, trainingSaveStateStr);
 
     console.log(`${C.cyan}=== NEUROEVOLUTION ===${C.reset}`);
-    console.log(`${C.dim}Population: ${POPULATION_SIZE} | Inputs: ${NUM_INPUTS} | Hidden: ${NUM_HIDDEN1}+${NUM_HIDDEN2} | Outputs: ${NUM_OUTPUTS} | Weights: ${TOTAL_WEIGHTS}${C.reset}`);
-    console.log(`${C.dim}Elite: ${ELITE_COUNT} | Mutation-only (no crossover) | Rate: ${(MUTATION_RATE*100).toFixed(0)}% @ ${MUTATION_STRENGTH} | Tournament: ${TOURNAMENT_SIZE}${C.reset}`);
-    console.log(`${C.dim}Stagnation boost: ${STAGNATION_THRESHOLD} gens | Diversity injection: ${DIVERSITY_INJECTION_THRESHOLD} gens${C.reset}`);
+    console.log(`${C.dim}Population: ${POPULATION_SIZE} | Arch: ${NUM_INPUTS}→${NUM_HIDDEN1}→${NUM_HIDDEN2}→${NUM_OUTPUTS} | Weights: ${TOTAL_WEIGHTS}${C.reset}`);
+    console.log(`${C.dim}Elite: ${ELITE_COUNT} | Mutation: ${(MUTATION_RATE*100).toFixed(0)}% @ ${MUTATION_STRENGTH} | Tournament: ${TOURNAMENT_SIZE}${C.reset}`);
+    console.log(`${C.dim}Fitness: milestone bonuses (100px steps) + bestX gradient + timer${C.reset}`);
+    console.log(`${C.dim}Workers: ${workers.length} | Stall: ${STALL_FRAMES} frames (${(STALL_FRAMES/60).toFixed(1)}s)${C.reset}`);
     console.log();
 
     const startTime = Date.now();
 
     // ==================== EVOLUTION LOOP ====================
+    // Dense fitness: cumX (sum of X every frame) provides smooth gradient.
+    // Networks that move right at ALL get higher cumX than networks that sit still.
+    // This lets evolution discover "press RIGHT" much faster than sparse bestX-only fitness.
 
     while (true) {
         const genStart = Date.now();
@@ -990,10 +984,14 @@ async function main() {
         // Evaluate all networks
         const results = await evaluatePopulation(workers, population, MAX_FRAMES);
 
-        // Fitness: how far + how much time left on the clock
-        // Distance is primary (further = better), timer is secondary (faster = better)
-        // This is exactly how the game scores: progress through the level quickly
-        const fitnesses = results.map(r => r.bestX * 1000 + (r.timer || 0));
+        // Milestone-based fitness: huge cliffs every 100px + fine gradient between
+        // floor(bestX/100) * 100000 = massive bonus per 100px milestone (creates selection pressure to pass obstacles)
+        // bestX * 100 = fine-grained gradient between milestones (discriminates 590px vs 594px)
+        // timer = speed bonus (faster completions rank higher)
+        const fitnesses = results.map(r => {
+            const milestones = Math.floor(r.bestX / 100);
+            return milestones * 100000 + r.bestX * 100 + (r.timer || 0);
+        });
 
         // Sort population by fitness
         const indices = fitnesses.map((f, i) => i).sort((a, b) => fitnesses[b] - fitnesses[a]);
@@ -1004,23 +1002,19 @@ async function main() {
         // Stats
         const bestResult = sortedResults[0];
         const bestFitness = sortedFitnesses[0];
-        const avgX = Math.round(results.reduce((s, r) => s + r.bestX, 0) / results.length);
         const bestX = bestResult.bestX;
-        const genTime = (Date.now() - genStart) / 1000;
+        const avgX = Math.round(results.reduce((s, r) => s + r.bestX, 0) / results.length);
 
-        // Check for improvement
-        if (bestFitness > bestEverFitness) {
-            bestEverFitness = bestFitness;
+        // Track best ever (by distance, not cumX)
+        const distFitness = bestX * 10000 + (bestResult.timer || 0);
+        if (distFitness > bestEverFitness) {
+            bestEverFitness = distFitness;
             bestEverX = bestX;
             bestEverNetwork = population[0].clone();
             bestEverResult = bestResult;
-            stagnationCount = 0;
-            mutationRate = MUTATION_RATE; // reset mutation on improvement
-        } else {
-            stagnationCount++;
         }
 
-        // Wall detection: where do most networks die?
+        // Wall detection
         const deathXs = results.filter(r => !r.completed).map(r => r.bestX);
         const wallBuckets = {};
         for (const x of deathXs) {
@@ -1030,31 +1024,37 @@ async function main() {
         const topWall = Object.entries(wallBuckets).sort((a, b) => b[1] - a[1])[0];
         const wallStr = topWall ? `wall: X=${topWall[0]}(${Math.round(topWall[1]/POPULATION_SIZE*100)}%)` : '';
 
-        // Stagnation handling
-        if (stagnationCount > 0 && stagnationCount >= STAGNATION_THRESHOLD && stagnationCount % STAGNATION_THRESHOLD === 0) {
-            mutationRate = Math.min(0.5, mutationRate * 2);
-            console.log(`  ${C.yellow}STAGNATION: boosting mutation to ${(mutationRate*100).toFixed(0)}%${C.reset}`);
-        }
-        if (stagnationCount >= DIVERSITY_INJECTION_THRESHOLD) {
-            // Replace bottom 50% with fresh random
-            for (let i = Math.floor(POPULATION_SIZE / 2); i < POPULATION_SIZE; i++) {
-                population[i] = new NeuralNetwork();
-            }
-            stagnationCount = 0;
-            mutationRate = MUTATION_RATE;
-            console.log(`  ${C.magenta}DIVERSITY INJECTION: 50% fresh random${C.reset}`);
+        // ==================== REPRODUCE ====================
+        // Standard evolutionary algorithm: tournament selection + mutation
+        // Elite: top ELITE_COUNT survive unchanged
+        // Rest: tournament-selected parent, mutated
+
+        const nextPop = new Array(POPULATION_SIZE);
+
+        // Elite: copy top networks unchanged
+        for (let i = 0; i < ELITE_COUNT; i++) {
+            nextPop[i] = population[i];
         }
 
-        // Log every generation
+        // Rest: tournament selection + mutation
+        for (let i = ELITE_COUNT; i < POPULATION_SIZE; i++) {
+            const parent = NeuralNetwork.tournamentSelect(population, sortedFitnesses, TOURNAMENT_SIZE);
+            const child = parent.clone();
+            child.mutate(MUTATION_RATE, MUTATION_STRENGTH);
+            nextPop[i] = child;
+        }
+
+        population = nextPop;
+
+        // ==================== LOGGING ====================
+        const genTime = (Date.now() - genStart) / 1000;
         const completions = results.filter(r => r.completed).length;
         const bestTime = (bestResult.frame / 60.098).toFixed(1);
         const elapsed = (Date.now() - startTime) / 1000;
-
         console.log(
             `Gen ${String(generation).padStart(4)} | ` +
             `best: ${bestX}px (${bestTime}s) ${bestResult.completed ? C.green + 'COMPLETE!' + C.reset : bestResult.reason} | ` +
             `avg: ${avgX}px | ${wallStr} | ` +
-            `mut: ${(mutationRate*100).toFixed(0)}% | stag: ${stagnationCount} | ` +
             `${genTime.toFixed(1)}s/gen` +
             (completions > 0 ? ` | ${C.green}${completions} completions!${C.reset}` : '')
         );
@@ -1064,8 +1064,8 @@ async function main() {
             console.log(`  ${bar} ${Math.round(bestEverX/LEVEL_WIDTH*100)}% | best ever: ${bestEverX}px | elapsed: ${formatTime(elapsed)}`);
         }
 
-        // Save best to replay every 50 generations or on completion
-        if (generation % 50 === 0 || bestResult.completed) {
+        // Save best to replay every 20 generations or on completion
+        if (generation % 20 === 0 || bestResult.completed) {
             const replayInputs = replayBestNetwork(nes, population[0], trainingSaveStateStr);
             saveBest(replayInputs, bestResult);
             if (bestResult.completed) {
@@ -1076,50 +1076,15 @@ async function main() {
 
         // Save to DB every 50 generations
         if (generation % 50 === 0) {
-            // Save top ELITE_COUNT networks for resume capability
             for (let i = 0; i < Math.min(ELITE_COUNT, population.length); i++) {
                 db.saveNetwork(generation, i, population[i].weights, sortedFitnesses[i],
                     sortedResults[i].bestX, sortedResults[i].frame, sortedResults[i].completed);
             }
             db.saveEvolutionStats(generation, bestFitness,
                 sortedFitnesses.reduce((a,b)=>a+b,0)/sortedFitnesses.length,
-                bestX, avgX, completions, wallStr, mutationRate, genTime);
+                bestX, avgX, completions, wallStr, MUTATION_RATE, genTime);
             console.log(`  ${C.dim}DB checkpoint saved (gen ${generation})${C.reset}`);
         }
-
-        // ==================== REPRODUCE ====================
-        // For each network: mutate it, test the child, keep whichever is better.
-        // Only improvements survive. Bad mutations are discarded, parent is kept.
-        const nextPop = [];
-        const childInputs = [];
-
-        // Generate mutated children for every network
-        for (let i = 0; i < POPULATION_SIZE; i++) {
-            const child = population[i].clone();
-            child.mutate(mutationRate, MUTATION_STRENGTH);
-            nextPop.push(child);
-            childInputs.push(child);
-        }
-
-        // Evaluate all children
-        const childResults = await evaluatePopulation(workers, nextPop, MAX_FRAMES);
-        const childFitnesses = childResults.map(r => r.bestX * 1000 + (r.timer || 0));
-
-        // Keep child only if better than parent, otherwise keep parent
-        for (let i = 0; i < POPULATION_SIZE; i++) {
-            if (childFitnesses[i] <= sortedFitnesses[i]) {
-                nextPop[i] = population[i]; // parent was better, keep it
-            }
-            // else child stays (it's already in nextPop[i])
-        }
-
-        // Replace bottom 5% with fresh random (maintain some exploration)
-        const numFresh = Math.max(2, Math.floor(POPULATION_SIZE * 0.05));
-        for (let i = POPULATION_SIZE - numFresh; i < POPULATION_SIZE; i++) {
-            nextPop[i] = new NeuralNetwork();
-        }
-
-        population = nextPop;
     }
 }
 
