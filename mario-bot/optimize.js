@@ -303,6 +303,7 @@ if (!isMainThread) {
         let bestX = startX;
         let lastProgressFrame = 0;
         let prevBitmask = 0;
+        let velXSum = 0; // sum of rightward velocity every frame — the core fitness signal
 
         for (let frame = 0; frame < maxFrames; frame++) {
             // Read game state -> network inference -> apply buttons
@@ -324,30 +325,32 @@ if (!isMainThread) {
 
             nes.frame();
 
-            // Read position, check death/completion/stall
+            // Read position and velocity
             const mem = nes.cpu.mem;
             const x = mem[0x006D] * 256 + mem[0x0086];
+            let velX = mem[0x0057]; if (velX > 127) velX -= 256;
+            if (velX > 0) velXSum += velX; // only count rightward velocity
             if (x > bestX) { bestX = x; lastProgressFrame = frame; }
 
             // Death check FIRST
             const ps = mem[0x000E];
             if (ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240 || mem[0x0770] === 3) {
-                return { bestX, frame: frame + 1, completed: false, reason: 'dead' };
+                return { bestX, frame: frame + 1, completed: false, reason: 'dead', velXSum };
             }
             // Completion
             if (mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0) {
-                return { bestX, frame: frame + 1, completed: true, reason: 'completed' };
+                return { bestX, frame: frame + 1, completed: true, reason: 'completed', velXSum };
             }
             // Backwards
             if (frame > 60 && x < startX) {
-                return { bestX, frame: frame + 1, completed: false, reason: 'backwards' };
+                return { bestX, frame: frame + 1, completed: false, reason: 'backwards', velXSum };
             }
             // Stalled
             if (frame - lastProgressFrame > STALL_FRAMES) {
-                return { bestX, frame: frame + 1, completed: false, reason: 'stalled' };
+                return { bestX, frame: frame + 1, completed: false, reason: 'stalled', velXSum };
             }
         }
-        return { bestX, frame: maxFrames, completed: false, reason: 'timeout' };
+        return { bestX, frame: maxFrames, completed: false, reason: 'timeout', velXSum };
     }
 
     // Message handler
@@ -589,7 +592,7 @@ function tryAddToHallOfFame(hof, inputs, result) {
     if (!result.completed) return false;
     const events = inputsToEvents(inputs);
     const entry = {
-        events, fitness: result.bestX * 10000 + (MAX_FRAMES - result.frame),
+        events, fitness: (result.velXSum || 0) + result.bestX * 100,
         inputs: Array.from(inputs),
         bestX: result.bestX,
         speed: parseFloat((result.bestX / Math.max(result.frame, 1)).toFixed(2)),
@@ -642,7 +645,7 @@ function saveBest(inputs, result) {
     fs.writeFileSync(bestPath, JSON.stringify({
         id, rating: result.completed ? 'S' : (result.bestX > LEVEL_WIDTH * 0.8 ? 'A' : 'C'),
         phase: currentPhase, generation: currentGeneration,
-        events, fitness: result.bestX * 10000 + (MAX_FRAMES - result.frame),
+        events, fitness: (result.velXSum || 0) + result.bestX * 100,
         completed: result.completed, completionFrame: result.completed ? result.frame : undefined,
         bestX: result.bestX, speed: parseFloat(speed.toFixed(2)),
         reason: result.reason, totalFrames: result.frame,
@@ -869,7 +872,7 @@ async function main() {
         try {
             if (bestEverNetwork) {
                 // Save best network weights to DB
-                const fit = bestEverResult ? bestEverResult.bestX * 10000 + (MAX_FRAMES - bestEverResult.frame) : 0;
+                const fit = bestEverResult ? (bestEverResult.velXSum || 0) + bestEverResult.bestX * 100 : 0;
                 db.saveNetwork(currentGeneration, 0, bestEverNetwork.weights, fit,
                     bestEverResult?.bestX || 0, bestEverResult?.frame || 0, bestEverResult?.completed || false);
 
@@ -985,8 +988,10 @@ async function main() {
         // Evaluate all networks
         const results = await evaluatePopulation(workers, population, MAX_FRAMES);
 
-        // Calculate fitness: bestX * 10000 + (MAX_FRAMES - frame)
-        const fitnesses = results.map(r => r.bestX * 10000 + (MAX_FRAMES - r.frame));
+        // Fitness: reward every frame of rightward movement + bonus for distance
+        // velXSum rewards continuous rightward velocity (the behavior we want)
+        // bestX bonus ensures distance still matters for tiebreaking
+        const fitnesses = results.map(r => (r.velXSum || 0) + r.bestX * 100);
 
         // Sort population by fitness
         const indices = fitnesses.map((f, i) => i).sort((a, b) => fitnesses[b] - fitnesses[a]);
