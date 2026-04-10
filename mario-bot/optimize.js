@@ -592,7 +592,7 @@ function tryAddToHallOfFame(hof, inputs, result) {
     if (!result.completed) return false;
     const events = inputsToEvents(inputs);
     const entry = {
-        events, fitness: (result.velXSum || 0) + result.bestX * 100,
+        events, fitness: (result.velXSum || 0) + Math.floor(result.bestX / 100) * 5000,
         inputs: Array.from(inputs),
         bestX: result.bestX,
         speed: parseFloat((result.bestX / Math.max(result.frame, 1)).toFixed(2)),
@@ -645,7 +645,7 @@ function saveBest(inputs, result) {
     fs.writeFileSync(bestPath, JSON.stringify({
         id, rating: result.completed ? 'S' : (result.bestX > LEVEL_WIDTH * 0.8 ? 'A' : 'C'),
         phase: currentPhase, generation: currentGeneration,
-        events, fitness: (result.velXSum || 0) + result.bestX * 100,
+        events, fitness: (result.velXSum || 0) + Math.floor(result.bestX / 100) * 5000,
         completed: result.completed, completionFrame: result.completed ? result.frame : undefined,
         bestX: result.bestX, speed: parseFloat(speed.toFixed(2)),
         reason: result.reason, totalFrames: result.frame,
@@ -872,7 +872,7 @@ async function main() {
         try {
             if (bestEverNetwork) {
                 // Save best network weights to DB
-                const fit = bestEverResult ? (bestEverResult.velXSum || 0) + bestEverResult.bestX * 100 : 0;
+                const fit = bestEverResult ? (bestEverResult.velXSum || 0) + Math.floor(bestEverResult.bestX / 100) * 5000 : 0;
                 db.saveNetwork(currentGeneration, 0, bestEverNetwork.weights, fit,
                     bestEverResult?.bestX || 0, bestEverResult?.frame || 0, bestEverResult?.completed || false);
 
@@ -988,10 +988,17 @@ async function main() {
         // Evaluate all networks
         const results = await evaluatePopulation(workers, population, MAX_FRAMES);
 
-        // Fitness: reward every frame of rightward movement + bonus for distance
-        // velXSum rewards continuous rightward velocity (the behavior we want)
-        // bestX bonus ensures distance still matters for tiebreaking
-        const fitnesses = results.map(r => (r.velXSum || 0) + r.bestX * 100);
+        // Fitness: velocity + distance milestones
+        // velXSum: rewards continuous movement (every frame of rightward velocity)
+        // Milestone bonus: huge reward for crossing each 100px threshold
+        //   This makes jumping over obstacles worth it — the brief velocity loss
+        //   from a jump is more than compensated by reaching the next milestone
+        const fitnesses = results.map(r => {
+            const vel = r.velXSum || 0;
+            const milestones = Math.floor(r.bestX / 100); // 0, 1, 2, ... 32
+            const milestoneBonus = milestones * 5000; // each 100px = 5000 fitness
+            return vel + milestoneBonus;
+        });
 
         // Sort population by fitness
         const indices = fitnesses.map((f, i) => i).sort((a, b) => fitnesses[b] - fitnesses[a]);
