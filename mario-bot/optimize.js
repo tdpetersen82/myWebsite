@@ -303,7 +303,6 @@ if (!isMainThread) {
         let bestX = startX;
         let lastProgressFrame = 0;
         let prevBitmask = 0;
-        let velXSum = 0; // sum of rightward velocity every frame — the core fitness signal
 
         for (let frame = 0; frame < maxFrames; frame++) {
             // Read game state -> network inference -> apply buttons
@@ -328,29 +327,32 @@ if (!isMainThread) {
             // Read position and velocity
             const mem = nes.cpu.mem;
             const x = mem[0x006D] * 256 + mem[0x0086];
-            let velX = mem[0x0057]; if (velX > 127) velX -= 256;
-            if (velX > 0) velXSum += velX; // only count rightward velocity
             if (x > bestX) { bestX = x; lastProgressFrame = frame; }
+
+            // Read game timer (BCD: hundreds, tens, ones)
+            const timer = ((mem[0x07F8] >> 4) * 10 + (mem[0x07F8] & 0xF)) * 100
+                        + ((mem[0x07F9] >> 4) * 10 + (mem[0x07F9] & 0xF)) * 10
+                        + ((mem[0x07FA] >> 4) * 10 + (mem[0x07FA] & 0xF));
 
             // Death check FIRST
             const ps = mem[0x000E];
             if (ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240 || mem[0x0770] === 3) {
-                return { bestX, frame: frame + 1, completed: false, reason: 'dead', velXSum };
+                return { bestX, frame: frame + 1, completed: false, reason: 'dead', timer };
             }
             // Completion
             if (mem[0x001D] === 3 || mem[0x075F] > 0 || mem[0x0760] > 0) {
-                return { bestX, frame: frame + 1, completed: true, reason: 'completed', velXSum };
+                return { bestX, frame: frame + 1, completed: true, reason: 'completed', timer };
             }
             // Backwards
             if (frame > 60 && x < startX) {
-                return { bestX, frame: frame + 1, completed: false, reason: 'backwards', velXSum };
+                return { bestX, frame: frame + 1, completed: false, reason: 'backwards', timer };
             }
             // Stalled
             if (frame - lastProgressFrame > STALL_FRAMES) {
-                return { bestX, frame: frame + 1, completed: false, reason: 'stalled', velXSum };
+                return { bestX, frame: frame + 1, completed: false, reason: 'stalled', timer };
             }
         }
-        return { bestX, frame: maxFrames, completed: false, reason: 'timeout', velXSum };
+        return { bestX, frame: maxFrames, completed: false, reason: 'timeout', timer: 0 };
     }
 
     // Message handler
@@ -592,7 +594,7 @@ function tryAddToHallOfFame(hof, inputs, result) {
     if (!result.completed) return false;
     const events = inputsToEvents(inputs);
     const entry = {
-        events, fitness: (result.velXSum || 0) + Math.floor(result.bestX / 100) * 5000,
+        events, fitness: result.bestX * 1000 + (result.timer || 0),
         inputs: Array.from(inputs),
         bestX: result.bestX,
         speed: parseFloat((result.bestX / Math.max(result.frame, 1)).toFixed(2)),
@@ -645,7 +647,7 @@ function saveBest(inputs, result) {
     fs.writeFileSync(bestPath, JSON.stringify({
         id, rating: result.completed ? 'S' : (result.bestX > LEVEL_WIDTH * 0.8 ? 'A' : 'C'),
         phase: currentPhase, generation: currentGeneration,
-        events, fitness: (result.velXSum || 0) + Math.floor(result.bestX / 100) * 5000,
+        events, fitness: result.bestX * 1000 + (result.timer || 0),
         completed: result.completed, completionFrame: result.completed ? result.frame : undefined,
         bestX: result.bestX, speed: parseFloat(speed.toFixed(2)),
         reason: result.reason, totalFrames: result.frame,
@@ -872,7 +874,7 @@ async function main() {
         try {
             if (bestEverNetwork) {
                 // Save best network weights to DB
-                const fit = bestEverResult ? (bestEverResult.velXSum || 0) + Math.floor(bestEverResult.bestX / 100) * 5000 : 0;
+                const fit = bestEverResult ? bestEverResult.bestX * 1000 + (bestEverResult.timer || 0) : 0;
                 db.saveNetwork(currentGeneration, 0, bestEverNetwork.weights, fit,
                     bestEverResult?.bestX || 0, bestEverResult?.frame || 0, bestEverResult?.completed || false);
 
@@ -988,17 +990,10 @@ async function main() {
         // Evaluate all networks
         const results = await evaluatePopulation(workers, population, MAX_FRAMES);
 
-        // Fitness: velocity + distance milestones
-        // velXSum: rewards continuous movement (every frame of rightward velocity)
-        // Milestone bonus: huge reward for crossing each 100px threshold
-        //   This makes jumping over obstacles worth it — the brief velocity loss
-        //   from a jump is more than compensated by reaching the next milestone
-        const fitnesses = results.map(r => {
-            const vel = r.velXSum || 0;
-            const milestones = Math.floor(r.bestX / 100); // 0, 1, 2, ... 32
-            const milestoneBonus = milestones * 5000; // each 100px = 5000 fitness
-            return vel + milestoneBonus;
-        });
+        // Fitness: how far + how much time left on the clock
+        // Distance is primary (further = better), timer is secondary (faster = better)
+        // This is exactly how the game scores: progress through the level quickly
+        const fitnesses = results.map(r => r.bestX * 1000 + (r.timer || 0));
 
         // Sort population by fitness
         const indices = fitnesses.map((f, i) => i).sort((a, b) => fitnesses[b] - fitnesses[a]);
