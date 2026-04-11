@@ -573,7 +573,8 @@ function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
             const mbAdv = tf.gather(advTensor, mbIdx);
             const mbReturns = tf.gather(returnsTensor, mbIdx);
 
-            const grads = optimizer.minimize(() => {
+            // Compute gradients manually so we can clip them
+            const { value: loss, grads } = tf.variableGrads(() => {
                 const [actorOut, criticOut] = model.apply(mbStates, { training: true });
 
                 // Clamp probabilities
@@ -611,9 +612,25 @@ function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
                 totalClipFrac += clipFrac.dataSync()[0];
                 batchCount++;
 
-                const loss = policyLoss.add(valueLoss).sub(entropy.mul(ENTROPY_COEFF));
-                return loss;
-            }, true);
+                return policyLoss.add(valueLoss).sub(entropy.mul(ENTROPY_COEFF));
+            });
+
+            // Clip gradients by global norm to prevent NaN explosion
+            const gradValues = Object.values(grads);
+            const globalNorm = tf.sqrt(gradValues.reduce((sum, g) => sum.add(g.square().sum()), tf.scalar(0)));
+            const clipCoeff = tf.minimum(tf.scalar(1), tf.scalar(MAX_GRAD_NORM).div(globalNorm.add(1e-6)));
+            const clippedGrads = {};
+            for (const [name, g] of Object.entries(grads)) {
+                clippedGrads[name] = g.mul(clipCoeff);
+            }
+            optimizer.applyGradients(clippedGrads);
+
+            // Clean up gradient tensors
+            globalNorm.dispose();
+            clipCoeff.dispose();
+            loss.dispose();
+            for (const g of Object.values(grads)) g.dispose();
+            for (const g of Object.values(clippedGrads)) g.dispose();
 
             // Clean up
             mbIdx.dispose();
@@ -1140,6 +1157,21 @@ async function main() {
         // 4. PPO gradient update
         const stats = ppoUpdate(model, allStates, allActions, allLogProbs, allAdvantages, allReturns);
 
+        // NaN detection — if weights exploded, reinitialize the model
+        if (isNaN(stats.policyLoss) || isNaN(stats.valueLoss)) {
+            console.log(`  \x1b[31mNaN detected in losses! Reinitializing model...\x1b[0m`);
+            // Rebuild model with fresh weights
+            const freshModel = createModel();
+            model.setWeights(freshModel.getWeights());
+            freshModel.dispose();
+            // Reset optimizer momentum
+            ppoOptimizer = null;
+            stats.policyLoss = 0;
+            stats.valueLoss = 0;
+            stats.entropy = 0;
+            stats.clipFraction = 0;
+        }
+
         // 5. Extract new weights and broadcast
         currentWeightsFlat = extractWeights(model);
         await broadcastWeights(workers, currentWeightsFlat);
@@ -1169,22 +1201,24 @@ async function main() {
         if (updateCount % 10 === 0) {
             const bar = makeProgressBar(bestEverX, LEVEL_WIDTH, 20);
             console.log(`  ${bar} ${Math.round(bestEverX/LEVEL_WIDTH*100)}% | best ever: ${bestEverX}px | ${(totalFrames/1000).toFixed(0)}K frames | ${formatTime(elapsed)}`);
+
+            // Log per-button action frequencies from the batch
+            const btnNames = ['R', 'L', 'A', 'B', 'U', 'D'];
+            const btnFreqs = new Float32Array(NUM_OUTPUTS);
+            for (let t = 0; t < batchSize; t++) {
+                for (let b = 0; b < NUM_OUTPUTS; b++) {
+                    if (allActions[t] & BUTTON_BITS[b]) btnFreqs[b]++;
+                }
+            }
+            const freqStr = btnNames.map((n, i) => `${n}:${(btnFreqs[i]/batchSize*100).toFixed(0)}%`).join(' ');
+            console.log(`  ${C.dim}buttons: ${freqStr}${C.reset}`);
         }
 
         // Save replay every 10 updates or on completion
         if (updateCount % 10 === 0 || totalCompletions > 0) {
             const replayInputs = replayBestPolicy(nes, currentWeightsFlat, trainingSaveStateStr);
-            // Quick eval of replay
-            const replayX = (() => {
-                let maxX = 0;
-                const tmpState = JSON.parse(trainingSaveStateStr);
-                nes.fromJSONLite(tmpState);
-                for (let f = 0; f < replayInputs.length; f++) {
-                    const x = nes.cpu.mem[0x006D] * 256 + nes.cpu.mem[0x0086];
-                    if (x > maxX) maxX = x;
-                }
-                return maxX;
-            })();
+            // replayBestPolicy already ran the simulation — read final X from NES state
+            const replayX = nes.cpu.mem[0x006D] * 256 + nes.cpu.mem[0x0086];
             const replayResult = { bestX: Math.max(replayX, batchBestX), frame: replayInputs.length, completed: totalCompletions > 0, reason: totalCompletions > 0 ? 'completed' : 'replay', timer: 0 };
             saveBest(replayInputs, replayResult);
             if (totalCompletions > 0) {

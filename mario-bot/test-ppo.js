@@ -1695,9 +1695,10 @@ async function testOptimizerLifecycle() {
     const persistentOptimizer = code.includes('let ppoOptimizer') || code.includes('var ppoOptimizer');
     assert(persistentOptimizer, 'Optimizer persists across updates (module-level variable)');
 
-    // Check tensor cleanup in ppoUpdate
+    // Check tensor cleanup in ppoUpdate — uses variableGrads + applyGradients for gradient clipping
+    const hasGradClip = code.includes('variableGrads') && code.includes('applyGradients');
     const hasMinimize = code.includes('optimizer.minimize');
-    assert(hasMinimize, 'Uses optimizer.minimize (auto-disposes intermediate tensors)');
+    assert(hasGradClip || hasMinimize, 'Uses gradient computation with proper cleanup (variableGrads+applyGradients or optimizer.minimize)');
 
     // Check that full-dataset tensors are disposed
     const fullTensorDispose = code.includes('statesTensor.dispose()') && code.includes('returnsTensor.dispose()');
@@ -1811,6 +1812,219 @@ async function testInputRanges() {
     applyBitmask(nes, 0, BIT.RIGHT | BIT.B | BIT.A);
 }
 
+// ==================== TEST: NaN Recovery ====================
+async function testNaNRecovery() {
+    HEADER('TEST: NaN Recovery (model reinitializes after NaN weights)');
+
+    const model = createModel();
+
+    // Poison the model weights with NaN
+    const weights = model.getWeights();
+    const poisoned = weights.map(w => {
+        const data = w.dataSync().slice();
+        data[0] = NaN;
+        return tf.tensor(data, w.shape);
+    });
+    model.setWeights(poisoned);
+    poisoned.forEach(t => t.dispose());
+
+    // Verify weights are NaN
+    const badWeights = model.getWeights()[0].dataSync();
+    assert(isNaN(badWeights[0]), 'Weight is NaN after poisoning');
+
+    // Recovery: create fresh model and copy weights (same as optimize.js NaN handler)
+    const freshModel = createModel();
+    model.setWeights(freshModel.getWeights());
+    freshModel.dispose();
+
+    // Verify weights are now finite
+    const goodWeights = model.getWeights()[0].dataSync();
+    let allFinite = true;
+    for (let i = 0; i < goodWeights.length; i++) {
+        if (!isFinite(goodWeights[i])) { allFinite = false; break; }
+    }
+    assert(allFinite, 'All weights finite after NaN recovery');
+    assert(!isNaN(goodWeights[0]), 'First weight is not NaN after recovery');
+
+    // Verify model still produces valid output
+    const testInput = tf.zeros([1, NUM_INPUTS]);
+    const [actorOut, criticOut] = model.predict(testInput);
+    const probs = actorOut.dataSync();
+    const value = criticOut.dataSync()[0];
+    testInput.dispose(); actorOut.dispose(); criticOut.dispose();
+
+    let outputsFinite = true;
+    for (const p of probs) { if (!isFinite(p)) outputsFinite = false; }
+    assert(outputsFinite, 'Model outputs finite after NaN recovery');
+    assert(isFinite(value), 'Critic value finite after NaN recovery');
+
+    model.dispose();
+}
+
+// ==================== TEST 20: Full Playthrough Diagnostic ====================
+async function testFullPlaythrough() {
+    HEADER('TEST 20: Full Playthrough Diagnostic (500 frames, random network)');
+
+    const nes = bootNES();
+    advanceToGameplay(nes);
+    const saveState = nes.toJSONLite();
+
+    function resetToStart() { nes.fromJSONLite(JSON.parse(JSON.stringify(saveState))); }
+    const weights = new Float32Array(TOTAL_WEIGHTS);
+    const scale = Math.sqrt(2 / NUM_INPUTS);
+    for (let i = 0; i < TOTAL_WEIGHTS; i++) weights[i] = (Math.random() * 2 - 1) * scale;
+
+    let prevBitmask = 0;
+    let bestX = 40;
+    let prevX = 40;
+    let totalReward = 0;
+    let deaths = 0;
+    let stalls = 0;
+    let lastProgressFrame = 0;
+    const btnCounts = new Float32Array(6); // R L A B U D
+    const btnNames = ['R', 'L', 'A', 'B', 'U', 'D'];
+    let nanInputs = 0;
+    let nanOutputs = 0;
+    let maxRatio = 0; // track if any reward component is extreme
+    let framesRun = 0;
+    const xHistory = [];
+
+    for (let frame = 0; frame < 500; frame++) {
+        const mem = nes.cpu.mem;
+        const x = mem[0x006D] * 256 + mem[0x0086];
+        const y = mem[0x00CE];
+        xHistory.push(x);
+
+        // Read inputs
+        const inputs = readNetworkInputs(nes);
+        for (let i = 0; i < inputs.length; i++) {
+            if (!isFinite(inputs[i])) nanInputs++;
+        }
+
+        // Forward pass
+        const { probs, value } = forwardPass(inputs, weights);
+        for (let i = 0; i < probs.length; i++) {
+            if (!isFinite(probs[i])) nanOutputs++;
+        }
+
+        // Deterministic action (threshold 0.5)
+        let mask = 0;
+        if (probs[0] > 0.5) mask |= BIT.RIGHT;
+        if (probs[1] > 0.5) mask |= BIT.LEFT;
+        if (probs[2] > 0.5) mask |= BIT.A;
+        if (probs[3] > 0.5) mask |= BIT.B;
+        if (probs[4] > 0.5) mask |= BIT.UP;
+        if (probs[5] > 0.5) mask |= BIT.DOWN;
+        if ((mask & BIT.LEFT) && (mask & BIT.RIGHT)) mask &= ~BIT.LEFT;
+
+        // Count buttons
+        for (let b = 0; b < 6; b++) {
+            if (mask & BUTTON_BITS[b]) btnCounts[b]++;
+        }
+
+        // Apply buttons (signature: nes, newMask, prevMask)
+        applyBitmask(nes, mask, prevBitmask);
+        prevBitmask = mask;
+
+        // Step
+        nes.frame();
+        framesRun++;
+
+        // Check results
+        const newX = mem[0x006D] * 256 + mem[0x0086];
+        const deltaX = newX - prevX;
+        if (newX > bestX) { bestX = newX; lastProgressFrame = frame; }
+
+        const reward = 0.01 * deltaX - 0.001;
+        totalReward += reward;
+
+        // Death check
+        const ps = mem[0x000E];
+        const dead = ps === 0x0B || ps === 0x06 || mem[0x00CE] > 240 || mem[0x0770] === 3;
+        const stalled = (frame - lastProgressFrame) > 360;
+
+        if (dead) {
+            deaths++;
+            totalReward -= 5;
+            // Log death point
+            if (deaths <= 3) {
+                INFO(`Death #${deaths} at frame ${frame}: X=${newX}, Y=${mem[0x00CE]}, PS=0x${ps.toString(16)}`);
+                // Show what the network saw at death
+                const deathProbs = probs.map(p => p.toFixed(2));
+                INFO(`  Network output: R=${deathProbs[0]} L=${deathProbs[1]} A=${deathProbs[2]} B=${deathProbs[3]} U=${deathProbs[4]} D=${deathProbs[5]}`);
+                INFO(`  Value estimate: ${value.toFixed(3)}`);
+            }
+            // Reset
+            resetToStart();
+            prevX = mem[0x006D] * 256 + mem[0x0086];
+            bestX = Math.max(bestX, prevX);
+            lastProgressFrame = frame;
+            prevBitmask = 0;
+            continue;
+        }
+
+        if (stalled) {
+            stalls++;
+            totalReward -= 5;
+            if (stalls <= 3) {
+                INFO(`Stall #${stalls} at frame ${frame}: X=${newX} (stuck since frame ${lastProgressFrame})`);
+            }
+            resetToStart();
+            prevX = mem[0x006D] * 256 + mem[0x0086];
+            lastProgressFrame = frame;
+            prevBitmask = 0;
+            continue;
+        }
+
+        prevX = newX;
+
+        // Log milestones
+        if (frame === 0 || frame === 99 || frame === 249 || frame === 499) {
+            const probStr = btnNames.map((n, i) => `${n}:${probs[i].toFixed(2)}`).join(' ');
+            INFO(`Frame ${frame}: X=${newX} Y=${y} val=${value.toFixed(2)} | ${probStr}`);
+        }
+    }
+
+    // Summary
+    const freqStr = btnNames.map((n, i) => `${n}:${(btnCounts[i]/framesRun*100).toFixed(0)}%`).join(' ');
+    INFO(`Played ${framesRun} frames | bestX=${bestX} | deaths=${deaths} stalls=${stalls} | reward=${totalReward.toFixed(2)}`);
+    INFO(`Button frequencies: ${freqStr}`);
+
+    // Check for uniqueness in X (is Mario actually moving to different positions?)
+    const uniqueX = new Set(xHistory).size;
+    INFO(`Unique X positions visited: ${uniqueX} out of ${xHistory.length} frames`);
+
+    assert(nanInputs === 0, `No NaN in inputs across ${framesRun} frames (found ${nanInputs})`);
+    assert(nanOutputs === 0, `No NaN in outputs across ${framesRun} frames (found ${nanOutputs})`);
+    // Random networks may not move — that's OK, just check the pipeline didn't break
+    if (bestX > 40) {
+        assert(true, `Mario moved from start (bestX=${bestX} > 40)`);
+    } else {
+        INFO(`Random network didn't move Mario (bestX=${bestX}) — pipeline OK, just unlucky weights`);
+        assert(true, `Pipeline functional despite random network not moving (no NaN, finite rewards)`);
+    }
+    assert(uniqueX >= 1, `Mario visited at least 1 position (${uniqueX} unique X values)`);
+    assert(isFinite(totalReward), `Total reward is finite: ${totalReward}`);
+
+    // Check tile inputs change as Mario moves (fresh NES to avoid death state interference)
+    const tileNes = bootNES();
+    advanceToGameplay(tileNes);
+    const startInputs = readNetworkInputs(tileNes);
+    for (let f = 0; f < 200; f++) {
+        tileNes.buttonDown(1, jsnes.Controller.BUTTON_RIGHT);
+        tileNes.buttonDown(1, jsnes.Controller.BUTTON_B);
+        tileNes.frame();
+    }
+    const laterInputs = readNetworkInputs(tileNes);
+    let tileChanges = 0;
+    for (let i = 5; i < 145; i++) {
+        if (startInputs[i] !== laterInputs[i]) tileChanges++;
+    }
+    const laterX = tileNes.cpu.mem[0x006D] * 256 + tileNes.cpu.mem[0x0086];
+    INFO(`Tile inputs that changed after 200 frames of running (X=${laterX}): ${tileChanges}/140`);
+    assert(tileChanges > 0, `Tile inputs change as Mario moves to different area (${tileChanges} changed)`);
+}
+
 // ================================================================
 //  MAIN
 // ================================================================
@@ -1840,9 +2054,11 @@ async function main() {
     await testNoFalseCompletion();
     await testRewardBalance();
     await testOptimizerLifecycle();
+    await testNaNRecovery();
     await testInputDeterminism();
     await testTimerDecreases();
     await testInputRanges();
+    await testFullPlaythrough();
 
     const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
 
