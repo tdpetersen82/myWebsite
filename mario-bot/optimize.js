@@ -49,6 +49,7 @@ const GAE_LAMBDA = 0.95;
 const DISCOUNT_GAMMA = 0.99;
 const LEARNING_RATE = 3e-4;
 const ENTROPY_COEFF = 0.02;       // 0.05 was fighting convergence — R oscillated 70-85% for 900 updates
+const ENTROPY_FLOOR = 0.25;       // minimum entropy — boost coefficient if entropy drops below this
 const VALUE_LOSS_COEFF = 0.5;
 const MAX_GRAD_NORM = 0.5;
 
@@ -527,10 +528,13 @@ function computeGAE(rewards, values, dones, lastValue) {
 // Creating a new one per call was resetting these statistics, making it essentially SGD.
 let ppoOptimizer = null;
 
+let currentEntropyCoeff = ENTROPY_COEFF;
+
 function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
     if (!ppoOptimizer) ppoOptimizer = tf.train.adam(LEARNING_RATE);
     const optimizer = ppoOptimizer;
     const T = advantages.length;
+    const entCoeff = currentEntropyCoeff;
 
     // Normalize advantages
     let advMean = 0, advStd = 0;
@@ -617,7 +621,7 @@ function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
                 totalClipFrac += clipFrac.dataSync()[0];
                 batchCount++;
 
-                return policyLoss.add(valueLoss).sub(entropy.mul(ENTROPY_COEFF));
+                return policyLoss.add(valueLoss).sub(entropy.mul(entCoeff));
             });
 
             // Clip gradients by global norm to prevent NaN explosion
@@ -1162,6 +1166,14 @@ async function main() {
         // 4. PPO gradient update
         const stats = ppoUpdate(model, allStates, allActions, allLogProbs, allAdvantages, allReturns);
 
+        // Entropy floor: if entropy drops below floor, boost coefficient to keep exploring
+        if (stats.entropy < ENTROPY_FLOOR && stats.entropy > 0) {
+            currentEntropyCoeff = Math.min(0.1, currentEntropyCoeff * 1.5);
+        } else if (stats.entropy > ENTROPY_FLOOR * 1.5 && currentEntropyCoeff > ENTROPY_COEFF) {
+            // Decay back toward base coefficient when entropy is healthy
+            currentEntropyCoeff = Math.max(ENTROPY_COEFF, currentEntropyCoeff * 0.95);
+        }
+
         // NaN detection — if weights exploded, reinitialize the model
         if (isNaN(stats.policyLoss) || isNaN(stats.valueLoss)) {
             console.log(`  \x1b[31mNaN detected in losses! Reinitializing model...\x1b[0m`);
@@ -1169,8 +1181,9 @@ async function main() {
             const freshModel = createModel();
             model.setWeights(freshModel.getWeights());
             freshModel.dispose();
-            // Reset optimizer momentum
+            // Reset optimizer momentum and entropy coefficient
             ppoOptimizer = null;
+            currentEntropyCoeff = ENTROPY_COEFF;
             stats.policyLoss = 0;
             stats.valueLoss = 0;
             stats.entropy = 0;
@@ -1198,7 +1211,7 @@ async function main() {
             `best: ${batchBestX}px | avg reward: ${meanReward.toFixed(2)} | ` +
             `episodes: ${totalEpisodes} | ` +
             `π_loss: ${stats.policyLoss.toFixed(4)} v_loss: ${stats.valueLoss.toFixed(4)} ` +
-            `ent: ${stats.entropy.toFixed(4)} clip: ${stats.clipFraction.toFixed(3)} | ` +
+            `ent: ${stats.entropy.toFixed(4)}${currentEntropyCoeff !== ENTROPY_COEFF ? `(β${currentEntropyCoeff.toFixed(3)})` : ''} clip: ${stats.clipFraction.toFixed(3)} | ` +
             `${fps} fps | ${updateTime.toFixed(1)}s` +
             (totalCompletions > 0 ? ` | ${C.green}${totalCompletions} completions!${C.reset}` : '')
         );
