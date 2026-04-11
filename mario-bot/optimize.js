@@ -42,13 +42,13 @@ const TOTAL_WEIGHTS = W.critic_b + 1;
 
 // PPO hyperparameters
 const ROLLOUT_LENGTH = 512;    // frames per worker per rollout
-const PPO_EPOCHS = 2;             // 4 was causing clip fractions of 0.4-0.6 (should be 0.1-0.2)
+const PPO_EPOCHS = 3;             // 2 was too conservative (clip 0.01), 4 too aggressive (clip 0.5)
 const MINIBATCH_SIZE = 256;
 const CLIP_EPSILON = 0.2;
 const GAE_LAMBDA = 0.95;
 const DISCOUNT_GAMMA = 0.99;
 const LEARNING_RATE = 3e-4;
-const ENTROPY_COEFF = 0.05;       // keep exploring — 0.01 converged before learning to jump
+const ENTROPY_COEFF = 0.02;       // 0.05 was fighting convergence — R oscillated 70-85% for 900 updates
 const VALUE_LOSS_COEFF = 0.5;
 const MAX_GRAD_NORM = 0.5;
 
