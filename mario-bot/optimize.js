@@ -15,7 +15,7 @@ const __dirname = path.dirname(fileURLToPath(import.meta.url));
 // ==================== CONFIG ====================
 
 const MAX_FRAMES = 8000;
-const STALL_FRAMES = 90;  // 1.5 seconds — must trigger within a 512-frame rollout
+const STALL_FRAMES = 180; // 3 seconds — triggers within 512-frame rollout after pipe (~200f run + 180f stall = 380f)
 const LEVEL_WIDTH = 3200;
 const NUM_WORKERS = Math.max(1, os.cpus().length - 1);
 
@@ -42,7 +42,7 @@ const TOTAL_WEIGHTS = W.critic_b + 1;
 
 // PPO hyperparameters
 const ROLLOUT_LENGTH = 512;    // frames per worker per rollout
-const PPO_EPOCHS = 4;
+const PPO_EPOCHS = 2;             // 4 was causing clip fractions of 0.4-0.6 (should be 0.1-0.2)
 const MINIBATCH_SIZE = 256;
 const CLIP_EPSILON = 0.2;
 const GAE_LAMBDA = 0.95;
