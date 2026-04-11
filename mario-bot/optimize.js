@@ -57,7 +57,7 @@ const REWARD_PROGRESS = 0.01;    // per pixel of rightward movement
 const REWARD_DEATH = -5.0;       // dying is bad
 const REWARD_TIME_PENALTY = -0.001;  // per frame — standing still costs
 const REWARD_COMPLETION = 10.0;
-const REWARD_BUTTON_COST = -0.0002; // per button pressed per frame — learn to not press useless buttons
+const REWARD_BUTTON_COST = -0.001;  // per button pressed per frame — learn to not press useless buttons
 
 // Hall of fame
 const GOLDEN_DIVERSITY_THRESHOLD = 30;
@@ -590,8 +590,9 @@ function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
                     mbActions.mul(-1).add(1).mul(probs.mul(-1).add(1).log())
                 ).sum(-1); // sum across buttons
 
-                // Ratio
-                const ratio = logP.sub(mbOldLogProbs).exp();
+                // Ratio — clamp log-ratio to prevent exp() overflow
+                const logRatio = logP.sub(mbOldLogProbs).clipByValue(-20, 20);
+                const ratio = logRatio.exp();
 
                 // Clipped surrogate loss
                 const surr1 = ratio.mul(mbAdv);
