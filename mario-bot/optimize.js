@@ -57,6 +57,7 @@ const REWARD_PROGRESS = 0.01;    // per pixel of rightward movement
 const REWARD_DEATH = -5.0;       // dying is bad
 const REWARD_TIME_PENALTY = -0.001;  // per frame — standing still costs
 const REWARD_COMPLETION = 10.0;
+const REWARD_BUTTON_COST = -0.0002; // per button pressed per frame — learn to not press useless buttons
 
 // Hall of fame
 const GOLDEN_DIVERSITY_THRESHOLD = 30;
@@ -350,7 +351,10 @@ if (!isMainThread) {
             if (x > episodeBestX) { episodeBestX = x; lastProgressFrame = t; }
 
             // Compute reward
-            let reward = REWARD_PROGRESS * deltaX + REWARD_TIME_PENALTY;
+            // Count pressed buttons for action cost
+            let buttonsPressed = 0;
+            for (let b = 0; b < 8; b++) { if (actionMask & (1 << b)) buttonsPressed++; }
+            let reward = REWARD_PROGRESS * deltaX + REWARD_TIME_PENALTY + REWARD_BUTTON_COST * buttonsPressed;
 
             // Check death
             const ps = mem[0x000E];
