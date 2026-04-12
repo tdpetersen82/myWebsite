@@ -77,7 +77,7 @@ const STALL_FRAMES = 360;
 const LEVEL_WIDTH = 3200;
 
 const NUM_INPUTS = 156;
-const H1 = 64;
+const H1 = 256;
 const H2 = 32;
 const NUM_OUTPUTS = 6;
 

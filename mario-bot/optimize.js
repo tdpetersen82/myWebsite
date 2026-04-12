@@ -22,7 +22,7 @@ const NUM_WORKERS = Math.max(1, os.cpus().length - 1);
 // Network architecture: shared-trunk actor-critic
 // 156 inputs → 64 hidden (ReLU) → 32 hidden (ReLU) → 6 actor (sigmoid) + 1 critic (linear)
 const NUM_INPUTS = 156;   // 5 mario + 140 tiles (10 cols × 14 rows) + 10 enemies (5×2) + 1 timer
-const H1 = 64;
+const H1 = 256;
 const H2 = 32;
 const NUM_OUTPUTS = 6;    // RIGHT, LEFT, A, B, UP, DOWN
 
