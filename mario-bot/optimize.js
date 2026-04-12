@@ -251,6 +251,7 @@ const romString = Array.from(new Uint8Array(romData)).map(b => String.fromCharCo
 const bestPath = path.join(__dirname, 'best-sequence.json');
 const saveStatePath = path.join(__dirname, 'save-state.json');
 const hofPath = path.join(__dirname, 'hall-of-fame.json');
+const neatStatePath = path.join(__dirname, 'neat-state.json');
 
 // ==================== WORKER POOL ====================
 
@@ -356,16 +357,6 @@ async function main() {
     const workers = await createWorkerPool(romString, saveStateStr, NUM_WORKERS);
     console.log(`  ${workers.length} workers ready\n`);
 
-    // Load hall of fame
-    const hallOfFame = loadHallOfFame();
-    if (hallOfFame.length > 0) {
-        console.log(`${C.green}Loaded ${hallOfFame.length} hall of fame entries${C.reset}`);
-        for (const h of hallOfFame) {
-            console.log(`  ${C.dim}${h.bestX}px ${h.completed ? 'COMPLETE' : h.reason} (${h.addedAt?.slice(0,10) || '?'})${C.reset}`);
-        }
-        console.log();
-    }
-
     // Create NEAT population — start EMPTY like MarI/O
     // Each genome starts with zero connections, gets a few random ones to bootstrap
     function createEmptyGenome() {
@@ -406,14 +397,42 @@ async function main() {
     let bestEverGenome = null;
     const startTime = Date.now();
 
+    function saveNeatState(gen) {
+        const state = {
+            generation: gen,
+            bestEverX,
+            bestEverFitness,
+            bestEverGenome,
+            population: neat.population.map(g => g.toJSON()),
+        };
+        fs.writeFileSync(neatStatePath, JSON.stringify(state));
+    }
+
+    // Try loading saved state
+    let startGen = 1;
+    if (fs.existsSync(neatStatePath)) {
+        try {
+            const saved = JSON.parse(fs.readFileSync(neatStatePath, 'utf8'));
+            if (saved.population && saved.population.length > 0) {
+                neat.population = saved.population.map(g => Network.fromJSON(g));
+                startGen = (saved.generation || 0) + 1;
+                bestEverX = saved.bestEverX || 0;
+                bestEverFitness = saved.bestEverFitness || -Infinity;
+                bestEverGenome = saved.bestEverGenome || null;
+                console.log(`${C.green}Resumed from gen ${startGen - 1} | best: ${bestEverX}px | pop: ${neat.population.length}${C.reset}\n`);
+            }
+        } catch(e) { console.log(`${C.dim}Could not load neat-state.json, starting fresh${C.reset}\n`); }
+    }
+
     // SIGINT handler
     let sigCount = 0;
     process.on('SIGINT', () => {
         sigCount++;
         if (sigCount > 1) process.exit(1);
         console.log('\n\nInterrupted! Saving...');
+        saveNeatState(startGen);
         if (bestEverGenome) {
-            console.log(`Best: ${bestEverX}px`);
+            console.log(`Saved gen ${startGen} | best: ${bestEverX}px`);
         }
         workers.forEach(w => w.terminate());
         if (process.stdin.isTTY) process.stdin.setRawMode(false);
@@ -421,7 +440,7 @@ async function main() {
     });
 
     // ==================== EVOLUTION LOOP ====================
-    for (let gen = 1; ; gen++) {
+    for (let gen = startGen; ; gen++) {
         const genStart = Date.now();
 
         // 1. Serialize all genomes
@@ -505,6 +524,13 @@ async function main() {
             // Save best genome replay
             // TODO: replay best genome to generate events for bot.js
         }
+
+        // Save periodically
+        if (gen % 50 === 0) {
+            saveNeatState(gen);
+            console.log(`  ${C.dim}Saved neat-state.json (gen ${gen})${C.reset}`);
+        }
+        startGen = gen; // update for SIGINT handler
 
         // 6. Evolve: elitism + offspring + mutation
         const newPop = [];
