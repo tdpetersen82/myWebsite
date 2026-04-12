@@ -19,26 +19,51 @@ const STALL_FRAMES = 180; // 3 seconds — triggers within 512-frame rollout aft
 const LEVEL_WIDTH = 3200;
 const NUM_WORKERS = Math.max(1, os.cpus().length - 1);
 
-// Network architecture: shared-trunk actor-critic
-// 156 inputs → 64 hidden (ReLU) → 32 hidden (ReLU) → 6 actor (sigmoid) + 1 critic (linear)
+// Network architecture: CNN for tiles + dense for state, merged actor-critic
+// Tile path: 140 tiles [14×10×1] → Conv2D(16,3×3,s2) → Conv2D(32,3×3,s2) → Dense(32)
+// State path: 16 values → Dense(16)
+// Merge: Concat(48) → Dense(32) → Actor(6) + Critic(1)
 const NUM_INPUTS = 156;   // 5 mario + 140 tiles (10 cols × 14 rows) + 10 enemies (5×2) + 1 timer
-const H1 = 64;
-const H2 = 32;
-const NUM_OUTPUTS = 6;    // RIGHT, LEFT, A, B, UP, DOWN
+const TILE_ROWS = 14;
+const TILE_COLS = 10;
+const NUM_TILES = TILE_ROWS * TILE_COLS;  // 140
+const TILE_START = 5;                      // index in input array where tiles begin
+const NUM_STATE = 16;                      // 5 mario + 10 enemies + 1 timer
+const CONV1_FILTERS = 16;
+const CONV2_FILTERS = 32;
+const CONV_DENSE = 32;   // CNN path output features
+const STATE_DENSE = 16;  // State path output features
+const MERGE_H = 32;      // Merged hidden layer
+const NUM_OUTPUTS = 6;   // RIGHT, LEFT, A, B, UP, DOWN
+
+// Conv2D with stride 2, same padding:
+// Layer 1: [14,10,1] → [7,5,16]
+// Layer 2: [7,5,16] → [4,3,32]
+// Flatten: 4*3*32 = 384
+const CONV1_OUT_H = Math.ceil(TILE_ROWS / 2);  // 7
+const CONV1_OUT_W = Math.ceil(TILE_COLS / 2);   // 5
+const CONV2_OUT_H = Math.ceil(CONV1_OUT_H / 2); // 4
+const CONV2_OUT_W = Math.ceil(CONV1_OUT_W / 2);  // 3
+const FLAT_SIZE = CONV2_OUT_H * CONV2_OUT_W * CONV2_FILTERS; // 384
 
 // Weight layout for flat Float32Array (must match TF.js extraction order)
-// TF.js dense layers store [kernel, bias] pairs in creation order
+// TF.js layers store [kernel, bias] pairs in creation order
 const W = {};
-W.ih1_k = 0;                                       // input→h1 kernel: NUM_INPUTS×H1
-W.ih1_b = W.ih1_k + NUM_INPUTS * H1;               // input→h1 bias: H1
-W.h1h2_k = W.ih1_b + H1;                           // h1→h2 kernel: H1×H2
-W.h1h2_b = W.h1h2_k + H1 * H2;                     // h1→h2 bias: H2
-W.actor_k = W.h1h2_b + H2;                          // h2→actor kernel: H2×NUM_OUTPUTS
-W.actor_b = W.actor_k + H2 * NUM_OUTPUTS;           // h2→actor bias: NUM_OUTPUTS
-W.critic_k = W.actor_b + NUM_OUTPUTS;               // h2→critic kernel: H2×1
-W.critic_b = W.critic_k + H2;                       // h2→critic bias: 1
+W.conv1_k = 0;                                               // [3,3,1,16] = 144
+W.conv1_b = W.conv1_k + 3 * 3 * 1 * CONV1_FILTERS;          // [16]
+W.conv2_k = W.conv1_b + CONV1_FILTERS;                       // [3,3,16,32] = 4608
+W.conv2_b = W.conv2_k + 3 * 3 * CONV1_FILTERS * CONV2_FILTERS; // [32]
+W.tile_dense_k = W.conv2_b + CONV2_FILTERS;                  // [384,32] = 12288
+W.tile_dense_b = W.tile_dense_k + FLAT_SIZE * CONV_DENSE;    // [32]
+W.state_dense_k = W.tile_dense_b + CONV_DENSE;               // [16,16] = 256
+W.state_dense_b = W.state_dense_k + NUM_STATE * STATE_DENSE; // [16]
+W.merge_k = W.state_dense_b + STATE_DENSE;                   // [48,32] = 1536
+W.merge_b = W.merge_k + (CONV_DENSE + STATE_DENSE) * MERGE_H; // [32]
+W.actor_k = W.merge_b + MERGE_H;                             // [32,6] = 192
+W.actor_b = W.actor_k + MERGE_H * NUM_OUTPUTS;               // [6]
+W.critic_k = W.actor_b + NUM_OUTPUTS;                        // [32,1] = 32
+W.critic_b = W.critic_k + MERGE_H;                           // [1]
 const TOTAL_WEIGHTS = W.critic_b + 1;
-// = 156*64 + 64 + 64*32 + 32 + 32*6 + 6 + 32 + 1 = 9984+64+2048+32+192+6+32+1 = 12359
 
 // PPO hyperparameters
 const ROLLOUT_LENGTH = 512;    // frames per worker per rollout
@@ -105,42 +130,99 @@ function patchJsnesLite(jsnes) {
 //  Must produce identical output to the TF.js model on main thread.
 // ================================================================
 
+// Manual Conv2D: 'same' padding, stride 2, ReLU activation
+// TF.js kernel layout: [kernelH, kernelW, inputChannels, outputFilters]
+function conv2dForward(input, inH, inW, inC, weights, wOff, bOff, filters, strH, strW) {
+    const kH = 3, kW = 3;
+    const outH = Math.ceil(inH / strH);
+    const outW = Math.ceil(inW / strW);
+    const padH = Math.max(0, (outH - 1) * strH + kH - inH);
+    const padW = Math.max(0, (outW - 1) * strW + kW - inW);
+    const padTop = Math.floor(padH / 2);
+    const padLeft = Math.floor(padW / 2);
+
+    const output = new Float32Array(outH * outW * filters);
+    for (let f = 0; f < filters; f++) {
+        for (let oy = 0; oy < outH; oy++) {
+            for (let ox = 0; ox < outW; ox++) {
+                let sum = weights[bOff + f];
+                for (let c = 0; c < inC; c++) {
+                    for (let ky = 0; ky < kH; ky++) {
+                        for (let kx = 0; kx < kW; kx++) {
+                            const iy = oy * strH + ky - padTop;
+                            const ix = ox * strW + kx - padLeft;
+                            if (iy >= 0 && iy < inH && ix >= 0 && ix < inW) {
+                                // TF kernel: [ky, kx, c, f]
+                                const kidx = ((ky * kW + kx) * inC + c) * filters + f;
+                                sum += input[(iy * inW + ix) * inC + c] * weights[wOff + kidx];
+                            }
+                        }
+                    }
+                }
+                const oidx = (oy * outW + ox) * filters + f;
+                output[oidx] = sum > 0 ? sum : 0; // ReLU
+            }
+        }
+    }
+    return { data: output, h: outH, w: outW };
+}
+
+// Dense layer: ReLU activation (or linear if isLinear)
+function denseForward(input, inSize, outSize, weights, wOff, bOff, relu) {
+    const output = new Float32Array(outSize);
+    for (let j = 0; j < outSize; j++) {
+        let sum = weights[bOff + j];
+        for (let i = 0; i < inSize; i++) {
+            sum += input[i] * weights[wOff + i * outSize + j];
+        }
+        output[j] = relu ? (sum > 0 ? sum : 0) : sum;
+    }
+    return output;
+}
+
 function forwardPass(inputs, weights) {
-    // Hidden layer 1: ReLU
-    const h1 = new Float32Array(H1);
-    for (let j = 0; j < H1; j++) {
-        let sum = weights[W.ih1_b + j];
-        for (let i = 0; i < NUM_INPUTS; i++) {
-            sum += inputs[i] * weights[W.ih1_k + i * H1 + j];
-        }
-        h1[j] = sum > 0 ? sum : 0; // ReLU
-    }
+    // === Split inputs ===
+    // Tiles: inputs[5..144] (140 values, layout: row-major [14 rows × 10 cols])
+    const tiles = new Float32Array(NUM_TILES);
+    for (let i = 0; i < NUM_TILES; i++) tiles[i] = inputs[TILE_START + i];
 
-    // Hidden layer 2: ReLU
-    const h2 = new Float32Array(H2);
-    for (let j = 0; j < H2; j++) {
-        let sum = weights[W.h1h2_b + j];
-        for (let i = 0; i < H1; i++) {
-            sum += h1[i] * weights[W.h1h2_k + i * H2 + j];
-        }
-        h2[j] = sum > 0 ? sum : 0; // ReLU
-    }
+    // State: inputs[0..4] + inputs[145..155] (16 values)
+    const state = new Float32Array(NUM_STATE);
+    for (let i = 0; i < 5; i++) state[i] = inputs[i];
+    for (let i = 0; i < 11; i++) state[5 + i] = inputs[145 + i];
 
-    // Actor head: sigmoid (independent per-button probability)
+    // === CNN tile path ===
+    // Conv1: [14,10,1] → [7,5,16]
+    const c1 = conv2dForward(tiles, TILE_ROWS, TILE_COLS, 1, weights, W.conv1_k, W.conv1_b, CONV1_FILTERS, 2, 2);
+    // Conv2: [7,5,16] → [4,3,32]
+    const c2 = conv2dForward(c1.data, c1.h, c1.w, CONV1_FILTERS, weights, W.conv2_k, W.conv2_b, CONV2_FILTERS, 2, 2);
+    // Flatten → Dense(32, relu)
+    const tileFeatures = denseForward(c2.data, FLAT_SIZE, CONV_DENSE, weights, W.tile_dense_k, W.tile_dense_b, true);
+
+    // === State path ===
+    const stateFeatures = denseForward(state, NUM_STATE, STATE_DENSE, weights, W.state_dense_k, W.state_dense_b, true);
+
+    // === Merge ===
+    const merged = new Float32Array(CONV_DENSE + STATE_DENSE);
+    merged.set(tileFeatures, 0);
+    merged.set(stateFeatures, CONV_DENSE);
+    const h = denseForward(merged, CONV_DENSE + STATE_DENSE, MERGE_H, weights, W.merge_k, W.merge_b, true);
+
+    // === Actor head: sigmoid ===
     const probs = new Float32Array(NUM_OUTPUTS);
     for (let j = 0; j < NUM_OUTPUTS; j++) {
         let sum = weights[W.actor_b + j];
-        for (let i = 0; i < H2; i++) {
-            sum += h2[i] * weights[W.actor_k + i * NUM_OUTPUTS + j];
+        for (let i = 0; i < MERGE_H; i++) {
+            sum += h[i] * weights[W.actor_k + i * NUM_OUTPUTS + j];
         }
         sum = Math.max(-10, Math.min(10, sum));
         probs[j] = 1 / (1 + Math.exp(-sum));
     }
 
-    // Critic head: linear (state value)
+    // === Critic head: linear ===
     let value = weights[W.critic_b];
-    for (let i = 0; i < H2; i++) {
-        value += h2[i] * weights[W.critic_k + i];
+    for (let i = 0; i < MERGE_H; i++) {
+        value += h[i] * weights[W.critic_k + i];
     }
 
     return { probs, value };
@@ -457,44 +539,66 @@ const romString = Array.from(new Uint8Array(romData)).map(b => String.fromCharCo
 // ==================== TF.JS MODEL ====================
 
 function createModel() {
-    const input = tf.input({ shape: [NUM_INPUTS] });
-    const h1 = tf.layers.dense({ units: H1, activation: 'relu', kernelInitializer: 'heNormal', name: 'h1' }).apply(input);
-    const h2 = tf.layers.dense({ units: H2, activation: 'relu', kernelInitializer: 'heNormal', name: 'h2' }).apply(h1);
-    const actorOut = tf.layers.dense({ units: NUM_OUTPUTS, activation: 'sigmoid', name: 'actor' }).apply(h2);
-    const criticOut = tf.layers.dense({ units: 1, name: 'critic' }).apply(h2);
-    return tf.model({ inputs: input, outputs: [actorOut, criticOut] });
+    // Tile CNN path
+    const tileInput = tf.input({ shape: [NUM_TILES], name: 'tile_input' });
+    const reshaped = tf.layers.reshape({ targetShape: [TILE_ROWS, TILE_COLS, 1], name: 'reshape' }).apply(tileInput);
+    const conv1 = tf.layers.conv2d({ filters: CONV1_FILTERS, kernelSize: 3, strides: 2, padding: 'same', activation: 'relu', kernelInitializer: 'heNormal', name: 'conv1' }).apply(reshaped);
+    const conv2 = tf.layers.conv2d({ filters: CONV2_FILTERS, kernelSize: 3, strides: 2, padding: 'same', activation: 'relu', kernelInitializer: 'heNormal', name: 'conv2' }).apply(conv1);
+    const flat = tf.layers.flatten({ name: 'flatten' }).apply(conv2);
+    const tileFeatures = tf.layers.dense({ units: CONV_DENSE, activation: 'relu', kernelInitializer: 'heNormal', name: 'tile_dense' }).apply(flat);
+
+    // State path (mario + enemies + timer)
+    const stateInput = tf.input({ shape: [NUM_STATE], name: 'state_input' });
+    const stateFeatures = tf.layers.dense({ units: STATE_DENSE, activation: 'relu', kernelInitializer: 'heNormal', name: 'state_dense' }).apply(stateInput);
+
+    // Merge
+    const merged = tf.layers.concatenate({ name: 'concat' }).apply([tileFeatures, stateFeatures]);
+    const h = tf.layers.dense({ units: MERGE_H, activation: 'relu', kernelInitializer: 'heNormal', name: 'merge' }).apply(merged);
+    const actorOut = tf.layers.dense({ units: NUM_OUTPUTS, activation: 'sigmoid', name: 'actor' }).apply(h);
+    const criticOut = tf.layers.dense({ units: 1, name: 'critic' }).apply(h);
+
+    return tf.model({ inputs: [tileInput, stateInput], outputs: [actorOut, criticOut] });
 }
 
+// Weight extraction/loading: order matches TF.js getWeights() order
+// TF.js returns trainable weights in layer creation order:
+// conv1/kernel, conv1/bias, conv2/kernel, conv2/bias,
+// tile_dense/kernel, tile_dense/bias, state_dense/kernel, state_dense/bias,
+// merge/kernel, merge/bias, actor/kernel, actor/bias, critic/kernel, critic/bias
+// (reshape, flatten, concat have no weights)
+const WEIGHT_MAP = [
+    ['conv1_k', 3*3*1*CONV1_FILTERS],
+    ['conv1_b', CONV1_FILTERS],
+    ['conv2_k', 3*3*CONV1_FILTERS*CONV2_FILTERS],
+    ['conv2_b', CONV2_FILTERS],
+    ['tile_dense_k', FLAT_SIZE*CONV_DENSE],
+    ['tile_dense_b', CONV_DENSE],
+    ['state_dense_k', NUM_STATE*STATE_DENSE],
+    ['state_dense_b', STATE_DENSE],
+    ['merge_k', (CONV_DENSE+STATE_DENSE)*MERGE_H],
+    ['merge_b', MERGE_H],
+    ['actor_k', MERGE_H*NUM_OUTPUTS],
+    ['actor_b', NUM_OUTPUTS],
+    ['critic_k', MERGE_H],
+    ['critic_b', 1],
+];
+
 function extractWeights(model) {
-    // Extract all weights into a flat Float32Array matching the W layout
     const flat = new Float32Array(TOTAL_WEIGHTS);
     const tensors = model.getWeights();
-    // TF.js order: h1/kernel, h1/bias, h2/kernel, h2/bias, actor/kernel, actor/bias, critic/kernel, critic/bias
     const data = tensors.map(t => t.dataSync());
-    flat.set(data[0], W.ih1_k);     // h1 kernel
-    flat.set(data[1], W.ih1_b);     // h1 bias
-    flat.set(data[2], W.h1h2_k);    // h2 kernel
-    flat.set(data[3], W.h1h2_b);    // h2 bias
-    flat.set(data[4], W.actor_k);   // actor kernel
-    flat.set(data[5], W.actor_b);   // actor bias
-    flat.set(data[6], W.critic_k);  // critic kernel
-    flat.set(data[7], W.critic_b);  // critic bias
+    for (let i = 0; i < WEIGHT_MAP.length; i++) {
+        flat.set(data[i], W[WEIGHT_MAP[i][0]]);
+    }
     return flat;
 }
 
 function loadWeightsIntoModel(model, flat) {
     const tensors = model.getWeights();
     const shapes = tensors.map(t => t.shape);
-    const newTensors = [
-        tf.tensor(flat.slice(W.ih1_k, W.ih1_k + NUM_INPUTS * H1), shapes[0]),
-        tf.tensor(flat.slice(W.ih1_b, W.ih1_b + H1), shapes[1]),
-        tf.tensor(flat.slice(W.h1h2_k, W.h1h2_k + H1 * H2), shapes[2]),
-        tf.tensor(flat.slice(W.h1h2_b, W.h1h2_b + H2), shapes[3]),
-        tf.tensor(flat.slice(W.actor_k, W.actor_k + H2 * NUM_OUTPUTS), shapes[4]),
-        tf.tensor(flat.slice(W.actor_b, W.actor_b + NUM_OUTPUTS), shapes[5]),
-        tf.tensor(flat.slice(W.critic_k, W.critic_k + H2), shapes[6]),
-        tf.tensor(flat.slice(W.critic_b, W.critic_b + 1), shapes[7]),
-    ];
+    const newTensors = WEIGHT_MAP.map(([name, size], i) =>
+        tf.tensor(flat.slice(W[name], W[name] + size), shapes[i])
+    );
     model.setWeights(newTensors);
     newTensors.forEach(t => t.dispose());
 }
@@ -552,8 +656,13 @@ function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
     let totalPolicyLoss = 0, totalValueLoss = 0, totalEntropy = 0, totalClipFrac = 0;
     let batchCount = 0;
 
-    // Create tensors for full dataset
+    // Create tensors for full dataset — split into tile and state inputs
     const statesTensor = tf.tensor2d(states, [T, NUM_INPUTS]);
+    const tilesTensor = statesTensor.slice([0, TILE_START], [-1, NUM_TILES]);
+    const stateTensor = tf.concat([
+        statesTensor.slice([0, 0], [-1, 5]),           // mario state
+        statesTensor.slice([0, TILE_START + NUM_TILES], [-1, 11])  // enemies + timer
+    ], 1);
     const actionsTensor = tf.tensor2d(actionBits, [T, NUM_OUTPUTS]);
     const oldLogProbsTensor = tf.tensor1d(oldLogProbs);
     const advTensor = tf.tensor1d(normAdv);
@@ -571,7 +680,8 @@ function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
             const end = Math.min(start + MINIBATCH_SIZE, T);
             const mbIdx = tf.tensor1d(indices.slice(start, end), 'int32');
 
-            const mbStates = tf.gather(statesTensor, mbIdx);
+            const mbTiles = tf.gather(tilesTensor, mbIdx);
+            const mbState = tf.gather(stateTensor, mbIdx);
             const mbActions = tf.gather(actionsTensor, mbIdx);
             const mbOldLogProbs = tf.gather(oldLogProbsTensor, mbIdx);
             const mbAdv = tf.gather(advTensor, mbIdx);
@@ -579,7 +689,7 @@ function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
 
             // Compute gradients manually so we can clip them
             const { value: loss, grads } = tf.variableGrads(() => {
-                const [actorOut, criticOut] = model.apply(mbStates, { training: true });
+                const [actorOut, criticOut] = model.apply([mbTiles, mbState], { training: true });
 
                 // Clamp probabilities
                 const probs = actorOut.clipByValue(1e-8, 1 - 1e-8);
@@ -639,7 +749,8 @@ function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
 
             // Clean up
             mbIdx.dispose();
-            mbStates.dispose();
+            mbTiles.dispose();
+            mbState.dispose();
             mbActions.dispose();
             mbOldLogProbs.dispose();
             mbAdv.dispose();
@@ -649,6 +760,8 @@ function ppoUpdate(model, states, actions, oldLogProbs, advantages, returns) {
 
     // Clean up full-dataset tensors
     statesTensor.dispose();
+    tilesTensor.dispose();
+    stateTensor.dispose();
     actionsTensor.dispose();
     oldLogProbsTensor.dispose();
     advTensor.dispose();
@@ -1096,7 +1209,7 @@ async function main() {
     await broadcastWeights(workers, currentWeightsFlat);
 
     console.log(`${C.cyan}=== PPO TRAINING ===${C.reset}`);
-    console.log(`${C.dim}Arch: ${NUM_INPUTS}→${H1}→${H2}→${NUM_OUTPUTS}+1 | Weights: ${TOTAL_WEIGHTS}${C.reset}`);
+    console.log(`${C.dim}Arch: CNN[${TILE_ROWS}×${TILE_COLS}→${CONV1_FILTERS}→${CONV2_FILTERS}→${CONV_DENSE}] + State[${NUM_STATE}→${STATE_DENSE}] → ${MERGE_H}→${NUM_OUTPUTS}+1 | Weights: ${TOTAL_WEIGHTS}${C.reset}`);
     console.log(`${C.dim}Rollout: ${ROLLOUT_LENGTH}f × ${workers.length} workers = ${ROLLOUT_LENGTH * workers.length} frames/update${C.reset}`);
     console.log(`${C.dim}PPO: epochs=${PPO_EPOCHS} minibatch=${MINIBATCH_SIZE} clip=${CLIP_EPSILON} lr=${LEARNING_RATE}${C.reset}`);
     console.log(`${C.dim}Reward: progress=${REWARD_PROGRESS}/px death=${REWARD_DEATH} time=${REWARD_TIME_PENALTY}/f completion=${REWARD_COMPLETION}${C.reset}`);
