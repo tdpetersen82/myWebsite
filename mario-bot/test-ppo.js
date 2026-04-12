@@ -73,38 +73,23 @@ function assertClose(a, b, tol, msg) {
 // ==================== CONFIG (copied from optimize.js) ====================
 
 const MAX_FRAMES = 8000;
-const STALL_FRAMES = 180;
+const STALL_FRAMES = 360;
 const LEVEL_WIDTH = 3200;
 
 const NUM_INPUTS = 156;
-const TILE_ROWS = 14;
-const TILE_COLS = 10;
-const NUM_TILES = TILE_ROWS * TILE_COLS;
-const TILE_START = 5;
-const NUM_STATE = 16;
-const CONV1_FILTERS = 8;
-const CONV_DENSE = 32;
-const STATE_DENSE = 16;
-const MERGE_H = 32;
+const H1 = 64;
+const H2 = 32;
 const NUM_OUTPUTS = 6;
 
-const CONV1_OUT_H = Math.ceil(TILE_ROWS / 2);
-const CONV1_OUT_W = Math.ceil(TILE_COLS / 2);
-const FLAT_SIZE = CONV1_OUT_H * CONV1_OUT_W * CONV1_FILTERS;
-
 const W = {};
-W.conv1_k = 0;
-W.conv1_b = W.conv1_k + 3 * 3 * 1 * CONV1_FILTERS;
-W.tile_dense_k = W.conv1_b + CONV1_FILTERS;
-W.tile_dense_b = W.tile_dense_k + FLAT_SIZE * CONV_DENSE;
-W.state_dense_k = W.tile_dense_b + CONV_DENSE;
-W.state_dense_b = W.state_dense_k + NUM_STATE * STATE_DENSE;
-W.merge_k = W.state_dense_b + STATE_DENSE;
-W.merge_b = W.merge_k + (CONV_DENSE + STATE_DENSE) * MERGE_H;
-W.actor_k = W.merge_b + MERGE_H;
-W.actor_b = W.actor_k + MERGE_H * NUM_OUTPUTS;
+W.ih1_k = 0;
+W.ih1_b = W.ih1_k + NUM_INPUTS * H1;
+W.h1h2_k = W.ih1_b + H1;
+W.h1h2_b = W.h1h2_k + H1 * H2;
+W.actor_k = W.h1h2_b + H2;
+W.actor_b = W.actor_k + H2 * NUM_OUTPUTS;
 W.critic_k = W.actor_b + NUM_OUTPUTS;
-W.critic_b = W.critic_k + MERGE_H;
+W.critic_b = W.critic_k + H2;
 const TOTAL_WEIGHTS = W.critic_b + 1;
 
 const ROLLOUT_LENGTH = 512;
@@ -159,79 +144,38 @@ function patchJsnesLite() {
 
 // ==================== CORE FUNCTIONS (copied from optimize.js) ====================
 
-function conv2dForward(input, inH, inW, inC, weights, wOff, bOff, filters, strH, strW) {
-    const kH = 3, kW = 3;
-    const outH = Math.ceil(inH / strH);
-    const outW = Math.ceil(inW / strW);
-    const padH = Math.max(0, (outH - 1) * strH + kH - inH);
-    const padW = Math.max(0, (outW - 1) * strW + kW - inW);
-    const padTop = Math.floor(padH / 2);
-    const padLeft = Math.floor(padW / 2);
-    const output = new Float32Array(outH * outW * filters);
-    for (let f = 0; f < filters; f++) {
-        for (let oy = 0; oy < outH; oy++) {
-            for (let ox = 0; ox < outW; ox++) {
-                let sum = weights[bOff + f];
-                for (let c = 0; c < inC; c++) {
-                    for (let ky = 0; ky < kH; ky++) {
-                        for (let kx = 0; kx < kW; kx++) {
-                            const iy = oy * strH + ky - padTop;
-                            const ix = ox * strW + kx - padLeft;
-                            if (iy >= 0 && iy < inH && ix >= 0 && ix < inW) {
-                                const kidx = ((ky * kW + kx) * inC + c) * filters + f;
-                                sum += input[(iy * inW + ix) * inC + c] * weights[wOff + kidx];
-                            }
-                        }
-                    }
-                }
-                output[(oy * outW + ox) * filters + f] = sum > 0 ? sum : 0;
-            }
-        }
-    }
-    return { data: output, h: outH, w: outW };
-}
-
-function denseForward(input, inSize, outSize, weights, wOff, bOff, relu) {
-    const output = new Float32Array(outSize);
-    for (let j = 0; j < outSize; j++) {
-        let sum = weights[bOff + j];
-        for (let i = 0; i < inSize; i++) {
-            sum += input[i] * weights[wOff + i * outSize + j];
-        }
-        output[j] = relu ? (sum > 0 ? sum : 0) : sum;
-    }
-    return output;
-}
-
 function forwardPass(inputs, weights) {
-    const tiles = new Float32Array(NUM_TILES);
-    for (let i = 0; i < NUM_TILES; i++) tiles[i] = inputs[TILE_START + i];
-    const state = new Float32Array(NUM_STATE);
-    for (let i = 0; i < 5; i++) state[i] = inputs[i];
-    for (let i = 0; i < 11; i++) state[5 + i] = inputs[145 + i];
+    const h1 = new Float32Array(H1);
+    for (let j = 0; j < H1; j++) {
+        let sum = weights[W.ih1_b + j];
+        for (let i = 0; i < NUM_INPUTS; i++) {
+            sum += inputs[i] * weights[W.ih1_k + i * H1 + j];
+        }
+        h1[j] = sum > 0 ? sum : 0;
+    }
 
-    const c1 = conv2dForward(tiles, TILE_ROWS, TILE_COLS, 1, weights, W.conv1_k, W.conv1_b, CONV1_FILTERS, 2, 2);
-    const tileFeatures = denseForward(c1.data, FLAT_SIZE, CONV_DENSE, weights, W.tile_dense_k, W.tile_dense_b, true);
-    const stateFeatures = denseForward(state, NUM_STATE, STATE_DENSE, weights, W.state_dense_k, W.state_dense_b, true);
-
-    const merged = new Float32Array(CONV_DENSE + STATE_DENSE);
-    merged.set(tileFeatures, 0);
-    merged.set(stateFeatures, CONV_DENSE);
-    const h = denseForward(merged, CONV_DENSE + STATE_DENSE, MERGE_H, weights, W.merge_k, W.merge_b, true);
+    const h2 = new Float32Array(H2);
+    for (let j = 0; j < H2; j++) {
+        let sum = weights[W.h1h2_b + j];
+        for (let i = 0; i < H1; i++) {
+            sum += h1[i] * weights[W.h1h2_k + i * H2 + j];
+        }
+        h2[j] = sum > 0 ? sum : 0;
+    }
 
     const probs = new Float32Array(NUM_OUTPUTS);
     for (let j = 0; j < NUM_OUTPUTS; j++) {
         let sum = weights[W.actor_b + j];
-        for (let i = 0; i < MERGE_H; i++) {
-            sum += h[i] * weights[W.actor_k + i * NUM_OUTPUTS + j];
+        for (let i = 0; i < H2; i++) {
+            sum += h2[i] * weights[W.actor_k + i * NUM_OUTPUTS + j];
         }
         sum = Math.max(-10, Math.min(10, sum));
         probs[j] = 1 / (1 + Math.exp(-sum));
     }
 
     let value = weights[W.critic_b];
-    for (let i = 0; i < MERGE_H; i++) {
-        value += h[i] * weights[W.critic_k + i];
+    for (let i = 0; i < H2; i++) {
+        value += h2[i] * weights[W.critic_k + i];
     }
 
     return { probs, value };
@@ -336,51 +280,42 @@ function computeGAE(rewards, values, dones, lastValue) {
 }
 
 function createModel() {
-    const tileInput = tf.input({ shape: [NUM_TILES], name: 'tile_input' });
-    const reshaped = tf.layers.reshape({ targetShape: [TILE_ROWS, TILE_COLS, 1], name: 'reshape' }).apply(tileInput);
-    const conv1 = tf.layers.conv2d({ filters: CONV1_FILTERS, kernelSize: 3, strides: 2, padding: 'same', activation: 'relu', kernelInitializer: 'heNormal', name: 'conv1' }).apply(reshaped);
-    const flat = tf.layers.flatten({ name: 'flatten' }).apply(conv1);
-    const tileFeatures = tf.layers.dense({ units: CONV_DENSE, activation: 'relu', kernelInitializer: 'heNormal', name: 'tile_dense' }).apply(flat);
-    const stateInput = tf.input({ shape: [NUM_STATE], name: 'state_input' });
-    const stateFeatures = tf.layers.dense({ units: STATE_DENSE, activation: 'relu', kernelInitializer: 'heNormal', name: 'state_dense' }).apply(stateInput);
-    const merged = tf.layers.concatenate({ name: 'concat' }).apply([tileFeatures, stateFeatures]);
-    const h = tf.layers.dense({ units: MERGE_H, activation: 'relu', kernelInitializer: 'heNormal', name: 'merge' }).apply(merged);
-    const actorOut = tf.layers.dense({ units: NUM_OUTPUTS, activation: 'sigmoid', name: 'actor' }).apply(h);
-    const criticOut = tf.layers.dense({ units: 1, name: 'critic' }).apply(h);
-    return tf.model({ inputs: [tileInput, stateInput], outputs: [actorOut, criticOut] });
+    const input = tf.input({ shape: [NUM_INPUTS] });
+    const h1 = tf.layers.dense({ units: H1, activation: 'relu', kernelInitializer: 'heNormal', name: 'h1' }).apply(input);
+    const h2 = tf.layers.dense({ units: H2, activation: 'relu', kernelInitializer: 'heNormal', name: 'h2' }).apply(h1);
+    const actorOut = tf.layers.dense({ units: NUM_OUTPUTS, activation: 'sigmoid', name: 'actor' }).apply(h2);
+    const criticOut = tf.layers.dense({ units: 1, name: 'critic' }).apply(h2);
+    return tf.model({ inputs: input, outputs: [actorOut, criticOut] });
 }
-
-const WEIGHT_MAP = [
-    ['conv1_k', 3*3*1*CONV1_FILTERS],
-    ['conv1_b', CONV1_FILTERS],
-    ['tile_dense_k', FLAT_SIZE*CONV_DENSE],
-    ['tile_dense_b', CONV_DENSE],
-    ['state_dense_k', NUM_STATE*STATE_DENSE],
-    ['state_dense_b', STATE_DENSE],
-    ['merge_k', (CONV_DENSE+STATE_DENSE)*MERGE_H],
-    ['merge_b', MERGE_H],
-    ['actor_k', MERGE_H*NUM_OUTPUTS],
-    ['actor_b', NUM_OUTPUTS],
-    ['critic_k', MERGE_H],
-    ['critic_b', 1],
-];
 
 function extractWeights(model) {
     const flat = new Float32Array(TOTAL_WEIGHTS);
     const tensors = model.getWeights();
     const data = tensors.map(t => t.dataSync());
-    for (let i = 0; i < WEIGHT_MAP.length; i++) {
-        flat.set(data[i], W[WEIGHT_MAP[i][0]]);
-    }
+    flat.set(data[0], W.ih1_k);
+    flat.set(data[1], W.ih1_b);
+    flat.set(data[2], W.h1h2_k);
+    flat.set(data[3], W.h1h2_b);
+    flat.set(data[4], W.actor_k);
+    flat.set(data[5], W.actor_b);
+    flat.set(data[6], W.critic_k);
+    flat.set(data[7], W.critic_b);
     return flat;
 }
 
 function loadWeightsIntoModel(model, flat) {
     const tensors = model.getWeights();
     const shapes = tensors.map(t => t.shape);
-    const newTensors = WEIGHT_MAP.map(([name, size], i) =>
-        tf.tensor(flat.slice(W[name], W[name] + size), shapes[i])
-    );
+    const newTensors = [
+        tf.tensor(flat.slice(W.ih1_k, W.ih1_k + NUM_INPUTS * H1), shapes[0]),
+        tf.tensor(flat.slice(W.ih1_b, W.ih1_b + H1), shapes[1]),
+        tf.tensor(flat.slice(W.h1h2_k, W.h1h2_k + H1 * H2), shapes[2]),
+        tf.tensor(flat.slice(W.h1h2_b, W.h1h2_b + H2), shapes[3]),
+        tf.tensor(flat.slice(W.actor_k, W.actor_k + H2 * NUM_OUTPUTS), shapes[4]),
+        tf.tensor(flat.slice(W.actor_b, W.actor_b + NUM_OUTPUTS), shapes[5]),
+        tf.tensor(flat.slice(W.critic_k, W.critic_k + H2), shapes[6]),
+        tf.tensor(flat.slice(W.critic_b, W.critic_b + 1), shapes[7]),
+    ];
     model.setWeights(newTensors);
     newTensors.forEach(t => t.dispose());
 }
@@ -607,16 +542,12 @@ async function testForwardPass() {
         // Manual forward pass
         const manual = forwardPass(data, weights);
 
-        // TF.js forward pass — split into tile and state inputs
-        const tileData = Array.from(data).slice(TILE_START, TILE_START + NUM_TILES);
-        const stateData = [...Array.from(data).slice(0, 5), ...Array.from(data).slice(TILE_START + NUM_TILES)];
-        const tileTensor = tf.tensor2d([tileData], [1, NUM_TILES]);
-        const stateTensor = tf.tensor2d([stateData], [1, NUM_STATE]);
-        const [actorOut, criticOut] = model.predict([tileTensor, stateTensor]);
+        // TF.js forward pass
+        const inputTensor = tf.tensor2d([Array.from(data)], [1, NUM_INPUTS]);
+        const [actorOut, criticOut] = model.predict(inputTensor);
         const tfProbs = actorOut.dataSync();
         const tfValue = criticOut.dataSync()[0];
-        tileTensor.dispose();
-        stateTensor.dispose();
+        inputTensor.dispose();
         actorOut.dispose();
         criticOut.dispose();
 
@@ -1471,11 +1402,6 @@ async function testPPOUpdateStability() {
     const optimizer = tf.train.adam(LEARNING_RATE);
 
     const statesTensor = tf.tensor2d(states, [T, NUM_INPUTS]);
-    const tilesTensor = statesTensor.slice([0, TILE_START], [-1, NUM_TILES]);
-    const stateTensor = tf.concat([
-        statesTensor.slice([0, 0], [-1, 5]),
-        statesTensor.slice([0, TILE_START + NUM_TILES], [-1, 11])
-    ], 1);
     const oldLogProbsTensor = tf.tensor1d(logProbs);
 
     // Normalize advantages
@@ -1500,7 +1426,7 @@ async function testPPOUpdateStability() {
 
     let lossValue = null;
     optimizer.minimize(() => {
-        const [actorOut, criticOut] = model.apply([tilesTensor, stateTensor], { training: true });
+        const [actorOut, criticOut] = model.apply(statesTensor, { training: true });
         const probs = actorOut.clipByValue(1e-8, 1 - 1e-8);
         const vals = criticOut.squeeze([-1]);
         const logP = actionsTensor.mul(probs.log()).add(
@@ -1535,7 +1461,7 @@ async function testPPOUpdateStability() {
     INFO(`Loss: ${lossValue.toFixed(6)}, max weight change: ${maxWeightChange.toExponential(3)}`);
 
     // Cleanup
-    statesTensor.dispose(); tilesTensor.dispose(); stateTensor.dispose(); oldLogProbsTensor.dispose(); actionsTensor.dispose();
+    statesTensor.dispose(); oldLogProbsTensor.dispose(); actionsTensor.dispose();
     advTensor.dispose(); returnsTensor.dispose(); optimizer.dispose(); model.dispose();
 }
 
@@ -1775,11 +1701,11 @@ async function testOptimizerLifecycle() {
     assert(hasGradClip || hasMinimize, 'Uses gradient computation with proper cleanup (variableGrads+applyGradients or optimizer.minimize)');
 
     // Check that full-dataset tensors are disposed
-    const fullTensorDispose = code.includes('statesTensor.dispose()') && code.includes('tilesTensor.dispose()') && code.includes('returnsTensor.dispose()');
+    const fullTensorDispose = code.includes('statesTensor.dispose()') && code.includes('returnsTensor.dispose()');
     assert(fullTensorDispose, 'Full-dataset tensors are disposed after PPO update');
 
     // Check minibatch tensors are disposed
-    const mbDispose = (code.includes('mbTiles.dispose()') && code.includes('mbState.dispose()') || code.includes('mbStates.dispose()')) && code.includes('mbIdx.dispose()');
+    const mbDispose = code.includes('mbStates.dispose()') && code.includes('mbIdx.dispose()');
     assert(mbDispose, 'Minibatch tensors are disposed each iteration');
 }
 
@@ -1921,12 +1847,11 @@ async function testNaNRecovery() {
     assert(!isNaN(goodWeights[0]), 'First weight is not NaN after recovery');
 
     // Verify model still produces valid output
-    const testTiles = tf.zeros([1, NUM_TILES]);
-    const testState = tf.zeros([1, NUM_STATE]);
-    const [actorOut, criticOut] = model.predict([testTiles, testState]);
+    const testInput = tf.zeros([1, NUM_INPUTS]);
+    const [actorOut, criticOut] = model.predict(testInput);
     const probs = actorOut.dataSync();
     const value = criticOut.dataSync()[0];
-    testTiles.dispose(); testState.dispose(); actorOut.dispose(); criticOut.dispose();
+    testInput.dispose(); actorOut.dispose(); criticOut.dispose();
 
     let outputsFinite = true;
     for (const p of probs) { if (!isFinite(p)) outputsFinite = false; }
