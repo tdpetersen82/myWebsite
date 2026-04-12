@@ -20,10 +20,15 @@ const STALL_FRAMES = 60;          // 1 second — enough to try jumping, fast en
 const LEVEL_WIDTH = 3200;
 const NUM_WORKERS = Math.max(1, os.cpus().length - 1);
 const POPULATION_SIZE = 300;
-const ELITISM = Math.round(POPULATION_SIZE * 0.1);  // top 10% survive unchanged
 const NUM_INPUTS = 156;           // 5 mario + 140 tiles + 10 enemies + 1 timer
 const NUM_OUTPUTS = 6;            // RIGHT, LEFT, A, B, UP, DOWN
 const HOF_SIZE = 10;
+
+// Speciation (MarI/O parameters)
+const DELTA_DISJOINT = 2.0;      // weight for structural differences
+const DELTA_WEIGHTS = 0.4;       // weight for connection weight differences
+const DELTA_THRESHOLD = 10.0;    // compatibility distance — high because empty genomes with random connections are very different
+const STALE_SPECIES = 15;        // kill species with no improvement in N gens
 
 // ==================== BUTTON CONSTANTS ====================
 
@@ -312,6 +317,157 @@ function saveHallOfFame(hof) {
     fs.writeFileSync(hofPath, JSON.stringify(hof, null, 2));
 }
 
+// ==================== SPECIATION ====================
+// MarI/O-style: group similar genomes, protect innovation, breed within species
+
+function genomeDistance(g1, g2) {
+    // Build connection maps by innovation-like key (from→to)
+    const conns1 = new Map();
+    for (const c of g1.connections) conns1.set(`${c.from}→${c.to}`, c.weight);
+    const conns2 = new Map();
+    for (const c of g2.connections) conns2.set(`${c.from}→${c.to}`, c.weight);
+
+    // Count disjoint (in one but not the other)
+    let disjoint = 0;
+    let matching = 0;
+    let weightDiff = 0;
+
+    for (const key of conns1.keys()) {
+        if (conns2.has(key)) {
+            matching++;
+            weightDiff += Math.abs(conns1.get(key) - conns2.get(key));
+        } else {
+            disjoint++;
+        }
+    }
+    for (const key of conns2.keys()) {
+        if (!conns1.has(key)) disjoint++;
+    }
+
+    const n = Math.max(conns1.size, conns2.size, 1);
+    const avgWeight = matching > 0 ? weightDiff / matching : 0;
+
+    return DELTA_DISJOINT * (disjoint / n) + DELTA_WEIGHTS * avgWeight;
+}
+
+function assignSpecies(population, speciesList) {
+    // Clear members from all species
+    for (const sp of speciesList) sp.members = [];
+
+    for (const genome of population) {
+        let placed = false;
+        for (const sp of speciesList) {
+            if (sp.representative && genomeDistance(genome.toJSON(), sp.representative) < DELTA_THRESHOLD) {
+                sp.members.push(genome);
+                placed = true;
+                break;
+            }
+        }
+        if (!placed) {
+            // New species
+            speciesList.push({
+                representative: genome.toJSON(),
+                members: [genome],
+                bestFitness: -Infinity,
+                staleness: 0,
+            });
+        }
+    }
+
+    // Remove empty species
+    for (let i = speciesList.length - 1; i >= 0; i--) {
+        if (speciesList[i].members.length === 0) speciesList.splice(i, 1);
+    }
+
+    // Update representatives (random member from each species)
+    for (const sp of speciesList) {
+        sp.representative = sp.members[Math.floor(Math.random() * sp.members.length)].toJSON();
+    }
+}
+
+function cullAndAllocate(speciesList, popsize, Network, methods) {
+    // Update staleness
+    for (const sp of speciesList) {
+        const best = Math.max(...sp.members.map(g => g.score || 0));
+        if (best > sp.bestFitness) {
+            sp.bestFitness = best;
+            sp.staleness = 0;
+        } else {
+            sp.staleness++;
+        }
+    }
+
+    // Kill stale species (keep at least 1)
+    if (speciesList.length > 1) {
+        for (let i = speciesList.length - 1; i >= 0; i--) {
+            if (speciesList[i].staleness >= STALE_SPECIES && speciesList.length > 1) {
+                speciesList.splice(i, 1);
+            }
+        }
+    }
+
+    // Calculate average fitness per species (using global rank)
+    // Rank all genomes globally
+    const allGenomes = speciesList.flatMap(sp => sp.members);
+    allGenomes.sort((a, b) => (a.score || 0) - (b.score || 0));
+    for (let i = 0; i < allGenomes.length; i++) allGenomes[i]._globalRank = i + 1;
+
+    // Species average = sum of member ranks / member count
+    for (const sp of speciesList) {
+        sp.avgRank = sp.members.reduce((sum, g) => sum + (g._globalRank || 0), 0) / sp.members.length;
+    }
+    const totalAvg = speciesList.reduce((sum, sp) => sum + sp.avgRank, 0);
+
+    // Allocate breeding slots proportional to species avg rank
+    const newPop = [];
+
+    for (const sp of speciesList) {
+        // Sort species members by fitness
+        sp.members.sort((a, b) => (b.score || 0) - (a.score || 0));
+
+        // Elite: keep best of each species
+        if (sp.members.length > 0) {
+            newPop.push(sp.members[0]); // species champion
+        }
+
+        // Breeding slots for this species
+        const slots = Math.floor((sp.avgRank / totalAvg) * popsize) - 1;
+        for (let i = 0; i < slots && newPop.length < popsize; i++) {
+            if (sp.members.length === 1) {
+                // Clone and mutate
+                const child = Network.fromJSON(sp.members[0].toJSON());
+                child.mutate(methods.mutation.FFW);
+                newPop.push(child);
+            } else {
+                // Crossover within species
+                const p1 = sp.members[Math.floor(Math.random() * Math.min(5, sp.members.length))];
+                const p2 = sp.members[Math.floor(Math.random() * sp.members.length)];
+                try {
+                    const child = Network.crossOver(p1, p2, p1.score >= p2.score);
+                    if (Math.random() < 0.8) child.mutate(methods.mutation.FFW);
+                    newPop.push(child);
+                } catch(e) {
+                    // Fallback: clone and mutate
+                    const child = Network.fromJSON(p1.toJSON());
+                    child.mutate(methods.mutation.FFW);
+                    newPop.push(child);
+                }
+            }
+        }
+    }
+
+    // Fill remaining with offspring from best species
+    while (newPop.length < popsize) {
+        const bestSpecies = speciesList.reduce((a, b) => a.avgRank > b.avgRank ? a : b);
+        const parent = bestSpecies.members[Math.floor(Math.random() * Math.min(5, bestSpecies.members.length))];
+        const child = Network.fromJSON(parent.toJSON());
+        child.mutate(methods.mutation.FFW);
+        newPop.push(child);
+    }
+
+    return newPop;
+}
+
 // ==================== HELPERS ====================
 
 function makeProgressBar(x, maxX, w) {
@@ -357,18 +513,15 @@ async function main() {
     const workers = await createWorkerPool(romString, saveStateStr, NUM_WORKERS);
     console.log(`  ${workers.length} workers ready\n`);
 
-    // Create NEAT population — start EMPTY like MarI/O
-    // Each genome starts with zero connections, gets a few random ones to bootstrap
+    // Create NEAT population — start empty, each gets random connections
     function createEmptyGenome() {
         const net = new Network(NUM_INPUTS, NUM_OUTPUTS);
-        // Clear all connections (neataptic creates fully-connected by default)
         net.connections = [];
         net.selfconns = [];
         net.gates = [];
         for (const node of net.nodes) {
             node.connections = { in: [], out: [], gated: [], self: { weight: 0, gater: null, from: node, to: node } };
         }
-        // Add a few random connections to bootstrap
         for (let i = 0; i < 5; i++) {
             try { net.mutate(methods.mutation.ADD_CONN); } catch(e) {}
         }
@@ -380,15 +533,16 @@ async function main() {
 
     const neat = new Neat(NUM_INPUTS, NUM_OUTPUTS, null, {
         popsize: POPULATION_SIZE,
-        elitism: ELITISM,
+        elitism: 0, // we handle elitism via species champions
         mutationRate: 0.5,
         mutationAmount: 3,
         mutation: methods.mutation.FFW,
     });
     neat.population = initialPop;
+    let speciesList = [];
 
     console.log(`${C.cyan}=== NEAT TRAINING ===${C.reset}`);
-    console.log(`${C.dim}Population: ${POPULATION_SIZE} | Inputs: ${NUM_INPUTS} | Outputs: ${NUM_OUTPUTS} | Elitism: ${ELITISM}${C.reset}`);
+    console.log(`${C.dim}Population: ${POPULATION_SIZE} | Inputs: ${NUM_INPUTS} | Outputs: ${NUM_OUTPUTS} | Speciation: δ=${DELTA_THRESHOLD} stale=${STALE_SPECIES}${C.reset}`);
     console.log(`${C.dim}Stall timeout: ${STALL_FRAMES} frames | Max frames: ${MAX_FRAMES}${C.reset}`);
     console.log();
 
@@ -404,6 +558,11 @@ async function main() {
             bestEverFitness,
             bestEverGenome,
             population: neat.population.map(g => g.toJSON()),
+            species: speciesList.map(sp => ({
+                representative: sp.representative,
+                bestFitness: sp.bestFitness,
+                staleness: sp.staleness,
+            })),
         };
         fs.writeFileSync(neatStatePath, JSON.stringify(state));
     }
@@ -419,7 +578,15 @@ async function main() {
                 bestEverX = saved.bestEverX || 0;
                 bestEverFitness = saved.bestEverFitness || -Infinity;
                 bestEverGenome = saved.bestEverGenome || null;
-                console.log(`${C.green}Resumed from gen ${startGen - 1} | best: ${bestEverX}px | pop: ${neat.population.length}${C.reset}\n`);
+                if (saved.species) {
+                    speciesList = saved.species.map(sp => ({
+                        representative: sp.representative,
+                        members: [],
+                        bestFitness: sp.bestFitness || -Infinity,
+                        staleness: sp.staleness || 0,
+                    }));
+                }
+                console.log(`${C.green}Resumed from gen ${startGen - 1} | best: ${bestEverX}px | pop: ${neat.population.length} | species: ${speciesList.length}${C.reset}\n`);
             }
         } catch(e) { console.log(`${C.dim}Could not load neat-state.json, starting fresh${C.reset}\n`); }
     }
@@ -477,13 +644,16 @@ async function main() {
             newBest = true;
         }
 
-        // 4. Sort by fitness
-        neat.sort();
+        // 4. Speciation: assign genomes to species
+        assignSpecies(neat.population, speciesList);
 
         // 5. Log
         const genTime = ((Date.now() - genStart) / 1000).toFixed(1);
         const elapsed = (Date.now() - startTime) / 1000;
         const fps = Math.round(totalFrames / ((Date.now() - genStart) / 1000));
+
+        // Best genome this gen
+        neat.population.sort((a, b) => (b.score || 0) - (a.score || 0));
         const bestGenome = neat.population[0];
         const nodes = bestGenome.nodes.length;
         const conns = bestGenome.connections.length;
@@ -502,27 +672,23 @@ async function main() {
         }
         const wallPct = Math.round(wallCount / POPULATION_SIZE * 100);
 
-        if (newBest || gen % 10 === 0) {
+        if (newBest || gen % 5 === 0) {
             const bar = makeProgressBar(bestEverX, LEVEL_WIDTH, 20);
             const tag = newBest ? `${C.yellow}\u25b2 NEW BEST${C.reset}` : '';
             console.log(
                 `Gen ${String(gen).padStart(4)} | ` +
-                `best: ${genBestX}px | avg: ${genAvgX}px | ` +
+                `gen: ${genBestX}px avg: ${genAvgX}px | ` +
+                `ever: ${bestEverX}px | ` +
+                `species: ${speciesList.length} | ` +
                 `wall: X=${wallX}(${wallPct}%) | ` +
-                `nodes: ${nodes} conns: ${conns} | ` +
+                `n:${nodes} c:${conns} | ` +
                 `${fps} fps | ${genTime}s` +
                 (genCompletions > 0 ? ` | ${C.green}${genCompletions} COMPLETE!${C.reset}` : '') +
                 (newBest ? ` ${tag}` : '')
             );
             if (gen % 10 === 0) {
-                console.log(`  ${bar} ${Math.round(bestEverX/LEVEL_WIDTH*100)}% | best ever: ${bestEverX}px | ${formatTime(elapsed)}`);
+                console.log(`  ${bar} ${Math.round(bestEverX/LEVEL_WIDTH*100)}% | ${formatTime(elapsed)}`);
             }
-        }
-
-        // Hall of fame
-        if (genCompletions > 0 || (newBest && bestEverX > 1000)) {
-            // Save best genome replay
-            // TODO: replay best genome to generate events for bot.js
         }
 
         // Save periodically
@@ -530,18 +696,10 @@ async function main() {
             saveNeatState(gen);
             console.log(`  ${C.dim}Saved neat-state.json (gen ${gen})${C.reset}`);
         }
-        startGen = gen; // update for SIGINT handler
+        startGen = gen;
 
-        // 6. Evolve: elitism + offspring + mutation
-        const newPop = [];
-        for (let i = 0; i < neat.elitism; i++) {
-            newPop.push(neat.population[i]);
-        }
-        while (newPop.length < neat.popsize) {
-            newPop.push(neat.getOffspring());
-        }
-        neat.population = newPop;
-        neat.mutate();
+        // 6. Evolve: speciation-based breeding
+        neat.population = cullAndAllocate(speciesList, POPULATION_SIZE, Network, methods);
         neat.generation++;
     }
 }
