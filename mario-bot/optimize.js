@@ -370,7 +370,8 @@ async function main() {
     const neat = new Neat(NUM_INPUTS, NUM_OUTPUTS, null, {
         popsize: POPULATION_SIZE,
         elitism: ELITISM,
-        mutationRate: 0.3,
+        mutationRate: 0.5,
+        mutationAmount: 3,  // apply up to 3 mutations per genome (default is 1)
         mutation: methods.mutation.FFW,  // Feed-forward mutations only (no recurrence)
     });
 
