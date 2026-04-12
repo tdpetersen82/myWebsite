@@ -366,14 +366,35 @@ async function main() {
         console.log();
     }
 
-    // Create NEAT population
+    // Create NEAT population — start EMPTY like MarI/O
+    // Each genome starts with zero connections, gets a few random ones to bootstrap
+    function createEmptyGenome() {
+        const net = new Network(NUM_INPUTS, NUM_OUTPUTS);
+        // Clear all connections (neataptic creates fully-connected by default)
+        net.connections = [];
+        net.selfconns = [];
+        net.gates = [];
+        for (const node of net.nodes) {
+            node.connections = { in: [], out: [], gated: [], self: { weight: 0, gater: null, from: node, to: node } };
+        }
+        // Add a few random connections to bootstrap
+        for (let i = 0; i < 5; i++) {
+            try { net.mutate(methods.mutation.ADD_CONN); } catch(e) {}
+        }
+        return net;
+    }
+
+    const initialPop = [];
+    for (let i = 0; i < POPULATION_SIZE; i++) initialPop.push(createEmptyGenome());
+
     const neat = new Neat(NUM_INPUTS, NUM_OUTPUTS, null, {
         popsize: POPULATION_SIZE,
         elitism: ELITISM,
         mutationRate: 0.5,
-        mutationAmount: 3,  // apply up to 3 mutations per genome (default is 1)
-        mutation: methods.mutation.FFW,  // Feed-forward mutations only (no recurrence)
+        mutationAmount: 3,
+        mutation: methods.mutation.FFW,
     });
+    neat.population = initialPop;
 
     console.log(`${C.cyan}=== NEAT TRAINING ===${C.reset}`);
     console.log(`${C.dim}Population: ${POPULATION_SIZE} | Inputs: ${NUM_INPUTS} | Outputs: ${NUM_OUTPUTS} | Elitism: ${ELITISM}${C.reset}`);
