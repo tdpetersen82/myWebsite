@@ -20,7 +20,7 @@ const LEVEL_WIDTH = 3200;
 const NUM_WORKERS = Math.max(1, os.cpus().length - 1);
 
 // Network architecture: CNN for tiles + dense for state, merged actor-critic
-// Tile path: 140 tiles [14×10×1] → Conv2D(16,3×3,s2) → Conv2D(32,3×3,s2) → Dense(32)
+// Tile path: 140 tiles [14×10×1] → Conv2D(8,3×3,s2) → Dense(32)
 // State path: 16 values → Dense(16)
 // Merge: Concat(48) → Dense(32) → Actor(6) + Critic(1)
 const NUM_INPUTS = 156;   // 5 mario + 140 tiles (10 cols × 14 rows) + 10 enemies (5×2) + 1 timer
@@ -29,31 +29,24 @@ const TILE_COLS = 10;
 const NUM_TILES = TILE_ROWS * TILE_COLS;  // 140
 const TILE_START = 5;                      // index in input array where tiles begin
 const NUM_STATE = 16;                      // 5 mario + 10 enemies + 1 timer
-const CONV1_FILTERS = 16;
-const CONV2_FILTERS = 32;
+const CONV1_FILTERS = 8;
 const CONV_DENSE = 32;   // CNN path output features
 const STATE_DENSE = 16;  // State path output features
 const MERGE_H = 32;      // Merged hidden layer
 const NUM_OUTPUTS = 6;   // RIGHT, LEFT, A, B, UP, DOWN
 
-// Conv2D with stride 2, same padding:
-// Layer 1: [14,10,1] → [7,5,16]
-// Layer 2: [7,5,16] → [4,3,32]
-// Flatten: 4*3*32 = 384
+// Single Conv2D with stride 2, same padding:
+// [14,10,1] → [7,5,8]
+// Flatten: 7*5*8 = 280
 const CONV1_OUT_H = Math.ceil(TILE_ROWS / 2);  // 7
 const CONV1_OUT_W = Math.ceil(TILE_COLS / 2);   // 5
-const CONV2_OUT_H = Math.ceil(CONV1_OUT_H / 2); // 4
-const CONV2_OUT_W = Math.ceil(CONV1_OUT_W / 2);  // 3
-const FLAT_SIZE = CONV2_OUT_H * CONV2_OUT_W * CONV2_FILTERS; // 384
+const FLAT_SIZE = CONV1_OUT_H * CONV1_OUT_W * CONV1_FILTERS; // 280
 
 // Weight layout for flat Float32Array (must match TF.js extraction order)
-// TF.js layers store [kernel, bias] pairs in creation order
 const W = {};
-W.conv1_k = 0;                                               // [3,3,1,16] = 144
-W.conv1_b = W.conv1_k + 3 * 3 * 1 * CONV1_FILTERS;          // [16]
-W.conv2_k = W.conv1_b + CONV1_FILTERS;                       // [3,3,16,32] = 4608
-W.conv2_b = W.conv2_k + 3 * 3 * CONV1_FILTERS * CONV2_FILTERS; // [32]
-W.tile_dense_k = W.conv2_b + CONV2_FILTERS;                  // [384,32] = 12288
+W.conv1_k = 0;                                               // [3,3,1,8] = 72
+W.conv1_b = W.conv1_k + 3 * 3 * 1 * CONV1_FILTERS;          // [8]
+W.tile_dense_k = W.conv1_b + CONV1_FILTERS;                  // [280,32] = 8960
 W.tile_dense_b = W.tile_dense_k + FLAT_SIZE * CONV_DENSE;    // [32]
 W.state_dense_k = W.tile_dense_b + CONV_DENSE;               // [16,16] = 256
 W.state_dense_b = W.state_dense_k + NUM_STATE * STATE_DENSE; // [16]
@@ -130,37 +123,48 @@ function patchJsnesLite(jsnes) {
 //  Must produce identical output to the TF.js model on main thread.
 // ================================================================
 
-// Manual Conv2D: 'same' padding, stride 2, ReLU activation
+// Optimized Conv2D: 'same' padding, stride 2, ReLU, 3×3 kernel
 // TF.js kernel layout: [kernelH, kernelW, inputChannels, outputFilters]
 function conv2dForward(input, inH, inW, inC, weights, wOff, bOff, filters, strH, strW) {
-    const kH = 3, kW = 3;
     const outH = Math.ceil(inH / strH);
     const outW = Math.ceil(inW / strW);
-    const padH = Math.max(0, (outH - 1) * strH + kH - inH);
-    const padW = Math.max(0, (outW - 1) * strW + kW - inW);
-    const padTop = Math.floor(padH / 2);
-    const padLeft = Math.floor(padW / 2);
-
+    const padTop = Math.floor(Math.max(0, (outH - 1) * strH + 3 - inH) / 2);
+    const padLeft = Math.floor(Math.max(0, (outW - 1) * strW + 3 - inW) / 2);
     const output = new Float32Array(outH * outW * filters);
-    for (let f = 0; f < filters; f++) {
-        for (let oy = 0; oy < outH; oy++) {
-            for (let ox = 0; ox < outW; ox++) {
-                let sum = weights[bOff + f];
-                for (let c = 0; c < inC; c++) {
-                    for (let ky = 0; ky < kH; ky++) {
-                        for (let kx = 0; kx < kW; kx++) {
-                            const iy = oy * strH + ky - padTop;
-                            const ix = ox * strW + kx - padLeft;
-                            if (iy >= 0 && iy < inH && ix >= 0 && ix < inW) {
-                                // TF kernel: [ky, kx, c, f]
-                                const kidx = ((ky * kW + kx) * inC + c) * filters + f;
-                                sum += input[(iy * inW + ix) * inC + c] * weights[wOff + kidx];
-                            }
+
+    // Process all output positions, all filters together (better cache locality)
+    for (let oy = 0; oy < outH; oy++) {
+        const iyBase = oy * strH - padTop;
+        for (let ox = 0; ox < outW; ox++) {
+            const ixBase = ox * strW - padLeft;
+            const oBase = (oy * outW + ox) * filters;
+
+            // Initialize with bias
+            for (let f = 0; f < filters; f++) output[oBase + f] = weights[bOff + f];
+
+            // Accumulate kernel contributions
+            for (let ky = 0; ky < 3; ky++) {
+                const iy = iyBase + ky;
+                if (iy < 0 || iy >= inH) continue;
+                for (let kx = 0; kx < 3; kx++) {
+                    const ix = ixBase + kx;
+                    if (ix < 0 || ix >= inW) continue;
+                    const iBase = (iy * inW + ix) * inC;
+                    const kBase = (ky * 3 + kx) * inC;
+                    for (let c = 0; c < inC; c++) {
+                        const inputVal = input[iBase + c];
+                        if (inputVal === 0) continue; // Skip zero inputs (tiles are binary)
+                        const kwBase = (kBase + c) * filters + wOff;
+                        for (let f = 0; f < filters; f++) {
+                            output[oBase + f] += inputVal * weights[kwBase + f];
                         }
                     }
                 }
-                const oidx = (oy * outW + ox) * filters + f;
-                output[oidx] = sum > 0 ? sum : 0; // ReLU
+            }
+
+            // ReLU
+            for (let f = 0; f < filters; f++) {
+                if (output[oBase + f] < 0) output[oBase + f] = 0;
             }
         }
     }
@@ -192,12 +196,9 @@ function forwardPass(inputs, weights) {
     for (let i = 0; i < 11; i++) state[5 + i] = inputs[145 + i];
 
     // === CNN tile path ===
-    // Conv1: [14,10,1] → [7,5,16]
+    // Conv1: [14,10,1] → [7,5,8], then flatten → Dense(32, relu)
     const c1 = conv2dForward(tiles, TILE_ROWS, TILE_COLS, 1, weights, W.conv1_k, W.conv1_b, CONV1_FILTERS, 2, 2);
-    // Conv2: [7,5,16] → [4,3,32]
-    const c2 = conv2dForward(c1.data, c1.h, c1.w, CONV1_FILTERS, weights, W.conv2_k, W.conv2_b, CONV2_FILTERS, 2, 2);
-    // Flatten → Dense(32, relu)
-    const tileFeatures = denseForward(c2.data, FLAT_SIZE, CONV_DENSE, weights, W.tile_dense_k, W.tile_dense_b, true);
+    const tileFeatures = denseForward(c1.data, FLAT_SIZE, CONV_DENSE, weights, W.tile_dense_k, W.tile_dense_b, true);
 
     // === State path ===
     const stateFeatures = denseForward(state, NUM_STATE, STATE_DENSE, weights, W.state_dense_k, W.state_dense_b, true);
@@ -543,8 +544,7 @@ function createModel() {
     const tileInput = tf.input({ shape: [NUM_TILES], name: 'tile_input' });
     const reshaped = tf.layers.reshape({ targetShape: [TILE_ROWS, TILE_COLS, 1], name: 'reshape' }).apply(tileInput);
     const conv1 = tf.layers.conv2d({ filters: CONV1_FILTERS, kernelSize: 3, strides: 2, padding: 'same', activation: 'relu', kernelInitializer: 'heNormal', name: 'conv1' }).apply(reshaped);
-    const conv2 = tf.layers.conv2d({ filters: CONV2_FILTERS, kernelSize: 3, strides: 2, padding: 'same', activation: 'relu', kernelInitializer: 'heNormal', name: 'conv2' }).apply(conv1);
-    const flat = tf.layers.flatten({ name: 'flatten' }).apply(conv2);
+    const flat = tf.layers.flatten({ name: 'flatten' }).apply(conv1);
     const tileFeatures = tf.layers.dense({ units: CONV_DENSE, activation: 'relu', kernelInitializer: 'heNormal', name: 'tile_dense' }).apply(flat);
 
     // State path (mario + enemies + timer)
@@ -569,8 +569,6 @@ function createModel() {
 const WEIGHT_MAP = [
     ['conv1_k', 3*3*1*CONV1_FILTERS],
     ['conv1_b', CONV1_FILTERS],
-    ['conv2_k', 3*3*CONV1_FILTERS*CONV2_FILTERS],
-    ['conv2_b', CONV2_FILTERS],
     ['tile_dense_k', FLAT_SIZE*CONV_DENSE],
     ['tile_dense_b', CONV_DENSE],
     ['state_dense_k', NUM_STATE*STATE_DENSE],
@@ -1209,7 +1207,7 @@ async function main() {
     await broadcastWeights(workers, currentWeightsFlat);
 
     console.log(`${C.cyan}=== PPO TRAINING ===${C.reset}`);
-    console.log(`${C.dim}Arch: CNN[${TILE_ROWS}×${TILE_COLS}→${CONV1_FILTERS}→${CONV2_FILTERS}→${CONV_DENSE}] + State[${NUM_STATE}→${STATE_DENSE}] → ${MERGE_H}→${NUM_OUTPUTS}+1 | Weights: ${TOTAL_WEIGHTS}${C.reset}`);
+    console.log(`${C.dim}Arch: CNN[${TILE_ROWS}×${TILE_COLS}→${CONV1_FILTERS}→${CONV_DENSE}] + State[${NUM_STATE}→${STATE_DENSE}] → ${MERGE_H}→${NUM_OUTPUTS}+1 | Weights: ${TOTAL_WEIGHTS}${C.reset}`);
     console.log(`${C.dim}Rollout: ${ROLLOUT_LENGTH}f × ${workers.length} workers = ${ROLLOUT_LENGTH * workers.length} frames/update${C.reset}`);
     console.log(`${C.dim}PPO: epochs=${PPO_EPOCHS} minibatch=${MINIBATCH_SIZE} clip=${CLIP_EPSILON} lr=${LEARNING_RATE}${C.reset}`);
     console.log(`${C.dim}Reward: progress=${REWARD_PROGRESS}/px death=${REWARD_DEATH} time=${REWARD_TIME_PENALTY}/f completion=${REWARD_COMPLETION}${C.reset}`);

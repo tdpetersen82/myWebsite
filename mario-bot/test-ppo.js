@@ -82,8 +82,7 @@ const TILE_COLS = 10;
 const NUM_TILES = TILE_ROWS * TILE_COLS;
 const TILE_START = 5;
 const NUM_STATE = 16;
-const CONV1_FILTERS = 16;
-const CONV2_FILTERS = 32;
+const CONV1_FILTERS = 8;
 const CONV_DENSE = 32;
 const STATE_DENSE = 16;
 const MERGE_H = 32;
@@ -91,16 +90,12 @@ const NUM_OUTPUTS = 6;
 
 const CONV1_OUT_H = Math.ceil(TILE_ROWS / 2);
 const CONV1_OUT_W = Math.ceil(TILE_COLS / 2);
-const CONV2_OUT_H = Math.ceil(CONV1_OUT_H / 2);
-const CONV2_OUT_W = Math.ceil(CONV1_OUT_W / 2);
-const FLAT_SIZE = CONV2_OUT_H * CONV2_OUT_W * CONV2_FILTERS;
+const FLAT_SIZE = CONV1_OUT_H * CONV1_OUT_W * CONV1_FILTERS;
 
 const W = {};
 W.conv1_k = 0;
 W.conv1_b = W.conv1_k + 3 * 3 * 1 * CONV1_FILTERS;
-W.conv2_k = W.conv1_b + CONV1_FILTERS;
-W.conv2_b = W.conv2_k + 3 * 3 * CONV1_FILTERS * CONV2_FILTERS;
-W.tile_dense_k = W.conv2_b + CONV2_FILTERS;
+W.tile_dense_k = W.conv1_b + CONV1_FILTERS;
 W.tile_dense_b = W.tile_dense_k + FLAT_SIZE * CONV_DENSE;
 W.state_dense_k = W.tile_dense_b + CONV_DENSE;
 W.state_dense_b = W.state_dense_k + NUM_STATE * STATE_DENSE;
@@ -216,8 +211,7 @@ function forwardPass(inputs, weights) {
     for (let i = 0; i < 11; i++) state[5 + i] = inputs[145 + i];
 
     const c1 = conv2dForward(tiles, TILE_ROWS, TILE_COLS, 1, weights, W.conv1_k, W.conv1_b, CONV1_FILTERS, 2, 2);
-    const c2 = conv2dForward(c1.data, c1.h, c1.w, CONV1_FILTERS, weights, W.conv2_k, W.conv2_b, CONV2_FILTERS, 2, 2);
-    const tileFeatures = denseForward(c2.data, FLAT_SIZE, CONV_DENSE, weights, W.tile_dense_k, W.tile_dense_b, true);
+    const tileFeatures = denseForward(c1.data, FLAT_SIZE, CONV_DENSE, weights, W.tile_dense_k, W.tile_dense_b, true);
     const stateFeatures = denseForward(state, NUM_STATE, STATE_DENSE, weights, W.state_dense_k, W.state_dense_b, true);
 
     const merged = new Float32Array(CONV_DENSE + STATE_DENSE);
@@ -345,8 +339,7 @@ function createModel() {
     const tileInput = tf.input({ shape: [NUM_TILES], name: 'tile_input' });
     const reshaped = tf.layers.reshape({ targetShape: [TILE_ROWS, TILE_COLS, 1], name: 'reshape' }).apply(tileInput);
     const conv1 = tf.layers.conv2d({ filters: CONV1_FILTERS, kernelSize: 3, strides: 2, padding: 'same', activation: 'relu', kernelInitializer: 'heNormal', name: 'conv1' }).apply(reshaped);
-    const conv2 = tf.layers.conv2d({ filters: CONV2_FILTERS, kernelSize: 3, strides: 2, padding: 'same', activation: 'relu', kernelInitializer: 'heNormal', name: 'conv2' }).apply(conv1);
-    const flat = tf.layers.flatten({ name: 'flatten' }).apply(conv2);
+    const flat = tf.layers.flatten({ name: 'flatten' }).apply(conv1);
     const tileFeatures = tf.layers.dense({ units: CONV_DENSE, activation: 'relu', kernelInitializer: 'heNormal', name: 'tile_dense' }).apply(flat);
     const stateInput = tf.input({ shape: [NUM_STATE], name: 'state_input' });
     const stateFeatures = tf.layers.dense({ units: STATE_DENSE, activation: 'relu', kernelInitializer: 'heNormal', name: 'state_dense' }).apply(stateInput);
@@ -360,8 +353,6 @@ function createModel() {
 const WEIGHT_MAP = [
     ['conv1_k', 3*3*1*CONV1_FILTERS],
     ['conv1_b', CONV1_FILTERS],
-    ['conv2_k', 3*3*CONV1_FILTERS*CONV2_FILTERS],
-    ['conv2_b', CONV2_FILTERS],
     ['tile_dense_k', FLAT_SIZE*CONV_DENSE],
     ['tile_dense_b', CONV_DENSE],
     ['state_dense_k', NUM_STATE*STATE_DENSE],
