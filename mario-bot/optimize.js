@@ -699,12 +699,16 @@ async function main() {
     if (fs.existsSync(neatStatePath)) {
         try {
             const saved = JSON.parse(fs.readFileSync(neatStatePath, 'utf8'));
-            pool = saved;
-            // Reconstruct species genomes from flat data
-            console.log(`${C.green}Resumed gen ${pool.generation} | species: ${pool.species.length} | max fitness: ${pool.maxFitness}${C.reset}\n`);
+            // Validate: must have species with genomes that have genes arrays
+            if (saved.species && saved.species.length > 0 && saved.species[0].genomes && saved.species[0].genomes[0].genes) {
+                pool = saved;
+                if (!pool.maxFitnessScore) pool.maxFitnessScore = -Infinity;
+                console.log(`${C.green}Resumed gen ${pool.generation} | species: ${pool.species.length} | best: ${pool.maxFitness}px${C.reset}\n`);
+            } else {
+                console.log(`${C.dim}Save file format invalid, starting fresh${C.reset}\n`);
+            }
         } catch(e) {
             console.log(`${C.dim}Could not load neat-state.json, starting fresh${C.reset}\n`);
-            pool = newPool();
         }
     }
 
