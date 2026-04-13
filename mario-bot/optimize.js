@@ -88,7 +88,7 @@ function newSpecies() {
 }
 
 function newPool() {
-    return { species: [], generation: 0, innovation: Outputs, maxFitness: 0 };
+    return { species: [], generation: 0, innovation: Outputs, maxFitness: 0, maxFitnessScore: -Infinity };
 }
 
 // ==================== NEAT CORE FUNCTIONS ====================
@@ -357,7 +357,7 @@ function removeStaleSpecies() {
         } else {
             species.staleness++;
         }
-        if (species.staleness < StaleSpecies || species.topFitness >= pool.maxFitness) {
+        if (species.staleness < StaleSpecies || species.topFitness >= pool.maxFitnessScore) {
             survived.push(species);
         }
     }
@@ -371,6 +371,8 @@ function removeWeakSpecies() {
         const breed = Math.floor(species.averageFitness / sum * Population);
         if (breed >= 1) survived.push(species);
     }
+    // Never let species list go empty
+    if (survived.length === 0 && pool.species.length > 0) survived.push(pool.species[0]);
     pool.species = survived;
 }
 
@@ -404,7 +406,7 @@ function newGeneration() {
 
     cullSpecies(true); // keep only champion of each species
 
-    while (children.length + pool.species.length < Population) {
+    while (children.length + pool.species.length < Population && pool.species.length > 0) {
         const species = pool.species[Math.floor(Math.random() * pool.species.length)];
         children.push(breedChild(species));
     }
@@ -741,18 +743,20 @@ async function main() {
         const results = await evaluateBatch(workers, allGenomes);
 
         // Assign fitness
-        let genBestX = 0, genAvgX = 0, genCompletions = 0, totalFrames = 0;
+        let genBestX = 0, genBestFitness = -Infinity, genAvgX = 0, genCompletions = 0, totalFrames = 0;
         for (let i = 0; i < allGenomes.length; i++) {
             allGenomes[i].fitness = results[i].fitness;
             genAvgX += results[i].bestX;
             totalFrames += results[i].frame;
             if (results[i].completed) genCompletions++;
             if (results[i].bestX > genBestX) genBestX = results[i].bestX;
+            if (results[i].fitness > genBestFitness) genBestFitness = results[i].fitness;
         }
         genAvgX = Math.round(genAvgX / allGenomes.length);
 
         const newBest = genBestX > pool.maxFitness;
         if (genBestX > pool.maxFitness) pool.maxFitness = genBestX;
+        if (genBestFitness > pool.maxFitnessScore) pool.maxFitnessScore = genBestFitness;
 
         // Log
         const genTime = ((Date.now() - genStart) / 1000).toFixed(1);
