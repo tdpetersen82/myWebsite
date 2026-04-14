@@ -867,6 +867,12 @@
             // Load ROM and restore save state
             const romString = romDataToString(romBuffer);
             jsnesNes.loadROM(romString);
+            // Patch lite save state — optimizer strips buffers to save space
+            if (saveState.ppu) {
+                if (!saveState.ppu.buffer) saveState.ppu.buffer = new Array(256*240).fill(0);
+                if (!saveState.ppu.bgbuffer) saveState.ppu.bgbuffer = new Array(256*240).fill(0);
+                if (!saveState.ppu.pixrendered) saveState.ppu.pixrendered = new Array(256*240).fill(0);
+            }
             jsnesNes.fromJSON(saveState);
 
             // Override jsnes palette AFTER fromJSON (which clobbers it)
@@ -1007,6 +1013,12 @@
             jsnesNes = new jsnes.NES({ onFrame: onFrame, onAudioSample: () => {}, emulateSound: false });
             const romString = romDataToString(romBuffer);
             jsnesNes.loadROM(romString);
+            // Patch lite save state — optimizer strips buffers to save space
+            if (saveState.ppu) {
+                if (!saveState.ppu.buffer) saveState.ppu.buffer = new Array(256*240).fill(0);
+                if (!saveState.ppu.bgbuffer) saveState.ppu.bgbuffer = new Array(256*240).fill(0);
+                if (!saveState.ppu.pixrendered) saveState.ppu.pixrendered = new Array(256*240).fill(0);
+            }
             jsnesNes.fromJSON(saveState);
 
             // Apply palette fix
