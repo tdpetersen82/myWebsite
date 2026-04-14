@@ -413,6 +413,15 @@ function newGeneration() {
     }
 
     for (const child of children) addToSpecies(child);
+
+    // Diversity injection: if species collapsed to 1, inject 20% fresh genomes
+    if (pool.species.length <= 1) {
+        const injectCount = Math.floor(Population * 0.2);
+        for (let i = 0; i < injectCount; i++) {
+            addToSpecies(basicGenome());
+        }
+    }
+
     pool.generation++;
 }
 
@@ -602,6 +611,9 @@ if (!isMainThread) {
         let fitness = bestX - startX;
         if (frame > 0) fitness -= frame * 0.5;
         if (completed) fitness += 1000;
+        // Bloat penalty: penalize large genomes to keep networks small and evolvable
+        const enabledGenes = genomeData.genes.filter(g => g.enabled).length;
+        if (enabledGenes > 50) fitness -= (enabledGenes - 50) * 0.5;
         return { fitness, bestX, frame, reason, completed };
     }
 
