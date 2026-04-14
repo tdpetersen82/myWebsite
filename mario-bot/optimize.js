@@ -654,6 +654,85 @@ function evaluateBatch(workers, genomes) {
     });
 }
 
+// Replay a genome on the NES and record button events for bot.js
+function replayGenome(nes, genome, saveStateStr) {
+    nes.fromJSONLite(JSON.parse(saveStateStr));
+
+    // Build network
+    const network = {};
+    for (let i = 0; i < Inputs; i++) network[i] = { incoming: [], value: 0 };
+    for (let o = 0; o < Outputs; o++) network[MaxNodes + o] = { incoming: [], value: 0 };
+    const genes = genome.genes.filter(g => g.enabled);
+    genes.sort((a, b) => a.out - b.out);
+    for (const gene of genes) {
+        if (!network[gene.out]) network[gene.out] = { incoming: [], value: 0 };
+        network[gene.out].incoming.push(gene);
+        if (!network[gene.into]) network[gene.into] = { incoming: [], value: 0 };
+    }
+    const neuronKeys = Object.keys(network).map(Number).sort((a, b) => a - b);
+
+    const JSNES_TO_BOT = { 0: 8, 1: 0, 2: 2, 3: 3, 4: 4, 5: 5, 6: 6, 7: 7 };
+    const events = [];
+    let prevBitmask = 0;
+    let bestX = 0;
+    let frame = 0;
+
+    for (frame = 0; frame < MAX_FRAMES; frame++) {
+        const inputs = readNetworkInputs(nes);
+        inputs.push(1);
+        for (let i = 0; i < Inputs; i++) network[i].value = inputs[i];
+        for (const key of neuronKeys) {
+            const neuron = network[key];
+            if (neuron.incoming.length > 0) {
+                let sum = 0;
+                for (const gene of neuron.incoming) {
+                    if (network[gene.into]) sum += gene.weight * network[gene.into].value;
+                }
+                neuron.value = 2 / (1 + Math.exp(-4.9 * sum)) - 1;
+            }
+        }
+
+        let mask = 0;
+        for (let o = 0; o < Outputs; o++) {
+            if (network[MaxNodes + o].value > 0) mask |= BUTTON_BITS[o];
+        }
+        if ((mask & BIT.LEFT) && (mask & BIT.RIGHT)) mask &= ~BIT.LEFT;
+
+        // Record button changes as events
+        if (mask !== prevBitmask) {
+            const changed = mask ^ prevBitmask;
+            for (let bit = 0; bit < 8; bit++) {
+                if (changed & (1 << bit)) {
+                    if (mask & (1 << bit)) {
+                        nes.buttonDown(1, BIT_TO_JSNES[bit]);
+                        events.push([frame, JSNES_TO_BOT[bit], 1]);
+                    } else {
+                        nes.buttonUp(1, BIT_TO_JSNES[bit]);
+                        events.push([frame, JSNES_TO_BOT[bit], 0]);
+                    }
+                }
+            }
+            prevBitmask = mask;
+        }
+
+        nes.frame();
+        const x = nes.cpu.mem[0x006D] * 256 + nes.cpu.mem[0x0086];
+        if (x > bestX) bestX = x;
+
+        if (nes.cpu.mem[0x001D] === 3 || nes.cpu.mem[0x075F] > 0 || nes.cpu.mem[0x0760] > 0) break;
+        const ps = nes.cpu.mem[0x000E];
+        if (ps === 0x0B || ps === 0x06 || nes.cpu.mem[0x00CE] > 240 || nes.cpu.mem[0x0770] === 3) break;
+        if (frame > 20 && x <= 40) break;
+    }
+
+    // Release all buttons
+    for (let bit = 0; bit < 8; bit++) {
+        if (prevBitmask & (1 << bit)) events.push([frame, JSNES_TO_BOT[bit], 0]);
+    }
+
+    return { events, bestX, frame };
+}
+
 function makeProgressBar(x, maxX, w) {
     const r = Math.min(x / maxX, 1); const f = Math.round(r * w);
     return '[' + '\u2588'.repeat(Math.max(0, f - 1)) + (f > 0 ? '\u2592' : '') + '\u2591'.repeat(w - f) + ']';
@@ -762,6 +841,53 @@ async function main() {
         if (genBestX > pool.maxFitness) pool.maxFitness = genBestX;
         if (genBestFitness > pool.maxFitnessScore) pool.maxFitnessScore = genBestFitness;
 
+        // Save replay and hall of fame on new best
+        if (newBest) {
+            // Find the best genome
+            let bestGenomeData = null;
+            for (const g of allGenomes) {
+                if (g.fitness === genBestFitness) { bestGenomeData = g; break; }
+            }
+            if (bestGenomeData) {
+                // Replay on main thread to get events
+                const replay = replayGenome(nes, bestGenomeData, saveStateStr);
+                const bestResult = results.find(r => r.bestX === genBestX) || {};
+
+                // Save best-sequence.json for browser playback
+                const bestPath = path.join(__dirname, 'best-sequence.json');
+                fs.writeFileSync(bestPath, JSON.stringify({
+                    id: `gen${pool.generation}-${genBestX}px`,
+                    events: replay.events,
+                    bestX: genBestX,
+                    totalFrames: replay.frame,
+                    completed: bestResult.completed || false,
+                    reason: bestResult.reason || 'unknown',
+                    generation: pool.generation,
+                    species: pool.species.length,
+                    nodes: new Set(bestGenomeData.genes.flatMap(g => [g.into, g.out])).size,
+                    connections: bestGenomeData.genes.filter(g => g.enabled).length,
+                }, null, 2));
+
+                // Hall of fame — keep top 10
+                const hofPath = path.join(__dirname, 'hall-of-fame.json');
+                let hof = [];
+                try { if (fs.existsSync(hofPath)) hof = JSON.parse(fs.readFileSync(hofPath, 'utf8')); } catch(e) {}
+                hof.push({
+                    events: replay.events,
+                    bestX: genBestX,
+                    frame: replay.frame,
+                    completed: bestResult.completed || false,
+                    reason: bestResult.reason || 'unknown',
+                    generation: pool.generation,
+                    genome: bestGenomeData,
+                    addedAt: new Date().toISOString(),
+                });
+                hof.sort((a, b) => b.bestX - a.bestX);
+                if (hof.length > HOF_SIZE) hof.length = HOF_SIZE;
+                fs.writeFileSync(hofPath, JSON.stringify(hof, null, 2));
+            }
+        }
+
         // Log
         const genTime = ((Date.now() - genStart) / 1000).toFixed(1);
         const elapsed = (Date.now() - startTime) / 1000;
@@ -781,11 +907,13 @@ async function main() {
         }
         const wallPct = Math.round(wallCount / allGenomes.length * 100);
 
-        // Best genome info
+        // Best genome info — find the genome with highest fitness this gen
         let bestNodes = 0, bestConns = 0;
         for (const g of allGenomes) {
-            if (g.fitness >= pool.maxFitness - 1) {
-                bestNodes = new Set(g.genes.flatMap(ge => [ge.into, ge.out])).size;
+            if (g.fitness === genBestFitness) {
+                const nodeSet = new Set();
+                for (const ge of g.genes) { if (ge.enabled) { nodeSet.add(ge.into); nodeSet.add(ge.out); } }
+                bestNodes = nodeSet.size;
                 bestConns = g.genes.filter(ge => ge.enabled).length;
                 break;
             }
