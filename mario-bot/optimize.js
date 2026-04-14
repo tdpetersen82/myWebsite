@@ -33,6 +33,7 @@ const MaxNodes = 1000000;
 // ==================== GAME CONSTANTS ====================
 
 const NUM_INPUTS = 156;     // 5 mario + 140 tiles + 10 enemies + 1 timer
+const HOF_SIZE = 10;
 const Inputs = NUM_INPUTS + 1; // +1 bias node
 const Outputs = 6;           // RIGHT, LEFT, A, B, UP, DOWN
 const MAX_FRAMES = 8000;
