@@ -414,11 +414,27 @@ function newGeneration() {
 
     for (const child of children) addToSpecies(child);
 
-    // Diversity injection: if species collapsed to 1, inject 20% fresh genomes
-    if (pool.species.length <= 1) {
-        const injectCount = Math.floor(Population * 0.2);
-        for (let i = 0; i < injectCount; i++) {
-            addToSpecies(basicGenome());
+    // Diversity injection: if species collapsed, inject mutated copies of the best genome
+    // NOT random genomes — those start at 100px and waste hundreds of generations re-evolving.
+    // Mutated copies of the best start near the frontier and explore variations THERE.
+    if (pool.species.length <= 2) {
+        // Find the best genome across all species
+        let bestGenome = null;
+        let bestFit = -Infinity;
+        for (const sp of pool.species) {
+            for (const g of sp.genomes) {
+                if ((g.fitness || 0) > bestFit) { bestFit = g.fitness; bestGenome = g; }
+            }
+        }
+        if (bestGenome) {
+            const injectCount = Math.floor(Population * 0.3);
+            for (let i = 0; i < injectCount; i++) {
+                const child = copyGenome(bestGenome);
+                // Aggressive mutation: 3-5 mutations per copy to explore variations
+                const numMutations = 3 + Math.floor(Math.random() * 3);
+                for (let m = 0; m < numMutations; m++) mutate(child);
+                addToSpecies(child);
+            }
         }
     }
 
