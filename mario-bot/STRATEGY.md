@@ -1,150 +1,88 @@
-# Mario Speedrun Bot — Optimization Strategy
+# Mario NEAT — Current Strategy
 
 ## Overview
 
-Frame database optimizer with adaptive convergence-based splicing. Collects thousands of random NES playthroughs, records per-frame game state, then surgically improves completion runs by transplanting faster obstacle traversals from donor runs.
+NEAT (NeuroEvolution of Augmenting Topologies) — networks start with zero hidden neurons and evolve structure to fit the problem. Direct translation of SethBling's MarI/O algorithm to JavaScript.
+
+## How It Works
+
+1. **Start empty.** Each genome has 157 input nodes (156 game state + 1 bias) and 6 output nodes (RIGHT, LEFT, A, B, UP, DOWN). Zero connections. Zero hidden neurons.
+
+2. **Mutate.** Add a connection between two nodes. Add a node that splits an existing connection. Tweak a weight. Enable/disable a connection. Each genome has self-adjusting mutation rates.
+
+3. **Evaluate.** Run each genome through the NES emulator. Read the game state (tiles, enemies, mario position/velocity, timer), feed it through the network, apply the output buttons, repeat every frame. Fitness = distance reached - time penalty + completion bonus.
+
+4. **Speciate.** Group similar genomes by compatibility distance (structural differences + weight differences). Genomes compete within their species, not globally. New structural innovations are protected.
+
+5. **Breed.** Each species gets offspring proportional to its average fitness. Crossover happens within species only, aligned by innovation number. Champions of each species survive unchanged.
+
+6. **Repeat.** Kill stale species (no improvement in 15 generations). Remove weak species (no breeding allocation). Inject mutated copies of the best genome when species collapse to maintain diversity.
 
 ## Architecture
 
-### Three Phases
+### Inputs (157)
+- **Mario state (5):** Y position, X velocity, Y velocity, on-ground flag, power-up flag
+- **Tile grid (140):** 14 rows × 10 columns ahead of Mario. Binary: 1=solid, 0=empty. Reads directly from NES PPU nametable.
+- **Enemies (10):** 5 slots × (relative X, relative Y). From NES RAM.
+- **Timer (1):** Game timer normalized to [0, 1].
+- **Bias (1):** Always 1.
 
-**Phase 1 — Collection**: Run thousands of random playthroughs. For every viable run (≥300px), store per-frame button inputs, X/Y position, and X/Y velocity. Scan every run for section speed records — fast sections from even mediocre runs get persisted.
+### Outputs (6)
+Each output uses MarI/O's sigmoid: `2/(1+exp(-4.9x))-1`. Output > 0 = button pressed.
+- RIGHT, LEFT, A (jump), B (sprint), UP, DOWN
 
-**Phase 2 — Initial Splice**: One round of golden run improvement using adaptive splicing (see below).
+### NEAT Parameters (from MarI/O)
+| Parameter | Value |
+|-----------|-------|
+| Population | 300 |
+| DeltaDisjoint | 2.0 |
+| DeltaWeights | 0.4 |
+| DeltaThreshold | 1.0 |
+| StaleSpecies | 15 generations |
+| CrossoverChance | 75% |
+| LinkMutationChance | 2.0 |
+| NodeMutationChance | 0.50 |
+| MutateConnectionsChance | 0.25 |
+| PerturbChance | 90% |
+| StepSize | 0.1 |
+| StallTimeout | 20 frames |
 
-**Phase 3 — Refinement Loop**: Repeats up to 50 rounds:
-- **Exploration mode** (no completions yet): Frontier runs push past the death point.
-- **Completion mode** (HoF has completions): For each golden run, find slow spots, search for faster donors, splice with adaptive convergence, validate by simulation. Also generates noisy variants to discover new strategies.
+### Fitness
+```
+fitness = bestX - startX - (frames × 0.5)
+if completed: fitness += 1000
+if enabledConnections > 50: fitness -= (connections - 50) × 0.5
+```
 
-### Adaptive Convergence-Based Splicing
+## Results
 
-The core splice algorithm for improving completion runs:
+- **Completed the level** at generation 1280 (~5 hours)
+- 21 completions per generation by gen 1315
+- Best genome: 184 nodes, 365 connections
 
-1. **Find slow spots**: Compare each golden run's section times against the section record book. Any section where the golden is ≥5 frames slower = slow spot.
+## Known Problems
 
-2. **Back up from slow spot**: Move 80px before the slow spot start to create the splice entry point. This gives the donor room to set up a different approach to the obstacle (e.g., start a jump earlier).
-
-3. **Search for donors**: Scan top 100 DB runs for those passing through the entry zone with a compatible state (Y within 4px, both grounded, moving right).
-
-4. **Find convergence**: Follow each donor forward from the entry point. The splice ENDS wherever the donor naturally converges back to a state compatible with the golden run (same ground level, grounded, moving right). Each donor has its own convergence point — some fix the obstacle in 25px, some take 200px.
-
-5. **Build and validate**: Construct golden prefix + donor middle + golden suffix. Only if the donor's middle is faster than the golden's. Validate every splice by full emulator simulation.
-
-6. **Targeted generation**: If no DB candidates help, generate 500 random runs that follow the golden run up to the entry point then randomize. These specifically explore that obstacle with different approaches. Results go into the DB for this and future rounds.
-
-### Persistence
-
-- `hall-of-fame.json`: Top 10 completions with diversity enforcement. Stores raw inputs for splicing.
-- `section-records.json`: Fastest known inputs for each level section (100px milestone pairs). Updated from ALL viable runs. Drives slow spot identification.
-- `best-sequence.json` + `save-state.json`: Current best for browser replay.
-
-### Playback (`bot.js`)
-- Uses jsnes directly in the browser (same emulator = deterministic replay)
-- Save state paired with best sequence ensures frame-perfect reproducibility
-- RAM HUD shows Mario's position, velocity, enemies, score in real-time
-- Hall of Fame browser, completion detection during flag sequence
-
-## Input Representation
-
-Each frame is a single byte (bitmask):
-- bit 0 = A (jump), bit 1 = B (sprint), bit 4 = UP, bit 5 = DOWN, bit 6 = LEFT, bit 7 = RIGHT
-- Random inputs: hold a weighted random button combo for 3-240 frames, then switch
-- Bias: RIGHT (92%), B (80%), A (35%), others rare
-
-## Fitness Function
-
-Three tiers:
-1. **Below 300px**: `fitness = bestX` (just reward distance)
-2. **300px+ viable**: `fitness = speed × 10000 + distance × 10 - stuckPenalty + checkpointBonus`
-3. **Completed**: `fitness = 10,000,000 + (8000 - frames) × 10 + checkpointBonus` (completions always win, faster = better)
-
-### Checkpoints: X=800, 1600, 2400. Bonus: `(8000 - frame) × 10` per checkpoint.
-
-## Tunable Parameters
-
-### Collection
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `COLLECTION_BATCH_SIZE` | 500 | Runs per batch sent to workers |
-| `INITIAL_BATCHES` | 10 | Number of collection batches (total = batch × size) |
-| `MAX_STORED_RUNS` | 3000 | Max runs in memory DB before pruning |
-| `MIN_VIABLE_DISTANCE` | 300 | Minimum X to store a run |
-
-### Splicing
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `MAX_SPLICE_CANDIDATES` | 300 | Max splice attempts validated per round |
-| `SPLICE_BACKUP_PX` | 80 | Pixels to back up from slow spot for entry |
-| `CONVERGENCE_SCAN_PX` | 300 | Max pixels past slow spot to search for convergence |
-| `CONVERGENCE_Y_TOLERANCE` | 4 | Y position match tolerance (pixels) |
-| `MIN_SAVED_FRAMES` | 5 | Minimum frames faster to be worth splicing |
-| `MAX_CANDIDATES_PER_SPOT` | 100 | Cap splice candidates per slow spot |
-| `DB_SCAN_TOP_N` | 100 | Top DB runs to scan as potential donors |
-| `TARGETED_GEN_THRESHOLD` | 20 | Generate targeted runs if fewer candidates than this |
-| `TARGETED_GEN_COUNT` | 500 | Targeted random runs per obstacle |
-
-### Section Records
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `MILESTONE_STEP` | 100 | X milestones every N pixels |
-| `RECORD_MIN_SECTION` | 100 | Minimum section width to record |
-| `RECORD_MAX_SECTION` | 2400 | Maximum section width (3/4 of level) |
-
-### Hall of Fame
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `HOF_SIZE` | 10 | Max hall of fame entries |
-| `GOLDEN_DIVERSITY_THRESHOLD` | 30 | Min checkpoint frame distance for diversity |
-
-### Refinement
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `REFINEMENT_VARIANTS` | 300 | Variants generated per refinement round |
-| `REFINEMENT_MAX_ROUNDS` | 50 | Maximum refinement rounds |
-| `REFINEMENT_STALL_LIMIT` | 5 | Rounds without improvement before burst |
-
-### Variant Generation
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `MIN_SEGMENT_DURATION` | 3 | Minimum frames per random button combo |
-| `MAX_SEGMENT_DURATION` | 240 | Maximum frames per random button combo |
-
-### Worker Pool
-| Parameter | Default | Description |
-|-----------|---------|-------------|
-| `NUM_WORKERS` | CPU cores - 1 | Parallel worker threads |
-| `MAX_FRAMES` | 8000 | Maximum frames per simulation |
-| `STALL_LIMIT` | 120 | Frames without progress before termination |
+1. **Network doesn't react to the level.** Constantly jumps. Gets through by luck, not by reading tiles.
+2. **Networks bloat.** Grow to 300-700 connections. MarI/O beat the level with <12 neurons.
+3. **Species collapse.** Converges to 1 species, losing diversity.
+4. **The "always jump" strategy.** Simpler than reactive jumping and scores well enough that evolution can't escape it.
 
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `optimize.js` | Training optimizer (Node.js, worker threads) |
+| `optimize.js` | NEAT optimizer (Node.js, worker threads) |
 | `bot.js` | Browser replay engine, RAM HUD, hall of fame browser |
 | `index.html` | Game page with EmulatorJS + jsnes replay canvas |
-| `analysis.html` | Speed profile charts, bottleneck analysis |
-| `best-sequence.json` | Current best candidate (events + metadata) |
+| `best-sequence.json` | Current best (events for browser replay) |
 | `save-state.json` | jsnes save state for deterministic replay |
-| `hall-of-fame.json` | Top 10 completions (inputs + events + metadata) |
-| `section-records.json` | Fastest known inputs per level section |
+| `hall-of-fame.json` | Top 10 genomes (events + genome data) |
+| `neat-state.json` | Full NEAT state for resume (population + species) |
 
 ## Training
 
 ```bash
 cd mario-bot
-node optimize.js          # Start training
-# Press + to add worker threads
-# Press - to remove worker threads
+node optimize.js          # Start training (auto-resumes from neat-state.json)
 # Ctrl+C to save and quit
 ```
-
-## Key Insights
-
-1. **Adaptive convergence** — splice boundaries are determined by where donor and golden run states naturally converge, not fixed pixel positions. Each donor has its own splice length.
-2. **Back up from obstacles** — splicing 80px before a slow spot gives donors room to set up a different approach (jump earlier, take different trajectory).
-3. **Targeted generation** — when no DB runs handle an obstacle well, generate purpose-built runs that follow the golden path up to the obstacle then randomize.
-4. **Section records capture knowledge** — fast traversals from ANY run get persisted, even from low-fitness runs that die shortly after. This knowledge drives slow spot identification.
-5. **Validation by simulation** — every splice is tested by running it through the emulator. Enemy states, timing mismatches, and physics differences are caught automatically.
-6. **Dual tracking** — highest-fitness and furthest-reaching runs tracked independently. Frontier runs push exploration, fitness-best drives speed optimization.
-7. **HoF diversity** — checkpoint-based distance prevents the hall of fame from filling with near-identical runs.
