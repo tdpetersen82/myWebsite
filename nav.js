@@ -49,6 +49,7 @@
         labyrinth3js: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="10" width="24" height="18" rx="2" fill="#C4913B" stroke="#6B4226" stroke-width="1.5"/><circle cx="10" cy="18" r="2" fill="#111"/><circle cx="22" cy="22" r="2" fill="#111"/><circle cx="16" cy="15" r="2.5" fill="#ccc" stroke="#999" stroke-width="1"/><path d="M8 13h4v2H8zM14 20h6v2h-6zM20 13h4v2h-4z" fill="#5C4033"/><circle cx="25" cy="25" r="1.5" fill="#FFD700"/></svg>',
         labyrinthbjs: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="10" width="24" height="18" rx="2" fill="#C4913B" stroke="#6B4226" stroke-width="1.5"/><circle cx="10" cy="18" r="2" fill="#111"/><circle cx="22" cy="22" r="2" fill="#111"/><circle cx="16" cy="15" r="2.5" fill="#ccc" stroke="#999" stroke-width="1"/><path d="M8 13h4v2H8zM14 20h6v2h-6zM20 13h4v2h-4z" fill="#5C4033"/><circle cx="25" cy="25" r="1.5" fill="#FFD700"/><text x="16" y="8" text-anchor="middle" font-size="5" fill="#667eea" font-weight="bold">B</text></svg>',
         horsefeeding: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="18" rx="8" ry="5" fill="#8B6914"/><ellipse cx="16" cy="14" rx="6" ry="4" fill="#A0782C"/><path d="M10 14c-2-4 0-6 2-8" stroke="#5C3A1E" stroke-width="2" stroke-linecap="round"/><path d="M14 14c-1-3 0-5 1-7" stroke="#5C3A1E" stroke-width="2" stroke-linecap="round"/><circle cx="22" cy="12" r="3" fill="#A0782C"/><circle cx="23" cy="11.5" r="1" fill="#1e293b"/><path d="M25 10l3-2M25 12l3 0" stroke="#5C3A1E" stroke-width="1.5" stroke-linecap="round"/><path d="M8 18c-1 3-1 6 0 8" stroke="#6B4226" stroke-width="2" stroke-linecap="round"/><path d="M12 20c0 3 0 5 0 7" stroke="#6B4226" stroke-width="2" stroke-linecap="round"/><path d="M20 20c0 3 0 5 0 7" stroke="#6B4226" stroke-width="2" stroke-linecap="round"/><path d="M24 18c1 3 1 6 0 8" stroke="#6B4226" stroke-width="2" stroke-linecap="round"/></svg>',
+        exodus: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="28" height="28" rx="2" fill="#1a1a2e" stroke="#6c5ce7" stroke-width="1.5"/><rect x="14" y="22" width="6" height="8" fill="#4ade80"/><circle cx="8" cy="10" r="2" fill="#fbbf24"/><circle cx="14" cy="11" r="2" fill="#ef4444"/><circle cx="20" cy="9" r="2" fill="#3b82f6"/><circle cx="11" cy="16" r="2" fill="#a855f7"/><circle cx="18" cy="17" r="2" fill="#ef4444"/><circle cx="24" cy="14" r="2" fill="#fbbf24"/><path d="M22 4l2 2-2 2-2-2z" fill="#ff6b1a"/><path d="M21 5l1 1-1 1-1-1z" fill="#fff080"/></svg>',
     };
 
     const GAME_CATALOG = [
@@ -91,6 +92,7 @@
                 { name: 'Connect 4', icon: I.connect4, url: 'connect-4/' },
                 { name: 'Dots & Boxes', icon: I.dots, url: 'connect-dots/' },
                 { name: 'Hex Defense', icon: I.hexdefense, url: 'hex-defense/' },
+                { name: 'Exodus', icon: I.exodus, url: 'crowd-evacuation/' },
                 { name: 'Fantastic Contraption', icon: I.contraption, url: 'fantastic-contraption/' },
             ]
         },
