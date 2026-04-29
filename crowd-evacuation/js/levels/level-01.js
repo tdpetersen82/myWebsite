@@ -47,6 +47,9 @@ const LEVEL_01 = {
     },
     budget: {
         marshals: 3,
+        barrier_units: 12,        // total cells of barrier wall
+        signs: 4,
+        pa: 2,
     },
     timeLimit: 120,
 };

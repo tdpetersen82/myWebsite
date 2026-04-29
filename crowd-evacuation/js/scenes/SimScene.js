@@ -1,28 +1,31 @@
 // SimScene: runs the simulation. No editing during this scene.
-// Fixed-timestep accumulator pattern. See SPEC.md §3.2.
+// Fixed-timestep accumulator. Hosts DebugOverlay (F1, F3, F6, F7, F9).
 
 class SimScene extends Phaser.Scene {
     constructor() { super('SimScene'); }
 
     init(data) {
         this.level = data.level;
-        this.marshals = data.marshals;
-        this.grid = data.grid;
+        this.placements = data.placements || new Placements();
         this.offsetX = data.offsetX;
         this.offsetY = data.offsetY;
     }
 
     create() {
-        // build agents
+        // Build a fresh grid and apply barriers.
+        this.grid = buildGridFromLevel(this.level);
+        this.placements.applyBarriersToGrid(this.grid);
+
+        // Build agents
         this.agents = spawnAgentsForLevel(this.level);
 
-        // threat
+        // Threat
         this.threat = new ThreatSystem(this.grid, this.level.threat);
 
-        // crowd system
-        this.crowd = new CrowdSystem(this.grid, this.agents, this.threat, this.marshals);
+        // Crowd system
+        this.crowd = new CrowdSystem(this.grid, this.agents, this.threat, this.placements);
 
-        // accumulator
+        // Accumulators
         this.simAcc = 0;
         this.threatAcc = 0;
         this.simStep = 1 / CFG.SIM_HZ;
@@ -31,33 +34,37 @@ class SimScene extends Phaser.Scene {
         this.timeRemaining = this.level.timeLimit;
         this.ended = false;
 
-        // graphics
-        this.bgLayer = this.add.graphics();
-        this.fireLayer = this.add.graphics();
-        this.smokeLayer = this.add.graphics();
-        this.agentLayer = this.add.graphics();
-        this.marshalLayer = this.add.graphics();
+        // Render layers
+        this.bgLayer       = this.add.graphics();
+        this.fireLayer     = this.add.graphics();
+        this.smokeLayer    = this.add.graphics();
+        this.placeLayer    = this.add.graphics();   // marshals, signs, PAs (always shown)
+        this.agentLayer    = this.add.graphics();
+        this.debugLayer    = this.add.graphics().setDepth(20);
+
         this._drawBackground();
-        this._drawMarshals();
+        this._drawPlacements();
 
         // HUD
-        const hudBg = this.add.rectangle(0, 0, CFG.CANVAS_W, CFG.HUD_HEIGHT, 0x0f0c29, 1)
-            .setOrigin(0, 0);
-        this.hudTime = this.add.text(20, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fff' });
-        this.hudEvac = this.add.text(180, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#4ade80' });
+        this.add.rectangle(0, 0, CFG.CANVAS_W, CFG.HUD_HEIGHT, 0x0f0c29, 1).setOrigin(0, 0);
+        this.hudTime    = this.add.text(20, 16, '',  { fontFamily: 'Arial Black', fontSize: '18px', color: '#fff' });
+        this.hudEvac    = this.add.text(180, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#4ade80' });
         this.hudInjured = this.add.text(340, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#ff6b6b' });
-        this.hudPanic = this.add.text(500, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fbbf24' });
+        this.hudPanic   = this.add.text(500, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fbbf24' });
+        this.hudKey     = this.add.text(CFG.CANVAS_W - 20, 16, 'F1 flow · F3 vision · F6 slow · F7 step · F9 perf', {
+            fontFamily: 'Arial', fontSize: '11px', color: '#888',
+        }).setOrigin(1, 0);
 
-        // alarm flash
+        // Alarm flash + text
         const flash = this.add.rectangle(CFG.CANVAS_W / 2, CFG.CANVAS_H / 2, CFG.CANVAS_W, CFG.CANVAS_H, 0xff4444, 0.4);
         this.tweens.add({ targets: flash, alpha: 0, duration: 600, onComplete: () => flash.destroy() });
-        this.add.text(CFG.CANVAS_W / 2, 100, 'ALARM TRIGGERED', {
+        const alarmTxt = this.add.text(CFG.CANVAS_W / 2, 100, 'ALARM TRIGGERED', {
             fontFamily: 'Arial Black', fontSize: '32px', color: '#ff4444',
-        }).setOrigin(0.5).setAlpha(1).setDepth(10);
-
-        // optional: fade alarm text
-        const alarmTxt = this.children.list[this.children.list.length - 1];
+        }).setOrigin(0.5).setDepth(10);
         this.tweens.add({ targets: alarmTxt, alpha: 0, duration: 1500, delay: 1000, onComplete: () => alarmTxt.destroy() });
+
+        // Debug overlay
+        this.debug = new DebugOverlay(this);
     }
 
     _drawBackground() {
@@ -79,19 +86,48 @@ class SimScene extends Phaser.Scene {
         }
     }
 
-    _drawMarshals() {
-        const g = this.marshalLayer;
+    _drawPlacements() {
+        const g = this.placeLayer;
         g.clear();
         const px = CFG.PIXELS_PER_METER;
-        for (const m of this.marshals) {
-            const sx = this.offsetX + m.x * px;
-            const sy = this.offsetY + m.y * px;
+
+        // Marshals
+        for (const m of this.placements.marshals) {
+            const sx = this.offsetX + m.x * px, sy = this.offsetY + m.y * px;
             g.fillStyle(0x60a5fa, 0.10);
             g.fillCircle(sx, sy, CFG.MARSHAL_RADIUS_M * px);
             g.fillStyle(0x60a5fa, 1);
             g.fillCircle(sx, sy, 9);
             g.lineStyle(2, 0xffffff, 1);
             g.strokeCircle(sx, sy, 9);
+        }
+        // PA speakers
+        for (const p of this.placements.pas) {
+            const sx = this.offsetX + p.x * px, sy = this.offsetY + p.y * px;
+            g.fillStyle(0xfbbf24, 0.08);
+            g.fillCircle(sx, sy, CFG.PA_RADIUS_M * px);
+            g.fillStyle(0xfbbf24, 1);
+            g.fillRect(sx - 7, sy - 7, 14, 14);
+            g.lineStyle(2, 0x000000, 0.6);
+            g.strokeRect(sx - 7, sy - 7, 14, 14);
+        }
+        // Signs
+        for (const s of this.placements.signs) {
+            const sx = this.offsetX + s.x * px, sy = this.offsetY + s.y * px;
+            const v = SignDirVec[s.dir];
+            g.fillStyle(0x4ade80, 1);
+            g.fillCircle(sx, sy, 8);
+            g.lineStyle(2, 0xffffff, 1);
+            g.strokeCircle(sx, sy, 8);
+            g.lineStyle(3, 0x064e3b, 1);
+            g.lineBetween(sx, sy, sx + v.x * 9, sy + v.y * 9);
+            g.fillStyle(0x064e3b, 1);
+            const tipX = sx + v.x * 11, tipY = sy + v.y * 11;
+            g.fillTriangle(
+                tipX, tipY,
+                tipX - v.x * 5 + v.y * 4, tipY - v.y * 5 - v.x * 4,
+                tipX - v.x * 5 - v.y * 4, tipY - v.y * 5 + v.x * 4,
+            );
         }
     }
 
@@ -103,20 +139,18 @@ class SimScene extends Phaser.Scene {
             if (a.state === 'ESCAPED') continue;
             const sx = this.offsetX + a.x * px;
             const sy = this.offsetY + a.y * px;
-            // halo by panic
+            // panic halo
             if (a.panic > 0.2) {
                 g.fillStyle(0xff4444, a.panic * 0.4);
                 g.fillCircle(sx, sy, 14);
             }
-            // body color by state/type
             let color;
-            if (a.state === 'INJURED')              color = 0x666666;
-            else if (a.type === 'wheelchair')       color = 0x9333ea;
-            else if (a.type === 'elderly')          color = 0x78716c;
-            else if (a.type === 'child')            color = 0xfbbf24;
-            else if (a.type === 'drunk')            color = 0xa855f7;
+            if (a.state === 'INJURED')           color = 0x666666;
+            else if (a.type === 'wheelchair')    color = 0x9333ea;
+            else if (a.type === 'elderly')       color = 0x78716c;
+            else if (a.type === 'child')         color = 0xfbbf24;
+            else if (a.type === 'drunk')         color = 0xa855f7;
             else {
-                // gradient panic green→red
                 const r = Math.floor(0x4a + a.panic * (0xff - 0x4a));
                 const grn = Math.floor(0xde - a.panic * (0xde - 0x44));
                 const b = Math.floor(0x80 - a.panic * (0x80 - 0x44));
@@ -155,8 +189,15 @@ class SimScene extends Phaser.Scene {
 
     update(time, dtMs) {
         if (this.ended) return;
+        if (this.debug && this.debug.paused) {
+            this._drawAgents();
+            this.debug.draw();
+            return;
+        }
         let dt = Math.min(dtMs / 1000, CFG.MAX_DT);
+        if (this.debug) dt *= this.debug.speedScale();
 
+        const t0 = performance.now();
         this.simAcc += dt;
         this.threatAcc += dt;
         let topologyChanged = false;
@@ -166,22 +207,22 @@ class SimScene extends Phaser.Scene {
             if (changed) topologyChanged = true;
             this.threatAcc -= this.threatStep;
         }
-        if (topologyChanged) {
-            this.crowd.rebuildFlowField();
-        }
+        if (topologyChanged) this.crowd.rebuildFlowField();
 
         while (this.simAcc >= this.simStep) {
             this.crowd.tick(this.simStep);
             this.simAcc -= this.simStep;
             this.simTime += this.simStep;
         }
+        const tSim = performance.now() - t0;
 
         this.timeRemaining = Math.max(0, this.level.timeLimit - this.simTime);
 
-        // render
+        const tR0 = performance.now();
         this._drawBackground();
         this._drawFireSmoke();
         this._drawAgents();
+        const tRender = performance.now() - tR0;
 
         // HUD
         const minutes = Math.floor(this.timeRemaining / 60);
@@ -191,6 +232,11 @@ class SimScene extends Phaser.Scene {
         this.hudInjured.setText(`INJ ${this.crowd.injured}`);
         const pct = Math.round(this.crowd.averagePanic() * 100);
         this.hudPanic.setText(`PANIC ${pct}%`);
+
+        if (this.debug) {
+            this.debug.recordPerf(tSim, tRender);
+            this.debug.draw();
+        }
 
         // termination
         const active = this.crowd.activeAgents();
@@ -205,11 +251,25 @@ class SimScene extends Phaser.Scene {
                         injured: this.crowd.injured,
                         timeRemaining: this.timeRemaining,
                         timeLimit: this.level.timeLimit,
-                        budgetUnspent: this.level.budget.marshals - this.marshals.length,
-                        budgetTotal: this.level.budget.marshals,
+                        budgetUnspent: this._budgetUnspent(),
+                        budgetTotal: this._budgetTotal(),
                     },
                 });
             });
         }
+    }
+
+    _budgetUnspent() {
+        const cost = this.placements.cost();
+        const b = this.level.budget;
+        return Math.max(0,
+            (b.marshals      - cost.marshals)
+          + (b.barrier_units - cost.barrier_units)
+          + (b.signs         - cost.signs)
+          + (b.pa            - cost.pa));
+    }
+    _budgetTotal() {
+        const b = this.level.budget;
+        return (b.marshals || 0) + (b.barrier_units || 0) + (b.signs || 0) + (b.pa || 0);
     }
 }

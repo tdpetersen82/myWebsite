@@ -43,10 +43,22 @@ const CFG = {
     // ── Vision ───────────────────────────────────────────
     VISION_NORMAL_M: 12,
     VISION_MIN_M: 1.5,
-    SIGN_PERSISTENCE_S: 8,
+
+    // ── Marshals ─────────────────────────────────────────
     MARSHAL_RADIUS_M: 4,
     MARSHAL_PERSISTENCE_S: 15,
     MARSHAL_PANIC_REDUCTION: 0.12,
+
+    // ── Signs ────────────────────────────────────────────
+    SIGN_VISION_RADIUS_M: 6,            // how far a sign is visible
+    SIGN_CONE_DEG: 120,                 // arc within which a sign is "facing" agent
+    SIGN_READ_BASE_PROB: 1.5,           // per-second; multiplied by awareness × visionFactor
+    SIGN_PERSISTENCE_S: 8,
+
+    // ── PA speakers ──────────────────────────────────────
+    PA_RADIUS_M: 6,                     // hearing radius (no LOS check in v0.2)
+    PA_PERSISTENCE_S: 12,
+    PA_PANIC_REDUCTION: 0.06,
 
     // ── Panic ────────────────────────────────────────────
     PANIC_DENSITY_GAIN: 0.5,

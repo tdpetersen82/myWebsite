@@ -2,11 +2,21 @@
 // Wires together flow field, social forces, panic, threats, marshals.
 
 class CrowdSystem {
-    constructor(grid, agents, threatSystem, marshals = []) {
+    constructor(grid, agents, threatSystem, placements = null) {
         this.grid = grid;
         this.agents = agents;
         this.threat = threatSystem;
-        this.marshals = marshals;
+        // backwards-compat: if a plain marshals array was passed, wrap it
+        if (Array.isArray(placements)) {
+            this.placements = new Placements();
+            this.placements.marshals = placements;
+        } else {
+            this.placements = placements || new Placements();
+        }
+        this.marshals = this.placements.marshals;     // alias for legacy callers
+        this.signs    = this.placements.signs;
+        this.pas      = this.placements.pas;
+
         this.flowField = new FlowField(grid);
         this.spatialHash = new SpatialHash();
         this.simTime = 0;
@@ -35,23 +45,69 @@ class CrowdSystem {
         }
     }
 
-    _applyMarshals(agent) {
-        let influenced = false;
+    _applyInfluencers(agent, dt) {
+        const tmp = { x: 0, y: 0 };
+        let marshalInfluence = false;
+        let paInfluence = false;
+
+        // Marshals — circular radius, strong panic reduction, sets bias.
+        const mr2 = CFG.MARSHAL_RADIUS_M * CFG.MARSHAL_RADIUS_M;
         for (const m of this.marshals) {
             const dx = m.x - agent.x;
             const dy = m.y - agent.y;
-            const d2 = dx * dx + dy * dy;
-            if (d2 <= CFG.MARSHAL_RADIUS_M * CFG.MARSHAL_RADIUS_M) {
-                influenced = true;
-                // bias toward the flow direction sampled at the marshal's tile
-                const tmp = { x: 0, y: 0 };
+            if (dx * dx + dy * dy <= mr2) {
+                marshalInfluence = true;
                 this.flowField.sampleAt(m.x, m.y, tmp);
                 agent.biasX = tmp.x;
                 agent.biasY = tmp.y;
                 agent.biasUntil = Math.max(agent.biasUntil, this.simTime + CFG.MARSHAL_PERSISTENCE_S);
             }
         }
-        return influenced;
+
+        // PA speakers — bigger radius, weaker panic reduction, refresh bias.
+        const par2 = CFG.PA_RADIUS_M * CFG.PA_RADIUS_M;
+        for (const p of this.pas) {
+            const dx = p.x - agent.x;
+            const dy = p.y - agent.y;
+            if (dx * dx + dy * dy <= par2) {
+                paInfluence = true;
+                this.flowField.sampleAt(p.x, p.y, tmp);
+                // PA bias is weaker — only set if no marshal already biased us
+                if (agent.biasUntil < this.simTime + 1) {
+                    agent.biasX = tmp.x;
+                    agent.biasY = tmp.y;
+                    agent.biasUntil = Math.max(agent.biasUntil, this.simTime + CFG.PA_PERSISTENCE_S);
+                }
+                // PA panic reduction applied directly here; smaller than marshal's
+                agent.panic = Math.max(0, agent.panic - CFG.PA_PANIC_REDUCTION * dt);
+            }
+        }
+
+        // Signs — directional, vision-cone, probabilistic per-tick reading.
+        const sr2 = CFG.SIGN_VISION_RADIUS_M * CFG.SIGN_VISION_RADIUS_M;
+        const coneCos = Math.cos((CFG.SIGN_CONE_DEG / 2) * Math.PI / 180);
+        for (const s of this.signs) {
+            const dx = agent.x - s.x;
+            const dy = agent.y - s.y;
+            const d2 = dx * dx + dy * dy;
+            if (d2 > sr2) continue;
+            // Sign points outward in `dir`. Agent must be within the cone.
+            const dirVec = SignDirVec[s.dir];
+            const len = Math.sqrt(d2) || 1;
+            const dot = (dx / len) * dirVec.x + (dy / len) * dirVec.y;
+            if (dot < coneCos) continue;
+            // Read probability scales with awareness × visionFactor.
+            const visionFactor = agent.visionRange / CFG.VISION_NORMAL_M;
+            const p = CFG.SIGN_READ_BASE_PROB * agent.awareness * visionFactor * dt;
+            if (Math.random() < p) {
+                // Sign biases agent toward the sign's facing direction.
+                agent.biasX = dirVec.x;
+                agent.biasY = dirVec.y;
+                agent.biasUntil = Math.max(agent.biasUntil, this.simTime + CFG.SIGN_PERSISTENCE_S);
+            }
+        }
+
+        return { marshalInfluence, paInfluence };
     }
 
     tick(dt) {
@@ -74,8 +130,9 @@ class CrowdSystem {
                 continue;
             }
 
-            // marshal influence (sets bias)
-            const marshalInfluence = this._applyMarshals(a);
+            // marshal / PA / sign influence (sets bias, may reduce panic)
+            const inf = this._applyInfluencers(a, dt);
+            const marshalInfluence = inf.marshalInfluence || inf.paInfluence;
 
             // vision: shrink in smoke
             const smoke = threat.smokeAt(a.x, a.y);
