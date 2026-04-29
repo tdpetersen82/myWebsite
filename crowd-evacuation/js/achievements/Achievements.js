@@ -77,9 +77,9 @@ const Achievements = (function () {
         return Object.keys(unlocked()).length;
     }
 
-    function spawnToast(scene, ach) {
+    function spawnToast(scene, ach, slot = 0) {
         const W = CFG.CANVAS_W;
-        const y = 90;
+        const y = 90 + slot * 56;
         const bg = scene.add.rectangle(W / 2, y, 360, 50, 0x000000, 0.9)
             .setStrokeStyle(2, 0xfbbf24).setDepth(95);
         const txt = scene.add.text(W / 2, y - 6, '🏆 Achievement unlocked', {

@@ -55,8 +55,8 @@ class SimScene extends Phaser.Scene {
         this.hudEvac    = this.add.text(180, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#4ade80' });
         this.hudInjured = this.add.text(340, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#ff6b6b' });
         this.hudPanic   = this.add.text(500, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fbbf24' });
-        this.hudKey     = this.add.text(CFG.CANVAS_W - 20, 16, 'P pause · F1 flow · F3 vision · F6 slow · F7 step · F8 inspect · F9 perf', {
-            fontFamily: 'Arial', fontSize: '10px', color: '#888',
+        this.hudKey     = this.add.text(CFG.CANVAS_W - 20, 40, 'P pause · F1 flow · F3 vision · F6 slow · F7 step · F8 inspect · F9 perf', {
+            fontFamily: 'Arial', fontSize: '9px', color: '#666',
         }).setOrigin(1, 0);
 
         // Alarm flash + text (skip flash if reduced motion)

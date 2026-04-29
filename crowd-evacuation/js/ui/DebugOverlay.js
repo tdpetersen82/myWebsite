@@ -107,15 +107,14 @@ class DebugOverlay {
             }
         }
 
-        // F3 — vision cones
+        // F3 — vision cones (stroke only — fill would stack to a yellow flood)
         if (this.flags.vision) {
-            g.lineStyle(1, 0xffff00, 0.3);
+            g.lineStyle(1, 0xffff00, 0.45);
             for (const a of this.scene.agents) {
                 if (a.state === 'ESCAPED' || a.state === 'INJURED') continue;
                 const sx = ox + a.x * px;
                 const sy = oy + a.y * px;
-                g.fillStyle(0xffff00, 0.10);
-                g.fillCircle(sx, sy, a.visionRange * px);
+                g.strokeCircle(sx, sy, a.visionRange * px);
             }
         }
 

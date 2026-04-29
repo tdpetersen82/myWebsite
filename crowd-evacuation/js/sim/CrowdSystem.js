@@ -46,40 +46,41 @@ class CrowdSystem {
     }
 
     _applyInfluencers(agent, dt) {
-        const tmp = { x: 0, y: 0 };
         let marshalInfluence = false;
         let paInfluence = false;
+        agent._awarenessMult = 1;
 
-        // Marshals — circular radius, strong panic reduction, sets bias.
+        // Marshals don't override flow direction (that was buggy: a marshal's
+        // own-cell flow is the wrong direction for nearby agents in different
+        // cells). Instead they:
+        //   1. Boost awareness — signs become more effective in their radius
+        //   2. Stabilize panic — clamp panic to a moderate ceiling (prevents
+        //      the panic→speed→fire-injury feedback at low density)
         const mr2 = CFG.MARSHAL_RADIUS_M * CFG.MARSHAL_RADIUS_M;
         for (const m of this.marshals) {
             const dx = m.x - agent.x;
             const dy = m.y - agent.y;
             if (dx * dx + dy * dy <= mr2) {
                 marshalInfluence = true;
-                this.flowField.sampleAt(m.x, m.y, tmp);
-                agent.biasX = tmp.x;
-                agent.biasY = tmp.y;
-                agent.biasUntil = Math.max(agent.biasUntil, this.simTime + CFG.MARSHAL_PERSISTENCE_S);
+                agent._awarenessMult = Math.max(agent._awarenessMult, 2.0);
+                // Soft cap on panic only (don't aggressively reduce — agents
+                // in fire zones still need to flee fast).
+                if (agent.panic > 0.7) agent.panic -= CFG.MARSHAL_PANIC_REDUCTION * dt;
+                break;
             }
         }
 
-        // PA speakers — bigger radius, weaker panic reduction, refresh bias.
+        // PA speakers — calm panic in radius (room-wide instruction effect).
+        // Same caveat as marshal: only soft-cap, don't kill urgency.
         const par2 = CFG.PA_RADIUS_M * CFG.PA_RADIUS_M;
         for (const p of this.pas) {
             const dx = p.x - agent.x;
             const dy = p.y - agent.y;
             if (dx * dx + dy * dy <= par2) {
                 paInfluence = true;
-                this.flowField.sampleAt(p.x, p.y, tmp);
-                // PA bias is weaker — only set if no marshal already biased us
-                if (agent.biasUntil < this.simTime + 1) {
-                    agent.biasX = tmp.x;
-                    agent.biasY = tmp.y;
-                    agent.biasUntil = Math.max(agent.biasUntil, this.simTime + CFG.PA_PERSISTENCE_S);
-                }
-                // PA panic reduction applied directly here; smaller than marshal's
-                agent.panic = Math.max(0, agent.panic - CFG.PA_PANIC_REDUCTION * dt);
+                agent._awarenessMult = Math.max(agent._awarenessMult, 1.5);
+                if (agent.panic > 0.6) agent.panic -= CFG.PA_PANIC_REDUCTION * dt;
+                break;
             }
         }
 
@@ -97,8 +98,10 @@ class CrowdSystem {
             const dot = (dx / len) * dirVec.x + (dy / len) * dirVec.y;
             if (dot < coneCos) continue;
             // Read probability scales with awareness × visionFactor.
+            // Awareness can be boosted by nearby marshals/PAs (set above).
             const visionFactor = agent.visionRange / CFG.VISION_NORMAL_M;
-            const p = CFG.SIGN_READ_BASE_PROB * agent.awareness * visionFactor * dt;
+            const awarenessMult = agent._awarenessMult || 1;
+            const p = CFG.SIGN_READ_BASE_PROB * agent.awareness * awarenessMult * visionFactor * dt;
             if (Math.random() < p) {
                 // Sign biases agent toward the sign's facing direction.
                 agent.biasX = dirVec.x;

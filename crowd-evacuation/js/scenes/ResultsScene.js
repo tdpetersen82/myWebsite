@@ -39,7 +39,7 @@ class ResultsScene extends Phaser.Scene {
             placementsUsed: this.placementsUsed,
         });
         newly.forEach((ach, i) => {
-            this.time.delayedCall(800 + i * 700, () => Achievements.spawnToast(this, ach));
+            this.time.delayedCall(800 + i * 700, () => Achievements.spawnToast(this, ach, i));
         });
         const isNewBest = !Storage.getScore(this.level.id) ||
                           score.score > (Storage.getScore(this.level.id)?.score || 0);

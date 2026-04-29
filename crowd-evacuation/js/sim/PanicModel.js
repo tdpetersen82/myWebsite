@@ -30,10 +30,8 @@ const PanicModel = (function () {
         const calmness = Math.max(0, 1 - densityFactor - threatFactor);
         delta -= CFG.PANIC_DECAY * dt * calmness;
 
-        // Marshal influence reduces panic (applied externally, but can include here).
-        if (ctx.marshalInfluence) {
-            delta -= CFG.MARSHAL_PANIC_REDUCTION * dt;
-        }
+        // Marshal/PA panic effects are applied directly in CrowdSystem._applyInfluencers
+        // (soft-cap only — kept out of the global panic delta to avoid stacking).
 
         agent.panic = Math.max(0, Math.min(1, agent.panic + delta));
     }
