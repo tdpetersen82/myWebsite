@@ -4,7 +4,22 @@ Living document. Status, known issues, and next steps for the crowd-evacuation g
 
 ---
 
-## Current version: v0.1 (commit 9fadde7)
+## Current version: v0.2 (commit 67558d0)
+
+### What changed in v0.2
+
+- **Editor expanded from one tool to four**: marshal, barrier (drag-place axis-aligned walls), sign (4-direction with R-rotate, 120° vision cone), PA speaker (radius-based panic reduction).
+- **Placements** class persists the bag of placed tools across scene transitions and computes per-tool budget cost.
+- **Validation** now rebuilds the grid with barriers applied and runs reachability BFS before allowing ALARM. Spawn-trapping designs are blocked.
+- **CrowdSystem._applyInfluencers** unifies marshal/PA/sign biasing in one pass; signs use awareness × visionFactor probability per tick.
+- **DebugOverlay**: F1 flow-field arrows, F3 vision cones, F6 slow-mo (0.25×), F7 pause + `.` step-frame, F9 sim/render perf graph, F10 toggle all.
+- Level 1 budget bumped to include all four tool kinds.
+
+Verified: barrier blocks tile, sign biases agents toward direction, PA reduces panic, fire still spreads and injures stragglers. 60s manual playthrough with mixed tools: 21/40 evacuated.
+
+---
+
+## v0.1 (commit 9fadde7)
 
 ### What shipped
 
@@ -40,18 +55,18 @@ Living document. Status, known issues, and next steps for the crowd-evacuation g
 
 ---
 
-## Next: v0.2 — make it a real game
+## Next: v0.3 — content + polish
 
 Goals, in priority order:
 
-1. **More tools**: barriers (drag-place segments), signs (4 directions), PA speakers (room-polygon influence). Each consumes from a per-level budget.
-2. **Second level**: nightclub or office floor — more agents, more constraints, panic-prone composition.
-3. **Debug overlay**: per `SPEC.md §11`. Mostly unblocks level tuning, secondarily unblocks player curiosity.
-4. **Tutorial**: scripted level 0, gated placement steps, captioned. Per `SPEC.md §13`.
-5. **Audio**: alarm loop, ambient pre-alarm, panic swell layered by avg crowd panic, fire crackle, marshal whistle, UI clicks. Per `SPEC.md §8.2`.
-6. **Better art**: replace circles with simple sprites for agents, exits, marshals.
+1. **Second level**: nightclub or office floor — more agents, more constraints, panic-prone composition. Proves the level pipeline isn't hardcoded around level-01's quirks.
+2. **Tutorial level**: scripted level 0, gated placement steps, captioned. Per `SPEC.md §13`.
+3. **Audio**: alarm loop, ambient pre-alarm, panic swell layered by avg crowd panic, fire crackle, marshal whistle, UI clicks. Per `SPEC.md §8.2`.
+4. **Better art**: replace circles with simple sprites for agents, exits, marshals.
+5. **Agent inspector** (debug F8): click-to-inspect side panel for any agent.
+6. **Settings**: SFX/music sliders, colorblind mode, reduced motion.
 
-Not for v0.2 (defer): sandbox, daily challenges, multi-deck levels, multiplayer.
+Not for v0.3 (defer): sandbox, daily challenges, multi-deck levels, multiplayer.
 
 ---
 
