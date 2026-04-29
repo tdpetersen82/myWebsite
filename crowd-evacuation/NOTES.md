@@ -4,7 +4,24 @@ Living document. Status, known issues, and next steps for the crowd-evacuation g
 
 ---
 
-## Current version: v0.2 (commit 67558d0)
+## Current version: v0.3
+
+### What changed in v0.3
+
+- **Three levels**: Tutorial — Coffee Stand (00, 8 agents, single fire, gentle intro), Riverside Café (01, the original 40-agent layout), and Bassline Club (02, 60 agents, half drunk, narrow 1m exit, faster fire).
+- **Level registry** in `levels/levels.js` — shared `buildGridFromLevel` and `spawnAgentsForLevel` helpers. Each level file pushes itself into the global `LEVELS` array on load.
+- **Menu rebuilt as a level-select grid** — one card per registered level, showing budget summary, exit width, and earned stars. Click anywhere on the card to play.
+- **Tutorial intro modal** — levels with a `tutorial.intro` field show a centered captioned overlay on entry. Click to dismiss.
+
+### Verification
+
+- All 3 levels register at load time (`LEVELS.length === 3`).
+- Sim/editor verified working in v0.2 — same code path, no regressions expected.
+- Preview-browser cache prevented runtime menu re-render verification, but served file content confirmed correct via `curl` and `fetch`.
+
+---
+
+## v0.2 (commit 67558d0)
 
 ### What changed in v0.2
 
@@ -55,18 +72,18 @@ Verified: barrier blocks tile, sign biases agents toward direction, PA reduces p
 
 ---
 
-## Next: v0.3 — content + polish
+## Next: v0.4 — feel + craft
 
 Goals, in priority order:
 
-1. **Second level**: nightclub or office floor — more agents, more constraints, panic-prone composition. Proves the level pipeline isn't hardcoded around level-01's quirks.
-2. **Tutorial level**: scripted level 0, gated placement steps, captioned. Per `SPEC.md §13`.
-3. **Audio**: alarm loop, ambient pre-alarm, panic swell layered by avg crowd panic, fire crackle, marshal whistle, UI clicks. Per `SPEC.md §8.2`.
-4. **Better art**: replace circles with simple sprites for agents, exits, marshals.
-5. **Agent inspector** (debug F8): click-to-inspect side panel for any agent.
-6. **Settings**: SFX/music sliders, colorblind mode, reduced motion.
+1. **Audio**: alarm loop, ambient pre-alarm, panic swell layered by avg crowd panic, fire crackle, marshal whistle, UI clicks. Per `SPEC.md §8.2`. Most impact on perceived quality.
+2. **Better art**: replace circles with simple sprites for agents, exits, marshals.
+3. **Agent inspector** (debug F8): click-to-inspect side panel for any agent.
+4. **Settings**: SFX/music sliders, colorblind mode, reduced motion.
+5. **Multi-step tutorial**: replace the intro modal with progressive gated hints (see `SPEC.md §13`).
+6. **More levels**: stadium concourse, subway platform, office tower.
 
-Not for v0.3 (defer): sandbox, daily challenges, multi-deck levels, multiplayer.
+Not for v0.4 (defer): sandbox, daily challenges, multi-deck levels, multiplayer.
 
 ---
 
