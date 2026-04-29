@@ -52,6 +52,7 @@ const LEVEL_01 = {
         pa: 2,
     },
     timeLimit: 120,
+    ambient: { tint: 0x0c0e1a, alpha: 0.14 },     // bright daylight café
 };
 
 LEVELS.push(LEVEL_01);

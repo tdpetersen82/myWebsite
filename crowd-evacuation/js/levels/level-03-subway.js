@@ -48,6 +48,7 @@ const LEVEL_03 = {
         pa: 3,
     },
     timeLimit: 120,
+    ambient: { tint: 0x06121a, alpha: 0.32 },     // cool fluorescent station
 };
 
 LEVELS.push(LEVEL_03);

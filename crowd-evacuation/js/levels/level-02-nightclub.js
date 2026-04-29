@@ -55,6 +55,7 @@ const LEVEL_02 = {
         pa: 3,
     },
     timeLimit: 100,
+    ambient: { tint: 0x14041e, alpha: 0.62 },     // deep dark club, magenta cast
 };
 
 LEVELS.push(LEVEL_02);

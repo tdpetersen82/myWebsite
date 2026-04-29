@@ -99,40 +99,62 @@ class AudioManager {
     failure()  { this._arpeggio([392, 311, 233], { stepDur: 0.18, peak: 0.30, type: 'sawtooth' }); }
     fireWhoosh() { this._noiseBurst(0.40, 0.18, 1500); }
 
-    // ── Alarm loop ─────────────────────────────────────────
+    // ── Alarm loop (FM-synthesized industrial alarm) ───────
 
     startAlarm() {
         const ctx = this._ensureCtx(); if (!ctx) return;
-        if (this.alarmNodes) return;   // already running
+        if (this.alarmNodes) return;
 
-        const osc = ctx.createOscillator();
+        // Two carriers in interval (perfect 5th) for a fuller chord-alarm sound
+        const c1 = ctx.createOscillator();
+        const c2 = ctx.createOscillator();
+        const mod = ctx.createOscillator();
+        const modGain = ctx.createGain();
         const lfo = ctx.createOscillator();
         const lfoGain = ctx.createGain();
-        const g = ctx.createGain();
-        osc.type = 'square';
-        osc.frequency.value = 700;
-        // LFO toggles between 700 and 950 Hz
-        lfo.type = 'square';
-        lfo.frequency.value = 2.5;     // 2.5 toggles per second
-        lfoGain.gain.value = 125;       // ±125 Hz around base 825
-        osc.frequency.value = 825;
+        const tremolo = ctx.createOscillator();
+        const tremoloGain = ctx.createGain();
+        const out = ctx.createGain();
+
+        c1.type = 'sine';   c1.frequency.value = 740;
+        c2.type = 'sine';   c2.frequency.value = 1110;   // 740 × 1.5
+
+        // FM modulator at audio rate adds harmonics → buzz
+        mod.type = 'sine';  mod.frequency.value = 38;
+        modGain.gain.value = 65;
+        mod.connect(modGain);
+        modGain.connect(c1.frequency);
+        modGain.connect(c2.frequency);
+
+        // LFO wails the pitch up and down (siren effect)
+        lfo.type = 'sine';  lfo.frequency.value = 2.6;
+        lfoGain.gain.value = 130;
         lfo.connect(lfoGain);
-        lfoGain.connect(osc.frequency);
-        g.gain.value = 0.06;
-        osc.connect(g);
-        g.connect(this.sfxGain);
-        osc.start();
-        lfo.start();
-        this.alarmNodes = { osc, lfo, g };
+        lfoGain.connect(c1.frequency);
+        lfoGain.connect(c2.frequency);
+
+        // Tremolo on amplitude for pulsing intensity
+        tremolo.type = 'sine'; tremolo.frequency.value = 5.2;
+        tremoloGain.gain.value = 0.025;     // depth in linear gain
+        tremolo.connect(tremoloGain);
+        tremoloGain.connect(out.gain);
+
+        out.gain.value = 0.055;
+        c1.connect(out);
+        c2.connect(out);
+        out.connect(this.sfxGain);
+        c1.start(); c2.start(); mod.start(); lfo.start(); tremolo.start();
+        this.alarmNodes = { c1, c2, mod, lfo, tremolo, out };
     }
 
     stopAlarm() {
         if (!this.alarmNodes) return;
-        const { osc, lfo, g } = this.alarmNodes;
+        const { c1, c2, mod, lfo, tremolo, out } = this.alarmNodes;
         const t = this.ctx.currentTime;
-        g.gain.exponentialRampToValueAtTime(0.0001, t + 0.3);
-        osc.stop(t + 0.35);
-        lfo.stop(t + 0.35);
+        out.gain.cancelScheduledValues(t);
+        out.gain.linearRampToValueAtTime(0, t + 0.3);
+        c1.stop(t + 0.35); c2.stop(t + 0.35);
+        mod.stop(t + 0.35); lfo.stop(t + 0.35); tremolo.stop(t + 0.35);
         this.alarmNodes = null;
     }
 

@@ -50,6 +50,9 @@ class SimScene extends Phaser.Scene {
         // Particles
         this.particles = new ParticleManager(this);
 
+        // Lighting overlay (uses level.ambient if specified)
+        this.lighting = new Lighting(this, this.level.ambient);
+
         this._drawBackground();
         this._buildAgentSprites();
         this._buildPlacementSprites();
@@ -83,6 +86,8 @@ class SimScene extends Phaser.Scene {
         window.exodusAudio?.startAlarm();
         window.exodusAudio?.startPanicSwell();
         window.exodusAudio?.startFireCrackle();
+        window.exodusMusic?.start();
+        window.exodusMusic?.setIntensity(0.6);    // tense at sim start
         this._fireSoundFired = false;
 
         // Debug overlay
@@ -99,6 +104,7 @@ class SimScene extends Phaser.Scene {
             window.exodusAudio?.stopAlarm();
             window.exodusAudio?.stopPanicSwell();
             window.exodusAudio?.stopFireCrackle();
+            window.exodusMusic?.stop();
         });
     }
 
@@ -208,8 +214,8 @@ class SimScene extends Phaser.Scene {
         const g = this.placeLayer;
         g.clear();
         const px = CFG.PIXELS_PER_METER;
-        // Marshals: blue halo, pulsing
         const pulse = 1 + Math.sin(this.simTime * 2.5) * 0.05;
+        // Marshals: blue halo, pulsing
         for (const m of this.placements.marshals) {
             const sx = this.offsetX + m.x * px, sy = this.offsetY + m.y * px;
             g.fillStyle(0x60a5fa, 0.09);
@@ -224,6 +230,15 @@ class SimScene extends Phaser.Scene {
             g.fillCircle(sx, sy, CFG.PA_RADIUS_M * px * pulse);
             g.lineStyle(1.5, 0xfbbf24, 0.4);
             g.strokeCircle(sx, sy, CFG.PA_RADIUS_M * px * pulse);
+        }
+        // Signs: outward-traveling ring every 2 seconds (visible "I am here" beacon)
+        const ringPhase = (this.simTime % 2) / 2;     // 0..1
+        const ringR = ringPhase * 36;
+        const ringA = (1 - ringPhase) * 0.55;
+        for (const s of this.placements.signs) {
+            const sx = this.offsetX + s.x * px, sy = this.offsetY + s.y * px;
+            g.lineStyle(2, 0x86efac, ringA);
+            g.strokeCircle(sx, sy, ringR);
         }
     }
 
@@ -396,6 +411,8 @@ class SimScene extends Phaser.Scene {
         this._drawAgents();
         // Jam dust at high-density spots
         this._emitJamDust();
+        // Dynamic lighting overlay
+        if (this.lighting) this.lighting.draw(this._collectLights());
         const tRender = performance.now() - tR0;
 
         // HUD
@@ -417,8 +434,13 @@ class SimScene extends Phaser.Scene {
         window.exodusAudio?.updatePanicIntensity(panic);
         let totalFire = 0;
         for (let i = 0; i < this.threat.fire.length; i++) totalFire += this.threat.fire[i];
-        const fireIntensity = Math.min(1, totalFire / 8);   // saturate around 8 cells of full fire
+        const fireIntensity = Math.min(1, totalFire / 8);
         window.exodusAudio?.updateFireIntensity(fireIntensity);
+        // Music intensity blends panic, fire, and time pressure
+        const timePressure = 1 - Math.min(1, this.timeRemaining / this.level.timeLimit);
+        const musicTarget = Math.min(1, panic * 0.55 + fireIntensity * 0.35 + timePressure * 0.25);
+        window.exodusMusic?.setIntensity(musicTarget);
+        window.exodusMusic?.tick(dt);
 
         // termination
         const active = this.crowd.activeAgents();
@@ -454,6 +476,66 @@ class SimScene extends Phaser.Scene {
                 });
             });
         }
+    }
+
+    _collectLights() {
+        const px = CFG.PIXELS_PER_METER;
+        const cs = CFG.CELL_M;
+        const lights = [];
+        const w = this.grid.w;
+
+        // Exits — soft green halo, gentle pulse
+        const pulse = 0.85 + 0.15 * Math.sin(this.simTime * 2.2);
+        for (const ex of this.grid.exits) {
+            for (const c of ex.cells) {
+                lights.push({
+                    x: this.offsetX + (c.x + 0.5) * cs * px,
+                    y: this.offsetY + (c.y + 0.5) * cs * px,
+                    radius: 64 * pulse, color: 0x4ade80, intensity: 0.85,
+                });
+            }
+        }
+
+        // Fires — orange, intensity scales with cell fire value
+        for (let y = 0; y < this.grid.h; y++) {
+            for (let x = 0; x < w; x++) {
+                const i = y * w + x;
+                const f = this.threat.fire[i];
+                if (f > 0.05) {
+                    lights.push({
+                        x: this.offsetX + (x + 0.5) * cs * px,
+                        y: this.offsetY + (y + 0.5) * cs * px,
+                        radius: 56 + f * 12, color: 0xff9a4a, intensity: f * 0.95,
+                    });
+                }
+            }
+        }
+
+        // Marshals — soft warm white halo
+        for (const m of this.placements.marshals) {
+            lights.push({
+                x: this.offsetX + m.x * px,
+                y: this.offsetY + m.y * px,
+                radius: 48, color: 0xfffaf0, intensity: 0.45,
+            });
+        }
+        // PA speakers — yellow
+        for (const p of this.placements.pas) {
+            lights.push({
+                x: this.offsetX + p.x * px,
+                y: this.offsetY + p.y * px,
+                radius: 56, color: 0xfde68a, intensity: 0.45,
+            });
+        }
+        // Signs — small green sparkle
+        for (const s of this.placements.signs) {
+            lights.push({
+                x: this.offsetX + s.x * px,
+                y: this.offsetY + s.y * px,
+                radius: 28, color: 0x86efac, intensity: 0.65,
+            });
+        }
+        return lights;
     }
 
     _emitJamDust() {

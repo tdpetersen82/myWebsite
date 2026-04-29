@@ -38,6 +38,7 @@ const LEVEL_00 = {
         pa: 0,
     },
     timeLimit: 60,
+    ambient: { tint: 0x1a0e08, alpha: 0.18 },     // warm golden hour
     tutorial: {
         steps: [
             { text: '8 people need to evacuate. Click anywhere on the floor to place a marshal.', advance: 'place-marshal' },

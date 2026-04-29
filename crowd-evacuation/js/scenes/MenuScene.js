@@ -14,6 +14,9 @@ class MenuScene extends Phaser.Scene {
 
         // Make sure no leftover alarm loop is playing
         window.exodusAudio?.stopAll();
+        // Music: low-intensity ambient on the menu
+        window.exodusMusic?.start();
+        window.exodusMusic?.setIntensity(0.15);
 
         // Title — Bungee display font
         const title = this.add.text(W / 2, 60, 'EXODUS', {

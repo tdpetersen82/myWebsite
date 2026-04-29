@@ -53,6 +53,7 @@ const LEVEL_04 = {
         pa: 4,
     },
     timeLimit: 130,
+    ambient: { tint: 0x101424, alpha: 0.22 },     // stadium evening glare
 };
 
 LEVELS.push(LEVEL_04);
