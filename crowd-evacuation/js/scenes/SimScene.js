@@ -9,6 +9,7 @@ class SimScene extends Phaser.Scene {
         this.placements = data.placements || new Placements();
         this.offsetX = data.offsetX;
         this.offsetY = data.offsetY;
+        this.isDaily = !!data.isDaily;
     }
 
     create() {
@@ -387,6 +388,13 @@ class SimScene extends Phaser.Scene {
             this.time.delayedCall(800, () => {
                 this.scene.start('ResultsScene', {
                     level: this.level,
+                    isDaily: this.isDaily,
+                    placementsUsed: {
+                        marshal: this.placements.marshals.length > 0,
+                        barrier: this.placements.barriers.length > 0,
+                        sign:    this.placements.signs.length > 0,
+                        pa:      this.placements.pas.length > 0,
+                    },
                     result: {
                         totalAgents: this.agents.length,
                         evacuated: this.crowd.evacuated,

@@ -6,6 +6,8 @@ class ResultsScene extends Phaser.Scene {
     init(data) {
         this.level = data.level;
         this.result = data.result;
+        this.placementsUsed = data.placementsUsed || null;
+        this.isDaily = !!data.isDaily;
     }
 
     create() {
@@ -20,6 +22,25 @@ class ResultsScene extends Phaser.Scene {
         // Jingle based on outcome
         if (score.stars > 0) window.exodusAudio?.success();
         else                 window.exodusAudio?.failure();
+
+        // Record daily attempt if this was the daily challenge
+        if (this.isDaily && !DailyChallenge.alreadyPlayed()) {
+            DailyChallenge.recordAttempt(
+                { ...this.result, levelId: this.level.id },
+                score
+            );
+        }
+
+        // Check achievements; if any newly unlocked, show toasts staggered.
+        const newly = Achievements.checkAfterLevel({
+            level: this.level,
+            result: this.result,
+            score,
+            placementsUsed: this.placementsUsed,
+        });
+        newly.forEach((ach, i) => {
+            this.time.delayedCall(800 + i * 700, () => Achievements.spawnToast(this, ach));
+        });
         const isNewBest = !Storage.getScore(this.level.id) ||
                           score.score > (Storage.getScore(this.level.id)?.score || 0);
         Storage.setScore(this.level.id, {

@@ -19,6 +19,7 @@ class DesignScene extends Phaser.Scene {
         this.tool = ToolKind.MARSHAL;
         this.signOrientation = 'S';   // current sign rotation when placing
         this.dragStart = null;        // for barrier drag
+        this.isDaily = !!data.isDaily;
     }
 
     create() {
@@ -481,6 +482,7 @@ class DesignScene extends Phaser.Scene {
             placements: this.placements,
             offsetX: this.offsetX,
             offsetY: this.offsetY,
+            isDaily: this.isDaily,
         });
     }
 }

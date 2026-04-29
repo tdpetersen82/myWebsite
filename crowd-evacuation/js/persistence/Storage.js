@@ -49,5 +49,40 @@ const Storage = (function () {
         _safeSet(PREFIX + 'settings', JSON.stringify(next));
     }
 
-    return { getScore, setScore, getBest, getSettings, setSettings };
+    function getAllScores() {
+        const raw = _safeGet(PREFIX + 'scores');
+        if (!raw) return {};
+        try { return JSON.parse(raw); } catch (_) { return {}; }
+    }
+
+    function getDailyAttempt(dayKey) {
+        const raw = _safeGet(PREFIX + 'daily');
+        if (!raw) return null;
+        try { return JSON.parse(raw)[dayKey] || null; } catch (_) { return null; }
+    }
+
+    function setDailyAttempt(dayKey, record) {
+        const raw = _safeGet(PREFIX + 'daily');
+        let map = {};
+        if (raw) { try { map = JSON.parse(raw); } catch (_) { map = {}; } }
+        map[dayKey] = record;
+        _safeSet(PREFIX + 'daily', JSON.stringify(map));
+    }
+
+    function getAchievements() {
+        const raw = _safeGet(PREFIX + 'achievements');
+        if (!raw) return {};
+        try { return JSON.parse(raw); } catch (_) { return {}; }
+    }
+
+    function setAchievements(map) {
+        _safeSet(PREFIX + 'achievements', JSON.stringify(map));
+    }
+
+    return {
+        getScore, setScore, getBest, getAllScores,
+        getSettings, setSettings,
+        getDailyAttempt, setDailyAttempt,
+        getAchievements, setAchievements,
+    };
 })();

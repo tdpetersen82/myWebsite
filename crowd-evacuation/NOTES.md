@@ -4,7 +4,35 @@ Living document. Status, known issues, and next steps for the crowd-evacuation g
 
 ---
 
-## Current version: v0.6
+## Current version: v0.7
+
+### What changed in v0.7
+
+- **Daily Challenge mode**: a card on the menu picks today's level
+  deterministically by a UTC-date hash (skips the tutorial). One attempt
+  per UTC day — replays show "come back tomorrow" with your score and
+  star count. Each play records to `localStorage` keyed by date.
+- **Achievements system**: 8 achievements tracked in `localStorage`:
+  First Steps, Star Collector, Perfectionist, Lifesaver, Nobody Left
+  Behind, Frugal, The Whole Toolkit, Drill Sergeant. Detection runs in
+  `Achievements.checkAfterLevel()` from ResultsScene. Newly unlocked
+  ones spawn animated toast notifications. Menu has a 🏆 link to a
+  modal listing all achievements with locked/unlocked status.
+- **Storage extended** with `getAllScores`, `getDailyAttempt`,
+  `setDailyAttempt`, `getAchievements`, `setAchievements`.
+
+### Verification
+
+- Daily challenge picks `01-cafe` today (depends on date hash); achievements
+  registry has 8 entries; new Storage methods all return defined values
+  in fresh browser sessions.
+- Preview-environment browser cache stale-serves the older Storage.js,
+  so live runtime checks show old API; HTTP-served content verified
+  correct via `curl`.
+
+---
+
+## v0.6
 
 ### What changed in v0.6
 
@@ -138,17 +166,26 @@ Verified: barrier blocks tile, sign biases agents toward direction, PA reduces p
 
 ---
 
-## Next: v0.7 — production readiness
+## Next: v0.8 — content + creator
 
 Goals, in priority order:
 
-1. **Daily challenge mode**: deterministic seeded run drawn from the level pool, one attempt per UTC date, persisted score on a global leaderboard later. For now: a "Today's Challenge" card on the menu that runs a seeded version of one level.
-2. **Achievements**: small set tracked in localStorage — first-clear, three-star a level, evac >95% on a level, no-injuries clear.
-3. **Procedural agent sprites** via `Phaser.Graphics → generateTexture` (defer from v0.6 — current Graphics rendering is adequate). Cleaner pipeline for future demographic variations.
-4. **Office tower level**: vertical layout with stairs forcing top-down evac across multi-deck flow. Stretch goal — needs sim work for level transitions.
-5. **Sandbox / level editor v0**: lets players build a venue and share a JSON blob.
+1. **Sandbox / level editor v0**: an in-game tool to paint a tile grid,
+   place an exit, define spawn region, set budgets. Export to JSON
+   string for sharing. This is the biggest feature unlock.
+2. **Office tower level** (vertical, stair-based): proves the editor +
+   level pipeline can handle multi-floor content. Sim may need a stairs
+   tile that connects two flow-field domains.
+3. **Procedural agent sprites** via `Phaser.Graphics → generateTexture`:
+   replace the inline shape drawing with reusable textures. Foundation
+   for animated walk cycles later.
+4. **Sim determinism for daily challenge**: seed the SFM and threat-spread
+   RNG so the daily run is replicable across players for fair leaderboards.
+5. **Replay mode**: record agent state per tick, export/import for a
+   level — both for debugging and for a shareable "look how I did it"
+   feature.
 
-Not for v0.7 (defer): true multiplayer, the level workshop, multi-deck physics.
+Not for v0.8 (defer): true multiplayer, global leaderboards (need server).
 
 ---
 
