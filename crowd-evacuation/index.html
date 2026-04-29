@@ -4,6 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Exodus — Free Online Crowd Evacuation Game | Arcade Game Hub</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bungee&family=Inter:wght@400;700;900&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../styles.css">
     <style>
         #game-container canvas {
@@ -53,34 +56,37 @@
     </div>
 
     <!-- Game scripts (order matters: dependencies first). v query busts dev caches. -->
-    <script src="js/config.js?v=0.7.5"></script>
-    <script src="js/persistence/Storage.js?v=0.7.5"></script>
-    <script src="js/sim/SpatialHash.js?v=0.7.5"></script>
-    <script src="js/sim/GridMap.js?v=0.7.5"></script>
-    <script src="js/sim/FlowField.js?v=0.7.5"></script>
-    <script src="js/sim/Agent.js?v=0.7.5"></script>
-    <script src="js/sim/SocialForce.js?v=0.7.5"></script>
-    <script src="js/sim/PanicModel.js?v=0.7.5"></script>
-    <script src="js/sim/ThreatSystem.js?v=0.7.5"></script>
-    <script src="js/sim/Placements.js?v=0.7.5"></script>
-    <script src="js/sim/CrowdSystem.js?v=0.7.5"></script>
-    <script src="js/sim/Scoring.js?v=0.7.5"></script>
-    <script src="js/audio/AudioManager.js?v=0.7.5"></script>
-    <script src="js/ui/DebugOverlay.js?v=0.7.5"></script>
-    <script src="js/ui/SettingsModal.js?v=0.7.5"></script>
-    <script src="js/ui/TutorialController.js?v=0.7.5"></script>
-    <script src="js/levels/levels.js?v=0.7.5"></script>
-    <script src="js/levels/level-00-tutorial.js?v=0.7.5"></script>
-    <script src="js/levels/level-01.js?v=0.7.5"></script>
-    <script src="js/levels/level-02-nightclub.js?v=0.7.5"></script>
-    <script src="js/levels/level-03-subway.js?v=0.7.5"></script>
-    <script src="js/levels/level-04-stadium.js?v=0.7.5"></script>
-    <script src="js/daily/DailyChallenge.js?v=0.7.5"></script>
-    <script src="js/achievements/Achievements.js?v=0.7.5"></script>
-    <script src="js/scenes/MenuScene.js?v=0.7.5"></script>
-    <script src="js/scenes/DesignScene.js?v=0.7.5"></script>
-    <script src="js/scenes/SimScene.js?v=0.7.5"></script>
-    <script src="js/scenes/ResultsScene.js?v=0.7.5"></script>
+    <script src="js/config.js?v=0.8.0"></script>
+    <script src="js/persistence/Storage.js?v=0.8.0"></script>
+    <script src="js/sim/SpatialHash.js?v=0.8.0"></script>
+    <script src="js/sim/GridMap.js?v=0.8.0"></script>
+    <script src="js/sim/FlowField.js?v=0.8.0"></script>
+    <script src="js/sim/Agent.js?v=0.8.0"></script>
+    <script src="js/sim/SocialForce.js?v=0.8.0"></script>
+    <script src="js/sim/PanicModel.js?v=0.8.0"></script>
+    <script src="js/sim/ThreatSystem.js?v=0.8.0"></script>
+    <script src="js/sim/Placements.js?v=0.8.0"></script>
+    <script src="js/sim/CrowdSystem.js?v=0.8.0"></script>
+    <script src="js/sim/Scoring.js?v=0.8.0"></script>
+    <script src="js/audio/AudioManager.js?v=0.8.0"></script>
+    <script src="js/render/SpriteFactory.js?v=0.8.0"></script>
+    <script src="js/render/Particles.js?v=0.8.0"></script>
+    <script src="js/ui/Juice.js?v=0.8.0"></script>
+    <script src="js/ui/DebugOverlay.js?v=0.8.0"></script>
+    <script src="js/ui/SettingsModal.js?v=0.8.0"></script>
+    <script src="js/ui/TutorialController.js?v=0.8.0"></script>
+    <script src="js/levels/levels.js?v=0.8.0"></script>
+    <script src="js/levels/level-00-tutorial.js?v=0.8.0"></script>
+    <script src="js/levels/level-01.js?v=0.8.0"></script>
+    <script src="js/levels/level-02-nightclub.js?v=0.8.0"></script>
+    <script src="js/levels/level-03-subway.js?v=0.8.0"></script>
+    <script src="js/levels/level-04-stadium.js?v=0.8.0"></script>
+    <script src="js/daily/DailyChallenge.js?v=0.8.0"></script>
+    <script src="js/achievements/Achievements.js?v=0.8.0"></script>
+    <script src="js/scenes/MenuScene.js?v=0.8.0"></script>
+    <script src="js/scenes/DesignScene.js?v=0.8.0"></script>
+    <script src="js/scenes/SimScene.js?v=0.8.0"></script>
+    <script src="js/scenes/ResultsScene.js?v=0.8.0"></script>
 
     <script>
     // Initialize hub-style high score display

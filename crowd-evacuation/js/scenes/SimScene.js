@@ -39,35 +39,45 @@ class SimScene extends Phaser.Scene {
         this.ended = false;
 
         // Render layers
-        this.bgLayer       = this.add.graphics();
-        this.fireLayer     = this.add.graphics();
-        this.smokeLayer    = this.add.graphics();
-        this.placeLayer    = this.add.graphics();   // marshals, signs, PAs (always shown)
-        this.agentLayer    = this.add.graphics();
+        this.bgLayer       = this.add.graphics().setDepth(0);
+        this.fireSprites   = [];                                // grid-cell array of fire sprites
+        this.smokeLayer    = this.add.graphics().setDepth(14);
+        this.placeLayer    = this.add.graphics().setDepth(5);   // marshal/sign/PA halos
+        this.placeSprites  = [];                                 // sprite refs for marshals/signs/PAs
+        this.agentSprites  = [];                                 // 1-to-1 with this.agents
         this.debugLayer    = this.add.graphics().setDepth(20);
 
+        // Particles
+        this.particles = new ParticleManager(this);
+
         this._drawBackground();
-        this._drawPlacements();
+        this._buildAgentSprites();
+        this._buildPlacementSprites();
+        this._buildFireSprites();
 
         // HUD
-        this.add.rectangle(0, 0, CFG.CANVAS_W, CFG.HUD_HEIGHT, 0x0f0c29, 1).setOrigin(0, 0);
-        this.hudTime    = this.add.text(20, 16, '',  { fontFamily: 'Arial Black', fontSize: '18px', color: '#fff' });
-        this.hudEvac    = this.add.text(180, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#4ade80' });
-        this.hudInjured = this.add.text(340, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#ff6b6b' });
-        this.hudPanic   = this.add.text(500, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fbbf24' });
+        this.add.rectangle(0, 0, CFG.CANVAS_W, CFG.HUD_HEIGHT, 0x0f0c29, 1).setOrigin(0, 0).setDepth(25);
+        const hudOpts = (color) => ({ fontFamily: '"Bungee","Arial Black",Arial', fontSize: '17px', color });
+        this.hudTime    = this.add.text(20, 14, '',  hudOpts('#fff')).setDepth(26);
+        this.hudEvac    = this.add.text(180, 14, '', hudOpts('#4ade80')).setDepth(26);
+        this.hudInjured = this.add.text(340, 14, '', hudOpts('#ff6b6b')).setDepth(26);
+        this.hudPanic   = this.add.text(500, 14, '', hudOpts('#fbbf24')).setDepth(26);
         this.hudKey     = this.add.text(CFG.CANVAS_W - 20, 40, 'P pause · F1 flow · F3 vision · F6 slow · F7 step · F8 inspect · F9 perf', {
-            fontFamily: 'Arial', fontSize: '9px', color: '#666',
-        }).setOrigin(1, 0);
+            fontFamily: '"Inter",Arial', fontSize: '9px', color: '#666',
+        }).setOrigin(1, 0).setDepth(26);
 
-        // Alarm flash + text (skip flash if reduced motion)
+        // Alarm flash + camera shake + hit-pause
         if (!this.settings.reducedMotion) {
-            const flash = this.add.rectangle(CFG.CANVAS_W / 2, CFG.CANVAS_H / 2, CFG.CANVAS_W, CFG.CANVAS_H, 0xff4444, 0.4);
-            this.tweens.add({ targets: flash, alpha: 0, duration: 600, onComplete: () => flash.destroy() });
+            Juice.flash(this, 200, 255, 80, 80);
+            Juice.shake(this, 380, 0.006);
         }
+        Juice.hitPause(this, 90);
         const alarmTxt = this.add.text(CFG.CANVAS_W / 2, 100, 'ALARM TRIGGERED', {
-            fontFamily: 'Arial Black', fontSize: '32px', color: '#ff4444',
-        }).setOrigin(0.5).setDepth(10);
-        this.tweens.add({ targets: alarmTxt, alpha: 0, duration: 1500, delay: 1000, onComplete: () => alarmTxt.destroy() });
+            fontFamily: '"Bungee", "Arial Black", Arial', fontSize: '34px', color: '#ff4444',
+            stroke: '#000', strokeThickness: 4,
+        }).setOrigin(0.5).setDepth(30);
+        Juice.popIn(this, alarmTxt, 380);
+        this.tweens.add({ targets: alarmTxt, alpha: 0, y: 80, duration: 1500, delay: 1100, onComplete: () => alarmTxt.destroy() });
 
         // Audio: alarm + continuous loops; intensities updated each tick
         window.exodusAudio?.startAlarm();
@@ -131,186 +141,199 @@ class SimScene extends Phaser.Scene {
     }
 
     _drawBackground() {
-        const g = this.bgLayer;
-        g.clear();
+        // Background uses tile sprites for floor / wall / exit. Burning cells
+        // render via Graphics overlay because they change at runtime.
         const cs = CFG.CELL_M, px = CFG.PIXELS_PER_METER;
+        const tileSize = cs * px;       // 16px for 0.5m cells
+        // Lazy-build the tile sprite grid once
+        if (!this._tilesBuilt) {
+            this._tileSprites = [];
+            for (let y = 0; y < this.grid.h; y++) {
+                for (let x = 0; x < this.grid.w; x++) {
+                    const t = this.grid.getTile(x, y);
+                    let key;
+                    if (t === Tile.WALL)      key = 'tile-wall';
+                    else if (t === Tile.EXIT) key = 'tile-exit-0';
+                    else                      key = `tile-floor-${(x + y * 3) % 3}`;
+                    const sx = this.offsetX + x * tileSize + tileSize / 2;
+                    const sy = this.offsetY + y * tileSize + tileSize / 2;
+                    const s = this.add.image(sx, sy, key)
+                        .setDisplaySize(tileSize, tileSize)
+                        .setDepth(0);
+                    this._tileSprites.push({ x, y, sprite: s });
+                }
+            }
+            this._tilesBuilt = true;
+        }
+        // Animate exit pulse — refresh exit-tile texture each draw
+        const exitFrame = Math.floor(this.simTime * 4) % 4;
+        for (const t of this._tileSprites) {
+            const tile = this.grid.getTile(t.x, t.y);
+            if (tile === Tile.EXIT) t.sprite.setTexture(`tile-exit-${exitFrame}`);
+        }
+        // Burning cells: tint the underlying tile dark red
+        const g = this.bgLayer; g.clear();
         for (let y = 0; y < this.grid.h; y++) {
             for (let x = 0; x < this.grid.w; x++) {
-                const t = this.grid.getTile(x, y);
-                const burning = this.grid.burning[y * this.grid.w + x];
-                let color;
-                if (burning)              color = 0x4a1a0a;
-                else if (t === Tile.WALL) color = 0x2a2a3a;
-                else if (t === Tile.EXIT) color = 0x4ade80;
-                else                      color = 0xddd5c8;
-                g.fillStyle(color, 1);
-                g.fillRect(this.offsetX + x * cs * px, this.offsetY + y * cs * px, cs * px, cs * px);
+                if (this.grid.burning[y * this.grid.w + x]) {
+                    g.fillStyle(0x4a1a0a, 0.55);
+                    g.fillRect(this.offsetX + x * tileSize, this.offsetY + y * tileSize, tileSize, tileSize);
+                }
             }
         }
     }
 
-    _drawPlacements() {
+    _buildPlacementSprites() {
+        // Marshals get a walk-cycle sprite + halo Graphics. We spawn
+        // them once and animate frames in the update loop.
+        const px = CFG.PIXELS_PER_METER;
+        for (const m of this.placements.marshals) {
+            const sx = this.offsetX + m.x * px, sy = this.offsetY + m.y * px;
+            const sprite = this.add.image(sx, sy, 'marshal-0').setDepth(11);
+            this.placeSprites.push({ kind: 'marshal', ref: m, sprite, frame: 0 });
+        }
+        for (const s of this.placements.signs) {
+            const sx = this.offsetX + s.x * px, sy = this.offsetY + s.y * px;
+            const sprite = this.add.image(sx, sy, `sign-${s.dir}`).setDepth(10);
+            this.placeSprites.push({ kind: 'sign', ref: s, sprite });
+        }
+        for (const p of this.placements.pas) {
+            const sx = this.offsetX + p.x * px, sy = this.offsetY + p.y * px;
+            const sprite = this.add.image(sx, sy, 'pa-speaker').setDepth(10);
+            this.placeSprites.push({ kind: 'pa', ref: p, sprite });
+        }
+    }
+
+    _drawPlacementHalos() {
         const g = this.placeLayer;
         g.clear();
         const px = CFG.PIXELS_PER_METER;
-
-        // Marshals — hi-vis vest body + helmet head + dashed influence ring
+        // Marshals: blue halo, pulsing
+        const pulse = 1 + Math.sin(this.simTime * 2.5) * 0.05;
         for (const m of this.placements.marshals) {
             const sx = this.offsetX + m.x * px, sy = this.offsetY + m.y * px;
-            // soft fill of influence radius
-            g.fillStyle(0x60a5fa, 0.10);
-            g.fillCircle(sx, sy, CFG.MARSHAL_RADIUS_M * px);
-            // dashed ring on the radius border (visual only — Phaser graphics has no native dash, fake with arcs)
-            g.lineStyle(2, 0x60a5fa, 0.55);
-            g.strokeCircle(sx, sy, CFG.MARSHAL_RADIUS_M * px);
-            // shadow
-            g.fillStyle(0x000000, 0.3);
-            g.fillEllipse(sx, sy + 6, 16, 5);
-            // hi-vis vest (yellow rectangle)
-            g.fillStyle(0xfbbf24, 1);
-            g.fillRect(sx - 6, sy - 1, 12, 9);
-            g.lineStyle(1.5, 0x000000, 0.7);
-            g.strokeRect(sx - 6, sy - 1, 12, 9);
-            // belt stripe
-            g.lineStyle(2, 0xef4444, 0.9);
-            g.lineBetween(sx - 6, sy + 4, sx + 6, sy + 4);
-            // head with helmet
-            g.fillStyle(0x1e40af, 1);
-            g.fillCircle(sx, sy - 5, 4);
-            g.lineStyle(1.5, 0x000000, 0.7);
-            g.strokeCircle(sx, sy - 5, 4);
-            // helmet shine
-            g.fillStyle(0xffffff, 0.5);
-            g.fillCircle(sx - 1, sy - 6, 1.2);
+            g.fillStyle(0x60a5fa, 0.09);
+            g.fillCircle(sx, sy, CFG.MARSHAL_RADIUS_M * px * pulse);
+            g.lineStyle(2, 0x60a5fa, 0.5);
+            g.strokeCircle(sx, sy, CFG.MARSHAL_RADIUS_M * px * pulse);
         }
-        // PA speakers — speaker box + sound waves
+        // PAs: yellow halo
         for (const p of this.placements.pas) {
             const sx = this.offsetX + p.x * px, sy = this.offsetY + p.y * px;
-            g.fillStyle(0xfbbf24, 0.08);
-            g.fillCircle(sx, sy, CFG.PA_RADIUS_M * px);
-            // speaker box
-            g.fillStyle(0xfbbf24, 1);
-            g.fillRect(sx - 7, sy - 7, 14, 14);
-            g.lineStyle(2, 0x000000, 0.7);
-            g.strokeRect(sx - 7, sy - 7, 14, 14);
-            // speaker grille
-            g.fillStyle(0x000000, 0.6);
-            g.fillCircle(sx, sy, 4);
-            g.fillStyle(0xfbbf24, 1);
-            g.fillCircle(sx, sy, 1.5);
-            // sound waves (concentric arcs to the right)
-            g.lineStyle(1.5, 0xfbbf24, 0.8);
-            for (let r = 12; r <= 22; r += 5) {
-                g.beginPath();
-                g.arc(sx + 4, sy, r, -Math.PI / 4, Math.PI / 4);
-                g.strokePath();
-            }
-        }
-        // Signs
-        for (const s of this.placements.signs) {
-            const sx = this.offsetX + s.x * px, sy = this.offsetY + s.y * px;
-            const v = SignDirVec[s.dir];
-            g.fillStyle(0x4ade80, 1);
-            g.fillCircle(sx, sy, 8);
-            g.lineStyle(2, 0xffffff, 1);
-            g.strokeCircle(sx, sy, 8);
-            g.lineStyle(3, 0x064e3b, 1);
-            g.lineBetween(sx, sy, sx + v.x * 9, sy + v.y * 9);
-            g.fillStyle(0x064e3b, 1);
-            const tipX = sx + v.x * 11, tipY = sy + v.y * 11;
-            g.fillTriangle(
-                tipX, tipY,
-                tipX - v.x * 5 + v.y * 4, tipY - v.y * 5 - v.x * 4,
-                tipX - v.x * 5 - v.y * 4, tipY - v.y * 5 + v.x * 4,
-            );
+            g.fillStyle(0xfbbf24, 0.07);
+            g.fillCircle(sx, sy, CFG.PA_RADIUS_M * px * pulse);
+            g.lineStyle(1.5, 0xfbbf24, 0.4);
+            g.strokeCircle(sx, sy, CFG.PA_RADIUS_M * px * pulse);
         }
     }
 
-    _drawAgents() {
-        const g = this.agentLayer;
-        g.clear();
+    _buildAgentSprites() {
         const px = CFG.PIXELS_PER_METER;
         for (const a of this.agents) {
-            if (a.state === 'ESCAPED') continue;
             const sx = this.offsetX + a.x * px;
             const sy = this.offsetY + a.y * px;
+            const key = SpriteFactory.agentTextureKey(a, 0);
+            const sprite = this.add.image(sx, sy, key).setDepth(12);
+            sprite.setTint(SpriteFactory.agentTint(a, this.settings.colorblind));
+            this.agentSprites.push(sprite);
+        }
+    }
 
-            // panic halo
-            if (a.panic > 0.2) {
-                g.fillStyle(0xff4444, a.panic * 0.45);
-                g.fillCircle(sx, sy, 13);
+    _buildFireSprites() {
+        // Lazy: built each tick where new fire cells appear. Cell-keyed.
+        this.fireSpriteMap = new Map();   // cellIdx → sprite
+    }
+
+    _drawAgents() {
+        const px = CFG.PIXELS_PER_METER;
+        const cb = this.settings.colorblind;
+        for (let i = 0; i < this.agents.length; i++) {
+            const a = this.agents[i];
+            const s = this.agentSprites[i];
+            if (!s) continue;
+            if (a.state === 'ESCAPED') { s.setVisible(false); continue; }
+            const sx = this.offsetX + a.x * px;
+            const sy = this.offsetY + a.y * px;
+            s.setPosition(sx, sy);
+            // walk-cycle frame: phase by sim time × speed
+            const speed = Math.hypot(a.vx, a.vy);
+            const frame = a.state === 'INJURED'
+                ? 0
+                : (speed > 0.1 ? Math.floor(this.simTime * speed * 3.5) % 4 : 0);
+            s.setTexture(SpriteFactory.agentTextureKey(a, frame));
+            // facing rotation (top-down: 0 rad = facing east in our textures
+            // which were drawn facing south — we offset by +PI/2 to align).
+            if (speed > 0.1 && a.state !== 'INJURED') {
+                s.setRotation(Math.atan2(a.vy, a.vx) - Math.PI / 2);
+            } else {
+                s.setRotation(0);
             }
-
-            // body color by type / panic
-            let bodyColor;
-            if (a.state === 'INJURED')           bodyColor = 0x555555;
-            else if (a.type === 'wheelchair')    bodyColor = 0x9333ea;
-            else if (a.type === 'elderly')       bodyColor = 0x78716c;
-            else if (a.type === 'child')         bodyColor = 0xfbbf24;
-            else if (a.type === 'drunk')         bodyColor = 0xa855f7;
-            else {
-                if (this.settings.colorblind) {
-                    const r = Math.floor(0x33 + a.panic * (0xfb - 0x33));
-                    const grn = Math.floor(0x80 + a.panic * (0xbf - 0x80));
-                    const b = Math.floor(0xee - a.panic * (0xee - 0x24));
-                    bodyColor = (r << 16) | (grn << 8) | b;
-                } else {
-                    const r = Math.floor(0x4a + a.panic * (0xff - 0x4a));
-                    const grn = Math.floor(0xde - a.panic * (0xde - 0x44));
-                    const b = Math.floor(0x80 - a.panic * (0x80 - 0x44));
-                    bodyColor = (r << 16) | (grn << 8) | b;
-                }
+            s.setTint(SpriteFactory.agentTint(a, cb));
+            // Footstep dust — every other walk-frame at high speed
+            if (speed > 0.8 && (frame === 1 || frame === 3) && Math.random() < 0.12) {
+                this.particles?.emitFootstep(sx, sy);
             }
-
-            // shadow underfoot
-            g.fillStyle(0x000000, 0.25);
-            g.fillEllipse(sx, sy + 4, 12, 4);
-
-            // body (torso)
-            g.fillStyle(bodyColor, 1);
-            g.fillCircle(sx, sy + 1, 5);
-            g.lineStyle(1, 0x000000, 0.65);
-            g.strokeCircle(sx, sy + 1, 5);
-
-            // head — slight skin tone, distinct for child / elderly
-            const headColor = a.type === 'child'   ? 0xfde68a
-                           : a.type === 'elderly'  ? 0xe7d4b5
-                           : a.type === 'drunk'    ? 0xfde68a
-                           : 0xfde68a;
-            g.fillStyle(headColor, 1);
-            g.fillCircle(sx, sy - 3, 2.6);
-            g.lineStyle(1, 0x000000, 0.65);
-            g.strokeCircle(sx, sy - 3, 2.6);
-
-            // direction indicator (small line in velocity direction)
-            const sp = Math.hypot(a.vx, a.vy);
-            if (sp > 0.1 && a.state !== 'INJURED') {
-                const k = 4 / sp;
-                g.lineStyle(1.5, 0x000000, 0.7);
-                g.lineBetween(sx, sy + 1, sx + a.vx * k, sy + 1 + a.vy * k);
-            }
+        }
+        // Panic halo overlay (drawn once for all agents, in agent layer behind)
+        if (!this._panicHaloLayer) {
+            this._panicHaloLayer = this.add.graphics().setDepth(11);
+        }
+        const g = this._panicHaloLayer;
+        g.clear();
+        for (const a of this.agents) {
+            if (a.state === 'ESCAPED' || a.panic < 0.3) continue;
+            const sx = this.offsetX + a.x * px;
+            const sy = this.offsetY + a.y * px;
+            g.fillStyle(0xff3333, a.panic * 0.32);
+            g.fillCircle(sx, sy, 12);
         }
     }
 
     _drawFireSmoke() {
-        const fg = this.fireLayer;
-        const sg = this.smokeLayer;
-        fg.clear(); sg.clear();
         const cs = CFG.CELL_M, px = CFG.PIXELS_PER_METER;
+        const tileSize = cs * px;
+        const fireFrame = Math.floor(this.simTime * 8) % 4;
+        const w = this.grid.w;
+        // 1. Add/update fire sprites for cells with fire
         for (let y = 0; y < this.grid.h; y++) {
-            for (let x = 0; x < this.grid.w; x++) {
-                const i = y * this.grid.w + x;
+            for (let x = 0; x < w; x++) {
+                const i = y * w + x;
                 const fire = this.threat.fire[i];
-                const smoke = this.threat.smoke[i];
+                let s = this.fireSpriteMap.get(i);
                 if (fire > 0.05) {
-                    fg.fillStyle(0xff6b1a, fire);
-                    fg.fillRect(this.offsetX + x * cs * px, this.offsetY + y * cs * px, cs * px, cs * px);
-                    fg.fillStyle(0xfff080, fire * 0.5);
-                    fg.fillCircle(this.offsetX + (x + 0.5) * cs * px, this.offsetY + (y + 0.5) * cs * px, 5);
+                    if (!s) {
+                        const cx = this.offsetX + (x + 0.5) * tileSize;
+                        const cy = this.offsetY + (y + 0.5) * tileSize;
+                        s = this.add.image(cx, cy, `fire-${fireFrame}`)
+                            .setDepth(13)
+                            .setDisplaySize(tileSize * 1.1, tileSize * 1.4)
+                            .setOrigin(0.5, 0.7);
+                        this.fireSpriteMap.set(i, s);
+                        // Spark burst when this cell first ignites
+                        this.particles?.emitSparksAt(cx, cy, 6);
+                    }
+                    s.setTexture(`fire-${(fireFrame + (x + y)) % 4}`);   // de-sync flicker
+                    s.setAlpha(Math.min(1, fire * 1.4));
+                    // Periodic smoke emission from this fire
+                    if (Math.random() < fire * 0.3) {
+                        this.particles?.emitSmokeAt(s.x, s.y - 4, 1);
+                    }
+                } else if (s) {
+                    s.destroy();
+                    this.fireSpriteMap.delete(i);
                 }
-                if (smoke > 0.05) {
-                    sg.fillStyle(0x666666, Math.min(0.6, smoke * 0.7));
-                    sg.fillRect(this.offsetX + x * cs * px, this.offsetY + y * cs * px, cs * px, cs * px);
+            }
+        }
+        // 2. Smoke overlay (cell-darkening for line-of-sight effect)
+        const sg = this.smokeLayer;
+        sg.clear();
+        for (let y = 0; y < this.grid.h; y++) {
+            for (let x = 0; x < w; x++) {
+                const i = y * w + x;
+                const smoke = this.threat.smoke[i];
+                if (smoke > 0.08) {
+                    sg.fillStyle(0x4a4a55, Math.min(0.55, smoke * 0.6));
+                    sg.fillRect(this.offsetX + x * tileSize, this.offsetY + y * tileSize, tileSize, tileSize);
                 }
             }
         }
@@ -322,6 +345,14 @@ class SimScene extends Phaser.Scene {
         if (this.debug && this.debug.paused) {
             this._drawAgents();
             this.debug.draw();
+            return;
+        }
+        // Hit-pause respect
+        if (Juice.isFrozen(this)) {
+            this._drawAgents();
+            this._drawPlacementHalos();
+            this._drawFireSmoke();
+            this._drawBackground();
             return;
         }
         let dt = Math.min(dtMs / 1000, CFG.MAX_DT);
@@ -338,9 +369,14 @@ class SimScene extends Phaser.Scene {
             this.threatAcc -= this.threatStep;
         }
         if (topologyChanged) this.crowd.rebuildFlowField();
-        // Fire ignition sound — fires once when fire first appears
+        // Fire ignition sound + camera shake + hit-pause — once
         if (!this._fireSoundFired && this.threat.ignited) {
             window.exodusAudio?.fireWhoosh();
+            if (!this.settings.reducedMotion) {
+                Juice.shake(this, 600, 0.009);
+                Juice.flash(this, 220, 255, 100, 0);
+            }
+            Juice.hitPause(this, 60);
             this._fireSoundFired = true;
         }
 
@@ -355,8 +391,11 @@ class SimScene extends Phaser.Scene {
 
         const tR0 = performance.now();
         this._drawBackground();
+        this._drawPlacementHalos();
         this._drawFireSmoke();
         this._drawAgents();
+        // Jam dust at high-density spots
+        this._emitJamDust();
         const tRender = performance.now() - tR0;
 
         // HUD
@@ -385,7 +424,15 @@ class SimScene extends Phaser.Scene {
         const active = this.crowd.activeAgents();
         if (active === 0 || this.timeRemaining <= 0) {
             this.ended = true;
-            this.time.delayedCall(800, () => {
+            // Confetti for any successful clear (≥1 evacuee), brief flash on fail
+            if (this.crowd.evacuated > 0) {
+                this.particles?.emitConfettiBurst(CFG.CANVAS_W, CFG.CANVAS_H);
+            }
+            if (!this.settings.reducedMotion) {
+                Juice.flash(this, 350, 80, 220, 120);
+            }
+            Juice.hitPause(this, 120);
+            this.time.delayedCall(900, () => {
                 this.scene.start('ResultsScene', {
                     level: this.level,
                     isDaily: this.isDaily,
@@ -406,6 +453,21 @@ class SimScene extends Phaser.Scene {
                     },
                 });
             });
+        }
+    }
+
+    _emitJamDust() {
+        if (!this.particles) return;
+        // Scan agents for high-density clusters (cheap: every ~10 frames, sparse)
+        if ((this._jamDustTick = (this._jamDustTick || 0) + 1) % 10 !== 0) return;
+        const px = CFG.PIXELS_PER_METER;
+        for (const a of this.agents) {
+            if (a.state !== 'SEARCHING' && a.state !== 'FOLLOWING') continue;
+            // crude density check via spatial hash
+            const nbrs = this.crowd.spatialHash.queryRadius(a.x, a.y, 0.7, 8, []);
+            if (nbrs.length >= 4 && Math.hypot(a.vx, a.vy) < 0.4 && Math.random() < 0.08) {
+                this.particles.emitDustAt(this.offsetX + a.x * px, this.offsetY + a.y * px + 6, 1);
+            }
         }
     }
 

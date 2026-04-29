@@ -3,6 +3,11 @@
 class MenuScene extends Phaser.Scene {
     constructor() { super('MenuScene'); }
 
+    preload() {
+        // Generate every game texture once, on first scene boot.
+        SpriteFactory.generate(this);
+    }
+
     create() {
         const W = CFG.CANVAS_W, H = CFG.CANVAS_H;
         this.cameras.main.setBackgroundColor('#0f0c29');
@@ -10,14 +15,17 @@ class MenuScene extends Phaser.Scene {
         // Make sure no leftover alarm loop is playing
         window.exodusAudio?.stopAll();
 
-        // Title
-        this.add.text(W / 2, 60, 'EXODUS', {
-            fontFamily: 'Arial Black, Arial', fontSize: '52px', color: '#fff',
-            stroke: '#000', strokeThickness: 4,
+        // Title — Bungee display font
+        const title = this.add.text(W / 2, 60, 'EXODUS', {
+            fontFamily: '"Bungee", "Arial Black", Arial', fontSize: '54px', color: '#fff',
+            stroke: '#1a1a2e', strokeThickness: 5,
         }).setOrigin(0.5);
-        this.add.text(W / 2, 110, 'When the alarm sounds, your design is everyone\'s only hope.', {
-            fontFamily: 'Arial', fontSize: '13px', color: '#bbb',
+        Juice.bob(this, title, 2, 3500);
+        const sub = this.add.text(W / 2, 110, 'WHEN THE ALARM SOUNDS, YOUR DESIGN IS EVERYONE\'S ONLY HOPE.', {
+            fontFamily: '"Inter", Arial', fontSize: '11px', color: '#a1a1aa',
+            letterSpacing: 1,
         }).setOrigin(0.5);
+        Juice.slideIn(this, sub, 10, 600);
 
         // Settings gear (top right)
         const gear = this.add.text(W - 24, 24, '⚙', {
@@ -35,8 +43,9 @@ class MenuScene extends Phaser.Scene {
         const best = Storage.getBest();
         const unlocked = Achievements.totalUnlocked();
         const total = Achievements.ACHIEVEMENTS.length;
-        this.add.text(W / 2, 134, `Best score ${best}  ·  🏆 ${unlocked}/${total}`, {
-            fontFamily: 'Arial', fontSize: '12px', color: '#9ad',
+        this.add.text(W / 2, 134, `BEST SCORE ${best}   ·   🏆 ${unlocked} / ${total}`, {
+            fontFamily: '"Inter", Arial', fontSize: '12px', color: '#a78bfa',
+            fontStyle: 'bold', letterSpacing: 1,
         }).setOrigin(0.5);
 
         // Achievements link
@@ -173,23 +182,24 @@ class MenuScene extends Phaser.Scene {
         const card = this.add.rectangle(cx, cy, w, h, 0x1a1a3a, 1)
             .setStrokeStyle(2, 0x6c5ce7)
             .setInteractive({ useHandCursor: true });
+        Juice.slideIn(this, card, 24, 480 + index * 60);
 
         // index pill
         this.add.text(cx - w / 2 + 12, cy - h / 2 + 10, `${index + 1}`, {
-            fontFamily: 'Arial Black', fontSize: '11px', color: '#6c5ce7',
+            fontFamily: '"Bungee","Arial Black",Arial', fontSize: '11px', color: '#a78bfa',
             backgroundColor: '#0f0c29', padding: { x: 6, y: 2 },
-        });
+        }).setDepth(2);
 
         // title
         this.add.text(cx, cy - 40, level.displayName, {
-            fontFamily: 'Arial Black', fontSize: '16px', color: '#fff',
+            fontFamily: '"Bungee","Arial Black",Arial', fontSize: '15px', color: '#fff',
             wordWrap: { width: w - 20 }, align: 'center',
         }).setOrigin(0.5);
 
         // summary line
         const summary = `${level.spawn.count} ppl · ${this._exitDescription(level)}`;
         this.add.text(cx, cy - 12, summary, {
-            fontFamily: 'Arial', fontSize: '11px', color: '#aaa',
+            fontFamily: '"Inter",Arial', fontSize: '11px', color: '#a1a1aa',
         }).setOrigin(0.5);
 
         // budget summary
@@ -208,27 +218,33 @@ class MenuScene extends Phaser.Scene {
         const stars = score ? score.stars : 0;
         const starLine = '★★★'.substring(0, stars) + '☆☆☆'.substring(0, 3 - stars);
         this.add.text(cx, cy + 32, starLine, {
-            fontFamily: 'Arial', fontSize: '20px',
-            color: stars > 0 ? '#fbbf24' : '#444',
+            fontFamily: '"Bungee","Arial Black",Arial', fontSize: '20px',
+            color: stars > 0 ? '#fbbf24' : '#3a3a4a',
         }).setOrigin(0.5);
 
         // play button
-        const btn = this.add.rectangle(cx, cy + 56, 100, 26, 0x4ade80, 1)
-            .setStrokeStyle(2, 0x166534)
-            .setInteractive({ useHandCursor: true });
-        this.add.text(cx, cy + 56, 'PLAY', {
-            fontFamily: 'Arial Black', fontSize: '13px', color: '#0a3d20',
+        const btn = this.add.rectangle(cx, cy + 56, 100, 28, 0x4ade80, 1)
+            .setStrokeStyle(2, 0x166534);
+        const btnText = this.add.text(cx, cy + 56, 'PLAY', {
+            fontFamily: '"Bungee","Arial Black",Arial', fontSize: '13px', color: '#0a3d20',
         }).setOrigin(0.5);
         const onPlay = () => {
             window.exodusAudio?.click();
             this.scene.start('DesignScene', { level });
         };
+        Juice.makeButton(this, btn);
         btn.on('pointerover', () => btn.setFillStyle(0x86efac));
         btn.on('pointerout',  () => btn.setFillStyle(0x4ade80));
         btn.on('pointerdown', onPlay);
         card.on('pointerdown', onPlay);
-        card.on('pointerover', () => card.setStrokeStyle(2, 0xa78bfa));
-        card.on('pointerout',  () => card.setStrokeStyle(2, 0x6c5ce7));
+        card.on('pointerover', () => {
+            card.setStrokeStyle(2, 0xa78bfa);
+            this.tweens.add({ targets: card, scaleX: 1.04, scaleY: 1.04, duration: 140, ease: 'Quad.easeOut' });
+        });
+        card.on('pointerout',  () => {
+            card.setStrokeStyle(2, 0x6c5ce7);
+            this.tweens.add({ targets: card, scaleX: 1, scaleY: 1, duration: 140, ease: 'Quad.easeOut' });
+        });
     }
 
     _exitDescription(level) {

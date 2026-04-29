@@ -52,31 +52,40 @@ class ResultsScene extends Phaser.Scene {
             ts: Date.now(),
         });
 
-        // Stars
-        const starY = 100;
+        // Stars — drop-in with bounce, staggered, with a chime per star earned
+        const starY = 110;
         for (let i = 0; i < 3; i++) {
             const filled = i < score.stars;
-            this.add.text(W / 2 - 60 + i * 60, starY,
+            const star = this.add.text(W / 2 - 60 + i * 60, starY,
                 filled ? '★' : '☆', {
-                    fontFamily: 'Arial Black', fontSize: '64px',
-                    color: filled ? '#fbbf24' : '#555',
+                    fontFamily: '"Bungee","Arial Black",Arial', fontSize: '64px',
+                    color: filled ? '#fbbf24' : '#3a3a4a',
+                    stroke: '#000', strokeThickness: 3,
                 }).setOrigin(0.5);
+            Juice.drop(this, star, -100, 700, i * 250);
+            if (filled) {
+                this.time.delayedCall(i * 250 + 600, () => window.exodusAudio?.click?.());
+            }
         }
 
         // Title
         const heading = score.stars > 0 ? 'LEVEL CLEARED' : 'LEVEL FAILED';
-        this.add.text(W / 2, 200, heading, {
-            fontFamily: 'Arial Black', fontSize: '32px',
+        const headingTxt = this.add.text(W / 2, 210, heading, {
+            fontFamily: '"Bungee","Arial Black",Arial', fontSize: '34px',
             color: score.stars > 0 ? '#4ade80' : '#ff6b6b',
+            stroke: '#000', strokeThickness: 4,
         }).setOrigin(0.5);
+        Juice.popIn(this, headingTxt, 500);
 
         if (isNewBest && score.stars > 0) {
-            this.add.text(W / 2, 240, 'NEW BEST!', {
-                fontFamily: 'Arial Black', fontSize: '18px', color: '#fbbf24',
+            const nb = this.add.text(W / 2, 254, 'NEW BEST!', {
+                fontFamily: '"Bungee","Arial Black",Arial', fontSize: '17px', color: '#fbbf24',
             }).setOrigin(0.5);
+            Juice.slideIn(this, nb, 12, 500);
+            Juice.pulse(this, nb, 1.06, 1400);
         }
 
-        // Breakdown
+        // Breakdown rows — fade in sequentially
         const lines = [
             ['Evacuated',       `${this.result.evacuated}/${this.result.totalAgents}`,  `+${score.breakdown.evac}`],
             ['Injured',         `${this.result.injured}`,                               `${score.breakdown.injured}`],
@@ -87,33 +96,43 @@ class ResultsScene extends Phaser.Scene {
         const x1 = W / 2;
         const x2 = W / 2 + 180;
         lines.forEach((row, i) => {
-            const y = 290 + i * 28;
-            this.add.text(x0, y, row[0], { fontFamily: 'Arial', fontSize: '16px', color: '#bbb' });
-            this.add.text(x1, y, row[1], { fontFamily: 'Arial', fontSize: '16px', color: '#fff' });
-            this.add.text(x2, y, row[2], { fontFamily: 'Arial Black', fontSize: '16px', color: '#9ad' }).setOrigin(1, 0);
+            const y = 296 + i * 28;
+            const a = this.add.text(x0, y, row[0], { fontFamily: '"Inter",Arial', fontSize: '14px', color: '#a1a1aa' });
+            const b = this.add.text(x1, y, row[1], { fontFamily: '"Inter",Arial', fontSize: '14px', color: '#fff' });
+            const c = this.add.text(x2, y, row[2], { fontFamily: '"Bungee","Arial Black",Arial', fontSize: '14px', color: '#9ad' }).setOrigin(1, 0);
+            [a, b, c].forEach(o => { o.alpha = 0; });
+            const delay = 200 + i * 180;
+            this.tweens.add({ targets: [a, b, c], alpha: 1, duration: 250, delay });
         });
 
-        // Total
-        this.add.text(x0, 420, 'FINAL SCORE', { fontFamily: 'Arial Black', fontSize: '20px', color: '#fff' });
-        this.add.text(x2, 420, `${score.score}`, { fontFamily: 'Arial Black', fontSize: '36px', color: '#fbbf24' }).setOrigin(1, 0);
+        // Total — count up
+        this.add.text(x0, 432, 'FINAL SCORE', {
+            fontFamily: '"Bungee","Arial Black",Arial', fontSize: '20px', color: '#fff',
+        });
+        const totalText = this.add.text(x2, 432, '0', {
+            fontFamily: '"Bungee","Arial Black",Arial', fontSize: '36px', color: '#fbbf24',
+        }).setOrigin(1, 0);
+        this.time.delayedCall(950, () => Juice.countUp(this, totalText, 0, score.score, 800));
 
         // Buttons
-        this._mkBtn(W / 2 - 130, H - 60, 'RETRY', 0x6c5ce7, () =>
+        const btnRetry = this._mkBtn(W / 2 - 130, H - 60, 'RETRY', 0x6c5ce7, () =>
             this.scene.start('DesignScene', { level: this.level }));
-        this._mkBtn(W / 2 + 130, H - 60, 'MENU', 0x4a4a6a, () =>
+        const btnMenu = this._mkBtn(W / 2 + 130, H - 60, 'MENU', 0x4a4a6a, () =>
             this.scene.start('MenuScene'));
+        Juice.slideIn(this, btnRetry, 30, 600);
+        Juice.slideIn(this, btnMenu, 30, 600);
     }
 
     _mkBtn(x, y, label, color, onClick) {
-        const r = this.add.rectangle(x, y, 180, 44, color, 1)
-            .setStrokeStyle(2, 0xffffff, 0.3)
-            .setInteractive({ useHandCursor: true });
+        const r = this.add.rectangle(x, y, 200, 48, color, 1)
+            .setStrokeStyle(2, 0xffffff, 0.3);
         const t = this.add.text(x, y, label, {
-            fontFamily: 'Arial Black', fontSize: '18px', color: '#fff',
+            fontFamily: '"Bungee","Arial Black",Arial', fontSize: '18px', color: '#fff',
         }).setOrigin(0.5);
-        r.on('pointerover', () => r.setFillStyle(color, 0.8));
+        Juice.makeButton(this, r);
+        r.on('pointerover', () => r.setFillStyle(color, 0.85));
         r.on('pointerout',  () => r.setFillStyle(color, 1));
-        r.on('pointerdown', () => { window.exodusAudio?.click(); onClick(); });
+        r.on('pointerdown', onClick);
         return r;
     }
 }
