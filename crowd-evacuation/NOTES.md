@@ -57,7 +57,7 @@ Not for v0.2 (defer): sandbox, daily challenges, multi-deck levels, multiplayer.
 
 ## Open follow-ups (separate from EXODUS work)
 
-- **Canvas-collapse fix for Bomberman / Asteroids and any other Phaser game** — single CSS rule (`aspect-ratio` + `height: auto !important` on `#game-container`).
+- ~~**Canvas-collapse fix for Bomberman / Asteroids and any other Phaser game**~~ — done. Patched all 17 affected Phaser games (asteroids, beat-em-up, bomberman, centipede, dig-dug, frogger, galaga, hill-climb, joust, lunar-lander, missile-command, off-road, pac-man, qbert, simon, spacex-lander, tempest, tron — plus the original Exodus). Each `#game-container` now has `aspect-ratio` (derived from each game's Phaser config), `height: auto !important`, and `max-width: <W+4>px !important` to override Phaser's inline `height: 100%`. donkey-kong / defender use a different fullscreen template (`#phaser-container` direct on body with explicit body height) and were verified rendering correctly without the patch.
 - `chess-solver` not registered in `nav.js` `GAME_CATALOG` — exists on the homepage but isn't in the nav dropdown.
 
 ---

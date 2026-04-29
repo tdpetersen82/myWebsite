@@ -15,7 +15,9 @@
         }
         #game-container {
             margin: 10px auto;
-            max-width: 1204px;
+            max-width: 1204px !important;
+            height: auto !important;        /* override Phaser inline height:100% */
+            aspect-ratio: 3 / 2;            /* drives height from width for 1200x800 design */
         }
         @font-face {
             font-family: 'Press Start 2P';

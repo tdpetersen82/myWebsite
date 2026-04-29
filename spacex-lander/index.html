@@ -9,7 +9,9 @@
     <style>
         #game-container {
             margin: 20px auto;
-            max-width: 100%;
+            max-width: 804px !important;
+            height: auto !important;        /* override Phaser inline height:100% */
+            aspect-ratio: 4 / 3;            /* drives height from width for 800x600 design */
         }
         #game-container canvas {
             border: 2px solid #333;
