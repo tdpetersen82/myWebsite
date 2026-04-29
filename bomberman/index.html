@@ -15,7 +15,9 @@
         }
         #game-container {
             margin: 10px auto;
-            max-width: 804px;
+            max-width: 804px !important;
+            height: auto !important;        /* override Phaser inline height:100% */
+            aspect-ratio: 4 / 3;            /* drives height from width for 800x600 design */
         }
     </style>
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
