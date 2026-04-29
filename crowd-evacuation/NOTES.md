@@ -4,7 +4,24 @@ Living document. Status, known issues, and next steps for the crowd-evacuation g
 
 ---
 
-## Current version: v0.4
+## Current version: v0.5
+
+### What changed in v0.5
+
+- **Continuous-intensity audio loops** in `AudioManager`:
+  - `startPanicSwell()` — sawtooth at 70Hz through a lowpass at 320Hz with a 4Hz tremolo. Gain ramps to a 0–18% range driven by avg crowd panic.
+  - `startFireCrackle()` — looped white-noise buffer through a bandpass at 1.8kHz. Gain scales with summed fire intensity across the grid (saturates ~8 cells of full fire).
+- **Pause menu**: `P` or `Esc` during sim opens a centered modal with Resume / Restart / Back-to-menu. Sim ticks halt while paused. Audio loops keep playing (alarm + panic + fire) since they're already attenuated by the empty visual; can quiet on next pass if needed.
+- **Subway level (Platform 7 — Westgate)**: 4th level, 30×14 grid, 80 commuters across normal/elderly/wheelchair mix, two exits at opposite ends of a long platform with structural pillar pairs, fire ignites mid-platform forcing a routing decision (closest exit isn't always best once the chokepoint jams).
+- HUD key hint extended: `P pause · F1 flow · F3 vision · F6 slow · F7 step · F8 inspect · F9 perf`.
+
+### Verification
+
+- All 4 levels register at load time; new audio methods present on the global `window.exodusAudio` singleton.
+
+---
+
+## v0.4
 
 ### What changed in v0.4
 
@@ -97,17 +114,17 @@ Verified: barrier blocks tile, sign biases agents toward direction, PA reduces p
 
 ---
 
-## Next: v0.5 — content + visual polish
+## Next: v0.6 — visuals + onboarding
 
 Goals, in priority order:
 
-1. **Better art**: replace agent circles with simple top-down sprites; tile the floor; add a marshal sprite with hi-vis vest. Highest visible-quality lift.
-2. **Continuous-intensity audio**: fire crackle (volume scales with total fire) and panic swell (layered, scales with avg crowd panic). Currently we have one-shots and alarm only.
-3. **Multi-step tutorial**: replace the intro modal with progressive gated hints — "place a marshal here", "now press alarm" — per `SPEC.md §13`.
-4. **More levels**: stadium concourse, subway platform, office tower with stairs.
-5. **Pause menu**: in-sim pause with resume / restart / menu options.
+1. **Better art**: top-down agent sprites (procedural via Phaser texture generation, or sourced); marshal in a hi-vis vest; clearer exit + sign iconography. Highest visible-quality lift.
+2. **Multi-step tutorial**: replace the intro modal with progressive gated hints — "place a marshal here", "now press ALARM" — per `SPEC.md §13`.
+3. **Stadium / office tower levels**: more environment variety; stairs/multi-floor a stretch goal.
+4. **Settings: keybind remapping** (rebind the hotkeys players actually use).
+5. **Daily challenge mode**: deterministic seed per UTC date, single-attempt scoreboard.
 
-Not for v0.5 (defer): sandbox, daily challenges, multi-deck levels, multiplayer.
+Not for v0.6 (defer): sandbox, sharing, multi-deck levels, multiplayer.
 
 ---
 

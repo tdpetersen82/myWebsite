@@ -136,7 +136,95 @@ class AudioManager {
         this.alarmNodes = null;
     }
 
-    stopAll() { this.stopAlarm(); }
+    // ── Continuous loops ──────────────────────────────────
+
+    // Panic swell: low-frequency growl modulated by a slow tremolo, intensity-driven gain.
+    startPanicSwell() {
+        const ctx = this._ensureCtx(); if (!ctx) return;
+        if (this.panicNodes) return;
+        const osc = ctx.createOscillator();
+        osc.type = 'sawtooth';
+        osc.frequency.value = 70;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'lowpass';
+        filter.frequency.value = 320;
+        const tremolo = ctx.createOscillator();
+        tremolo.type = 'sine';
+        tremolo.frequency.value = 4.0;
+        const tremoloGain = ctx.createGain();
+        tremoloGain.gain.value = 0.4;
+        const out = ctx.createGain();
+        out.gain.value = 0;        // start silent; updateIntensity ramps up
+        osc.connect(filter); filter.connect(out); out.connect(this.sfxGain);
+        tremolo.connect(tremoloGain); tremoloGain.connect(out.gain);
+        osc.start(); tremolo.start();
+        this.panicNodes = { osc, tremolo, out };
+    }
+
+    updatePanicIntensity(v) {
+        if (!this.panicNodes) return;
+        const target = Math.max(0, Math.min(0.18, v * 0.18));   // cap at 0.18 — atmospheric not annoying
+        const t = this.ctx.currentTime;
+        this.panicNodes.out.gain.cancelScheduledValues(t);
+        this.panicNodes.out.gain.linearRampToValueAtTime(target, t + 0.2);
+    }
+
+    stopPanicSwell() {
+        if (!this.panicNodes) return;
+        const { osc, tremolo, out } = this.panicNodes;
+        const t = this.ctx.currentTime;
+        out.gain.cancelScheduledValues(t);
+        out.gain.linearRampToValueAtTime(0, t + 0.4);
+        osc.stop(t + 0.5);
+        tremolo.stop(t + 0.5);
+        this.panicNodes = null;
+    }
+
+    // Fire crackle: bandpass-filtered white noise, intensity-driven gain.
+    startFireCrackle() {
+        const ctx = this._ensureCtx(); if (!ctx) return;
+        if (this.fireNodes) return;
+        // Long buffer of pre-baked noise — we reuse via loop=true.
+        const buf = ctx.createBuffer(1, ctx.sampleRate * 4, ctx.sampleRate);
+        const d = buf.getChannelData(0);
+        for (let i = 0; i < d.length; i++) d[i] = (Math.random() * 2 - 1);
+        const src = ctx.createBufferSource();
+        src.buffer = buf;
+        src.loop = true;
+        const filter = ctx.createBiquadFilter();
+        filter.type = 'bandpass';
+        filter.frequency.value = 1800;
+        filter.Q.value = 0.7;
+        const out = ctx.createGain();
+        out.gain.value = 0;
+        src.connect(filter); filter.connect(out); out.connect(this.sfxGain);
+        src.start();
+        this.fireNodes = { src, out };
+    }
+
+    updateFireIntensity(v) {
+        if (!this.fireNodes) return;
+        const target = Math.max(0, Math.min(0.22, v * 0.22));
+        const t = this.ctx.currentTime;
+        this.fireNodes.out.gain.cancelScheduledValues(t);
+        this.fireNodes.out.gain.linearRampToValueAtTime(target, t + 0.2);
+    }
+
+    stopFireCrackle() {
+        if (!this.fireNodes) return;
+        const { src, out } = this.fireNodes;
+        const t = this.ctx.currentTime;
+        out.gain.cancelScheduledValues(t);
+        out.gain.linearRampToValueAtTime(0, t + 0.3);
+        src.stop(t + 0.4);
+        this.fireNodes = null;
+    }
+
+    stopAll() {
+        this.stopAlarm();
+        this.stopPanicSwell();
+        this.stopFireCrackle();
+    }
 }
 
 // Global singleton — lazy-init on first use

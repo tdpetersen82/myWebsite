@@ -54,7 +54,7 @@ class SimScene extends Phaser.Scene {
         this.hudEvac    = this.add.text(180, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#4ade80' });
         this.hudInjured = this.add.text(340, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#ff6b6b' });
         this.hudPanic   = this.add.text(500, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fbbf24' });
-        this.hudKey     = this.add.text(CFG.CANVAS_W - 20, 16, 'F1 flow · F3 vision · F6 slow · F7 step · F8 inspect · F9 perf', {
+        this.hudKey     = this.add.text(CFG.CANVAS_W - 20, 16, 'P pause · F1 flow · F3 vision · F6 slow · F7 step · F8 inspect · F9 perf', {
             fontFamily: 'Arial', fontSize: '10px', color: '#888',
         }).setOrigin(1, 0);
 
@@ -68,15 +68,65 @@ class SimScene extends Phaser.Scene {
         }).setOrigin(0.5).setDepth(10);
         this.tweens.add({ targets: alarmTxt, alpha: 0, duration: 1500, delay: 1000, onComplete: () => alarmTxt.destroy() });
 
-        // Audio: start alarm loop now
+        // Audio: alarm + continuous loops; intensities updated each tick
         window.exodusAudio?.startAlarm();
+        window.exodusAudio?.startPanicSwell();
+        window.exodusAudio?.startFireCrackle();
         this._fireSoundFired = false;
 
         // Debug overlay
         this.debug = new DebugOverlay(this);
 
-        // Stop alarm if scene exits
-        this.events.once('shutdown', () => window.exodusAudio?.stopAlarm());
+        // Pause menu
+        this.userPaused = false;
+        this._pauseElements = [];
+        this.input.keyboard.on('keydown-P',   () => this._togglePause());
+        this.input.keyboard.on('keydown-ESC', () => this._togglePause());
+
+        // Stop loops on scene exit
+        this.events.once('shutdown', () => {
+            window.exodusAudio?.stopAlarm();
+            window.exodusAudio?.stopPanicSwell();
+            window.exodusAudio?.stopFireCrackle();
+        });
+    }
+
+    _togglePause() {
+        if (this.ended) return;
+        this.userPaused = !this.userPaused;
+        if (this.userPaused) this._showPauseMenu();
+        else this._hidePauseMenu();
+    }
+
+    _showPauseMenu() {
+        const W = CFG.CANVAS_W, H = CFG.CANVAS_H;
+        const overlay = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.7).setDepth(60);
+        const panel = this.add.rectangle(W / 2, H / 2, 320, 260, 0x1a1a3a, 1)
+            .setStrokeStyle(2, 0xfbbf24).setDepth(61);
+        const title = this.add.text(W / 2, H / 2 - 90, 'PAUSED', {
+            fontFamily: 'Arial Black', fontSize: '28px', color: '#fbbf24',
+        }).setOrigin(0.5).setDepth(62);
+        this._pauseElements.push(overlay, panel, title);
+
+        const mkBtn = (y, label, color, onClick) => {
+            const r = this.add.rectangle(W / 2, y, 220, 40, color, 1)
+                .setStrokeStyle(2, 0xffffff, 0.3)
+                .setInteractive({ useHandCursor: true })
+                .setDepth(62);
+            const t = this.add.text(W / 2, y, label, {
+                fontFamily: 'Arial Black', fontSize: '15px', color: '#fff',
+            }).setOrigin(0.5).setDepth(63);
+            r.on('pointerdown', () => { window.exodusAudio?.click(); onClick(); });
+            this._pauseElements.push(r, t);
+        };
+        mkBtn(H / 2 - 30, 'RESUME',           0x4ade80, () => this._togglePause());
+        mkBtn(H / 2 + 20, 'RESTART LEVEL',    0x6c5ce7, () => this.scene.start('DesignScene', { level: this.level }));
+        mkBtn(H / 2 + 70, 'BACK TO MENU',     0x4a4a6a, () => this.scene.start('MenuScene'));
+    }
+
+    _hidePauseMenu() {
+        for (const e of this._pauseElements) e.destroy();
+        this._pauseElements = [];
     }
 
     _drawBackground() {
@@ -209,6 +259,7 @@ class SimScene extends Phaser.Scene {
 
     update(time, dtMs) {
         if (this.ended) return;
+        if (this.userPaused) return;
         if (this.debug && this.debug.paused) {
             this._drawAgents();
             this.debug.draw();
@@ -262,6 +313,14 @@ class SimScene extends Phaser.Scene {
             this.debug.recordPerf(tSim, tRender);
             this.debug.draw();
         }
+
+        // Intensity-driven continuous audio
+        const panic = this.crowd.averagePanic();
+        window.exodusAudio?.updatePanicIntensity(panic);
+        let totalFire = 0;
+        for (let i = 0; i < this.threat.fire.length; i++) totalFire += this.threat.fire[i];
+        const fireIntensity = Math.min(1, totalFire / 8);   // saturate around 8 cells of full fire
+        window.exodusAudio?.updateFireIntensity(fireIntensity);
 
         // termination
         const active = this.crowd.activeAgents();
