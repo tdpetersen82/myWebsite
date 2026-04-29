@@ -91,32 +91,8 @@ class DesignScene extends Phaser.Scene {
         this._drawAll();
         this._updateStatus();
 
-        // Tutorial intro banner (if level has one).
-        if (this.level.tutorial && this.level.tutorial.intro) {
-            this._showTutorialBanner(this.level.tutorial.intro);
-        }
-    }
-
-    _showTutorialBanner(text) {
-        const W = CFG.CANVAS_W, H = CFG.CANVAS_H;
-        const overlay = this.add.rectangle(W / 2, H / 2, W, H, 0x000000, 0.75)
-            .setDepth(50).setInteractive({ useHandCursor: true });
-        const panel = this.add.rectangle(W / 2, H / 2, 560, 280, 0x1a1a3a, 1)
-            .setStrokeStyle(2, 0xfbbf24).setDepth(51);
-        const heading = this.add.text(W / 2, H / 2 - 110, 'Tutorial', {
-            fontFamily: 'Arial Black', fontSize: '22px', color: '#fbbf24',
-        }).setOrigin(0.5).setDepth(52);
-        const body = this.add.text(W / 2, H / 2 - 10, text, {
-            fontFamily: 'Arial', fontSize: '14px', color: '#fff',
-            align: 'center', wordWrap: { width: 520 },
-        }).setOrigin(0.5).setDepth(52);
-        const dismiss = this.add.text(W / 2, H / 2 + 100, 'click to begin', {
-            fontFamily: 'Arial Black', fontSize: '13px', color: '#7dd3fc',
-        }).setOrigin(0.5).setDepth(52);
-        const dismissAll = () => {
-            overlay.destroy(); panel.destroy(); heading.destroy(); body.destroy(); dismiss.destroy();
-        };
-        overlay.on('pointerdown', dismissAll);
+        // Tutorial controller (multi-step or legacy intro).
+        this.tutorial = TutorialController.fromLevel(this, this.level);
     }
 
     _computeOffsets() {
@@ -157,6 +133,7 @@ class DesignScene extends Phaser.Scene {
         this._updateToolbarHighlight();
         this._updateStatus();
         this._drawAll();
+        this.tutorial?.notify('tool-' + tool);
     }
 
     _updateToolbarHighlight() {
@@ -327,7 +304,11 @@ class DesignScene extends Phaser.Scene {
                 this.dragStart = { cx, cy };
                 break;
         }
-        if (placed) window.exodusAudio?.place();
+        if (placed) {
+            window.exodusAudio?.place();
+            // Tutorial event names match the tool kind: 'place-marshal', 'place-sign', etc.
+            this.tutorial?.notify('place-' + this.tool);
+        }
         else if (this.tool !== ToolKind.BARRIER) window.exodusAudio?.error();
         this._drawAll(); this._updateStatus();
     }
@@ -384,6 +365,7 @@ class DesignScene extends Phaser.Scene {
                     if (ok) {
                         this.placements.barriers.push(seg);
                         window.exodusAudio?.place();
+                        this.tutorial?.notify('place-barrier');
                     } else {
                         window.exodusAudio?.error();
                     }
@@ -493,6 +475,7 @@ class DesignScene extends Phaser.Scene {
             return;
         }
 
+        this.tutorial?.notify('alarm');
         this.scene.start('SimScene', {
             level: this.level,
             placements: this.placements,

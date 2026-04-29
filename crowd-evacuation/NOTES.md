@@ -4,7 +4,31 @@ Living document. Status, known issues, and next steps for the crowd-evacuation g
 
 ---
 
-## Current version: v0.5
+## Current version: v0.6
+
+### What changed in v0.6
+
+- **Multi-step tutorial controller** (`TutorialController`): replaces the
+  one-shot intro modal. Levels now declare `tutorial.steps` — each step is
+  text + an `advance` event name. The controller listens for events from
+  DesignScene (`tool-sign`, `place-marshal`, `place-sign`, `alarm`, etc.) and
+  advances on match. Backward-compat with the legacy `tutorial.intro` string.
+- **Level 04 — Section 119 Concourse**: 100 spectators, 3 gate exits on the
+  south wall (each 2m), three pillar rows, NW concession-stand fire ignition.
+  Hardest level by agent count and budget; rewards multi-exit routing.
+- **Improved agent rendering**: torso + head + shadow + facing-direction
+  indicator. Heads tinted by demographic (skin tones for child / elderly /
+  drunk; helmet-blue for marshals). Marshals now wear a visible hi-vis vest
+  with red belt. PA speakers have a grille + concentric sound waves.
+
+### Verification
+
+- 5 levels register at load. `TutorialController.fromLevel()` returns a
+  multi-step instance for level-00 and null for the others.
+
+---
+
+## v0.5
 
 ### What changed in v0.5
 
@@ -114,17 +138,17 @@ Verified: barrier blocks tile, sign biases agents toward direction, PA reduces p
 
 ---
 
-## Next: v0.6 — visuals + onboarding
+## Next: v0.7 — production readiness
 
 Goals, in priority order:
 
-1. **Better art**: top-down agent sprites (procedural via Phaser texture generation, or sourced); marshal in a hi-vis vest; clearer exit + sign iconography. Highest visible-quality lift.
-2. **Multi-step tutorial**: replace the intro modal with progressive gated hints — "place a marshal here", "now press ALARM" — per `SPEC.md §13`.
-3. **Stadium / office tower levels**: more environment variety; stairs/multi-floor a stretch goal.
-4. **Settings: keybind remapping** (rebind the hotkeys players actually use).
-5. **Daily challenge mode**: deterministic seed per UTC date, single-attempt scoreboard.
+1. **Daily challenge mode**: deterministic seeded run drawn from the level pool, one attempt per UTC date, persisted score on a global leaderboard later. For now: a "Today's Challenge" card on the menu that runs a seeded version of one level.
+2. **Achievements**: small set tracked in localStorage — first-clear, three-star a level, evac >95% on a level, no-injuries clear.
+3. **Procedural agent sprites** via `Phaser.Graphics → generateTexture` (defer from v0.6 — current Graphics rendering is adequate). Cleaner pipeline for future demographic variations.
+4. **Office tower level**: vertical layout with stairs forcing top-down evac across multi-deck flow. Stretch goal — needs sim work for level transitions.
+5. **Sandbox / level editor v0**: lets players build a venue and share a JSON blob.
 
-Not for v0.6 (defer): sandbox, sharing, multi-deck levels, multiplayer.
+Not for v0.7 (defer): true multiplayer, the level workshop, multi-deck physics.
 
 ---
 

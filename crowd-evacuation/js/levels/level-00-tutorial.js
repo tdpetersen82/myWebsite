@@ -39,10 +39,12 @@ const LEVEL_00 = {
     },
     timeLimit: 60,
     tutorial: {
-        intro: '8 people need to evacuate before fire spreads.\n\n' +
-               '• Place 1 marshal — they reduce panic and pull people toward exits.\n' +
-               '• Place 1 sign — it points the way (rotate with R).\n' +
-               '• Press ALARM when ready.',
+        steps: [
+            { text: '8 people need to evacuate. Click anywhere on the floor to place a marshal.', advance: 'place-marshal' },
+            { text: 'Marshals pull nearby people toward exits and reduce their panic. Now press 3 (or click 3 Sign on the toolbar) to switch tools.', advance: 'tool-sign' },
+            { text: 'Press R to rotate the sign so it points south, then click on the floor to place it. Signs guide people who are within sight.', advance: 'place-sign' },
+            { text: 'Ready? Press ALARM (or Enter) to start the simulation. You can\'t edit once it fires.', advance: 'alarm' },
+        ],
     },
 };
 

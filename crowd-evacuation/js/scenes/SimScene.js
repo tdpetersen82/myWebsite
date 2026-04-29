@@ -153,25 +153,57 @@ class SimScene extends Phaser.Scene {
         g.clear();
         const px = CFG.PIXELS_PER_METER;
 
-        // Marshals
+        // Marshals — hi-vis vest body + helmet head + dashed influence ring
         for (const m of this.placements.marshals) {
             const sx = this.offsetX + m.x * px, sy = this.offsetY + m.y * px;
+            // soft fill of influence radius
             g.fillStyle(0x60a5fa, 0.10);
             g.fillCircle(sx, sy, CFG.MARSHAL_RADIUS_M * px);
-            g.fillStyle(0x60a5fa, 1);
-            g.fillCircle(sx, sy, 9);
-            g.lineStyle(2, 0xffffff, 1);
-            g.strokeCircle(sx, sy, 9);
+            // dashed ring on the radius border (visual only — Phaser graphics has no native dash, fake with arcs)
+            g.lineStyle(2, 0x60a5fa, 0.55);
+            g.strokeCircle(sx, sy, CFG.MARSHAL_RADIUS_M * px);
+            // shadow
+            g.fillStyle(0x000000, 0.3);
+            g.fillEllipse(sx, sy + 6, 16, 5);
+            // hi-vis vest (yellow rectangle)
+            g.fillStyle(0xfbbf24, 1);
+            g.fillRect(sx - 6, sy - 1, 12, 9);
+            g.lineStyle(1.5, 0x000000, 0.7);
+            g.strokeRect(sx - 6, sy - 1, 12, 9);
+            // belt stripe
+            g.lineStyle(2, 0xef4444, 0.9);
+            g.lineBetween(sx - 6, sy + 4, sx + 6, sy + 4);
+            // head with helmet
+            g.fillStyle(0x1e40af, 1);
+            g.fillCircle(sx, sy - 5, 4);
+            g.lineStyle(1.5, 0x000000, 0.7);
+            g.strokeCircle(sx, sy - 5, 4);
+            // helmet shine
+            g.fillStyle(0xffffff, 0.5);
+            g.fillCircle(sx - 1, sy - 6, 1.2);
         }
-        // PA speakers
+        // PA speakers — speaker box + sound waves
         for (const p of this.placements.pas) {
             const sx = this.offsetX + p.x * px, sy = this.offsetY + p.y * px;
             g.fillStyle(0xfbbf24, 0.08);
             g.fillCircle(sx, sy, CFG.PA_RADIUS_M * px);
+            // speaker box
             g.fillStyle(0xfbbf24, 1);
             g.fillRect(sx - 7, sy - 7, 14, 14);
-            g.lineStyle(2, 0x000000, 0.6);
+            g.lineStyle(2, 0x000000, 0.7);
             g.strokeRect(sx - 7, sy - 7, 14, 14);
+            // speaker grille
+            g.fillStyle(0x000000, 0.6);
+            g.fillCircle(sx, sy, 4);
+            g.fillStyle(0xfbbf24, 1);
+            g.fillCircle(sx, sy, 1.5);
+            // sound waves (concentric arcs to the right)
+            g.lineStyle(1.5, 0xfbbf24, 0.8);
+            for (let r = 12; r <= 22; r += 5) {
+                g.beginPath();
+                g.arc(sx + 4, sy, r, -Math.PI / 4, Math.PI / 4);
+                g.strokePath();
+            }
         }
         // Signs
         for (const s of this.placements.signs) {
@@ -201,35 +233,61 @@ class SimScene extends Phaser.Scene {
             if (a.state === 'ESCAPED') continue;
             const sx = this.offsetX + a.x * px;
             const sy = this.offsetY + a.y * px;
+
             // panic halo
             if (a.panic > 0.2) {
-                g.fillStyle(0xff4444, a.panic * 0.4);
-                g.fillCircle(sx, sy, 14);
+                g.fillStyle(0xff4444, a.panic * 0.45);
+                g.fillCircle(sx, sy, 13);
             }
-            let color;
-            if (a.state === 'INJURED')           color = 0x666666;
-            else if (a.type === 'wheelchair')    color = 0x9333ea;
-            else if (a.type === 'elderly')       color = 0x78716c;
-            else if (a.type === 'child')         color = 0xfbbf24;
-            else if (a.type === 'drunk')         color = 0xa855f7;
+
+            // body color by type / panic
+            let bodyColor;
+            if (a.state === 'INJURED')           bodyColor = 0x555555;
+            else if (a.type === 'wheelchair')    bodyColor = 0x9333ea;
+            else if (a.type === 'elderly')       bodyColor = 0x78716c;
+            else if (a.type === 'child')         bodyColor = 0xfbbf24;
+            else if (a.type === 'drunk')         bodyColor = 0xa855f7;
             else {
                 if (this.settings.colorblind) {
-                    // Blue (calm) → yellow (panicked) — high contrast for protan/deutan
                     const r = Math.floor(0x33 + a.panic * (0xfb - 0x33));
                     const grn = Math.floor(0x80 + a.panic * (0xbf - 0x80));
                     const b = Math.floor(0xee - a.panic * (0xee - 0x24));
-                    color = (r << 16) | (grn << 8) | b;
+                    bodyColor = (r << 16) | (grn << 8) | b;
                 } else {
                     const r = Math.floor(0x4a + a.panic * (0xff - 0x4a));
                     const grn = Math.floor(0xde - a.panic * (0xde - 0x44));
                     const b = Math.floor(0x80 - a.panic * (0x80 - 0x44));
-                    color = (r << 16) | (grn << 8) | b;
+                    bodyColor = (r << 16) | (grn << 8) | b;
                 }
             }
-            g.fillStyle(color, 1);
-            g.fillCircle(sx, sy, 6);
-            g.lineStyle(1, 0x000000, 0.6);
-            g.strokeCircle(sx, sy, 6);
+
+            // shadow underfoot
+            g.fillStyle(0x000000, 0.25);
+            g.fillEllipse(sx, sy + 4, 12, 4);
+
+            // body (torso)
+            g.fillStyle(bodyColor, 1);
+            g.fillCircle(sx, sy + 1, 5);
+            g.lineStyle(1, 0x000000, 0.65);
+            g.strokeCircle(sx, sy + 1, 5);
+
+            // head — slight skin tone, distinct for child / elderly
+            const headColor = a.type === 'child'   ? 0xfde68a
+                           : a.type === 'elderly'  ? 0xe7d4b5
+                           : a.type === 'drunk'    ? 0xfde68a
+                           : 0xfde68a;
+            g.fillStyle(headColor, 1);
+            g.fillCircle(sx, sy - 3, 2.6);
+            g.lineStyle(1, 0x000000, 0.65);
+            g.strokeCircle(sx, sy - 3, 2.6);
+
+            // direction indicator (small line in velocity direction)
+            const sp = Math.hypot(a.vx, a.vy);
+            if (sp > 0.1 && a.state !== 'INJURED') {
+                const k = 4 / sp;
+                g.lineStyle(1.5, 0x000000, 0.7);
+                g.lineBetween(sx, sy + 1, sx + a.vx * k, sy + 1 + a.vy * k);
+            }
         }
     }
 
