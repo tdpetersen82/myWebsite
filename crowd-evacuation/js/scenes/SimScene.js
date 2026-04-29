@@ -12,6 +12,9 @@ class SimScene extends Phaser.Scene {
     }
 
     create() {
+        // Read settings once at scene start
+        this.settings = Storage.getSettings();
+
         // Build a fresh grid and apply barriers.
         this.grid = buildGridFromLevel(this.level);
         this.placements.applyBarriersToGrid(this.grid);
@@ -51,20 +54,29 @@ class SimScene extends Phaser.Scene {
         this.hudEvac    = this.add.text(180, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#4ade80' });
         this.hudInjured = this.add.text(340, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#ff6b6b' });
         this.hudPanic   = this.add.text(500, 16, '', { fontFamily: 'Arial Black', fontSize: '18px', color: '#fbbf24' });
-        this.hudKey     = this.add.text(CFG.CANVAS_W - 20, 16, 'F1 flow · F3 vision · F6 slow · F7 step · F9 perf', {
-            fontFamily: 'Arial', fontSize: '11px', color: '#888',
+        this.hudKey     = this.add.text(CFG.CANVAS_W - 20, 16, 'F1 flow · F3 vision · F6 slow · F7 step · F8 inspect · F9 perf', {
+            fontFamily: 'Arial', fontSize: '10px', color: '#888',
         }).setOrigin(1, 0);
 
-        // Alarm flash + text
-        const flash = this.add.rectangle(CFG.CANVAS_W / 2, CFG.CANVAS_H / 2, CFG.CANVAS_W, CFG.CANVAS_H, 0xff4444, 0.4);
-        this.tweens.add({ targets: flash, alpha: 0, duration: 600, onComplete: () => flash.destroy() });
+        // Alarm flash + text (skip flash if reduced motion)
+        if (!this.settings.reducedMotion) {
+            const flash = this.add.rectangle(CFG.CANVAS_W / 2, CFG.CANVAS_H / 2, CFG.CANVAS_W, CFG.CANVAS_H, 0xff4444, 0.4);
+            this.tweens.add({ targets: flash, alpha: 0, duration: 600, onComplete: () => flash.destroy() });
+        }
         const alarmTxt = this.add.text(CFG.CANVAS_W / 2, 100, 'ALARM TRIGGERED', {
             fontFamily: 'Arial Black', fontSize: '32px', color: '#ff4444',
         }).setOrigin(0.5).setDepth(10);
         this.tweens.add({ targets: alarmTxt, alpha: 0, duration: 1500, delay: 1000, onComplete: () => alarmTxt.destroy() });
 
+        // Audio: start alarm loop now
+        window.exodusAudio?.startAlarm();
+        this._fireSoundFired = false;
+
         // Debug overlay
         this.debug = new DebugOverlay(this);
+
+        // Stop alarm if scene exits
+        this.events.once('shutdown', () => window.exodusAudio?.stopAlarm());
     }
 
     _drawBackground() {
@@ -151,10 +163,18 @@ class SimScene extends Phaser.Scene {
             else if (a.type === 'child')         color = 0xfbbf24;
             else if (a.type === 'drunk')         color = 0xa855f7;
             else {
-                const r = Math.floor(0x4a + a.panic * (0xff - 0x4a));
-                const grn = Math.floor(0xde - a.panic * (0xde - 0x44));
-                const b = Math.floor(0x80 - a.panic * (0x80 - 0x44));
-                color = (r << 16) | (grn << 8) | b;
+                if (this.settings.colorblind) {
+                    // Blue (calm) → yellow (panicked) — high contrast for protan/deutan
+                    const r = Math.floor(0x33 + a.panic * (0xfb - 0x33));
+                    const grn = Math.floor(0x80 + a.panic * (0xbf - 0x80));
+                    const b = Math.floor(0xee - a.panic * (0xee - 0x24));
+                    color = (r << 16) | (grn << 8) | b;
+                } else {
+                    const r = Math.floor(0x4a + a.panic * (0xff - 0x4a));
+                    const grn = Math.floor(0xde - a.panic * (0xde - 0x44));
+                    const b = Math.floor(0x80 - a.panic * (0x80 - 0x44));
+                    color = (r << 16) | (grn << 8) | b;
+                }
             }
             g.fillStyle(color, 1);
             g.fillCircle(sx, sy, 6);
@@ -208,6 +228,11 @@ class SimScene extends Phaser.Scene {
             this.threatAcc -= this.threatStep;
         }
         if (topologyChanged) this.crowd.rebuildFlowField();
+        // Fire ignition sound — fires once when fire first appears
+        if (!this._fireSoundFired && this.threat.ignited) {
+            window.exodusAudio?.fireWhoosh();
+            this._fireSoundFired = true;
+        }
 
         while (this.simAcc >= this.simStep) {
             this.crowd.tick(this.simStep);

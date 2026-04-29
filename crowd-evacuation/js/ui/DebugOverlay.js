@@ -13,11 +13,17 @@ class DebugOverlay {
         this.renderMs = 0;
         this.frameLog = [];   // ring buffer of last 60 frames
 
+        // Agent inspector
+        this.inspectMode = false;
+        this.inspectedAgent = null;
+        this._inspectPanel = null;
+
         const kbd = scene.input.keyboard;
         kbd.on('keydown-F1',  () => this._tog('flow'));
         kbd.on('keydown-F3',  () => this._tog('vision'));
         kbd.on('keydown-F6',  () => { this.slow = !this.slow; });
         kbd.on('keydown-F7',  () => { this.paused = !this.paused; });
+        kbd.on('keydown-F8',  () => this._toggleInspect());
         kbd.on('keydown-F9',  () => this._tog('perf'));
         kbd.on('keydown-F10', () => this._togAll());
         kbd.on('keydown-PERIOD', () => {
@@ -27,6 +33,35 @@ class DebugOverlay {
                 this.scene.simTime += this.scene.simStep;
             }
         });
+
+        // Click handler — when in inspect mode, clicking near an agent inspects it
+        scene.input.on('pointerdown', (p) => {
+            if (!this.inspectMode) return;
+            // Don't catch clicks on the panel itself
+            if (this._inspectPanel && p.x > CFG.CANVAS_W - 240) return;
+            const wx = (p.x - this.scene.offsetX) / CFG.PIXELS_PER_METER;
+            const wy = (p.y - this.scene.offsetY) / CFG.PIXELS_PER_METER;
+            let nearest = null, bestD2 = 1.5;   // 1.5m radius
+            for (const a of this.scene.agents) {
+                if (a.state === 'ESCAPED') continue;
+                const dx = a.x - wx, dy = a.y - wy;
+                const d2 = dx * dx + dy * dy;
+                if (d2 < bestD2) { bestD2 = d2; nearest = a; }
+            }
+            this.inspectedAgent = nearest;
+        });
+    }
+
+    _toggleInspect() {
+        this.inspectMode = !this.inspectMode;
+        if (!this.inspectMode) {
+            this.inspectedAgent = null;
+            if (this._inspectPanel) {
+                this._inspectPanel.bg?.destroy();
+                this._inspectPanel.txt?.destroy();
+                this._inspectPanel = null;
+            }
+        }
     }
 
     _tog(k)    { this.flags[k] = !this.flags[k]; }
@@ -113,6 +148,64 @@ class DebugOverlay {
             this._stateTextRefresh();
         } else if (this._stateText) {
             this._stateText.destroy(); this._stateText = null;
+        }
+
+        // F8 — agent inspector
+        if (this.inspectMode) {
+            this._inspectorRefresh();
+            // ring around inspected agent
+            if (this.inspectedAgent && this.inspectedAgent.state !== 'ESCAPED') {
+                const a = this.inspectedAgent;
+                const sx = ox + a.x * px;
+                const sy = oy + a.y * px;
+                g.lineStyle(2, 0xffd700, 1);
+                g.strokeCircle(sx, sy, 12);
+            }
+        } else if (this._inspectPanel) {
+            this._inspectPanel.bg?.destroy();
+            this._inspectPanel.txt?.destroy();
+            this._inspectPanel = null;
+        }
+    }
+
+    _inspectorRefresh() {
+        const a = this.inspectedAgent;
+        const W = 220, H = 230;
+        const x0 = CFG.CANVAS_W - W - 8;
+        const y0 = CFG.HUD_HEIGHT + 8;
+        let body;
+        if (!a) {
+            body = 'F8 INSPECT MODE\n\nclick on an agent to inspect.\n(F8 to exit)';
+        } else {
+            const groupCount = a.group >= 0
+                ? this.scene.agents.filter(o => o.group === a.group && o.state !== 'ESCAPED').length
+                : 0;
+            body =
+                `Agent #${a.id}\n` +
+                `Type:     ${a.type}\n` +
+                `State:    ${a.state}\n` +
+                `Pos:      (${a.x.toFixed(1)}, ${a.y.toFixed(1)})\n` +
+                `Vel:      (${a.vx.toFixed(2)}, ${a.vy.toFixed(2)})\n` +
+                `Speed:    ${Math.hypot(a.vx, a.vy).toFixed(2)} m/s\n` +
+                `Panic:    ${a.panic.toFixed(2)}\n` +
+                `Vision:   ${a.visionRange.toFixed(1)} m\n` +
+                `Mobility: ${a.mobility.toFixed(2)}\n` +
+                `Awareness:${a.awareness.toFixed(2)}\n` +
+                `Group:    ${a.group >= 0 ? `#${a.group} (${groupCount} alive)` : 'solo'}\n` +
+                `Bias:     ${this.scene.simTime < a.biasUntil ? `(${a.biasX.toFixed(1)},${a.biasY.toFixed(1)})` : 'none'}`;
+        }
+        if (!this._inspectPanel) {
+            const bg = this.scene.add.rectangle(x0 + W / 2, y0 + H / 2, W, H, 0x000000, 0.78)
+                .setStrokeStyle(2, 0xffd700)
+                .setDepth(22);
+            const txt = this.scene.add.text(x0 + 8, y0 + 8, body, {
+                fontFamily: 'monospace', fontSize: '11px', color: '#fff',
+            }).setDepth(23);
+            this._inspectPanel = { bg, txt };
+        } else {
+            this._inspectPanel.txt.setText(body);
+            this._inspectPanel.bg.setPosition(x0 + W / 2, y0 + H / 2);
+            this._inspectPanel.txt.setPosition(x0 + 8, y0 + 8);
         }
     }
 

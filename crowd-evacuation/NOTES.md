@@ -4,7 +4,32 @@ Living document. Status, known issues, and next steps for the crowd-evacuation g
 
 ---
 
-## Current version: v0.3
+## Current version: v0.4
+
+### What changed in v0.4
+
+- **Synthesized audio** via Web Audio API (no external assets). `AudioManager`
+  builds tones, arpeggios, and filtered noise at runtime. Includes one-shots
+  (click, place, remove, error, whistle, PA chime, fire whoosh, success/failure
+  jingles) and a continuous alarm loop with LFO-modulated frequency.
+- **Settings modal** accessible from the menu's gear icon. Sliders for master
+  and SFX volume, toggles for colorblind palette and reduced motion. Persisted
+  via `Storage.setSettings()`; AudioManager hot-reloads on change.
+- **Colorblind palette**: agent panic gradient shifts from green→red to
+  blue→yellow when enabled. Helps protan/deutan players read crowd state.
+- **Reduced motion**: skips the alarm-flash overlay on sim entry.
+- **Agent inspector (F8)**: click an agent in inspect mode to show a side panel
+  with full agent state — type, panic, vision, mobility, awareness, group,
+  bias, position, velocity. Inspected agent gets a yellow ring.
+
+### Verification
+
+- All scripts load without errors. `window.exodusAudio` and `SettingsModal`
+  defined globally. Storage settings round-trip through localStorage.
+
+---
+
+## v0.3
 
 ### What changed in v0.3
 
@@ -72,18 +97,17 @@ Verified: barrier blocks tile, sign biases agents toward direction, PA reduces p
 
 ---
 
-## Next: v0.4 — feel + craft
+## Next: v0.5 — content + visual polish
 
 Goals, in priority order:
 
-1. **Audio**: alarm loop, ambient pre-alarm, panic swell layered by avg crowd panic, fire crackle, marshal whistle, UI clicks. Per `SPEC.md §8.2`. Most impact on perceived quality.
-2. **Better art**: replace circles with simple sprites for agents, exits, marshals.
-3. **Agent inspector** (debug F8): click-to-inspect side panel for any agent.
-4. **Settings**: SFX/music sliders, colorblind mode, reduced motion.
-5. **Multi-step tutorial**: replace the intro modal with progressive gated hints (see `SPEC.md §13`).
-6. **More levels**: stadium concourse, subway platform, office tower.
+1. **Better art**: replace agent circles with simple top-down sprites; tile the floor; add a marshal sprite with hi-vis vest. Highest visible-quality lift.
+2. **Continuous-intensity audio**: fire crackle (volume scales with total fire) and panic swell (layered, scales with avg crowd panic). Currently we have one-shots and alarm only.
+3. **Multi-step tutorial**: replace the intro modal with progressive gated hints — "place a marshal here", "now press alarm" — per `SPEC.md §13`.
+4. **More levels**: stadium concourse, subway platform, office tower with stairs.
+5. **Pause menu**: in-sim pause with resume / restart / menu options.
 
-Not for v0.4 (defer): sandbox, daily challenges, multi-deck levels, multiplayer.
+Not for v0.5 (defer): sandbox, daily challenges, multi-deck levels, multiplayer.
 
 ---
 

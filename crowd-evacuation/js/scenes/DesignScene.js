@@ -296,32 +296,39 @@ class DesignScene extends Phaser.Scene {
 
         // Try removing existing item under cursor first
         if (this._tryRemoveAt(wx, wy)) {
+            window.exodusAudio?.remove();
             this._drawAll(); this._updateStatus(); return;
         }
 
         // Tool-specific placement
         const cx = Math.floor(wx / CFG.CELL_M);
         const cy = Math.floor(wy / CFG.CELL_M);
+        let placed = false;
         switch (this.tool) {
             case ToolKind.MARSHAL:
                 if (this.grid.walkable(cx, cy) && this._underBudget('marshals')) {
                     this.placements.marshals.push({ x: wx, y: wy });
+                    placed = true;
                 }
                 break;
             case ToolKind.PA:
                 if (this.grid.walkable(cx, cy) && this._underBudget('pa')) {
                     this.placements.pas.push({ x: wx, y: wy });
+                    placed = true;
                 }
                 break;
             case ToolKind.SIGN:
                 if (this._underBudget('signs')) {
                     this.placements.signs.push({ x: wx, y: wy, dir: this.signOrientation });
+                    placed = true;
                 }
                 break;
             case ToolKind.BARRIER:
                 this.dragStart = { cx, cy };
                 break;
         }
+        if (placed) window.exodusAudio?.place();
+        else if (this.tool !== ToolKind.BARRIER) window.exodusAudio?.error();
         this._drawAll(); this._updateStatus();
     }
 
@@ -374,7 +381,12 @@ class DesignScene extends Phaser.Scene {
                         if (x === seg.x1 && y === seg.y1) break;
                         x += dx; y += dy;
                     }
-                    if (ok) this.placements.barriers.push(seg);
+                    if (ok) {
+                        this.placements.barriers.push(seg);
+                        window.exodusAudio?.place();
+                    } else {
+                        window.exodusAudio?.error();
+                    }
                 }
             }
             this.dragStart = null;

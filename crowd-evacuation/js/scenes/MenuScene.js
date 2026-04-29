@@ -7,6 +7,9 @@ class MenuScene extends Phaser.Scene {
         const W = CFG.CANVAS_W, H = CFG.CANVAS_H;
         this.cameras.main.setBackgroundColor('#0f0c29');
 
+        // Make sure no leftover alarm loop is playing
+        window.exodusAudio?.stopAll();
+
         // Title
         this.add.text(W / 2, 60, 'EXODUS', {
             fontFamily: 'Arial Black, Arial', fontSize: '52px', color: '#fff',
@@ -15,6 +18,18 @@ class MenuScene extends Phaser.Scene {
         this.add.text(W / 2, 110, 'When the alarm sounds, your design is everyone\'s only hope.', {
             fontFamily: 'Arial', fontSize: '13px', color: '#bbb',
         }).setOrigin(0.5);
+
+        // Settings gear (top right)
+        const gear = this.add.text(W - 24, 24, '⚙', {
+            fontFamily: 'Arial', fontSize: '22px', color: '#aaa',
+        }).setOrigin(0.5).setInteractive({ useHandCursor: true });
+        gear.on('pointerover', () => gear.setColor('#fff'));
+        gear.on('pointerout',  () => gear.setColor('#aaa'));
+        gear.on('pointerdown', () => {
+            window.exodusAudio?.click();
+            this._settings = this._settings || new SettingsModal(this);
+            this._settings.show();
+        });
 
         // Best score readout
         const best = Storage.getBest();
@@ -93,7 +108,10 @@ class MenuScene extends Phaser.Scene {
         this.add.text(cx, cy + 56, 'PLAY', {
             fontFamily: 'Arial Black', fontSize: '13px', color: '#0a3d20',
         }).setOrigin(0.5);
-        const onPlay = () => this.scene.start('DesignScene', { level });
+        const onPlay = () => {
+            window.exodusAudio?.click();
+            this.scene.start('DesignScene', { level });
+        };
         btn.on('pointerover', () => btn.setFillStyle(0x86efac));
         btn.on('pointerout',  () => btn.setFillStyle(0x4ade80));
         btn.on('pointerdown', onPlay);

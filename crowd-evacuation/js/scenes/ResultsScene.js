@@ -12,7 +12,14 @@ class ResultsScene extends Phaser.Scene {
         const W = CFG.CANVAS_W, H = CFG.CANVAS_H;
         this.cameras.main.setBackgroundColor('#0f0c29');
 
+        // Stop any lingering alarm
+        window.exodusAudio?.stopAlarm();
+
         const score = Scoring.compute(this.result);
+
+        // Jingle based on outcome
+        if (score.stars > 0) window.exodusAudio?.success();
+        else                 window.exodusAudio?.failure();
         const isNewBest = !Storage.getScore(this.level.id) ||
                           score.score > (Storage.getScore(this.level.id)?.score || 0);
         Storage.setScore(this.level.id, {
@@ -85,7 +92,7 @@ class ResultsScene extends Phaser.Scene {
         }).setOrigin(0.5);
         r.on('pointerover', () => r.setFillStyle(color, 0.8));
         r.on('pointerout',  () => r.setFillStyle(color, 1));
-        r.on('pointerdown', onClick);
+        r.on('pointerdown', () => { window.exodusAudio?.click(); onClick(); });
         return r;
     }
 }
