@@ -717,15 +717,36 @@
             return this.y + (this.jumpY || 0);
         }
 
-        draw(gfx, cameraX) {
-            if (!this.active) return;
+        draw(gfx, cameraX, scene, shakeX, shakeY) {
+            if (!this.active) {
+                if (this.sprite) this.sprite.setVisible(false);
+                return;
+            }
             const sx = this.x - cameraX;
             const sy = this.getDrawY();
             // Shadow
             gfx.fillStyle(0x000000, 0.3);
             gfx.fillEllipse(sx, this.y + this.height / 2 + 2, this.width * 0.8, 8);
-            // Figure
-            drawBlockFigure(gfx, sx, sy, this.width, this.height, this.colors, this.state, this.facingRight, this.stateTimer, this.iframes > 0);
+            // Sprite
+            if (!this.sprite && scene) {
+                this.sprite = scene.add.sprite(0, 0, 'cast', 'hero-idle-0');
+                this.sprite.setOrigin(0.5, 0.92);
+                this.sprite.setScale(0.7);
+            }
+            if (this.sprite) {
+                this.sprite.setVisible(true);
+                this.sprite.setPosition(sx + shakeX, sy + this.height / 2 + shakeY);
+                this.sprite.setFlipX(!this.facingRight);
+                this.sprite.setDepth(this.y);
+                let wantAnim = 'hero-idle';
+                if (this.state === 'walk') wantAnim = 'hero-walk';
+                else if (this.state === 'punch' || this.state === 'kick' || this.state === 'jump_attack' || this.state === 'special') wantAnim = 'hero-punch';
+                else if (this.state === 'knockdown' || this.state === 'hurt') wantAnim = 'hero-knockdown';
+                if (this.sprite.anims.currentAnim?.key !== wantAnim) {
+                    this.sprite.play(wantAnim);
+                }
+                this.sprite.setAlpha(this.iframes > 0 && Math.floor(this.stateTimer * 10) % 2 === 0 ? 0.3 : 1);
+            }
         }
     }
 
@@ -894,8 +915,11 @@
             return this.y + this.jumpY;
         }
 
-        draw(gfx, cameraX) {
-            if (!this.active) return;
+        draw(gfx, cameraX, scene, shakeX, shakeY) {
+            if (!this.active) {
+                if (this.sprite) this.sprite.setVisible(false);
+                return;
+            }
             const sx = this.x - cameraX;
             const sy = this.getDrawY();
 
@@ -903,8 +927,25 @@
             gfx.fillStyle(0x000000, 0.3);
             gfx.fillEllipse(sx, this.y + this.height / 2 + 2, this.width * 0.8, 8);
 
-            // Figure
-            drawBlockFigure(gfx, sx, sy, this.width, this.height, this.colors, this.state, this.facingRight, this.stateTimer, false);
+            // Sprite
+            if (!this.sprite && scene) {
+                this.sprite = scene.add.sprite(0, 0, 'cast', `${this.type}-idle`);
+                this.sprite.setOrigin(0.5, 0.92);
+                this.sprite.setScale(0.7);
+            }
+            if (this.sprite) {
+                this.sprite.setVisible(true);
+                this.sprite.setPosition(sx + shakeX, sy + this.height / 2 + shakeY);
+                this.sprite.setFlipX(!this.facingRight);
+                this.sprite.setDepth(this.y);
+                let wantAnim = `${this.type}-idle`;
+                if (this.state === 'walk') wantAnim = `${this.type}-walk`;
+                else if (this.state === 'attack') wantAnim = `${this.type}-attack`;
+                else if (this.state === 'knockdown' || this.state === 'hurt') wantAnim = `${this.type}-knockdown`;
+                if (this.sprite.anims.currentAnim?.key !== wantAnim) {
+                    this.sprite.play(wantAnim);
+                }
+            }
 
             // Health bar above
             if (this.hp < this.maxHp) {
@@ -1049,8 +1090,33 @@
             this.numPlayers = data.numPlayers || 1;
         }
 
+        preload() {
+            this.load.atlas('cast', 'cast.png', 'cast.json');
+        }
+
         create() {
             this.gfx = this.add.graphics();
+
+            const mkAnim = (key, frameNames, frameRate, repeat) => {
+                this.anims.create({
+                    key,
+                    frames: frameNames.map(f => ({ key: 'cast', frame: f })),
+                    frameRate, repeat
+                });
+            };
+            mkAnim('hero-idle', ['hero-idle-0','hero-idle-1','hero-idle-2','hero-idle-3'], 4, -1);
+            mkAnim('hero-walk', ['hero-walk-0','hero-walk-1','hero-walk-2','hero-walk-3','hero-walk-4','hero-walk-5','hero-walk-6'], 12, -1);
+            mkAnim('hero-punch', ['hero-punch-0','hero-punch-1','hero-punch-2'], 14, 0);
+            mkAnim('hero-knockdown', ['hero-knockdown-0','hero-knockdown-1','hero-knockdown-2','hero-knockdown-3'], 8, 0);
+
+            for (const t of ['thug', 'knife', 'big', 'boss']) {
+                mkAnim(`${t}-idle`, [`${t}-idle`], 1, -1);
+                const walkN = (t === 'boss') ? 4 : (t === 'knife' ? 3 : (t === 'big' ? 3 : 4));
+                mkAnim(`${t}-walk`, Array.from({length: walkN}, (_, i) => `${t}-walk-${i}`), 10, -1);
+                const atkN = (t === 'big') ? 2 : 3;
+                mkAnim(`${t}-attack`, Array.from({length: atkN}, (_, i) => `${t}-attack-${i}`), 10, 0);
+                mkAnim(`${t}-knockdown`, ['0','1','2'].map(i => `${t}-knockdown-${i}`), 8, 0);
+            }
             this.score = 0;
             this.currentStage = 0;
             this.cameraX = 0;
@@ -1100,6 +1166,7 @@
             this.currentStage = index;
             this.cameraX = 0;
             this.encounterIndex = 0;
+            this.enemies.forEach(e => { if (e.sprite) e.sprite.destroy(); });
             this.enemies = [];
             this.scrollLocked = false;
             this.stageTransition = false;
@@ -1352,7 +1419,7 @@
             entities.forEach(ent => {
                 g.save();
                 g.setPosition(shakeX, shakeY);
-                ent.obj.draw(g, this.cameraX);
+                ent.obj.draw(g, this.cameraX, this, shakeX, shakeY);
                 g.setPosition(0, 0);
                 g.restore();
             });
