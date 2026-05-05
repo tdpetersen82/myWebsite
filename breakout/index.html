@@ -309,7 +309,11 @@
             }
             lastFrameTime = currentTime - (deltaTime % frameDelay);
 
-            // Move paddle
+            // Move paddle — poll held keys every frame so direction reverses instantly
+            if (keys['ArrowLeft']) paddle.dx = -paddle.speed;
+            else if (keys['ArrowRight']) paddle.dx = paddle.speed;
+            else paddle.dx = 0;
+
             paddle.x += paddle.dx;
             if (paddle.x < 0) paddle.x = 0;
             if (paddle.x + paddle.width > canvas.width) {
@@ -324,14 +328,17 @@
                 ball.x += ball.dx;
                 ball.y += ball.dy;
 
-                // Wall collision (sides)
-                if (ball.x + ball.radius > canvas.width || ball.x - ball.radius < 0) {
-                    ball.dx = -ball.dx;
+                // Wall collision — clamp position and force correct direction to prevent sticking
+                if (ball.x - ball.radius < 0) {
+                    ball.x = ball.radius;
+                    ball.dx = Math.abs(ball.dx);
+                } else if (ball.x + ball.radius > canvas.width) {
+                    ball.x = canvas.width - ball.radius;
+                    ball.dx = -Math.abs(ball.dx);
                 }
-
-                // Wall collision (top)
                 if (ball.y - ball.radius < 0) {
-                    ball.dy = -ball.dy;
+                    ball.y = ball.radius;
+                    ball.dy = Math.abs(ball.dy);
                 }
 
                 // Paddle collision
@@ -395,7 +402,9 @@
             gameLoop = requestAnimationFrame(update);
         }
 
+        const keys = {};
         document.addEventListener('keydown', (e) => {
+            keys[e.key] = true;
             if (e.key === ' ' || e.key === 'Spacebar') {
                 e.preventDefault();
                 if (!gameRunning) {
@@ -406,19 +415,10 @@
                     ball.dy = -ball.speed;
                 }
             }
-
-            if (e.key === 'ArrowLeft') {
-                paddle.dx = -paddle.speed;
-            } else if (e.key === 'ArrowRight') {
-                paddle.dx = paddle.speed;
-            }
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') e.preventDefault();
         });
 
-        document.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
-                paddle.dx = 0;
-            }
-        });
+        document.addEventListener('keyup', (e) => { keys[e.key] = false; });
 
         canvas.addEventListener('mousemove', (e) => {
             if (!gameRunning) return;

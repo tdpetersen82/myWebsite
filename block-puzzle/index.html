@@ -35,10 +35,16 @@
 <body>
     <div class="container">
         <h1>🟦 Block Puzzle</h1>
-        <div class="game-info">
-            <p>Score: <span id="score">0</span></p>
-            <p>Lines: <span id="lines">0</span></p>
-            <p>Level: <span id="level">1</span></p>
+        <div class="game-info" style="display:flex;justify-content:center;align-items:flex-start;gap:24px;flex-wrap:wrap;">
+            <div>
+                <p>Score: <span id="score">0</span></p>
+                <p>Lines: <span id="lines">0</span></p>
+                <p>Level: <span id="level">1</span></p>
+            </div>
+            <div style="text-align:center;">
+                <p style="margin:0 0 4px;">Next</p>
+                <canvas id="nextCanvas" width="80" height="80" style="border:2px solid #333;background:#000;display:block;margin:0 auto;"></canvas>
+            </div>
         </div>
         <canvas id="gameCanvas" width="300" height="600"></canvas>
         <div class="controls">
@@ -51,6 +57,8 @@
     <script>
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
+        const nextCanvas = document.getElementById('nextCanvas');
+        const nextCtx = nextCanvas.getContext('2d');
         const scoreElement = document.getElementById('score');
         const linesElement = document.getElementById('lines');
         const levelElement = document.getElementById('level');
@@ -121,6 +129,7 @@
 
         let board = Array(ROWS).fill().map(() => Array(COLS).fill(0));
         let currentPiece = null;
+        let nextPiece = null;
         let currentX = 0;
         let currentY = 0;
         let score = 0;
@@ -161,11 +170,32 @@
 
         function drawPiece() {
             if (!currentPiece) return;
-            
+
             currentPiece.shape.forEach((row, y) => {
                 row.forEach((value, x) => {
                     if (value) {
                         drawBlock(currentX + x, currentY + y, currentPiece.color);
+                    }
+                });
+            });
+        }
+
+        function drawNextPiece() {
+            const NEXT_SIZE = 20;
+            nextCtx.fillStyle = '#000';
+            nextCtx.fillRect(0, 0, nextCanvas.width, nextCanvas.height);
+            if (!nextPiece) return;
+            const cols = nextPiece.shape[0].length;
+            const rows = nextPiece.shape.length;
+            const offsetX = Math.floor((4 - cols) / 2);
+            const offsetY = Math.floor((4 - rows) / 2);
+            nextPiece.shape.forEach((row, y) => {
+                row.forEach((value, x) => {
+                    if (value) {
+                        nextCtx.fillStyle = nextPiece.color;
+                        nextCtx.fillRect((offsetX + x) * NEXT_SIZE, (offsetY + y) * NEXT_SIZE, NEXT_SIZE - 1, NEXT_SIZE - 1);
+                        nextCtx.strokeStyle = '#000';
+                        nextCtx.strokeRect((offsetX + x) * NEXT_SIZE, (offsetY + y) * NEXT_SIZE, NEXT_SIZE - 1, NEXT_SIZE - 1);
                     }
                 });
             });
@@ -250,9 +280,11 @@
         }
 
         function spawnPiece() {
-            currentPiece = createPiece();
+            currentPiece = nextPiece || createPiece();
+            nextPiece = createPiece();
             currentX = Math.floor(COLS / 2) - Math.floor(currentPiece.shape[0].length / 2);
             currentY = 0;
+            drawNextPiece();
 
             if (collision()) {
                 gameOver();
@@ -294,11 +326,12 @@
             lines = 0;
             level = 1;
             dropInterval = 1000;
-            
+            nextPiece = createPiece();
+
             scoreElement.textContent = score;
             linesElement.textContent = lines;
             levelElement.textContent = level;
-            
+
             spawnPiece();
             gameRunning = true;
             lastDrop = performance.now();
