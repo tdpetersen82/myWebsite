@@ -1,17 +1,31 @@
 const Animations = (() => {
 
     function dealCard(cardEl) {
+        // Arc from "shoe" at top-right of wrapper to the card's natural position.
+        const wrapper = document.getElementById('game-wrapper');
+        let dx = 0, dy = -30;
+        let rot = 0;
+        if (wrapper) {
+            const target = cardEl.getBoundingClientRect();
+            const wrap = wrapper.getBoundingClientRect();
+            // Shoe position (top-right corner of the wrapper)
+            const shoeX = wrap.right - 60;
+            const shoeY = wrap.top + 50;
+            dx = shoeX - target.left;
+            dy = shoeY - target.top;
+            rot = -12;
+        }
         cardEl.style.opacity = '0';
-        cardEl.style.transform = 'scale(0.3) translateY(-30px)';
+        cardEl.style.transform = 'translate(' + dx + 'px, ' + dy + 'px) rotate(' + rot + 'deg) scale(0.55)';
         void cardEl.offsetWidth; // force reflow
-        cardEl.style.transition = 'opacity 0.3s ease, transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1)';
+        cardEl.style.transition = 'opacity 0.4s ease, transform 0.5s cubic-bezier(0.32, 0.72, 0.42, 1.08)';
         cardEl.style.opacity = '1';
-        cardEl.style.transform = 'scale(1) translateY(0)';
+        cardEl.style.transform = 'translate(0,0) rotate(0deg) scale(1)';
         setTimeout(() => {
             cardEl.style.transition = '';
             cardEl.style.transform = '';
             cardEl.style.opacity = '';
-        }, 350);
+        }, 540);
     }
 
     function flipCard(innerEl, onFlip) {

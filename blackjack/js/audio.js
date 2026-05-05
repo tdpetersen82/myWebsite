@@ -1,5 +1,7 @@
 const Audio = (() => {
     let ctx;
+    let muted = false;
+    let masterVolume = 0.6;
 
     function getCtx() {
         if (!ctx) ctx = new (window.AudioContext || window.webkitAudioContext)();
@@ -7,12 +9,13 @@ const Audio = (() => {
     }
 
     function tone(freq, duration, type = 'sine', volume = 0.3) {
+        if (muted) return;
         const c = getCtx();
         const osc = c.createOscillator();
         const gain = c.createGain();
         osc.type = type;
         osc.frequency.value = freq;
-        gain.gain.setValueAtTime(volume, c.currentTime);
+        gain.gain.setValueAtTime(volume * masterVolume, c.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
         osc.connect(gain);
         gain.connect(c.destination);
@@ -21,6 +24,7 @@ const Audio = (() => {
     }
 
     function noise(duration, volume = 0.15) {
+        if (muted) return;
         const c = getCtx();
         const bufferSize = c.sampleRate * duration;
         const buffer = c.createBuffer(1, bufferSize, c.sampleRate);
@@ -31,7 +35,7 @@ const Audio = (() => {
         const source = c.createBufferSource();
         source.buffer = buffer;
         const gain = c.createGain();
-        gain.gain.setValueAtTime(volume, c.currentTime);
+        gain.gain.setValueAtTime(volume * masterVolume, c.currentTime);
         gain.gain.exponentialRampToValueAtTime(0.001, c.currentTime + duration);
         source.connect(gain);
         gain.connect(c.destination);
@@ -43,7 +47,6 @@ const Audio = (() => {
         cardFlip() { tone(800, 0.05, 'square', 0.15); },
         chipPlace() { tone(1200, 0.06, 'triangle', 0.2); },
         win() {
-            const c = getCtx();
             [523, 659, 784].forEach((f, i) => {
                 setTimeout(() => tone(f, 0.15, 'sine', 0.25), i * 100);
             });
@@ -57,5 +60,9 @@ const Audio = (() => {
                 setTimeout(() => tone(f, 0.2, 'sine', 0.3), i * 120);
             });
         },
+        setMuted(v) { muted = !!v; },
+        setVolume(v) { masterVolume = Math.max(0, Math.min(1, parseFloat(v) || 0)); },
+        isMuted() { return muted; },
+        getVolume() { return masterVolume; },
     };
 })();

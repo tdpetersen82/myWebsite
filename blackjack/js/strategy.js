@@ -324,5 +324,9 @@ const Strategy = (() => {
         }
     }
 
-    return { getRecommendation };
+    return {
+        getRecommendation,
+        // Read-only access to strategy tables for the Learning Center chart.
+        getTables: () => ({ HARD, SOFT, PAIRS, ACTION_MAP, DEALER_INDEX, BUST_IF_HIT, DEALER_BUST }),
+    };
 })();

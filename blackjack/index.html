@@ -7,7 +7,7 @@
     <meta name="description" content="Play Blackjack free in your browser. Hit, stand, double down, and split your way to 21! No downloads, no installs.">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Blackjack","description":"Play Blackjack free in your browser. Hit, stand, double down, and split your way to 21! No downloads, no installs.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Arcade Game Hub"}}</script>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/styles.css?v=5">
     <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
     <link rel="canonical" href="https://example.com/blackjack/">
     <meta property="og:title" content="Blackjack — Free Online Game | Arcade Game Hub">
@@ -35,7 +35,10 @@
             <div class="bj-header">
                 <h1>&#x2660; Blackjack</h1>
                 <div class="bj-bankroll">Bankroll: <span id="bankroll-value">$1,000</span></div>
-                <button class="btn-hints" id="btn-hints">Hints: OFF</button>
+                <div class="header-buttons">
+                    <button class="btn-hints" id="btn-hints">Hints: OFF</button>
+                    <button class="btn-learn" id="btn-learn">🎓 Learn</button>
+                </div>
             </div>
 
             <!-- Table -->
@@ -47,6 +50,9 @@
                     <div class="hand-value" id="dealer-value"></div>
                     <div class="cards-row" id="dealer-cards"></div>
                 </div>
+
+                <!-- Streak Badge -->
+                <div class="streak-badge" id="streak-badge"></div>
 
                 <!-- Message -->
                 <div class="message-area" id="message">Place your bet</div>
@@ -93,6 +99,7 @@
                     <div class="bet-display">
                         <button class="btn-clear" id="btn-clear">Clear</button>
                         <span>Bet: <span class="bet-amount" id="bet-amount">$0</span></span>
+                        <div class="bet-stack" id="bet-stack"></div>
                         <button class="btn-rebet" id="btn-rebet">Rebet</button>
                         <button class="btn-deal" id="btn-deal" disabled>Deal</button>
                     </div>
@@ -110,14 +117,20 @@
     </div>
 
     <!-- JS modules in dependency order -->
-    <script src="js/config.js"></script>
-    <script src="js/deck.js"></script>
-    <script src="js/hand.js"></script>
-    <script src="js/strategy.js"></script>
-    <script src="js/audio.js"></script>
-    <script src="js/animations.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/game.js"></script>
+    <script src="js/config.js?v=5"></script>
+    <script src="js/deck.js?v=5"></script>
+    <script src="js/hand.js?v=5"></script>
+    <script src="js/strategy.js?v=5"></script>
+    <script src="js/audio.js?v=5"></script>
+    <script src="js/animations.js?v=5"></script>
+    <script src="js/dealer.js?v=5"></script>
+    <script src="js/analytics.js?v=5"></script>
+    <script src="js/achievements.js?v=5"></script>
+    <script src="js/counting.js?v=5"></script>
+    <script src="js/learning.js?v=5"></script>
+    <script src="js/settings.js?v=5"></script>
+    <script src="js/ui.js?v=5"></script>
+    <script src="js/game.js?v=5"></script>
 
     <!-- Auto-scaling -->
     <script>

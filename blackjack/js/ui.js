@@ -41,6 +41,9 @@ const UI = (() => {
             statsBar: document.getElementById('stats-bar'),
             message: document.getElementById('message'),
             resultBanner: document.getElementById('result-banner'),
+            streakBadge: document.getElementById('streak-badge'),
+            betStack: document.getElementById('bet-stack'),
+            learnBtn: document.getElementById('btn-learn'),
         };
     }
 
@@ -127,6 +130,47 @@ const UI = (() => {
 
     function updateBet(amount) {
         els.betAmount.textContent = '$' + amount;
+        renderBetStack(amount);
+    }
+
+    // Break a bet down to standard chip denoms and render visual stack.
+    function renderBetStack(amount) {
+        if (!els.betStack) return;
+        els.betStack.innerHTML = '';
+        if (amount <= 0) return;
+
+        const denoms = [
+            { v: 500, bg: '#8e44ad', border: '#6c3483' },
+            { v: 100, bg: '#2980b9', border: '#1f6fa5' },
+            { v: 25,  bg: '#27ae60', border: '#1e8449' },
+            { v: 5,   bg: '#e74c3c', border: '#c0392b' },
+        ];
+        let remaining = amount;
+        let total = 0;
+        const MAX_CHIPS = 8;
+        for (const d of denoms) {
+            while (remaining >= d.v && total < MAX_CHIPS) {
+                const chip = document.createElement('div');
+                chip.className = 'bet-stack-chip';
+                chip.style.background = d.bg;
+                chip.style.borderColor = d.border;
+                els.betStack.appendChild(chip);
+                remaining -= d.v;
+                total++;
+            }
+            if (total >= MAX_CHIPS) break;
+        }
+    }
+
+    function updateStreak(wins) {
+        if (!els.streakBadge) return;
+        if (wins >= 2) {
+            els.streakBadge.textContent = '🔥 ' + wins + ' wins!';
+            els.streakBadge.classList.add('visible');
+            els.streakBadge.classList.toggle('hot', wins >= 4);
+        } else {
+            els.streakBadge.classList.remove('visible', 'hot');
+        }
     }
 
     function updateHandValue(el, value, soft) {
@@ -240,5 +284,6 @@ const UI = (() => {
         showActions, hideActions, showBetting, enableDeal,
         showHint, hideHint, setMessage, showResult, updateStats,
         createSplitLayout, removeSplitLayout,
+        updateStreak, renderBetStack,
     };
 })();

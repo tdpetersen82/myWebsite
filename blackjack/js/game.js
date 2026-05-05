@@ -23,6 +23,7 @@ const Game = (() => {
 
     // Stats
     let stats = { handsPlayed: 0, handsWon: 0, blackjacks: 0, biggestWin: 0, biggestBankroll: CONFIG.STARTING_BANKROLL };
+    let winStreak = 0;
 
     function init() {
         UI.init();
@@ -30,6 +31,19 @@ const Game = (() => {
         Deck.buildShoe();
         bindEvents();
         updateHintsButton();
+        if (typeof Dealer !== 'undefined') Dealer.init();
+        if (typeof Settings !== 'undefined') Settings.init();
+        if (typeof Learning !== 'undefined') Learning.init({
+            onHintsToggle: () => {
+                hintsOn = !hintsOn;
+                localStorage.setItem(CONFIG.HINT_KEY, hintsOn);
+                updateHintsButton();
+                if (state === STATES.PLAYER_TURN) updateHint();
+                else UI.hideHint();
+            },
+            getHintsState: () => hintsOn,
+        });
+        if (typeof Analytics !== 'undefined') Analytics.recordBankroll(bankroll);
         enterBetting();
     }
 
@@ -104,6 +118,13 @@ const Game = (() => {
             if (state === STATES.PLAYER_TURN) updateHint();
             else UI.hideHint();
         });
+
+        // Learn modal
+        if (els.learnBtn) {
+            els.learnBtn.addEventListener('click', () => {
+                if (typeof Learning !== 'undefined') Learning.open();
+            });
+        }
     }
 
     function updateHintsButton() {
@@ -116,6 +137,7 @@ const Game = (() => {
 
     function enterBetting() {
         state = STATES.BETTING;
+        if (typeof Dealer !== 'undefined') Dealer.setMood('idle');
         if (Deck.needsReshuffle()) {
             Deck.buildShoe();
             UI.setMessage('Shuffling new shoe...');
@@ -146,6 +168,7 @@ const Game = (() => {
 
     function startDeal() {
         state = STATES.DEALING;
+        if (typeof Dealer !== 'undefined') Dealer.setMood('deal');
         lastBet = currentBet;
         bankroll -= currentBet;
         UI.updateBankroll(bankroll);
@@ -212,6 +235,7 @@ const Game = (() => {
                     Animations.pushEffect(UI.els().playerArea);
                     stats.handsPlayed++;
                     stats.blackjacks++;
+                    if (typeof Dealer !== 'undefined') Dealer.setMood('shocked', { quip: 'We both got it!' });
                 } else {
                     // Player wins 3:2
                     const payout = playerHands[0].bet + Math.floor(playerHands[0].bet * 1.5);
@@ -223,6 +247,14 @@ const Game = (() => {
                     stats.handsWon++;
                     stats.blackjacks++;
                     stats.biggestWin = Math.max(stats.biggestWin, payout - playerHands[0].bet);
+                    winStreak++;
+                    UI.updateStreak(winStreak);
+                    if (typeof Dealer !== 'undefined') Dealer.setMood('shocked');
+                    if (typeof Achievements !== 'undefined') {
+                        Achievements.onBlackjack();
+                        Achievements.onStreak(winStreak);
+                        Achievements.onBankroll(bankroll);
+                    }
                 }
                 stats.biggestBankroll = Math.max(stats.biggestBankroll, bankroll);
                 UI.updateBankroll(bankroll);
@@ -303,8 +335,18 @@ const Game = (() => {
         return UI.els().playerValue;
     }
 
+    function logDecision(action) {
+        if (typeof Analytics === 'undefined') return;
+        const hand = playerHands[activeHandIndex];
+        const canDbl = Hand.canDouble(hand.cards) && bankroll >= hand.bet;
+        const canSpl = Hand.canSplit(hand.cards, splitCount) && bankroll >= hand.bet;
+        const canSurr = hand.cards.length === 2 && !hand.isFromSplit;
+        Analytics.recordDecision(hand.cards, dealerCards[0], action, canSpl, canDbl, canSurr);
+    }
+
     function playerHit() {
         if (state !== STATES.PLAYER_TURN) return;
+        logDecision('HIT');
         const hand = playerHands[activeHandIndex];
         const card = Deck.deal();
         hand.cards.push(card);
@@ -328,6 +370,7 @@ const Game = (() => {
 
     function playerStand() {
         if (state !== STATES.PLAYER_TURN) return;
+        logDecision('STAND');
         playerHands[activeHandIndex].done = true;
         advanceHand();
     }
@@ -336,6 +379,7 @@ const Game = (() => {
         if (state !== STATES.PLAYER_TURN) return;
         const hand = playerHands[activeHandIndex];
         if (!Hand.canDouble(hand.cards) || bankroll < hand.bet) return;
+        logDecision('DOUBLE');
 
         bankroll -= hand.bet;
         hand.bet *= 2;
@@ -360,6 +404,7 @@ const Game = (() => {
         if (state !== STATES.PLAYER_TURN) return;
         const hand = playerHands[activeHandIndex];
         if (!Hand.canSplit(hand.cards, splitCount) || bankroll < hand.bet) return;
+        logDecision('SPLIT');
 
         splitCount++;
         bankroll -= hand.bet;
@@ -440,6 +485,7 @@ const Game = (() => {
 
     function playerSurrender() {
         if (state !== STATES.PLAYER_TURN) return;
+        logDecision('SURRENDER');
         const hand = playerHands[activeHandIndex];
         hand.surrendered = true;
         hand.done = true;
@@ -567,25 +613,47 @@ const Game = (() => {
 
         UI.updateBankroll(bankroll);
         saveState();
+        if (typeof Analytics !== 'undefined') Analytics.recordBankroll(bankroll);
+        if (typeof Achievements !== 'undefined') {
+            Achievements.onBankroll(bankroll);
+            Achievements.onAccuracyCheck();
+        }
 
         // Show result
+        const dealerBusted = Hand.isBust(dealerCards);
         if (totalResult > 0) {
+            winStreak++;
+            UI.updateStreak(winStreak);
+            if (typeof Achievements !== 'undefined') Achievements.onStreak(winStreak);
             const anyBJ = playerHands.some(h => Hand.isBlackjack(h.cards) && !h.isFromSplit);
+            const anySplitWin = playerHands.some(h => h.isFromSplit && !Hand.isBust(h.cards) && !h.surrendered);
             if (anyBJ) {
                 UI.showResult('Blackjack! +$' + totalResult, '#f1c40f');
                 Animations.blackjackEffect(UI.els().playerArea);
                 Audio.blackjack();
+                if (typeof Dealer !== 'undefined') Dealer.setMood('shocked');
+                if (typeof Achievements !== 'undefined') Achievements.onBlackjack();
             } else {
                 UI.showResult('Win! +$' + totalResult, '#2ecc71');
                 Animations.winEffect(UI.els().playerArea);
                 Audio.win();
+                if (typeof Dealer !== 'undefined') {
+                    Dealer.setMood(dealerBusted ? 'bust' : 'sad');
+                }
+                if (typeof Achievements !== 'undefined' && dealerBusted) Achievements.onDealerBust();
             }
+            if (anySplitWin && typeof Achievements !== 'undefined') Achievements.onSplitWin();
         } else if (totalResult < 0) {
+            winStreak = 0;
+            UI.updateStreak(0);
             UI.showResult('Lose $' + Math.abs(totalResult), '#e74c3c');
             Audio.lose();
+            if (typeof Dealer !== 'undefined') Dealer.setMood('happy');
         } else {
+            // Push: streak preserved
             UI.showResult('Push', '#f1c40f');
             Animations.pushEffect(UI.els().playerArea);
+            if (typeof Dealer !== 'undefined') Dealer.setMood('idle', { quip: 'Push.' });
         }
 
         setTimeout(() => {
