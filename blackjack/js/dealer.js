@@ -253,14 +253,20 @@ const Dealer = (() => {
             // Image present — show it
             imgEl.style.display = 'block';
             fallbackEl.style.display = 'none';
-            // Crossfade
-            imgEl.classList.add('fading');
-            requestAnimationFrame(() => {
-                imgEl.src = imagePath(currentDealer, mood);
-                imgEl.onload = () => {
-                    imgEl.classList.remove('fading');
-                };
-            });
+            const newSrc = imagePath(currentDealer, mood);
+            const sameSrc = imgEl.src && imgEl.src.endsWith(newSrc);
+
+            if (sameSrc && imgEl.complete) {
+                // Already showing this image — no fade needed
+                imgEl.classList.remove('fading');
+            } else {
+                imgEl.classList.add('fading');
+                imgEl.onload = () => imgEl.classList.remove('fading');
+                imgEl.onerror = () => imgEl.classList.remove('fading');
+                imgEl.src = newSrc;
+                // If cached, onload may not fire — fall back after a beat
+                setTimeout(() => imgEl.classList.remove('fading'), 350);
+            }
         } else {
             // Fallback: emoji + label, also reflects mood through a CSS class
             imgEl.style.display = 'none';

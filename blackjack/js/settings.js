@@ -47,7 +47,7 @@ const Settings = (() => {
             'linear-gradient(135deg, ' +
             'rgba(' + hexToRgb(theme.from) + ',0.85), ' +
             'rgba(' + hexToRgb(theme.to) + ',0.85)' +
-            '), url(\'../assets/table/felt.jpg\')';
+            '), url(\'../assets/table/felt.png\')';
         wrapper.style.backgroundSize = 'cover';
         wrapper.style.backgroundPosition = 'center';
         wrapper.style.backgroundColor = theme.to;
