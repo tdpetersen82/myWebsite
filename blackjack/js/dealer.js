@@ -4,8 +4,8 @@ const Dealer = (() => {
     const MOODS = ['idle', 'deal', 'happy', 'sad', 'shocked', 'bust'];
 
     const DEALERS = {
-        male:   { name: 'Marcus', emoji: '🎩' },
-        female: { name: 'Eva',    emoji: '💃' },
+        male:   { name: 'Marcus',  emoji: '🎩' },
+        female: { name: 'Melissa', emoji: '💃' },
     };
 
     const QUIPS = {
