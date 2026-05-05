@@ -269,21 +269,8 @@ function pickLine(key, ctx = {}) {
   return line.replace(/\{p\}/g, ctx.player || 'friend').replace(/\{d\}/g, dealer);
 }
 
-function expressionFor(state) {
-  switch(state) {
-    case 'dealing': return 'deal';
-    case 'player_bj':
-    case 'dealer_bust': return 'shocked';
-    case 'player_win': return 'sad';
-    case 'dealer_win': return 'happy';
-    case 'bust': return 'sad';
-    case 'push': return 'idle';
-    default: return 'idle';
-  }
-}
-
-function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idle = false, speaking = false, mood = 0 }) {
-  const file = expression === 'bust' ? 'sad' : expression;
+function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idle = false, mood = 0 }) {
+  const file = expression;
   const src = `assets/dealers/${gender}/${file}.png`;
   const [layers, setLayers] = React.useState(() => [{ key: 0, src, opacity: 1, blur: 0 }]);
   const counter = React.useRef(0);
@@ -310,7 +297,7 @@ function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idl
   const m = Math.max(-1, Math.min(1, mood));
   const sat = (1.05 + m * 0.25).toFixed(3);
   const bright = (1 + m * 0.06).toFixed(3);
-  const animClass = speaking ? 'bob' : (idle ? 'breathe' : '');
+  const animClass = idle ? 'breathe' : '';
 
   return (
     <div style={{
@@ -361,26 +348,18 @@ function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idl
   );
 }
 
-function SpeechBubble({ text, dealerName = 'Melissa', onTypingChange }) {
+function SpeechBubble({ text, dealerName = 'Melissa' }) {
   const [shown, setShown] = React.useState('');
   const [done, setDone] = React.useState(false);
   React.useEffect(() => {
     setShown(''); setDone(false);
-    onTypingChange && onTypingChange(true);
     let i = 0;
     const id = setInterval(() => {
       i++;
       setShown(text.slice(0, i));
-      if (i >= text.length) {
-        clearInterval(id);
-        setDone(true);
-        onTypingChange && onTypingChange(false);
-      }
+      if (i >= text.length) { clearInterval(id); setDone(true); }
     }, 18);
-    return () => {
-      clearInterval(id);
-      onTypingChange && onTypingChange(false);
-    };
+    return () => clearInterval(id);
   }, [text]);
 
   return (
@@ -420,22 +399,26 @@ function SpeechBubble({ text, dealerName = 'Melissa', onTypingChange }) {
   );
 }
 
-function DealerNameplate({ name }) {
+function DealerNameplate({ name, gender = 'female' }) {
   return (
     <div style={{
       display:'inline-flex', alignItems:'center', gap: 10,
-      padding:'8px 14px',
+      padding:'6px 14px 6px 6px',
       background:'linear-gradient(180deg, rgba(20,12,6,.85), rgba(10,6,3,.85))',
       border:'1px solid rgba(201,162,106,.45)',
       borderRadius: 999,
       backdropFilter:'blur(6px)',
       boxShadow:'0 8px 18px rgba(0,0,0,.45)'
     }}>
-      <span style={{
-        width: 8, height: 8, borderRadius: '50%',
-        background:'#7adb9a',
-        boxShadow:'0 0 10px #7adb9a'
-      }} />
+      <img
+        src={`assets/dealers/${gender}/avatar.png`}
+        alt=""
+        style={{
+          width: 30, height: 30, borderRadius: '50%',
+          objectFit: 'cover', objectPosition: 'center top',
+          boxShadow:'0 0 0 1px rgba(201,162,106,.55), 0 0 8px rgba(201,162,106,.35)'
+        }}
+      />
       <span style={{ fontSize: 11, letterSpacing:'.18em', color:'var(--ivory-dim)', textTransform:'uppercase' }}>Your dealer</span>
       <span style={{
         fontFamily:"'Playfair Display', serif",
@@ -446,7 +429,6 @@ function DealerNameplate({ name }) {
 }
 
 function DealerPanel({ name, expression, message, onTipDealer, tipped, playerName, gender = 'female', isIdle = false, mood = 0 }) {
-  const [speaking, setSpeaking] = React.useState(false);
   return (
     <div style={{
       position:'relative',
@@ -457,16 +439,16 @@ function DealerPanel({ name, expression, message, onTipDealer, tipped, playerNam
       background:'#1a1208',
       boxShadow:'var(--shadow-deep), inset 0 0 0 1px rgba(201,162,106,.18)'
     }}>
-      <DealerPortrait expression={expression} gender={gender} idle={isIdle} speaking={speaking} mood={mood} />
+      <DealerPortrait expression={expression} gender={gender} idle={isIdle} mood={mood} />
 
       <div style={{ position:'absolute', top: 18, left: 18, right: 18, zIndex: 3 }}>
-        <DealerNameplate name={name} />
+        <DealerNameplate name={name} gender={gender} />
       </div>
 
       <div style={{
         position:'absolute', left: 22, right: 22, bottom: 70, zIndex: 4
       }}>
-        {message && <SpeechBubble text={message} dealerName={name} onTypingChange={setSpeaking} />}
+        {message && <SpeechBubble text={message} dealerName={name} />}
       </div>
 
       <div style={{

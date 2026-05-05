@@ -240,13 +240,13 @@ function App() {
         setTimeout(() => resolveImmediate(newPlayer, newDealer, totalBet), 700);
       } else {
         setPhase('player');
-        setExpression('idle');
         const v = handValue(newPlayer).total;
         if (v === 21) setMessage('Twenty-one!');
         else if (v === 11) setMessage(`Eleven. The doubling temptation is real, ${tweaks.playerName}.`);
         else setMessage(pickLine('idle', ctx));
+        setTimeout(() => setExpression('idle'), 700);
       }
-    }, 800);
+    }, 1400);
   }
 
   function takeInsurance(yes) {
@@ -349,20 +349,24 @@ function App() {
     setShoe(next);
     const newCards = [...h.cards, c];
     setHands(prev => prev.map((x,i) => i===activeHandIdx ? {...x, cards: newCards} : x));
-    if (Math.random() < 0.4) say('hit', 'idle');
+    setExpression('deal');
+    if (Math.random() < 0.4) setMessage(pickLine('hit', ctx));
     const v = handValue(newCards).total;
     if (v > 21) {
       setTimeout(() => {
         setHands(prev => prev.map((x,i) => i===activeHandIdx ? {...x, cards: newCards, busted: true} : x));
-        say('bust', 'sad');
+        say('bust', 'bust');
         if (tweaks.soundOn) SFX.bust();
         advanceHand();
-      }, 500);
+      }, 700);
     } else if (v === 21) {
       setTimeout(() => {
         setHands(prev => prev.map((x,i) => i===activeHandIdx ? {...x, cards: newCards, stood: true} : x));
+        setExpression('idle');
         advanceHand();
-      }, 400);
+      }, 700);
+    } else {
+      setTimeout(() => setExpression('idle'), 700);
     }
   }
 
@@ -391,7 +395,7 @@ function App() {
       const v = handValue(newCards).total;
       if (v > 21) {
         setHands(prev => prev.map((x,i) => i===activeHandIdx ? {...x, busted: true} : x));
-        say('bust', 'sad');
+        say('bust', 'bust');
       }
       advanceHand();
     }, 600);
@@ -814,8 +818,8 @@ function BrassRail({ bankroll, streak, played, won, best, showHints, onToggleHin
     }}>
       {/* Lobby pill */}
       <a
-        href="../"
-        title="Back to lobby"
+        href="../casino/"
+        title="Back to casino"
         style={{
           display:'inline-flex', alignItems:'center', gap: 6,
           alignSelf:'center',
@@ -836,8 +840,8 @@ function BrassRail({ bankroll, streak, played, won, best, showHints, onToggleHin
 
       {/* Brand on left (clickable) */}
       <a
-        href="../"
-        title="Back to lobby"
+        href="../casino/"
+        title="Back to casino"
         style={{
           display:'flex', alignItems:'center', gap: 12, paddingRight: 18,
           borderRight:'1px solid rgba(201,162,106,.2)',
