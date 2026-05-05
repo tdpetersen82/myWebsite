@@ -120,7 +120,26 @@ function App() {
   const [tipped, setTipped] = useState(false);
   const [isIdle, setIsIdle] = useState(false);
   const [mood, setMood] = useState(0);
+  const [showNameModal, setShowNameModal] = useState(false);
   const idleTimerRef = useRef(null);
+
+  // Player name persistence
+  useEffect(() => {
+    const stored = localStorage.getItem('bjPlayerName');
+    if (stored && stored.trim()) {
+      if (stored !== tweaks.playerName) setTweak('playerName', stored);
+    } else {
+      setShowNameModal(true);
+    }
+  }, []);
+
+  function savePlayerName(name) {
+    const trimmed = (name || '').trim().slice(0, 20);
+    if (!trimmed) return;
+    localStorage.setItem('bjPlayerName', trimmed);
+    setTweak('playerName', trimmed);
+    setShowNameModal(false);
+  }
 
   const ctx = { player: tweaks.playerName, dealer: tweaks.dealerName };
 
@@ -148,11 +167,11 @@ function App() {
     return () => clearInterval(id);
   }, []);
 
-  // Greeting on mount/dealer change
+  // Greeting on mount, dealer change, or name change
   useEffect(() => {
     setMessage(pickLine('greet', { player: tweaks.playerName, dealer: tweaks.dealerName }));
     setExpression('idle');
-  }, [tweaks.dealerName]);
+  }, [tweaks.dealerName, tweaks.playerName]);
 
   // Idle behavior — after 12s of inactivity, prompt
   useEffect(() => {
@@ -646,6 +665,7 @@ function App() {
           playerName={tweaks.playerName}
           isIdle={isIdle}
           mood={mood}
+          onEditName={() => setShowNameModal(true)}
         />
 
         <div style={{
@@ -795,6 +815,111 @@ function App() {
           <TweakButton label="Reset bankroll" onClick={() => { setBankroll(tweaks.startingBankroll); setStats({played:0,won:0,bj:0,best:tweaks.startingBankroll,tipsGiven:0}); setStreak(0); setLossStreak(0); }} />
         </TweakSection>
       </TweaksPanel>
+
+      {showNameModal && (
+        <NameModal
+          initialName={tweaks.playerName === 'Alex' ? '' : tweaks.playerName}
+          onSave={savePlayerName}
+          onCancel={localStorage.getItem('bjPlayerName') ? () => setShowNameModal(false) : null}
+        />
+      )}
+    </div>
+  );
+}
+
+function NameModal({ initialName = '', onSave, onCancel }) {
+  const [name, setName] = React.useState(initialName);
+  const inputRef = React.useRef(null);
+
+  React.useEffect(() => {
+    const id = setTimeout(() => {
+      inputRef.current?.focus();
+      inputRef.current?.select();
+    }, 50);
+    return () => clearTimeout(id);
+  }, []);
+
+  function submit(e) {
+    if (e) e.preventDefault();
+    if (name.trim()) onSave(name);
+  }
+
+  return (
+    <div style={{
+      position:'fixed', inset:0, zIndex:9000,
+      background:'rgba(8,5,2,.65)',
+      backdropFilter:'blur(8px)',
+      display:'flex', alignItems:'center', justifyContent:'center'
+    }}>
+      <form onSubmit={submit} style={{
+        background:'linear-gradient(180deg, rgba(35,22,10,.95), rgba(20,12,6,.98))',
+        border:'1px solid rgba(201,162,106,.5)',
+        borderRadius: 16,
+        padding:'30px 36px 26px',
+        boxShadow:'0 30px 80px rgba(0,0,0,.7), inset 0 1px 0 rgba(230,197,144,.15)',
+        minWidth: 380, maxWidth: 440,
+        textAlign:'center'
+      }}>
+        <div style={{
+          fontSize: 10, letterSpacing:'.32em', textTransform:'uppercase',
+          color:'var(--ivory-dim)', marginBottom: 6
+        }}>Limestone Games</div>
+        <div style={{
+          fontFamily:"'Playfair Display', serif",
+          fontStyle:'italic',
+          fontSize: 22, color:'var(--brass-2)',
+          marginBottom: 20, lineHeight: 1.3
+        }}>
+          {initialName ? 'Going by something different tonight?' : 'What should the dealer call you?'}
+        </div>
+        <input
+          ref={inputRef}
+          value={name}
+          onChange={e => setName(e.target.value)}
+          maxLength={20}
+          placeholder="Your name"
+          autoComplete="off"
+          style={{
+            width:'100%',
+            padding:'12px 16px',
+            background:'rgba(10,6,3,.6)',
+            border:'1px solid rgba(201,162,106,.4)',
+            borderRadius: 10,
+            color:'var(--ivory)',
+            fontFamily:"'Playfair Display', serif",
+            fontSize: 19,
+            fontStyle:'italic',
+            textAlign:'center',
+            outline:'none',
+            boxSizing:'border-box'
+          }}
+        />
+        <div style={{ display:'flex', gap: 10, marginTop: 18, justifyContent:'center' }}>
+          {onCancel && (
+            <button type="button" onClick={onCancel} style={{
+              padding:'10px 18px',
+              background:'rgba(20,12,6,.6)',
+              border:'1px solid rgba(201,162,106,.3)',
+              borderRadius: 999,
+              color:'var(--ivory-dim)',
+              fontSize: 10, fontWeight: 700, letterSpacing:'.18em',
+              textTransform:'uppercase',
+              cursor:'pointer'
+            }}>Cancel</button>
+          )}
+          <button type="submit" disabled={!name.trim()} style={{
+            padding:'10px 22px',
+            background: name.trim() ? 'linear-gradient(180deg, #e6c590, #c9a26a)' : 'rgba(201,162,106,.25)',
+            border:'1px solid rgba(201,162,106,.5)',
+            borderRadius: 999,
+            color: name.trim() ? '#1a1208' : 'var(--ivory-dim)',
+            fontSize: 10, fontWeight: 700, letterSpacing:'.18em',
+            textTransform:'uppercase',
+            cursor: name.trim() ? 'pointer' : 'not-allowed',
+            boxShadow: name.trim() ? '0 4px 12px rgba(230,197,144,.4)' : 'none'
+          }}>Take a seat →</button>
+        </div>
+      </form>
     </div>
   );
 }

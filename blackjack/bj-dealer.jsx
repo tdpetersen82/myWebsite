@@ -428,7 +428,7 @@ function DealerNameplate({ name, gender = 'female' }) {
   );
 }
 
-function DealerPanel({ name, expression, message, onTipDealer, tipped, playerName, gender = 'female', isIdle = false, mood = 0 }) {
+function DealerPanel({ name, expression, message, onTipDealer, tipped, playerName, gender = 'female', isIdle = false, mood = 0, onEditName }) {
   return (
     <div style={{
       position:'relative',
@@ -449,6 +449,36 @@ function DealerPanel({ name, expression, message, onTipDealer, tipped, playerNam
         position:'absolute', left: 22, right: 22, bottom: 70, zIndex: 4
       }}>
         {message && <SpeechBubble text={message} dealerName={name} />}
+      </div>
+
+      <div style={{
+        position:'absolute', left: 14, bottom: 14, zIndex: 3
+      }}>
+        <button
+          onClick={onEditName}
+          title="Change name"
+          style={{
+            display:'inline-flex', alignItems:'baseline', gap: 6,
+            padding:'8px 14px',
+            background:'rgba(20,12,6,.7)',
+            color:'var(--brass-2)',
+            border:'1px solid rgba(201,162,106,.4)',
+            borderRadius: 999,
+            fontFamily:"'Playfair Display', serif",
+            fontSize: 14, fontStyle:'italic',
+            cursor:'pointer',
+            backdropFilter:'blur(6px)',
+            transition:'all .2s',
+            whiteSpace:'nowrap',
+            boxShadow:'0 4px 12px rgba(0,0,0,.4)'
+          }}
+        >
+          <span style={{
+            fontSize: 9, letterSpacing:'.22em', textTransform:'uppercase',
+            color:'var(--ivory-dim)', fontStyle:'normal', fontFamily:'system-ui, sans-serif'
+          }}>Now serving</span>
+          {playerName}
+        </button>
       </div>
 
       <div style={{
