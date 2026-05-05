@@ -140,14 +140,11 @@ const Dealer = (() => {
         // Restore selection
         currentDealer = localStorage.getItem(STORAGE_KEY) || 'male';
 
-        // Preload, then either show selection or apply current dealer
+        // Preload, then always show the dealer selection on page load
         preload().then(() => {
-            if (!localStorage.getItem(FIRST_VISIT_KEY)) {
-                showSelectionScreen();
-            } else {
-                applyDealer();
-                setMood('idle');
-            }
+            applyDealer();
+            setMood('idle', { silent: true });
+            showSelectionScreen();
         });
     }
 
