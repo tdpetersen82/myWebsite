@@ -13,30 +13,6 @@ const RANK_DISPLAY = {
   'J':'J','Q':'Q','K':'K'
 };
 
-// Pip layouts (col, row positions on a 5-row grid; row 0 top, 4 bottom)
-const PIPS = {
-  '2':  [[1,0],[1,4]],
-  '3':  [[1,0],[1,2],[1,4]],
-  '4':  [[0,0],[2,0],[0,4],[2,4]],
-  '5':  [[0,0],[2,0],[1,2],[0,4],[2,4]],
-  '6':  [[0,0],[2,0],[0,2],[2,2],[0,4],[2,4]],
-  '7':  [[0,0],[2,0],[1,1],[0,2],[2,2],[0,4],[2,4]],
-  '8':  [[0,0],[2,0],[1,1],[0,2],[2,2],[1,3],[0,4],[2,4]],
-  '9':  [[0,0],[2,0],[0,1.5],[2,1.5],[1,2],[0,2.5],[2,2.5],[0,4],[2,4]],
-  '10': [[0,0],[2,0],[0,1],[2,1],[1,1.5],[1,2.5],[0,3],[2,3],[0,4],[2,4]]
-};
-
-function CardSuit({ suit, size = 14, flip = false }) {
-  const color = SUITS[suit].color;
-  return (
-    <span style={{
-      color, fontSize: size, lineHeight: 1, display: 'inline-block',
-      transform: flip ? 'rotate(180deg)' : 'none',
-      fontFamily: 'serif'
-    }}>{suit}</span>
-  );
-}
-
 function CardCorner({ rank, suit, flip = false }) {
   const color = SUITS[suit].color;
   return (
@@ -60,7 +36,6 @@ function CardCorner({ rank, suit, flip = false }) {
 function CardFace({ rank, suit, w, h }) {
   const color = SUITS[suit].color;
   const isFace = rank === 'J' || rank === 'Q' || rank === 'K';
-  const isAce = rank === 'A';
 
   return (
     <div style={{
@@ -74,25 +49,25 @@ function CardFace({ rank, suit, w, h }) {
       <CardCorner rank={rank} suit={suit} flip />
 
       {/* Center artwork */}
-      {isAce && (
+      {!isFace && (
         <div style={{
           position:'absolute', inset:0, display:'flex',
           alignItems:'center', justifyContent:'center'
         }}>
           <div style={{
             position:'relative',
-            width: w*0.6, height: w*0.6,
+            width: w*0.62, height: w*0.62,
             display:'flex', alignItems:'center', justifyContent:'center',
             background:'radial-gradient(circle, rgba(201,162,106,.18) 0%, transparent 65%)'
           }}>
-            <span style={{ fontSize: w*0.55, color, lineHeight:1 }}>{suit}</span>
+            <span style={{ fontSize: w*0.6, color, lineHeight:1, fontFamily:'serif' }}>{suit}</span>
           </div>
         </div>
       )}
 
       {isFace && (
         <div style={{
-          position:'absolute', left: 16, right: 16, top: 32, bottom: 32,
+          position:'absolute', left: 14, right: 14, top: 24, bottom: 24,
           border:`1.5px solid ${color}`,
           borderRadius: 6,
           background: `repeating-linear-gradient(45deg, ${color}11 0 4px, transparent 4px 8px), linear-gradient(180deg, #fffdf6, #f0e7cf)`,
@@ -102,36 +77,13 @@ function CardFace({ rank, suit, w, h }) {
           <div style={{
             fontFamily:"'Playfair Display', serif",
             fontStyle:'italic',
-            fontSize: w*0.42,
+            fontSize: w*0.36,
             fontWeight: 700,
             color,
-            textShadow:'0 1px 0 rgba(0,0,0,.06)'
+            textShadow:'0 1px 0 rgba(0,0,0,.06)',
+            lineHeight: 1
           }}>{rank}</div>
-          <div style={{ fontSize: w*0.22, color, marginTop: 4 }}>{suit}</div>
-        </div>
-      )}
-
-      {!isAce && !isFace && (
-        <div style={{
-          position:'absolute', left: 14, right: 14, top: 26, bottom: 26,
-          display: 'grid',
-          gridTemplateColumns: 'repeat(3, 1fr)',
-          gridTemplateRows: 'repeat(5, 1fr)',
-        }}>
-          {(PIPS[rank] || []).map(([col, row], i) => {
-            const flipPip = row > 2 || (row === 2 && col === 1 && rank === '7' ? false : row >= 2.5);
-            const sz = w * 0.16;
-            return (
-              <div key={i} style={{
-                gridColumn: Math.floor(col)+1,
-                gridRow: Math.floor(row)+1,
-                display:'flex', alignItems:'center', justifyContent:'center',
-                transform: `translateY(${(row % 1) * 100}%)`,
-              }}>
-                <CardSuit suit={suit} size={sz} flip={row > 2.2} />
-              </div>
-            );
-          })}
+          <div style={{ fontSize: w*0.18, color, marginTop: 2, fontFamily:'serif' }}>{suit}</div>
         </div>
       )}
     </div>

@@ -636,6 +636,8 @@ function App() {
               played={stats.played}
               won={stats.won}
               best={stats.best}
+              showHints={tweaks.showHints}
+              onToggleHints={() => setTweak('showHints', !tweaks.showHints)}
             />
 
             {/* Play area */}
@@ -773,7 +775,7 @@ function App() {
 
 // ─── Sub-components ─────────────────────────────────────
 
-function BrassRail({ bankroll, streak, played, won, best }) {
+function BrassRail({ bankroll, streak, played, won, best, showHints, onToggleHints }) {
   const winRate = played ? Math.round(won/played*100) : null;
   return (
     <div style={{
@@ -818,6 +820,28 @@ function BrassRail({ bankroll, streak, played, won, best }) {
         <RailStat label="Hands" value={played || '—'} />
         <RailStat label="Win Rate" value={winRate !== null ? `${winRate}%` : '—'} />
         <RailStat label="Peak" value={`$${best.toLocaleString()}`} small />
+        <button
+          onClick={onToggleHints}
+          title={showHints ? 'Hide basic-strategy hints' : 'Show basic-strategy hints'}
+          style={{
+            marginLeft: 14,
+            padding:'8px 14px',
+            background: showHints
+              ? 'linear-gradient(180deg, #e6c590, #c9a26a)'
+              : 'rgba(20,12,6,.6)',
+            color: showHints ? '#1a1208' : 'var(--brass-2)',
+            border:'1px solid rgba(201,162,106,.5)',
+            borderRadius: 999,
+            fontSize: 10, fontWeight: 700, letterSpacing:'.18em',
+            textTransform:'uppercase',
+            cursor:'pointer',
+            whiteSpace:'nowrap',
+            transition:'all .2s',
+            boxShadow: showHints ? '0 4px 10px rgba(230,197,144,.35)' : '0 2px 6px rgba(0,0,0,.3)'
+          }}
+        >
+          {showHints ? '✦ Hints On' : 'Hints Off'}
+        </button>
       </div>
     </div>
   );

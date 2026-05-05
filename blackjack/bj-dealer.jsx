@@ -417,14 +417,14 @@ function DealerPanel({ name, expression, message, onTipDealer, tipped, playerNam
       background:'#1a1208',
       boxShadow:'var(--shadow-deep), inset 0 0 0 1px rgba(201,162,106,.18)'
     }}>
-      <DealerPortrait expression={expressionFor(expression)} gender={gender} idle={isIdle} />
+      <DealerPortrait expression={expression} gender={gender} idle={isIdle} />
 
       <div style={{ position:'absolute', top: 18, left: 18, right: 18, zIndex: 3 }}>
         <DealerNameplate name={name} />
       </div>
 
       <div style={{
-        position:'absolute', left: 22, right: 22, bottom: '38%', zIndex: 4
+        position:'absolute', left: 22, right: 22, bottom: 70, zIndex: 4
       }}>
         {message && <SpeechBubble text={message} dealerName={name} />}
       </div>
