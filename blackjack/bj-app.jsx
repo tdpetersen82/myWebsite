@@ -790,8 +790,38 @@ function BrassRail({ bankroll, streak, played, won, best, showHints, onToggleHin
       gap: 0,
       zIndex: 5, position:'relative'
     }}>
-      {/* Brand on left */}
-      <div style={{ display:'flex', alignItems:'center', gap: 12, paddingRight: 18, borderRight:'1px solid rgba(201,162,106,.2)' }}>
+      {/* Lobby pill */}
+      <a
+        href="../"
+        title="Back to lobby"
+        style={{
+          display:'inline-flex', alignItems:'center', gap: 6,
+          alignSelf:'center',
+          marginRight: 14,
+          padding:'8px 14px',
+          background:'rgba(20,12,6,.6)',
+          color:'var(--brass-2)',
+          border:'1px solid rgba(201,162,106,.5)',
+          borderRadius: 999,
+          fontSize: 10, fontWeight: 700, letterSpacing:'.18em',
+          textTransform:'uppercase',
+          textDecoration:'none',
+          whiteSpace:'nowrap',
+          transition:'all .2s',
+          boxShadow:'0 2px 6px rgba(0,0,0,.3)'
+        }}
+      >← Lobby</a>
+
+      {/* Brand on left (clickable) */}
+      <a
+        href="../"
+        title="Back to lobby"
+        style={{
+          display:'flex', alignItems:'center', gap: 12, paddingRight: 18,
+          borderRight:'1px solid rgba(201,162,106,.2)',
+          textDecoration:'none', color:'inherit'
+        }}
+      >
         <div style={{
           width: 32, height: 32, borderRadius:'50%',
           background:'radial-gradient(circle at 35% 30%, #f5d896, #8c6a3f 75%)',
@@ -811,7 +841,7 @@ function BrassRail({ bankroll, streak, played, won, best, showHints, onToggleHin
             Vegas Strip · Private Table 07
           </div>
         </div>
-      </div>
+      </a>
 
       {/* Stat slots */}
       <div style={{ flex: 1, display:'flex', alignItems:'center', justifyContent:'flex-end', gap: 0 }}>
