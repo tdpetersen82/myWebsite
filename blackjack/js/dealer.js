@@ -55,19 +55,25 @@ const Dealer = (() => {
     let portraitEl, imgEl, fallbackEl, fallbackEmojiEl, fallbackNameEl, speechEl;
     let selectOverlayEl;
 
+    // Cache-bust asset URLs so new images don't get masked by old empty
+    // placeholder responses cached by browsers / CDNs.
+    const ASSET_VERSION = '9';
+
     function imagePath(dealer, mood) {
-        return 'assets/dealers/' + dealer + '/' + mood + '.png';
+        return 'assets/dealers/' + dealer + '/' + mood + '.png?v=' + ASSET_VERSION;
     }
 
     function avatarPath(dealer) {
-        return 'assets/dealers/' + dealer + '/avatar.png';
+        return 'assets/dealers/' + dealer + '/avatar.png?v=' + ASSET_VERSION;
     }
 
     // Probe an image; resolves with 'ok' or 'fail'.
+    // Treat 0-naturalWidth as fail — covers the case where a cached empty
+    // placeholder response decoded as a valid-but-empty image.
     function probeImage(src) {
         return new Promise((resolve) => {
             const img = new Image();
-            img.onload = () => resolve('ok');
+            img.onload = () => resolve(img.naturalWidth > 0 ? 'ok' : 'fail');
             img.onerror = () => resolve('fail');
             img.src = src;
         });

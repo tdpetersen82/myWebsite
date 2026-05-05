@@ -12,7 +12,7 @@
     height: 640px;
     background:
         linear-gradient(135deg, rgba(46,204,113,0.85), rgba(39,174,96,0.85)),
-        url('../assets/table/felt.png');
+        url('../assets/table/felt.png?v=9');
     background-size: cover;
     background-position: center;
     background-color: #27ae60;
