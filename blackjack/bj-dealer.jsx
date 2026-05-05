@@ -282,32 +282,63 @@ function expressionFor(state) {
   }
 }
 
-function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idle = false }) {
+function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idle = false, speaking = false, mood = 0 }) {
   const file = expression === 'bust' ? 'sad' : expression;
+  const src = `assets/dealers/${gender}/${file}.png`;
+  const [layers, setLayers] = React.useState(() => [{ key: 0, src, opacity: 1, blur: 0 }]);
+  const counter = React.useRef(0);
+  const lastSrc = React.useRef(src);
+
+  React.useEffect(() => {
+    if (lastSrc.current === src) return;
+    lastSrc.current = src;
+    counter.current += 1;
+    const newKey = counter.current;
+    setLayers(prev => [
+      ...prev.map(l => ({ ...l, opacity: 0, blur: 6 })),
+      { key: newKey, src, opacity: 0, blur: 6 }
+    ]);
+    const raf = requestAnimationFrame(() => {
+      setLayers(prev => prev.map(l => l.key === newKey ? { ...l, opacity: 1, blur: 0 } : l));
+    });
+    const t = setTimeout(() => {
+      setLayers(prev => prev.filter(l => l.key === newKey));
+    }, 520);
+    return () => { cancelAnimationFrame(raf); clearTimeout(t); };
+  }, [src]);
+
+  const m = Math.max(-1, Math.min(1, mood));
+  const sat = (1.05 + m * 0.25).toFixed(3);
+  const bright = (1 + m * 0.06).toFixed(3);
+  const animClass = speaking ? 'bob' : (idle ? 'breathe' : '');
+
   return (
     <div style={{
       position:'absolute', inset:0,
       overflow:'hidden',
       borderRadius: 'inherit'
     }}>
-      <img
-        key={`${gender}-${file}`}
-        src={`assets/dealers/${gender}/${file}.png`}
-        alt="dealer"
-        onError={(e) => { e.currentTarget.src = `assets/dealers/female/${file}.png`; }}
-        className={idle ? 'breathe' : ''}
-        style={{
-          position:'absolute',
-          left:'50%',
-          top: `${shift}px`,
-          transform:'translateX(-50%)',
-          height:'120%',
-          objectFit:'cover',
-          objectPosition:'center top',
-          transition:'opacity .4s ease',
-          filter:'saturate(1.05) contrast(1.02)'
-        }}
-      />
+      {layers.map(layer => (
+        <img
+          key={layer.key}
+          src={layer.src}
+          alt="dealer"
+          onError={(e) => { e.currentTarget.src = `assets/dealers/female/${file}.png`; }}
+          className={animClass}
+          style={{
+            position:'absolute',
+            left:'50%',
+            top: `${shift}px`,
+            transform:'translateX(-50%)',
+            height:'120%',
+            objectFit:'cover',
+            objectPosition:'center top',
+            opacity: layer.opacity,
+            transition: 'opacity .45s ease, filter .45s ease',
+            filter: `blur(${layer.blur}px) saturate(${sat}) contrast(1.02) brightness(${bright})`
+          }}
+        />
+      ))}
       {/* vignette */}
       <div style={{
         position:'absolute', inset:0,
@@ -330,18 +361,26 @@ function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idl
   );
 }
 
-function SpeechBubble({ text, dealerName = 'Melissa' }) {
+function SpeechBubble({ text, dealerName = 'Melissa', onTypingChange }) {
   const [shown, setShown] = React.useState('');
   const [done, setDone] = React.useState(false);
   React.useEffect(() => {
     setShown(''); setDone(false);
+    onTypingChange && onTypingChange(true);
     let i = 0;
     const id = setInterval(() => {
       i++;
       setShown(text.slice(0, i));
-      if (i >= text.length) { clearInterval(id); setDone(true); }
+      if (i >= text.length) {
+        clearInterval(id);
+        setDone(true);
+        onTypingChange && onTypingChange(false);
+      }
     }, 18);
-    return () => clearInterval(id);
+    return () => {
+      clearInterval(id);
+      onTypingChange && onTypingChange(false);
+    };
   }, [text]);
 
   return (
@@ -406,7 +445,8 @@ function DealerNameplate({ name }) {
   );
 }
 
-function DealerPanel({ name, expression, message, onTipDealer, tipped, playerName, gender = 'female', isIdle = false }) {
+function DealerPanel({ name, expression, message, onTipDealer, tipped, playerName, gender = 'female', isIdle = false, mood = 0 }) {
+  const [speaking, setSpeaking] = React.useState(false);
   return (
     <div style={{
       position:'relative',
@@ -417,7 +457,7 @@ function DealerPanel({ name, expression, message, onTipDealer, tipped, playerNam
       background:'#1a1208',
       boxShadow:'var(--shadow-deep), inset 0 0 0 1px rgba(201,162,106,.18)'
     }}>
-      <DealerPortrait expression={expression} gender={gender} idle={isIdle} />
+      <DealerPortrait expression={expression} gender={gender} idle={isIdle} speaking={speaking} mood={mood} />
 
       <div style={{ position:'absolute', top: 18, left: 18, right: 18, zIndex: 3 }}>
         <DealerNameplate name={name} />
@@ -426,7 +466,7 @@ function DealerPanel({ name, expression, message, onTipDealer, tipped, playerNam
       <div style={{
         position:'absolute', left: 22, right: 22, bottom: 70, zIndex: 4
       }}>
-        {message && <SpeechBubble text={message} dealerName={name} />}
+        {message && <SpeechBubble text={message} dealerName={name} onTypingChange={setSpeaking} />}
       </div>
 
       <div style={{

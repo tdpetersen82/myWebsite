@@ -119,14 +119,34 @@ function App() {
   const [message, setMessage] = useState('');
   const [tipped, setTipped] = useState(false);
   const [isIdle, setIsIdle] = useState(false);
+  const [mood, setMood] = useState(0);
   const idleTimerRef = useRef(null);
 
   const ctx = { player: tweaks.playerName, dealer: tweaks.dealerName };
 
+  function nudgeMood(delta) {
+    setMood(m => Math.max(-1, Math.min(1, m + delta)));
+  }
+
   function say(key, expr) {
     setMessage(pickLine(key, ctx));
-    if (expr) setExpression(expr);
+    if (expr) {
+      setExpression(expr);
+      const moodDelta = expr === 'happy' ? 0.18
+        : expr === 'shocked' ? 0.10
+        : (expr === 'sad' || expr === 'bust') ? -0.18
+        : 0;
+      if (moodDelta) nudgeMood(moodDelta);
+    }
   }
+
+  // Mood decay toward 0
+  useEffect(() => {
+    const id = setInterval(() => {
+      setMood(m => Math.abs(m) < 0.02 ? 0 : m * 0.94);
+    }, 2500);
+    return () => clearInterval(id);
+  }, []);
 
   // Greeting on mount/dealer change
   useEffect(() => {
@@ -558,6 +578,7 @@ function App() {
     setBankroll(br => br - 5);
     setTipped(true);
     setExpression('happy');
+    nudgeMood(0.35);
     setStats(s => ({...s, tipsGiven: s.tipsGiven + 1}));
     if (stats.tipsGiven > 0) {
       setMessage(pickLine('after_tip', ctx));
@@ -620,6 +641,7 @@ function App() {
           tipped={tipped}
           playerName={tweaks.playerName}
           isIdle={isIdle}
+          mood={mood}
         />
 
         <div style={{
