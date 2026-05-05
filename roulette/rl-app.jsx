@@ -149,9 +149,9 @@ function App() {
     if (tweaks.soundOn) RL_SFX.chipPlace();
 
     const newTotal = totalBet + selectedChip;
-    if (newTotal >= 500) say('bet_high', 'shocked');
-    else if (newTotal >= 100 || selectedChip >= 100) say('bet_mid', 'happy');
-    else say('bet_low');
+    if (newTotal >= 500 && totalBet < 500) say('bet_high', 'shocked');
+    else if (newTotal >= 100 && totalBet < 100) say('bet_mid', 'happy');
+    else say('bet_low', 'idle');
   }
 
   function clearBets() {
@@ -280,6 +280,8 @@ function App() {
       // Bankroll wipe
       setBankroll(STARTING_BANKROLL);
       say('bust', 'bust');
+    } else {
+      flashExpression('idle');
     }
     setPhase('betting');
   }
