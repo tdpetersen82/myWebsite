@@ -4,96 +4,165 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Dots & Boxes — Free Online Game | Arcade Game Hub</title>
+    <link rel="stylesheet" href="../styles.css">
     <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-        }
-        .container {
-            background: rgba(255, 255, 255, 0.95);
-            border-radius: 20px;
-            padding: 30px;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
-            text-align: center;
-            max-width: 600px;
-            width: 95%;
-        }
-        h1 {
-            font-size: 2.2em;
-            color: #333;
-            margin-bottom: 10px;
-        }
-        .game-info {
-            display: flex;
-            justify-content: center;
-            gap: 30px;
-            margin: 10px 0;
-            font-size: 1.1em;
-            font-weight: bold;
-        }
-        .game-info span { color: #667eea; }
-        .player-score { color: #2196F3 !important; }
-        .computer-score { color: #f44336 !important; }
-        .turn-indicator {
-            font-size: 1em;
-            margin: 5px 0 10px;
-            font-weight: bold;
-            min-height: 24px;
-        }
-        .turn-player { color: #2196F3; }
-        .turn-computer { color: #f44336; }
         canvas {
             display: block;
-            margin: 0 auto;
-            border-radius: 10px;
-            background: #1a1a2e;
+            margin: 14px auto;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            border: 2px solid #2a2a4a;
             cursor: pointer;
+            touch-action: none;
         }
-        .controls {
-            margin-top: 15px;
-        }
-        .btn {
-            padding: 10px 25px;
-            font-size: 1em;
-            border: none;
-            border-radius: 25px;
-            cursor: pointer;
-            margin: 5px;
-            color: white;
-            font-weight: bold;
-            transition: transform 0.2s, box-shadow 0.2s;
-        }
-        .btn:hover { transform: scale(1.05); box-shadow: 0 5px 15px rgba(0,0,0,0.2); }
-        .btn:active { transform: scale(0.98); }
-        .btn-primary { background: linear-gradient(135deg, #667eea, #764ba2); }
-        .btn-easy { background: linear-gradient(135deg, #4CAF50, #45a049); }
-        .btn-medium { background: linear-gradient(135deg, #FF9800, #F57C00); }
-        .btn-hard { background: linear-gradient(135deg, #f44336, #d32f2f); }
-        .difficulty-screen {
-            margin: 20px 0;
-        }
-        .difficulty-screen p {
+        .turn-indicator {
             font-size: 1.1em;
-            color: #555;
-            margin-bottom: 15px;
+            font-weight: 700;
+            margin: 8px 0;
+            min-height: 1.5em;
+            letter-spacing: 0.3px;
         }
-        .difficulty-info {
-            font-size: 0.85em;
+        .turn-indicator .pill {
+            display: inline-block;
+            padding: 4px 14px;
+            border-radius: 18px;
+            color: #fff;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.15);
+        }
+        .turn-indicator.player .pill { background: linear-gradient(135deg, #4facfe 0%, #00b8ff 100%); }
+        .turn-indicator.computer .pill { background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); }
+        .turn-indicator.thinking .pill::after {
+            content: '';
+            display: inline-block;
+            width: 1em;
+            text-align: left;
+            animation: dots 1s steps(4, end) infinite;
+        }
+        @keyframes dots {
+            0%, 25% { content: ''; }
+            33%, 50% { content: '.'; }
+            58%, 75% { content: '..'; }
+            83%, 100% { content: '...'; }
+        }
+        .scoreboard {
+            display: flex;
+            justify-content: center;
+            gap: 14px;
+            margin: 8px 0 4px;
+            flex-wrap: wrap;
+        }
+        .score-card {
+            background: #fff;
+            border: 2px solid #e6e6f0;
+            border-radius: 14px;
+            padding: 10px 18px;
+            min-width: 110px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+            transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+        }
+        .score-card.active {
+            transform: translateY(-2px);
+        }
+        .score-card.player.active {
+            border-color: #4facfe;
+            box-shadow: 0 4px 14px rgba(79, 172, 254, 0.35);
+        }
+        .score-card.computer.active {
+            border-color: #f5576c;
+            box-shadow: 0 4px 14px rgba(245, 87, 108, 0.35);
+        }
+        .score-label {
+            font-size: 0.78em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            font-weight: 700;
             color: #888;
-            margin-top: 5px;
         }
+        .score-card.player .score-label { color: #2196f3; }
+        .score-card.computer .score-label { color: #e53935; }
+        .score-value {
+            font-size: 1.9em;
+            font-weight: 800;
+            line-height: 1;
+            margin-top: 2px;
+            color: #222;
+        }
+
+        .difficulty-screen {
+            margin: 14px auto;
+            max-width: 540px;
+        }
+        .difficulty-screen h2 {
+            color: #444;
+            font-size: 1.1em;
+            margin-bottom: 14px;
+            font-weight: 600;
+        }
+        .diff-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+        }
+        .diff-card {
+            background: #fff;
+            border: 2px solid #e6e6f0;
+            border-radius: 14px;
+            padding: 14px 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: center;
+        }
+        .diff-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 20px rgba(102, 126, 234, 0.2);
+            border-color: #667eea;
+        }
+        .diff-icon {
+            font-size: 1.8em;
+            margin-bottom: 4px;
+        }
+        .diff-name {
+            font-weight: 800;
+            font-size: 1.1em;
+            color: #333;
+            margin-bottom: 4px;
+        }
+        .diff-desc {
+            font-size: 0.78em;
+            color: #777;
+            line-height: 1.3;
+        }
+        .diff-card.easy .diff-name { color: #4caf50; }
+        .diff-card.medium .diff-name { color: #ff9800; }
+        .diff-card.hard .diff-name { color: #f44336; }
+
+        .stats-bar {
+            display: flex;
+            justify-content: center;
+            gap: 18px;
+            margin: 12px 0 4px;
+            font-size: 0.85em;
+            color: #666;
+        }
+        .stats-bar strong { color: #333; }
+
         .game-over-msg {
             font-size: 1.3em;
-            font-weight: bold;
+            font-weight: 800;
             margin: 10px 0;
-            min-height: 30px;
+            min-height: 1.6em;
+            letter-spacing: 0.3px;
         }
-        .hidden { display: none; }
+        .game-over-msg.win { color: #2196f3; }
+        .game-over-msg.lose { color: #e53935; }
+        .game-over-msg.tie { color: #777; }
+
+        .hidden { display: none !important; }
+
+        @media (max-width: 600px) {
+            .diff-grid { grid-template-columns: 1fr; }
+            .score-card { padding: 8px 14px; min-width: 95px; }
+            .score-value { font-size: 1.6em; }
+        }
     </style>
     <meta name="description" content="Play Dots & Boxes free in your browser. Draw lines between dots to complete boxes and outsmart the AI! No downloads, no installs.">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Dots & Boxes","description":"Play Dots & Boxes free in your browser. Draw lines between dots to complete boxes and outsmart the AI! No downloads, no installs.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Arcade Game Hub"}}</script>
@@ -108,38 +177,56 @@
     <meta name="twitter:description" content="Play Dots & Boxes free in your browser. Draw lines between dots to complete boxes and outsmart the AI! No downloads, no installs.">
     <meta name="twitter:image" content="https://example.com/og-image.png">
     <link rel="manifest" href="../manifest.json">
-    <!-- Google Analytics — replace G-DP6FGVETMV with your tracking ID -->
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
-    <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID -->
+    <!-- Google AdSense -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 </head>
 <body>
     <div class="container">
-        <h1>🔵 Dots & Boxes</h1>
+        <h1>🔵 Dots &amp; Boxes</h1>
 
         <div id="difficultyScreen" class="difficulty-screen">
-            <p>Choose your difficulty:</p>
-            <button class="btn btn-easy" onclick="startGame('easy')">Easy</button>
-            <div class="difficulty-info">3×3 grid — Random AI</div>
-            <br><br>
-            <button class="btn btn-medium" onclick="startGame('medium')">Medium</button>
-            <div class="difficulty-info">4×4 grid — Smarter AI</div>
-            <br><br>
-            <button class="btn btn-hard" onclick="startGame('hard')">Hard</button>
-            <div class="difficulty-info">5×5 grid — Strategic AI</div>
+            <h2>Choose your difficulty</h2>
+            <div class="diff-grid">
+                <div class="diff-card easy" onclick="startGame('easy')">
+                    <div class="diff-icon">🌱</div>
+                    <div class="diff-name">Easy</div>
+                    <div class="diff-desc">3×3 grid<br>Random AI</div>
+                </div>
+                <div class="diff-card medium" onclick="startGame('medium')">
+                    <div class="diff-icon">⚔️</div>
+                    <div class="diff-name">Medium</div>
+                    <div class="diff-desc">4×4 grid<br>Smarter AI</div>
+                </div>
+                <div class="diff-card hard" onclick="startGame('hard')">
+                    <div class="diff-icon">🔥</div>
+                    <div class="diff-name">Hard</div>
+                    <div class="diff-desc">5×5 grid<br>Strategic AI</div>
+                </div>
+            </div>
+            <div class="stats-bar" id="statsBar"></div>
         </div>
 
         <div id="gameArea" class="hidden">
-            <div class="game-info">
-                <div>You: <span id="playerScore" class="player-score">0</span></div>
-                <div>Computer: <span id="computerScore" class="computer-score">0</span></div>
+            <div class="scoreboard">
+                <div class="score-card player" id="playerCard">
+                    <div class="score-label">You</div>
+                    <div class="score-value" id="playerScore">0</div>
+                </div>
+                <div class="score-card computer" id="computerCard">
+                    <div class="score-label">Computer</div>
+                    <div class="score-value" id="computerScore">0</div>
+                </div>
             </div>
-            <div id="turnIndicator" class="turn-indicator turn-player">Your turn</div>
-            <canvas id="gameCanvas" width="500" height="500"></canvas>
+            <div id="turnIndicator" class="turn-indicator player">
+                <span class="pill" id="turnPill">Your turn</span>
+            </div>
+            <canvas id="gameCanvas" width="540" height="540"></canvas>
             <div id="gameOverMsg" class="game-over-msg"></div>
             <div class="controls">
-                <button class="btn btn-primary" onclick="showDifficulty()">New Game</button>
+                <button class="play-button" onclick="showDifficulty()">New Game</button>
             </div>
         </div>
 
@@ -150,61 +237,100 @@
         const ctx = canvas.getContext('2d');
         const playerScoreEl = document.getElementById('playerScore');
         const computerScoreEl = document.getElementById('computerScore');
+        const playerCardEl = document.getElementById('playerCard');
+        const computerCardEl = document.getElementById('computerCard');
         const turnIndicatorEl = document.getElementById('turnIndicator');
+        const turnPillEl = document.getElementById('turnPill');
         const gameOverMsgEl = document.getElementById('gameOverMsg');
         const difficultyScreen = document.getElementById('difficultyScreen');
         const gameArea = document.getElementById('gameArea');
+        const statsBar = document.getElementById('statsBar');
 
-        // Audio
+        // ===================== Audio =====================
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
 
-        function playSound(freq, duration = 0.1, type = 'square') {
+        function playSound(freq, duration = 0.1, type = 'square', volume = 0.18) {
             const osc = audioContext.createOscillator();
             const gain = audioContext.createGain();
             osc.connect(gain);
             gain.connect(audioContext.destination);
             osc.type = type;
             osc.frequency.value = freq;
-            gain.gain.setValueAtTime(0.3, audioContext.currentTime);
+            gain.gain.setValueAtTime(volume, audioContext.currentTime);
             gain.gain.exponentialRampToValueAtTime(0.001, audioContext.currentTime + duration);
             osc.start();
             osc.stop(audioContext.currentTime + duration);
         }
 
-        function playLineSound() { playSound(600, 0.05, 'sine'); }
-        function playBoxPlayerSound() { playSound(800, 0.15, 'sine'); setTimeout(() => playSound(1000, 0.15, 'sine'), 100); }
-        function playBoxComputerSound() { playSound(400, 0.1, 'triangle'); }
-        function playWinSound() { playSound(523, 0.15, 'sine'); setTimeout(() => playSound(659, 0.15, 'sine'), 150); setTimeout(() => playSound(784, 0.3, 'sine'), 300); }
-        function playLoseSound() { playSound(400, 0.15, 'sine'); setTimeout(() => playSound(300, 0.15, 'sine'), 150); setTimeout(() => playSound(200, 0.3, 'sine'), 300); }
+        function playLineSound() { playSound(620, 0.05, 'sine'); }
+        function playBoxPlayerSound() { playSound(820, 0.13, 'sine'); setTimeout(() => playSound(1040, 0.13, 'sine'), 90); }
+        function playBoxComputerSound() { playSound(380, 0.12, 'triangle'); }
+        function playWinSound() {
+            [523, 659, 784, 1047].forEach((f, i) => setTimeout(() => playSound(f, 0.18, 'sine', 0.16), i * 110));
+        }
+        function playLoseSound() {
+            [400, 330, 260, 200].forEach((f, i) => setTimeout(() => playSound(f, 0.18, 'sine', 0.16), i * 110));
+        }
 
-        // Game state
+        // ===================== Game state =====================
         let rows, cols, difficulty;
         let horizontalLines, verticalLines, boxes;
         let playerScore, computerScore;
-        let currentTurn; // 'player' or 'computer'
-        let hoveredLine; // { type: 'h'|'v', row, col } or null
+        let currentTurn;
+        let hoveredLine;
         let gameOver;
         let computerThinking;
 
-        // Layout constants
-        const PADDING = 40;
+        // Animation state
+        let lineAnims = []; // {type, row, col, owner, t, duration}
+        let boxAnims = [];  // {row, col, owner, t, duration}
+        let particles = []; // {x, y, vx, vy, life, color}
+        let needsRedraw = true;
+
+        // ===================== Layout constants =====================
+        const PADDING = 50;
         let dotSpacing;
-        const DOT_RADIUS = 6;
-        const LINE_THICKNESS = 5;
-        const HOVER_THICKNESS = 7;
-        const CLICK_THRESHOLD = 30;
+        const DOT_RADIUS = 7;
+        const LINE_THICKNESS = 6;
+        const HOVER_THICKNESS = 8;
+        const CLICK_THRESHOLD = 32;
 
-        const PLAYER_COLOR = '#42A5F5';
-        const PLAYER_COLOR_LIGHT = 'rgba(66, 165, 245, 0.25)';
-        const COMPUTER_COLOR = '#EF5350';
-        const COMPUTER_COLOR_LIGHT = 'rgba(239, 83, 80, 0.25)';
-        const EMPTY_LINE_COLOR = 'rgba(255, 255, 255, 0.3)';
-        const HOVER_COLOR = 'rgba(66, 165, 245, 0.7)';
-        const DOT_COLOR = '#e0e0e0';
+        const PLAYER_COLOR = '#4facfe';
+        const PLAYER_GLOW = 'rgba(79, 172, 254, 0.45)';
+        const PLAYER_FILL = 'rgba(79, 172, 254, 0.22)';
+        const PLAYER_FILL_DARK = 'rgba(79, 172, 254, 0.4)';
+        const COMPUTER_COLOR = '#f5576c';
+        const COMPUTER_GLOW = 'rgba(245, 87, 108, 0.45)';
+        const COMPUTER_FILL = 'rgba(245, 87, 108, 0.22)';
+        const COMPUTER_FILL_DARK = 'rgba(245, 87, 108, 0.4)';
+        const EMPTY_LINE_COLOR = 'rgba(255, 255, 255, 0.08)';
+        const HOVER_COLOR = 'rgba(79, 172, 254, 0.7)';
+        const DOT_COLOR = '#e8e8f5';
+        const DOT_GLOW = 'rgba(232, 232, 245, 0.25)';
 
+        function colorForOwner(owner) { return owner === 1 ? PLAYER_COLOR : COMPUTER_COLOR; }
+        function fillForOwner(owner) { return owner === 1 ? PLAYER_FILL : COMPUTER_FILL; }
+        function fillDarkForOwner(owner) { return owner === 1 ? PLAYER_FILL_DARK : COMPUTER_FILL_DARK; }
+        function glowForOwner(owner) { return owner === 1 ? PLAYER_GLOW : COMPUTER_GLOW; }
+
+        // ===================== Stats (localStorage) =====================
+        function loadStats() {
+            try {
+                return JSON.parse(localStorage.getItem('dotsBoxesStats')) || { wins: 0, losses: 0, ties: 0 };
+            } catch { return { wins: 0, losses: 0, ties: 0 }; }
+        }
+        function saveStats(s) { localStorage.setItem('dotsBoxesStats', JSON.stringify(s)); }
+        function updateStatsBar() {
+            const s = loadStats();
+            statsBar.innerHTML = `Wins: <strong>${s.wins}</strong> · Losses: <strong>${s.losses}</strong> · Ties: <strong>${s.ties}</strong>`;
+        }
+
+        // ===================== Screen control =====================
         function showDifficulty() {
             difficultyScreen.classList.remove('hidden');
             gameArea.classList.add('hidden');
+            gameOverMsgEl.textContent = '';
+            updateStatsBar();
         }
 
         function startGame(diff) {
@@ -220,13 +346,11 @@
                 horizontalLines[r] = [];
                 for (let c = 0; c < cols; c++) horizontalLines[r][c] = 0;
             }
-
             verticalLines = [];
             for (let r = 0; r < rows; r++) {
                 verticalLines[r] = [];
                 for (let c = 0; c <= cols; c++) verticalLines[r][c] = 0;
             }
-
             boxes = [];
             for (let r = 0; r < rows; r++) {
                 boxes[r] = [];
@@ -239,66 +363,167 @@
             hoveredLine = null;
             gameOver = false;
             computerThinking = false;
+            lineAnims = [];
+            boxAnims = [];
+            particles = [];
 
             difficultyScreen.classList.add('hidden');
             gameArea.classList.remove('hidden');
             gameOverMsgEl.textContent = '';
+            gameOverMsgEl.className = 'game-over-msg';
             updateUI();
-            draw();
-            // Recalculate canvas scale now that it's visible
+            needsRedraw = true;
             requestAnimationFrame(() => { if (_scaleCanvas) _scaleCanvas(); });
         }
 
         function updateUI() {
             playerScoreEl.textContent = playerScore;
             computerScoreEl.textContent = computerScore;
+            playerCardEl.classList.toggle('active', currentTurn === 'player' && !gameOver);
+            computerCardEl.classList.toggle('active', currentTurn === 'computer' && !gameOver);
+
             if (gameOver) {
-                turnIndicatorEl.textContent = '';
+                turnPillEl.textContent = 'Game over';
                 turnIndicatorEl.className = 'turn-indicator';
             } else if (currentTurn === 'player') {
-                turnIndicatorEl.textContent = 'Your turn';
-                turnIndicatorEl.className = 'turn-indicator turn-player';
+                turnPillEl.textContent = 'Your turn';
+                turnIndicatorEl.className = 'turn-indicator player';
             } else {
-                turnIndicatorEl.textContent = 'Computer thinking...';
-                turnIndicatorEl.className = 'turn-indicator turn-computer';
+                turnPillEl.textContent = 'Computer thinking';
+                turnIndicatorEl.className = 'turn-indicator computer thinking';
             }
         }
 
-        // Coordinate helpers
+        // ===================== Coordinate helpers =====================
         function dotX(col) { return PADDING + col * dotSpacing; }
         function dotY(row) { return PADDING + row * dotSpacing; }
 
-        // Drawing
-        function draw() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // ===================== Animation helpers =====================
+        function startLineAnim(type, row, col, owner) {
+            lineAnims.push({ type, row, col, owner, t: 0, duration: 220 });
+        }
+        function startBoxAnim(row, col, owner) {
+            boxAnims.push({ row, col, owner, t: 0, duration: 380 });
+            // Spawn a small particle burst
+            const cx = dotX(col) + dotSpacing / 2;
+            const cy = dotY(row) + dotSpacing / 2;
+            const color = owner === 1 ? PLAYER_COLOR : COMPUTER_COLOR;
+            for (let i = 0; i < 10; i++) {
+                const a = Math.random() * Math.PI * 2;
+                const sp = 0.6 + Math.random() * 1.6;
+                particles.push({
+                    x: cx, y: cy,
+                    vx: Math.cos(a) * sp,
+                    vy: Math.sin(a) * sp,
+                    life: 1,
+                    color
+                });
+            }
+        }
 
-            // Draw claimed boxes
-            for (let r = 0; r < rows; r++) {
-                for (let c = 0; c < cols; c++) {
-                    if (boxes[r][c] !== 0) {
-                        const x = dotX(c);
-                        const y = dotY(r);
-                        ctx.fillStyle = boxes[r][c] === 1 ? PLAYER_COLOR_LIGHT : COMPUTER_COLOR_LIGHT;
-                        ctx.fillRect(x + 2, y + 2, dotSpacing - 4, dotSpacing - 4);
-                        ctx.fillStyle = boxes[r][c] === 1 ? PLAYER_COLOR : COMPUTER_COLOR;
-                        ctx.font = `bold ${Math.floor(dotSpacing * 0.35)}px sans-serif`;
-                        ctx.textAlign = 'center';
-                        ctx.textBaseline = 'middle';
-                        ctx.fillText(boxes[r][c] === 1 ? 'P' : 'C', x + dotSpacing / 2, y + dotSpacing / 2);
-                    }
+        // ===================== Drawing =====================
+        function drawBackground() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            // Subtle dot grid pattern background
+            ctx.fillStyle = 'rgba(255,255,255,0.025)';
+            for (let y = 20; y < canvas.height; y += 40) {
+                for (let x = 20; x < canvas.width; x += 40) {
+                    ctx.fillRect(x, y, 1, 1);
                 }
             }
+        }
 
-            // Draw empty line guides
+        function drawBoxes() {
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    if (boxes[r][c] === 0) continue;
+                    const x = dotX(c);
+                    const y = dotY(r);
+                    const owner = boxes[r][c];
+
+                    // Find ongoing animation if any
+                    const anim = boxAnims.find(a => a.row === r && a.col === c);
+                    let scale = 1, glow = 0;
+                    if (anim) {
+                        const p = Math.min(1, anim.t / anim.duration);
+                        // Ease-out elastic-ish
+                        scale = 1 + 0.18 * Math.sin(p * Math.PI) * (1 - p);
+                        glow = (1 - p);
+                    }
+
+                    const inset = 4;
+                    const w = dotSpacing - inset * 2;
+                    const cx = x + dotSpacing / 2;
+                    const cy = y + dotSpacing / 2;
+                    const drawW = w * scale;
+
+                    // Glow during animation
+                    if (glow > 0) {
+                        ctx.save();
+                        ctx.shadowColor = glowForOwner(owner);
+                        ctx.shadowBlur = 22 * glow;
+                        ctx.fillStyle = fillDarkForOwner(owner);
+                        roundRect(ctx, cx - drawW / 2, cy - drawW / 2, drawW, drawW, 6);
+                        ctx.fill();
+                        ctx.restore();
+                    } else {
+                        ctx.fillStyle = fillForOwner(owner);
+                        roundRect(ctx, cx - drawW / 2, cy - drawW / 2, drawW, drawW, 6);
+                        ctx.fill();
+                    }
+
+                    // Player marker icon (owl face style — just colored circle with letter)
+                    const markerSize = Math.floor(dotSpacing * 0.32) * scale;
+                    ctx.beginPath();
+                    ctx.arc(cx, cy, markerSize, 0, Math.PI * 2);
+                    const grad = ctx.createRadialGradient(cx - markerSize * 0.3, cy - markerSize * 0.3, markerSize * 0.2, cx, cy, markerSize);
+                    if (owner === 1) {
+                        grad.addColorStop(0, '#aee0ff');
+                        grad.addColorStop(1, PLAYER_COLOR);
+                    } else {
+                        grad.addColorStop(0, '#ffc0c8');
+                        grad.addColorStop(1, COMPUTER_COLOR);
+                    }
+                    ctx.fillStyle = grad;
+                    ctx.fill();
+                    ctx.strokeStyle = 'rgba(255,255,255,0.65)';
+                    ctx.lineWidth = 1.5;
+                    ctx.stroke();
+
+                    ctx.fillStyle = '#fff';
+                    ctx.font = `bold ${Math.floor(markerSize * 1.0)}px sans-serif`;
+                    ctx.textAlign = 'center';
+                    ctx.textBaseline = 'middle';
+                    ctx.fillText(owner === 1 ? 'P' : 'C', cx, cy + 1);
+                }
+            }
+        }
+
+        function roundRect(c, x, y, w, h, r) {
+            c.beginPath();
+            c.moveTo(x + r, y);
+            c.lineTo(x + w - r, y);
+            c.quadraticCurveTo(x + w, y, x + w, y + r);
+            c.lineTo(x + w, y + h - r);
+            c.quadraticCurveTo(x + w, y + h, x + w - r, y + h);
+            c.lineTo(x + r, y + h);
+            c.quadraticCurveTo(x, y + h, x, y + h - r);
+            c.lineTo(x, y + r);
+            c.quadraticCurveTo(x, y, x + r, y);
+            c.closePath();
+        }
+
+        function drawEmptyLines() {
             ctx.strokeStyle = EMPTY_LINE_COLOR;
-            ctx.lineWidth = 3;
+            ctx.lineWidth = 2;
             ctx.lineCap = 'round';
+            ctx.setLineDash([4, 6]);
             for (let r = 0; r <= rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     if (horizontalLines[r][c] === 0) {
                         ctx.beginPath();
-                        ctx.moveTo(dotX(c), dotY(r));
-                        ctx.lineTo(dotX(c + 1), dotY(r));
+                        ctx.moveTo(dotX(c) + 4, dotY(r));
+                        ctx.lineTo(dotX(c + 1) - 4, dotY(r));
                         ctx.stroke();
                     }
                 }
@@ -307,153 +532,218 @@
                 for (let c = 0; c <= cols; c++) {
                     if (verticalLines[r][c] === 0) {
                         ctx.beginPath();
-                        ctx.moveTo(dotX(c), dotY(r));
-                        ctx.lineTo(dotX(c), dotY(r + 1));
+                        ctx.moveTo(dotX(c), dotY(r) + 4);
+                        ctx.lineTo(dotX(c), dotY(r + 1) - 4);
                         ctx.stroke();
                     }
                 }
             }
+            ctx.setLineDash([]);
+        }
 
-            // Draw claimed lines
+        function drawClaimedLines() {
             for (let r = 0; r <= rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     if (horizontalLines[r][c] !== 0) {
-                        ctx.strokeStyle = horizontalLines[r][c] === 1 ? PLAYER_COLOR : COMPUTER_COLOR;
-                        ctx.lineWidth = LINE_THICKNESS;
-                        ctx.lineCap = 'round';
-                        ctx.beginPath();
-                        ctx.moveTo(dotX(c), dotY(r));
-                        ctx.lineTo(dotX(c + 1), dotY(r));
-                        ctx.stroke();
+                        drawLine('h', r, c, horizontalLines[r][c]);
                     }
                 }
             }
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c <= cols; c++) {
                     if (verticalLines[r][c] !== 0) {
-                        ctx.strokeStyle = verticalLines[r][c] === 1 ? PLAYER_COLOR : COMPUTER_COLOR;
-                        ctx.lineWidth = LINE_THICKNESS;
-                        ctx.lineCap = 'round';
-                        ctx.beginPath();
-                        ctx.moveTo(dotX(c), dotY(r));
-                        ctx.lineTo(dotX(c), dotY(r + 1));
-                        ctx.stroke();
+                        drawLine('v', r, c, verticalLines[r][c]);
                     }
                 }
             }
+        }
 
-            // Draw hover line
-            if (hoveredLine && !gameOver && currentTurn === 'player' && !computerThinking) {
-                ctx.strokeStyle = HOVER_COLOR;
-                ctx.lineWidth = HOVER_THICKNESS;
-                ctx.lineCap = 'round';
-                ctx.beginPath();
-                if (hoveredLine.type === 'h') {
-                    ctx.moveTo(dotX(hoveredLine.col), dotY(hoveredLine.row));
-                    ctx.lineTo(dotX(hoveredLine.col + 1), dotY(hoveredLine.row));
-                } else {
-                    ctx.moveTo(dotX(hoveredLine.col), dotY(hoveredLine.row));
-                    ctx.lineTo(dotX(hoveredLine.col), dotY(hoveredLine.row + 1));
-                }
-                ctx.stroke();
+        function drawLine(type, row, col, owner) {
+            const anim = lineAnims.find(a => a.type === type && a.row === row && a.col === col);
+            let progress = 1;
+            if (anim) progress = Math.min(1, anim.t / anim.duration);
+
+            const x1 = dotX(col);
+            const y1 = dotY(row);
+            const x2 = type === 'h' ? dotX(col + 1) : dotX(col);
+            const y2 = type === 'h' ? dotY(row) : dotY(row + 1);
+            const ex = x1 + (x2 - x1) * progress;
+            const ey = y1 + (y2 - y1) * progress;
+
+            ctx.save();
+            ctx.shadowColor = glowForOwner(owner);
+            ctx.shadowBlur = 6;
+            ctx.strokeStyle = colorForOwner(owner);
+            ctx.lineWidth = LINE_THICKNESS;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(ex, ey);
+            ctx.stroke();
+            ctx.restore();
+        }
+
+        function drawHover() {
+            if (!hoveredLine || gameOver || currentTurn !== 'player' || computerThinking) return;
+            ctx.save();
+            ctx.shadowColor = HOVER_COLOR;
+            ctx.shadowBlur = 12;
+            ctx.strokeStyle = HOVER_COLOR;
+            ctx.lineWidth = HOVER_THICKNESS;
+            ctx.lineCap = 'round';
+            ctx.beginPath();
+            if (hoveredLine.type === 'h') {
+                ctx.moveTo(dotX(hoveredLine.col), dotY(hoveredLine.row));
+                ctx.lineTo(dotX(hoveredLine.col + 1), dotY(hoveredLine.row));
+            } else {
+                ctx.moveTo(dotX(hoveredLine.col), dotY(hoveredLine.row));
+                ctx.lineTo(dotX(hoveredLine.col), dotY(hoveredLine.row + 1));
             }
+            ctx.stroke();
+            ctx.restore();
+        }
 
-            // Draw dots on top
+        function drawDots() {
             for (let r = 0; r <= rows; r++) {
                 for (let c = 0; c <= cols; c++) {
+                    const x = dotX(c);
+                    const y = dotY(r);
+                    // Glow halo
+                    ctx.fillStyle = DOT_GLOW;
+                    ctx.beginPath();
+                    ctx.arc(x, y, DOT_RADIUS + 3, 0, Math.PI * 2);
+                    ctx.fill();
+                    // Inner dot
                     ctx.fillStyle = DOT_COLOR;
                     ctx.beginPath();
-                    ctx.arc(dotX(c), dotY(r), DOT_RADIUS, 0, Math.PI * 2);
+                    ctx.arc(x, y, DOT_RADIUS, 0, Math.PI * 2);
                     ctx.fill();
                 }
             }
         }
 
-        // Find nearest line to mouse position
+        function drawParticles() {
+            for (const p of particles) {
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.fillStyle = p.color;
+                ctx.beginPath();
+                ctx.arc(p.x, p.y, 2.5 * p.life, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            ctx.globalAlpha = 1;
+        }
+
+        function draw() {
+            drawBackground();
+            drawBoxes();
+            drawEmptyLines();
+            drawClaimedLines();
+            drawHover();
+            drawDots();
+            drawParticles();
+        }
+
+        // ===================== Animation loop =====================
+        let lastFrame = 0;
+        function animLoop(t) {
+            const dt = lastFrame ? Math.min(50, t - lastFrame) : 16;
+            lastFrame = t;
+
+            let anyAnimActive = lineAnims.length > 0 || boxAnims.length > 0 || particles.length > 0;
+
+            // Advance line anims
+            for (let i = lineAnims.length - 1; i >= 0; i--) {
+                lineAnims[i].t += dt;
+                if (lineAnims[i].t >= lineAnims[i].duration) lineAnims.splice(i, 1);
+            }
+            // Advance box anims
+            for (let i = boxAnims.length - 1; i >= 0; i--) {
+                boxAnims[i].t += dt;
+                if (boxAnims[i].t >= boxAnims[i].duration) boxAnims.splice(i, 1);
+            }
+            // Advance particles
+            for (let i = particles.length - 1; i >= 0; i--) {
+                const p = particles[i];
+                p.x += p.vx;
+                p.y += p.vy;
+                p.vx *= 0.92;
+                p.vy *= 0.92;
+                p.vy += 0.04;
+                p.life -= dt / 600;
+                if (p.life <= 0) particles.splice(i, 1);
+            }
+
+            if (anyAnimActive || needsRedraw) {
+                draw();
+                needsRedraw = false;
+            }
+            requestAnimationFrame(animLoop);
+        }
+        requestAnimationFrame(animLoop);
+
+        // ===================== Game logic =====================
         function getNearestLine(mx, my) {
             let best = null;
             let bestDist = CLICK_THRESHOLD;
-
-            // Check horizontal lines
             for (let r = 0; r <= rows; r++) {
                 for (let c = 0; c < cols; c++) {
                     if (horizontalLines[r][c] !== 0) continue;
                     const x1 = dotX(c), x2 = dotX(c + 1), y = dotY(r);
-                    // Distance from point to line segment
                     const t = Math.max(0, Math.min(1, (mx - x1) / (x2 - x1)));
                     const px = x1 + t * (x2 - x1);
-                    const py = y;
-                    const dist = Math.sqrt((mx - px) ** 2 + (my - py) ** 2);
-                    if (dist < bestDist) {
-                        bestDist = dist;
-                        best = { type: 'h', row: r, col: c };
-                    }
+                    const dist = Math.sqrt((mx - px) ** 2 + (my - y) ** 2);
+                    if (dist < bestDist) { bestDist = dist; best = { type: 'h', row: r, col: c }; }
                 }
             }
-
-            // Check vertical lines
             for (let r = 0; r < rows; r++) {
                 for (let c = 0; c <= cols; c++) {
                     if (verticalLines[r][c] !== 0) continue;
                     const x = dotX(c), y1 = dotY(r), y2 = dotY(r + 1);
                     const t = Math.max(0, Math.min(1, (my - y1) / (y2 - y1)));
-                    const px = x;
                     const py = y1 + t * (y2 - y1);
-                    const dist = Math.sqrt((mx - px) ** 2 + (my - py) ** 2);
-                    if (dist < bestDist) {
-                        bestDist = dist;
-                        best = { type: 'v', row: r, col: c };
-                    }
+                    const dist = Math.sqrt((mx - x) ** 2 + (my - py) ** 2);
+                    if (dist < bestDist) { bestDist = dist; best = { type: 'v', row: r, col: c }; }
                 }
             }
-
             return best;
         }
 
-        // Count sides of a box
         function countBoxSides(r, c) {
             let count = 0;
-            if (horizontalLines[r][c] !== 0) count++;     // top
-            if (horizontalLines[r + 1][c] !== 0) count++;  // bottom
-            if (verticalLines[r][c] !== 0) count++;         // left
-            if (verticalLines[r][c + 1] !== 0) count++;     // right
+            if (horizontalLines[r][c] !== 0) count++;
+            if (horizontalLines[r + 1][c] !== 0) count++;
+            if (verticalLines[r][c] !== 0) count++;
+            if (verticalLines[r][c + 1] !== 0) count++;
             return count;
         }
 
-        // Place a line and check for completed boxes
         function placeLine(type, row, col, owner) {
             if (type === 'h') horizontalLines[row][col] = owner;
             else verticalLines[row][col] = owner;
 
-            let completedBoxes = 0;
+            startLineAnim(type, row, col, owner);
 
-            // Check which boxes this line borders
+            let completedBoxes = 0;
+            const completed = [];
             if (type === 'h') {
-                // Horizontal line at (row, col): borders box above (row-1, col) and box below (row, col)
                 if (row > 0 && boxes[row - 1][col] === 0 && countBoxSides(row - 1, col) === 4) {
-                    boxes[row - 1][col] = owner;
-                    completedBoxes++;
+                    boxes[row - 1][col] = owner; completed.push([row - 1, col]); completedBoxes++;
                 }
                 if (row < rows && boxes[row][col] === 0 && countBoxSides(row, col) === 4) {
-                    boxes[row][col] = owner;
-                    completedBoxes++;
+                    boxes[row][col] = owner; completed.push([row, col]); completedBoxes++;
                 }
             } else {
-                // Vertical line at (row, col): borders box left (row, col-1) and box right (row, col)
                 if (col > 0 && boxes[row][col - 1] === 0 && countBoxSides(row, col - 1) === 4) {
-                    boxes[row][col - 1] = owner;
-                    completedBoxes++;
+                    boxes[row][col - 1] = owner; completed.push([row, col - 1]); completedBoxes++;
                 }
                 if (col < cols && boxes[row][col] === 0 && countBoxSides(row, col) === 4) {
-                    boxes[row][col] = owner;
-                    completedBoxes++;
+                    boxes[row][col] = owner; completed.push([row, col]); completedBoxes++;
                 }
             }
-
+            for (const [r, c] of completed) startBoxAnim(r, c, owner);
             return completedBoxes;
         }
 
-        // Get all available moves
         function getAvailableMoves() {
             const moves = [];
             for (let r = 0; r <= rows; r++)
@@ -465,7 +755,6 @@
             return moves;
         }
 
-        // Check if a move would complete a box (without placing it)
         function wouldCompleteBox(type, row, col) {
             if (type === 'h') {
                 if (row > 0 && boxes[row - 1][col] === 0 && countBoxSides(row - 1, col) === 3) return true;
@@ -477,7 +766,6 @@
             return false;
         }
 
-        // Check if a move would create a 3-sided box (setting up opponent)
         function wouldCreateThreeSided(type, row, col) {
             if (type === 'h') {
                 if (row > 0 && boxes[row - 1][col] === 0 && countBoxSides(row - 1, col) === 2) return true;
@@ -489,49 +777,35 @@
             return false;
         }
 
-        // Count how many boxes a move gives away (for chain analysis)
         function countChainLength(type, row, col) {
-            // Simulate placing the line and count how many boxes opponent could chain
-            // Temporarily place
             if (type === 'h') horizontalLines[row][col] = 2;
             else verticalLines[row][col] = 2;
 
-            let chainBoxes = 0;
-            // Find all 3-sided boxes this creates and simulate the chain
             const toCheck = [];
             if (type === 'h') {
-                if (row > 0 && boxes[row - 1][col] === 0 && countBoxSides(row - 1, col) === 3)
-                    toCheck.push({ r: row - 1, c: col });
-                if (row < rows && boxes[row][col] === 0 && countBoxSides(row, col) === 3)
-                    toCheck.push({ r: row, c: col });
+                if (row > 0 && boxes[row - 1][col] === 0 && countBoxSides(row - 1, col) === 3) toCheck.push({ r: row - 1, c: col });
+                if (row < rows && boxes[row][col] === 0 && countBoxSides(row, col) === 3) toCheck.push({ r: row, c: col });
             } else {
-                if (col > 0 && boxes[row][col - 1] === 0 && countBoxSides(row, col - 1) === 3)
-                    toCheck.push({ r: row, c: col - 1 });
-                if (col < cols && boxes[row][col] === 0 && countBoxSides(row, col) === 3)
-                    toCheck.push({ r: row, c: col });
+                if (col > 0 && boxes[row][col - 1] === 0 && countBoxSides(row, col - 1) === 3) toCheck.push({ r: row, c: col - 1 });
+                if (col < cols && boxes[row][col] === 0 && countBoxSides(row, col) === 3) toCheck.push({ r: row, c: col });
             }
-            chainBoxes = toCheck.length;
+            const chainBoxes = toCheck.length;
 
-            // Undo
             if (type === 'h') horizontalLines[row][col] = 0;
             else verticalLines[row][col] = 0;
-
             return chainBoxes;
         }
 
-        // AI move selection
         function getComputerMove() {
             const moves = getAvailableMoves();
             if (moves.length === 0) return null;
 
-            // All difficulties: complete boxes first
             const completingMoves = moves.filter(m => wouldCompleteBox(m.type, m.row, m.col));
             if (completingMoves.length > 0 && difficulty !== 'easy') {
                 return completingMoves[Math.floor(Math.random() * completingMoves.length)];
             }
 
             if (difficulty === 'easy') {
-                // Easy: just pick randomly (even if it could complete a box, 50% chance to miss it)
                 if (completingMoves.length > 0 && Math.random() < 0.5) {
                     return completingMoves[Math.floor(Math.random() * completingMoves.length)];
                 }
@@ -539,7 +813,6 @@
             }
 
             if (difficulty === 'medium') {
-                // Medium: avoid creating 3-sided boxes 60% of the time
                 const safeMoves = moves.filter(m => !wouldCreateThreeSided(m.type, m.row, m.col));
                 if (safeMoves.length > 0 && Math.random() < 0.6) {
                     return safeMoves[Math.floor(Math.random() * safeMoves.length)];
@@ -547,65 +820,39 @@
                 return moves[Math.floor(Math.random() * moves.length)];
             }
 
-            // Hard: strategic play
+            // Hard
             const safeMoves = moves.filter(m => !wouldCreateThreeSided(m.type, m.row, m.col));
-            if (safeMoves.length > 0) {
-                return safeMoves[Math.floor(Math.random() * safeMoves.length)];
-            }
+            if (safeMoves.length > 0) return safeMoves[Math.floor(Math.random() * safeMoves.length)];
 
-            // All moves are risky — pick the one that gives away fewest boxes
             let bestMove = moves[0];
             let bestChain = Infinity;
             for (const m of moves) {
                 const chain = countChainLength(m.type, m.row, m.col);
-                if (chain < bestChain) {
-                    bestChain = chain;
-                    bestMove = m;
-                }
+                if (chain < bestChain) { bestChain = chain; bestMove = m; }
             }
             return bestMove;
         }
 
-        // Handle a move (for either player)
         function makeMove(type, row, col, owner) {
             const ownerVal = owner === 'player' ? 1 : 2;
             const completed = placeLine(type, row, col, ownerVal);
+            playLineSound();
 
-            if (owner === 'player') {
-                playLineSound();
-                if (completed > 0) {
-                    playerScore += completed;
-                    playBoxPlayerSound();
-                }
-            } else {
-                playLineSound();
-                if (completed > 0) {
-                    computerScore += completed;
-                    playBoxComputerSound();
-                }
-            }
-
-            updateUI();
-            draw();
-
-            // Check game over
-            if (isGameOver()) {
-                endGame();
-                return;
-            }
-
-            // If completed a box, same player goes again
             if (completed > 0) {
-                if (owner === 'computer') {
-                    setTimeout(computerTurn, 400);
-                }
-                // Player just gets to click again
+                if (owner === 'player') { playerScore += completed; playBoxPlayerSound(); }
+                else { computerScore += completed; playBoxComputerSound(); }
+            }
+            updateUI();
+
+            if (isGameOver()) { endGame(); return; }
+
+            if (completed > 0) {
+                if (owner === 'computer') setTimeout(computerTurn, 450);
             } else {
-                // Switch turns
                 if (owner === 'player') {
                     currentTurn = 'computer';
                     updateUI();
-                    setTimeout(computerTurn, 400);
+                    setTimeout(computerTurn, 450);
                 } else {
                     currentTurn = 'player';
                     updateUI();
@@ -617,9 +864,7 @@
             if (gameOver) return;
             computerThinking = true;
             const move = getComputerMove();
-            if (move) {
-                makeMove(move.type, move.row, move.col, 'computer');
-            }
+            if (move) makeMove(move.type, move.row, move.col, 'computer');
             computerThinking = false;
         }
 
@@ -632,52 +877,53 @@
             currentTurn = null;
             updateUI();
 
-            const totalBoxes = rows * cols;
+            const stats = loadStats();
             if (playerScore > computerScore) {
-                gameOverMsgEl.style.color = PLAYER_COLOR;
-                gameOverMsgEl.textContent = `You win! ${playerScore}–${computerScore}`;
+                gameOverMsgEl.className = 'game-over-msg win';
+                gameOverMsgEl.textContent = `🏆 You win! ${playerScore}–${computerScore}`;
                 playWinSound();
-                // Track wins
-                const wins = parseInt(localStorage.getItem('connectDotsWins') || '0');
-                localStorage.setItem('connectDotsWins', wins + 1);
+                stats.wins++;
             } else if (computerScore > playerScore) {
-                gameOverMsgEl.style.color = COMPUTER_COLOR;
-                gameOverMsgEl.textContent = `Computer wins! ${computerScore}–${playerScore}`;
+                gameOverMsgEl.className = 'game-over-msg lose';
+                gameOverMsgEl.textContent = `Computer wins ${computerScore}–${playerScore}`;
                 playLoseSound();
+                stats.losses++;
             } else {
-                gameOverMsgEl.style.color = '#666';
+                gameOverMsgEl.className = 'game-over-msg tie';
                 gameOverMsgEl.textContent = `It's a tie! ${playerScore}–${computerScore}`;
+                stats.ties++;
             }
+            saveStats(stats);
         }
 
-        // Mouse events
-        canvas.addEventListener('mousemove', (e) => {
-            if (gameOver || currentTurn !== 'player' || computerThinking) {
-                hoveredLine = null;
-                draw();
-                return;
-            }
+        // ===================== Input =====================
+        function getCanvasCoords(clientX, clientY) {
             const rect = canvas.getBoundingClientRect();
             const scaleX = canvas.width / rect.width;
             const scaleY = canvas.height / rect.height;
-            const mx = (e.clientX - rect.left) * scaleX;
-            const my = (e.clientY - rect.top) * scaleY;
-            hoveredLine = getNearestLine(mx, my);
-            draw();
+            return { mx: (clientX - rect.left) * scaleX, my: (clientY - rect.top) * scaleY };
+        }
+
+        canvas.addEventListener('mousemove', (e) => {
+            if (gameOver || currentTurn !== 'player' || computerThinking) {
+                if (hoveredLine) { hoveredLine = null; needsRedraw = true; }
+                return;
+            }
+            const { mx, my } = getCanvasCoords(e.clientX, e.clientY);
+            const newHover = getNearestLine(mx, my);
+            const changed = !!hoveredLine !== !!newHover ||
+                (hoveredLine && newHover && (hoveredLine.type !== newHover.type || hoveredLine.row !== newHover.row || hoveredLine.col !== newHover.col));
+            hoveredLine = newHover;
+            if (changed) needsRedraw = true;
         });
 
         canvas.addEventListener('mouseleave', () => {
-            hoveredLine = null;
-            draw();
+            if (hoveredLine) { hoveredLine = null; needsRedraw = true; }
         });
 
         canvas.addEventListener('click', (e) => {
             if (gameOver || currentTurn !== 'player' || computerThinking) return;
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const mx = (e.clientX - rect.left) * scaleX;
-            const my = (e.clientY - rect.top) * scaleY;
+            const { mx, my } = getCanvasCoords(e.clientX, e.clientY);
             const line = getNearestLine(mx, my);
             if (line) {
                 hoveredLine = null;
@@ -685,16 +931,11 @@
             }
         });
 
-        // Touch support
         canvas.addEventListener('touchstart', (e) => {
             e.preventDefault();
             if (gameOver || currentTurn !== 'player' || computerThinking) return;
-            const touch = e.touches[0];
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const mx = (touch.clientX - rect.left) * scaleX;
-            const my = (touch.clientY - rect.top) * scaleY;
+            const t = e.touches[0];
+            const { mx, my } = getCanvasCoords(t.clientX, t.clientY);
             const line = getNearestLine(mx, my);
             if (line) {
                 hoveredLine = null;
@@ -702,8 +943,8 @@
             }
         }, { passive: false });
 
-        // Initial draw
-        draw();
+        // ===================== Init =====================
+        updateStatsBar();
 
         // Auto-scale canvas to fit viewport
         const _scaleCanvas = (function() {
@@ -711,10 +952,10 @@
             const bw = c.width, bh = c.height;
             function sc() {
                 const par = c.parentElement;
-                if (!par || par.offsetWidth === 0) return; // Skip if hidden
+                if (!par || par.offsetWidth === 0) return;
                 const ps = getComputedStyle(par);
                 const mw = par.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
-                const mh = window.innerHeight * 0.75;
+                const mh = window.innerHeight * 0.72;
                 const s = Math.max(0.1, Math.min(mw / bw, mh / bh, 1));
                 if (isNaN(s)) return;
                 c.style.transformOrigin = 'top center';

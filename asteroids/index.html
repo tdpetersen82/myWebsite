@@ -249,7 +249,7 @@
             this.invulnerable = false;
             this.invulnerableTimer = null;
             this.thrustSoundTimer = 0;
-            this.bulletCount = 0;
+
 
             // Progressive difficulty
             this.speedMultiplier = 1.0;
@@ -267,6 +267,10 @@
             this.ufo = null;
             this.ufoTimer = null;
             this.ufoShootTimer = null;
+
+            // Timers that must be cancelled on restart
+            this.respawnTimer = null;
+            this.blinkEvent = null;
 
             // Starfield
             this.stars = [];
@@ -482,7 +486,7 @@
             this.asteroids.clear(true, true);
             this.particles.clear(true, true);
             this.ufoBullets.clear(true, true);
-            this.bulletCount = 0;
+
 
             // Destroy UFO
             this.destroyUFO();
@@ -498,6 +502,14 @@
             if (this.invulnerableTimer) {
                 this.invulnerableTimer.remove();
                 this.invulnerableTimer = null;
+            }
+            if (this.respawnTimer) {
+                this.respawnTimer.remove();
+                this.respawnTimer = null;
+            }
+            if (this.blinkEvent) {
+                this.blinkEvent.remove();
+                this.blinkEvent = null;
             }
 
             this.ship.x = 400;
@@ -600,7 +612,7 @@
 
         // ===================== Bullets =====================
         shootBullet() {
-            if (this.bulletCount >= 4) return;
+            if (this.bullets.getChildren().length >= 4) return;
             const now = this.time.now;
             if (now - this.lastShot < 150) return;
             this.lastShot = now;
@@ -621,7 +633,6 @@
             g.life = 60;
 
             this.bullets.add(g);
-            this.bulletCount++;
         }
 
         // ===================== UFO System =====================
@@ -811,7 +822,9 @@
             this.ship.velY = 0;
             this.ship.rotVel = 0;
 
-            this.time.delayedCall(1000, () => {
+            this.respawnTimer = this.time.delayedCall(1000, () => {
+                this.respawnTimer = null;
+                if (this.gameState !== 'playing') return;
                 this.ship.x = 400;
                 this.ship.y = 300;
                 this.ship.rotation = -Math.PI / 2;
@@ -831,7 +844,7 @@
                     this.invulnerable = false;
                     this.ship.visible = true;
                     this.invulnerableTimer = null;
-                    if (this.blinkEvent) this.blinkEvent.remove();
+                    if (this.blinkEvent) { this.blinkEvent.remove(); this.blinkEvent = null; }
                 });
             });
         }
@@ -1023,10 +1036,7 @@
                 this.wrapPosition(b, 3);
                 if (b.life <= 0) bulletsToRemove.push(b);
             });
-            bulletsToRemove.forEach(b => {
-                b.destroy();
-                this.bulletCount--;
-            });
+            bulletsToRemove.forEach(b => b.destroy());
 
             // Update asteroids
             this.asteroids.getChildren().forEach(a => {
@@ -1148,7 +1158,6 @@
 
             // Remove
             bullet.destroy();
-            this.bulletCount--;
             asteroid.destroy();
         }
 
@@ -1177,7 +1186,6 @@
             }
 
             bullet.destroy();
-            this.bulletCount--;
             this.destroyUFO();
             this.scheduleUFO();
         }
@@ -1193,10 +1201,10 @@
                 if (p.life <= 0) toRemove.push(p);
             });
             toRemove.forEach(p => p.destroy());
-            // Cap particles to prevent memory issues
-            const remaining = this.particles.getChildren();
-            while (remaining.length > 80) {
-                remaining[0].destroy();
+            // Cap particles to prevent runaway growth
+            const all = this.particles.getChildren();
+            if (all.length > 80) {
+                all.slice(0, all.length - 80).forEach(p => p.destroy());
             }
         }
     }
