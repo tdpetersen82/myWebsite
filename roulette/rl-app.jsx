@@ -183,11 +183,11 @@ function App() {
     setTarget(result);
 
     setPhase('no_more_bets');
-    say('no_more_bets', 'deal');
+    say('no_more_bets', 'shocked');
 
     setTimeout(() => {
       setPhase('spinning');
-      say('spin', 'deal');
+      say('spin', 'idle');
     }, 900);
   }
 
