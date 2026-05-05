@@ -1,0 +1,494 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limestone Arcade — Classic Browser Games</title>
+    <meta name="description" content="Five classic arcade remakes — Snake, Pong, Breakout, Space Invasion, Block Puzzle. Pixel-perfect, two-second loads, scores save locally.">
+    <meta name="keywords" content="classic arcade games, snake, pong, breakout, space invaders, block puzzle, free browser games">
+    <meta property="og:title" content="Limestone Arcade — Classic Browser Games">
+    <meta property="og:description" content="Five classic arcade remakes. Pixel-perfect, two-second loads.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tdpetersen82.github.io/myWebsite/arcade/">
+    <link rel="canonical" href="https://tdpetersen82.github.io/myWebsite/arcade/">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../category.css">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      :root {
+        --cat-hero-bg: linear-gradient(135deg, #FFD89F 0%, #F2A65A 60%, #C97D3A 100%);
+        --cat-hero-ink: #3A1F0A;
+        --cat-eyebrow-color: #FF4F2D;
+        --cat-cta-bg: #FF4F2D;
+        --cat-cta-ink: #fff;
+        --cat-feat-art-bg: linear-gradient(135deg, #FFD89F, #F2A65A);
+      }
+      .cat-hero::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image:
+          linear-gradient(0deg, rgba(58, 31, 10, 0.08) 1px, transparent 1px),
+          linear-gradient(90deg, rgba(58, 31, 10, 0.08) 1px, transparent 1px);
+        background-size: 22px 22px;
+        opacity: 0.6;
+        pointer-events: none;
+      }
+      /* Hero motif: chunky joystick */
+      .arc-stick {
+        position: relative;
+        width: 240px;
+        height: 280px;
+        margin: 0 auto;
+      }
+      .arc-stick .base {
+        position: absolute;
+        bottom: 0; left: 50%;
+        transform: translateX(-50%);
+        width: 200px; height: 56px;
+        border-radius: 28px 28px 8px 8px;
+        background: #3A1F0A;
+        box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.3), inset 0 3px 6px rgba(255, 255, 255, 0.15);
+      }
+      .arc-stick .shaft {
+        position: absolute;
+        bottom: 48px; left: 50%;
+        transform: translateX(-50%);
+        width: 20px; height: 130px;
+        background: linear-gradient(180deg, #1F1108, #3A1F0A);
+        border-radius: 10px 10px 0 0;
+      }
+      .arc-stick .ball {
+        position: absolute;
+        bottom: 168px; left: 50%;
+        transform: translateX(-50%);
+        width: 64px; height: 64px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 35%, #FF4F2D, #B82A12);
+        box-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.4),
+          inset 0 -6px 12px rgba(0, 0, 0, 0.25),
+          inset 0 4px 8px rgba(255, 255, 255, 0.4);
+      }
+      .arc-stick .btn {
+        position: absolute;
+        bottom: 14px;
+        width: 26px; height: 26px;
+        border-radius: 50%;
+        box-shadow: inset 0 -2px 5px rgba(0, 0, 0, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+      }
+      .arc-stick .btn.b1 { right: 36px; background: radial-gradient(circle at 35% 35%, #FFD93D, #B8860B); }
+      .arc-stick .btn.b2 { right: 6px;  background: radial-gradient(circle at 35% 35%, #4ECDC4, #1A8B82); }
+
+      /* Featured-art piece: stacked tetromino-like blocks */
+      .arc-feat-blocks {
+        display: grid;
+        grid-template-columns: repeat(3, 36px);
+        grid-auto-rows: 36px;
+        gap: 4px;
+      }
+      .arc-feat-blocks div {
+        border-radius: 6px;
+        box-shadow: inset 0 -3px 4px rgba(0, 0, 0, 0.18), inset 0 2px 4px rgba(255, 255, 255, 0.3);
+      }
+      .arc-feat-blocks div.c1 { background: #5DC4D9; }
+      .arc-feat-blocks div.c2 { background: #F2A65A; }
+      .arc-feat-blocks div.c3 { background: #FF4F2D; }
+      .arc-feat-blocks div.c4 { background: #FFD93D; }
+      .arc-feat-blocks div.empty { background: transparent; box-shadow: none; }
+    </style>
+</head>
+<body class="cat-root">
+
+    <nav class="cat-nav">
+        <div class="cat-nav-left">
+            <a class="cat-logo" href="..">
+                <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
+                    <defs>
+                        <radialGradient id="stoneGrad" cx="35%" cy="30%" r="80%">
+                            <stop offset="0%" stop-color="#F4EEE2"/>
+                            <stop offset="100%" stop-color="#C9BCA3"/>
+                        </radialGradient>
+                    </defs>
+                    <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="url(#stoneGrad)"/>
+                    <circle cx="14" cy="16" r="1.2" fill="#A89678" opacity="0.55"/>
+                    <circle cx="22" cy="22" r="0.9" fill="#A89678" opacity="0.4"/>
+                    <circle cx="28" cy="14" r="0.7" fill="#A89678" opacity="0.5"/>
+                    <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+                </svg>
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="cat-nav-links">
+                <a href="..">Games</a>
+                <a href="../casino/">Casino</a>
+                <a href="" class="active">Arcade</a>
+                <a href="../retro/">Retro</a>
+                <a href="../puzzles/">Puzzles</a>
+                <a href="../utilities/">Utilities</a>
+            </div>
+        </div>
+        <div class="cat-nav-meta">
+            <span class="dot"></span>
+            5 cabinets · always on
+        </div>
+    </nav>
+
+    <div class="cat-crumb">
+        <a href="..">Games</a> &nbsp;/&nbsp; <span class="here">Classic Arcade</span>
+    </div>
+
+    <header class="cat-hero">
+        <div class="cat-hero-left">
+            <div class="cat-hero-eyebrow">⬡ Classic Arcade · 5 cabinets · Free play</div>
+            <h1>Press start.<br>Beat the <em>cabinet</em>.</h1>
+            <p class="lede">Five originals that started it all — Snake, Pong, Breakout, Space Invasion, Block Puzzle. Pixel-perfect remakes that load in two seconds and play forever. Your scores save locally.</p>
+            <div class="cat-hero-stats">
+                <div>5<span>Cabinets</span></div>
+                <div>38,400<span>Top score</span></div>
+                <div>11d<span>Streak</span></div>
+                <div>87<span>Plays</span></div>
+            </div>
+        </div>
+        <div class="cat-hero-right">
+            <div class="arc-stick">
+                <div class="ball"></div>
+                <div class="shaft"></div>
+                <div class="base"></div>
+                <div class="btn b1"></div>
+                <div class="btn b2"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="cat-stats">
+        <div class="cat-stats-main">
+            <div class="cat-stats-chip">★</div>
+            <div>
+                <h3>Your top score</h3>
+                <div class="amt">38,400</div>
+                <div class="delta">▲ +2,200 this week · Block Puzzle</div>
+            </div>
+        </div>
+        <div class="cat-stat-cell">
+            <div class="l">Total plays</div>
+            <div class="n">87</div>
+            <div class="s">Across 5 cabinets</div>
+        </div>
+        <div class="cat-stat-cell">
+            <div class="l">Streak</div>
+            <div class="n">11 days</div>
+            <div class="s">Longest: 14 days</div>
+        </div>
+        <div class="cat-stat-cell">
+            <div class="l">Favorite</div>
+            <div class="n">Block Puzzle</div>
+            <div class="s">31 sessions</div>
+        </div>
+    </div>
+
+    <div class="cat-wrap">
+
+        <div class="cat-section-head">
+            <h2>Tonight's featured cabinet</h2>
+            <div class="rule"></div>
+            <a class="more" href="#all-cabinets">Browse all →</a>
+        </div>
+        <div class="cat-featured">
+            <div class="cat-featured-art">
+                <div class="arc-feat-blocks">
+                    <div class="empty"></div><div class="c4"></div><div class="empty"></div>
+                    <div class="c1"></div><div class="c4"></div><div class="empty"></div>
+                    <div class="c1"></div><div class="c1"></div><div class="empty"></div>
+                    <div class="c2"></div><div class="c1"></div><div class="c3"></div>
+                    <div class="c2"></div><div class="c2"></div><div class="c3"></div>
+                    <div class="c2"></div><div class="c3"></div><div class="c3"></div>
+                </div>
+            </div>
+            <div class="cat-featured-body">
+                <div class="cat-featured-tag">★ All-time leader</div>
+                <h3>Block Puzzle</h3>
+                <p>Stack falling tetrominoes, clear lines, score forever. Hard drop with space, soft drop with down. Your high score saves the second you land it.</p>
+                <div class="cat-featured-stats">
+                    <div class="stat"><div class="l">Top score</div><div class="n accent">38,400</div></div>
+                    <div class="stat"><div class="l">Plays</div><div class="n">22.6k</div></div>
+                    <div class="stat"><div class="l">Difficulty</div><div class="n">Easy</div></div>
+                </div>
+                <div class="cat-featured-cta">
+                    <a class="cat-btn" href="../block-puzzle/">Drop in →</a>
+                    <a class="cat-btn outline" href="../block-puzzle/">How to play</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="all-cabinets" class="cat-section-head">
+            <h2>All cabinets</h2>
+            <span class="sub">5 games · scores save locally</span>
+            <div class="rule"></div>
+        </div>
+        <div class="cat-grid">
+
+            <a class="cat-card featured" href="../block-puzzle/">
+                <span class="cat-card-tag">Easy</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#5DC4D92E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="40" width="10" height="10" rx="2" fill="#5DC4D9"/><rect x="18" y="40" width="10" height="10" rx="2" fill="#5DC4D9"/><rect x="18" y="30" width="10" height="10" rx="2" fill="#5DC4D9"/><rect x="28" y="40" width="10" height="10" rx="2" fill="#5DC4D9" opacity="0.7"/><rect x="38" y="40" width="10" height="10" rx="2" fill="#5DC4D9" opacity="0.7"/><rect x="38" y="30" width="10" height="10" rx="2" fill="#5DC4D9" opacity="0.7"/><rect x="38" y="12" width="10" height="10" rx="2" fill="#5DC4D9" opacity="0.4"/></svg>
+                    </div>
+                    <div>
+                        <h3>Block Puzzle</h3>
+                        <div class="desc">Stack, clear, score.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">38,400</div></div>
+                    <div><div class="l">Plays</div><div class="v">22.6k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">38,400</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">31 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../snake/">
+                <span class="cat-card-tag">Easy</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#7BC97B2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="14" y="14" width="10" height="10" rx="2" fill="#7BC97B"/><rect x="26" y="14" width="10" height="10" rx="2" fill="#7BC97B"/><rect x="38" y="14" width="10" height="10" rx="2" fill="#7BC97B"/><rect x="38" y="26" width="10" height="10" rx="2" fill="#7BC97B"/><rect x="38" y="38" width="10" height="10" rx="2" fill="#7BC97B"/></svg>
+                    </div>
+                    <div>
+                        <h3>Snake</h3>
+                        <div class="desc">Eat, grow, don't crash.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">1,840</div></div>
+                    <div><div class="l">Plays</div><div class="v">12.4k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">1,840</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">19 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../pong/">
+                <span class="cat-card-tag">Easy</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#8FA8E62E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="14" width="6" height="34" rx="3" fill="#8FA8E6"/><rect x="48" y="20" width="6" height="34" rx="3" fill="#8FA8E6" opacity="0.7"/><circle cx="32" cy="32" r="4" fill="#8FA8E6"/></svg>
+                    </div>
+                    <div>
+                        <h3>Pong</h3>
+                        <div class="desc">Paddle vs. AI. Keep it alive.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">21</div></div>
+                    <div><div class="l">Plays</div><div class="v">8.2k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">21</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">12 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../breakout/">
+                <span class="cat-card-tag">Medium</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#F2A65A2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="10" width="12" height="6" rx="2" fill="#F2A65A"/><rect x="22" y="10" width="12" height="6" rx="2" fill="#F2A65A" opacity="0.7"/><rect x="36" y="10" width="12" height="6" rx="2" fill="#F2A65A"/><rect x="8" y="18" width="12" height="6" rx="2" fill="#F2A65A" opacity="0.6"/><rect x="22" y="18" width="12" height="6" rx="2" fill="#F2A65A"/><rect x="20" y="50" width="24" height="5" rx="2.5" fill="#F2A65A"/><circle cx="32" cy="40" r="3.5" fill="#F2A65A" opacity="0.8"/></svg>
+                    </div>
+                    <div>
+                        <h3>Breakout</h3>
+                        <div class="desc">Bricks, ball, bounce.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">4,720</div></div>
+                    <div><div class="l">Plays</div><div class="v">15.1k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Medium</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">4,720</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">14 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../space-invaders/">
+                <span class="cat-card-tag">Medium</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#9B7EDC2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="20" y="14" width="6" height="6" fill="#9B7EDC"/><rect x="38" y="14" width="6" height="6" fill="#9B7EDC"/><rect x="14" y="20" width="36" height="10" rx="2" fill="#9B7EDC"/><rect x="10" y="26" width="6" height="8" fill="#9B7EDC"/><rect x="48" y="26" width="6" height="8" fill="#9B7EDC"/><rect x="20" y="34" width="8" height="4" fill="#9B7EDC"/><rect x="36" y="34" width="8" height="4" fill="#9B7EDC"/><rect x="28" y="48" width="8" height="6" rx="1" fill="#9B7EDC" opacity="0.7"/></svg>
+                    </div>
+                    <div>
+                        <h3>Space Invasion</h3>
+                        <div class="desc">Defend Earth from alien waves.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">9,650</div></div>
+                    <div><div class="l">Plays</div><div class="v">11.8k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Medium</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">9,650</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">11 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+        </div>
+
+        <div class="cat-ad-row">
+            <div class="ad-slot">
+                <div>Sponsored · In-feed</div>
+                <div class="ad-size">728 × 90</div>
+                <ins class="adsbygoogle"
+                     style="display:none"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="horizontal"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+        <div class="cat-twocol">
+            <div class="cat-challenge">
+                <div class="cat-challenge-eyebrow"><span class="cat-challenge-dot"></span> Today only · resets at midnight</div>
+                <h3>Daily high-score<br>challenge</h3>
+                <p>Same starting seed for every player. Top score on the leaderboard at midnight wins bragging rights and the chip glow on your profile for 24 hours.</p>
+                <div class="cat-challenge-grid">
+                    <div><div class="l">Players today</div><div class="n">317</div></div>
+                    <div><div class="l">Top score</div><div class="n accent">42,180</div></div>
+                    <div><div class="l">Your rank</div><div class="n">#23</div></div>
+                    <div><div class="l">Cabinet</div><div class="n">Block Puzzle</div></div>
+                </div>
+                <div class="cat-challenge-cta">
+                    <a class="primary" href="../block-puzzle/">Take the challenge →</a>
+                    <button class="ghost" type="button">Yesterday's winners</button>
+                </div>
+            </div>
+            <div class="cat-hall">
+                <h3>Hall of fame</h3>
+                <div class="sub">All-time top scores · all cabinets</div>
+                <div class="cat-hall-row">
+                    <div class="pos p1">1</div>
+                    <div class="who">pixel.eight<span>Block Puzzle</span></div>
+                    <div class="amt">186,200</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos p2">2</div>
+                    <div class="who">brickbreaker<span>Breakout</span></div>
+                    <div class="amt">94,400</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos p3">3</div>
+                    <div class="who">snakecharmer<span>Snake</span></div>
+                    <div class="amt">12,850</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos">4</div>
+                    <div class="who">retropad<span>Space Invasion</span></div>
+                    <div class="amt">88,200</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos">5</div>
+                    <div class="who">paddlepro<span>Pong</span></div>
+                    <div class="amt">72</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos">6</div>
+                    <div class="who you">You<span>Block Puzzle</span></div>
+                    <div class="amt">38,400</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cat-strategy">
+            <div class="cat-strategy-head">
+                <div><h2>Cabinet wisdom</h2></div>
+                <span class="sub">Quick tips · keyboard shortcuts · score multipliers</span>
+            </div>
+            <div class="cat-strategy-grid">
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Block Puzzle: keep the right column open</h4>
+                    <p>Tetrominoes only clear when a row is full. Save your rightmost column for I-pieces and you'll get four-line clears (Tetrises) consistently.</p>
+                    <ul>
+                        <li>Single line <b>100 pts</b></li>
+                        <li>Tetris (4 lines) <b>800 pts</b></li>
+                        <li>Soft drop <b>+1 per cell</b></li>
+                    </ul>
+                </div>
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Snake: hug the walls early</h4>
+                    <p>Run the perimeter for the first 30 segments — it builds reflexes and clears the middle for tight spirals once the snake is long.</p>
+                    <ul>
+                        <li>Each food <b>+10 pts</b></li>
+                        <li>Length 50+ <b>2× points</b></li>
+                        <li>Length 100+ <b>3× points</b></li>
+                    </ul>
+                </div>
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Breakout: aim for the corners</h4>
+                    <p>The ball bounces sharper off paddle edges. Clip the side of the paddle to angle the ball into untouched columns and you'll dismantle the wall faster.</p>
+                    <ul>
+                        <li>Top row brick <b>50 pts</b></li>
+                        <li>Bottom row brick <b>10 pts</b></li>
+                        <li>All bricks cleared <b>+1,000</b></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cat-ad-row">
+            <div class="ad-slot">
+                <div>Sponsored · Bottom banner</div>
+                <div class="ad-size">728 × 90</div>
+                <ins class="adsbygoogle"
+                     style="display:none"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="cat-disclaimer">
+        <b>Free arcade.</b> No accounts, no purchases, no ads inside the games. Scores save locally to your browser — clearing site data wipes your records.
+    </div>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="..">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="..">All games</a>
+            <a href="../privacy.html">Privacy</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+</body>
+</html>

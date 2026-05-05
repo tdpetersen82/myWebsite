@@ -394,11 +394,13 @@
         pill.innerHTML = `<b>${list.length}</b> games`
           + (newCount > 0 ? ` · <b>${newCount}</b> new` : '');
       }
+      // Each category has its own landing page; the hero card routes there.
+      const LANDINGS = { classic: 'arcade/', retro: 'retro/', puzzle: 'puzzles/', casino: 'casino/' };
       card.addEventListener('click', (e) => {
         if (e.target.closest('a')) return;
-        // Categories with their own landing page route there; others filter in place.
-        if (cat === 'casino') {
-          window.location.href = 'casino/';
+        const target = LANDINGS[cat];
+        if (target) {
+          window.location.href = target;
           return;
         }
         state.filter = cat;

@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limestone Retro — Cathode-Ray Era Browser Games</title>
+    <meta name="description" content="Seven 80s arcade classics — Asteroids, Lunar Lander, Defender, Frogger, Missile Command, Simon, SpaceX Lander. Neon, scanlines, quarter-feeders.">
+    <meta name="keywords" content="retro games, 80s arcade, asteroids, lunar lander, defender, frogger, simon, missile command, free browser games">
+    <meta property="og:title" content="Limestone Retro — Cathode-Ray Era Browser Games">
+    <meta property="og:description" content="Seven 80s arcade classics. Neon, scanlines, quarter-feeders.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://tdpetersen82.github.io/myWebsite/retro/">
+    <link rel="canonical" href="https://tdpetersen82.github.io/myWebsite/retro/">
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../category.css">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      :root {
+        --cat-hero-bg: radial-gradient(circle at 20% 30%, #4D2A8E 0%, #2B1456 60%, #150828 100%);
+        --cat-hero-ink: #F2EFE6;
+        --cat-eyebrow-color: #FF55AA;
+        --cat-cta-bg: #FF55AA;
+        --cat-cta-ink: #fff;
+        --cat-feat-art-bg: radial-gradient(circle at 30% 30%, #4D2A8E 0%, #2B1456 60%, #150828 100%);
+      }
+      .cat-hero::before {
+        content: '';
+        position: absolute; inset: 0;
+        background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 4px);
+        mix-blend-mode: screen;
+        pointer-events: none;
+      }
+      .cat-hero::after {
+        content: '';
+        position: absolute; inset: 0;
+        background-image:
+          radial-gradient(circle at 70% 25%, rgba(255, 85, 170, 0.25) 0%, transparent 30%),
+          radial-gradient(circle at 90% 75%, rgba(95, 205, 255, 0.18) 0%, transparent 35%);
+        pointer-events: none;
+      }
+      /* Hero motif: flying saucer + asteroids */
+      .ret-scene { position: relative; width: 280px; height: 280px; margin: 0 auto; }
+      .ret-saucer { position: absolute; left: 50%; top: 60px; transform: translateX(-50%); width: 200px; height: 100px; }
+      .ret-saucer .dome {
+        position: absolute; left: 50%; top: 0; transform: translateX(-50%);
+        width: 110px; height: 56px;
+        border-radius: 50% 50% 0 0;
+        background: radial-gradient(ellipse at 35% 35%, #FF99CC, #FF55AA 60%, #B82A6F);
+        box-shadow: 0 0 32px rgba(255, 85, 170, 0.6);
+      }
+      .ret-saucer .body {
+        position: absolute; bottom: 20px; left: 0; right: 0;
+        height: 42px;
+        border-radius: 50%;
+        background: linear-gradient(180deg, #4D2A8E, #2B1456);
+        box-shadow: 0 0 30px rgba(95, 205, 255, 0.4);
+      }
+      .ret-saucer .light {
+        position: absolute; bottom: 32px;
+        width: 12px; height: 12px;
+        border-radius: 50%;
+        background: #FFE066;
+        box-shadow: 0 0 12px #FFE066;
+      }
+      .ret-saucer .light.l1 { left: 32px; }
+      .ret-saucer .light.l2 { left: 50%; transform: translateX(-50%); }
+      .ret-saucer .light.l3 { right: 32px; }
+      .ret-rock { position: absolute; border-radius: 30%; }
+      .ret-rock.r1 {
+        top: 18%; left: 78%;
+        width: 38px; height: 38px;
+        background: #7B5AB0;
+        box-shadow: 0 0 14px rgba(255, 85, 170, 0.3);
+        transform: rotate(15deg);
+      }
+      .ret-rock.r2 {
+        top: 75%; left: 80%;
+        width: 24px; height: 24px;
+        background: #9B7EDC;
+        box-shadow: 0 0 10px rgba(155, 126, 220, 0.4);
+        transform: rotate(-25deg);
+      }
+      .ret-rock.r3 {
+        top: 12%; left: 14%;
+        width: 18px; height: 18px;
+        background: #5FCDFF;
+        box-shadow: 0 0 8px rgba(95, 205, 255, 0.5);
+      }
+
+      /* Featured-art piece: stylized asteroid + ship */
+      .ret-feat-scene {
+        position: relative; width: 220px; height: 220px;
+      }
+      .ret-feat-scene .ship {
+        position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%);
+        width: 80px; height: 80px;
+      }
+      .ret-feat-scene .ship svg {
+        width: 100%; height: 100%;
+        filter: drop-shadow(0 0 8px rgba(255, 85, 170, 0.6));
+      }
+      .ret-feat-scene .asteroid {
+        position: absolute;
+        border-radius: 30%;
+        background: rgba(255, 255, 255, 0.85);
+        box-shadow: 0 0 14px rgba(255, 85, 170, 0.4);
+      }
+      .ret-feat-scene .asteroid.a1 { top: 14%;  left: 10%; width: 30px; height: 30px; transform: rotate(20deg); }
+      .ret-feat-scene .asteroid.a2 { top: 70%;  left: 14%; width: 22px; height: 22px; transform: rotate(-15deg); }
+      .ret-feat-scene .asteroid.a3 { top: 18%;  left: 75%; width: 26px; height: 26px; transform: rotate(40deg); }
+      .ret-feat-scene .asteroid.a4 { top: 78%;  left: 78%; width: 18px; height: 18px; }
+    </style>
+</head>
+<body class="cat-root dark">
+
+    <nav class="cat-nav">
+        <div class="cat-nav-left">
+            <a class="cat-logo" href="..">
+                <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
+                    <defs>
+                        <radialGradient id="stoneGrad" cx="35%" cy="30%" r="80%">
+                            <stop offset="0%" stop-color="#F4EEE2"/>
+                            <stop offset="100%" stop-color="#C9BCA3"/>
+                        </radialGradient>
+                    </defs>
+                    <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="url(#stoneGrad)"/>
+                    <circle cx="14" cy="16" r="1.2" fill="#A89678" opacity="0.55"/>
+                    <circle cx="22" cy="22" r="0.9" fill="#A89678" opacity="0.4"/>
+                    <circle cx="28" cy="14" r="0.7" fill="#A89678" opacity="0.5"/>
+                    <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+                </svg>
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="cat-nav-links">
+                <a href="..">Games</a>
+                <a href="../casino/">Casino</a>
+                <a href="../arcade/">Arcade</a>
+                <a href="" class="active">Retro</a>
+                <a href="../puzzles/">Puzzles</a>
+                <a href="../utilities/">Utilities</a>
+            </div>
+        </div>
+        <div class="cat-nav-meta">
+            <span class="dot"></span>
+            7 cabinets · 6 new
+        </div>
+    </nav>
+
+    <div class="cat-crumb">
+        <a href="..">Games</a> &nbsp;/&nbsp; <span class="here">Retro</span>
+    </div>
+
+    <header class="cat-hero">
+        <div class="cat-hero-left">
+            <div class="cat-hero-eyebrow">⬡ 80s arcade · 7 cabinets · 6 new this month</div>
+            <h1>Insert coin.<br>Last <em>longer</em>.</h1>
+            <p class="lede">Seven cabinet classics — Asteroids, Lunar Lander, Defender, Frogger, Missile Command, Simon, SpaceX Lander. Six new drops, every one a love letter to the cathode-ray era.</p>
+            <div class="cat-hero-stats">
+                <div>7<span>Cabinets</span></div>
+                <div>12,200<span>Top score</span></div>
+                <div>6<span>New drops</span></div>
+                <div>87<span>Plays</span></div>
+            </div>
+        </div>
+        <div class="cat-hero-right">
+            <div class="ret-scene">
+                <div class="ret-rock r1"></div>
+                <div class="ret-rock r2"></div>
+                <div class="ret-rock r3"></div>
+                <div class="ret-saucer">
+                    <div class="dome"></div>
+                    <div class="body"></div>
+                    <div class="light l1"></div>
+                    <div class="light l2"></div>
+                    <div class="light l3"></div>
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <div class="cat-stats">
+        <div class="cat-stats-main">
+            <div class="cat-stats-chip">★</div>
+            <div>
+                <h3>Your top run</h3>
+                <div class="amt">12,200</div>
+                <div class="delta">▲ +1,400 this week · Asteroids</div>
+            </div>
+        </div>
+        <div class="cat-stat-cell">
+            <div class="l">Cabinets played</div>
+            <div class="n">7 / 7</div>
+            <div class="s">All unlocked</div>
+        </div>
+        <div class="cat-stat-cell">
+            <div class="l">Lives spent</div>
+            <div class="n">214</div>
+            <div class="s">87 sessions</div>
+        </div>
+        <div class="cat-stat-cell">
+            <div class="l">Favorite</div>
+            <div class="n">Asteroids</div>
+            <div class="s">22 sessions</div>
+        </div>
+    </div>
+
+    <div class="cat-wrap">
+
+        <div class="cat-section-head">
+            <h2>This week's headliner</h2>
+            <div class="rule"></div>
+            <a class="more" href="#all-cabinets">Browse all →</a>
+        </div>
+        <div class="cat-featured">
+            <div class="cat-featured-art">
+                <div class="ret-feat-scene">
+                    <div class="asteroid a1"></div>
+                    <div class="asteroid a2"></div>
+                    <div class="asteroid a3"></div>
+                    <div class="asteroid a4"></div>
+                    <div class="ship">
+                        <svg viewBox="0 0 64 64" aria-hidden="true">
+                            <polygon points="32,8 22,14 14,22 18,32 14,42 28,46 42,42 46,32 42,22 38,14" fill="none" stroke="#FF99CC" stroke-width="3" stroke-linejoin="round"/>
+                            <polygon points="32,28 28,34 32,40 36,34" fill="#FF55AA"/>
+                        </svg>
+                    </div>
+                </div>
+            </div>
+            <div class="cat-featured-body">
+                <div class="cat-featured-tag">★ Highest scoring</div>
+                <h3>Asteroids</h3>
+                <p>Pilot through a field of rocks. Thrust, rotate, fire. Hyperspace at your peril. Wave count and accuracy bonuses scale into the thousands once you survive past wave 5.</p>
+                <div class="cat-featured-stats">
+                    <div class="stat"><div class="l">Top score</div><div class="n accent">12,200</div></div>
+                    <div class="stat"><div class="l">Plays</div><div class="n">9.4k</div></div>
+                    <div class="stat"><div class="l">Difficulty</div><div class="n">Medium</div></div>
+                </div>
+                <div class="cat-featured-cta">
+                    <a class="cat-btn" href="../asteroids/">Insert coin →</a>
+                    <a class="cat-btn outline" href="../asteroids/">Controls</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="all-cabinets" class="cat-section-head">
+            <h2>All cabinets</h2>
+            <span class="sub">7 games · 6 new drops</span>
+            <div class="rule"></div>
+        </div>
+        <div class="cat-grid">
+
+            <a class="cat-card featured" href="../asteroids/">
+                <span class="cat-card-tag">Medium</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#A78BFA2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,8 22,14 14,22 18,32 14,42 28,46 42,42 46,32 42,22 38,14" fill="none" stroke="#A78BFA" stroke-width="3" stroke-linejoin="round"/><polygon points="32,28 28,34 32,40 36,34" fill="#A78BFA"/></svg>
+                    </div>
+                    <div>
+                        <h3>Asteroids</h3>
+                        <div class="desc">Pilot through the rocks.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">12,200</div></div>
+                    <div><div class="l">Plays</div><div class="v">9.4k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Medium</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">12,200</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">22 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../simon/">
+                <span class="cat-card-tag">Memory</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#F084882E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 8 A24 24 0 0 1 56 32 L32 32 Z" fill="#F08488"/><path d="M56 32 A24 24 0 0 1 32 56 L32 32 Z" fill="#F08488" opacity="0.7"/><path d="M32 56 A24 24 0 0 1 8 32 L32 32 Z" fill="#F08488" opacity="0.5"/><path d="M8 32 A24 24 0 0 1 32 8 L32 32 Z" fill="#F08488" opacity="0.85"/></svg>
+                    </div>
+                    <div>
+                        <h3>Simon</h3>
+                        <div class="desc">Watch. Repeat. Repeat longer.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">27</div></div>
+                    <div><div class="l">Plays</div><div class="v">8.6k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Memory</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">27</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">9 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../spacex-lander/">
+                <span class="cat-card-tag">Tricky</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#5DC4D92E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="28" y="10" width="8" height="26" rx="3" fill="#5DC4D9"/><polygon points="28,36 22,48 30,48" fill="#5DC4D9" opacity="0.7"/><polygon points="36,36 42,48 34,48" fill="#5DC4D9" opacity="0.7"/><rect x="10" y="50" width="44" height="4" rx="1" fill="#5DC4D9" opacity="0.4"/></svg>
+                    </div>
+                    <div>
+                        <h3>SpaceX Lander</h3>
+                        <div class="desc">Land the Falcon 9.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">7,100</div></div>
+                    <div><div class="l">Plays</div><div class="v">7.1k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Tricky</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">—</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">7 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../frogger/">
+                <span class="cat-card-tag">Easy</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#7BC97B2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="34" rx="12" ry="9" fill="#7BC97B"/><circle cx="26" cy="26" r="4" fill="#7BC97B"/><circle cx="38" cy="26" r="4" fill="#7BC97B"/><circle cx="26" cy="25" r="1.5" fill="#fff"/><circle cx="38" cy="25" r="1.5" fill="#fff"/></svg>
+                    </div>
+                    <div>
+                        <h3>Frogger</h3>
+                        <div class="desc">Hop home through traffic.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">880</div></div>
+                    <div><div class="l">Plays</div><div class="v">6.7k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">880</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">5 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../lunar-lander/">
+                <span class="cat-card-tag">Tricky</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#8FA8E62E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,12 22,28 42,28" fill="#8FA8E6"/><rect x="26" y="28" width="12" height="6" fill="#8FA8E6" opacity="0.8"/><line x1="22" y1="28" x2="16" y2="40" stroke="#8FA8E6" stroke-width="2"/><line x1="42" y1="28" x2="48" y2="40" stroke="#8FA8E6" stroke-width="2"/><rect x="14" y="44" width="36" height="6" rx="1" fill="#8FA8E6" opacity="0.3"/></svg>
+                    </div>
+                    <div>
+                        <h3>Lunar Lander</h3>
+                        <div class="desc">Touch down softly.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">5,500</div></div>
+                    <div><div class="l">Plays</div><div class="v">5.5k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Tricky</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">—</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">6 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../missile-command/">
+                <span class="cat-card-tag">Hectic</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#F2A65A2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><circle cx="20" cy="38" r="3" fill="#F2A65A"/><line x1="20" y1="38" x2="40" y2="14" stroke="#F2A65A" stroke-width="2.5" stroke-dasharray="3 3"/><polygon points="40,12 36,18 44,18" fill="#F2A65A"/><rect x="10" y="44" width="44" height="6" rx="2" fill="#F2A65A" opacity="0.4"/></svg>
+                    </div>
+                    <div>
+                        <h3>Missile Command</h3>
+                        <div class="desc">Defend cities from above.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">4,900</div></div>
+                    <div><div class="l">Plays</div><div class="v">4.9k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Hectic</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">—</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">4 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../defender/">
+                <span class="cat-card-tag">Hard</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#9B7EDC2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><path d="M8 32 Q20 22 32 30 T56 28" fill="none" stroke="#9B7EDC" stroke-width="3"/><circle cx="14" cy="34" r="2" fill="#9B7EDC"/><circle cx="48" cy="32" r="2" fill="#9B7EDC" opacity="0.7"/></svg>
+                    </div>
+                    <div>
+                        <h3>Defender</h3>
+                        <div class="desc">Save the humanoids.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">3,200</div></div>
+                    <div><div class="l">Plays</div><div class="v">3.2k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Hard</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">—</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">3 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+        </div>
+
+        <div class="cat-ad-row">
+            <div class="ad-slot">
+                <div>Sponsored · In-feed</div>
+                <div class="ad-size">728 × 90</div>
+                <ins class="adsbygoogle"
+                     style="display:none"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="horizontal"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+        <div class="cat-twocol">
+            <div class="cat-challenge">
+                <div class="cat-challenge-eyebrow"><span class="cat-challenge-dot"></span> Live now · ends Sunday</div>
+                <h3>Survival run<br>weekly bracket</h3>
+                <p>Single life, single cabinet, single attempt. Your run resets every Sunday at midnight. Top three survivors get the cathode glow on their profile for the week.</p>
+                <div class="cat-challenge-grid">
+                    <div><div class="l">Players</div><div class="n">142</div></div>
+                    <div><div class="l">Top run</div><div class="n accent">38m 14s</div></div>
+                    <div><div class="l">Cabinet</div><div class="n">Asteroids</div></div>
+                    <div><div class="l">Your rank</div><div class="n">#19</div></div>
+                </div>
+                <div class="cat-challenge-cta">
+                    <a class="primary" href="../asteroids/">Start your run →</a>
+                    <button class="ghost" type="button">Last week's winners</button>
+                </div>
+            </div>
+            <div class="cat-hall">
+                <h3>Hall of fame</h3>
+                <div class="sub">All-time top scores · all cabinets</div>
+                <div class="cat-hall-row">
+                    <div class="pos p1">1</div>
+                    <div class="who">starcaster<span>Asteroids</span></div>
+                    <div class="amt">88,400</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos p2">2</div>
+                    <div class="who">moonshepherd<span>Lunar Lander</span></div>
+                    <div class="amt">42,100</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos p3">3</div>
+                    <div class="who">crt.dust<span>Defender</span></div>
+                    <div class="amt">36,200</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos">4</div>
+                    <div class="who">simon.recall<span>Simon</span></div>
+                    <div class="amt">62</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos">5</div>
+                    <div class="who">hopfield<span>Frogger</span></div>
+                    <div class="amt">2,140</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos">6</div>
+                    <div class="who you">You<span>Asteroids</span></div>
+                    <div class="amt">12,200</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cat-strategy">
+            <div class="cat-strategy-head">
+                <div><h2>Cabinet wisdom</h2></div>
+                <span class="sub">Tips from the arcade · old-school survival</span>
+            </div>
+            <div class="cat-strategy-grid">
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Asteroids: don't hyperspace early</h4>
+                    <p>Hyperspace is your panic button — but it places you randomly, sometimes inside a rock. Save it for wave 6+ when the screen is too crowded to thrust safely.</p>
+                    <ul>
+                        <li>Big rock <b>20 pts</b></li>
+                        <li>Medium rock <b>50 pts</b></li>
+                        <li>Small rock <b>100 pts</b></li>
+                    </ul>
+                </div>
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Lunar Lander: cut thrust late</h4>
+                    <p>Gravity is gentle but compounds. Thrust hard early to kill horizontal velocity, then coast and feather the engine in the last 50 meters. Fuel matters; don't overshoot.</p>
+                    <ul>
+                        <li>Soft landing <b>×2 fuel bonus</b></li>
+                        <li>Pad bullseye <b>+500</b></li>
+                        <li>Out of fuel <b>game over</b></li>
+                    </ul>
+                </div>
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Simon: chunk your patterns</h4>
+                    <p>Don't memorize note-by-note past round 8. Group sequences in chunks of 3–4 and rehearse the rhythm aloud. The brain holds melody longer than digits.</p>
+                    <ul>
+                        <li>Each repeat <b>+1 pt</b></li>
+                        <li>Round 20+ <b>2× speed</b></li>
+                        <li>Round 30+ <b>random tempo</b></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cat-ad-row">
+            <div class="ad-slot">
+                <div>Sponsored · Bottom banner</div>
+                <div class="ad-size">728 × 90</div>
+                <ins class="adsbygoogle"
+                     style="display:none"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="cat-disclaimer">
+        <b>Free play.</b> No quarters, no continues, no accounts. Scores save locally — clearing site data wipes your records.
+    </div>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="..">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="..">All games</a>
+            <a href="../privacy.html">Privacy</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+</body>
+</html>
