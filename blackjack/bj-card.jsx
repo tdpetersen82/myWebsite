@@ -67,23 +67,26 @@ function CardFace({ rank, suit, w, h }) {
 
       {isFace && (
         <div style={{
-          position:'absolute', left: 14, right: 14, top: 24, bottom: 24,
-          border:`1.5px solid ${color}`,
+          position:'absolute', left: 12, right: 12, top: 22, bottom: 22,
+          border:`1px solid ${color}`,
           borderRadius: 6,
-          background: `repeating-linear-gradient(45deg, ${color}11 0 4px, transparent 4px 8px), linear-gradient(180deg, #fffdf6, #f0e7cf)`,
-          display:'flex', alignItems:'center', justifyContent:'center',
-          flexDirection:'column'
+          background: `radial-gradient(ellipse at center, ${color}10 0%, transparent 65%), linear-gradient(180deg, #fffdf6, #f0e7cf)`,
+          display:'flex', alignItems:'center', justifyContent:'space-between',
+          flexDirection:'column',
+          padding: `${w*0.08}px 0`,
+          overflow:'hidden'
         }}>
-          <div style={{
+          <span style={{ fontSize: w*0.22, color, fontFamily:'serif', lineHeight: 1 }}>{suit}</span>
+          <span style={{
             fontFamily:"'Playfair Display', serif",
             fontStyle:'italic',
-            fontSize: w*0.36,
+            fontSize: w*0.5,
             fontWeight: 700,
             color,
-            textShadow:'0 1px 0 rgba(0,0,0,.06)',
+            textShadow:'0 1px 0 rgba(0,0,0,.08)',
             lineHeight: 1
-          }}>{rank}</div>
-          <div style={{ fontSize: w*0.18, color, marginTop: 2, fontFamily:'serif' }}>{suit}</div>
+          }}>{rank}</span>
+          <span style={{ fontSize: w*0.22, color, fontFamily:'serif', lineHeight: 1, transform:'rotate(180deg)' }}>{suit}</span>
         </div>
       )}
     </div>
