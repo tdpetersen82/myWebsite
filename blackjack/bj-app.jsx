@@ -811,7 +811,7 @@ function App() {
                 <ResolvedZone
                   result={overallResult}
                   onContinue={nextRound}
-                  onRebet={() => { nextRound(); setTimeout(rebet, 50); }}
+                  onRebet={() => { nextRound(); setTimeout(rebet, 50); setTimeout(deal, 100); }}
                   hasLast={lastBet.length > 0}
                 />
               )}
