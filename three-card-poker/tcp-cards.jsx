@@ -60,26 +60,25 @@ function TCPCardFace({ rank, suit, w }) {
 
       {isFace && (
         <div style={{
-          position: 'absolute', left: 12, right: 12, top: 22, bottom: 22,
-          border: `1px solid ${color}`,
-          borderRadius: 6,
-          background: `radial-gradient(ellipse at center, ${color}10 0%, transparent 65%), linear-gradient(180deg, #fffdf6, #f0e7cf)`,
-          display: 'flex', alignItems: 'center', justifyContent: 'space-between',
-          flexDirection: 'column',
-          padding: `${w * 0.08}px 0`,
-          overflow: 'hidden'
+          position: 'absolute', inset: 0, display: 'flex',
+          alignItems: 'center', justifyContent: 'center'
         }}>
-          <span style={{ fontSize: w * 0.22, color, fontFamily: 'serif', lineHeight: 1 }}>{suit}</span>
-          <span style={{
-            fontFamily: "'Playfair Display', serif",
-            fontStyle: 'italic',
-            fontSize: w * 0.5,
-            fontWeight: 700,
-            color,
-            textShadow: '0 1px 0 rgba(0,0,0,.08)',
-            lineHeight: 1
-          }}>{rank}</span>
-          <span style={{ fontSize: w * 0.22, color, fontFamily: 'serif', lineHeight: 1, transform: 'rotate(180deg)' }}>{suit}</span>
+          <div style={{
+            position: 'relative',
+            width: w * 0.66, height: w * 0.66,
+            display: 'flex', alignItems: 'center', justifyContent: 'center',
+            background: `radial-gradient(circle, ${color}1f 0%, transparent 70%)`
+          }}>
+            <span style={{
+              fontFamily: "'Playfair Display', serif",
+              fontStyle: 'italic',
+              fontSize: w * 0.62,
+              fontWeight: 700,
+              color,
+              textShadow: '0 2px 3px rgba(0,0,0,.15)',
+              lineHeight: 1
+            }}>{rank}</span>
+          </div>
         </div>
       )}
     </div>
