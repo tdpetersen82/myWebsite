@@ -115,7 +115,7 @@ function CardBack({ design = 'damask' }) {
           fontFamily:"'Playfair Display', serif",
           fontSize: 24, color:'rgba(230,197,144,.85)',
           fontStyle:'italic', letterSpacing:'.1em'
-        }}>BJ</span>
+        }}>LG</span>
       </div>
     </div>
   );

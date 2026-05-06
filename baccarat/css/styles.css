@@ -176,9 +176,12 @@
     justify-content: center;
 }
 .card-back::after {
-    content: '\2660';
-    font-size: 28px;
-    color: rgba(255,255,255,0.3);
+    content: 'LG';
+    font-family: 'Playfair Display', Georgia, serif;
+    font-style: italic;
+    font-size: 22px;
+    letter-spacing: .08em;
+    color: rgba(255,255,255,0.5);
 }
 
 /* ── Hint Panel ──────────────────────────────────── */
