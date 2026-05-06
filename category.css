@@ -1,4 +1,4 @@
-/* Shared category landing layout — used by /arcade, /retro, /puzzles.
+/* Shared category landing layout — used by /arcade, /kids, /puzzles, /casino.
    Each page sets its own palette via CSS custom properties + adds the hero motif. */
 
 :root {

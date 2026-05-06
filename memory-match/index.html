@@ -1,0 +1,307 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Memory Match — Free Kids Game | Limestone Games</title>
+    <meta name="description" content="Flip the cards and find matching pairs. A friendly memory game for kids — three difficulty sizes, scores save locally.">
+    <meta name="keywords" content="memory match, concentration, kids memory game, pairs, free browser game, family game">
+    <link rel="canonical" href="https://limestonegames.com/memory-match/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Memory Match","description":"Flip cards to find matching pairs. Three difficulty sizes for kids.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Kids","item":"https://limestonegames.com/kids/"},{"@type":"ListItem","position":3,"name":"Memory Match"}]}</script>
+    <meta property="og:title" content="Memory Match — Free Kids Game">
+    <meta property="og:description" content="Flip cards to find pairs. Friendly memory game for kids.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/memory-match/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+
+    <style>
+      :root {
+        --ink: #1F1A2E;
+        --bg-1: #FFF8DC;
+        --bg-2: #FFE4F0;
+        --bg-3: #DCEEFF;
+        --accent: #FF4F8B;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 20px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 760px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+      .top-bar {
+        width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        font-size: 14px; flex-wrap: wrap;
+      }
+      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
+      .top-bar a:hover { opacity: 1; }
+      h1 {
+        font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #FFA751, #FF4F8B);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .stats {
+        display: flex; gap: 18px; font-size: 14px; font-weight: 600;
+        background: rgba(255, 255, 255, 0.6);
+        padding: 10px 18px; border-radius: 999px;
+        box-shadow: 0 4px 12px rgba(31, 26, 46, 0.06);
+        flex-wrap: wrap; justify-content: center;
+      }
+      .stats div { display: flex; gap: 6px; align-items: baseline; }
+      .stats .l { color: rgba(31, 26, 46, 0.55); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+      .stats .v { font-size: 18px; font-weight: 800; color: var(--accent); }
+      .level-pick {
+        display: flex; gap: 8px;
+      }
+      .level-pick button {
+        padding: 8px 18px; border-radius: 999px; border: 2px solid rgba(31, 26, 46, 0.12);
+        background: rgba(255, 255, 255, 0.65); color: var(--ink);
+        font: inherit; font-weight: 700; cursor: pointer;
+      }
+      .level-pick button.active {
+        background: var(--accent); color: #fff; border-color: var(--accent);
+      }
+      .board-wrap {
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 24px;
+        padding: 18px;
+        box-shadow: 0 10px 30px rgba(31, 26, 46, 0.08);
+        position: relative;
+      }
+      .board {
+        display: grid; gap: 10px;
+        --cell: 110px;
+        grid-template-columns: repeat(var(--cols), var(--cell));
+        grid-auto-rows: var(--cell);
+      }
+      .card {
+        position: relative;
+        border-radius: 14px;
+        cursor: pointer;
+        perspective: 800px;
+        transition: transform 0.1s;
+      }
+      .card:hover:not(.matched):not(.flipped) { transform: translateY(-2px); }
+      .card-inner {
+        position: absolute; inset: 0;
+        transform-style: preserve-3d;
+        transition: transform 0.4s;
+        border-radius: 14px;
+      }
+      .card.flipped .card-inner, .card.matched .card-inner { transform: rotateY(180deg); }
+      .face {
+        position: absolute; inset: 0;
+        display: flex; align-items: center; justify-content: center;
+        font-size: 48px;
+        border-radius: 14px;
+        backface-visibility: hidden;
+        box-shadow: inset 0 -6px 8px rgba(0, 0, 0, 0.1), inset 0 4px 6px rgba(255, 255, 255, 0.45);
+      }
+      .face.back {
+        background: linear-gradient(135deg, #FF8FA3, #FF4F8B);
+        color: #fff;
+        font-weight: 800;
+      }
+      .face.front {
+        background: linear-gradient(135deg, #FFF8DC, #DCEEFF);
+        transform: rotateY(180deg);
+      }
+      .card.matched .face.front {
+        background: linear-gradient(135deg, #B8F2C0, #7BC97B);
+      }
+      .controls {
+        display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+      }
+      button.action {
+        font: inherit; font-weight: 700;
+        padding: 12px 22px; border-radius: 999px;
+        border: 2px solid transparent;
+        background: var(--accent); color: #fff;
+        cursor: pointer; transition: transform 0.1s;
+        box-shadow: 0 4px 12px rgba(255, 79, 139, 0.3);
+      }
+      button.action.ghost { background: transparent; color: var(--ink); border-color: rgba(31, 26, 46, 0.2); box-shadow: none; }
+      button.action:hover { transform: translateY(-1px); }
+      .hint { font-size: 13px; color: rgba(31, 26, 46, 0.6); text-align: center; max-width: 540px; }
+      .win {
+        position: absolute; inset: 18px;
+        background: rgba(255, 255, 255, 0.94);
+        border-radius: 14px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+      }
+      .win.show { opacity: 1; pointer-events: auto; }
+      .win h2 { font-size: 32px; color: var(--accent); }
+      .win p { font-size: 16px; color: rgba(31, 26, 46, 0.7); text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../kids/">All Kids games</a>
+        </div>
+        <h1>Memory Match</h1>
+        <div class="level-pick">
+            <button data-size="4" class="active">Easy · 4</button>
+            <button data-size="12">Medium · 12</button>
+            <button data-size="20">Hard · 20</button>
+        </div>
+        <div class="stats">
+            <div><span class="l">Moves</span><span class="v" id="moves">0</span></div>
+            <div><span class="l">Pairs found</span><span class="v" id="found">0</span></div>
+            <div><span class="l">Best (hard)</span><span class="v" id="best">—</span></div>
+        </div>
+        <div class="board-wrap">
+            <div id="board" class="board"></div>
+            <div class="win" id="win">
+                <h2 id="winTitle">You did it!</h2>
+                <p id="winText">Found all pairs.</p>
+                <button class="action" onclick="restart()">Play again</button>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="action" onclick="restart()">New game</button>
+            <a href="../kids/"><button class="action ghost">More kids games</button></a>
+        </div>
+        <p class="hint">Tap two cards to flip them. If they match, they stay! Find every pair to win.</p>
+    </div>
+
+    <script>
+        const KEY_BEST = 'kids-memory-match-best-hard';
+        const ICONS = ['🐶','🐱','🐭','🦊','🐻','🐼','🦁','🐸','🐵','🐔','🦄','🐢','🐝','🐠','🦋','🌸','🍎','🍌','🍓','⭐','☀️','🌈','🚂','🚀'];
+
+        let cards = [];
+        let flipped = [];
+        let moves = 0;
+        let found = 0;
+        let size = 4;
+        let lockBoard = false;
+
+        const boardEl = document.getElementById('board');
+        const movesEl = document.getElementById('moves');
+        const foundEl = document.getElementById('found');
+        const bestEl = document.getElementById('best');
+        const winEl = document.getElementById('win');
+        const winTitleEl = document.getElementById('winTitle');
+        const winTextEl = document.getElementById('winText');
+
+        document.querySelectorAll('.level-pick button').forEach(b => {
+            b.addEventListener('click', () => {
+                document.querySelectorAll('.level-pick button').forEach(x => x.classList.remove('active'));
+                b.classList.add('active');
+                size = parseInt(b.dataset.size, 10);
+                restart();
+            });
+        });
+
+        function loadBest() {
+            const v = parseInt(localStorage.getItem(KEY_BEST) || '0', 10);
+            bestEl.textContent = v > 0 ? (v + ' moves') : '—';
+            return v;
+        }
+
+        function shuffle(arr) {
+            for (let i = arr.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [arr[i], arr[j]] = [arr[j], arr[i]];
+            }
+            return arr;
+        }
+
+        function buildBoard() {
+            boardEl.innerHTML = '';
+            const pairs = size / 2;
+            const chosen = shuffle([...ICONS]).slice(0, pairs);
+            const deck = shuffle([...chosen, ...chosen]);
+            cards = deck.map((icon, idx) => ({ idx, icon, matched: false, flipped: false }));
+
+            const cols = size === 4 ? 2 : (size === 12 ? 4 : 5);
+            boardEl.style.setProperty('--cols', cols);
+            const cell = size === 4 ? 130 : (size === 12 ? 110 : 92);
+            boardEl.style.setProperty('--cell', cell + 'px');
+
+            cards.forEach(c => {
+                const el = document.createElement('div');
+                el.className = 'card';
+                el.dataset.idx = c.idx;
+                el.innerHTML = '<div class="card-inner">'
+                    + '<div class="face back">?</div>'
+                    + '<div class="face front">' + c.icon + '</div>'
+                    + '</div>';
+                el.addEventListener('click', () => onCardClick(c.idx, el));
+                boardEl.appendChild(el);
+            });
+        }
+
+        function onCardClick(idx, el) {
+            if (lockBoard) return;
+            const c = cards[idx];
+            if (c.flipped || c.matched) return;
+            c.flipped = true;
+            el.classList.add('flipped');
+            flipped.push({ idx, el });
+            if (flipped.length === 2) {
+                moves++;
+                movesEl.textContent = moves;
+                checkPair();
+            }
+        }
+
+        function checkPair() {
+            const [a, b] = flipped;
+            if (cards[a.idx].icon === cards[b.idx].icon) {
+                cards[a.idx].matched = true;
+                cards[b.idx].matched = true;
+                a.el.classList.add('matched');
+                b.el.classList.add('matched');
+                found++;
+                foundEl.textContent = found;
+                flipped = [];
+                if (found === size / 2) win();
+            } else {
+                lockBoard = true;
+                setTimeout(() => {
+                    cards[a.idx].flipped = false;
+                    cards[b.idx].flipped = false;
+                    a.el.classList.remove('flipped');
+                    b.el.classList.remove('flipped');
+                    flipped = [];
+                    lockBoard = false;
+                }, 900);
+            }
+        }
+
+        function win() {
+            let isNewBest = false;
+            if (size === 20) {
+                const cur = parseInt(localStorage.getItem(KEY_BEST) || '0', 10);
+                if (cur === 0 || moves < cur) {
+                    localStorage.setItem(KEY_BEST, String(moves));
+                    bestEl.textContent = moves + ' moves';
+                    isNewBest = true;
+                }
+            }
+            winTitleEl.textContent = isNewBest ? 'New best!' : 'You did it!';
+            winTextEl.textContent = 'Found all ' + (size / 2) + ' pairs in ' + moves + ' moves.';
+            winEl.classList.add('show');
+        }
+
+        function restart() {
+            moves = 0; found = 0; flipped = []; lockBoard = false;
+            movesEl.textContent = 0;
+            foundEl.textContent = 0;
+            winEl.classList.remove('show');
+            buildBoard();
+        }
+
+        loadBest();
+        restart();
+    </script>
+</body>
+</html>

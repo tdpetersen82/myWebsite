@@ -6,7 +6,7 @@ Run through this before merging any user-visible change. Anything here that fail
 
 - [ ] `python3 -m http.server 8080` from repo root, open every page below at desktop width (≥1280px) and at narrow width (≤700px):
   - `/` (homepage)
-  - `/arcade/` `/retro/` `/puzzles/` `/casino/`
+  - `/arcade/` `/kids/` `/puzzles/` `/casino/`
   - The specific game(s) you touched
 - [ ] DevTools console: zero errors. Warnings limited to the standard babel-standalone "in-browser transformer" notice. No 404s in Network tab.
 
@@ -15,7 +15,7 @@ Run through this before merging any user-visible change. Anything here that fail
 The four section navs (`hub-nav`, `cat-nav`, `cas-nav`) must be visually interchangeable — clicking from one to another should not shift the row.
 
 - [ ] All four pages: nav anchored at `top: 0`, total height ~83px, links at the same X coordinates.
-- [ ] Same four links in the same order on every page: **Arcade · Retro · Puzzles · Casino**. No "Games" link anywhere.
+- [ ] Same four links in the same order on every page: **Arcade · Kids · Puzzles · Casino**. No "Games" link anywhere.
 - [ ] Current section is the only `.active` link. Homepage has no active link.
 - [ ] Breadcrumbs read "Home / Section Name" (never "Games / …").
 - [ ] Logo + wordmark unchanged across pages and clicks back to `/`.
