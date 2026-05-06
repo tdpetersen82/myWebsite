@@ -244,10 +244,14 @@ function FeltLogo() {
 
 function HintPanel({ hint }) {
   if (!hint) return null;
+  const headerLabel =
+    hint.kind === 'insurance' ? 'Insurance offered' :
+    hint.kind === 'bet' ? 'Suggested bet' :
+    'Basic strategy says';
   return (
     <div style={{
       position:'absolute', right: 14, top: 14,
-      width: 220,
+      width: 240,
       padding:'12px 14px',
       background:'linear-gradient(180deg, rgba(20,12,6,.95), rgba(10,6,3,.95))',
       borderRadius: 10,
@@ -261,7 +265,7 @@ function HintPanel({ hint }) {
         marginBottom: 4, display:'flex', alignItems:'center', gap: 6
       }}>
         <span style={{ width: 6, height: 6, borderRadius:'50%', background:'#e6c590' }} />
-        Basic strategy says
+        {headerLabel}
       </div>
       <div style={{
         fontFamily:"'Playfair Display', serif",
@@ -272,6 +276,18 @@ function HintPanel({ hint }) {
       <div style={{ fontSize: 11, color:'var(--ivory-dim)', lineHeight: 1.4 }}>
         {hint.explanation}
       </div>
+      {hint.odds && (hint.odds.dealerBust !== undefined || hint.odds.playerBust !== undefined) && (
+        <div style={{
+          marginTop: 10, paddingTop: 8,
+          borderTop: '1px solid rgba(230,197,144,.18)',
+          fontFamily:"'JetBrains Mono', ui-monospace, monospace",
+          fontSize: 9, letterSpacing:'.18em', color:'var(--brass)', textTransform:'uppercase',
+          display:'flex', gap: 10, justifyContent:'center', flexWrap:'wrap'
+        }}>
+          {hint.odds.dealerBust !== undefined && <span>DEALER BUST {hint.odds.dealerBust}%</span>}
+          {hint.odds.playerBust !== undefined && <span>· YOUR HIT {hint.odds.playerBust}%</span>}
+        </div>
+      )}
     </div>
   );
 }
