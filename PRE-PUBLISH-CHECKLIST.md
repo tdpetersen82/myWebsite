@@ -51,3 +51,94 @@ If you edited any `*.jsx` or `*.js` referenced from an `index.html` via `?v=...`
 
 - [ ] No accidentally committed `.env`, credentials, or large binary blobs.
 - [ ] `git status` clean. Branch up to date with `origin/main` after merge.
+
+## 8. SEO & crawl integrity (automated)
+
+Each command should produce no output (or exit 0). Anything else is a blocker. Run from the repo root.
+
+- [ ] **Sitemap is valid XML**
+  ```sh
+  xmllint --noout sitemap.xml
+  ```
+- [ ] **No leftover `example.com` placeholder URLs**
+  ```sh
+  ! grep -rn "example.com" --include="*.html" --include="*.xml" --include="*.txt" --include="*.json" .
+  ```
+- [ ] **No leftover stale brand `Arcade Game Hub`**
+  ```sh
+  ! grep -rn "Arcade Game Hub" --include="*.html" --include="*.json" .
+  ```
+- [ ] **No leftover `tdpetersen82.github.io` URLs in published files**
+  ```sh
+  ! grep -rn "tdpetersen82.github.io" --include="*.html" --include="*.xml" --include="*.json" .
+  ```
+- [ ] **Every URL in `sitemap.xml` corresponds to a real file on disk**
+  ```sh
+  python3 -c '
+  import re, os, sys
+  with open("sitemap.xml") as f: urls = re.findall(r"<loc>https://limestonegames\.com(/[^<]*)</loc>", f.read())
+  bad = []
+  for u in urls:
+      p = u.lstrip("/")
+      if p == "" or p.endswith("/"):
+          if not os.path.isfile(os.path.join(p, "index.html")): bad.append(u)
+      else:
+          if not os.path.isfile(p): bad.append(u)
+  print("\n".join(bad)) if bad else print("OK")
+  sys.exit(1 if bad else 0)'
+  ```
+- [ ] **`robots.txt` points at the production sitemap URL**
+  ```sh
+  grep -q "Sitemap: https://limestonegames.com/sitemap.xml" robots.txt
+  ```
+- [ ] **Image assets referenced from manifest/OG/Twitter exist on disk** (any `MISSING:` line is a blocker)
+  ```sh
+  for ref in $(grep -rhoE '/(og-image|icon-[0-9]+)\.png' --include="*.html" --include="*.json" . | sort -u); do
+    f="${ref#/}"
+    [ -f "$f" ] || echo "MISSING: $f"
+  done
+  ```
+
+## 9. Per-page SEO meta sweep (automated)
+
+Every published HTML page must contain `<title>`, `<meta name="description">`, `<link rel="canonical">`, `og:title`, `og:url`, `twitter:card`, and at least one `application/ld+json` block.
+
+- [ ] **Run the sweep — no output means all pages pass**
+  ```sh
+  { find . -maxdepth 2 -name "index.html" -not -path "./node_modules/*" -not -path "./.claude/*"; echo "./privacy.html"; } | while read -r p; do
+    for tag in '<title>' 'name="description"' 'rel="canonical"' 'og:title' 'og:url' 'twitter:card' 'application/ld+json'; do
+      grep -qF "$tag" "$p" || echo "$p missing: $tag"
+    done
+  done
+  ```
+
+## 10. Schema validation (manual, browser)
+
+Paste each URL into the **Google Rich Results Test** (https://search.google.com/test/rich-results). Schemas must validate without errors.
+
+- [ ] Homepage `https://limestonegames.com/` — expects `Organization`, `ItemList`.
+- [ ] One category, e.g. `https://limestonegames.com/casino/` — expects `BreadcrumbList`.
+- [ ] One game, e.g. `https://limestonegames.com/snake/` — expects `VideoGame`, `BreadcrumbList`.
+
+## 11. Open Graph & social preview (manual, browser)
+
+For each of the three URLs above:
+
+- [ ] **Facebook Sharing Debugger** (https://developers.facebook.com/tools/debug/) — title, description, and image render.
+- [ ] **Twitter Card Validator** (https://cards-dev.twitter.com/validator) — same expectation.
+
+If `og-image.png` is still missing on the production server, the preview image won't render — see §12.
+
+## 12. Known blockers (must resolve before going live)
+
+These items are flagged but not fixed in code; they need assets or external decisions:
+
+- [ ] **`og-image.png` exists at the repo root** (1200×630). Until then, social shares show no preview image.
+- [ ] **AdSense publisher ID** — `ca-pub-XXXXXXXXXXXXXXXX` is still a placeholder site-wide. Replace with the real ID, or remove the `<script>` tag.
+- [ ] **DNS canonical confirmed** — every page declares `https://limestonegames.com` (apex) as canonical. If your hosting actually serves `www.limestonegames.com` as canonical, swap apex → www in every page and 301-redirect apex → www.
+- [ ] **PWA icons (optional)** — `manifest.json` no longer references icons. If you want the PWA install banner, add `icon-192.png` and `icon-512.png` and put them in the `icons` array.
+
+## 13. After deploy
+
+- [ ] **Resubmit sitemap to Google Search Console** — triggers a recrawl and clears stale URLs (e.g. the phantom games we just removed) from the index over time.
+- [ ] `curl -I https://limestonegames.com/robots.txt` returns 200 and the body contains the production sitemap URL.
