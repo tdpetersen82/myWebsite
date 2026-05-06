@@ -122,7 +122,7 @@
         let active = null; // current draggable
         let drag = null; // { dx, dy }
         let streak = 0, sorted = 0;
-        let fallSpeed = 35;
+        let fallSpeed = 110; // pixels per second
         let last = 0;
         let bouncing = null; // { x, y, vx, vy, target, shape, color }
 
@@ -239,7 +239,7 @@
 
             if (active) {
                 if (active.falling && !drag) {
-                    active.y += fallSpeed * dt * 60 * 0.5;
+                    active.y += fallSpeed * dt;
                     if (active.y > H + 60) {
                         // missed (slid off bottom)
                         streak = 0;
@@ -298,7 +298,7 @@
                     localStorage.setItem(KEY, String(best));
                     bestEl.textContent = best;
                 }
-                fallSpeed = Math.min(110, fallSpeed + 1.4);
+                fallSpeed = Math.min(280, fallSpeed + 4);
                 active = null;
             } else {
                 streak = 0;
@@ -319,7 +319,7 @@
         window.addEventListener('touchend', endDrag);
 
         function restart() {
-            streak = 0; sorted = 0; fallSpeed = 35;
+            streak = 0; sorted = 0; fallSpeed = 110;
             streakEl.textContent = 0; sortedEl.textContent = 0;
             layoutBuckets();
             spawnShape();
