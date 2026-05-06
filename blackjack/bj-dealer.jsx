@@ -419,13 +419,11 @@ function DealerNameplate({ name, gender = 'female' }) {
           boxShadow:'0 0 0 1px rgba(201,162,106,.55), 0 0 8px rgba(201,162,106,.35)'
         }}
       />
-      <div style={{ display:'inline-flex', alignItems:'baseline', gap: 10 }}>
-        <span style={{ fontSize: 11, letterSpacing:'.18em', color:'var(--ivory-dim)', textTransform:'uppercase' }}>Your dealer</span>
-        <span style={{
-          fontFamily:"'Playfair Display', serif",
-          fontSize: 19, color:'var(--brass-2)', fontWeight: 600, letterSpacing:'.02em'
-        }}>{name}</span>
-      </div>
+      <span style={{ fontSize: 11, lineHeight: 1, letterSpacing:'.18em', color:'var(--ivory-dim)', textTransform:'uppercase' }}>Your dealer</span>
+      <span style={{
+        fontFamily:"'Playfair Display', serif",
+        fontSize: 19, lineHeight: 1, color:'var(--brass-2)', fontWeight: 600, letterSpacing:'.02em'
+      }}>{name}</span>
     </div>
   );
 }
