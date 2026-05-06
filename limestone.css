@@ -37,7 +37,7 @@ body.hub-root {
 }
 
 .hub-shell {
-  padding: 24px 40px 48px;
+  padding: 0 40px 48px;
   max-width: 1500px;
   margin: 0 auto;
 }
@@ -48,7 +48,7 @@ body.hub-root {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 8px 0 22px;
+  padding: 24px 0;
   border-bottom: 1px solid var(--line);
   margin-bottom: 24px;
 }
