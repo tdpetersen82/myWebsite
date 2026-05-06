@@ -63,6 +63,7 @@ function basicStrategy(player, dealerUp) {
   const pair = player.length === 2 && player[0].rank === player[1].rank;
   const dealerKey = dealerUp.rank === 'A' ? 'A' : Math.min(cardVal(dealerUp.rank), 10);
   const dealerBust = DEALER_BUST_PCT[dealerKey];
+  const up = dealerUp.rank === 'A' ? 'ace' : String(dealerKey);
 
   function out(action, explanation) {
     const odds = { dealerBust };
@@ -73,35 +74,35 @@ function basicStrategy(player, dealerUp) {
 
   if (pair) {
     const r = player[0].rank;
-    if (r === 'A') return out('Split', 'Always split aces — strongest move in the game. You only get one card per ace, though, no further hits or doubles.');
-    if (r === '8') return out('Split', "Always split eights — sixteen is the worst hard total in blackjack; two fresh starts beat one bust-prone hand.");
-    if (['10','J','Q','K'].includes(r)) return out('Stand', 'Twenty is golden. Never break it apart.');
-    if (r === '9' && [2,3,4,5,6,8,9].includes(dv)) return out('Split', "Two nines play stronger as separate hands against the dealer's weak upcards.");
-    if (r === '7' && dv <= 7) return out('Split', 'Split sevens against weak dealer cards — fourteen is a tough total.');
-    if (r === '6' && dv <= 6) return out('Split', 'Twelve is bust-prone; sixes do better as two hands when dealer is weak.');
-    if (r === '4' && [5,6].includes(dv)) return out('Split', 'Only split fours against five or six.');
-    if ((r === '2' || r === '3') && dv <= 7) return out('Split', "Splits cheaply build two starts vs. dealer's weak board.");
+    if (r === 'A') return out('Split', `Aces are the most profitable split in the game — each one starts a new hand at 11. Catch: you only get one card per ace, no further hits or doubles. Still always worth it.`);
+    if (r === '8') return out('Split', `Hard 16 is the worst total in blackjack — too high to safely hit, too weak to win standing. Two fresh starts at 8 dodge it entirely, especially against the dealer's ${up}.`);
+    if (['10','J','Q','K'].includes(r)) return out('Stand', `20 wins against everything but a dealer 21. Splitting trades a near-certain win for two ten-starts that aren't as strong. Don't break it.`);
+    if (r === '9' && [2,3,4,5,6,8,9].includes(dv)) return out('Split', `18 is decent, but vs the dealer's ${up}, two fresh nines extract more EV. (Pair of 9s vs 7, 10, or ace: stand on the 18.)`);
+    if (r === '7' && dv <= 7) return out('Split', `14 is one of the toughest totals — too low to stand, too high to hit comfortably. Vs the dealer's ${up}, two starting sevens are better than one stuck 14.`);
+    if (r === '6' && dv <= 6) return out('Split', `12 from a pair of sixes is bust-prone on a hit and a probable loser if you stand. Vs the dealer's ${up} (weak), splitting puts two hands into play while they're most likely to break.`);
+    if (r === '4' && [5,6].includes(dv)) return out('Split', `Eight is weak to hit. The dealer's ${up} is in the bust zone, so splitting fours catches their weakest spot — two starting 4s beat one 8.`);
+    if ((r === '2' || r === '3') && dv <= 7) return out('Split', `Splitting cheaply when the dealer's ${up} is weak (busts often) — two hands in play extract more than one weak hit-or-stand decision.`);
   }
 
   if (soft) {
-    if (total >= 19) return out('Stand', 'Soft nineteen or better — stand and let the dealer chase.');
+    if (total >= 19) return out('Stand', `Soft ${total} beats most dealer outcomes. Hitting risks turning a winner into a 17 or worse — stand pat.`);
     if (total === 18) {
-      if (dv >= 9) return out('Hit', 'Soft eighteen vs nine, ten, or ace — hit; the ace protects you from busting.');
-      return out('Stand', 'Soft eighteen plays well against weak upcards.');
+      if (dv >= 9) return out('Hit', `Soft 18 loses to the dealer's likely 19-20 here. Your ace flexes to 1 if you pull a face — you can't bust on one card, so hit safely for a shot at 19+.`);
+      return out('Stand', `Soft 18 vs the dealer's ${up} (weak) wins more often than it loses. Stand and let them try to make a hand.`);
     }
-    if (total === 17 && [3,4,5,6].includes(dv)) return out('Double', 'Soft seventeen vs. low dealer cards — double for value.');
-    return out('Hit', "Soft hands can't bust on one card. Take a free improvement.");
+    if (total === 17 && [3,4,5,6].includes(dv)) return out('Double', `Soft 17 vs a ${up} is the rare soft-hand double. The ace cushions the bust risk, and the dealer is in their weakest range — double for max value.`);
+    return out('Hit', `Soft hands can't bust on one card — the ace flexes from 11 to 1 if needed. Take the free improvement; ${total} alone won't beat much.`);
   }
 
-  if (total === 16 && dv >= 9) return out('Surrender', 'Sixteen against a strong upcard — half back beats the likely loss.');
-  if (total === 15 && dv === 10) return out('Surrender', 'Fifteen vs ten — surrender if allowed.');
-  if (total >= 17) return out('Stand', 'Hard seventeen and up — never hit. The risk of bust outweighs the gain.');
-  if (total >= 13 && dv <= 6) return out('Stand', 'Dealer is weak; let them be the one to bust.');
-  if (total === 12 && [4,5,6].includes(dv)) return out('Stand', "Dealer's most likely to bust on four, five, or six. Don't risk it.");
-  if (total === 11) return out('Double', 'Eleven is the best hand to double — many tens left in the shoe.');
-  if (total === 10 && dv <= 9) return out('Double', "Ten is strong; double when the dealer can't beat you with a face card.");
-  if (total === 9 && [3,4,5,6].includes(dv)) return out('Double', "Double nine against three through six — dealer's weakest range.");
-  return out('Hit', 'Take another card — your total is too low to stand confidently.');
+  if (total === 16 && dv >= 9) return out('Surrender', `Hard 16 vs the dealer's ${up} is a near-certain loss either way: hit and you bust the majority of the time, stand and the dealer's strong upcard beats you. Half back is the best math available.`);
+  if (total === 15 && dv === 10) return out('Surrender', `Hard 15 vs a 10 loses around 74% of the time. Hitting busts on more than half your draws. Surrender for half back if the table allows.`);
+  if (total >= 17) return out('Stand', `Hard ${total} stands — hitting busts on more cards than it improves you. Whatever the dealer's ${up} makes, you've already drawn the line.`);
+  if (total >= 13 && dv <= 6) return out('Stand', `The dealer's ${up} is weak — they're more likely to break than make a strong hand. Standing on ${total} forces them to play it out and bust.`);
+  if (total === 12 && [4,5,6].includes(dv)) return out('Stand', `The dealer's ${up} is the bust zone (4-6 break the most often). Don't take your own bust risk on a 12 when they're about to break for you.`);
+  if (total === 11) return out('Double', `11 is the best double in the game. Ten-value cards are 4 of 13 ranks (~31%) — your most likely landing spot is 21. Vs the dealer's ${up}, double for the extra unit.`);
+  if (total === 10 && dv <= 9) return out('Double', `10 doubles into 20 on any ten-card, and the dealer's ${up} can't make blackjack. Lock in the EV before they play.`);
+  if (total === 9 && [3,4,5,6].includes(dv)) return out('Double', `9 + a ten = 19, and the dealer's ${up} is the weakest range to face. Double down — they're most likely to break and a 19 wins big when they don't.`);
+  return out('Hit', `Hard ${total} is too low to stand against the dealer's ${up}. The dealer will likely outdraw you if you stop here — take another card.`);
 }
 
 // ─── App ──────────────────────────────────────────────
