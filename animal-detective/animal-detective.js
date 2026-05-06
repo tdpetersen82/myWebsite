@@ -37,7 +37,7 @@
 
   // ── Utilities ──────────────────────────────────────────────────────────
   function pickLine(key, ctx) {
-    const lines = (window.LILY_LINES || {})[key] || [];
+    const lines = (window.MADDIE_LINES || {})[key] || [];
     if (!lines.length) return '';
     const line = lines[Math.floor(Math.random() * lines.length)];
     return line.replace('{name}', (ctx && ctx.name) || '');
@@ -48,12 +48,12 @@
     return animals[Math.floor(Math.random() * animals.length)];
   }
 
-  // ── Lily portrait (zookeeper sprite) ──────────────────────────────────
+  // ── Maddie portrait (zookeeper sprite) ────────────────────────────────
   // assets/zookeepersprite.png is a 2x2 grid of expressions:
   //   ┌──────────┬──────────┐
-  //   │  happy   │   sad    │   ← top row: smile (yes/win), sad (lose)
+  //   │  happy   │   sad    │   ← top row: happy (yes/win), sad (lose)
   //   ├──────────┼──────────┤
-  //   │ thinking │ skeptical│   ← bottom row: thinking (idle), skeptical (no)
+  //   │ thinking │ annoyed  │   ← bottom row: thinking (idle), annoyed (no)
   //   └──────────┴──────────┘
   // CSS in index.html maps each expression to a quadrant via background-position.
 
@@ -181,8 +181,8 @@
 
     const sub = document.getElementById('guess-sub');
     sub.textContent = forced
-      ? "Tap the animal you think Lily is thinking of."
-      : "Type to filter, then tap the animal you think Lily is thinking of.";
+      ? "Tap the animal you think Maddie is thinking of."
+      : "Type to filter, then tap the animal you think Maddie is thinking of.";
 
     document.getElementById('guess-modal').classList.add('show');
 

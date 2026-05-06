@@ -4,20 +4,20 @@
 <meta charset="UTF-8" />
 <title>Animal Detective — Free Kids Game | Limestone Games</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Play Animal Detective free in your browser. Ask Detective Lily up to 20 yes-or-no questions to guess the mystery animal — 76 friendly creatures to discover. Made for kids ages 4-10.">
+<meta name="description" content="Play Animal Detective free in your browser. Ask Zookeeper Maddie up to 20 yes-or-no questions to guess the mystery animal — 76 friendly creatures to discover. Made for kids ages 4-10.">
 <meta name="keywords" content="animal detective, twenty questions, animal guessing game, kids game, free browser game, animal quiz, family game">
 <link rel="canonical" href="https://limestonegames.com/animal-detective/">
 <meta property="og:title" content="Animal Detective — Limestone Games">
-<meta property="og:description" content="Ask Detective Lily 20 yes-or-no questions to guess the mystery animal. 76 friendly creatures, made for kids 4-10.">
+<meta property="og:description" content="Ask Zookeeper Maddie 20 yes-or-no questions to guess the mystery animal. 76 friendly creatures, made for kids 4-10.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://limestonegames.com/animal-detective/">
 <meta property="og:image" content="https://limestonegames.com/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Animal Detective — Limestone Games">
-<meta name="twitter:description" content="Ask Detective Lily 20 yes-or-no questions to guess the mystery animal. 76 friendly creatures, made for kids 4-10.">
+<meta name="twitter:description" content="Ask Zookeeper Maddie 20 yes-or-no questions to guess the mystery animal. 76 friendly creatures, made for kids 4-10.">
 <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
 <link rel="manifest" href="../manifest.json">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Animal Detective","description":"Ask Detective Lily yes-or-no questions to guess the mystery animal. A twenty-questions style game with 76 friendly creatures for kids 4-10.","url":"https://limestonegames.com/animal-detective/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Animal Detective","description":"Ask Zookeeper Maddie yes-or-no questions to guess the mystery animal. A twenty-questions style game with 76 friendly creatures for kids 4-10.","url":"https://limestonegames.com/animal-detective/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Kids","item":"https://limestonegames.com/kids/"},{"@type":"ListItem","position":3,"name":"Animal Detective"}]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -147,7 +147,7 @@
     min-height: 0;
   }
 
-  /* ── Left column (Lily) ───────────────────────────────────────────── */
+  /* ── Left column (Maddie's portrait + speech) ─────────────────────── */
   .lily-card {
     background: var(--paper);
     border-radius: 28px;
@@ -746,7 +746,7 @@
     <!-- Main game area -->
     <div class="main-grid">
 
-      <!-- Left: Detective Lily -->
+      <!-- Left: Zookeeper Maddie -->
       <div class="lily-card">
         <div class="speech-wrap">
           <div class="speech-bubble">
@@ -755,7 +755,7 @@
         </div>
         <div id="lily-portrait" class="lily-portrait" data-expr="idle"></div>
         <div class="name-plate">
-          <div class="name">Detective Lily</div>
+          <div class="name">Zookeeper Maddie</div>
           <div class="case" id="case-num">Case #001</div>
         </div>
       </div>
@@ -784,7 +784,7 @@
 <div id="guess-modal" class="modal">
   <div class="modal-card">
     <h2 id="guess-title">Pick your answer</h2>
-    <div class="modal-sub" id="guess-sub">Type to filter, then tap the animal you think Lily is thinking of.</div>
+    <div class="modal-sub" id="guess-sub">Type to filter, then tap the animal you think Maddie is thinking of.</div>
     <input id="guess-search" type="text" placeholder="Type to filter… (e.g. eleph)" autocomplete="off" />
     <div id="guess-grid" class="guess-grid"></div>
     <button id="btn-cancel-guess" class="btn-cancel" type="button">Cancel — keep asking questions</button>
@@ -794,15 +794,16 @@
 <!-- Reveal overlay -->
 <div id="reveal-overlay" class="reveal-overlay"></div>
 
-<!-- Auto-scaling IIFE — same pattern as blackjack -->
+<!-- Auto-scaling IIFE — leaves a 24px breathing margin top and bottom so
+     the bottom-bar isn't flush against the screen edge. -->
 <script>
 (function() {
   var wrapper = document.getElementById('game-wrapper');
   function resize() {
-    var W = 1380, H = 860;
-    var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
+    var W = 1380, H = 860, pad = 24;
+    var s = Math.min(window.innerWidth / W, (window.innerHeight - pad * 2) / H, 1);
     wrapper.style.transform = 'scale(' + s + ')';
-    wrapper.style.marginTop = Math.max(0, (window.innerHeight - H * s) / 2) + 'px';
+    wrapper.style.marginTop = Math.max(pad, (window.innerHeight - H * s) / 2) + 'px';
   }
   window.addEventListener('resize', resize);
   resize();

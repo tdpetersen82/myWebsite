@@ -1,4 +1,4 @@
-// Animal Detective — questions and Lily's voice lines.
+// Animal Detective — questions and Maddie's voice lines.
 // Each question is a predicate against an animal record (see animals.js).
 // Categories: body | habitat | food | people
 
@@ -49,12 +49,12 @@ window.AD_CATEGORIES = [
   { id: "people",  label: "People",          emoji: "🏡" },
 ];
 
-window.LILY_LINES = {
+window.MADDIE_LINES = {
   greet: [
-    "Hi! I'm Detective Lily. I'm thinking of an animal — can you crack the case?",
-    "Welcome, partner! I picked an animal. Ask me questions to find out which one!",
+    "Hi! I'm Zookeeper Maddie. I'm thinking of an animal — can you crack the case?",
+    "Welcome, detective! I picked an animal. Ask me questions to find out which one!",
     "A new mystery animal! Ask me yes-or-no questions to figure it out.",
-    "I've got an animal in mind. Twenty questions to crack the case — let's go!",
+    "I've got an animal in mind. Twenty questions to guess it — let's go!",
   ],
   yes: [
     "Yes!",
