@@ -30,7 +30,6 @@ function TCPCardCorner({ rank, suit, flip = false }) {
 
 function TCPCardFace({ rank, suit, w }) {
   const color = TCP_SUITS[suit].color;
-  const isFace = rank === 'J' || rank === 'Q' || rank === 'K';
   return (
     <div style={{
       position: 'absolute', inset: 0,
@@ -42,45 +41,19 @@ function TCPCardFace({ rank, suit, w }) {
       <TCPCardCorner rank={rank} suit={suit} />
       <TCPCardCorner rank={rank} suit={suit} flip />
 
-      {!isFace && (
+      <div style={{
+        position: 'absolute', inset: 0, display: 'flex',
+        alignItems: 'center', justifyContent: 'center'
+      }}>
         <div style={{
-          position: 'absolute', inset: 0, display: 'flex',
-          alignItems: 'center', justifyContent: 'center'
+          position: 'relative',
+          width: w * 0.62, height: w * 0.62,
+          display: 'flex', alignItems: 'center', justifyContent: 'center',
+          background: 'radial-gradient(circle, rgba(201,162,106,.18) 0%, transparent 65%)'
         }}>
-          <div style={{
-            position: 'relative',
-            width: w * 0.62, height: w * 0.62,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: 'radial-gradient(circle, rgba(201,162,106,.18) 0%, transparent 65%)'
-          }}>
-            <span style={{ fontSize: w * 0.6, color, lineHeight: 1, fontFamily: 'serif' }}>{suit}</span>
-          </div>
+          <span style={{ fontSize: w * 0.6, color, lineHeight: 1, fontFamily: 'serif' }}>{suit}</span>
         </div>
-      )}
-
-      {isFace && (
-        <div style={{
-          position: 'absolute', inset: 0, display: 'flex',
-          alignItems: 'center', justifyContent: 'center'
-        }}>
-          <div style={{
-            position: 'relative',
-            width: w * 0.66, height: w * 0.66,
-            display: 'flex', alignItems: 'center', justifyContent: 'center',
-            background: `radial-gradient(circle, ${color}1f 0%, transparent 70%)`
-          }}>
-            <span style={{
-              fontFamily: "'Playfair Display', serif",
-              fontStyle: 'italic',
-              fontSize: w * 0.62,
-              fontWeight: 700,
-              color,
-              textShadow: '0 2px 3px rgba(0,0,0,.15)',
-              lineHeight: 1
-            }}>{rank}</span>
-          </div>
-        </div>
-      )}
+      </div>
     </div>
   );
 }
