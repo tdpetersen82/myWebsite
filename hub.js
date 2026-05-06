@@ -6,31 +6,35 @@
 
   // ── Game catalog ───────────────────────────────────────────────────────
   const GAMES = [
-    { id: 'snake',            name: 'Snake',            cat: 'classic', desc: "Eat, grow, don't crash.",         color: '#7BC97B', plays: '12.4k' },
-    { id: 'pong',             name: 'Pong',             cat: 'classic', desc: 'Paddle vs. AI. Keep it alive.',    color: '#8FA8E6', plays: '8.2k'  },
-    { id: 'breakout',         name: 'Breakout',         cat: 'classic', desc: 'Bricks, ball, bounce.',            color: '#F2A65A', plays: '15.1k' },
-    { id: 'space-invaders',   name: 'Space Invasion',   cat: 'classic', desc: 'Defend Earth from alien waves.',   color: '#9B7EDC', plays: '11.8k' },
-    { id: 'block-puzzle',     name: 'Block Puzzle',     cat: 'classic', desc: 'Stack, clear, score.',             color: '#5DC4D9', plays: '22.6k' },
-    { id: 'asteroids',        name: 'Asteroids',        cat: 'retro',   desc: 'Pilot through the rocks.',         color: '#A78BFA', plays: '9.4k'  },
-    { id: 'frogger',          name: 'Frogger',          cat: 'retro',   desc: 'Hop home through traffic.',        color: '#7BC97B', plays: '6.7k',  isNew: true },
-    { id: 'missile-command',  name: 'Missile Command',  cat: 'retro',   desc: 'Defend cities from above.',        color: '#F2A65A', plays: '4.9k',  isNew: true },
-    { id: 'lunar-lander',     name: 'Lunar Lander',     cat: 'retro',   desc: 'Touch down softly.',               color: '#8FA8E6', plays: '5.5k',  isNew: true },
-    { id: 'spacex-lander',    name: 'SpaceX Lander',    cat: 'retro',   desc: 'Land the Falcon 9.',               color: '#5DC4D9', plays: '7.1k',  isNew: true },
-    { id: 'defender',         name: 'Defender',         cat: 'retro',   desc: 'Save the humanoids.',              color: '#9B7EDC', plays: '3.2k',  isNew: true },
-    { id: 'simon',            name: 'Simon',            cat: 'retro',   desc: 'Watch. Repeat. Repeat longer.',    color: '#F08488', plays: '8.6k',  isNew: true },
-    { id: 'connect-4',        name: 'Connect 4',        cat: 'puzzle',  desc: 'Four in a row beats the AI.',      color: '#8FA8E6', plays: '14.3k' },
-    { id: 'connect-dots',     name: 'Dots & Boxes',     cat: 'puzzle',  desc: 'Lines, boxes, strategy.',          color: '#F08488', plays: '5.8k'  },
-    { id: 'blackjack',        name: 'Blackjack',        cat: 'casino',  desc: 'Hit 21 with strategy hints.',      color: '#7BC97B', plays: '18.9k' },
-    { id: 'roulette',         name: 'Roulette',         cat: 'casino',  desc: 'Spin the European wheel.',         color: '#F08488', plays: '6.4k',  isNew: true },
-    { id: 'video-poker',      name: 'Video Poker',      cat: 'casino',  desc: 'Jacks or Better. Hold smart.',     color: '#A78BFA', plays: '11.2k', isNew: true },
-    { id: 'baccarat',         name: 'Baccarat',         cat: 'casino',  desc: 'Player or Banker?',                color: '#F2A65A', plays: '3.7k',  isNew: true },
-    { id: 'craps',            name: 'Craps',            cat: 'casino',  desc: 'Roll the bones.',                  color: '#5DC4D9', plays: '4.1k',  isNew: true },
-    { id: 'three-card-poker', name: 'Three Card Poker', cat: 'casino',  desc: 'Play or fold? Three cards.',       color: '#9B7EDC', plays: '5.3k',  isNew: true },
+    { id: 'snake',             name: 'Snake',             cat: 'kids',    desc: "Eat, grow, don't crash.",         color: '#7BC97B', plays: '12.4k' },
+    { id: 'bubble-pop',        name: 'Bubble Pop',        cat: 'kids',    desc: 'Tap bubbles before they float away.', color: '#FF8FA3', plays: '0',    isNew: true },
+    { id: 'memory-match',      name: 'Memory Match',      cat: 'kids',    desc: 'Flip cards. Find the pairs.',      color: '#FFD93D', plays: '0',    isNew: true },
+    { id: 'shape-sorter',      name: 'Shape Sorter',      cat: 'kids',    desc: 'Drag shapes into matching buckets.', color: '#6DD5FA', plays: '0',    isNew: true },
+    { id: 'counting-critters', name: 'Counting Critters', cat: 'kids',    desc: 'How many critters? Tap the number.', color: '#A78BFA', plays: '0',    isNew: true },
+    { id: 'pong',              name: 'Pong',              cat: 'classic', desc: 'Paddle vs. AI. Keep it alive.',    color: '#8FA8E6', plays: '8.2k'  },
+    { id: 'breakout',          name: 'Breakout',          cat: 'classic', desc: 'Bricks, ball, bounce.',            color: '#F2A65A', plays: '15.1k' },
+    { id: 'space-invaders',    name: 'Space Invasion',    cat: 'classic', desc: 'Defend Earth from alien waves.',   color: '#9B7EDC', plays: '11.8k' },
+    { id: 'block-puzzle',      name: 'Block Puzzle',      cat: 'classic', desc: 'Stack, clear, score.',             color: '#5DC4D9', plays: '22.6k' },
+    { id: 'asteroids',         name: 'Asteroids',         cat: 'classic', desc: 'Pilot through the rocks.',         color: '#A78BFA', plays: '9.4k'  },
+    { id: 'frogger',           name: 'Frogger',           cat: 'classic', desc: 'Hop home through traffic.',        color: '#7BC97B', plays: '6.7k'  },
+    { id: 'missile-command',   name: 'Missile Command',   cat: 'classic', desc: 'Defend cities from above.',        color: '#F2A65A', plays: '4.9k'  },
+    { id: 'lunar-lander',      name: 'Lunar Lander',      cat: 'classic', desc: 'Touch down softly.',               color: '#8FA8E6', plays: '5.5k'  },
+    { id: 'spacex-lander',     name: 'SpaceX Lander',     cat: 'classic', desc: 'Land the Falcon 9.',               color: '#5DC4D9', plays: '7.1k'  },
+    { id: 'defender',          name: 'Defender',          cat: 'classic', desc: 'Save the humanoids.',              color: '#9B7EDC', plays: '3.2k'  },
+    { id: 'simon',             name: 'Simon',             cat: 'classic', desc: 'Watch. Repeat. Repeat longer.',    color: '#F08488', plays: '8.6k'  },
+    { id: 'connect-4',         name: 'Connect 4',         cat: 'puzzle',  desc: 'Four in a row beats the AI.',      color: '#8FA8E6', plays: '14.3k' },
+    { id: 'connect-dots',      name: 'Dots & Boxes',      cat: 'puzzle',  desc: 'Lines, boxes, strategy.',          color: '#F08488', plays: '5.8k'  },
+    { id: 'blackjack',         name: 'Blackjack',         cat: 'casino',  desc: 'Hit 21 with strategy hints.',      color: '#7BC97B', plays: '18.9k' },
+    { id: 'roulette',          name: 'Roulette',          cat: 'casino',  desc: 'Spin the European wheel.',         color: '#F08488', plays: '6.4k'  },
+    { id: 'video-poker',       name: 'Video Poker',       cat: 'casino',  desc: 'Jacks or Better. Hold smart.',     color: '#A78BFA', plays: '11.2k' },
+    { id: 'baccarat',          name: 'Baccarat',          cat: 'casino',  desc: 'Player or Banker?',                color: '#F2A65A', plays: '3.7k'  },
+    { id: 'craps',             name: 'Craps',             cat: 'casino',  desc: 'Roll the bones.',                  color: '#5DC4D9', plays: '4.1k'  },
+    { id: 'three-card-poker',  name: 'Three Card Poker',  cat: 'casino',  desc: 'Play or fold? Three cards.',       color: '#9B7EDC', plays: '5.3k'  },
   ];
 
   const CATEGORIES = [
-    { id: 'classic', label: 'Classic Arcade' },
-    { id: 'retro',   label: 'Retro' },
+    { id: 'classic', label: 'Arcade' },
+    { id: 'kids',    label: 'Kids' },
     { id: 'puzzle',  label: 'Strategy & Puzzles' },
     { id: 'casino',  label: 'Casino' },
   ];
@@ -62,6 +66,10 @@
     baccarat: '<rect x="10" y="14" width="20" height="32" rx="3" fill="C"/><rect x="34" y="14" width="20" height="32" rx="3" fill="#2a2a2a"/>',
     craps: '<rect x="8" y="14" width="20" height="20" rx="3" fill="C" transform="rotate(-10 18 24)"/><circle cx="14" cy="20" r="1.5" fill="#fff"/><circle cx="22" cy="28" r="1.5" fill="#fff"/><rect x="32" y="22" width="20" height="20" rx="3" fill="#fff" stroke="C" stroke-width="1.5" transform="rotate(8 42 32)"/><circle cx="38" cy="28" r="1.5" fill="C"/><circle cx="46" cy="36" r="1.5" fill="C"/><circle cx="42" cy="32" r="1.5" fill="C"/>',
     'three-card-poker': '<rect x="6" y="18" width="16" height="26" rx="2" fill="#fff" stroke="C" stroke-width="1.5" transform="rotate(-8 14 30)"/><rect x="22" y="14" width="16" height="26" rx="2" fill="#fff" stroke="C" stroke-width="1.5"/><rect x="40" y="18" width="16" height="26" rx="2" fill="#fff" stroke="C" stroke-width="1.5" transform="rotate(8 48 30)"/>',
+    'bubble-pop': '<circle cx="20" cy="22" r="9" fill="C" opacity="0.55"/><circle cx="17" cy="19" r="2.5" fill="#fff" opacity="0.9"/><circle cx="42" cy="34" r="11" fill="C" opacity="0.45"/><circle cx="38" cy="30" r="3" fill="#fff" opacity="0.9"/><circle cx="28" cy="46" r="7" fill="C" opacity="0.65"/><circle cx="26" cy="44" r="2" fill="#fff" opacity="0.9"/>',
+    'memory-match': '<rect x="6"  y="10" width="16" height="20" rx="3" fill="C"/><rect x="24" y="10" width="16" height="20" rx="3" fill="C" opacity="0.55"/><rect x="42" y="10" width="16" height="20" rx="3" fill="C"/><rect x="6"  y="34" width="16" height="20" rx="3" fill="C" opacity="0.55"/><rect x="24" y="34" width="16" height="20" rx="3" fill="C"/><rect x="42" y="34" width="16" height="20" rx="3" fill="C" opacity="0.55"/><circle cx="32" cy="44" r="3" fill="#fff"/>',
+    'shape-sorter': '<circle cx="14" cy="14" r="6" fill="C"/><rect x="26" y="8" width="12" height="12" rx="2" fill="C" opacity="0.7"/><polygon points="50,8 56,20 44,20" fill="C"/><rect x="6" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5"/><rect x="26" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5" opacity="0.7"/><rect x="46" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5"/>',
+    'counting-critters': '<circle cx="14" cy="20" r="6" fill="C"/><circle cx="32" cy="20" r="6" fill="C" opacity="0.7"/><circle cx="50" cy="20" r="6" fill="C"/><text x="32" y="50" font-size="20" font-weight="800" text-anchor="middle" fill="C">3</text>',
   };
 
   function glyph(game, size) {
@@ -76,7 +84,7 @@
     { id: 'blackjack',      size: 's-tall' },
     { id: 'asteroids',      size: 's-wide' },
     { id: 'space-invaders', size: 's-wide' },
-    { id: 'simon',          size: 's-med'  },
+    { id: 'bubble-pop',     size: 's-med'  },
   ];
   const FEATURED_IDS = FEATURED_LAYOUT.map(f => f.id);
 
@@ -395,7 +403,7 @@
           + (newCount > 0 ? ` · <b>${newCount}</b> new` : '');
       }
       // Each category has its own landing page; the hero card routes there.
-      const LANDINGS = { classic: 'arcade/', retro: 'retro/', puzzle: 'puzzles/', casino: 'casino/' };
+      const LANDINGS = { classic: 'arcade/', kids: 'kids/', puzzle: 'puzzles/', casino: 'casino/' };
       card.addEventListener('click', (e) => {
         if (e.target.closest('a')) return;
         const target = LANDINGS[cat];

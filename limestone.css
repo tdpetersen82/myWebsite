@@ -375,87 +375,105 @@ body.hub-root {
 .ch-stick .btn.b1 { right: 30px; background: radial-gradient(circle at 35% 35%, #FFD93D, #B8860B); }
 .ch-stick .btn.b2 { right: 6px; background: radial-gradient(circle at 35% 35%, #4ECDC4, #1A8B82); }
 
-/* — Retro — neon scanlines + flying saucer — */
-.ch-card.cat-retro {
-  background: radial-gradient(circle at 20% 30%, #4D2A8E 0%, #2B1456 60%, #150828 100%);
-  color: #F2EFE6;
+/* — Kids — bright primaries, rainbow + balloons + sun — */
+.ch-card.cat-kids {
+  background: linear-gradient(160deg, #FFF8DC 0%, #FFE4F0 60%, #DCEEFF 100%);
+  color: #1F1A2E;
 }
-.ch-art-retro::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.04) 0 1px, transparent 1px 4px);
-  mix-blend-mode: screen;
-}
-.ch-art-retro::after {
+.ch-art-kids::before {
   content: '';
   position: absolute;
   inset: 0;
   background-image:
-    radial-gradient(circle at 70% 25%, rgba(255, 85, 170, 0.25) 0%, transparent 30%),
-    radial-gradient(circle at 90% 75%, rgba(95, 205, 255, 0.18) 0%, transparent 35%);
+    radial-gradient(circle at 18% 82%, rgba(255, 217, 61, 0.35) 0%, transparent 22%),
+    radial-gradient(circle at 90% 18%, rgba(255, 143, 163, 0.30) 0%, transparent 25%);
 }
-.ch-saucer {
+.ch-art-kids::after {
+  content: '';
   position: absolute;
-  right: 48px;
-  top: 48px;
+  inset: 0;
+  background-image:
+    radial-gradient(circle at 12% 18%, #FF8FA3 1.5px, transparent 2.5px),
+    radial-gradient(circle at 24% 70%, #6DD5FA 1.5px, transparent 2.5px),
+    radial-gradient(circle at 48% 30%, #7BC97B 1.5px, transparent 2.5px),
+    radial-gradient(circle at 78% 84%, #FFD93D 1.8px, transparent 2.8px);
+  background-size: 220px 220px;
+  opacity: 0.7;
+  pointer-events: none;
+}
+.ch-rainbow {
+  position: absolute;
+  right: 38px;
+  top: 56px;
   width: 140px;
   height: 70px;
+  overflow: hidden;
 }
-.ch-saucer .dome {
+.ch-rainbow .band {
+  position: absolute;
+  left: 0;
+  bottom: 0;
+  border-radius: 140px 140px 0 0;
+  border-style: solid;
+  border-bottom: none;
+}
+.ch-rainbow .band.b1 {
+  width: 140px; height: 70px;
+  border-color: #FF6F61;
+  border-width: 8px 8px 0 8px;
+}
+.ch-rainbow .band.b2 {
+  left: 14px; width: 112px; height: 56px;
+  border-color: #FFD93D;
+  border-width: 8px 8px 0 8px;
+}
+.ch-rainbow .band.b3 {
+  left: 28px; width: 84px; height: 42px;
+  border-color: #6DD5FA;
+  border-width: 8px 8px 0 8px;
+}
+.ch-sun {
+  position: absolute;
+  right: 168px;
+  top: 28px;
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 38%, #FFE066, #FFA751 80%);
+  box-shadow:
+    0 0 0 6px rgba(255, 217, 61, 0.25),
+    0 0 0 14px rgba(255, 217, 61, 0.12);
+}
+.ch-balloon {
+  position: absolute;
+  width: 36px;
+  height: 44px;
+  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+  box-shadow: inset -4px -6px 8px rgba(0, 0, 0, 0.12), inset 3px 4px 6px rgba(255, 255, 255, 0.5);
+}
+.ch-balloon::after {
+  content: '';
   position: absolute;
   left: 50%;
-  top: 0;
-  transform: translateX(-50%);
-  width: 80px;
-  height: 40px;
-  border-radius: 50% 50% 0 0;
-  background: radial-gradient(ellipse at 35% 35%, #FF99CC, #FF55AA 60%, #B82A6F);
-  box-shadow: 0 0 24px rgba(255, 85, 170, 0.6);
+  bottom: -28px;
+  width: 1px;
+  height: 28px;
+  background: rgba(31, 26, 46, 0.35);
 }
-.ch-saucer .body {
-  position: absolute;
-  bottom: 14px;
-  left: 0;
-  right: 0;
-  height: 30px;
-  border-radius: 50%;
-  background: linear-gradient(180deg, #4D2A8E, #2B1456);
-  box-shadow: 0 0 30px rgba(95, 205, 255, 0.4);
+.ch-balloon.b1 {
+  left: 56px; bottom: 96px;
+  background: radial-gradient(circle at 35% 30%, #FFE066, #FFA751);
+  transform: rotate(-6deg);
 }
-.ch-saucer .light {
-  position: absolute;
-  bottom: 22px;
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: #FFE066;
-  box-shadow: 0 0 8px #FFE066;
+.ch-balloon.b2 {
+  left: 110px; bottom: 70px;
+  background: radial-gradient(circle at 35% 30%, #FF8FA3, #FF4F8B);
+  transform: rotate(4deg);
 }
-.ch-saucer .light.l1 { left: 24px; }
-.ch-saucer .light.l2 { left: 50%; transform: translateX(-50%); }
-.ch-saucer .light.l3 { right: 24px; }
-
-.ch-rock { position: absolute; border-radius: 30%; }
-.ch-rock.r1 {
-  top: 32%; left: 62%;
-  width: 28px; height: 28px;
-  background: #7B5AB0;
-  box-shadow: 0 0 12px rgba(255, 85, 170, 0.3);
-  transform: rotate(15deg);
-}
-.ch-rock.r2 {
-  top: 75%; left: 75%;
-  width: 18px; height: 18px;
-  background: #9B7EDC;
-  box-shadow: 0 0 8px rgba(155, 126, 220, 0.4);
-  transform: rotate(-25deg);
-}
-.ch-rock.r3 {
-  top: 18%; left: 80%;
-  width: 12px; height: 12px;
-  background: #5FCDFF;
-  box-shadow: 0 0 6px rgba(95, 205, 255, 0.5);
+.ch-balloon.b3 {
+  left: 26px; bottom: 50px;
+  background: radial-gradient(circle at 35% 30%, #6DD5FA, #4AA9D6);
+  transform: rotate(-10deg);
 }
 
 /* — Strategy & Puzzles — overlapping discs + tangram — */

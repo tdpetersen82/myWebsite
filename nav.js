@@ -49,40 +49,38 @@
         labyrinthbjs: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="4" y="10" width="24" height="18" rx="2" fill="#C4913B" stroke="#6B4226" stroke-width="1.5"/><circle cx="10" cy="18" r="2" fill="#111"/><circle cx="22" cy="22" r="2" fill="#111"/><circle cx="16" cy="15" r="2.5" fill="#ccc" stroke="#999" stroke-width="1"/><path d="M8 13h4v2H8zM14 20h6v2h-6zM20 13h4v2h-4z" fill="#5C4033"/><circle cx="25" cy="25" r="1.5" fill="#FFD700"/><text x="16" y="8" text-anchor="middle" font-size="5" fill="#667eea" font-weight="bold">B</text></svg>',
         horsefeeding: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><ellipse cx="16" cy="18" rx="8" ry="5" fill="#8B6914"/><ellipse cx="16" cy="14" rx="6" ry="4" fill="#A0782C"/><path d="M10 14c-2-4 0-6 2-8" stroke="#5C3A1E" stroke-width="2" stroke-linecap="round"/><path d="M14 14c-1-3 0-5 1-7" stroke="#5C3A1E" stroke-width="2" stroke-linecap="round"/><circle cx="22" cy="12" r="3" fill="#A0782C"/><circle cx="23" cy="11.5" r="1" fill="#1e293b"/><path d="M25 10l3-2M25 12l3 0" stroke="#5C3A1E" stroke-width="1.5" stroke-linecap="round"/><path d="M8 18c-1 3-1 6 0 8" stroke="#6B4226" stroke-width="2" stroke-linecap="round"/><path d="M12 20c0 3 0 5 0 7" stroke="#6B4226" stroke-width="2" stroke-linecap="round"/><path d="M20 20c0 3 0 5 0 7" stroke="#6B4226" stroke-width="2" stroke-linecap="round"/><path d="M24 18c1 3 1 6 0 8" stroke="#6B4226" stroke-width="2" stroke-linecap="round"/></svg>',
         exodus: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="2" y="2" width="28" height="28" rx="2" fill="#1a1a2e" stroke="#6c5ce7" stroke-width="1.5"/><rect x="14" y="22" width="6" height="8" fill="#4ade80"/><circle cx="8" cy="10" r="2" fill="#fbbf24"/><circle cx="14" cy="11" r="2" fill="#ef4444"/><circle cx="20" cy="9" r="2" fill="#3b82f6"/><circle cx="11" cy="16" r="2" fill="#a855f7"/><circle cx="18" cy="17" r="2" fill="#ef4444"/><circle cx="24" cy="14" r="2" fill="#fbbf24"/><path d="M22 4l2 2-2 2-2-2z" fill="#ff6b1a"/><path d="M21 5l1 1-1 1-1-1z" fill="#fff080"/></svg>',
+        bubblepop: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="10" cy="12" r="5" fill="#FF8FA3" opacity="0.7"/><circle cx="8.5" cy="10.5" r="1.4" fill="#fff" opacity="0.9"/><circle cx="22" cy="18" r="6" fill="#6DD5FA" opacity="0.6"/><circle cx="20" cy="16" r="1.8" fill="#fff" opacity="0.9"/><circle cx="14" cy="24" r="4" fill="#FFD93D" opacity="0.8"/><circle cx="13" cy="23" r="1.2" fill="#fff" opacity="0.9"/></svg>',
+        memorymatch: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="3"  y="5"  width="9" height="11" rx="1.5" fill="#FFD93D"/><rect x="13" y="5"  width="9" height="11" rx="1.5" fill="#FFD93D" opacity="0.55"/><rect x="23" y="5"  width="6" height="11" rx="1.5" fill="#FFD93D"/><rect x="3"  y="18" width="9" height="11" rx="1.5" fill="#FFD93D" opacity="0.55"/><rect x="13" y="18" width="9" height="11" rx="1.5" fill="#FFD93D"/><rect x="23" y="18" width="6" height="11" rx="1.5" fill="#FFD93D" opacity="0.55"/></svg>',
+        shapesorter: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="7" cy="8" r="3.5" fill="#6DD5FA"/><rect x="13" y="4.5" width="7" height="7" rx="1" fill="#FF8FA3"/><polygon points="26,4 30,11 22,11" fill="#7BC97B"/><rect x="3" y="20" width="8" height="8" rx="1.5" fill="none" stroke="#6DD5FA" stroke-width="2"/><rect x="13" y="20" width="8" height="8" rx="1.5" fill="none" stroke="#FF8FA3" stroke-width="2"/><rect x="23" y="20" width="6" height="8" rx="1.5" fill="none" stroke="#7BC97B" stroke-width="2"/></svg>',
+        countingcritters: '<svg viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><circle cx="6"  cy="11" r="3" fill="#A78BFA"/><circle cx="14" cy="11" r="3" fill="#A78BFA" opacity="0.7"/><circle cx="22" cy="11" r="3" fill="#A78BFA"/><text x="16" y="28" font-size="13" font-weight="800" text-anchor="middle" fill="#A78BFA">3</text></svg>',
     };
 
     const GAME_CATALOG = [
         {
-            name: 'Classic Arcade', icon: '\u{1F47E}',
+            name: 'Arcade', icon: '\u{1F47E}',
             games: [
-                { name: 'Snake', icon: I.snake, url: 'snake/' },
                 { name: 'Pong', icon: I.pong, url: 'pong/' },
                 { name: 'Breakout', icon: I.breakout, url: 'breakout/' },
                 { name: 'Space Invaders', icon: I.spaceinvaders, url: 'space-invaders/' },
                 { name: 'Flappy Bird', icon: I.flappy, url: 'flappy-bird/' },
                 { name: 'Block Puzzle', icon: I.blockpuzzle, url: 'block-puzzle/' },
+                { name: 'Asteroids', icon: I.asteroids, url: 'asteroids/' },
+                { name: 'Frogger', icon: I.frogger, url: 'frogger/' },
+                { name: 'Missile Command', icon: I.missile, url: 'missile-command/' },
+                { name: 'Lunar Lander', icon: I.lunar, url: 'lunar-lander/' },
+                { name: 'SpaceX Lander', icon: I.spacex, url: 'spacex-lander/' },
+                { name: 'Defender', icon: I.defender, url: 'defender/' },
+                { name: 'Simon', icon: I.simon, url: 'simon/' },
             ]
         },
         {
-            name: 'Retro Arcade', icon: '\u{1F579}\uFE0F',
+            name: 'Kids', icon: '\u{1F308}',
             games: [
-                { name: 'Asteroids', icon: I.asteroids, url: 'asteroids/' },
-                { name: 'Pac-Man', icon: I.pacman, url: 'pac-man/' },
-                { name: 'Frogger', icon: I.frogger, url: 'frogger/' },
-                { name: 'Missile Command', icon: I.missile, url: 'missile-command/' },
-                { name: 'Galaga', icon: I.galaga, url: 'galaga/' },
-                { name: 'Centipede', icon: I.centipede, url: 'centipede/' },
-                { name: 'Lunar Lander', icon: I.lunar, url: 'lunar-lander/' },
-                { name: 'SpaceX Lander', icon: I.spacex, url: 'spacex-lander/' },
-                { name: 'Joust', icon: I.joust, url: 'joust/' },
-                { name: 'Bomberman', icon: I.bomberman, url: 'bomberman/' },
-                { name: 'Q*bert', icon: I.qbert, url: 'qbert/' },
-                { name: 'Donkey Kong', icon: I.donkeykong, url: 'donkey-kong/' },
-                { name: 'Dig Dug', icon: I.digdug, url: 'dig-dug/' },
-                { name: 'Tempest', icon: I.tempest, url: 'tempest/' },
-                { name: 'Defender', icon: I.defender, url: 'defender/' },
-                { name: 'Tron Light Cycles', icon: I.tron, url: 'tron/' },
-                { name: 'Simon', icon: I.simon, url: 'simon/' },
+                { name: 'Snake', icon: I.snake, url: 'snake/' },
+                { name: 'Bubble Pop', icon: I.bubblepop, url: 'bubble-pop/' },
+                { name: 'Memory Match', icon: I.memorymatch, url: 'memory-match/' },
+                { name: 'Shape Sorter', icon: I.shapesorter, url: 'shape-sorter/' },
+                { name: 'Counting Critters', icon: I.countingcritters, url: 'counting-critters/' },
             ]
         },
         {
@@ -192,7 +190,7 @@
 .site-nav-dropdown .game-icon{width:22px;text-align:center;flex-shrink:0}\
 .site-nav-dropdown .game-icon svg,.site-nav-search-results .game-icon svg,.mobile-game-list .game-icon svg{width:16px;height:16px;vertical-align:middle}\
 \
-/* Wide dropdown for Retro Arcade (16 games) */\
+/* Wide two-column dropdown for the Arcade group (12 games) */\
 .site-nav-dropdown.wide{min-width:380px;display:grid;grid-template-columns:1fr 1fr;gap:2px}\
 .site-nav-dropdown::-webkit-scrollbar{width:5px}\
 .site-nav-dropdown::-webkit-scrollbar-thumb{background:rgba(102,126,234,0.3);border-radius:3px}\

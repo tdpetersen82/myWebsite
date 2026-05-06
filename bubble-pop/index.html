@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bubble Pop — Free Kids Game | Limestone Games</title>
+    <meta name="description" content="Tap floating bubbles before they drift away. A bright, friendly browser game for kids — no ads, scores save locally.">
+    <meta name="keywords" content="bubble pop, kids game, tap game, free browser game, family game">
+    <link rel="canonical" href="https://limestonegames.com/bubble-pop/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Bubble Pop","description":"Tap bubbles before they float away. A friendly tap game for kids.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Kids","item":"https://limestonegames.com/kids/"},{"@type":"ListItem","position":3,"name":"Bubble Pop"}]}</script>
+    <meta property="og:title" content="Bubble Pop — Free Kids Game">
+    <meta property="og:description" content="Tap floating bubbles before they drift away. Friendly tap game for kids.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/bubble-pop/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+
+    <style>
+      :root {
+        --ink: #1F1A2E;
+        --bg-1: #FFF8DC;
+        --bg-2: #FFE4F0;
+        --bg-3: #DCEEFF;
+        --accent: #FF4F8B;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 20px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 832px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+      .top-bar {
+        width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        font-size: 14px; flex-wrap: wrap;
+      }
+      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
+      .top-bar a:hover { opacity: 1; }
+      h1 {
+        font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #FFA751, #FF4F8B);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .stats {
+        display: flex; gap: 18px; font-size: 14px; font-weight: 600;
+        background: rgba(255, 255, 255, 0.6);
+        backdrop-filter: blur(6px);
+        padding: 10px 18px; border-radius: 999px;
+        box-shadow: 0 4px 12px rgba(31, 26, 46, 0.06);
+      }
+      .stats div { display: flex; gap: 6px; align-items: baseline; }
+      .stats .l { color: rgba(31, 26, 46, 0.55); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+      .stats .v { font-size: 18px; font-weight: 800; color: var(--accent); }
+      .stage-wrap {
+        position: relative;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 24px;
+        padding: 14px;
+        box-shadow: 0 10px 30px rgba(31, 26, 46, 0.08);
+        align-self: stretch;
+        display: flex;
+        justify-content: center;
+      }
+      canvas {
+        display: block;
+        background: linear-gradient(180deg, #DDF1FF 0%, #FFE4F0 100%);
+        border-radius: 14px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .controls {
+        display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+      }
+      button {
+        font: inherit; font-weight: 700;
+        padding: 12px 22px; border-radius: 999px;
+        border: 2px solid transparent;
+        background: var(--accent); color: #fff;
+        cursor: pointer; transition: transform 0.1s;
+        box-shadow: 0 4px 12px rgba(255, 79, 139, 0.3);
+      }
+      button:hover { transform: translateY(-1px); }
+      button:active { transform: translateY(1px); }
+      button.ghost { background: transparent; color: var(--ink); border-color: rgba(31, 26, 46, 0.2); box-shadow: none; }
+      .hint { font-size: 13px; color: rgba(31, 26, 46, 0.6); text-align: center; max-width: 540px; }
+      .game-over {
+        position: absolute; inset: 14px;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 14px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+      }
+      .game-over.show { opacity: 1; pointer-events: auto; }
+      .game-over h2 { font-size: 32px; color: var(--accent); }
+      .game-over p { font-size: 16px; color: rgba(31, 26, 46, 0.7); }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../kids/">All Kids games</a>
+        </div>
+        <h1>Bubble Pop</h1>
+        <div class="stats">
+            <div><span class="l">Level</span><span class="v" id="lv">1</span></div>
+            <div><span class="l">Score</span><span class="v" id="sc">0</span></div>
+            <div><span class="l">Misses</span><span class="v" id="ms">0/5</span></div>
+            <div><span class="l">Best</span><span class="v" id="bs">—</span></div>
+        </div>
+        <div class="stage-wrap">
+            <canvas id="game" width="800" height="600"></canvas>
+            <div class="game-over" id="over">
+                <h2 id="overTitle">Nice run!</h2>
+                <p id="overText">Reached level 1.</p>
+                <button onclick="restart()">Play again</button>
+            </div>
+        </div>
+        <div class="controls">
+            <button onclick="restart()">Restart</button>
+            <a href="../kids/"><button class="ghost">More kids games</button></a>
+        </div>
+        <p class="hint">Tap or click each bubble before it drifts off the top. Five misses ends the round.</p>
+    </div>
+
+    <script>
+        const KEY = 'kids-bubble-pop-best';
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        const lvEl = document.getElementById('lv');
+        const scEl = document.getElementById('sc');
+        const msEl = document.getElementById('ms');
+        const bsEl = document.getElementById('bs');
+        const overEl = document.getElementById('over');
+        const overTitleEl = document.getElementById('overTitle');
+        const overTextEl = document.getElementById('overText');
+
+        const COLORS = ['#FF8FA3', '#FFD93D', '#6DD5FA', '#7BC97B', '#A78BFA', '#FFA751'];
+
+        let bubbles = [];
+        let level = 1, score = 0, misses = 0;
+        let spawnTimer = 0;
+        let running = false;
+        let last = 0;
+
+        function loadBest() {
+            const v = parseInt(localStorage.getItem(KEY) || '0', 10);
+            bsEl.textContent = v > 0 ? ('lv ' + v) : '—';
+            return v;
+        }
+        let best = loadBest();
+
+        function spawn() {
+            const r = 22 + Math.random() * 26;
+            bubbles.push({
+                x: r + Math.random() * (W - 2 * r),
+                y: H + r,
+                r,
+                vy: -(50 + level * 10 + Math.random() * 30),
+                vx: (Math.random() - 0.5) * 30,
+                color: COLORS[(Math.random() * COLORS.length) | 0],
+                wobble: Math.random() * Math.PI * 2,
+            });
+        }
+
+        function step(t) {
+            if (!running) return;
+            const dt = Math.min(0.05, (t - last) / 1000);
+            last = t;
+            spawnTimer -= dt;
+            const spawnEvery = Math.max(0.4, 1.4 - level * 0.08);
+            while (spawnTimer <= 0) {
+                spawn();
+                spawnTimer += spawnEvery;
+            }
+
+            ctx.clearRect(0, 0, W, H);
+            // soft sky
+            const grd = ctx.createLinearGradient(0, 0, 0, H);
+            grd.addColorStop(0, '#DDF1FF');
+            grd.addColorStop(1, '#FFE4F0');
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, W, H);
+
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const b = bubbles[i];
+                b.wobble += dt * 2;
+                b.x += (b.vx + Math.sin(b.wobble) * 18) * dt;
+                b.y += b.vy * dt;
+                if (b.x < b.r) { b.x = b.r; b.vx = Math.abs(b.vx); }
+                if (b.x > W - b.r) { b.x = W - b.r; b.vx = -Math.abs(b.vx); }
+                drawBubble(b);
+                if (b.y + b.r < 0) {
+                    bubbles.splice(i, 1);
+                    misses++;
+                    msEl.textContent = misses + '/5';
+                    if (misses >= 5) gameOver();
+                }
+            }
+
+            // level up every 12 pops
+            const newLevel = 1 + Math.floor(score / 12);
+            if (newLevel !== level) {
+                level = newLevel;
+                lvEl.textContent = level;
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        function drawBubble(b) {
+            ctx.save();
+            const g = ctx.createRadialGradient(
+                b.x - b.r * 0.35, b.y - b.r * 0.35, b.r * 0.1,
+                b.x, b.y, b.r
+            );
+            g.addColorStop(0, '#ffffff');
+            g.addColorStop(0.4, b.color);
+            g.addColorStop(1, b.color);
+            ctx.globalAlpha = 0.55;
+            ctx.fillStyle = g;
+            ctx.beginPath();
+            ctx.arc(b.x, b.y, b.r, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.globalAlpha = 0.85;
+            ctx.fillStyle = 'rgba(255,255,255,0.85)';
+            ctx.beginPath();
+            ctx.arc(b.x - b.r * 0.4, b.y - b.r * 0.45, b.r * 0.22, 0, Math.PI * 2);
+            ctx.fill();
+            ctx.restore();
+        }
+
+        function pop(px, py) {
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                const b = bubbles[i];
+                const dx = px - b.x, dy = py - b.y;
+                if (dx * dx + dy * dy <= b.r * b.r) {
+                    bubbles.splice(i, 1);
+                    score++;
+                    scEl.textContent = score;
+                    return;
+                }
+            }
+        }
+
+        canvas.addEventListener('click', (e) => {
+            if (!running) return;
+            const rect = canvas.getBoundingClientRect();
+            const sx = canvas.width / rect.width;
+            const sy = canvas.height / rect.height;
+            pop((e.clientX - rect.left) * sx, (e.clientY - rect.top) * sy);
+        });
+        canvas.addEventListener('touchstart', (e) => {
+            if (!running) return;
+            e.preventDefault();
+            const rect = canvas.getBoundingClientRect();
+            const sx = canvas.width / rect.width;
+            const sy = canvas.height / rect.height;
+            for (const t of e.changedTouches) {
+                pop((t.clientX - rect.left) * sx, (t.clientY - rect.top) * sy);
+            }
+        }, { passive: false });
+
+        function gameOver() {
+            running = false;
+            if (level > best) {
+                best = level;
+                localStorage.setItem(KEY, String(best));
+                bsEl.textContent = 'lv ' + best;
+                overTitleEl.textContent = 'New best!';
+            } else {
+                overTitleEl.textContent = 'Nice run!';
+            }
+            overTextEl.textContent = 'Reached level ' + level + ' · ' + score + ' bubbles popped.';
+            overEl.classList.add('show');
+        }
+
+        function restart() {
+            bubbles = [];
+            level = 1; score = 0; misses = 0;
+            spawnTimer = 0;
+            lvEl.textContent = 1;
+            scEl.textContent = 0;
+            msEl.textContent = '0/5';
+            overEl.classList.remove('show');
+            running = true;
+            last = performance.now();
+            requestAnimationFrame(step);
+        }
+
+        restart();
+
+        // Auto-scale
+        (function () {
+            const c = document.getElementById('game');
+            const bw = c.width, bh = c.height;
+            function sc() {
+                const par = c.parentElement;
+                const ps = getComputedStyle(par);
+                const mw = par.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
+                const mh = window.innerHeight * 0.7;
+                const s = Math.min(mw / bw, mh / bh, 1);
+                c.style.width = (bw * s) + 'px';
+                c.style.height = (bh * s) + 'px';
+            }
+            window.addEventListener('resize', sc);
+            sc();
+        })();
+    </script>
+</body>
+</html>

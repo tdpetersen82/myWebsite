@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limestone Kids — Bright, Friendly Browser Games for Ages 4-10</title>
+    <meta name="description" content="Five short, friendly browser games for kids — Snake, Bubble Pop, Memory Match, Shape Sorter, Counting Critters. No ads, no accounts, no time pressure.">
+    <meta name="keywords" content="kids games, family games, free browser games, memory match, bubble pop, snake, shape sorter, counting game">
+    <meta property="og:title" content="Limestone Kids — Bright, Friendly Browser Games">
+    <meta property="og:description" content="Five short games for ages 4-10. No ads, no accounts, no time pressure.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/kids/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Limestone Kids — Bright, Friendly Browser Games">
+    <meta name="twitter:description" content="Five short games for ages 4-10. No ads, no accounts, no time pressure.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/kids/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Kids","item":"https://limestonegames.com/kids/"}]}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../category.css">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      :root {
+        --cat-hero-bg: linear-gradient(135deg, #FFD93D 0%, #FF8FA3 50%, #6DD5FA 100%);
+        --cat-hero-ink: #1F1A2E;
+        --cat-eyebrow-color: #FF4F8B;
+        --cat-cta-bg: #FF4F8B;
+        --cat-cta-ink: #fff;
+        --cat-feat-art-bg: linear-gradient(135deg, #FFD93D, #FF8FA3);
+      }
+      .cat-hero::before {
+        content: '';
+        position: absolute; inset: 0;
+        background-image:
+          radial-gradient(circle at 12% 18%, rgba(255, 255, 255, 0.6) 2px, transparent 3px),
+          radial-gradient(circle at 28% 70%, rgba(255, 255, 255, 0.5) 2px, transparent 3px),
+          radial-gradient(circle at 70% 24%, rgba(255, 255, 255, 0.55) 2px, transparent 3px),
+          radial-gradient(circle at 82% 80%, rgba(255, 255, 255, 0.6) 2px, transparent 3px);
+        background-size: 220px 220px;
+        pointer-events: none;
+      }
+      /* Hero motif: rainbow + 3 balloons + sun */
+      .kids-scene { position: relative; width: 280px; height: 280px; margin: 0 auto; }
+      .kids-rainbow {
+        position: absolute; left: 50%; top: 30px;
+        transform: translateX(-50%);
+        width: 220px; height: 110px;
+        overflow: hidden;
+      }
+      .kids-rainbow .band {
+        position: absolute; left: 0; bottom: 0;
+        border-radius: 220px 220px 0 0;
+        border-style: solid;
+        border-bottom: none;
+      }
+      .kids-rainbow .band.b1 {
+        width: 220px; height: 110px;
+        border-color: #FF6F61;
+        border-width: 14px 14px 0 14px;
+      }
+      .kids-rainbow .band.b2 {
+        left: 22px; width: 176px; height: 88px;
+        border-color: #FFD93D;
+        border-width: 14px 14px 0 14px;
+      }
+      .kids-rainbow .band.b3 {
+        left: 44px; width: 132px; height: 66px;
+        border-color: #6DD5FA;
+        border-width: 14px 14px 0 14px;
+      }
+      .kids-sun {
+        position: absolute;
+        left: 30px; top: 30px;
+        width: 78px; height: 78px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 38% 38%, #FFE066, #FFA751 80%);
+        box-shadow:
+          0 0 0 8px rgba(255, 217, 61, 0.32),
+          0 0 0 18px rgba(255, 217, 61, 0.16);
+      }
+      .kids-balloon {
+        position: absolute;
+        width: 50px; height: 60px;
+        border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
+        box-shadow:
+          inset -5px -8px 12px rgba(0, 0, 0, 0.14),
+          inset 4px 5px 8px rgba(255, 255, 255, 0.5);
+      }
+      .kids-balloon::after {
+        content: '';
+        position: absolute;
+        left: 50%; bottom: -38px;
+        width: 1.5px; height: 38px;
+        background: rgba(31, 26, 46, 0.4);
+      }
+      .kids-balloon.b1 {
+        left: 12%; bottom: 12%;
+        background: radial-gradient(circle at 35% 30%, #FFE066, #FFA751);
+        transform: rotate(-8deg);
+      }
+      .kids-balloon.b2 {
+        left: 70%; bottom: 20%;
+        background: radial-gradient(circle at 35% 30%, #FF8FA3, #FF4F8B);
+        transform: rotate(6deg);
+      }
+      .kids-balloon.b3 {
+        left: 44%; bottom: 6%;
+        background: radial-gradient(circle at 35% 30%, #6DD5FA, #4AA9D6);
+        transform: rotate(-2deg);
+      }
+
+      /* Featured-art piece: chunky ABC blocks */
+      .kids-feat-blocks {
+        display: grid;
+        grid-template-columns: repeat(3, 50px);
+        grid-auto-rows: 50px;
+        gap: 6px;
+      }
+      .kids-feat-blocks div {
+        border-radius: 10px;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-weight: 800; font-size: 26px;
+        color: rgba(31, 26, 46, 0.85);
+        box-shadow: inset 0 -4px 5px rgba(0, 0, 0, 0.12), inset 0 3px 5px rgba(255, 255, 255, 0.45);
+      }
+      .kids-feat-blocks div.c1 { background: #FFD93D; }
+      .kids-feat-blocks div.c2 { background: #FF8FA3; }
+      .kids-feat-blocks div.c3 { background: #6DD5FA; }
+      .kids-feat-blocks div.c4 { background: #7BC97B; }
+      .kids-feat-blocks div.empty { background: transparent; box-shadow: none; }
+    </style>
+</head>
+<body class="cat-root">
+
+    <nav class="cat-nav">
+        <div class="cat-nav-left">
+            <a class="cat-logo" href="..">
+                <svg width="30" height="30" viewBox="0 0 40 40" aria-hidden="true">
+                    <defs>
+                        <radialGradient id="stoneGrad" cx="35%" cy="30%" r="80%">
+                            <stop offset="0%" stop-color="#F4EEE2"/>
+                            <stop offset="100%" stop-color="#C9BCA3"/>
+                        </radialGradient>
+                    </defs>
+                    <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="url(#stoneGrad)"/>
+                    <circle cx="14" cy="16" r="1.2" fill="#A89678" opacity="0.55"/>
+                    <circle cx="22" cy="22" r="0.9" fill="#A89678" opacity="0.4"/>
+                    <circle cx="28" cy="14" r="0.7" fill="#A89678" opacity="0.5"/>
+                    <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+                </svg>
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="cat-nav-links">
+                <a href="../arcade/">Arcade</a>
+                <a href="" class="active">Kids</a>
+                <a href="../puzzles/">Puzzles</a>
+                <a href="../casino/">Casino</a>
+            </div>
+        </div>
+        <div class="cat-nav-meta">
+            <span class="dot"></span>
+            5 games · ages 4-10
+        </div>
+    </nav>
+
+    <div class="cat-crumb">
+        <a href="..">Home</a> &nbsp;/&nbsp; <span class="here">Kids</span>
+    </div>
+
+    <div class="cat-stats">
+        <div class="cat-stats-main">
+            <div class="cat-stats-chip">★</div>
+            <div>
+                <h3>Your top score</h3>
+                <div class="amt">1,840</div>
+                <div class="delta">▲ Snake · best run yet</div>
+            </div>
+        </div>
+        <div class="cat-stat-cell">
+            <div class="l">Games</div>
+            <div class="n">5 / 5</div>
+            <div class="s">All free, all yours</div>
+        </div>
+        <div class="cat-stat-cell">
+            <div class="l">Made for</div>
+            <div class="n">Ages 4-10</div>
+            <div class="s">Friendly &amp; quick</div>
+        </div>
+        <div class="cat-stat-cell">
+            <div class="l">Favorite</div>
+            <div class="n">Snake</div>
+            <div class="s">19 sessions</div>
+        </div>
+    </div>
+
+    <header class="cat-hero">
+        <div class="cat-hero-left">
+            <div class="cat-hero-eyebrow">✿ Kids · 5 games · ages 4-10</div>
+            <h1>Press play.<br>Stay <em>curious</em>.</h1>
+            <p class="lede">Five short games for ages 4-10. No ads, no accounts, no time pressure. Snake, Bubble Pop, Memory Match, Shape Sorter, and Counting Critters — your scores save locally, so picking up where you left off is one tap away.</p>
+            <div class="cat-hero-stats">
+                <div>5<span>Games</span></div>
+                <div>4-10<span>Ages</span></div>
+                <div>0<span>Ads</span></div>
+                <div>∞<span>Plays</span></div>
+            </div>
+        </div>
+        <div class="cat-hero-right">
+            <div class="kids-scene">
+                <div class="kids-rainbow">
+                    <div class="band b1"></div>
+                    <div class="band b2"></div>
+                    <div class="band b3"></div>
+                </div>
+                <div class="kids-sun"></div>
+                <div class="kids-balloon b1"></div>
+                <div class="kids-balloon b2"></div>
+                <div class="kids-balloon b3"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="cat-wrap">
+
+        <div class="cat-section-head">
+            <h2>Today's headliner</h2>
+            <div class="rule"></div>
+            <a class="more" href="#all-games">Browse all →</a>
+        </div>
+        <div class="cat-featured">
+            <div class="cat-featured-art">
+                <div class="kids-feat-blocks">
+                    <div class="c1">A</div><div class="c2">B</div><div class="c3">C</div>
+                    <div class="c4">1</div><div class="c1">2</div><div class="c2">3</div>
+                    <div class="c3">★</div><div class="c4">●</div><div class="c1">▲</div>
+                </div>
+            </div>
+            <div class="cat-featured-body">
+                <div class="cat-featured-tag">★ Family classic</div>
+                <h3>Snake</h3>
+                <p>Eat, grow, don't crash. The friendliest version of the all-time classic — gentle pace, big buttons, no surprises. Your best length saves automatically so you can chase a personal record any time.</p>
+                <div class="cat-featured-stats">
+                    <div class="stat"><div class="l">Top score</div><div class="n accent">1,840</div></div>
+                    <div class="stat"><div class="l">Plays</div><div class="n">12.4k</div></div>
+                    <div class="stat"><div class="l">Difficulty</div><div class="n">Easy</div></div>
+                </div>
+                <div class="cat-featured-cta">
+                    <a class="cat-btn" href="../snake/">Let's play →</a>
+                    <a class="cat-btn outline" href="../snake/">How to play</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="all-games" class="cat-section-head">
+            <h2>All games</h2>
+            <span class="sub">5 games · made for ages 4-10</span>
+            <div class="rule"></div>
+        </div>
+        <div class="cat-grid">
+
+            <a class="cat-card featured" href="../snake/">
+                <span class="cat-card-tag">Easy</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#7BC97B2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="14" y="14" width="10" height="10" rx="2" fill="#7BC97B"/><rect x="26" y="14" width="10" height="10" rx="2" fill="#7BC97B"/><rect x="38" y="14" width="10" height="10" rx="2" fill="#7BC97B"/><rect x="38" y="26" width="10" height="10" rx="2" fill="#7BC97B"/><rect x="38" y="38" width="10" height="10" rx="2" fill="#7BC97B"/></svg>
+                    </div>
+                    <div>
+                        <h3>Snake</h3>
+                        <div class="desc">Eat, grow, don't crash.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Top score</div><div class="v accent">1,840</div></div>
+                    <div><div class="l">Plays</div><div class="v">12.4k</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">1,840</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">19 sessions</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../bubble-pop/">
+                <span class="cat-card-tag">Tap</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#FF8FA32E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><circle cx="20" cy="22" r="9" fill="#FF8FA3" opacity="0.55"/><circle cx="17" cy="19" r="2.5" fill="#fff" opacity="0.9"/><circle cx="42" cy="34" r="11" fill="#FF8FA3" opacity="0.45"/><circle cx="38" cy="30" r="3" fill="#fff" opacity="0.9"/><circle cx="28" cy="46" r="7" fill="#FF8FA3" opacity="0.65"/><circle cx="26" cy="44" r="2" fill="#fff" opacity="0.9"/></svg>
+                    </div>
+                    <div>
+                        <h3>Bubble Pop</h3>
+                        <div class="desc">Tap bubbles before they float away.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Best level</div><div class="v accent">—</div></div>
+                    <div><div class="l">Plays</div><div class="v">New</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">—</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Brand new</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../memory-match/">
+                <span class="cat-card-tag">Memory</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#FFD93D2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="6"  y="10" width="16" height="20" rx="3" fill="#FFD93D"/><rect x="24" y="10" width="16" height="20" rx="3" fill="#FFD93D" opacity="0.55"/><rect x="42" y="10" width="16" height="20" rx="3" fill="#FFD93D"/><rect x="6"  y="34" width="16" height="20" rx="3" fill="#FFD93D" opacity="0.55"/><rect x="24" y="34" width="16" height="20" rx="3" fill="#FFD93D"/><rect x="42" y="34" width="16" height="20" rx="3" fill="#FFD93D" opacity="0.55"/><circle cx="32" cy="44" r="3" fill="#fff"/></svg>
+                    </div>
+                    <div>
+                        <h3>Memory Match</h3>
+                        <div class="desc">Flip cards. Find the pairs.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Fewest moves</div><div class="v accent">—</div></div>
+                    <div><div class="l">Plays</div><div class="v">New</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">—</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Brand new</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../shape-sorter/">
+                <span class="cat-card-tag">Drag</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#6DD5FA2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><circle cx="14" cy="14" r="6" fill="#6DD5FA"/><rect x="26" y="8" width="12" height="12" rx="2" fill="#6DD5FA" opacity="0.7"/><polygon points="50,8 56,20 44,20" fill="#6DD5FA"/><rect x="6" y="40" width="14" height="14" rx="3" fill="none" stroke="#6DD5FA" stroke-width="2.5"/><rect x="26" y="40" width="14" height="14" rx="3" fill="none" stroke="#6DD5FA" stroke-width="2.5" opacity="0.7"/><rect x="46" y="40" width="14" height="14" rx="3" fill="none" stroke="#6DD5FA" stroke-width="2.5"/></svg>
+                    </div>
+                    <div>
+                        <h3>Shape Sorter</h3>
+                        <div class="desc">Drag shapes into matching buckets.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Best streak</div><div class="v accent">—</div></div>
+                    <div><div class="l">Plays</div><div class="v">New</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">—</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Brand new</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../counting-critters/">
+                <span class="cat-card-tag">Numbers</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#A78BFA2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><circle cx="14" cy="20" r="6" fill="#A78BFA"/><circle cx="32" cy="20" r="6" fill="#A78BFA" opacity="0.7"/><circle cx="50" cy="20" r="6" fill="#A78BFA"/><text x="32" y="50" font-size="20" font-weight="800" text-anchor="middle" fill="#A78BFA">3</text></svg>
+                    </div>
+                    <div>
+                        <h3>Counting Critters</h3>
+                        <div class="desc">How many critters? Tap the number.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Best accuracy</div><div class="v accent">—</div></div>
+                    <div><div class="l">Plays</div><div class="v">New</div></div>
+                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
+                    <div><div class="l">Your best</div><div class="v sm">—</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Brand new</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+        </div>
+
+        <div class="cat-ad-row">
+            <div class="ad-slot">
+                <div>Sponsored · In-feed</div>
+                <div class="ad-size">728 × 90</div>
+                <ins class="adsbygoogle"
+                     style="display:none"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="horizontal"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+        <div class="cat-twocol">
+            <div class="cat-challenge">
+                <div class="cat-challenge-eyebrow"><span class="cat-challenge-dot"></span> Family-friendly · always free</div>
+                <h3>Five games,<br>five minutes each</h3>
+                <p>Every game in here finishes in five minutes or less, so it's perfect for a quick tablet session. Big buttons, gentle feedback, no in-app purchases — built for shared family time, not for chasing engagement metrics.</p>
+                <div class="cat-challenge-grid">
+                    <div><div class="l">Games</div><div class="n">5</div></div>
+                    <div><div class="l">Avg session</div><div class="n accent">4 min</div></div>
+                    <div><div class="l">Ads inside</div><div class="n">0</div></div>
+                    <div><div class="l">Accounts</div><div class="n">0</div></div>
+                </div>
+                <div class="cat-challenge-cta">
+                    <a class="primary" href="../snake/">Start with Snake →</a>
+                    <button class="ghost" type="button">Why we built this</button>
+                </div>
+            </div>
+            <div class="cat-hall">
+                <h3>Picks for grown-ups</h3>
+                <div class="sub">If your kid has outgrown these</div>
+                <div class="cat-hall-row">
+                    <div class="pos p1">▶</div>
+                    <div class="who"><a href="../connect-4/" style="color:inherit;text-decoration:none">Connect 4</a><span>Strategy &amp; Puzzles</span></div>
+                    <div class="amt">→</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos p2">▶</div>
+                    <div class="who"><a href="../connect-dots/" style="color:inherit;text-decoration:none">Dots &amp; Boxes</a><span>Strategy &amp; Puzzles</span></div>
+                    <div class="amt">→</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos p3">▶</div>
+                    <div class="who"><a href="../frogger/" style="color:inherit;text-decoration:none">Frogger</a><span>Arcade</span></div>
+                    <div class="amt">→</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos">▶</div>
+                    <div class="who"><a href="../simon/" style="color:inherit;text-decoration:none">Simon</a><span>Arcade</span></div>
+                    <div class="amt">→</div>
+                </div>
+                <div class="cat-hall-row">
+                    <div class="pos">▶</div>
+                    <div class="who"><a href="../breakout/" style="color:inherit;text-decoration:none">Breakout</a><span>Arcade</span></div>
+                    <div class="amt">→</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="cat-strategy">
+            <div class="cat-strategy-head">
+                <div><h2>Tips for grown-ups</h2></div>
+                <span class="sub">Pacing · what each game teaches · age guidance</span>
+            </div>
+            <div class="cat-strategy-grid">
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Counting Critters: skip the timer for under-6s</h4>
+                    <p>The default mode auto-advances after a short pause. For younger players, the game waits indefinitely until they tap an answer. No timer means no frustration on close calls.</p>
+                    <ul>
+                        <li>Ages 4-5 <b>1-5 critters</b></li>
+                        <li>Ages 6-8 <b>1-10 critters</b></li>
+                        <li>Ages 9+ <b>plus distractors</b></li>
+                    </ul>
+                </div>
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Memory Match: start at 4 cards</h4>
+                    <p>Begin with the smallest grid (just two pairs) and let them feel the win. Move up to 12 cards once they've found a few matches without help — and to 20 cards when they ask for a harder one.</p>
+                    <ul>
+                        <li>Easy <b>4 cards · 2 pairs</b></li>
+                        <li>Medium <b>12 cards · 6 pairs</b></li>
+                        <li>Hard <b>20 cards · 10 pairs</b></li>
+                    </ul>
+                </div>
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Shape Sorter: it celebrates effort, not speed</h4>
+                    <p>Wrong answers don't deduct points or end the game — the shape just bounces back to try again. Streaks are tracked but never penalize a miss; the goal is gentle classification practice.</p>
+                    <ul>
+                        <li>Match <b>+1 streak</b></li>
+                        <li>Miss <b>streak resets</b></li>
+                        <li>Best streak <b>saves locally</b></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cat-ad-row">
+            <div class="ad-slot">
+                <div>Sponsored · Bottom banner</div>
+                <div class="ad-size">728 × 90</div>
+                <ins class="adsbygoogle"
+                     style="display:none"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="cat-disclaimer">
+        <b>Built for kids.</b> No ads inside the games, no purchases, no accounts. Scores save locally to your browser — clearing site data wipes your records.
+    </div>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="..">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="..">All games</a>
+            <a href="../privacy.html">Privacy</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+</body>
+</html>

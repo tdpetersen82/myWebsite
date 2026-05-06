@@ -3,22 +3,26 @@
   <url><loc>https://limestonegames.com/</loc><priority>1.0</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://limestonegames.com/arcade/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://limestonegames.com/casino/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://limestonegames.com/retro/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://limestonegames.com/kids/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://limestonegames.com/puzzles/</loc><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://limestonegames.com/asteroids/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/baccarat/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://limestonegames.com/bubble-pop/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/blackjack/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/block-puzzle/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/breakout/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/connect-4/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/connect-dots/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://limestonegames.com/counting-critters/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/craps/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/defender/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/frogger/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/lunar-lander/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://limestonegames.com/memory-match/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/missile-command/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/pong/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/roulette/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://limestonegames.com/shape-sorter/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/simon/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/snake/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/space-invaders/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>

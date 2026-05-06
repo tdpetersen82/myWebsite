@@ -1,0 +1,350 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shape Sorter — Free Kids Game | Limestone Games</title>
+    <meta name="description" content="Drop falling shapes into the matching colored buckets. A friendly drag-and-drop game for kids — gentle pace, scores save locally.">
+    <meta name="keywords" content="shape sorter, kids drag and drop game, shapes, colors, free browser game, family game">
+    <link rel="canonical" href="https://limestonegames.com/shape-sorter/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Shape Sorter","description":"Drag shapes into matching buckets. A friendly classification game for kids.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Kids","item":"https://limestonegames.com/kids/"},{"@type":"ListItem","position":3,"name":"Shape Sorter"}]}</script>
+    <meta property="og:title" content="Shape Sorter — Free Kids Game">
+    <meta property="og:description" content="Drag shapes into matching buckets. Friendly drag-and-drop game for kids.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/shape-sorter/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+
+    <style>
+      :root {
+        --ink: #1F1A2E;
+        --bg-1: #FFF8DC;
+        --bg-2: #FFE4F0;
+        --bg-3: #DCEEFF;
+        --accent: #FF4F8B;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 20px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 832px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+      .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px; flex-wrap: wrap; }
+      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
+      .top-bar a:hover { opacity: 1; }
+      h1 {
+        font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
+        background: linear-gradient(135deg, #FFA751, #FF4F8B);
+        -webkit-background-clip: text; background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+      .stats {
+        display: flex; gap: 18px; font-size: 14px; font-weight: 600;
+        background: rgba(255, 255, 255, 0.6);
+        padding: 10px 18px; border-radius: 999px;
+        box-shadow: 0 4px 12px rgba(31, 26, 46, 0.06);
+        flex-wrap: wrap; justify-content: center;
+      }
+      .stats div { display: flex; gap: 6px; align-items: baseline; }
+      .stats .l { color: rgba(31, 26, 46, 0.55); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+      .stats .v { font-size: 18px; font-weight: 800; color: var(--accent); }
+      .stage-wrap {
+        position: relative;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 24px;
+        padding: 14px;
+        box-shadow: 0 10px 30px rgba(31, 26, 46, 0.08);
+        align-self: stretch;
+        display: flex;
+        justify-content: center;
+      }
+      canvas {
+        display: block;
+        background: linear-gradient(180deg, #DDF1FF 0%, #FFE4F0 100%);
+        border-radius: 14px;
+        cursor: grab; touch-action: none;
+      }
+      canvas.dragging { cursor: grabbing; }
+      .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+      button {
+        font: inherit; font-weight: 700;
+        padding: 12px 22px; border-radius: 999px;
+        border: 2px solid transparent;
+        background: var(--accent); color: #fff;
+        cursor: pointer; transition: transform 0.1s;
+        box-shadow: 0 4px 12px rgba(255, 79, 139, 0.3);
+      }
+      button.ghost { background: transparent; color: var(--ink); border-color: rgba(31, 26, 46, 0.2); box-shadow: none; }
+      button:hover { transform: translateY(-1px); }
+      .hint { font-size: 13px; color: rgba(31, 26, 46, 0.6); text-align: center; max-width: 540px; }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../kids/">All Kids games</a>
+        </div>
+        <h1>Shape Sorter</h1>
+        <div class="stats">
+            <div><span class="l">Streak</span><span class="v" id="streak">0</span></div>
+            <div><span class="l">Sorted</span><span class="v" id="sorted">0</span></div>
+            <div><span class="l">Best streak</span><span class="v" id="best">—</span></div>
+        </div>
+        <div class="stage-wrap">
+            <canvas id="game" width="800" height="560"></canvas>
+        </div>
+        <div class="controls">
+            <button onclick="restart()">Restart</button>
+            <a href="../kids/"><button class="ghost">More kids games</button></a>
+        </div>
+        <p class="hint">Drag each shape into the bucket that matches its shape. Wrong drop? No worries — the shape bounces back.</p>
+    </div>
+
+    <script>
+        const KEY = 'kids-shape-sorter-best';
+        const canvas = document.getElementById('game');
+        const ctx = canvas.getContext('2d');
+        const W = canvas.width, H = canvas.height;
+        const streakEl = document.getElementById('streak');
+        const sortedEl = document.getElementById('sorted');
+        const bestEl = document.getElementById('best');
+
+        const SHAPES = ['circle', 'square', 'triangle', 'star'];
+        const COLORS = { circle: '#6DD5FA', square: '#FF8FA3', triangle: '#7BC97B', star: '#FFD93D' };
+        const LABELS = { circle: 'circle', square: 'square', triangle: 'triangle', star: 'star' };
+
+        let buckets = []; // { x, y, w, h, shape }
+        let active = null; // current draggable
+        let drag = null; // { dx, dy }
+        let streak = 0, sorted = 0;
+        let fallSpeed = 35;
+        let last = 0;
+        let bouncing = null; // { x, y, vx, vy, target, shape, color }
+
+        let best = parseInt(localStorage.getItem(KEY) || '0', 10);
+        bestEl.textContent = best > 0 ? best : '—';
+
+        function layoutBuckets() {
+            const bw = 150, bh = 110, gap = 30;
+            const total = bw * 4 + gap * 3;
+            const startX = (W - total) / 2;
+            const y = H - bh - 20;
+            buckets = SHAPES.map((shape, i) => ({
+                shape,
+                x: startX + i * (bw + gap),
+                y, w: bw, h: bh,
+            }));
+        }
+
+        function spawnShape() {
+            const shape = SHAPES[(Math.random() * SHAPES.length) | 0];
+            active = {
+                shape,
+                color: COLORS[shape],
+                x: 80 + Math.random() * (W - 160),
+                y: -50,
+                size: 56,
+                falling: true,
+            };
+        }
+
+        function drawShape(s, x, y, size, alpha = 1) {
+            ctx.save();
+            ctx.globalAlpha = alpha;
+            ctx.fillStyle = s.color;
+            ctx.strokeStyle = 'rgba(31, 26, 46, 0.25)';
+            ctx.lineWidth = 2;
+            const half = size / 2;
+            if (s.shape === 'circle') {
+                ctx.beginPath();
+                ctx.arc(x, y, half, 0, Math.PI * 2);
+                ctx.fill(); ctx.stroke();
+            } else if (s.shape === 'square') {
+                ctx.beginPath();
+                ctx.roundRect(x - half, y - half, size, size, 8);
+                ctx.fill(); ctx.stroke();
+            } else if (s.shape === 'triangle') {
+                ctx.beginPath();
+                ctx.moveTo(x, y - half);
+                ctx.lineTo(x + half, y + half);
+                ctx.lineTo(x - half, y + half);
+                ctx.closePath();
+                ctx.fill(); ctx.stroke();
+            } else if (s.shape === 'star') {
+                ctx.beginPath();
+                for (let i = 0; i < 10; i++) {
+                    const r = i % 2 === 0 ? half : half * 0.5;
+                    const a = -Math.PI / 2 + i * Math.PI / 5;
+                    const px = x + Math.cos(a) * r;
+                    const py = y + Math.sin(a) * r;
+                    if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+                }
+                ctx.closePath();
+                ctx.fill(); ctx.stroke();
+            }
+            ctx.restore();
+        }
+
+        function drawBucket(b) {
+            ctx.save();
+            // bucket body
+            ctx.fillStyle = COLORS[b.shape];
+            ctx.globalAlpha = 0.18;
+            ctx.beginPath();
+            ctx.roundRect(b.x, b.y, b.w, b.h, 14);
+            ctx.fill();
+            ctx.globalAlpha = 1;
+            ctx.strokeStyle = COLORS[b.shape];
+            ctx.lineWidth = 4;
+            ctx.beginPath();
+            ctx.roundRect(b.x, b.y, b.w, b.h, 14);
+            ctx.stroke();
+            // outline of expected shape
+            const cx = b.x + b.w / 2, cy = b.y + b.h / 2 - 6;
+            ctx.globalAlpha = 0.4;
+            drawShape({ shape: b.shape, color: COLORS[b.shape] }, cx, cy, 56, 0.4);
+            // label
+            ctx.globalAlpha = 1;
+            ctx.fillStyle = 'rgba(31, 26, 46, 0.7)';
+            ctx.font = '600 14px sans-serif';
+            ctx.textAlign = 'center';
+            ctx.fillText(LABELS[b.shape], cx, b.y + b.h - 8);
+            ctx.restore();
+        }
+
+        function step(t) {
+            const dt = Math.min(0.05, (t - last) / 1000);
+            last = t;
+            ctx.clearRect(0, 0, W, H);
+            const grd = ctx.createLinearGradient(0, 0, 0, H);
+            grd.addColorStop(0, '#DDF1FF');
+            grd.addColorStop(1, '#FFE4F0');
+            ctx.fillStyle = grd;
+            ctx.fillRect(0, 0, W, H);
+
+            buckets.forEach(drawBucket);
+
+            if (bouncing) {
+                bouncing.vy += 240 * dt;
+                bouncing.x += bouncing.vx * dt;
+                bouncing.y += bouncing.vy * dt;
+                drawShape(bouncing, bouncing.x, bouncing.y, bouncing.size, 0.85);
+                if (bouncing.y > H + 60) bouncing = null;
+            }
+
+            if (active) {
+                if (active.falling && !drag) {
+                    active.y += fallSpeed * dt * 60 * 0.5;
+                    if (active.y > H + 60) {
+                        // missed (slid off bottom)
+                        streak = 0;
+                        streakEl.textContent = 0;
+                        active = null;
+                        spawnShape();
+                    }
+                }
+                if (active) drawShape(active, active.x, active.y, active.size);
+            }
+
+            requestAnimationFrame(step);
+        }
+
+        function pointerPos(e) {
+            const rect = canvas.getBoundingClientRect();
+            const sx = canvas.width / rect.width;
+            const sy = canvas.height / rect.height;
+            const cx = (e.touches ? e.touches[0].clientX : e.clientX);
+            const cy = (e.touches ? e.touches[0].clientY : e.clientY);
+            return { x: (cx - rect.left) * sx, y: (cy - rect.top) * sy };
+        }
+
+        function startDrag(e) {
+            if (!active) return;
+            const p = pointerPos(e);
+            const dx = p.x - active.x, dy = p.y - active.y;
+            if (dx * dx + dy * dy < (active.size * 0.6) ** 2) {
+                drag = { dx, dy };
+                canvas.classList.add('dragging');
+                if (e.cancelable) e.preventDefault();
+            }
+        }
+        function moveDrag(e) {
+            if (!drag || !active) return;
+            const p = pointerPos(e);
+            active.x = p.x - drag.dx;
+            active.y = p.y - drag.dy;
+            if (e.cancelable) e.preventDefault();
+        }
+        function endDrag() {
+            if (!drag || !active) return;
+            const a = active;
+            // is over a bucket?
+            const inside = buckets.find(b =>
+                a.x > b.x && a.x < b.x + b.w &&
+                a.y > b.y && a.y < b.y + b.h
+            );
+            if (inside && inside.shape === a.shape) {
+                sorted++;
+                streak++;
+                sortedEl.textContent = sorted;
+                streakEl.textContent = streak;
+                if (streak > best) {
+                    best = streak;
+                    localStorage.setItem(KEY, String(best));
+                    bestEl.textContent = best;
+                }
+                fallSpeed = Math.min(110, fallSpeed + 1.4);
+                active = null;
+            } else {
+                streak = 0;
+                streakEl.textContent = 0;
+                bouncing = { ...a, vx: (Math.random() - 0.5) * 200, vy: -260 };
+                active = null;
+            }
+            drag = null;
+            canvas.classList.remove('dragging');
+            if (!active) spawnShape();
+        }
+
+        canvas.addEventListener('mousedown', startDrag);
+        window.addEventListener('mousemove', moveDrag);
+        window.addEventListener('mouseup', endDrag);
+        canvas.addEventListener('touchstart', startDrag, { passive: false });
+        window.addEventListener('touchmove', moveDrag, { passive: false });
+        window.addEventListener('touchend', endDrag);
+
+        function restart() {
+            streak = 0; sorted = 0; fallSpeed = 35;
+            streakEl.textContent = 0; sortedEl.textContent = 0;
+            layoutBuckets();
+            spawnShape();
+        }
+
+        restart();
+        last = performance.now();
+        requestAnimationFrame(step);
+
+        // Auto-scale
+        (function () {
+            const c = canvas;
+            const bw = c.width, bh = c.height;
+            function sc() {
+                const par = c.parentElement;
+                const ps = getComputedStyle(par);
+                const mw = par.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
+                const mh = window.innerHeight * 0.7;
+                const s = Math.min(mw / bw, mh / bh, 1);
+                c.style.width = (bw * s) + 'px';
+                c.style.height = (bh * s) + 'px';
+            }
+            window.addEventListener('resize', sc);
+            sc();
+        })();
+    </script>
+</body>
+</html>
