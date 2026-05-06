@@ -48,155 +48,19 @@
     return animals[Math.floor(Math.random() * animals.length)];
   }
 
-  // ── Lily SVG renderer ──────────────────────────────────────────────────
-  // Body and face shape are constant; eyes + mouth swap by expression.
-
-  const LILY_BASE = `
-    <ellipse cx="200" cy="540" rx="125" ry="14" fill="rgba(0,0,0,.13)"/>
-
-    <!-- coat -->
-    <path d="M40 552 Q40 380 200 380 Q360 380 360 552 Z" fill="#4F8AAD"/>
-    <path d="M40 552 Q40 380 200 380 Q360 380 360 552 Z" fill="url(#coatHi)" opacity="0.35"/>
-    <!-- coat lapels -->
-    <path d="M155 380 L200 430 L150 470 L130 430 Z" fill="#3C6F8B"/>
-    <path d="M245 380 L200 430 L250 470 L270 430 Z" fill="#3C6F8B"/>
-    <!-- collar -->
-    <path d="M165 380 L200 410 L235 380 L200 425 Z" fill="#FAFAFA"/>
-    <!-- bow tie -->
-    <path d="M180 422 L200 432 L220 422 L220 444 L200 434 L180 444 Z" fill="#FF8FA3"/>
-    <circle cx="200" cy="433" r="3" fill="#D43A6E"/>
-
-    <!-- neck -->
-    <rect x="180" y="345" width="40" height="40" fill="#F4D2A9"/>
-
-    <!-- magnifying glass tucked at side -->
-    <g transform="translate(78, 440) rotate(-26)">
-      <line x1="22" y1="22" x2="56" y2="56" stroke="#8C6A3F" stroke-width="9" stroke-linecap="round"/>
-      <line x1="22" y1="22" x2="56" y2="56" stroke="#FFD93D" stroke-width="6" stroke-linecap="round"/>
-      <circle cx="0" cy="0" r="32" fill="rgba(255,255,255,.55)" stroke="#FFD93D" stroke-width="7"/>
-    </g>
-
-    <!-- ears -->
-    <ellipse cx="92" cy="220" rx="13" ry="20" fill="#F4D2A9"/>
-    <ellipse cx="308" cy="220" rx="13" ry="20" fill="#F4D2A9"/>
-
-    <!-- head -->
-    <ellipse cx="200" cy="218" rx="108" ry="122" fill="#F4D2A9"/>
-    <ellipse cx="200" cy="218" rx="108" ry="122" fill="url(#faceShade)" opacity="0.5"/>
-
-    <!-- hair back -->
-    <path d="M92 200 Q92 88 200 88 Q308 88 308 200 L308 290 Q282 298 240 298 L160 298 Q118 298 92 290 Z" fill="#5C3A21"/>
-
-    <!-- hair lock side right -->
-    <path d="M295 195 Q310 240 290 290 Q283 270 285 235 Z" fill="#4A2D1A"/>
-    <!-- hair lock side left -->
-    <path d="M105 195 Q90 240 110 290 Q117 270 115 235 Z" fill="#4A2D1A"/>
-
-    <!-- bangs -->
-    <path d="M115 165 Q160 110 200 120 Q244 110 285 165 Q260 158 218 162 Q176 166 152 175 Q132 178 115 165 Z" fill="#5C3A21"/>
-
-    <!-- headband -->
-    <path d="M105 168 Q200 138 295 168 L295 188 Q200 158 105 188 Z" fill="#3FB6BC"/>
-    <circle cx="288" cy="172" r="9" fill="#FFD93D"/>
-    <circle cx="288" cy="172" r="4" fill="#FF4F8B"/>
-
-    <!-- cheeks -->
-    <ellipse cx="135" cy="262" rx="14" ry="9" fill="#FFB7C7" opacity="0.6"/>
-    <ellipse cx="265" cy="262" rx="14" ry="9" fill="#FFB7C7" opacity="0.6"/>
-
-    <!-- nose -->
-    <path d="M196 250 Q200 262 206 252" fill="none" stroke="#C49A77" stroke-width="2.5" stroke-linecap="round"/>
-  `;
-
-  const LILY_FACES = {
-    idle: `
-      <path d="M138 198 Q160 192 178 198" fill="none" stroke="#3D2517" stroke-width="4" stroke-linecap="round"/>
-      <path d="M222 198 Q244 192 262 198" fill="none" stroke="#3D2517" stroke-width="4" stroke-linecap="round"/>
-      <ellipse cx="160" cy="225" rx="9" ry="11" fill="#1F1A2E"/>
-      <ellipse cx="240" cy="225" rx="9" ry="11" fill="#1F1A2E"/>
-      <ellipse cx="158" cy="221" rx="3" ry="3.5" fill="#fff"/>
-      <ellipse cx="238" cy="221" rx="3" ry="3.5" fill="#fff"/>
-      <path d="M178 295 Q200 308 222 295" fill="none" stroke="#1F1A2E" stroke-width="4" stroke-linecap="round"/>
-    `,
-    thinking: `
-      <path d="M138 192 Q158 184 178 192" fill="none" stroke="#3D2517" stroke-width="4" stroke-linecap="round"/>
-      <path d="M222 192 Q244 184 262 192" fill="none" stroke="#3D2517" stroke-width="4" stroke-linecap="round"/>
-      <ellipse cx="166" cy="222" rx="9" ry="11" fill="#1F1A2E"/>
-      <ellipse cx="246" cy="222" rx="9" ry="11" fill="#1F1A2E"/>
-      <ellipse cx="170" cy="217" rx="3" ry="3.5" fill="#fff"/>
-      <ellipse cx="250" cy="217" rx="3" ry="3.5" fill="#fff"/>
-      <ellipse cx="200" cy="298" rx="9" ry="6" fill="#1F1A2E"/>
-      <circle cx="305" cy="135" r="6" fill="#1F1A2E" opacity="0.5"/>
-      <circle cx="332" cy="118" r="9" fill="#1F1A2E" opacity="0.55"/>
-      <circle cx="362" cy="92" r="20" fill="#fff" stroke="#1F1A2E" stroke-width="3"/>
-      <text x="362" y="103" text-anchor="middle" font-size="26" font-family="Bricolage Grotesque, serif" font-weight="700" fill="#1F1A2E">?</text>
-    `,
-    yes: `
-      <path d="M138 188 Q160 184 178 192" fill="none" stroke="#3D2517" stroke-width="4" stroke-linecap="round"/>
-      <path d="M222 192 Q244 184 262 188" fill="none" stroke="#3D2517" stroke-width="4" stroke-linecap="round"/>
-      <path d="M147 232 Q160 215 175 232" fill="none" stroke="#1F1A2E" stroke-width="6" stroke-linecap="round"/>
-      <path d="M225 232 Q240 215 253 232" fill="none" stroke="#1F1A2E" stroke-width="6" stroke-linecap="round"/>
-      <path d="M163 290 Q200 322 237 290 Q200 320 163 290 Z" fill="#1F1A2E"/>
-      <path d="M170 295 Q200 312 230 295 Q200 314 170 295 Z" fill="#FF4F8B"/>
-      <text x="350" y="180" font-size="44">👍</text>
-    `,
-    no: `
-      <path d="M138 200 Q160 206 178 198" fill="none" stroke="#3D2517" stroke-width="4" stroke-linecap="round"/>
-      <path d="M222 198 Q244 206 262 200" fill="none" stroke="#3D2517" stroke-width="4" stroke-linecap="round"/>
-      <path d="M148 226 L172 226" stroke="#1F1A2E" stroke-width="6" stroke-linecap="round"/>
-      <path d="M228 226 L252 226" stroke="#1F1A2E" stroke-width="6" stroke-linecap="round"/>
-      <path d="M178 300 L222 300" stroke="#1F1A2E" stroke-width="5" stroke-linecap="round"/>
-      <text x="345" y="180" font-size="44">🤔</text>
-    `,
-    win: `
-      <path d="M138 184 Q160 178 178 188" fill="none" stroke="#3D2517" stroke-width="4" stroke-linecap="round"/>
-      <path d="M222 188 Q244 178 262 184" fill="none" stroke="#3D2517" stroke-width="4" stroke-linecap="round"/>
-      <text x="160" y="240" text-anchor="middle" font-size="36" fill="#FFD93D" stroke="#1F1A2E" stroke-width="1.5">★</text>
-      <text x="240" y="240" text-anchor="middle" font-size="36" fill="#FFD93D" stroke="#1F1A2E" stroke-width="1.5">★</text>
-      <ellipse cx="200" cy="298" rx="18" ry="16" fill="#1F1A2E"/>
-      <ellipse cx="200" cy="304" rx="13" ry="8" fill="#FF4F8B"/>
-      <text x="80" y="120" font-size="32">✨</text>
-      <text x="320" y="135" font-size="28">✨</text>
-      <text x="55" y="220" font-size="22">✨</text>
-      <text x="345" y="240" font-size="22">✨</text>
-    `,
-    lose: `
-      <path d="M138 208 Q158 196 178 204" fill="none" stroke="#3D2517" stroke-width="4" stroke-linecap="round"/>
-      <path d="M222 204 Q242 196 262 208" fill="none" stroke="#3D2517" stroke-width="4" stroke-linecap="round"/>
-      <ellipse cx="160" cy="228" rx="8" ry="10" fill="#1F1A2E"/>
-      <ellipse cx="240" cy="228" rx="8" ry="10" fill="#1F1A2E"/>
-      <ellipse cx="158" cy="225" rx="2.5" ry="3" fill="#fff"/>
-      <ellipse cx="238" cy="225" rx="2.5" ry="3" fill="#fff"/>
-      <path d="M163 240 Q156 268 168 274 Q178 268 167 240 Z" fill="#6DD5FA" opacity="0.85"/>
-      <path d="M178 308 Q200 294 222 308" fill="none" stroke="#1F1A2E" stroke-width="4" stroke-linecap="round"/>
-    `,
-  };
-
-  function lilySvg(expression) {
-    const face = LILY_FACES[expression] || LILY_FACES.idle;
-    return `
-      <svg viewBox="0 0 400 580" xmlns="http://www.w3.org/2000/svg" preserveAspectRatio="xMidYMid meet">
-        <defs>
-          <linearGradient id="coatHi" x1="0" y1="0" x2="0" y2="1">
-            <stop offset="0" stop-color="#fff" stop-opacity="0.4"/>
-            <stop offset="1" stop-color="#fff" stop-opacity="0"/>
-          </linearGradient>
-          <radialGradient id="faceShade" cx="50%" cy="35%" r="60%">
-            <stop offset="0" stop-color="#fff" stop-opacity="0.5"/>
-            <stop offset="0.7" stop-color="#fff" stop-opacity="0"/>
-            <stop offset="1" stop-color="#A07050" stop-opacity="0.25"/>
-          </radialGradient>
-        </defs>
-        ${LILY_BASE}
-        ${face}
-      </svg>
-    `;
-  }
+  // ── Lily portrait (zookeeper sprite) ──────────────────────────────────
+  // assets/zookeepersprite.png is a 2x2 grid of expressions:
+  //   ┌──────────┬──────────┐
+  //   │  happy   │   sad    │   ← top row: smile (yes/win), sad (lose)
+  //   ├──────────┼──────────┤
+  //   │ thinking │ skeptical│   ← bottom row: thinking (idle), skeptical (no)
+  //   └──────────┴──────────┘
+  // CSS in index.html maps each expression to a quadrant via background-position.
 
   function setExpression(expr) {
     state.expression = expr;
     const el = document.getElementById('lily-portrait');
-    if (el) el.innerHTML = lilySvg(expr);
+    if (el) el.dataset.expr = expr;
   }
 
   // ── Speech bubble typewriter ──────────────────────────────────────────

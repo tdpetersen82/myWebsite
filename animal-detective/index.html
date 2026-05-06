@@ -213,19 +213,28 @@
   @keyframes blink { 50% { opacity: 0; } }
 
   .lily-portrait {
-    flex: 1;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    min-height: 0;
-    margin-top: 8px;
+    margin: auto;
+    width: 100%;
+    max-width: 380px;
+    aspect-ratio: 1 / 1;
+    background-image: url('assets/zookeepersprite.png?v=20260506a');
+    background-size: 200% 200%;
+    background-repeat: no-repeat;
+    background-position: 0% 100%;          /* default: bottom-left, thinking */
+    border-radius: 22px;
+    box-shadow: 0 14px 32px rgba(31, 26, 46, 0.18), 0 2px 6px rgba(31, 26, 46, 0.08);
     animation: breathe 4.5s ease-in-out infinite;
+    transition: background-position 0.45s cubic-bezier(.2, .8, .25, 1), transform 0.25s;
   }
-  .lily-portrait svg {
-    height: 100%;
-    width: auto;
-    max-width: 100%;
-  }
+  .lily-portrait[data-expr="idle"],
+  .lily-portrait[data-expr="thinking"] { background-position: 0% 100%; }
+  .lily-portrait[data-expr="yes"],
+  .lily-portrait[data-expr="win"]      { background-position: 0% 0%; }
+  .lily-portrait[data-expr="no"]       { background-position: 100% 100%; }
+  .lily-portrait[data-expr="lose"]     { background-position: 100% 0%; }
+  .lily-portrait[data-expr="yes"],
+  .lily-portrait[data-expr="win"]      { transform: scale(1.025); }
+  .lily-portrait[data-expr="no"]       { transform: scale(0.985); }
   @keyframes breathe {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-5px); }
@@ -744,7 +753,7 @@
             <span id="speech-text"></span>
           </div>
         </div>
-        <div id="lily-portrait" class="lily-portrait"></div>
+        <div id="lily-portrait" class="lily-portrait" data-expr="idle"></div>
         <div class="name-plate">
           <div class="name">Detective Lily</div>
           <div class="case" id="case-num">Case #001</div>
