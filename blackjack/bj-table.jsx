@@ -300,6 +300,7 @@ function ResultBanner({ kind, payout }) {
     push:      { title: 'PUSH',      sub: 'Bet returned', color:'#e6c590', glow:'#c9a26a' },
     lose:      { title: 'DEALER WINS', sub: `-$${payout}`, color:'#f29a8c', glow:'#c0392b' },
     bust:      { title: 'BUST',      sub: `-$${payout}`, color:'#f29a8c', glow:'#c0392b' },
+    surrender: { title: 'SURRENDER', sub: `Half back: -$${payout}`, color:'#e6c590', glow:'#c9a26a' },
   };
   const m = map[kind];
   return (
