@@ -1,169 +1,156 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Three Card Poker — Free Online Game | Limestone Games</title>
-    <meta name="description" content="Play Three Card Poker free in your browser. Ante up, get dealt three cards, and beat the dealer! No downloads, no installs.">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Three Card Poker","description":"Play Three Card Poker free in your browser. Ante up, get dealt three cards, and beat the dealer! No downloads, no installs.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-    <link rel="canonical" href="https://limestonegames.com/three-card-poker/">
+<meta charset="UTF-8" />
+<title>Three Card Poker — Free Online Game | Limestone Games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Play Three Card Poker free in your browser. Ante, Pair Plus, and Play — beat the dealer with strategy hints and casino-style polish. Play money only, no downloads.">
+<meta name="keywords" content="three card poker, free three card poker, online three card poker, browser three card poker, casino, pair plus, ante, play">
+<link rel="canonical" href="https://limestonegames.com/three-card-poker/">
+<meta property="og:title" content="Three Card Poker — Limestone Games">
+<meta property="og:description" content="Play Three Card Poker free in your browser. Ante, Pair Plus, and Play — beat the dealer with strategy hints. Play money only, no downloads.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://limestonegames.com/three-card-poker/">
+<meta property="og:image" content="https://limestonegames.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Three Card Poker — Limestone Games">
+<meta name="twitter:description" content="Play Three Card Poker free in your browser. Ante, Pair Plus, and Play — beat the dealer with strategy hints. Play money only, no downloads.">
+<meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+<link rel="manifest" href="../manifest.json">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Three Card Poker","description":"Play Three Card Poker free in your browser. Ante, Pair Plus, and Play — beat the dealer with strategy hints.","url":"https://limestonegames.com/three-card-poker/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Three Card Poker"}]}</script>
-    <meta property="og:title" content="Three Card Poker — Free Online Game | Limestone Games">
-    <meta property="og:description" content="Play Three Card Poker free in your browser. Ante up, get dealt three cards, and beat the dealer! No downloads, no installs.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://limestonegames.com/three-card-poker/">
-    <meta property="og:image" content="https://limestonegames.com/og-image.png">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Three Card Poker — Free Online Game | Limestone Games">
-    <meta name="twitter:description" content="Play Three Card Poker free in your browser. Ante up, get dealt three cards, and beat the dealer! No downloads, no installs.">
-    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
-    <link rel="manifest" href="../manifest.json">
-    <!-- Google Analytics — replace G-DP6FGVETMV with your tracking ID -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
-    <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+<style>
+  :root{
+    --felt-1:#0e3a2e;
+    --felt-2:#0a2a21;
+    --felt-rail:#3a2418;
+    --brass:#c9a26a;
+    --brass-2:#e6c590;
+    --brass-deep:#8c6a3f;
+    --ivory:#f4ecd8;
+    --ivory-dim:#d9cfb8;
+    --red:#c0392b;
+    --ink:#0c1611;
+    --ink-2:#1a2820;
+    --green-chip:#2e7d4f;
+    --shadow-deep: 0 30px 60px -20px rgba(0,0,0,.6), 0 12px 24px -10px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  body{
+    background:
+      radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
+      radial-gradient(900px 600px at 50% 90%, rgba(0,0,0,.7), transparent 70%),
+      #0a0805;
+  }
+  #root{width:100%;height:100%}
+  #game-wrapper{width:1380px;height:860px;transform-origin:top center;margin:0 auto}
+  /* card flip */
+  .card-shell{perspective:900px}
+  .card-flip{
+    transform-style:preserve-3d;
+    transition: transform .55s cubic-bezier(.2,.8,.25,1);
+  }
+  .card-flip.face-down{transform:rotateY(180deg)}
+  .card-face,.card-back{
+    position:absolute;inset:0;backface-visibility:hidden;border-radius:10px;
+  }
+  .card-back{transform:rotateY(180deg)}
+  /* chip */
+  .chip-3d{
+    position:relative;border-radius:50%;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.25) inset,
+      0 -3px 0 rgba(0,0,0,.25) inset,
+      0 6px 12px rgba(0,0,0,.45),
+      0 2px 0 rgba(0,0,0,.35);
+  }
+  /* deal-in animation */
+  @keyframes dealIn{
+    0%{transform:translate(var(--from-x,300px), var(--from-y,-260px)) rotate(-12deg) scale(.85);opacity:0}
+    60%{opacity:1}
+    100%{transform:translate(0,0) rotate(0) scale(1);opacity:1}
+  }
+  .deal-in{animation:dealIn .55s cubic-bezier(.2,.7,.2,1) backwards}
+  @keyframes chipPlace{
+    0%{transform:translateY(-90px) scale(.7) rotate(-30deg);opacity:0}
+    70%{transform:translateY(4px) scale(1.02) rotate(2deg);opacity:1}
+    100%{transform:translateY(0) scale(1) rotate(0);opacity:1}
+  }
+  .chip-place{animation:chipPlace .35s cubic-bezier(.4,1.6,.3,1) backwards}
+  .chat-pop{opacity:1;transition:transform .3s cubic-bezier(.2,.9,.2,1)}
+  @keyframes glowPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(230,197,144,.0), inset 0 0 0 1px rgba(230,197,144,.4)}
+    50%{box-shadow:0 0 30px 4px rgba(230,197,144,.35), inset 0 0 0 1px rgba(230,197,144,.7)}
+  }
+  .glow-pulse{animation:glowPulse 1.6s ease-in-out infinite}
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(4px)}
+  }
+  .shake{animation:shake .5s ease-in-out}
+  @keyframes bannerIn{
+    0%{transform:translate(-50%,-20px) scale(.92);opacity:0;letter-spacing:.4em}
+    100%{transform:translate(-50%,0) scale(1);opacity:1;letter-spacing:.18em}
+  }
+  .banner-in{animation:bannerIn .55s cubic-bezier(.2,.8,.25,1) both}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:rgba(201,162,106,.3);border-radius:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  button{font-family:inherit}
+  .blink-cursor::after{content:'▍';margin-left:2px;animation:blink 1s steps(2) infinite;opacity:.6}
+  @keyframes blink{50%{opacity:0}}
+  @keyframes breathe{
+    0%,100%{transform:translateX(-50%) translateY(0)}
+    50%{transform:translateX(-50%) translateY(-2px)}
+  }
+  .breathe{animation:breathe 4s ease-in-out infinite}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>&#x1F0CF; Three Card Poker</h1>
-        <div id="game-wrapper">
+<div id="game-wrapper">
+  <div id="root"></div>
+</div>
 
-            <!-- Header -->
-            <div class="tcp-header">
-                <h1>&#x1F0CF; Three Card Poker</h1>
-                <div class="tcp-bankroll">Bankroll: <span id="bankroll-value">$1,000</span></div>
-                <button class="btn-hints" id="btn-hints">Hints: OFF</button>
-            </div>
+<script>
+(function() {
+  var wrapper = document.getElementById('game-wrapper');
+  function resize() {
+    var W = 1380, H = 860;
+    var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
+    wrapper.style.transform = 'scale(' + s + ')';
+    wrapper.style.marginTop = Math.max(0, (window.innerHeight - H * s) / 2) + 'px';
+  }
+  window.addEventListener('resize', resize);
+  resize();
+})();
+</script>
 
-            <!-- Table -->
-            <div class="tcp-table">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-                <!-- Dealer Hand -->
-                <div class="hand-area" id="dealer-area">
-                    <div class="hand-label">Dealer</div>
-                    <div class="hand-value" id="dealer-value"></div>
-                    <div class="cards-row" id="dealer-cards"></div>
-                </div>
+<script src="../casino/casino-bankroll.js?v=20260506a"></script>
+<script src="tcp-deck.js?v=20260506a"></script>
+<script src="tcp-hand.js?v=20260506a"></script>
+<script src="tcp-strategy.js?v=20260506a"></script>
+<script src="tcp-sfx.js?v=20260506a"></script>
 
-                <!-- Message -->
-                <div class="message-area" id="message">Place your bets</div>
+<script type="text/babel" src="tweaks-panel.jsx?v=20260506a"></script>
+<script type="text/babel" src="tcp-cards.jsx?v=20260506a"></script>
+<script type="text/babel" src="tcp-dealer.jsx?v=20260506a"></script>
+<script type="text/babel" src="tcp-table.jsx?v=20260506a"></script>
+<script type="text/babel" src="tcp-app.jsx?v=20260506a"></script>
 
-                <!-- Result Banner -->
-                <div class="result-banner" id="result-banner"></div>
-
-                <!-- Bet Circles -->
-                <div class="bet-circles">
-                    <div class="bet-circle" id="circle-pair-plus">
-                        <div class="bet-circle-label">PAIR PLUS</div>
-                        <div class="bet-circle-amount" id="pair-plus-amount"></div>
-                    </div>
-                    <div class="bet-circle" id="circle-ante">
-                        <div class="bet-circle-label">ANTE</div>
-                        <div class="bet-circle-amount" id="ante-amount"></div>
-                    </div>
-                    <div class="bet-circle" id="circle-play">
-                        <div class="bet-circle-label">PLAY</div>
-                        <div class="bet-circle-amount" id="play-amount"></div>
-                    </div>
-                </div>
-
-                <!-- Player Hand -->
-                <div class="hand-area" id="player-area">
-                    <div class="hand-label">Player</div>
-                    <div class="hand-value" id="player-value"></div>
-                    <div class="cards-row" id="player-cards"></div>
-                </div>
-
-                <!-- Hint Panel -->
-                <div class="hint-panel" id="hint-panel">
-                    <div class="hint-header">
-                        <span class="hint-action" id="hint-action"></span>
-                        <span class="hint-risk" id="hint-risk"></span>
-                    </div>
-                    <div class="hint-explanation" id="hint-explanation"></div>
-                    <div class="hint-detail-toggle" id="hint-detail-toggle">Learn More &#9656;</div>
-                    <div class="hint-detail" id="hint-detail"></div>
-                </div>
-
-                <!-- Action Buttons -->
-                <div class="action-bar" id="action-bar" style="display:none">
-                    <button class="btn-action btn-play" id="btn-play">Play</button>
-                    <button class="btn-action btn-fold" id="btn-fold">Fold</button>
-                </div>
-
-                <!-- Betting Area -->
-                <div class="betting-area" id="betting-area">
-                    <div class="bet-selector">
-                        <button class="bet-target active" id="target-ante" data-target="ante">Ante</button>
-                        <button class="bet-target" id="target-pair-plus" data-target="pairplus">Pair Plus</button>
-                    </div>
-                    <div class="chip-rack" id="chip-rack">
-                        <div class="chip" data-value="5" style="background: #e74c3c; border-color: #c0392b;">$5</div>
-                        <div class="chip" data-value="25" style="background: #27ae60; border-color: #1e8449;">$25</div>
-                        <div class="chip" data-value="100" style="background: #2980b9; border-color: #1f6fa5;">$100</div>
-                        <div class="chip" data-value="500" style="background: #8e44ad; border-color: #6c3483;">$500</div>
-                    </div>
-                    <div class="bet-display">
-                        <button class="btn-clear" id="btn-clear">Clear</button>
-                        <span>Ante: <span class="bet-amount" id="bet-ante-display">$0</span></span>
-                        <span>PP: <span class="bet-amount" id="bet-pp-display">$0</span></span>
-                        <button class="btn-rebet" id="btn-rebet">Rebet</button>
-                        <button class="btn-deal" id="btn-deal" disabled>Deal</button>
-                    </div>
-                </div>
-
-                <!-- Stats -->
-                <div class="stats-bar" id="stats-bar">
-                    <span>Played: 0</span>
-                    <span>Wins: 0</span>
-                    <span>Bonuses: 0</span>
-                    <span>Best: $1,000</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- JS modules in dependency order -->
-    <script src="js/config.js"></script>
-    <script src="js/deck.js"></script>
-    <script src="js/hand.js"></script>
-    <script src="js/strategy.js"></script>
-    <script src="js/audio.js"></script>
-    <script src="js/animations.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/game.js"></script>
-
-    <!-- Auto-scaling -->
-    <script>
-    (function() {
-        var wrapper = document.getElementById('game-wrapper');
-        function resize() {
-            var W = 960, H = 640;
-            var s = Math.min(window.innerWidth / W, (window.innerHeight * 0.85) / H, 1);
-            wrapper.style.transform = 'scale(' + s + ')';
-            wrapper.style.transformOrigin = 'top center';
-            wrapper.style.marginTop = Math.max(0, (window.innerHeight * 0.85 - H * s) / 2) + 'px';
-        }
-        window.addEventListener('resize', resize);
-        resize();
-    })();
-    </script>
-
-    <script src="../nav.js"></script>
-    <!-- Ad Slot: Game Page Banner -->
-    <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-             data-ad-slot="XXXXXXXXXX"
-             data-ad-format="horizontal"
-             data-full-width-responsive="true"></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    </div>
-    <script src="../share.js"></script>
 </body>
 </html>
