@@ -11,6 +11,7 @@
     { id: 'memory-match',      name: 'Memory Match',      cat: 'kids',    desc: 'Flip cards. Find the pairs.',      color: '#FFD93D', plays: '0',    isNew: true },
     { id: 'shape-sorter',      name: 'Shape Sorter',      cat: 'kids',    desc: 'Drag shapes into matching buckets.', color: '#6DD5FA', plays: '0',    isNew: true },
     { id: 'counting-critters', name: 'Counting Critters', cat: 'kids',    desc: 'How many critters? Tap the number.', color: '#A78BFA', plays: '0',    isNew: true },
+    { id: 'animal-detective',  name: 'Animal Detective',  cat: 'kids',    desc: 'Guess the animal in 20 yes-or-no questions.', color: '#FF6F61', plays: '0',    isNew: true },
     { id: 'pong',              name: 'Pong',              cat: 'classic', desc: 'Paddle vs. AI. Keep it alive.',    color: '#8FA8E6', plays: '8.2k'  },
     { id: 'breakout',          name: 'Breakout',          cat: 'classic', desc: 'Bricks, ball, bounce.',            color: '#F2A65A', plays: '15.1k' },
     { id: 'space-invaders',    name: 'Space Invasion',    cat: 'classic', desc: 'Defend Earth from alien waves.',   color: '#9B7EDC', plays: '11.8k' },

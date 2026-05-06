@@ -1,0 +1,808 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Animal Detective — Free Kids Game | Limestone Games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Play Animal Detective free in your browser. Ask Detective Lily up to 20 yes-or-no questions to guess the mystery animal — 76 friendly creatures to discover. Made for kids ages 4-10.">
+<meta name="keywords" content="animal detective, twenty questions, animal guessing game, kids game, free browser game, animal quiz, family game">
+<link rel="canonical" href="https://limestonegames.com/animal-detective/">
+<meta property="og:title" content="Animal Detective — Limestone Games">
+<meta property="og:description" content="Ask Detective Lily 20 yes-or-no questions to guess the mystery animal. 76 friendly creatures, made for kids 4-10.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://limestonegames.com/animal-detective/">
+<meta property="og:image" content="https://limestonegames.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Animal Detective — Limestone Games">
+<meta name="twitter:description" content="Ask Detective Lily 20 yes-or-no questions to guess the mystery animal. 76 friendly creatures, made for kids 4-10.">
+<meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+<link rel="manifest" href="../manifest.json">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Animal Detective","description":"Ask Detective Lily yes-or-no questions to guess the mystery animal. A twenty-questions style game with 76 friendly creatures for kids 4-10.","url":"https://limestonegames.com/animal-detective/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Kids","item":"https://limestonegames.com/kids/"},{"@type":"ListItem","position":3,"name":"Animal Detective"}]}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+<style>
+  :root {
+    --ink: #1F1A2E;
+    --ink-soft: rgba(31, 26, 46, 0.7);
+    --ink-faint: rgba(31, 26, 46, 0.4);
+    --accent: #FF4F8B;
+    --accent-soft: #FF8FA3;
+    --sun: #FFD93D;
+    --sky: #6DD5FA;
+    --leaf: #7BC97B;
+    --paper: #FFFDF6;
+    --bg-1: #FFF8DC;
+    --bg-2: #FFE4F0;
+    --bg-3: #DCEEFF;
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { height: 100%; overflow: hidden; }
+  body {
+    background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+    font-family: 'Inter', system-ui, sans-serif;
+    color: var(--ink);
+  }
+  button { font-family: inherit; }
+
+  /* Auto-scaling wrapper (1380x860 design size) */
+  #game-wrapper {
+    width: 1380px;
+    height: 860px;
+    transform-origin: top center;
+    margin: 0 auto;
+  }
+  #root {
+    width: 100%;
+    height: 100%;
+    padding: 24px;
+    display: flex;
+    flex-direction: column;
+    gap: 18px;
+  }
+
+  /* ── Top bar ──────────────────────────────────────────────────────── */
+  .top-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-shrink: 0;
+  }
+  .tb-left {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+  }
+  .tb-back {
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    opacity: 0.7;
+    transition: opacity 0.15s;
+  }
+  .tb-back:hover { opacity: 1; }
+  .tb-title {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -0.5px;
+    background: linear-gradient(135deg, #FF8FA3, #FF4F8B);
+    -webkit-background-clip: text;
+    background-clip: text;
+    -webkit-text-fill-color: transparent;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  .tb-title .icon { font-size: 26px; -webkit-text-fill-color: initial; }
+  .tb-right {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+  }
+  .badge {
+    background: rgba(255, 255, 255, 0.85);
+    padding: 9px 16px;
+    border-radius: 999px;
+    display: flex;
+    gap: 8px;
+    align-items: baseline;
+    box-shadow: 0 4px 12px rgba(31, 26, 46, 0.06);
+  }
+  .badge .l {
+    color: var(--ink-soft);
+    font-size: 11px;
+    font-weight: 500;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+  }
+  .badge .v {
+    font-weight: 800;
+    color: var(--accent);
+    font-size: 17px;
+    font-family: 'JetBrains Mono', monospace;
+  }
+  .tb-link {
+    color: var(--ink);
+    text-decoration: none;
+    font-weight: 600;
+    font-size: 14px;
+    opacity: 0.7;
+  }
+  .tb-link:hover { opacity: 1; }
+
+  /* ── Main grid ────────────────────────────────────────────────────── */
+  .main-grid {
+    display: grid;
+    grid-template-columns: 460px 1fr;
+    gap: 20px;
+    flex: 1;
+    min-height: 0;
+  }
+
+  /* ── Left column (Lily) ───────────────────────────────────────────── */
+  .lily-card {
+    background: var(--paper);
+    border-radius: 28px;
+    padding: 18px 24px 24px;
+    position: relative;
+    box-shadow: 0 12px 40px rgba(31, 26, 46, 0.08);
+    display: flex;
+    flex-direction: column;
+    overflow: visible;
+    background-image:
+      radial-gradient(circle at 18% 88%, rgba(255, 217, 61, 0.18) 80px, transparent 120px),
+      radial-gradient(circle at 88% 12%, rgba(109, 213, 250, 0.18) 70px, transparent 110px),
+      var(--paper);
+  }
+
+  .speech-wrap {
+    position: relative;
+    margin-bottom: 4px;
+    z-index: 3;
+  }
+  .speech-bubble {
+    background: rgba(255, 253, 246, 0.97);
+    border: 2px solid rgba(31, 26, 46, 0.08);
+    border-radius: 22px;
+    padding: 16px 20px;
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 18px;
+    font-weight: 500;
+    color: var(--ink);
+    min-height: 78px;
+    box-shadow: 0 8px 24px rgba(31, 26, 46, 0.1);
+    line-height: 1.35;
+  }
+  .speech-bubble::after {
+    content: '';
+    position: absolute;
+    bottom: -14px;
+    left: 64px;
+    width: 0;
+    height: 0;
+    border: 14px solid transparent;
+    border-top-color: rgba(255, 253, 246, 0.97);
+    border-bottom: 0;
+    filter: drop-shadow(0 4px 4px rgba(0, 0, 0, 0.06));
+  }
+  .speech-bubble::before {
+    content: '';
+    position: absolute;
+    bottom: -16px;
+    left: 62px;
+    width: 0;
+    height: 0;
+    border: 15px solid transparent;
+    border-top-color: rgba(31, 26, 46, 0.08);
+    border-bottom: 0;
+  }
+  .blink-cursor::after {
+    content: '▍';
+    margin-left: 2px;
+    animation: blink 1s steps(2) infinite;
+    opacity: 0.6;
+  }
+  @keyframes blink { 50% { opacity: 0; } }
+
+  .lily-portrait {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    min-height: 0;
+    margin-top: 8px;
+    animation: breathe 4.5s ease-in-out infinite;
+  }
+  .lily-portrait svg {
+    height: 100%;
+    width: auto;
+    max-width: 100%;
+  }
+  @keyframes breathe {
+    0%, 100% { transform: translateY(0); }
+    50% { transform: translateY(-5px); }
+  }
+
+  .name-plate {
+    text-align: center;
+    padding-top: 6px;
+    border-top: 2px dashed rgba(31, 26, 46, 0.1);
+  }
+  .name-plate .name {
+    font-family: 'Bricolage Grotesque', serif;
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--ink);
+    margin-top: 12px;
+  }
+  .name-plate .case {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-faint);
+    margin-top: 4px;
+  }
+
+  /* ── Right column (questions) ──────────────────────────────────── */
+  .right-col {
+    display: flex;
+    flex-direction: column;
+    gap: 14px;
+    min-height: 0;
+  }
+
+  .tabs {
+    display: flex;
+    gap: 6px;
+    background: rgba(255, 255, 255, 0.55);
+    padding: 6px;
+    border-radius: 16px;
+    flex-shrink: 0;
+  }
+  .qtab {
+    flex: 1;
+    padding: 12px 8px;
+    border-radius: 12px;
+    border: none;
+    background: transparent;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 15px;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    transition: all 0.15s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+  }
+  .qtab .te { font-size: 18px; }
+  .qtab:hover { background: rgba(255, 79, 139, 0.12); }
+  .qtab.active {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 4px 12px rgba(255, 79, 139, 0.35);
+  }
+
+  .questions {
+    flex: 1;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    align-content: start;
+    padding: 16px;
+    background: rgba(255, 255, 255, 0.45);
+    border-radius: 18px;
+    overflow-y: auto;
+    min-height: 0;
+  }
+  .questions::-webkit-scrollbar { width: 8px; }
+  .questions::-webkit-scrollbar-thumb {
+    background: rgba(255, 79, 139, 0.25);
+    border-radius: 4px;
+  }
+  .questions::-webkit-scrollbar-track { background: transparent; }
+
+  .qbtn {
+    padding: 18px 18px;
+    border-radius: 14px;
+    border: 2px solid rgba(31, 26, 46, 0.1);
+    background: white;
+    font-family: inherit;
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--ink);
+    cursor: pointer;
+    text-align: left;
+    transition: all 0.18s cubic-bezier(.2,.8,.25,1);
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    line-height: 1.25;
+  }
+  .qbtn .qmark {
+    width: 28px;
+    height: 28px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--sun), #FFA751);
+    color: white;
+    font-weight: 800;
+    font-family: 'Bricolage Grotesque', serif;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    font-size: 17px;
+    box-shadow: 0 2px 6px rgba(255, 167, 81, 0.4);
+  }
+  .qbtn .qtext { flex: 1; }
+  .qbtn:hover:not(.asked) {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 8px 18px rgba(255, 79, 139, 0.18);
+  }
+  .qbtn:active:not(.asked) {
+    transform: translateY(0);
+  }
+  .qbtn.asked {
+    background: rgba(255, 255, 255, 0.4);
+    color: var(--ink-faint);
+    cursor: default;
+    text-decoration: line-through;
+    box-shadow: none;
+  }
+  .qbtn.asked .qmark {
+    background: rgba(31, 26, 46, 0.15);
+    color: rgba(255, 255, 255, 0.6);
+    box-shadow: none;
+  }
+
+  /* ── Bottom bar ──────────────────────────────────────────────────── */
+  .bottom-bar {
+    display: flex;
+    align-items: center;
+    gap: 20px;
+    background: white;
+    padding: 16px 22px;
+    border-radius: 18px;
+    box-shadow: 0 6px 20px rgba(31, 26, 46, 0.08);
+    flex-shrink: 0;
+  }
+  .counter {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 7px;
+  }
+  .counter-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+  }
+  .counter .label {
+    font-size: 12px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--ink-soft);
+    font-weight: 600;
+  }
+  .counter .n {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 19px;
+    font-weight: 700;
+    color: var(--ink);
+  }
+  .counter .bar {
+    height: 9px;
+    background: rgba(31, 26, 46, 0.08);
+    border-radius: 5px;
+    overflow: hidden;
+  }
+  .counter .fill {
+    height: 100%;
+    width: 0%;
+    background: linear-gradient(90deg, var(--sun), var(--accent));
+    transition: width 0.35s cubic-bezier(.2,.8,.25,1);
+    border-radius: 5px;
+  }
+  .btn-guess {
+    padding: 18px 32px;
+    border-radius: 999px;
+    border: none;
+    background: linear-gradient(135deg, var(--accent-soft), var(--accent));
+    color: white;
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 18px;
+    font-weight: 800;
+    cursor: pointer;
+    box-shadow: 0 8px 22px rgba(255, 79, 139, 0.4);
+    transition: transform 0.15s, box-shadow 0.15s;
+    flex-shrink: 0;
+    letter-spacing: 0.01em;
+  }
+  .btn-guess:hover {
+    transform: translateY(-2px) scale(1.02);
+    box-shadow: 0 12px 28px rgba(255, 79, 139, 0.5);
+  }
+  .btn-guess:active { transform: translateY(0); }
+
+  /* ── Modals ──────────────────────────────────────────────────────── */
+  .modal {
+    position: fixed;
+    inset: 0;
+    background: rgba(31, 26, 46, 0.55);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 100;
+    backdrop-filter: blur(4px);
+    -webkit-backdrop-filter: blur(4px);
+  }
+  .modal.show {
+    display: flex;
+    animation: fadeIn 0.2s ease-out;
+  }
+  @keyframes fadeIn {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  .modal-card {
+    width: min(940px, 92%);
+    max-height: 84vh;
+    background: var(--paper);
+    border-radius: 28px;
+    padding: 28px 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 16px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.3);
+    animation: cardIn 0.35s cubic-bezier(.2,.8,.25,1);
+  }
+  @keyframes cardIn {
+    from { transform: translateY(20px) scale(0.96); opacity: 0; }
+    to { transform: translateY(0) scale(1); opacity: 1; }
+  }
+  .modal-card h2 {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 26px;
+    font-weight: 800;
+    color: var(--ink);
+  }
+  .modal-card .modal-sub {
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  #guess-search {
+    padding: 14px 20px;
+    border-radius: 14px;
+    border: 2px solid rgba(31, 26, 46, 0.1);
+    font-family: inherit;
+    font-size: 17px;
+    background: white;
+  }
+  #guess-search:focus {
+    outline: none;
+    border-color: var(--accent);
+    box-shadow: 0 0 0 4px rgba(255, 79, 139, 0.12);
+  }
+  .guess-grid {
+    display: grid;
+    grid-template-columns: repeat(8, 1fr);
+    gap: 8px;
+    overflow-y: auto;
+    padding: 4px;
+    min-height: 160px;
+  }
+  .guess-grid::-webkit-scrollbar { width: 8px; }
+  .guess-grid::-webkit-scrollbar-thumb {
+    background: rgba(255, 79, 139, 0.25);
+    border-radius: 4px;
+  }
+  .guess-tile {
+    padding: 10px 4px;
+    border-radius: 12px;
+    border: 2px solid rgba(31, 26, 46, 0.08);
+    background: white;
+    cursor: pointer;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    transition: all 0.15s;
+  }
+  .guess-tile:hover {
+    border-color: var(--accent);
+    transform: translateY(-2px);
+    box-shadow: 0 6px 14px rgba(255, 79, 139, 0.18);
+    background: linear-gradient(160deg, var(--bg-1), var(--bg-2));
+  }
+  .guess-tile .ge { font-size: 30px; }
+  .guess-tile .gn {
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--ink);
+    text-align: center;
+  }
+  .guess-empty {
+    grid-column: 1 / -1;
+    text-align: center;
+    padding: 40px;
+    color: var(--ink-soft);
+    font-size: 14px;
+  }
+  .btn-cancel {
+    align-self: center;
+    padding: 12px 24px;
+    border-radius: 999px;
+    border: 2px solid rgba(31, 26, 46, 0.15);
+    background: transparent;
+    font-family: inherit;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    font-size: 14px;
+  }
+  .btn-cancel:hover {
+    background: rgba(31, 26, 46, 0.05);
+  }
+
+  /* ── Reveal overlay ──────────────────────────────────────────────── */
+  .reveal-overlay {
+    position: fixed;
+    inset: 0;
+    background: rgba(31, 26, 46, 0.7);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    z-index: 200;
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+  }
+  .reveal-overlay.show {
+    display: flex;
+    animation: fadeIn 0.3s ease-out;
+  }
+  .reveal-card {
+    width: 380px;
+    min-height: 540px;
+    border-radius: 28px;
+    padding: 28px 28px 24px;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 14px;
+    box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
+    animation: revealIn 0.7s cubic-bezier(.2,.8,.25,1) backwards;
+    overflow: hidden;
+  }
+  .reveal-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background-image:
+      radial-gradient(circle at 12% 88%, rgba(255, 255, 255, 0.4) 0, transparent 40%),
+      radial-gradient(circle at 88% 12%, rgba(255, 255, 255, 0.25) 0, transparent 50%);
+    pointer-events: none;
+  }
+  @keyframes revealIn {
+    0% { transform: scale(0.7) rotate(-4deg); opacity: 0; }
+    60% { transform: scale(1.04) rotate(1deg); opacity: 1; }
+    100% { transform: scale(1) rotate(0); opacity: 1; }
+  }
+  .reveal-stamp {
+    position: absolute;
+    top: 18px;
+    right: 18px;
+    background: rgba(31, 26, 46, 0.92);
+    color: white;
+    padding: 7px 16px;
+    border-radius: 999px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: 0.12em;
+    z-index: 1;
+  }
+  .reveal-stamp.won {
+    background: var(--accent);
+    box-shadow: 0 4px 14px rgba(255, 79, 139, 0.5);
+  }
+  .reveal-emoji-frame {
+    width: 220px;
+    height: 220px;
+    background: rgba(255, 255, 255, 0.55);
+    border-radius: 24px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-top: 30px;
+    border: 3px dashed rgba(31, 26, 46, 0.18);
+    z-index: 1;
+  }
+  .reveal-emoji {
+    font-size: 130px;
+    line-height: 1;
+    animation: tilt 2.4s ease-in-out infinite;
+    filter: drop-shadow(0 6px 12px rgba(0, 0, 0, 0.15));
+  }
+  @keyframes tilt {
+    0%, 100% { transform: rotate(-4deg); }
+    50% { transform: rotate(4deg); }
+  }
+  .reveal-name {
+    font-family: 'Bricolage Grotesque', sans-serif;
+    font-size: 42px;
+    font-weight: 800;
+    color: var(--ink);
+    line-height: 1;
+    z-index: 1;
+  }
+  .reveal-tag {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.14em;
+    color: var(--ink-soft);
+    z-index: 1;
+  }
+  .reveal-fact {
+    font-family: 'Inter', sans-serif;
+    font-style: italic;
+    font-size: 15px;
+    line-height: 1.45;
+    text-align: center;
+    color: rgba(31, 26, 46, 0.85);
+    padding: 0 12px;
+    z-index: 1;
+  }
+  .reveal-sub {
+    font-size: 14px;
+    font-weight: 700;
+    color: var(--ink);
+    text-align: center;
+    z-index: 1;
+  }
+  .reveal-meta {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    color: var(--ink-faint);
+    z-index: 1;
+  }
+  .reveal-actions {
+    display: flex;
+    gap: 10px;
+    margin-top: auto;
+    padding-top: 8px;
+    z-index: 1;
+  }
+  .rb {
+    padding: 13px 22px;
+    border-radius: 999px;
+    border: none;
+    font-family: inherit;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    text-decoration: none;
+    transition: transform 0.15s;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+  .rb:hover { transform: scale(1.04); }
+  .rb.primary {
+    background: var(--accent);
+    color: white;
+    box-shadow: 0 6px 16px rgba(255, 79, 139, 0.45);
+  }
+  .rb.ghost {
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--ink);
+    border: 2px solid rgba(31, 26, 46, 0.12);
+  }
+</style>
+</head>
+<body>
+
+<div id="game-wrapper">
+  <div id="root">
+
+    <!-- Top bar -->
+    <div class="top-bar">
+      <div class="tb-left">
+        <a class="tb-back" href="../">← Limestone Games</a>
+        <div class="tb-title"><span class="icon">🔍</span>Animal Detective</div>
+      </div>
+      <div class="tb-right">
+        <div class="badge"><span class="l">Streak</span><span class="v" id="streak-val">0</span></div>
+        <div class="badge"><span class="l">Wins</span><span class="v" id="wins-val">0</span></div>
+        <div class="badge"><span class="l">Best</span><span class="v" id="best-val">—</span></div>
+        <a class="tb-link" href="../kids/">All Kids games →</a>
+      </div>
+    </div>
+
+    <!-- Main game area -->
+    <div class="main-grid">
+
+      <!-- Left: Detective Lily -->
+      <div class="lily-card">
+        <div class="speech-wrap">
+          <div class="speech-bubble">
+            <span id="speech-text"></span>
+          </div>
+        </div>
+        <div id="lily-portrait" class="lily-portrait"></div>
+        <div class="name-plate">
+          <div class="name">Detective Lily</div>
+          <div class="case" id="case-num">Case #001</div>
+        </div>
+      </div>
+
+      <!-- Right: Questions -->
+      <div class="right-col">
+        <div class="tabs" id="question-tabs"></div>
+        <div class="questions" id="question-grid"></div>
+        <div class="bottom-bar">
+          <div class="counter">
+            <div class="counter-row">
+              <span class="label">Questions used</span>
+              <span class="n" id="q-counter">0 / 20</span>
+            </div>
+            <div class="bar"><div class="fill" id="q-progress"></div></div>
+          </div>
+          <button id="btn-guess" class="btn-guess" type="button">I think I know! 🔍</button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+<!-- Guess modal -->
+<div id="guess-modal" class="modal">
+  <div class="modal-card">
+    <h2 id="guess-title">Pick your answer</h2>
+    <div class="modal-sub" id="guess-sub">Type to filter, then tap the animal you think Lily is thinking of.</div>
+    <input id="guess-search" type="text" placeholder="Type to filter… (e.g. eleph)" autocomplete="off" />
+    <div id="guess-grid" class="guess-grid"></div>
+    <button id="btn-cancel-guess" class="btn-cancel" type="button">Cancel — keep asking questions</button>
+  </div>
+</div>
+
+<!-- Reveal overlay -->
+<div id="reveal-overlay" class="reveal-overlay"></div>
+
+<!-- Auto-scaling IIFE — same pattern as blackjack -->
+<script>
+(function() {
+  var wrapper = document.getElementById('game-wrapper');
+  function resize() {
+    var W = 1380, H = 860;
+    var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
+    wrapper.style.transform = 'scale(' + s + ')';
+    wrapper.style.marginTop = Math.max(0, (window.innerHeight - H * s) / 2) + 'px';
+  }
+  window.addEventListener('resize', resize);
+  resize();
+})();
+</script>
+
+<script src="questions.js?v=20260506a"></script>
+<script src="animals.js?v=20260506a"></script>
+<script src="animal-detective.js?v=20260506a"></script>
+
+</body>
+</html>
