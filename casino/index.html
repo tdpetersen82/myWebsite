@@ -92,24 +92,23 @@
             <div class="cas-bank-chip">★</div>
             <div>
                 <h3>Your bankroll</h3>
-                <div class="amt">$2,840</div>
-                <div class="delta">▲ +$340 (12.0%) this week</div>
+                <div class="amt"><span id="cas-bank-amount">$1,000</span></div>
+                <div class="delta" id="cas-bank-greeting">Pull up a seat — chips on the house.</div>
             </div>
         </div>
-        <div class="cas-bank-stat">
+        <div class="cas-bank-stat" id="cas-stat-biggest">
             <div class="l">Biggest pot</div>
-            <div class="n">$1,420</div>
-            <div class="s">Blackjack · Apr 28</div>
+            <div class="n">—</div>
+            <div class="s">No wins yet</div>
         </div>
-        <div class="cas-bank-stat">
-            <div class="l">Win rate</div>
-            <div class="n">52.3%</div>
-            <div class="s">Across 87 hands</div>
+        <div class="cas-bank-stat" id="cas-stat-hands">
+            <div class="l">Hands played</div>
+            <div class="n">0</div>
+            <div class="s">No hands yet</div>
         </div>
-        <div class="cas-bank-stat">
-            <div class="l">Favorite</div>
-            <div class="n">Blackjack</div>
-            <div class="s">31 sessions</div>
+        <div class="cas-bank-stat cas-bank-reload">
+            <button id="cas-reload" type="button">Reload $1,000</button>
+            <div class="s">Top up your stake anytime</div>
         </div>
     </div>
 
@@ -433,6 +432,9 @@
             <span>© 2026 Limestone Games</span>
         </div>
     </footer>
+
+<script src="casino-bankroll.js?v=20260507c"></script>
+<script src="casino.js?v=20260507c"></script>
 
 </body>
 </html>

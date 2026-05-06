@@ -95,11 +95,19 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 function App() {
   const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
 
-  // Persistent
-  const [bankroll, setBankroll] = useState(tweaks.startingBankroll);
+  // Persistent — bankroll lives in shared casino store
+  const [bankroll, setBankroll] = useState(() =>
+    (window.CASINO_BANKROLL ? window.CASINO_BANKROLL.read() : tweaks.startingBankroll)
+  );
   const [stats, setStats] = useState({ played: 0, won: 0, bj: 0, best: tweaks.startingBankroll, tipsGiven: 0 });
   const [streak, setStreak] = useState(0);
   const [lossStreak, setLossStreak] = useState(0);
+  const [showBrokeModal, setShowBrokeModal] = useState(false);
+
+  // Mirror bankroll into shared store on every change.
+  useEffect(() => {
+    if (window.CASINO_BANKROLL) window.CASINO_BANKROLL.write(bankroll);
+  }, [bankroll]);
 
   // Round
   const [phase, setPhase] = useState('idle');
@@ -166,6 +174,16 @@ function App() {
     }, 2500);
     return () => clearInterval(id);
   }, []);
+
+  // Broke detection — pop modal when bankroll falls below smallest chip and
+  // the player isn't mid-round.
+  useEffect(() => {
+    if ((phase === 'idle' || phase === 'bet') && bankroll < 5 && bet.length === 0) {
+      setShowBrokeModal(true);
+    } else if (bankroll >= 5 && showBrokeModal) {
+      setShowBrokeModal(false);
+    }
+  }, [phase, bankroll, bet.length]);
 
   // Greeting on mount, dealer change, or name change
   useEffect(() => {
@@ -823,6 +841,66 @@ function App() {
           onCancel={localStorage.getItem('bjPlayerName') ? () => setShowNameModal(false) : null}
         />
       )}
+
+      {showBrokeModal && (
+        <BrokeModal
+          playerName={tweaks.playerName}
+          message={`Looks like the table cleaned you out, ${tweaks.playerName}.`}
+          onReload={() => {
+            const v = window.CASINO_BANKROLL ? window.CASINO_BANKROLL.reload() : 1000;
+            setBankroll(v);
+            setShowBrokeModal(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function BrokeModal({ playerName, message, onReload }) {
+  return (
+    <div style={{
+      position:'fixed', inset:0, zIndex:9000,
+      background:'rgba(8,5,2,.7)', backdropFilter:'blur(8px)',
+      display:'flex', alignItems:'center', justifyContent:'center'
+    }}>
+      <div style={{
+        background:'linear-gradient(180deg, rgba(35,22,10,.95), rgba(20,12,6,.98))',
+        border:'1px solid rgba(201,162,106,.5)',
+        borderRadius:16,
+        padding:'30px 36px 26px',
+        boxShadow:'0 30px 80px rgba(0,0,0,.7), inset 0 1px 0 rgba(230,197,144,.15)',
+        minWidth:380, maxWidth:460,
+        textAlign:'center'
+      }}>
+        <div style={{ fontSize:10, letterSpacing:'.32em', textTransform:'uppercase', color:'var(--ivory-dim)', marginBottom:6 }}>Limestone Games</div>
+        <div style={{
+          fontFamily:"'Playfair Display', serif", fontStyle:'italic',
+          fontSize:24, color:'var(--brass-2)', marginBottom:6, lineHeight:1.25
+        }}>Out of chips.</div>
+        <div style={{ fontSize:14, color:'var(--ivory-dim)', marginBottom:22, lineHeight:1.4 }}>
+          {message || `That's the last of it, ${playerName || 'friend'}.`}
+        </div>
+        <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
+          <a href="../casino/" style={{
+            padding:'10px 18px',
+            background:'rgba(20,12,6,.6)',
+            border:'1px solid rgba(201,162,106,.3)',
+            borderRadius:999, color:'var(--ivory-dim)',
+            fontSize:10, fontWeight:700, letterSpacing:'.18em', textTransform:'uppercase',
+            textDecoration:'none', display:'inline-block'
+          }}>← Lobby</a>
+          <button onClick={onReload} style={{
+            padding:'10px 22px',
+            background:'linear-gradient(180deg, #e6c590, #c9a26a)',
+            border:'1px solid rgba(201,162,106,.5)',
+            borderRadius:999, color:'#1a1208',
+            fontSize:10, fontWeight:700, letterSpacing:'.18em', textTransform:'uppercase',
+            cursor:'pointer',
+            boxShadow:'0 4px 12px rgba(230,197,144,.4)'
+          }}>Reload $1,000</button>
+        </div>
+      </div>
     </div>
   );
 }

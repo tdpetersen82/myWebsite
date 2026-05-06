@@ -18,10 +18,13 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 function App() {
   const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
 
-  // Persistent
-  const [bankroll, setBankroll] = useState(STARTING_BANKROLL);
+  // Persistent — bankroll is shared with the rest of the casino
+  const [bankroll, setBankroll] = useState(() =>
+    (window.CASINO_BANKROLL ? window.CASINO_BANKROLL.read() : STARTING_BANKROLL)
+  );
   const [stats, setStats] = useState({ spinsPlayed: 0, spinsWon: 0, biggestWin: 0, biggestBankroll: STARTING_BANKROLL });
   const [history, setHistory] = useState([]);
+  const [showBrokeModal, setShowBrokeModal] = useState(false);
 
   // Round
   const [phase, setPhase] = useState('betting'); // betting | no_more_bets | spinning | result
@@ -49,7 +52,6 @@ function App() {
     try {
       const saved = JSON.parse(localStorage.getItem(STORAGE_KEY));
       if (saved) {
-        if (saved.bankroll != null) setBankroll(saved.bankroll);
         if (saved.stats) setStats(s => ({ ...s, ...saved.stats }));
         if (Array.isArray(saved.history)) setHistory(saved.history);
       }
@@ -62,9 +64,24 @@ function App() {
     }
   }, []);
 
+  // Per-game stats (no bankroll — that lives in the shared store).
   useEffect(() => {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify({ bankroll, stats, history }));
-  }, [bankroll, stats, history]);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify({ stats, history }));
+  }, [stats, history]);
+
+  // Mirror bankroll into shared casino store.
+  useEffect(() => {
+    if (window.CASINO_BANKROLL) window.CASINO_BANKROLL.write(bankroll);
+  }, [bankroll]);
+
+  // Broke detection.
+  useEffect(() => {
+    if (phase === 'betting' && bets.length === 0 && bankroll < MIN_BET) {
+      setShowBrokeModal(true);
+    } else if (bankroll >= MIN_BET && showBrokeModal) {
+      setShowBrokeModal(false);
+    }
+  }, [phase, bankroll, bets.length]);
 
   function savePlayerName(name) {
     const trimmed = (name || '').trim().slice(0, 20);
@@ -276,13 +293,9 @@ function App() {
     setTarget(null);
     setWinningNumber(null);
     setResultBanner(null);
-    if (bankroll < MIN_BET && totalBet === 0) {
-      // Bankroll wipe
-      setBankroll(STARTING_BANKROLL);
-      say('bust', 'bust');
-    } else {
-      flashExpression('idle');
-    }
+    flashExpression('idle');
+    // Broke handling is centralized in the broke-detect useEffect — let the
+    // BrokeModal pop on its own if bankroll < MIN_BET.
     setPhase('betting');
   }
 
@@ -473,6 +486,66 @@ function App() {
           onCancel={localStorage.getItem('bjPlayerName') ? () => setShowNameModal(false) : null}
         />
       )}
+
+      {showBrokeModal && (
+        <BrokeModal
+          playerName={tweaks.playerName}
+          message={`Wheel was unkind tonight, ${tweaks.playerName}. Last of your chips just rode the rail.`}
+          onReload={() => {
+            const v = window.CASINO_BANKROLL ? window.CASINO_BANKROLL.reload() : STARTING_BANKROLL;
+            setBankroll(v);
+            setShowBrokeModal(false);
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+function BrokeModal({ playerName, message, onReload }) {
+  return (
+    <div style={{
+      position:'fixed', inset:0, zIndex:9000,
+      background:'rgba(8,5,2,.7)', backdropFilter:'blur(8px)',
+      display:'flex', alignItems:'center', justifyContent:'center'
+    }}>
+      <div style={{
+        background:'linear-gradient(180deg, rgba(35,22,10,.95), rgba(20,12,6,.98))',
+        border:'1px solid rgba(201,162,106,.5)',
+        borderRadius:16,
+        padding:'30px 36px 26px',
+        boxShadow:'0 30px 80px rgba(0,0,0,.7), inset 0 1px 0 rgba(230,197,144,.15)',
+        minWidth:380, maxWidth:460,
+        textAlign:'center'
+      }}>
+        <div style={{ fontSize:10, letterSpacing:'.32em', textTransform:'uppercase', color:'var(--ivory-dim)', marginBottom:6 }}>Limestone Games</div>
+        <div style={{
+          fontFamily:"'Playfair Display', serif", fontStyle:'italic',
+          fontSize:24, color:'var(--brass-2)', marginBottom:6, lineHeight:1.25
+        }}>Out of chips.</div>
+        <div style={{ fontSize:14, color:'var(--ivory-dim)', marginBottom:22, lineHeight:1.4 }}>
+          {message || `That's the last of it, ${playerName || 'friend'}.`}
+        </div>
+        <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
+          <a href="../casino/" style={{
+            padding:'10px 18px',
+            background:'rgba(20,12,6,.6)',
+            border:'1px solid rgba(201,162,106,.3)',
+            borderRadius:999, color:'var(--ivory-dim)',
+            fontSize:10, fontWeight:700, letterSpacing:'.18em', textTransform:'uppercase',
+            textDecoration:'none', display:'inline-block'
+          }}>← Lobby</a>
+          <button onClick={onReload} style={{
+            padding:'10px 22px',
+            background:'linear-gradient(180deg, #e6c590, #c9a26a)',
+            border:'1px solid rgba(201,162,106,.5)',
+            borderRadius:999, color:'#1a1208',
+            fontSize:10, fontWeight:700, letterSpacing:'.18em', textTransform:'uppercase',
+            cursor:'pointer',
+            boxShadow:'0 4px 12px rgba(230,197,144,.4)'
+          }}>Reload $1,000</button>
+        </div>
+      </div>
     </div>
   );
 }
