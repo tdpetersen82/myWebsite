@@ -100,14 +100,14 @@ body.cat-root {
   position: relative;
   background: var(--cat-hero-bg);
   color: var(--cat-hero-ink);
-  padding: 56px 56px 0;
-  min-height: 480px;
+  padding: 40px 40px 0;
+  min-height: 400px;
   display: grid;
   grid-template-columns: 1.2fr 1fr;
   gap: 32px;
   align-items: end;
 }
-.cat-hero-left { padding-bottom: 56px; position: relative; z-index: 1; }
+.cat-hero-left { padding-bottom: 40px; position: relative; z-index: 1; }
 .cat-hero-eyebrow {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
@@ -123,9 +123,9 @@ body.cat-root {
   border-color: rgba(255, 255, 255, 0.18);
 }
 .cat-hero h1 {
-  font-size: 88px; font-weight: 600;
+  font-size: 64px; font-weight: 600;
   line-height: 0.95; letter-spacing: -0.04em;
-  margin-bottom: 24px;
+  margin-bottom: 18px;
 }
 .cat-hero h1 em {
   font-style: normal;
@@ -166,7 +166,7 @@ body.cat-root {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 14px;
-  margin: 0 40px 32px;
+  margin: 24px 40px 32px;
   padding: 22px;
   background: var(--cat-stat-card-bg);
   color: var(--cat-stat-card-ink);
