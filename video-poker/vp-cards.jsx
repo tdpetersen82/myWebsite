@@ -31,7 +31,6 @@ function CardCorner({ rank, suit, flip = false }) {
 
 function CardFace({ rank, suit, w }) {
   const color = SUITS[suit].color;
-  const isFace = rank === 'J' || rank === 'Q' || rank === 'K';
   return (
     <div style={{
       position:'absolute', inset:0,
@@ -43,38 +42,15 @@ function CardFace({ rank, suit, w }) {
       <CardCorner rank={rank} suit={suit} />
       <CardCorner rank={rank} suit={suit} flip />
 
-      {!isFace && (
-        <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
-          <div style={{
-            width: w*0.62, height: w*0.62,
-            display:'flex', alignItems:'center', justifyContent:'center',
-            background:'radial-gradient(circle, rgba(201,162,106,.18) 0%, transparent 65%)'
-          }}>
-            <span style={{ fontSize: w*0.6, color, lineHeight:1, fontFamily:'serif' }}>{suit}</span>
-          </div>
-        </div>
-      )}
-
-      {isFace && (
+      <div style={{ position:'absolute', inset:0, display:'flex', alignItems:'center', justifyContent:'center' }}>
         <div style={{
-          position:'absolute', left:12, right:12, top:22, bottom:22,
-          border:`1px solid ${color}`,
-          borderRadius:6,
-          background:`radial-gradient(ellipse at center, ${color}10 0%, transparent 65%), linear-gradient(180deg, #fffdf6, #f0e7cf)`,
-          display:'flex', alignItems:'center', justifyContent:'space-between', flexDirection:'column',
-          padding:`${w*0.08}px 0`,
-          overflow:'hidden'
+          width: w*0.62, height: w*0.62,
+          display:'flex', alignItems:'center', justifyContent:'center',
+          background:'radial-gradient(circle, rgba(201,162,106,.18) 0%, transparent 65%)'
         }}>
-          <span style={{ fontSize: w*0.22, color, fontFamily:'serif', lineHeight:1 }}>{suit}</span>
-          <span style={{
-            fontFamily:"'Playfair Display', serif",
-            fontStyle:'italic',
-            fontSize: w*0.5, fontWeight:700, color,
-            textShadow:'0 1px 0 rgba(0,0,0,.08)', lineHeight:1
-          }}>{rank}</span>
-          <span style={{ fontSize: w*0.22, color, fontFamily:'serif', lineHeight:1, transform:'rotate(180deg)' }}>{suit}</span>
+          <span style={{ fontSize: w*0.6, color, lineHeight:1, fontFamily:'serif' }}>{suit}</span>
         </div>
-      )}
+      </div>
     </div>
   );
 }
