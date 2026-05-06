@@ -149,7 +149,7 @@ function App() {
     if (tweaks.soundOn) RL_SFX.chipPlace();
 
     const newTotal = totalBet + selectedChip;
-    if (newTotal >= 500 && totalBet < 500) say('bet_high', 'shocked');
+    if (newTotal >= 500 && totalBet < 500) say('bet_high', 'happy');
     else if (newTotal >= 100 && totalBet < 100) say('bet_mid', 'happy');
     else say('bet_low', 'idle');
   }
