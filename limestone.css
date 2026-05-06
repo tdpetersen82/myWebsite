@@ -64,7 +64,12 @@ body.hub-root {
   text-decoration: none;
   color: inherit;
 }
-.hub-logo svg { display: block; }
+.hub-logo img {
+  display: block;
+  width: 40px;
+  height: 40px;
+  mix-blend-mode: multiply;
+}
 .hub-logo .wordmark {
   font-family: 'Bricolage Grotesque', system-ui, sans-serif;
   font-weight: 700;
