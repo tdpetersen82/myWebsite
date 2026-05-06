@@ -224,8 +224,11 @@
     border-radius: 22px;
     box-shadow: 0 14px 32px rgba(31, 26, 46, 0.18), 0 2px 6px rgba(31, 26, 46, 0.08);
     animation: breathe 4.5s ease-in-out infinite;
-    transition: background-position 0.45s cubic-bezier(.2, .8, .25, 1), transform 0.25s;
+    transition: filter 0.2s ease-out, transform 0.25s;
+    will-change: filter;
   }
+  /* Mood swap is instant — the JS adds .blurring before the swap and
+     removes it after, so the player sees blur-out → new pose → blur-in. */
   .lily-portrait[data-expr="idle"],
   .lily-portrait[data-expr="thinking"] { background-position: 0% 100%; }
   .lily-portrait[data-expr="yes"],
@@ -235,6 +238,9 @@
   .lily-portrait[data-expr="yes"],
   .lily-portrait[data-expr="win"]      { transform: scale(1.025); }
   .lily-portrait[data-expr="no"]       { transform: scale(0.985); }
+  .lily-portrait.blurring {
+    filter: blur(14px);
+  }
   @keyframes breathe {
     0%, 100% { transform: translateY(0); }
     50% { transform: translateY(-5px); }

@@ -60,7 +60,17 @@
   function setExpression(expr) {
     state.expression = expr;
     const el = document.getElementById('lily-portrait');
-    if (el) el.dataset.expr = expr;
+    if (!el) return;
+    if (el.dataset.expr === expr && !state.exprBlurTimer) return;
+    if (state.exprBlurTimer) clearTimeout(state.exprBlurTimer);
+    el.classList.add('blurring');
+    state.exprBlurTimer = setTimeout(() => {
+      el.dataset.expr = expr;
+      requestAnimationFrame(() => {
+        el.classList.remove('blurring');
+        state.exprBlurTimer = null;
+      });
+    }, 200);
   }
 
   // ── Speech bubble typewriter ──────────────────────────────────────────
