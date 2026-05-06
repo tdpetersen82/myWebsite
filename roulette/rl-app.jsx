@@ -183,7 +183,7 @@ function App() {
     setTarget(result);
 
     setPhase('no_more_bets');
-    say('no_more_bets', 'shocked');
+    say('no_more_bets', 'idle');
 
     setTimeout(() => {
       setPhase('spinning');
