@@ -100,7 +100,7 @@ body.hub-root {
   align-items: center;
   gap: 8px;
   background: var(--paper);
-  padding: 9px 14px;
+  padding: 7px 14px;
   border-radius: 999px;
   border: 1px solid var(--line);
   width: 300px;
