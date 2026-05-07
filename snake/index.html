@@ -109,16 +109,6 @@
 
     function lerp(a, b, t) { return a + (b - a) * t; }
 
-    function prevPos(i) {
-        return prevSnake[Math.min(i, prevSnake.length - 1)];
-    }
-
-    function interpPx(i, t) {
-        const a = g2p(prevPos(i).x, prevPos(i).y);
-        const b = g2p(snake[i].x, snake[i].y);
-        return { x: lerp(a.x, b.x, t), y: lerp(a.y, b.y, t) };
-    }
-
     // ── Effects ────────────────────────────────────────────────────────────
     function spawnParticles(cx, cy) {
         const colors = ['#FF6B6B','#FFD93D','#6BCB77','#4D96FF','#FF922B','#F06595','#74C0FC'];
@@ -243,7 +233,21 @@
 
     function drawSnake(t) {
         if (!snake.length) return;
-        const pts = snake.map((_, i) => interpPx(i, t));
+
+        // Build polyline as: [head extending forward] + [body at fixed grid cells] + [tail receding forward].
+        // Lerping each segment in a straight line (the old approach) cuts diagonally across corners during
+        // a turn, which makes the visible polyline length pulse smaller and back. Keeping body cells fixed
+        // and only animating the two ends preserves the snake's apparent length through every tick.
+        const pts = [];
+        const prevHeadPx = g2p(prevSnake[0].x, prevSnake[0].y);
+        const newHeadPx = g2p(snake[0].x, snake[0].y);
+        pts.push({ x: lerp(prevHeadPx.x, newHeadPx.x, t), y: lerp(prevHeadPx.y, newHeadPx.y, t) });
+        for (let i = 1; i < snake.length; i++) pts.push(g2p(snake[i].x, snake[i].y));
+        const prevTail = prevSnake[prevSnake.length - 1];
+        const newTail = snake[snake.length - 1];
+        const prevTailPx = g2p(prevTail.x, prevTail.y);
+        const newTailPx = g2p(newTail.x, newTail.y);
+        pts.push({ x: lerp(prevTailPx.x, newTailPx.x, t), y: lerp(prevTailPx.y, newTailPx.y, t) });
         const n = pts.length;
 
         // Body shadow
