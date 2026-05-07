@@ -423,14 +423,13 @@
     function loop(ts) {
         if (!gameRunning) return;
 
-        const elapsed = ts - lastTickTime;
-        const t = Math.min(elapsed / TICK_MS, 1);
-
-        if (elapsed >= TICK_MS) {
+        if (ts - lastTickTime >= TICK_MS) {
             lastTickTime = ts;
             tick();
             if (!gameRunning) return;
         }
+
+        const t = Math.min((ts - lastTickTime) / TICK_MS, 1);
 
         drawBg();
         drawFoods();
