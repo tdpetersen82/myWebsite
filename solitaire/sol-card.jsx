@@ -88,13 +88,14 @@ function PlayingCard({
   w = 84, h = 120,
   dealIndex = 0, fromX = 360, fromY = -240,
   glow = false, selected = false,
-  onClick, dealing = false
+  onClick, onDoubleClick, dealing = false
 }) {
   const animate = dealing;
   return (
     <div
       className={`card-shell ${animate ? 'deal-in' : ''}`}
       onClick={onClick}
+      onDoubleClick={onDoubleClick}
       style={{
         width:w, height:h, position:'relative',
         animationDelay: animate ? `${dealIndex * 0.05}s` : undefined,

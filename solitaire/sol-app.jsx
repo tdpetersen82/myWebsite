@@ -304,6 +304,10 @@ function App() {
   const [autoPlaying, setAutoPlaying] = useState(false);
   const autoPlayRef = useRef(null);
   const stateRef = useRef(null);
+  const drawingRef = useRef(false);
+
+  // Release the stock-draw guard after every render so the next click can fire.
+  useEffect(() => { drawingRef.current = false; });
 
   // Dealer state
   const [expression, setExpression] = useState('idle');
@@ -360,8 +364,8 @@ function App() {
 
   // Player name
   useEffect(() => {
-    const stored = localStorage.getItem('solitairePlayerName');
-    if (stored && stored.trim()) {
+    const stored = window.CASINO_PLAYER.read();
+    if (stored) {
       if (stored !== tweaks.playerName) setTweak('playerName', stored);
     } else {
       setShowNameModal(true);
@@ -369,9 +373,8 @@ function App() {
   }, []);
 
   function savePlayerName(name) {
-    const trimmed = (name || '').trim().slice(0, 20);
+    const trimmed = window.CASINO_PLAYER.write(name);
     if (!trimmed) return;
-    localStorage.setItem('solitairePlayerName', trimmed);
     setTweak('playerName', trimmed);
     setShowNameModal(false);
   }
@@ -508,6 +511,8 @@ function App() {
 
     setTableau(next.tableau);
     setFoundations(next.foundations);
+    setWaste(next.waste);
+    setStock(next.stock);
     setSelection(null);
     setMoves(m => m + 1);
     if (scoreDelta) setScore(s => s + scoreDelta);
@@ -584,6 +589,15 @@ function App() {
     setSelection({ source: 'tableau', col, idx });
   }
 
+  // Double-click a face-up tableau top → send to foundation if it fits there.
+  function onTableauDblClick(col, idx, card) {
+    if (phase !== 'playing') return;
+    if (!card.faceUp) return;
+    if (idx !== tableau[col].length - 1) return;
+    if (!canMoveToFoundation(card, foundations[card.suit])) return;
+    attemptMove({ source: 'tableau', col, idx }, { kind: 'foundation', suit: card.suit });
+  }
+
   function onTableauEmptyClick(col) {
     if (phase !== 'playing') return;
     if (selection) {
@@ -603,6 +617,15 @@ function App() {
     setSelection({ source: 'waste' });
   }
 
+  // Double-click waste top → send to foundation if it fits there.
+  function onWasteDblClick() {
+    if (phase !== 'playing') return;
+    const top = topOf(waste);
+    if (!top) return;
+    if (!canMoveToFoundation(top, foundations[top.suit])) return;
+    attemptMove({ source: 'waste' }, { kind: 'foundation', suit: top.suit });
+  }
+
   function onFoundationClick(suit) {
     if (phase !== 'playing') return;
     if (selection) {
@@ -615,6 +638,12 @@ function App() {
 
   function onStockClick() {
     if (phase !== 'playing') return;
+    // Block re-entry until React commits the resulting state. Without this, a
+    // second click that fires before the next render reads stale stock/waste
+    // from closure and ends up duplicating the same card into waste.
+    if (drawingRef.current) return;
+    drawingRef.current = true;
+
     setSelection(null);
     if (stock.length === 0) {
       if (waste.length === 0) return;
@@ -677,15 +706,29 @@ function App() {
     if (phase !== 'playing') return;
     const stateNow = { tableau, foundations, stock, waste };
     const h = findHint(stateNow);
-    if (!h) {
-      say('stuck', 'sad');
-      if (window.SFX) SFX.illegal();
+    if (h) {
+      setHint(h);
+      say('hint_offered');
+      if (window.SFX) SFX.hint();
+      setTimeout(() => setHint(null), 4000);
       return;
     }
-    setHint(h);
-    say('hint_offered');
-    if (window.SFX) SFX.hint();
-    setTimeout(() => setHint(null), 4000);
+    if (stock.length > 0) {
+      setHint({ fromIds: [], dest: { kind: 'stock' } });
+      say('hint_draw');
+      if (window.SFX) SFX.hint();
+      setTimeout(() => setHint(null), 4000);
+      return;
+    }
+    if (waste.length > 0) {
+      setHint({ fromIds: [], dest: { kind: 'stock' } });
+      say('hint_recycle');
+      if (window.SFX) SFX.hint();
+      setTimeout(() => setHint(null), 4000);
+      return;
+    }
+    say('stuck', 'sad');
+    if (window.SFX) SFX.illegal();
   }
 
   function doAutoComplete() {
@@ -770,6 +813,7 @@ function App() {
   const hintIds = hint ? hint.fromIds : null;
   const hintFoundationSuit = hint && hint.dest.kind === 'foundation' ? hint.dest.suit : null;
   const hintTableauCol = hint && hint.dest.kind === 'tableau' ? hint.dest.col : null;
+  const hintStock = hint && hint.dest.kind === 'stock';
 
   const isDealing = phase === 'dealing';
 
@@ -811,8 +855,8 @@ function App() {
 
           {/* Stock + Waste */}
           <div style={{ position:'absolute', left: 28, top: 90, display:'flex', gap: 18 }}>
-            <StockPile stock={stock} waste={waste} onDraw={onStockClick} drawMode={drawCount} passes={passes} />
-            <WastePile waste={waste} drawMode={drawCount} selection={selection} onSelect={onWasteClick} />
+            <StockPile stock={stock} waste={waste} onDraw={onStockClick} drawMode={drawCount} passes={passes} isHinted={hintStock} />
+            <WastePile waste={waste} drawMode={drawCount} selection={selection} onSelect={onWasteClick} onDblClick={onWasteDblClick} />
           </div>
 
           {/* Foundations */}
@@ -848,6 +892,7 @@ function App() {
                   selection={selection}
                   hintIds={hintIds}
                   onCardClick={onTableauClick}
+                  onCardDblClick={onTableauDblClick}
                   onEmptyClick={() => onTableauEmptyClick(idx)}
                   isDealing={isDealing}
                 />
@@ -917,7 +962,7 @@ function App() {
         <TweakText
           label="Your name"
           value={tweaks.playerName}
-          onChange={(v) => { setTweak('playerName', v); localStorage.setItem('solitairePlayerName', v); }}
+          onChange={(v) => setTweak('playerName', v)}
         />
         <TweakRadio
           label="Host"
@@ -930,7 +975,7 @@ function App() {
   );
 }
 
-function DealtTableauColumn({ col, cards, selection, hintIds, onCardClick, onEmptyClick, isDealing }) {
+function DealtTableauColumn({ col, cards, selection, hintIds, onCardClick, onCardDblClick, onEmptyClick, isDealing }) {
   if (cards.length === 0) {
     return (
       <div onClick={onEmptyClick} style={{
@@ -975,6 +1020,7 @@ function DealtTableauColumn({ col, cards, selection, hintIds, onCardClick, onEmp
               dealIndex={dealIdx}
               fromX={-380} fromY={-90}
               onClick={() => onCardClick(col, i, card)}
+              onDoubleClick={() => onCardDblClick && onCardDblClick(col, i, card)}
             />
           </div>
         );

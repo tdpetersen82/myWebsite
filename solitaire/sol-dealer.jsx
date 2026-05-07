@@ -66,6 +66,17 @@ const DEALER_VOICES = {
       "That's the move I'd play.",
       "Look — right there."
     ],
+    hint_draw: [
+      "Pull from the deck, {p}. Nothing useful out yet.",
+      "Try a fresh card. The board's quiet right now.",
+      "Tap the stock — see what flips.",
+      "Need a new card. Draw one."
+    ],
+    hint_recycle: [
+      "Flip the waste back over, {p}. Worth another pass.",
+      "Recycle the deck. Costs you, but it's all you've got.",
+      "Send it through again."
+    ],
     undo_used: [
       "Take it back. Costs five.",
       "Rewind. House charges, of course.",
@@ -164,6 +175,17 @@ const DEALER_VOICES = {
       "That one.",
       "Try it.",
       "See it now?"
+    ],
+    hint_draw: [
+      "Draw one.",
+      "Pull from the deck.",
+      "Tap the stock.",
+      "Need a fresh card."
+    ],
+    hint_recycle: [
+      "Flip the waste back.",
+      "Recycle. It'll cost you.",
+      "Through the deck again."
     ],
     undo_used: [
       "Undo. Five.",

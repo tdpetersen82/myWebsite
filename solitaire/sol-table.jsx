@@ -39,8 +39,8 @@ function RailButton({ label, onClick, disabled, accent, sub, glow }) {
       disabled={disabled}
       style={{
         position:'relative',
-        padding:'8px 14px',
-        minWidth: 70,
+        padding:'6px 10px',
+        minWidth: 56,
         background: disabled
           ? 'rgba(20,12,6,.45)'
           : accent
@@ -77,19 +77,19 @@ function RailButton({ label, onClick, disabled, accent, sub, glow }) {
 
 function ScoreBoard({ score, moves, time, best }) {
   const stat = (label, value, color) => (
-    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', minWidth: 60 }}>
-      <div style={{ fontSize: 9, letterSpacing:'.22em', textTransform:'uppercase', color:'var(--ivory-dim)', fontWeight: 600 }}>{label}</div>
+    <div style={{ display:'flex', flexDirection:'column', alignItems:'center', minWidth: 46 }}>
+      <div style={{ fontSize: 8, letterSpacing:'.22em', textTransform:'uppercase', color:'var(--ivory-dim)', fontWeight: 600 }}>{label}</div>
       <div style={{
         fontFamily:"'Playfair Display', serif",
-        fontSize: 19, fontWeight: 700, color: color || 'var(--ivory)', lineHeight: 1.1, letterSpacing:'.02em'
+        fontSize: 16, fontWeight: 700, color: color || 'var(--ivory)', lineHeight: 1.1, letterSpacing:'.02em'
       }}>{value}</div>
     </div>
   );
   const dollar = (n) => (n >= 0 ? '+$' : '-$') + Math.abs(n);
   return (
     <div style={{
-      display:'flex', alignItems:'center', gap: 18,
-      padding:'8px 18px',
+      display:'flex', alignItems:'center', gap: 12,
+      padding:'6px 12px',
       background:'rgba(0,0,0,.45)',
       backdropFilter:'blur(6px)',
       borderRadius: 12,
@@ -113,18 +113,53 @@ function BrassRail({
 }) {
   return (
     <div style={{
-      position:'absolute', top: 14, left: 18, right: 18, height: 56, zIndex: 5,
-      display:'flex', alignItems:'center', justifyContent:'space-between', gap: 12
+      position:'absolute', top: 14, left: 18, right: 60, height: 56, zIndex: 5,
+      display:'flex', alignItems:'center', gap: 10
     }}>
+      <a href="../casino/" title="Back to casino" style={{
+        display:'inline-flex', alignItems:'center',
+        padding:'6px 12px',
+        background:'rgba(20,12,6,.6)',
+        color:'var(--brass-2)',
+        border:'1px solid rgba(201,162,106,.5)',
+        borderRadius: 999,
+        fontSize: 10, fontWeight: 700, letterSpacing:'.18em',
+        textTransform:'uppercase', textDecoration:'none', whiteSpace:'nowrap',
+        boxShadow:'0 2px 6px rgba(0,0,0,.3)'
+      }}>← Lobby</a>
+      <a href="../casino/" title="Back to casino" style={{
+        display:'flex', alignItems:'center', gap: 10, paddingRight: 14,
+        borderRight:'1px solid rgba(201,162,106,.2)',
+        textDecoration:'none', color:'inherit'
+      }}>
+        <div style={{
+          width: 28, height: 28, borderRadius:'50%',
+          background:'radial-gradient(circle at 35% 30%, #f5d896, #8c6a3f 75%)',
+          display:'flex', alignItems:'center', justifyContent:'center',
+          fontFamily:"'Playfair Display', serif",
+          color:'#1a1208', fontSize: 14, fontWeight: 800, fontStyle:'italic',
+          boxShadow:'inset 0 1px 0 rgba(255,255,255,.4), 0 2px 6px rgba(0,0,0,.4)'
+        }}>L</div>
+        <div>
+          <div style={{
+            fontFamily:"'Playfair Display', serif",
+            fontSize: 15, color:'var(--brass-2)',
+            fontStyle:'italic', fontWeight: 600, letterSpacing:'.02em', lineHeight: 1, whiteSpace:'nowrap'
+          }}>Limestone Games</div>
+          <div style={{ fontSize: 8, letterSpacing:'.28em', color:'var(--ivory-dim)', textTransform:'uppercase', marginTop: 3, whiteSpace:'nowrap' }}>
+            Klondike · Private Table 07
+          </div>
+        </div>
+      </a>
       <ScoreBoard score={score} moves={moves} time={time} best={best} />
-      <div style={{ display:'flex', gap: 8 }}>
+      <div style={{ display:'flex', gap: 6, marginLeft:'auto' }}>
         <RailButton label="Undo" sub="⌘Z" onClick={onUndo} disabled={!canUndo} />
         <RailButton label="Redo" sub="⌘⇧Z" onClick={onRedo} disabled={!canRedo} />
         <RailButton label="Hint" onClick={onHint} />
         {canAutoComplete && (
           <RailButton label="Auto-finish" accent onClick={onAutoComplete} glow />
         )}
-        <RailButton label="New deal" onClick={onNewDeal} />
+        <RailButton label="Deal" onClick={onNewDeal} />
       </div>
     </div>
   );
@@ -158,7 +193,7 @@ function PileSlot({ label, w = 84, h = 120, children, onClick, glow, dim, label_
   );
 }
 
-function StockPile({ stock, waste, onDraw, drawMode, passes }) {
+function StockPile({ stock, waste, onDraw, drawMode, passes, isHinted }) {
   const empty = stock.length === 0;
   return (
     <div onClick={onDraw} style={{
@@ -166,7 +201,10 @@ function StockPile({ stock, waste, onDraw, drawMode, passes }) {
       borderRadius: 10,
       border: empty ? '1.5px dashed rgba(201,162,106,.55)' : 'none',
       background: empty ? 'rgba(0,0,0,.18)' : 'transparent',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      animation: isHinted ? 'glowPulse 1.6s ease-in-out infinite' : 'none',
+      filter: isHinted && !empty ? 'drop-shadow(0 0 18px rgba(230,197,144,.85))' : 'none',
+      transition: 'filter .3s ease'
     }}>
       {empty ? (
         <div style={{
@@ -202,7 +240,7 @@ function StockPile({ stock, waste, onDraw, drawMode, passes }) {
   );
 }
 
-function WastePile({ waste, drawMode, selection, onSelect }) {
+function WastePile({ waste, drawMode, selection, onSelect, onDblClick }) {
   if (!waste.length) {
     return <PileSlot label="·" />;
   }
@@ -225,6 +263,7 @@ function WastePile({ waste, drawMode, selection, onSelect }) {
               h={120}
               selected={isTop && isSelected}
               onClick={isTop ? onSelect : undefined}
+              onDoubleClick={isTop ? onDblClick : undefined}
             />
           </div>
         );
