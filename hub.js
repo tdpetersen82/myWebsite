@@ -186,13 +186,53 @@
     const side = document.getElementById('hub-side');
     side.innerHTML = '';
 
-    // Stats
+    // Stats — rollup of all four sections
+    const STATS = {
+      streak: '11d',
+      anchor: { label: 'All-time top', value: '38,400', game: 'Block Puzzle', delta: '+2,200 this week' },
+      totals: { plays: 87, games: 9, longest: '14d' },
+      cats: [
+        { id: 'classic', label: 'Arcade',  href: 'arcade/',  color: '#FF4F2D', metric: '38,400', sub: 'Block Puzzle' },
+        { id: 'kids',    label: 'Kids',    href: 'kids/',    color: '#FF4F8B', metric: '1,840',  sub: 'Snake' },
+        { id: 'puzzle',  label: 'Puzzles', href: 'puzzles/', color: '#1F5A3D', metric: '14–6',   sub: 'Connect 4' },
+        { id: 'casino',  label: 'Casino',  href: 'casino/',  color: '#C8A14A', metric: '$1,000', sub: 'Bankroll' },
+      ],
+    };
+
+    // Live casino bankroll from shared storage (falls back silently)
+    try {
+      const api = window.CASINO_BANKROLL;
+      const raw = api ? api.read() : Number(localStorage.getItem('casinoBankroll'));
+      if (isFinite(raw) && raw >= 0) {
+        const casinoTile = STATS.cats.find(c => c.id === 'casino');
+        casinoTile.metric = '$' + Math.floor(raw).toLocaleString();
+      }
+    } catch (e) {}
+
+    const tilesHtml = STATS.cats.map(c => `
+      <a class="stats-cat" href="${c.href}" style="--cat:${c.color}">
+        <div class="l"><span class="dot"></span>${c.label}</div>
+        <div class="n">${c.metric}</div>
+        <div class="s">${c.sub}</div>
+      </a>
+    `).join('');
+
     const stats = el(`
       <div class="stats-card">
-        <h4>Your stats <span class="more">11-day streak</span></h4>
-        <div class="stats-grid">
-          <div class="stat"><div class="l">Top score</div><div class="n">38,400</div><div class="s">Block Puzzle</div></div>
-          <div class="stat"><div class="l">Plays</div><div class="n">87</div><div class="s">9 games</div></div>
+        <h4>Your stats <span class="more">${STATS.streak} streak</span></h4>
+        <div class="stats-anchor">
+          <div class="stats-anchor-chip">★</div>
+          <div class="stats-anchor-body">
+            <div class="l">${STATS.anchor.label}</div>
+            <div class="n">${STATS.anchor.value}</div>
+            <div class="s">${STATS.anchor.game} · ▲ ${STATS.anchor.delta}</div>
+          </div>
+        </div>
+        <div class="stats-cats">${tilesHtml}</div>
+        <div class="stats-foot">
+          <span><b>${STATS.totals.plays}</b> plays</span>
+          <span><b>${STATS.totals.games}</b> games</span>
+          <span>longest <b>${STATS.totals.longest}</b></span>
         </div>
       </div>
     `);

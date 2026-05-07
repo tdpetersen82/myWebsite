@@ -1039,29 +1039,122 @@ body.hub-root {
   margin-bottom: 14px;
 }
 .stats-card h4 .more { color: rgba(255, 255, 255, 0.5); }
-.stats-grid {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
+
+/* Anchor stat row */
+.stats-anchor {
+  display: flex;
+  align-items: center;
   gap: 12px;
+  padding-bottom: 14px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
 }
-.stat .l {
+.stats-anchor-chip {
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.08);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+  color: #FFD93D;
+}
+.stats-anchor-body { min-width: 0; }
+.stats-anchor-body .l {
   font-family: 'JetBrains Mono', ui-monospace, monospace;
   font-size: 9.5px;
   letter-spacing: 0.12em;
   text-transform: uppercase;
   opacity: 0.55;
 }
-.stat .n {
+.stats-anchor-body .n {
   font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 22px;
-  font-weight: 600;
+  font-size: 26px;
+  font-weight: 700;
   line-height: 1;
   margin-top: 4px;
 }
-.stat .s {
+.stats-anchor-body .s {
   font-size: 10.5px;
-  opacity: 0.6;
+  opacity: 0.65;
+  margin-top: 4px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* 2x2 category tile grid */
+.stats-cats {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 8px;
+  padding: 14px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+}
+.stats-cat {
+  display: block;
+  padding: 10px;
+  border-radius: 12px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  color: var(--bg);
+  text-decoration: none;
+  transition: background 0.15s, transform 0.15s;
+}
+.stats-cat:hover {
+  background: rgba(255, 255, 255, 0.08);
+  transform: translateY(-1px);
+}
+.stats-cat .l {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 9.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  opacity: 0.7;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+.stats-cat .l .dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--cat);
+  flex-shrink: 0;
+}
+.stats-cat .n {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-size: 17px;
+  font-weight: 600;
+  line-height: 1;
+  margin-top: 6px;
+}
+.stats-cat .s {
+  font-size: 10px;
+  opacity: 0.55;
   margin-top: 3px;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* Footer totals row */
+.stats-foot {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 12px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 10px;
+  letter-spacing: 0.04em;
+  opacity: 0.7;
+}
+.stats-foot b {
+  font-family: 'Bricolage Grotesque', sans-serif;
+  font-weight: 700;
+  font-size: 12px;
+  opacity: 1;
+  margin-right: 2px;
 }
 
 /* Empty state */
