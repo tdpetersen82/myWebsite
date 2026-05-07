@@ -147,7 +147,7 @@
     <nav class="cat-nav">
         <div class="cat-nav-left">
             <a class="cat-logo" href="..">
-                <img src="../assets/logo-96.png" alt="" width="40" height="40">
+                <img src="../assets/logo-96.png" alt="Limestone Games home" width="40" height="40">
                 <span class="wordmark">Limestone <span class="light">Games</span></span>
             </a>
             <div class="cat-nav-links">
@@ -240,9 +240,9 @@
                 <h3>Snake</h3>
                 <p>Eat, grow, don't crash. The friendliest version of the all-time classic — gentle pace, big buttons, no surprises. Your best length saves automatically so you can chase a personal record any time.</p>
                 <div class="cat-featured-stats">
-                    <div class="stat"><div class="l">Top score</div><div class="n accent">1,840</div></div>
-                    <div class="stat"><div class="l">Plays</div><div class="n">12.4k</div></div>
+                    <div class="stat"><div class="l">Your best</div><div class="n accent" data-snake-best>—</div></div>
                     <div class="stat"><div class="l">Difficulty</div><div class="n">Easy</div></div>
+                    <div class="stat"><div class="l">Save</div><div class="n">Auto</div></div>
                 </div>
                 <div class="cat-featured-cta">
                     <a class="cat-btn" href="../snake/">Let's play →</a>
@@ -270,13 +270,13 @@
                     </div>
                 </div>
                 <div class="cat-card-meta">
-                    <div><div class="l">Top score</div><div class="v accent">1,840</div></div>
-                    <div><div class="l">Plays</div><div class="v">12.4k</div></div>
-                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
-                    <div><div class="l">Your best</div><div class="v sm">1,840</div></div>
+                    <div><div class="l">Your best</div><div class="v accent" data-snake-best>—</div></div>
+                    <div><div class="l">Difficulty</div><div class="v">Easy</div></div>
+                    <div><div class="l">Save</div><div class="v sm">Auto</div></div>
+                    <div><div class="l">Ages</div><div class="v sm">4-10</div></div>
                 </div>
                 <div class="cat-card-foot">
-                    <span class="plays">19 sessions</span>
+                    <span class="plays">Saves automatically</span>
                     <span class="play-btn">Play →</span>
                 </div>
             </a>
@@ -415,10 +415,10 @@
         <div class="cat-twocol">
             <div class="cat-challenge">
                 <div class="cat-challenge-eyebrow"><span class="cat-challenge-dot"></span> Family-friendly · always free</div>
-                <h3>Five games,<br>five minutes each</h3>
+                <h3>Six games,<br>five minutes each</h3>
                 <p>Every game in here finishes in five minutes or less, so it's perfect for a quick tablet session. Big buttons, gentle feedback, no in-app purchases — built for shared family time, not for chasing engagement metrics.</p>
                 <div class="cat-challenge-grid">
-                    <div><div class="l">Games</div><div class="n">5</div></div>
+                    <div><div class="l">Games</div><div class="n">6</div></div>
                     <div><div class="l">Avg session</div><div class="n accent">4 min</div></div>
                     <div><div class="l">Ads inside</div><div class="n">0</div></div>
                     <div><div class="l">Accounts</div><div class="n">0</div></div>
@@ -530,5 +530,14 @@
         </div>
     </footer>
 
+    <script>
+        (function () {
+            const best = parseInt(localStorage.getItem('snakeHighScore'), 10);
+            if (!isFinite(best) || best <= 0) return;
+            document.querySelectorAll('[data-snake-best]').forEach(el => {
+                el.textContent = best.toLocaleString();
+            });
+        })();
+    </script>
 </body>
 </html>

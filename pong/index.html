@@ -120,6 +120,7 @@
         let score = 0;
         let highScore = localStorage.getItem('pongHighScore') || 0;
         let gameRunning = false;
+        let isGameOver = false;
         let gameLoop;
         let lastFrameTime = 0;
         const targetFPS = 60;
@@ -262,8 +263,6 @@
             isGameOver = false;
             lastFrameTime = performance.now();
         }
-
-        let isGameOver = false;
 
         function gameLoopFunction(currentTime) {
             requestAnimationFrame(gameLoopFunction);

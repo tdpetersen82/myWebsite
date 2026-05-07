@@ -8,8 +8,10 @@ const TCP_SUITS = {
   '♦': { color: '#c0392b' }
 };
 
-function TCPCardCorner({ rank, suit, flip = false }) {
+function TCPCardCorner({ rank, suit, flip = false, w = 78 }) {
   const color = TCP_SUITS[suit].color;
+  const rankFs = rank === '10' ? Math.round(w * 0.19) : Math.round(w * 0.23);
+  const suitFs = Math.round(w * 0.19);
   return (
     <div style={{
       position: 'absolute',
@@ -18,12 +20,12 @@ function TCPCardCorner({ rank, suit, flip = false }) {
       lineHeight: 1, color
     }}>
       <span style={{
-        fontSize: rank === '10' ? 16 : 19,
+        fontSize: rankFs,
         fontWeight: 700,
         fontFamily: "'Playfair Display', serif",
         letterSpacing: '-.02em'
       }}>{rank}</span>
-      <span style={{ fontSize: 15, marginTop: 1 }}>{suit}</span>
+      <span style={{ fontSize: suitFs, marginTop: 1 }}>{suit}</span>
     </div>
   );
 }
@@ -38,8 +40,8 @@ function TCPCardFace({ rank, suit, w }) {
       boxShadow: '0 1px 0 rgba(255,255,255,.8) inset, 0 0 0 1px rgba(0,0,0,.1), 0 8px 18px rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.2)',
       overflow: 'hidden'
     }}>
-      <TCPCardCorner rank={rank} suit={suit} />
-      <TCPCardCorner rank={rank} suit={suit} flip />
+      <TCPCardCorner rank={rank} suit={suit} w={w} />
+      <TCPCardCorner rank={rank} suit={suit} w={w} flip />
 
       <div style={{
         position: 'absolute', inset: 0, display: 'flex',

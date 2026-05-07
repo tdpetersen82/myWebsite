@@ -56,12 +56,18 @@ function App() {
         }
       }
     } catch (e) {}
-    // Hints toggle: respect any persisted value at first mount.
+    // One-time migration: copy legacy crapsHintsOn into the shared CASINO_PLAYER
+    // profile, then delete it. After this, useTweaks reads/writes showHints
+    // through CASINO_PLAYER and the value is shared across all casino games.
     try {
       const h = localStorage.getItem('crapsHintsOn');
       if (h === 'true' || h === 'false') {
         const want = h === 'true';
+        if (window.CASINO_PLAYER && window.CASINO_PLAYER.get('showHints') === undefined) {
+          window.CASINO_PLAYER.set('showHints', want);
+        }
         if (want !== tweaks.showHints) setTweak('showHints', want);
+        localStorage.removeItem('crapsHintsOn');
       }
     } catch (e) {}
     // Player name persistence
@@ -80,10 +86,6 @@ function App() {
       localStorage.setItem('crapsStats', JSON.stringify(toSave));
     } catch (e) {}
   }, [stats]);
-
-  useEffect(() => {
-    try { localStorage.setItem('crapsHintsOn', String(tweaks.showHints)); } catch (e) {}
-  }, [tweaks.showHints]);
 
   function savePlayerName(name) {
     const trimmed = window.CASINO_PLAYER.write(name);

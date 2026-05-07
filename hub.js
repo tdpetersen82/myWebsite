@@ -41,10 +41,27 @@
     { id: 'casino',  label: 'Casino' },
   ];
 
-  const HIGH_SCORES = {
-    snake: '1,840', pong: 21, breakout: '4,720', 'space-invaders': '9,650', 'block-puzzle': '38,400',
-    asteroids: '12,200', frogger: 880, simon: 27, blackjack: '+$420', roulette: '+$185',
+  // Map of game id → localStorage key for personal best. If a key isn't here
+  // (or has no stored value), the tile renders without the ★ badge — better
+  // than showing fake placeholder data.
+  const SCORE_KEYS = {
+    snake: 'snakeHighScore',
+    pong: 'pongHighScore',
+    breakout: 'breakoutHighScore',
+    'space-invaders': 'spaceInvadersHighScore',
+    asteroids: 'asteroidsHighScore',
+    frogger: 'froggerHighScore',
+    simon: 'simonHighScore',
+    defender: 'defenderHighScore',
+    'lunar-lander': 'lunarLanderHighScore',
+    'spacex-lander': 'spacexLanderHighScore',
   };
+  function getBest(gameId) {
+    const key = SCORE_KEYS[gameId];
+    if (!key) return null;
+    const n = parseInt(localStorage.getItem(key), 10);
+    return isFinite(n) && n > 0 ? n.toLocaleString() : null;
+  }
 
   // Per-game inline SVG glyph (paths only; svg wrapper added at render time).
   const GLYPH_PATHS = {
@@ -111,7 +128,7 @@
 
   // ── Tile rendering ─────────────────────────────────────────────────────
   function renderTile(game, size, isHero) {
-    const best = HIGH_SCORES[game.id];
+    const best = getBest(game.id);
     const hero = isHero ? `
       <p class="desc">${game.desc} Pick up where you left off — your scores are saved locally.</p>
     ` : '';
@@ -182,34 +199,46 @@
   }
 
   // ── Sidebar ────────────────────────────────────────────────────────────
+  function readNumStorage(key) {
+    const n = parseInt(localStorage.getItem(key), 10);
+    return isFinite(n) && n > 0 ? n : null;
+  }
+
   function renderSidebar() {
     const side = document.getElementById('hub-side');
     side.innerHTML = '';
 
-    // Stats — rollup of all four sections
-    const STATS = {
-      streak: '11d',
-      anchor: { label: 'All-time top', value: '38,400', game: 'Block Puzzle', delta: '+2,200 this week' },
-      totals: { plays: 87, games: 9, longest: '14d' },
-      cats: [
-        { id: 'classic', label: 'Arcade',  href: 'arcade/',  color: '#FF4F2D', metric: '38,400', sub: 'Block Puzzle' },
-        { id: 'kids',    label: 'Kids',    href: 'kids/',    color: '#FF4F8B', metric: '1,840',  sub: 'Snake' },
-        { id: 'puzzle',  label: 'Puzzles', href: 'puzzles/', color: '#1F5A3D', metric: '14–6',   sub: 'Connect 4' },
-        { id: 'casino',  label: 'Casino',  href: 'casino/',  color: '#C8A14A', metric: '$1,000', sub: 'Bankroll' },
-      ],
-    };
+    // Pull what we actually know from localStorage; show editorial picks otherwise.
+    const snakeBest = readNumStorage('snakeHighScore');
+    const asteroidsBest = readNumStorage('asteroidsHighScore');
+    const blockPuzzleBest = readNumStorage('blockPuzzleHighScore'); // not yet persisted
+    const arcadeBest = Math.max(asteroidsBest || 0, blockPuzzleBest || 0,
+      readNumStorage('breakoutHighScore') || 0,
+      readNumStorage('spaceInvadersHighScore') || 0,
+      readNumStorage('pongHighScore') || 0) || null;
 
-    // Live casino bankroll from shared storage (falls back silently)
+    let casinoBankroll = null;
     try {
       const api = window.CASINO_BANKROLL;
       const raw = api ? api.read() : Number(localStorage.getItem('casinoBankroll'));
-      if (isFinite(raw) && raw >= 0) {
-        const casinoTile = STATS.cats.find(c => c.id === 'casino');
-        casinoTile.metric = '$' + Math.floor(raw).toLocaleString();
-      }
+      if (isFinite(raw) && raw >= 0) casinoBankroll = Math.floor(raw);
     } catch (e) {}
 
-    const tilesHtml = STATS.cats.map(c => `
+    const cats = [
+      { id: 'classic', label: 'Arcade',  href: 'arcade/',  color: '#FF4F2D',
+        metric: arcadeBest != null ? arcadeBest.toLocaleString() : 'Play',
+        sub:    arcadeBest != null ? 'Top arcade score' : 'Eleven cabinets' },
+      { id: 'kids',    label: 'Kids',    href: 'kids/',    color: '#FF4F8B',
+        metric: snakeBest != null ? snakeBest.toLocaleString() : 'Play',
+        sub:    snakeBest != null ? 'Snake best' : 'Six gentle games' },
+      { id: 'puzzle',  label: 'Puzzles', href: 'puzzles/', color: '#1F5A3D',
+        metric: 'Play', sub: 'Beat the AI' },
+      { id: 'casino',  label: 'Casino',  href: 'casino/',  color: '#C8A14A',
+        metric: casinoBankroll != null ? '$' + casinoBankroll.toLocaleString() : '$1,000',
+        sub:    casinoBankroll != null ? 'Bankroll' : 'Free starting stake' },
+    ];
+
+    const tilesHtml = cats.map(c => `
       <a class="stats-cat" href="${c.href}" style="--cat:${c.color}">
         <div class="l"><span class="dot"></span>${c.label}</div>
         <div class="n">${c.metric}</div>
@@ -217,23 +246,28 @@
       </a>
     `).join('');
 
+    // Anchor: only show a top score if we actually have one.
+    const realScores = [
+      arcadeBest != null ? { label: 'Arcade best',  value: arcadeBest.toLocaleString(),  game: 'Top arcade run' } : null,
+      snakeBest  != null ? { label: 'Snake best',   value: snakeBest.toLocaleString(),   game: 'Snake' } : null,
+    ].filter(Boolean);
+    const anchor = realScores.length
+      ? realScores.reduce((a, b) => (parseInt(a.value.replace(/,/g, ''), 10) >= parseInt(b.value.replace(/,/g, ''), 10) ? a : b))
+      : null;
+
     const stats = el(`
       <div class="stats-card">
-        <h4>Your stats <span class="more">${STATS.streak} streak</span></h4>
+        <h4>At a glance</h4>
+        ${anchor ? `
         <div class="stats-anchor">
           <div class="stats-anchor-chip">★</div>
           <div class="stats-anchor-body">
-            <div class="l">${STATS.anchor.label}</div>
-            <div class="n">${STATS.anchor.value}</div>
-            <div class="s">${STATS.anchor.game} · ▲ ${STATS.anchor.delta}</div>
+            <div class="l">${anchor.label}</div>
+            <div class="n">${anchor.value}</div>
+            <div class="s">${anchor.game}</div>
           </div>
-        </div>
+        </div>` : ''}
         <div class="stats-cats">${tilesHtml}</div>
-        <div class="stats-foot">
-          <span><b>${STATS.totals.plays}</b> plays</span>
-          <span><b>${STATS.totals.games}</b> games</span>
-          <span>longest <b>${STATS.totals.longest}</b></span>
-        </div>
       </div>
     `);
     side.appendChild(stats);
