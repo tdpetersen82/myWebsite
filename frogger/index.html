@@ -5,59 +5,36 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Frogger — Free Online Game | Limestone Games</title>
     <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../arcade/arcade-game.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-        body {
-            background: linear-gradient(135deg, #1a472a 0%, #2d1b69 100%);
-            align-items: flex-start;
-            padding-top: 20px;
-        }
-        .container {
-            background: rgba(20, 20, 30, 0.95);
-        }
-        h1 { color: #4caf50; }
-        .game-info {
-            color: #ccc;
-            flex-wrap: wrap;
-            gap: 20px;
-        }
-        .game-info span { color: #4caf50; }
-        .game-info .lives-display { color: #ff5252; }
+        body.arc-game .game-info .lives-display { color: #FF5252; }
         .timer-bar-container {
             width: 300px;
             max-width: 80%;
-            height: 16px;
-            background: #333;
+            height: 14px;
+            background: rgba(0, 0, 0, 0.5);
             border-radius: 8px;
-            margin: 8px auto 12px;
+            margin: 10px auto 14px;
             overflow: hidden;
-            border: 1px solid #555;
+            border: 1px solid rgba(201, 125, 58, 0.35);
         }
         .timer-bar {
             height: 100%;
-            background: linear-gradient(90deg, #ff5252, #ffeb3b, #4caf50);
+            background: linear-gradient(90deg, #FF5252, #FFD93D, #4ECDC4);
             border-radius: 8px;
             transition: width 0.25s linear;
         }
         #game-container {
             margin: 10px auto;
-            border-radius: 10px;
             overflow: hidden;
-            border: 2px solid #4caf50;
             max-width: 804px !important;
-            height: auto !important;        /* override Phaser inline height:100% */
-            aspect-ratio: 8 / 7;            /* drives height from width for 800x700 design */
+            height: auto !important;
+            aspect-ratio: 8 / 7;
         }
-        #game-container canvas {
-            display: block;
-        }
-        .controls { margin-top: 15px; }
-        .controls p { color: #aaa; margin: 8px 0; font-size: 1em; }
-        .play-button {
-            background: linear-gradient(135deg, #388e3c, #1b5e20);
-        }
-        .play-button:hover {
-            box-shadow: 0 5px 20px rgba(76, 175, 80, 0.4);
-        }
+        #game-container canvas { display: block; }
     </style>
     <meta name="description" content="Play Frogger free in your browser. Cross busy roads and rivers to reach home safely in this classic arcade game! No downloads, no installs.">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Frogger","description":"Play Frogger free in your browser. Cross busy roads and rivers to reach home safely in this classic arcade game! No downloads, no installs.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
@@ -79,7 +56,7 @@
     <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 </head>
-<body>
+<body class="arc-game">
     <div class="container">
         <h1>🐸 Frogger</h1>
         <div class="game-info">

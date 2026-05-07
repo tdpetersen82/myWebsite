@@ -4,8 +4,8 @@
     {
       "name": "website",
       "runtimeExecutable": "python3",
-      "runtimeArgs": ["-m", "http.server", "8088"],
-      "port": 8088,
+      "runtimeArgs": ["-m", "http.server", "8091"],
+      "port": 8091,
       "autoPort": true
     }
   ]
