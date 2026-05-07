@@ -465,6 +465,13 @@ function THLobbyModal({ bankroll, onJoin, onCancel, defaultName = '' }) {
   const [pickedTier, setPickedTier] = React.useState(null);
   const inputRef = React.useRef(null);
 
+  // The shared casino profile loads after first render, so re-seed the input
+  // when defaultName arrives (otherwise users see an empty field even though
+  // their name is already saved).
+  React.useEffect(() => {
+    if (defaultName && !name) setName(defaultName);
+  }, [defaultName]);
+
   React.useEffect(() => {
     const id = setTimeout(() => {
       if (!defaultName) inputRef.current?.focus();

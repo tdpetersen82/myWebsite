@@ -10,7 +10,7 @@
 // tab on stale code still works mid-rollout.
 (function () {
   const KEY = 'casinoPlayer';
-  const NAME_LEGACY_KEYS = ['casinoPlayerName', 'bjPlayerName', 'crPlayerName', 'tcpPlayerName', 'solitairePlayerName'];
+  const NAME_LEGACY_KEYS = ['casinoPlayerName', 'bjPlayerName', 'crPlayerName', 'tcpPlayerName', 'solitairePlayerName', 'thPlayerName'];
   const MAX_NAME_LEN = 20;
   let migrated = false;
 

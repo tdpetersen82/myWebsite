@@ -13,7 +13,6 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 }/*EDITMODE-END*/;
 
 const STATS_KEY = 'texasHoldemStats';
-const PLAYER_NAME_KEY = 'thPlayerName';
 
 function loadStats() {
   try {
@@ -179,16 +178,17 @@ function App() {
   // Cached equity for hint (avoid recomputing every keystroke).
   const equityCache = useRef({ key: '', value: null });
 
-  // Persistent player name (mirror into tweaks).
+  // Persistent player name — pulled from the shared casino profile so the
+  // name set in any other table flows in here too.
   useEffect(() => {
-    const stored = (localStorage.getItem(PLAYER_NAME_KEY) || '').trim();
+    const stored = window.CASINO_PLAYER ? window.CASINO_PLAYER.read() : '';
     if (stored && stored !== tweaks.playerName) setTweak('playerName', stored);
   }, []);
 
   function persistName(name) {
-    const trimmed = (name || '').trim().slice(0, 20);
+    if (!window.CASINO_PLAYER) return;
+    const trimmed = window.CASINO_PLAYER.write(name);
     if (!trimmed) return;
-    localStorage.setItem(PLAYER_NAME_KEY, trimmed);
     setTweak('playerName', trimmed);
   }
 
@@ -1066,7 +1066,7 @@ function App() {
 
       <TweaksPanel title="Tweaks">
         <TweakSection label="Player">
-          <TweakText label="Your name" value={tweaks.playerName} onChange={v => { setTweak('playerName', v); persistName(v); }} />
+          <TweakText label="Your name" value={tweaks.playerName} onChange={v => setTweak('playerName', v)} />
           <TweakSelect label="Dealer" value={tweaks.dealerName} onChange={v => setTweak('dealerName', v)}
             options={[{ value: 'Melissa', label: 'Melissa (warm)' }, { value: 'Marcus', label: 'Marcus (deadpan)' }]}/>
         </TweakSection>
