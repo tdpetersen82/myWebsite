@@ -370,16 +370,20 @@
     transform: translateY(0);
   }
   .qbtn.asked {
-    background: rgba(255, 255, 255, 0.4);
-    color: var(--ink-faint);
+    background: rgba(255, 255, 255, 0.7);
+    color: var(--ink-soft);
     cursor: default;
-    text-decoration: line-through;
     box-shadow: none;
   }
-  .qbtn.asked .qmark {
-    background: rgba(31, 26, 46, 0.15);
-    color: rgba(255, 255, 255, 0.6);
-    box-shadow: none;
+  .qbtn .qmark.yes {
+    background: linear-gradient(135deg, #7BC97B, #4CAF50);
+    box-shadow: 0 2px 6px rgba(76, 175, 80, 0.4);
+    font-size: 18px;
+  }
+  .qbtn .qmark.no {
+    background: linear-gradient(135deg, #FF8FA3, #D8425A);
+    box-shadow: 0 2px 6px rgba(216, 66, 90, 0.4);
+    font-size: 18px;
   }
 
   /* ── Bottom bar ──────────────────────────────────────────────────── */
@@ -548,6 +552,11 @@
     color: var(--ink);
     text-align: center;
   }
+  .guess-tile.eliminated {
+    opacity: 0.28;
+    filter: grayscale(0.8);
+    pointer-events: none;
+  }
   .guess-empty {
     grid-column: 1 / -1;
     text-align: center;
@@ -555,8 +564,41 @@
     color: var(--ink-soft);
     font-size: 14px;
   }
+  .guess-actions {
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .btn-hint {
+    padding: 12px 22px;
+    border-radius: 999px;
+    border: 2px solid var(--sun);
+    background: rgba(255, 217, 61, 0.18);
+    font-family: inherit;
+    font-weight: 700;
+    color: var(--ink);
+    cursor: pointer;
+    font-size: 14px;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    transition: background 0.15s, transform 0.1s;
+  }
+  .btn-hint:hover:not(:disabled) {
+    background: rgba(255, 217, 61, 0.36);
+  }
+  .btn-hint.active {
+    background: var(--sun);
+    border-color: #E6BE0F;
+    box-shadow: 0 4px 12px rgba(255, 217, 61, 0.5);
+  }
+  .btn-hint:disabled {
+    opacity: 0.45;
+    cursor: not-allowed;
+  }
   .btn-cancel {
-    align-self: center;
     padding: 12px 24px;
     border-radius: 999px;
     border: 2px solid rgba(31, 26, 46, 0.15);
@@ -590,6 +632,7 @@
   .reveal-card {
     width: 380px;
     min-height: 540px;
+    max-height: 92vh;
     border-radius: 28px;
     padding: 28px 28px 24px;
     position: relative;
@@ -599,7 +642,8 @@
     gap: 14px;
     box-shadow: 0 30px 60px rgba(0, 0, 0, 0.4);
     animation: revealIn 0.7s cubic-bezier(.2,.8,.25,1) backwards;
-    overflow: hidden;
+    overflow-y: auto;
+    overflow-x: hidden;
   }
   .reveal-card::before {
     content: '';
@@ -696,6 +740,49 @@
     color: var(--ink-faint);
     z-index: 1;
   }
+  .reveal-clues {
+    width: 100%;
+    background: rgba(255, 255, 255, 0.55);
+    border-radius: 14px;
+    padding: 10px 12px 11px;
+    z-index: 1;
+  }
+  .reveal-clues-title {
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.12em;
+    color: var(--ink-soft);
+    font-weight: 700;
+    text-align: center;
+    margin-bottom: 7px;
+  }
+  .reveal-clue-list {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 4px 12px;
+  }
+  .reveal-clue {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 12px;
+    color: var(--ink);
+    gap: 6px;
+    line-height: 1.2;
+  }
+  .reveal-clue .rc-text {
+    flex: 1;
+  }
+  .reveal-clue .rc-mark {
+    font-weight: 800;
+    font-size: 14px;
+    flex-shrink: 0;
+    line-height: 1;
+  }
+  .reveal-clue .rc-mark.yes { color: #2E8B57; }
+  .reveal-clue .rc-mark.no  { color: #C8324B; }
+
   .reveal-actions {
     display: flex;
     gap: 10px;
@@ -793,7 +880,10 @@
     <div class="modal-sub" id="guess-sub">Type to filter, then tap the animal you think Maddie is thinking of.</div>
     <input id="guess-search" type="text" placeholder="Type to filter… (e.g. eleph)" autocomplete="off" />
     <div id="guess-grid" class="guess-grid"></div>
-    <button id="btn-cancel-guess" class="btn-cancel" type="button">Cancel — keep asking questions</button>
+    <div class="guess-actions">
+      <button id="btn-hint" class="btn-hint" type="button">💡 Hint</button>
+      <button id="btn-cancel-guess" class="btn-cancel" type="button">Cancel — keep asking questions</button>
+    </div>
   </div>
 </div>
 
@@ -818,7 +908,7 @@
 
 <script src="questions.js?v=20260506a"></script>
 <script src="animals.js?v=20260506a"></script>
-<script src="animal-detective.js?v=20260506a"></script>
+<script src="animal-detective.js?v=20260506b"></script>
 
 </body>
 </html>

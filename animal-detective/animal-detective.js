@@ -18,13 +18,14 @@
 
   const state = {
     animal: null,
-    asked: new Set(),
+    answers: new Map(),        // qid → boolean (true=yes, false=no), preserves ask order
     activeTab: 'body',
     phase: 'asking',           // asking | guessing | revealed
     responding: false,
     typewriterTimer: null,
     expression: 'idle',
     caseNumber: 1,
+    hintMode: false,
   };
 
   // ── Storage helpers ────────────────────────────────────────────────────
@@ -119,9 +120,12 @@
     if (!grid) return;
     const qs = window.AD_QUESTIONS.filter(q => q.category === state.activeTab);
     grid.innerHTML = qs.map(q => {
-      const asked = state.asked.has(q.id);
+      const asked = state.answers.has(q.id);
+      const ans = asked ? state.answers.get(q.id) : null;
+      const mark = asked ? (ans ? '✓' : '✗') : '?';
+      const markCls = asked ? (ans ? 'yes' : 'no') : '';
       return `<button class="qbtn ${asked ? 'asked' : ''}" data-id="${q.id}" type="button" ${asked ? 'disabled' : ''}>
-        <span class="qmark">?</span>
+        <span class="qmark ${markCls}">${mark}</span>
         <span class="qtext">${q.text}</span>
       </button>`;
     }).join('');
@@ -132,22 +136,22 @@
 
   function updateCounter() {
     const counterEl = document.getElementById('q-counter');
-    if (counterEl) counterEl.textContent = `${state.asked.size} / ${MAX_QUESTIONS}`;
+    if (counterEl) counterEl.textContent = `${state.answers.size} / ${MAX_QUESTIONS}`;
     const fill = document.getElementById('q-progress');
-    if (fill) fill.style.width = `${(state.asked.size / MAX_QUESTIONS) * 100}%`;
+    if (fill) fill.style.width = `${(state.answers.size / MAX_QUESTIONS) * 100}%`;
   }
 
   function askQuestion(id) {
     if (state.responding) return;
     if (state.phase !== 'asking') return;
-    if (state.asked.has(id)) return;
+    if (state.answers.has(id)) return;
 
     const q = window.AD_QUESTIONS.find(x => x.id === id);
     if (!q) return;
 
-    state.asked.add(id);
-    state.responding = true;
     const yes = q.fn(state.animal);
+    state.answers.set(id, yes);
+    state.responding = true;
 
     setExpression(yes ? 'yes' : 'no');
     setSpeech(pickLine(yes ? 'yes' : 'no'));
@@ -157,7 +161,7 @@
 
     setTimeout(() => {
       state.responding = false;
-      const count = state.asked.size;
+      const count = state.answers.size;
 
       if (count === MAX_QUESTIONS) {
         openGuess(true);
@@ -180,6 +184,7 @@
   function openGuess(forced) {
     if (state.phase === 'revealed') return;
     state.phase = 'guessing';
+    state.hintMode = false;
 
     const cancelBtn = document.getElementById('btn-cancel-guess');
     cancelBtn.style.display = forced ? 'none' : '';
@@ -194,6 +199,15 @@
       ? "Tap the animal you think Maddie is thinking of."
       : "Type to filter, then tap the animal you think Maddie is thinking of.";
 
+    const hintBtn = document.getElementById('btn-hint');
+    if (hintBtn) {
+      hintBtn.classList.remove('active');
+      hintBtn.disabled = state.answers.size === 0;
+      hintBtn.textContent = state.answers.size === 0
+        ? '💡 Hint (ask first)'
+        : '💡 Hint';
+    }
+
     document.getElementById('guess-modal').classList.add('show');
 
     setExpression('thinking');
@@ -205,20 +219,38 @@
     setTimeout(() => search.focus(), 100);
   }
 
+  // Returns a Set of slugs whose attributes contradict at least one answer.
+  function getEliminatedSlugs() {
+    const eliminated = new Set();
+    for (const animal of window.AD_ANIMALS) {
+      for (const [qid, expected] of state.answers) {
+        const q = window.AD_QUESTIONS.find(x => x.id === qid);
+        if (!q) continue;
+        if (Boolean(q.fn(animal)) !== expected) {
+          eliminated.add(animal.slug);
+          break;
+        }
+      }
+    }
+    return eliminated;
+  }
+
   function renderGuessGrid(filter) {
     const grid = document.getElementById('guess-grid');
     if (!grid) return;
     const f = (filter || '').toLowerCase().trim();
+    const eliminated = state.hintMode ? getEliminatedSlugs() : null;
     const animals = window.AD_ANIMALS
       .filter(a => !f || a.name.toLowerCase().includes(f))
       .slice()
       .sort((a, b) => a.name.localeCompare(b.name));
-    grid.innerHTML = animals.map(a =>
-      `<button class="guess-tile" data-slug="${a.slug}" type="button">
+    grid.innerHTML = animals.map(a => {
+      const isElim = eliminated && eliminated.has(a.slug);
+      return `<button class="guess-tile ${isElim ? 'eliminated' : ''}" data-slug="${a.slug}" type="button">
         <span class="ge">${a.emoji}</span>
         <span class="gn">${a.name}</span>
-      </button>`
-    ).join('');
+      </button>`;
+    }).join('');
     grid.querySelectorAll('.guess-tile').forEach(b => {
       b.addEventListener('click', () => makeGuess(b.dataset.slug));
     });
@@ -227,9 +259,27 @@
     }
   }
 
+  function toggleHint() {
+    if (state.answers.size === 0) return;
+    state.hintMode = !state.hintMode;
+    const btn = document.getElementById('btn-hint');
+    if (btn) {
+      btn.classList.toggle('active', state.hintMode);
+      if (state.hintMode) {
+        const remaining = window.AD_ANIMALS.length - getEliminatedSlugs().size;
+        btn.textContent = `✨ ${remaining} possible`;
+      } else {
+        btn.textContent = '💡 Hint';
+      }
+    }
+    const search = document.getElementById('guess-search');
+    renderGuessGrid(search ? search.value : '');
+  }
+
   function closeGuess() {
     if (state.phase !== 'guessing') return;
     state.phase = 'asking';
+    state.hintMode = false;
     document.getElementById('guess-modal').classList.remove('show');
     setExpression('idle');
     setSpeech("OK — keep asking! What's next?");
@@ -246,7 +296,7 @@
   function endRound(won, reason, guessedAnimal) {
     state.phase = 'revealed';
     const animal = state.animal;
-    const used = state.asked.size;
+    const used = state.answers.size;
 
     const wins = readNum(KEYS.WINS);
     const losses = readNum(KEYS.LOSSES);
@@ -287,6 +337,26 @@
     return tints[cls] || tints.mammal;
   }
 
+  function buildCluesHtml() {
+    if (state.answers.size === 0) return '';
+    const items = [];
+    for (const [qid, ans] of state.answers) {
+      const q = window.AD_QUESTIONS.find(x => x.id === qid);
+      if (!q) continue;
+      const mark = ans ? '✓' : '✗';
+      const cls = ans ? 'yes' : 'no';
+      items.push(
+        `<div class="reveal-clue"><span class="rc-text">${q.text}</span><span class="rc-mark ${cls}">${mark}</span></div>`
+      );
+    }
+    return `
+      <div class="reveal-clues">
+        <div class="reveal-clues-title">Your clues</div>
+        <div class="reveal-clue-list">${items.join('')}</div>
+      </div>
+    `;
+  }
+
   function showRevealCard(animal, won, used, guessedAnimal, reason) {
     const overlay = document.getElementById('reveal-overlay');
     const tag = `${animal.class.toUpperCase()} · ${animal.size.toUpperCase()} · ${(animal.habitat[0] || '').toUpperCase()}`;
@@ -308,6 +378,7 @@
         <div class="reveal-tag">${tag}</div>
         <div class="reveal-fact">${animal.fact}</div>
         <div class="reveal-sub">${subText}</div>
+        ${buildCluesHtml()}
         <div class="reveal-meta">${used_label} · Case #${String(state.caseNumber).padStart(3, '0')}</div>
         <div class="reveal-actions">
           <button class="rb primary" id="btn-play-again" type="button">Play again →</button>
@@ -336,10 +407,11 @@
   // ── New round ──────────────────────────────────────────────────────────
   function newRound() {
     state.animal = pickAnimal();
-    state.asked = new Set();
+    state.answers = new Map();
     state.activeTab = 'body';
     state.phase = 'asking';
     state.responding = false;
+    state.hintMode = false;
     state.caseNumber = readNum(KEYS.CASES) + 1;
     writeNum(KEYS.CASES, state.caseNumber);
 
@@ -362,6 +434,9 @@
   document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-guess').addEventListener('click', () => openGuess(false));
     document.getElementById('btn-cancel-guess').addEventListener('click', closeGuess);
+
+    const hintBtn = document.getElementById('btn-hint');
+    if (hintBtn) hintBtn.addEventListener('click', toggleHint);
 
     const search = document.getElementById('guess-search');
     if (search) {
