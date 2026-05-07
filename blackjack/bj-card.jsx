@@ -85,11 +85,10 @@ function CardBack({ design = 'damask' }) {
         display:'flex',alignItems:'center',justifyContent:'center',
         background:'radial-gradient(circle at 50% 50%, rgba(201,162,106,.15), transparent 70%)'
       }}>
-        <span style={{
-          fontFamily:"'Playfair Display', serif",
-          fontSize: 24, color:'rgba(230,197,144,.85)',
-          fontStyle:'italic', letterSpacing:'.1em'
-        }}>LG</span>
+        <img src="../assets/logo-96.png" alt="" style={{
+          width:'56%', height:'auto',
+          filter:'drop-shadow(0 1px 2px rgba(0,0,0,.5))'
+        }}/>
       </div>
     </div>
   );
