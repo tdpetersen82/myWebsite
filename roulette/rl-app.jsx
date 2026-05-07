@@ -346,7 +346,7 @@ function App() {
 
         <div style={{
           flex: 1, position:'relative', minWidth: 800,
-          borderRadius: 18, overflow: 'hidden'
+          borderRadius: 18, overflow: 'visible'
         }}>
           <FeltBackdrop />
           <FeltLogo />

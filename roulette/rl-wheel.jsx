@@ -15,6 +15,7 @@ function pocketColor(n) {
 }
 
 const SPIN_DURATION = 4000;
+const PAD = 44; // extra canvas bleed so the brass rim and pointer triangle aren't clipped
 
 function Wheel({ size = 280, target, onLanded, spinning, onTickStart, onTickStop, onSpinStart, onBallDrop }) {
   const canvasRef = React.useRef(null);
@@ -24,7 +25,7 @@ function Wheel({ size = 280, target, onLanded, spinning, onTickStart, onTickStop
   const pocketAngle = (2 * Math.PI) / numPockets;
 
   function draw(ctx, currentAngle, ballNumber) {
-    const W = size, H = size;
+    const W = size + PAD * 2, H = size + PAD * 2;
     const cx = W / 2, cy = H / 2;
     const outerR = size * 0.46;
     const innerR = size * 0.30;
@@ -143,10 +144,11 @@ function Wheel({ size = 280, target, onLanded, spinning, onTickStart, onTickStop
     const canvas = canvasRef.current;
     if (!canvas) return;
     const dpr = window.devicePixelRatio || 1;
-    canvas.width = size * dpr;
-    canvas.height = size * dpr;
-    canvas.style.width = size + 'px';
-    canvas.style.height = size + 'px';
+    const canvasW = size + PAD * 2;
+    canvas.width = canvasW * dpr;
+    canvas.height = canvasW * dpr;
+    canvas.style.width = canvasW + 'px';
+    canvas.style.height = canvasW + 'px';
     const ctx = canvas.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     draw(ctx, angleRef.current, /* ballNumber */ 0);
@@ -198,13 +200,18 @@ function Wheel({ size = 280, target, onLanded, spinning, onTickStart, onTickStop
   }, [spinning, target]);
 
   return (
-    <canvas
-      ref={canvasRef}
-      style={{
-        display: 'block',
-        filter: 'drop-shadow(0 12px 22px rgba(0,0,0,.55))'
-      }}
-    />
+    <div style={{ width: size, height: size, position: 'relative', flexShrink: 0 }}>
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: 'absolute',
+          left: -PAD,
+          top: -PAD,
+          display: 'block',
+          filter: 'drop-shadow(0 12px 22px rgba(0,0,0,.55))'
+        }}
+      />
+    </div>
   );
 }
 

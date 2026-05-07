@@ -1,0 +1,179 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Texas Hold'em — Free Online Game | Limestone Games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Play Texas Hold'em free in your browser. 4-handed cash game with three AI personalities, equity-driven hint panel, and casino polish. Play money only, no downloads.">
+<meta name="keywords" content="texas hold em, free texas holdem, online poker, browser poker, casino, no limit holdem">
+<link rel="canonical" href="https://limestonegames.com/texas-holdem/">
+<meta property="og:title" content="Texas Hold'em — Limestone Games">
+<meta property="og:description" content="Play Texas Hold'em free in your browser. 4-handed cash game with equity-based hints. Play money only, no downloads.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://limestonegames.com/texas-holdem/">
+<meta property="og:image" content="https://limestonegames.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Texas Hold'em — Limestone Games">
+<meta name="twitter:description" content="Play Texas Hold'em free in your browser. 4-handed cash game with equity-based hints. Play money only, no downloads.">
+<meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+<link rel="manifest" href="../manifest.json">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Texas Hold'em","description":"Play Texas Hold'em free in your browser. 4-handed cash game with equity-based hints.","url":"https://limestonegames.com/texas-holdem/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Texas Hold'em"}]}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+<style>
+  :root{
+    --felt-1:#0e3a2e;
+    --felt-2:#0a2a21;
+    --felt-rail:#3a2418;
+    --brass:#c9a26a;
+    --brass-2:#e6c590;
+    --brass-deep:#8c6a3f;
+    --ivory:#f4ecd8;
+    --ivory-dim:#d9cfb8;
+    --red:#c0392b;
+    --ink:#0c1611;
+    --ink-2:#1a2820;
+    --green-chip:#2e7d4f;
+    --shadow-deep: 0 30px 60px -20px rgba(0,0,0,.6), 0 12px 24px -10px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  body{
+    background:
+      radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
+      radial-gradient(900px 600px at 50% 90%, rgba(0,0,0,.7), transparent 70%),
+      #0a0805;
+  }
+  #root{width:100%;height:100%}
+  #game-wrapper{width:1380px;height:860px;transform-origin:top center;margin:0 auto}
+  /* card flip */
+  .card-shell{perspective:900px}
+  .card-flip{
+    transform-style:preserve-3d;
+    transition: transform .55s cubic-bezier(.2,.8,.25,1);
+  }
+  .card-flip.face-down{transform:rotateY(180deg)}
+  .card-face,.card-back{
+    position:absolute;inset:0;backface-visibility:hidden;border-radius:10px;
+  }
+  .card-back{transform:rotateY(180deg)}
+  /* chip */
+  .chip-3d{
+    position:relative;border-radius:50%;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.25) inset,
+      0 -3px 0 rgba(0,0,0,.25) inset,
+      0 6px 12px rgba(0,0,0,.45),
+      0 2px 0 rgba(0,0,0,.35);
+  }
+  /* deal-in animation */
+  @keyframes dealIn{
+    0%{transform:translate(var(--from-x,300px), var(--from-y,-260px)) rotate(-12deg) scale(.85);opacity:0}
+    60%{opacity:1}
+    100%{transform:translate(0,0) rotate(0) scale(1);opacity:1}
+  }
+  .deal-in{animation:dealIn .55s cubic-bezier(.2,.7,.2,1) backwards}
+  @keyframes chipPlace{
+    0%{transform:translateY(-90px) scale(.7) rotate(-30deg);opacity:0}
+    70%{transform:translateY(4px) scale(1.02) rotate(2deg);opacity:1}
+    100%{transform:translateY(0) scale(1) rotate(0);opacity:1}
+  }
+  .chip-place{animation:chipPlace .35s cubic-bezier(.4,1.6,.3,1) backwards}
+  .chat-pop{opacity:1;transition:transform .3s cubic-bezier(.2,.9,.2,1)}
+  @keyframes glowPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(230,197,144,.0), inset 0 0 0 1px rgba(230,197,144,.4)}
+    50%{box-shadow:0 0 30px 4px rgba(230,197,144,.35), inset 0 0 0 1px rgba(230,197,144,.7)}
+  }
+  .glow-pulse{animation:glowPulse 1.6s ease-in-out infinite}
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(4px)}
+  }
+  .shake{animation:shake .5s ease-in-out}
+  @keyframes bannerIn{
+    0%{transform:translate(-50%,-20px) scale(.92);opacity:0;letter-spacing:.4em}
+    100%{transform:translate(-50%,0) scale(1);opacity:1;letter-spacing:.18em}
+  }
+  .banner-in{animation:bannerIn .55s cubic-bezier(.2,.8,.25,1) both}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:rgba(201,162,106,.3);border-radius:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  button{font-family:inherit}
+  .blink-cursor::after{content:'▍';margin-left:2px;animation:blink 1s steps(2) infinite;opacity:.6}
+  @keyframes blink{50%{opacity:0}}
+  @keyframes breathe{
+    0%,100%{transform:translateX(-50%) translateY(0)}
+    50%{transform:translateX(-50%) translateY(-2px)}
+  }
+  .breathe{animation:breathe 4s ease-in-out infinite}
+  /* range slider styling */
+  input[type=range]{
+    appearance:none;-webkit-appearance:none;
+    width:100%;height:4px;
+    background:rgba(230,197,144,.25);
+    border-radius:999px;outline:none;
+  }
+  input[type=range]::-webkit-slider-thumb{
+    -webkit-appearance:none;appearance:none;
+    width:14px;height:14px;border-radius:50%;
+    background:#e6c590;border:1px solid #8c6a3f;
+    box-shadow:0 1px 3px rgba(0,0,0,.4);
+    cursor:pointer;
+  }
+  input[type=range]::-moz-range-thumb{
+    width:14px;height:14px;border-radius:50%;
+    background:#e6c590;border:1px solid #8c6a3f;
+    box-shadow:0 1px 3px rgba(0,0,0,.4);
+    cursor:pointer;
+  }
+</style>
+</head>
+<body>
+<div id="game-wrapper">
+  <div id="root"></div>
+</div>
+
+<script>
+(function() {
+  var wrapper = document.getElementById('game-wrapper');
+  function resize() {
+    var W = 1380, H = 860;
+    var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
+    wrapper.style.transform = 'scale(' + s + ')';
+    wrapper.style.marginTop = Math.max(0, (window.innerHeight - H * s) / 2) + 'px';
+  }
+  window.addEventListener('resize', resize);
+  resize();
+})();
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="../casino/casino-bankroll.js?v=20260507a"></script>
+<script src="../casino/casino-player.js?v=20260507a"></script>
+<script src="th-deck.js?v=20260507a"></script>
+<script src="th-hand.js?v=20260507a"></script>
+<script src="th-equity.js?v=20260507a"></script>
+<script src="th-personality.js?v=20260507a"></script>
+<script src="th-ai.js?v=20260507a"></script>
+<script src="th-sfx.js?v=20260507a"></script>
+
+<script type="text/babel" src="tweaks-panel.jsx?v=20260507a"></script>
+<script type="text/babel" src="th-cards.jsx?v=20260507a"></script>
+<script type="text/babel" src="th-dealer.jsx?v=20260507a"></script>
+<script type="text/babel" src="th-table.jsx?v=20260507a"></script>
+<script type="text/babel" src="th-app.jsx?v=20260507a"></script>
+
+</body>
+</html>
