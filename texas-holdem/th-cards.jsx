@@ -13,8 +13,8 @@ const TH_SUIT_GLYPHS = { hearts: '♥', diamonds: '♦', clubs: '♣', spades: '
 
 function THCardCorner({ rank, suit, w, flip = false }) {
   const color = TH_SUITS[suit].color;
-  const fontSize = w < 60 ? (rank === '10' ? 11 : 13) : (rank === '10' ? 14 : 17);
-  const suitSize = w < 60 ? 10 : 13;
+  const fontSize = w < 60 ? (rank === '10' ? 13 : 15) : (rank === '10' ? 16 : 19);
+  const suitSize = w < 60 ? 12 : 15;
   return (
     <div style={{
       position: 'absolute',

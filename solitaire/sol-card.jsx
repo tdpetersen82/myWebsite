@@ -10,8 +10,8 @@ const SUITS = {
 
 function CardCorner({ rank, suit, flip = false, w = 84 }) {
   const color = SUITS[suit].color;
-  const rankFs = rank === '10' ? Math.round(w * 0.16) : Math.round(w * 0.20);
-  const suitFs = Math.round(w * 0.16);
+  const rankFs = rank === '10' ? Math.round(w * 0.19) : Math.round(w * 0.23);
+  const suitFs = Math.round(w * 0.19);
   return (
     <div style={{
       position: 'absolute',

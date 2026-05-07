@@ -23,12 +23,12 @@ function CardCorner({ rank, suit, flip = false }) {
       lineHeight: 1, color
     }}>
       <span style={{
-        fontSize: rank === '10' ? 14 : 17,
+        fontSize: rank === '10' ? 16 : 19,
         fontWeight: 700,
         fontFamily: "'Playfair Display', serif",
         letterSpacing: '-.02em'
       }}>{rank}</span>
-      <span style={{ fontSize: 13, marginTop: 1 }}>{suit}</span>
+      <span style={{ fontSize: 15, marginTop: 1 }}>{suit}</span>
     </div>
   );
 }
