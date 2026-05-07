@@ -246,6 +246,9 @@
                     return;
                 }
             }
+            misses++;
+            msEl.textContent = misses + '/5';
+            if (misses >= 5) gameOver();
         }
 
         canvas.addEventListener('click', (e) => {
