@@ -148,9 +148,9 @@
         </div>
         <h1>Memory Match</h1>
         <div class="level-pick">
-            <button data-size="4" class="active">Easy · 4</button>
-            <button data-size="12">Medium · 12</button>
-            <button data-size="20">Hard · 20</button>
+            <button data-size="12" class="active">Easy · 12</button>
+            <button data-size="20">Medium · 20</button>
+            <button data-size="80">Hard · 80</button>
         </div>
         <div class="stats">
             <div><span class="l">Moves</span><span class="v" id="moves">0</span></div>
@@ -173,14 +173,14 @@
     </div>
 
     <script>
-        const KEY_BEST = 'kids-memory-match-best-hard';
-        const ICONS = ['🐶','🐱','🐭','🦊','🐻','🐼','🦁','🐸','🐵','🐔','🦄','🐢','🐝','🐠','🦋','🌸','🍎','🍌','🍓','⭐','☀️','🌈','🚂','🚀'];
+        const KEY_BEST = 'kids-memory-match-best-hard-80';
+        const ICONS = ['🐶','🐱','🐭','🦊','🐻','🐼','🦁','🐸','🐵','🐔','🦄','🐢','🐝','🐠','🦋','🐯','🐰','🐨','🐮','🐷','🐧','🐙','🐬','🦒','🌸','🌻','🌷','🍀','🍎','🍌','🍓','🍇','🍉','🍊','🍑','⭐','☀️','🌈','🌙','❄️','🚂','🚀','🚗','✈️','⛵','🍕','🍩','🎂','🎈','🎁'];
 
         let cards = [];
         let flipped = [];
         let moves = 0;
         let found = 0;
-        let size = 4;
+        let size = 12;
         let lockBoard = false;
 
         const boardEl = document.getElementById('board');
@@ -221,9 +221,9 @@
             const deck = shuffle([...chosen, ...chosen]);
             cards = deck.map((icon, idx) => ({ idx, icon, matched: false, flipped: false }));
 
-            const cols = size === 4 ? 2 : (size === 12 ? 4 : 5);
+            const cols = size === 12 ? 4 : (size === 20 ? 5 : 10);
             boardEl.style.setProperty('--cols', cols);
-            const cell = size === 4 ? 130 : (size === 12 ? 110 : 92);
+            const cell = size === 12 ? 110 : (size === 20 ? 92 : 60);
             boardEl.style.setProperty('--cell', cell + 'px');
 
             cards.forEach(c => {
@@ -279,7 +279,7 @@
 
         function win() {
             let isNewBest = false;
-            if (size === 20) {
+            if (size === 80) {
                 const cur = parseInt(localStorage.getItem(KEY_BEST) || '0', 10);
                 if (cur === 0 || moves < cur) {
                     localStorage.setItem(KEY_BEST, String(moves));
