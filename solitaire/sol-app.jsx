@@ -921,9 +921,9 @@ function App() {
 
       {showNameModal && (
         <NameModal
-          initial={tweaks.playerName}
+          initial={tweaks.playerName === 'Alex' ? '' : tweaks.playerName}
           onSave={savePlayerName}
-          onCancel={tweaks.playerName ? () => setShowNameModal(false) : null}
+          onCancel={window.CASINO_PLAYER.read() ? () => setShowNameModal(false) : null}
         />
       )}
 

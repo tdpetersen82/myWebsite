@@ -136,8 +136,25 @@ const __TWEAKS_STYLE = `
 // ── useTweaks ───────────────────────────────────────────────────────────────
 // Single source of truth for tweak values. setTweak persists via the host
 // (__edit_mode_set_keys → host rewrites the EDITMODE block on disk).
+//
+// Player-scoped fields (playerName, showHints, soundOn) are also mirrored to
+// window.CASINO_PLAYER so they persist across games and tabs. Fields not in
+// SHARED_TWEAKS stay local to this game (e.g. dealerName, feltColor, drawMode).
+const SHARED_TWEAKS = { showHints: 'showHints', soundOn: 'soundOn' };
+
 function useTweaks(defaults) {
-  const [values, setValues] = React.useState(defaults);
+  const [values, setValues] = React.useState(() => {
+    const initial = { ...defaults };
+    const player = window.CASINO_PLAYER;
+    if (player) {
+      for (const [k, pk] of Object.entries(SHARED_TWEAKS)) {
+        if (!(k in defaults)) continue;
+        const v = player.get(pk);
+        if (v !== undefined) initial[k] = v;
+      }
+    }
+    return initial;
+  });
   // Accepts either setTweak('key', value) or setTweak({ key: value, ... }) so a
   // useState-style call doesn't write a "[object Object]" key into the persisted
   // JSON block.
@@ -146,7 +163,37 @@ function useTweaks(defaults) {
       ? keyOrEdits : { [keyOrEdits]: val };
     setValues((prev) => ({ ...prev, ...edits }));
     window.parent.postMessage({ type: '__edit_mode_set_keys', edits }, '*');
+
+    const player = window.CASINO_PLAYER;
+    if (player) {
+      if ('playerName' in edits) player.write(edits.playerName);
+      for (const [k, pk] of Object.entries(SHARED_TWEAKS)) {
+        if (k in edits) player.set(pk, edits[k]);
+      }
+    }
   }, []);
+
+  // Sync from other tabs/games when the shared profile changes.
+  React.useEffect(() => {
+    const player = window.CASINO_PLAYER;
+    if (!player) return;
+    function onStorage(e) {
+      if (e.key !== player.KEY) return;
+      const updates = {};
+      const name = player.read();
+      if (name) updates.playerName = name;
+      for (const [k, pk] of Object.entries(SHARED_TWEAKS)) {
+        const v = player.get(pk);
+        if (v !== undefined) updates[k] = v;
+      }
+      if (Object.keys(updates).length > 0) {
+        setValues((prev) => ({ ...prev, ...updates }));
+      }
+    }
+    window.addEventListener('storage', onStorage);
+    return () => window.removeEventListener('storage', onStorage);
+  }, []);
+
   return [values, setTweak];
 }
 
