@@ -13,6 +13,8 @@ class WaveManager {
         this.spawnInterval = 0;
         this.bomberTimer = 0;
         this.satelliteTimer = 0;
+        this.bombersRemaining = 0;
+        this.satellitesRemaining = 0;
         this.waveAnnouncementTimer = 0;
         this.intermissionTimer = 0;
         this.bonusWaveTimer = 0;
@@ -43,6 +45,19 @@ class WaveManager {
 
         this.bomberTimer = this.wave >= 5 ? Helpers.randomRange(5000, 10000) : Infinity;
         this.satelliteTimer = this.wave >= 8 ? Helpers.randomRange(8000, 15000) : Infinity;
+
+        if (this.wave >= 5) {
+            const bossBonus = this.isBossWave() ? 1 : 0;
+            this.bombersRemaining = Math.min(2 + Math.floor((this.wave - 5) / 3), 5) + bossBonus;
+        } else {
+            this.bombersRemaining = 0;
+        }
+        if (this.wave >= 8) {
+            const bossBonus = this.isBossWave() ? 1 : 0;
+            this.satellitesRemaining = Math.min(1 + Math.floor((this.wave - 8) / 4), 3) + bossBonus;
+        } else {
+            this.satellitesRemaining = 0;
+        }
     }
 
     startBonusWave() {
@@ -52,6 +67,8 @@ class WaveManager {
         this.enemyMissilesTotal = 30;
         this.spawnInterval = 300;
         this.spawnTimer = 200;
+        this.bombersRemaining = 0;
+        this.satellitesRemaining = 0;
     }
 
     isWaveComplete() {
@@ -129,8 +146,10 @@ class WaveManager {
 
     shouldSpawnBomber() {
         if (this.state !== 'spawning' || this.wave < 5) return false;
+        if (this.bombersRemaining <= 0) return false;
         if (this.bomberTimer <= 0) {
             this.bomberTimer = Helpers.randomRange(8000, 15000);
+            this.bombersRemaining--;
             return true;
         }
         return false;
@@ -138,8 +157,10 @@ class WaveManager {
 
     shouldSpawnSatellite() {
         if (this.state !== 'spawning' || this.wave < 8) return false;
+        if (this.satellitesRemaining <= 0) return false;
         if (this.satelliteTimer <= 0) {
             this.satelliteTimer = Helpers.randomRange(15000, 25000);
+            this.satellitesRemaining--;
             return true;
         }
         return false;
