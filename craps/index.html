@@ -1,201 +1,175 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Craps — Free Online Game | Limestone Games</title>
-    <meta name="description" content="Play Craps free in your browser. Roll the dice, place your bets, and try your luck at the casino table! No downloads, no installs.">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Craps","description":"Play Craps free in your browser. Roll the dice, place your bets, and try your luck at the casino table! No downloads, no installs.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="css/styles.css">
-    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
-    <link rel="canonical" href="https://limestonegames.com/craps/">
+<meta charset="UTF-8" />
+<title>Craps — Free Online Game | Limestone Games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Play Craps free in your browser. Pass line, come, place, field, odds — roll the bones with strategy hints. Play money only, no downloads.">
+<meta name="keywords" content="craps, free craps, online craps, browser craps, casino, dice">
+<link rel="canonical" href="https://limestonegames.com/craps/">
+<meta property="og:title" content="Craps — Limestone Games">
+<meta property="og:description" content="Play Craps free in your browser. Pass line, come, place, field, odds — roll the bones with strategy hints. Play money only, no downloads.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://limestonegames.com/craps/">
+<meta property="og:image" content="https://limestonegames.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Craps — Limestone Games">
+<meta name="twitter:description" content="Play Craps free in your browser. Pass line, come, place, field, odds — roll the bones with strategy hints. Play money only, no downloads.">
+<meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+<link rel="manifest" href="../manifest.json">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Craps","description":"Play Craps free in your browser. Pass line, come, place, field, odds — roll the bones with strategy hints.","url":"https://limestonegames.com/craps/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Craps"}]}</script>
-    <meta property="og:title" content="Craps — Free Online Game | Limestone Games">
-    <meta property="og:description" content="Play Craps free in your browser. Roll the dice, place your bets, and try your luck at the casino table! No downloads, no installs.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://limestonegames.com/craps/">
-    <meta property="og:image" content="https://limestonegames.com/og-image.png">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Craps — Free Online Game | Limestone Games">
-    <meta name="twitter:description" content="Play Craps free in your browser. Roll the dice, place your bets, and try your luck at the casino table! No downloads, no installs.">
-    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
-    <link rel="manifest" href="../manifest.json">
-    <!-- Google Analytics — replace G-DP6FGVETMV with your tracking ID -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
-    <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+<style>
+  :root{
+    --felt-1:#0e3a2e;
+    --felt-2:#0a2a21;
+    --felt-rail:#3a2418;
+    --brass:#c9a26a;
+    --brass-2:#e6c590;
+    --brass-deep:#8c6a3f;
+    --ivory:#f4ecd8;
+    --ivory-dim:#d9cfb8;
+    --red:#c0392b;
+    --ink:#0c1611;
+    --ink-2:#1a2820;
+    --green-chip:#2e7d4f;
+    --shadow-deep: 0 30px 60px -20px rgba(0,0,0,.6), 0 12px 24px -10px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  body{
+    background:
+      radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
+      radial-gradient(900px 600px at 50% 90%, rgba(0,0,0,.7), transparent 70%),
+      #0a0805;
+  }
+  #root{width:100%;height:100%}
+  #game-wrapper{width:1380px;height:860px;transform-origin:top center;margin:0 auto}
+
+  /* chip 3D shadow */
+  .chip-3d{
+    position:relative;border-radius:50%;
+    box-shadow:
+      0 1px 0 rgba(255,255,255,.25) inset,
+      0 -3px 0 rgba(0,0,0,.25) inset,
+      0 6px 12px rgba(0,0,0,.45),
+      0 2px 0 rgba(0,0,0,.35);
+  }
+
+  /* chip place — used by ChipBadge entrance */
+  @keyframes chipPlace{
+    0%{transform:translateY(-90px) scale(.7) rotate(-30deg);opacity:0}
+    70%{transform:translateY(4px) scale(1.02) rotate(2deg);opacity:1}
+    100%{transform:translateY(0) scale(1) rotate(0);opacity:1}
+  }
+  .chip-place{animation:chipPlace .35s cubic-bezier(.4,1.6,.3,1) backwards}
+
+  /* dealer message bubble fade */
+  .chat-pop{opacity:1;transition:transform .3s cubic-bezier(.2,.9,.2,1)}
+
+  /* glow pulse */
+  @keyframes glowPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(230,197,144,.0), inset 0 0 0 1px rgba(230,197,144,.4)}
+    50%{box-shadow:0 0 30px 4px rgba(230,197,144,.35), inset 0 0 0 1px rgba(230,197,144,.7)}
+  }
+  .glow-pulse{animation:glowPulse 1.6s ease-in-out infinite}
+
+  /* shake (illegal-bet flash) */
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(4px)}
+  }
+  .shake{animation:shake .5s ease-in-out}
+
+  @keyframes illegalFlash{
+    0%,100%{box-shadow:inset 0 0 0 1.5px rgba(192,57,43,.0)}
+    50%{box-shadow:inset 0 0 0 2px rgba(192,57,43,.85), 0 0 18px rgba(192,57,43,.55)}
+  }
+  .zone-illegal{animation:shake .35s ease-in-out, illegalFlash .35s ease-in-out}
+
+  /* result banner entrance */
+  @keyframes bannerIn{
+    0%{transform:translate(-50%,-20px) scale(.92);opacity:0;letter-spacing:.4em}
+    100%{transform:translate(-50%,0) scale(1);opacity:1;letter-spacing:.18em}
+  }
+  .banner-in{animation:bannerIn .55s cubic-bezier(.2,.8,.25,1) both}
+
+  /* breathing idle */
+  @keyframes breathe{
+    0%,100%{transform:translateX(-50%) translateY(0)}
+    50%{transform:translateX(-50%) translateY(-2px)}
+  }
+  .breathe{animation:breathe 4s ease-in-out infinite}
+
+  /* dice */
+  @keyframes diceShake{
+    0%,100%{transform:translateY(0) rotate(0deg)}
+    20%{transform:translateY(-3px) rotate(-12deg)}
+    40%{transform:translateY(2px) rotate(8deg)}
+    60%{transform:translateY(-2px) rotate(-5deg)}
+    80%{transform:translateY(3px) rotate(10deg)}
+  }
+  .die-rolling{animation:diceShake .2s ease-in-out infinite}
+
+  @keyframes diceLand{
+    0%{transform:translateY(-22px) rotate(8deg) scale(1.05)}
+    60%{transform:translateY(2px) rotate(-2deg) scale(.98)}
+    100%{transform:translateY(0) rotate(0) scale(1)}
+  }
+  .die-landed{animation:diceLand .35s cubic-bezier(.3,1.4,.3,1) backwards}
+
+  /* scrollbar */
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:rgba(201,162,106,.3);border-radius:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  button{font-family:inherit}
+  .blink-cursor::after{content:'▍';margin-left:2px;animation:blink 1s steps(2) infinite;opacity:.6}
+  @keyframes blink{50%{opacity:0}}
+</style>
 </head>
 <body>
-    <div class="container">
-        <h1>&#x1F3B2; Craps</h1>
-        <div id="game-wrapper">
+<div id="game-wrapper">
+  <div id="root"></div>
+</div>
 
-            <!-- Header -->
-            <div class="craps-header">
-                <h1>&#x1F3B2; Craps</h1>
-                <div class="craps-bankroll">Bankroll: <span id="bankroll-value">$1,000</span></div>
-                <button class="btn-hints" id="btn-hints">Hints: OFF</button>
-            </div>
+<script>
+(function() {
+  var wrapper = document.getElementById('game-wrapper');
+  function resize() {
+    var W = 1380, H = 860;
+    var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
+    wrapper.style.transform = 'scale(' + s + ')';
+    wrapper.style.marginTop = Math.max(0, (window.innerHeight - H * s) / 2) + 'px';
+  }
+  window.addEventListener('resize', resize);
+  resize();
+})();
+</script>
 
-            <!-- Table -->
-            <div class="craps-table" id="craps-table">
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
-                <!-- Point Numbers Row -->
-                <div class="point-row">
-                    <div class="point-cell" id="point-4" data-point="4">
-                        <div class="point-number">4</div>
-                        <div class="place-label">PLACE</div>
-                        <div class="bet-chip-display" id="place4-bet" style="display:none"></div>
-                    </div>
-                    <div class="point-cell" id="point-5" data-point="5">
-                        <div class="point-number">5</div>
-                        <div class="place-label">PLACE</div>
-                        <div class="bet-chip-display" id="place5-bet" style="display:none"></div>
-                    </div>
-                    <div class="point-cell clickable" id="zone-place-6" data-point="6">
-                        <div class="point-number">6</div>
-                        <div class="place-label">PLACE</div>
-                        <div class="bet-chip-display" id="place6-bet" style="display:none"></div>
-                    </div>
-                    <div class="point-cell clickable" id="zone-place-8" data-point="8">
-                        <div class="point-number">8</div>
-                        <div class="place-label">PLACE</div>
-                        <div class="bet-chip-display" id="place8-bet" style="display:none"></div>
-                    </div>
-                    <div class="point-cell" id="point-9" data-point="9">
-                        <div class="point-number">9</div>
-                        <div class="place-label">PLACE</div>
-                        <div class="bet-chip-display" id="place9-bet" style="display:none"></div>
-                    </div>
-                    <div class="point-cell" id="point-10" data-point="10">
-                        <div class="point-number">10</div>
-                        <div class="place-label">PLACE</div>
-                        <div class="bet-chip-display" id="place10-bet" style="display:none"></div>
-                    </div>
-                    <div class="puck-home" id="puck-home">
-                        <div class="puck puck-off" id="puck">OFF</div>
-                    </div>
-                </div>
+<script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
+<script src="../casino/casino-bankroll.js?v=20260506a"></script>
+<script src="cr-rules.js?v=20260506a"></script>
+<script src="cr-strategy.js?v=20260506a"></script>
+<script src="cr-sfx.js?v=20260506a"></script>
 
-                <!-- Field Zone -->
-                <div class="bet-zone field-zone clickable" id="zone-field">
-                    <div class="zone-label">FIELD</div>
-                    <div class="zone-numbers">2 &bull; 3 &bull; 4 &bull; 9 &bull; 10 &bull; 11 &bull; 12</div>
-                    <div class="zone-detail">2 pays 2:1 &bull; 12 pays 3:1</div>
-                    <div class="bet-chip-display" id="field-bet" style="display:none"></div>
-                </div>
+<script type="text/babel" src="tweaks-panel.jsx?v=20260506a"></script>
+<script type="text/babel" src="cr-shooter.jsx?v=20260506a"></script>
+<script type="text/babel" src="cr-table.jsx?v=20260506a"></script>
+<script type="text/babel" src="cr-app.jsx?v=20260506a"></script>
 
-                <!-- Dice Area -->
-                <div class="dice-area" id="dice-area">
-                    <div class="die">
-                        <div class="die-dot" style="left:50%;top:50%"></div>
-                    </div>
-                    <div class="die">
-                        <div class="die-dot" style="left:50%;top:50%"></div>
-                    </div>
-                </div>
-
-                <!-- Message -->
-                <div class="message-area" id="message">Come-Out Roll &#8212; Place your bets!</div>
-
-                <!-- Result Banner -->
-                <div class="result-banner" id="result-banner"></div>
-
-                <!-- Hint Panel -->
-                <div class="hint-panel" id="hint-panel">
-                    <div class="hint-header">
-                        <span class="hint-action" id="hint-action"></span>
-                        <span class="hint-risk" id="hint-risk"></span>
-                    </div>
-                    <div class="hint-explanation" id="hint-explanation"></div>
-                    <div class="hint-detail-toggle" id="hint-detail-toggle">Learn More &#9656;</div>
-                    <div class="hint-detail" id="hint-detail"></div>
-                </div>
-
-                <!-- Odds Zone (hidden until point set) -->
-                <div class="bet-zone odds-zone clickable" id="zone-odds" style="display:none">
-                    <div class="zone-label">ODDS</div>
-                    <div class="zone-detail">0% house edge &bull; Up to 3x</div>
-                    <div class="bet-chip-display" id="odds-bet" style="display:none"></div>
-                </div>
-
-                <!-- Don't Pass Zone -->
-                <div class="bet-zone dontpass-zone clickable" id="zone-dontpass">
-                    <div class="zone-label">DON'T PASS</div>
-                    <div class="zone-detail">Bar 12</div>
-                    <div class="bet-chip-display" id="dontpass-bet" style="display:none"></div>
-                </div>
-
-                <!-- Pass Line Zone -->
-                <div class="bet-zone pass-zone clickable" id="zone-pass">
-                    <div class="zone-label">PASS LINE</div>
-                    <div class="bet-chip-display" id="pass-bet" style="display:none"></div>
-                </div>
-
-                <!-- Controls -->
-                <div class="controls-bar">
-                    <div class="chip-rack" id="chip-rack">
-                        <div class="chip chip-selected" data-value="5" style="background: #e74c3c; border-color: #c0392b;">$5</div>
-                        <div class="chip" data-value="25" style="background: #27ae60; border-color: #1e8449;">$25</div>
-                        <div class="chip" data-value="100" style="background: #2980b9; border-color: #1f6fa5;">$100</div>
-                        <div class="chip" data-value="500" style="background: #8e44ad; border-color: #6c3483;">$500</div>
-                    </div>
-                    <div class="controls-right">
-                        <span class="selected-label">Chip: <span id="selected-chip">$5</span></span>
-                        <button class="btn-clear-bets" id="btn-clear-bets">Clear</button>
-                        <button class="btn-roll" id="btn-roll" disabled>Roll Dice</button>
-                    </div>
-                </div>
-
-                <!-- Stats -->
-                <div class="stats-bar" id="stats-bar">
-                    <span>Rolls: 0</span>
-                    <span>Pass Wins: 0</span>
-                    <span>Don't Pass Wins: 0</span>
-                    <span>Best: $1,000</span>
-                </div>
-            </div>
-        </div>
-    </div>
-
-    <!-- JS modules in dependency order -->
-    <script src="js/config.js"></script>
-    <script src="js/dice.js"></script>
-    <script src="js/strategy.js"></script>
-    <script src="js/audio.js"></script>
-    <script src="js/animations.js"></script>
-    <script src="js/ui.js"></script>
-    <script src="js/game.js"></script>
-
-    <!-- Auto-scaling -->
-    <script>
-    (function() {
-        var wrapper = document.getElementById('game-wrapper');
-        function resize() {
-            var W = 960, H = 640;
-            var s = Math.min(window.innerWidth / W, (window.innerHeight * 0.85) / H, 1);
-            wrapper.style.transform = 'scale(' + s + ')';
-            wrapper.style.transformOrigin = 'top center';
-            wrapper.style.marginTop = Math.max(0, (window.innerHeight * 0.85 - H * s) / 2) + 'px';
-        }
-        window.addEventListener('resize', resize);
-        resize();
-    })();
-    </script>
-
-    <script src="../nav.js"></script>
-    <!-- Ad Slot: Game Page Banner -->
-    <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-             data-ad-slot="XXXXXXXXXX"
-             data-ad-format="horizontal"
-             data-full-width-responsive="true"></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    </div>
-    <script src="../share.js"></script>
 </body>
 </html>
