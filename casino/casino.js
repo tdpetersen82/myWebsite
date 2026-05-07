@@ -14,7 +14,7 @@
 
   function update() {
     const bankroll = window.CASINO_BANKROLL.read();
-    const name = (localStorage.getItem('bjPlayerName') || '').trim();
+    const name = window.CASINO_PLAYER.read();
 
     // Bankroll amount
     const amtEl = document.getElementById('cas-bank-amount');
@@ -75,11 +75,15 @@
       console.warn('[casino] casino-bankroll.js not loaded');
       return;
     }
+    if (!window.CASINO_PLAYER) {
+      console.warn('[casino] casino-player.js not loaded');
+      return;
+    }
     update();
     bindReload();
     // Refresh whenever another tab updates the bankroll.
     window.addEventListener('storage', function (e) {
-      if (e.key === window.CASINO_BANKROLL.KEY || e.key === 'bjPlayerName' || e.key === 'rouletteStats' || e.key === 'videoPokerStats') {
+      if (e.key === window.CASINO_BANKROLL.KEY || e.key === window.CASINO_PLAYER.KEY || e.key === 'rouletteStats' || e.key === 'videoPokerStats') {
         update();
       }
     });

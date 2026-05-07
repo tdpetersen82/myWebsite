@@ -65,8 +65,8 @@ function App() {
       }
     } catch (e) {}
     // Player name persistence
-    const storedName = localStorage.getItem('crPlayerName');
-    if (storedName && storedName.trim()) {
+    const storedName = window.CASINO_PLAYER.read();
+    if (storedName) {
       if (storedName !== tweaks.playerName) setTweak('playerName', storedName);
     } else {
       setShowNameModal(true);
@@ -86,9 +86,8 @@ function App() {
   }, [tweaks.showHints]);
 
   function savePlayerName(name) {
-    const trimmed = (name || '').trim().slice(0, 20);
+    const trimmed = window.CASINO_PLAYER.write(name);
     if (!trimmed) return;
-    localStorage.setItem('crPlayerName', trimmed);
     setTweak('playerName', trimmed);
     setShowNameModal(false);
   }
@@ -710,7 +709,7 @@ function App() {
         <NameModal
           initialName={tweaks.playerName === 'Alex' ? '' : tweaks.playerName}
           onSave={savePlayerName}
-          onCancel={localStorage.getItem('crPlayerName') ? () => setShowNameModal(false) : null}
+          onCancel={window.CASINO_PLAYER.read() ? () => setShowNameModal(false) : null}
         />
       )}
 

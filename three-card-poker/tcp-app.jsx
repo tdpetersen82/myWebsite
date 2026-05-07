@@ -12,7 +12,6 @@ const TCP_TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
 
 const TCP_STATS_KEY = 'threeCardPokerStats';
 const TCP_TWEAKS_KEY = 'threeCardPokerTweaks';
-const TCP_NAME_KEY = 'tcpPlayerName';
 const TCP_MIN_BET = 5;
 const TCP_MAX_BET = 500;
 
@@ -61,17 +60,16 @@ function App() {
 
   // Player name persistence (matches BJ pattern)
   useEffect(() => {
-    const stored = localStorage.getItem(TCP_NAME_KEY);
-    if (stored && stored.trim()) {
+    const stored = window.CASINO_PLAYER.read();
+    if (stored) {
       if (stored !== tweaks.playerName) setTweak('playerName', stored);
     } else {
       setShowNameModal(true);
     }
   }, []);
   function savePlayerName(name) {
-    const trimmed = (name || '').trim().slice(0, 20);
+    const trimmed = window.CASINO_PLAYER.write(name);
     if (!trimmed) return;
-    localStorage.setItem(TCP_NAME_KEY, trimmed);
     setTweak('playerName', trimmed);
     setShowNameModal(false);
   }
@@ -607,7 +605,7 @@ function App() {
         <NameModal
           initialName={tweaks.playerName === 'Alex' ? '' : tweaks.playerName}
           onSave={savePlayerName}
-          onCancel={localStorage.getItem(TCP_NAME_KEY) ? () => setShowNameModal(false) : null}
+          onCancel={window.CASINO_PLAYER.read() ? () => setShowNameModal(false) : null}
         />
       )}
 
