@@ -27,17 +27,28 @@
     // Cross-game stats
     const rl = readJson('rouletteStats') || {};
     const vp = readJson('videoPokerStats') || {};
+    const th = readJson('texasHoldemStats') || {};
     const rlStats = rl.stats || {};
     const vpStats = vp.stats || {};
 
-    const totalHands = (rlStats.spinsPlayed || 0) + (vpStats.handsPlayed || 0);
-    const totalWins  = (rlStats.spinsWon   || 0) + (vpStats.handsWon   || 0);
+    const totalHands = (rlStats.spinsPlayed || 0) + (vpStats.handsPlayed || 0) + (th.handsPlayed || 0);
+    const totalWins  = (rlStats.spinsWon   || 0) + (vpStats.handsWon   || 0) + (th.handsWon || 0);
     const winRate    = totalHands > 0 ? Math.round((totalWins / totalHands) * 100) : null;
 
-    // "Biggest pot" — best single roulette win + best video-poker bankroll above $1000
+    // "Biggest pot" — best single roulette win, best video-poker bankroll above
+    // $1000, or the biggest hold'em pot a player has won.
     const biggestRoulette = rlStats.biggestWin || 0;
     const biggestVP       = Math.max(0, (vpStats.biggestBankroll || 1000) - 1000);
-    const biggestPot      = Math.max(biggestRoulette, biggestVP);
+    const biggestTH       = th.biggestWin || 0;
+    const biggestPot      = Math.max(biggestRoulette, biggestVP, biggestTH);
+
+    // Per-game tile stats for hold'em.
+    const thHandsEl = document.getElementById('cas-th-hands');
+    if (thHandsEl) thHandsEl.textContent = (th.handsPlayed || 0) > 0
+      ? `${th.handsPlayed.toLocaleString()} hand${th.handsPlayed === 1 ? '' : 's'}`
+      : 'New table';
+    const thBestEl = document.getElementById('cas-th-best');
+    if (thBestEl) thBestEl.textContent = (th.biggestWin || 0) > 0 ? `+$${th.biggestWin.toLocaleString()}` : '—';
 
     setStat('cas-stat-biggest', biggestPot > 0 ? fmt(biggestPot) : '—', biggestPot > 0 ? 'Single best win' : 'No wins yet');
     setStat('cas-stat-hands',   totalHands.toLocaleString(),
@@ -83,7 +94,7 @@
     bindReload();
     // Refresh whenever another tab updates the bankroll.
     window.addEventListener('storage', function (e) {
-      if (e.key === window.CASINO_BANKROLL.KEY || e.key === window.CASINO_PLAYER.KEY || e.key === 'rouletteStats' || e.key === 'videoPokerStats') {
+      if (e.key === window.CASINO_BANKROLL.KEY || e.key === window.CASINO_PLAYER.KEY || e.key === 'rouletteStats' || e.key === 'videoPokerStats' || e.key === 'texasHoldemStats') {
         update();
       }
     });
