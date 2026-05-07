@@ -1,0 +1,136 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<title>Solitaire — Free Online Klondike | Limestone Games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Play Klondike Solitaire free in your browser. Beat the deck with a casino host watching over your table — Draw 1 or Draw 3, undo, hints, Vegas scoring.">
+<meta name="keywords" content="solitaire, klondike, free solitaire, online solitaire, browser solitaire, casino solitaire, vegas solitaire">
+<link rel="canonical" href="https://limestonegames.com/solitaire/">
+<meta property="og:title" content="Solitaire — Limestone Games">
+<meta property="og:description" content="Play Klondike Solitaire free in your browser. A casino host deals you in — Draw 1 or 3, hints, Vegas scoring, no downloads.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://limestonegames.com/solitaire/">
+<meta property="og:image" content="https://limestonegames.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Solitaire — Limestone Games">
+<meta name="twitter:description" content="Play Klondike Solitaire free in your browser. Vegas scoring, hints, undo. No downloads.">
+<meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+<link rel="manifest" href="../manifest.json">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Solitaire","description":"Klondike Solitaire — beat the deck. A casino host deals you in. Draw 1 or 3, undo, hints, Vegas scoring.","url":"https://limestonegames.com/solitaire/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Solitaire"}]}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+<style>
+  :root{
+    --felt-1:#0e3a2e;
+    --felt-2:#0a2a21;
+    --felt-rail:#3a2418;
+    --brass:#c9a26a;
+    --brass-2:#e6c590;
+    --brass-deep:#8c6a3f;
+    --ivory:#f4ecd8;
+    --ivory-dim:#d9cfb8;
+    --red:#c0392b;
+    --ink:#0c1611;
+    --ink-2:#1a2820;
+    --green-chip:#2e7d4f;
+    --shadow-deep: 0 30px 60px -20px rgba(0,0,0,.6), 0 12px 24px -10px rgba(0,0,0,.5);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  body{
+    background:
+      radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
+      radial-gradient(900px 600px at 50% 90%, rgba(0,0,0,.7), transparent 70%),
+      #0a0805;
+  }
+  #root{width:100%;height:100%}
+  #game-wrapper{width:1380px;height:860px;transform-origin:top center;margin:0 auto}
+  /* card flip */
+  .card-shell{perspective:900px}
+  .card-flip{
+    transform-style:preserve-3d;
+    transition: transform .55s cubic-bezier(.2,.8,.25,1);
+  }
+  .card-flip.face-down{transform:rotateY(180deg)}
+  .card-face,.card-back{
+    position:absolute;inset:0;backface-visibility:hidden;border-radius:10px;
+  }
+  .card-back{transform:rotateY(180deg)}
+  /* deal-in animation */
+  @keyframes dealIn{
+    0%{transform:translate(var(--from-x,300px), var(--from-y,-260px)) rotate(-12deg) scale(.85);opacity:0}
+    60%{opacity:1}
+    100%{transform:translate(0,0) rotate(0) scale(1);opacity:1}
+  }
+  .deal-in{animation:dealIn .55s cubic-bezier(.2,.7,.2,1) backwards}
+  @keyframes glowPulse{
+    0%,100%{box-shadow:0 0 0 0 rgba(230,197,144,.0), inset 0 0 0 1px rgba(230,197,144,.4)}
+    50%{box-shadow:0 0 30px 4px rgba(230,197,144,.45), inset 0 0 0 1px rgba(230,197,144,.7)}
+  }
+  .glow-pulse{animation:glowPulse 1.6s ease-in-out infinite}
+  @keyframes shake{
+    0%,100%{transform:translateX(0)}
+    20%{transform:translateX(-6px)}
+    40%{transform:translateX(6px)}
+    60%{transform:translateX(-4px)}
+    80%{transform:translateX(4px)}
+  }
+  .shake{animation:shake .5s ease-in-out}
+  @keyframes bannerIn{
+    0%{transform:translateY(-20px) scale(.92);opacity:0;letter-spacing:.4em}
+    100%{transform:translateY(0) scale(1);opacity:1;letter-spacing:.18em}
+  }
+  .banner-in{animation:bannerIn .55s cubic-bezier(.2,.8,.25,1) both}
+  ::-webkit-scrollbar{width:8px;height:8px}
+  ::-webkit-scrollbar-thumb{background:rgba(201,162,106,.3);border-radius:4px}
+  ::-webkit-scrollbar-track{background:transparent}
+  button{font-family:inherit}
+  .blink-cursor::after{content:'▍';margin-left:2px;animation:blink 1s steps(2) infinite;opacity:.6}
+  @keyframes blink{50%{opacity:0}}
+  @keyframes breathe{
+    0%,100%{transform:translateX(-50%) translateY(0)}
+    50%{transform:translateX(-50%) translateY(-2px)}
+  }
+  .breathe{animation:breathe 4s ease-in-out infinite}
+</style>
+</head>
+<body>
+<div id="game-wrapper">
+  <div id="root"></div>
+</div>
+
+<script>
+(function() {
+  var wrapper = document.getElementById('game-wrapper');
+  function resize() {
+    var W = 1380, H = 860;
+    var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
+    wrapper.style.transform = 'scale(' + s + ')';
+    wrapper.style.marginTop = Math.max(0, (window.innerHeight - H * s) / 2) + 'px';
+  }
+  window.addEventListener('resize', resize);
+  resize();
+})();
+</script>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script src="sol-sfx.js?v=20260506a"></script>
+
+<script type="text/babel" src="tweaks-panel.jsx?v=20260506a"></script>
+<script type="text/babel" src="sol-card.jsx?v=20260506a"></script>
+<script type="text/babel" src="sol-dealer.jsx?v=20260506a"></script>
+<script type="text/babel" src="sol-table.jsx?v=20260506a"></script>
+<script type="text/babel" src="sol-app.jsx?v=20260506a"></script>
+
+</body>
+</html>
