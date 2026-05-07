@@ -72,18 +72,10 @@ function TCPCardBack() {
       display: 'flex', alignItems: 'center', justifyContent: 'center',
       overflow: 'hidden'
     }}>
-      <div style={{
-        width: '72%', height: '82%',
-        border: '1.5px solid rgba(201,162,106,.7)',
-        borderRadius: 6,
-        display: 'flex', alignItems: 'center', justifyContent: 'center',
-        background: 'radial-gradient(circle at 50% 50%, rgba(201,162,106,.15), transparent 70%)'
-      }}>
-        <img src="../assets/logo-96.png" alt="" style={{
-          width: '56%', height: 'auto',
-          filter: 'drop-shadow(0 1px 2px rgba(0,0,0,.5))'
-        }}/>
-      </div>
+      <img src="../assets/logo-96.png" alt="" style={{
+        width: '52%', height: 'auto',
+        filter: 'drop-shadow(0 2px 4px rgba(0,0,0,.6))'
+      }}/>
     </div>
   );
 }
