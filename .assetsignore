@@ -1,0 +1,13 @@
+.git
+.gitignore
+.assetsignore
+.claude
+.wrangler
+.dev.vars*
+.env*
+node_modules
+_design_handoff
+.DS_Store
+PRE-PUBLISH-CHECKLIST.md
+CLAUDE.md
+wrangler.jsonc
