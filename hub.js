@@ -26,6 +26,9 @@
     { id: 'connect-4',         name: 'Connect 4',         cat: 'puzzle',  desc: 'Four in a row beats the AI.',      color: '#8FA8E6', plays: '14.3k' },
     { id: 'connect-dots',      name: 'Dots & Boxes',      cat: 'puzzle',  desc: 'Lines, boxes, strategy.',          color: '#F08488', plays: '5.8k'  },
     { id: '2048',              name: '2048',              cat: 'puzzle',  desc: 'Merge tiles. Reach 2048.',          color: '#F2A65A', plays: '0',    isNew: true },
+    { id: 'chess',             name: 'Chess',             cat: 'puzzle',  desc: 'Beat the AI. Full rules, three difficulties.', color: '#9B7EDC', plays: '0', isNew: true },
+    { id: 'checkers',          name: 'Checkers',          cat: 'puzzle',  desc: 'Mandatory captures. Multi-jumps. Crown me.',   color: '#D23B33', plays: '0', isNew: true },
+    { id: 'backgammon',        name: 'Backgammon',        cat: 'puzzle',  desc: 'Roll, race, bear off. Pip-count strategy.',     color: '#A26F3C', plays: '0', isNew: true },
     { id: 'blackjack',         name: 'Blackjack',         cat: 'casino',  desc: 'Hit 21 with strategy hints.',      color: '#7BC97B', plays: '18.9k' },
     { id: 'roulette',          name: 'Roulette',          cat: 'casino',  desc: 'Spin the European wheel.',         color: '#F08488', plays: '6.4k'  },
     { id: 'video-poker',       name: 'Video Poker',       cat: 'casino',  desc: 'Jacks or Better. Hold smart.',     color: '#A78BFA', plays: '11.2k' },
@@ -38,7 +41,7 @@
   const CATEGORIES = [
     { id: 'classic', label: 'Arcade' },
     { id: 'kids',    label: 'Kids' },
-    { id: 'puzzle',  label: 'Strategy & Puzzles' },
+    { id: 'puzzle',  label: 'Strategy' },
     { id: 'casino',  label: 'Casino' },
   ];
 
@@ -57,6 +60,9 @@
     'lunar-lander': 'lunarLanderHighScore',
     'spacex-lander': 'spacexLanderHighScore',
     '2048': '2048HighScore',
+    chess: 'chessHighScore',
+    checkers: 'checkersHighScore',
+    backgammon: 'backgammonHighScore',
   };
   function getBest(gameId) {
     const key = SCORE_KEYS[gameId];
@@ -89,6 +95,9 @@
     craps: '<rect x="8" y="14" width="20" height="20" rx="3" fill="C" transform="rotate(-10 18 24)"/><circle cx="14" cy="20" r="1.5" fill="#fff"/><circle cx="22" cy="28" r="1.5" fill="#fff"/><rect x="32" y="22" width="20" height="20" rx="3" fill="#fff" stroke="C" stroke-width="1.5" transform="rotate(8 42 32)"/><circle cx="38" cy="28" r="1.5" fill="C"/><circle cx="46" cy="36" r="1.5" fill="C"/><circle cx="42" cy="32" r="1.5" fill="C"/>',
     'three-card-poker': '<rect x="6" y="18" width="16" height="26" rx="2" fill="#fff" stroke="C" stroke-width="1.5" transform="rotate(-8 14 30)"/><rect x="22" y="14" width="16" height="26" rx="2" fill="#fff" stroke="C" stroke-width="1.5"/><rect x="40" y="18" width="16" height="26" rx="2" fill="#fff" stroke="C" stroke-width="1.5" transform="rotate(8 48 30)"/>',
     'texas-holdem': '<rect x="10" y="14" width="22" height="32" rx="3" fill="#fff" stroke="C" stroke-width="2" transform="rotate(-10 21 30)"/><text x="13" y="28" font-size="10" fill="C" font-weight="700" transform="rotate(-10 21 30)">A</text><rect x="32" y="14" width="22" height="32" rx="3" fill="C" transform="rotate(10 43 30)"/><text x="36" y="34" font-size="10" fill="#fff" font-weight="700" transform="rotate(10 43 30)">K</text>',
+    chess: '<path d="M28 8h8v6h6v6h-6l4 14h-16l4-14h-6v-6h6z" fill="C"/><rect x="18" y="40" width="28" height="6" rx="1" fill="C" opacity="0.7"/><rect x="14" y="48" width="36" height="8" rx="2" fill="C"/>',
+    checkers: '<circle cx="32" cy="42" r="14" fill="C"/><circle cx="32" cy="42" r="10" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.5"/><circle cx="32" cy="22" r="14" fill="C" opacity="0.55"/><polygon points="32,15 28,22 36,22" fill="C"/>',
+    backgammon: '<rect x="6" y="10" width="52" height="44" rx="3" fill="C" opacity="0.25"/><polygon points="10,12 16,12 13,30" fill="C"/><polygon points="20,12 26,12 23,30" fill="C" opacity="0.5"/><polygon points="30,12 36,12 33,30" fill="C"/><polygon points="40,12 46,12 43,30" fill="C" opacity="0.5"/><polygon points="50,12 56,12 53,30" fill="C"/><polygon points="13,52 16,34 10,34" fill="C" opacity="0.5"/><polygon points="23,52 26,34 20,34" fill="C"/><circle cx="13" cy="48" r="4" fill="C"/><circle cx="23" cy="46" r="4" fill="#fff" stroke="C" stroke-width="1"/>',
     'bubble-pop': '<circle cx="20" cy="22" r="9" fill="C" opacity="0.55"/><circle cx="17" cy="19" r="2.5" fill="#fff" opacity="0.9"/><circle cx="42" cy="34" r="11" fill="C" opacity="0.45"/><circle cx="38" cy="30" r="3" fill="#fff" opacity="0.9"/><circle cx="28" cy="46" r="7" fill="C" opacity="0.65"/><circle cx="26" cy="44" r="2" fill="#fff" opacity="0.9"/>',
     'memory-match': '<rect x="6"  y="10" width="16" height="20" rx="3" fill="C"/><rect x="24" y="10" width="16" height="20" rx="3" fill="C" opacity="0.55"/><rect x="42" y="10" width="16" height="20" rx="3" fill="C"/><rect x="6"  y="34" width="16" height="20" rx="3" fill="C" opacity="0.55"/><rect x="24" y="34" width="16" height="20" rx="3" fill="C"/><rect x="42" y="34" width="16" height="20" rx="3" fill="C" opacity="0.55"/><circle cx="32" cy="44" r="3" fill="#fff"/>',
     'shape-sorter': '<circle cx="14" cy="14" r="6" fill="C"/><rect x="26" y="8" width="12" height="12" rx="2" fill="C" opacity="0.7"/><polygon points="50,8 56,20 44,20" fill="C"/><rect x="6" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5"/><rect x="26" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5" opacity="0.7"/><rect x="46" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5"/>',
@@ -234,7 +243,7 @@
       { id: 'kids',    label: 'Kids',    href: 'kids/',    color: '#FF4F8B',
         metric: snakeBest != null ? snakeBest.toLocaleString() : 'Play',
         sub:    snakeBest != null ? 'Snake best' : 'Six gentle games' },
-      { id: 'puzzle',  label: 'Puzzles', href: 'puzzles/', color: '#1F5A3D',
+      { id: 'puzzle',  label: 'Strategy', href: 'strategy/', color: '#1F5A3D',
         metric: 'Play', sub: 'Beat the AI' },
       { id: 'casino',  label: 'Casino',  href: 'casino/',  color: '#C8A14A',
         metric: casinoBankroll != null ? '$' + casinoBankroll.toLocaleString() : '$1,000',
@@ -483,7 +492,7 @@
           + (newCount > 0 ? ` · <b>${newCount}</b> new` : '');
       }
       // Each category has its own landing page; the hero card routes there.
-      const LANDINGS = { classic: 'arcade/', kids: 'kids/', puzzle: 'puzzles/', casino: 'casino/' };
+      const LANDINGS = { classic: 'arcade/', kids: 'kids/', puzzle: 'strategy/', casino: 'casino/' };
       card.addEventListener('click', (e) => {
         if (e.target.closest('a')) return;
         const target = LANDINGS[cat];

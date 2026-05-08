@@ -1,0 +1,550 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Limestone Strategy — Chess, Checkers, Backgammon &amp; More</title>
+    <meta name="description" content="Six head-to-head browser strategy games — chess, checkers, backgammon, Connect 4, Dots &amp; Boxes, and 2048. Three difficulty tiers, full rules, no downloads.">
+    <meta name="keywords" content="chess, checkers, backgammon, connect 4, dots and boxes, 2048, strategy games, browser strategy games, beat the AI">
+    <meta property="og:title" content="Limestone Strategy — Chess, Checkers, Backgammon">
+    <meta property="og:description" content="Six head-to-head strategy games against the AI. Three difficulty tiers, full rules, no downloads.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/strategy/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Limestone Strategy — Chess, Checkers, Backgammon">
+    <meta name="twitter:description" content="Six head-to-head strategy games against the AI. Three difficulty tiers, full rules, no downloads.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/strategy/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"}]}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../category.css">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      :root {
+        --cat-hero-bg: linear-gradient(135deg, #DCEFE0 0%, #A8D4B5 70%, #6FA383 100%);
+        --cat-hero-ink: #1F3A2A;
+        --cat-eyebrow-color: #1F5A3D;
+        --cat-cta-bg: #1F5A3D;
+        --cat-cta-ink: #fff;
+        --cat-feat-art-bg: linear-gradient(135deg, #DCEFE0, #A8D4B5);
+      }
+      .cat-hero::before {
+        content: '';
+        position: absolute; inset: 0;
+        background-image: radial-gradient(circle at 30% 60%, rgba(255, 255, 255, 0.4) 0%, transparent 50%);
+        mix-blend-mode: overlay;
+        pointer-events: none;
+      }
+      /* Hero motif: stylized chess pieces silhouette */
+      .strat-shapes { position: relative; width: 280px; height: 280px; margin: 0 auto; }
+      .strat-piece {
+        position: absolute;
+        font-family: 'Bricolage Grotesque', serif;
+        font-weight: 700;
+        line-height: 1;
+        color: rgba(31, 58, 42, 0.92);
+        text-shadow: 0 4px 10px rgba(0, 0, 0, 0.18);
+      }
+      .strat-piece.king   { font-size: 150px; top: 20px;  left: 78px;  }
+      .strat-piece.knight { font-size: 84px;  top: 110px; left: 4px;   transform: rotate(-8deg); color: rgba(31, 58, 42, 0.7); }
+      .strat-piece.rook   { font-size: 84px;  top: 130px; left: 198px; transform: rotate(6deg);  color: rgba(31, 58, 42, 0.7); }
+      .strat-disc {
+        position: absolute;
+        width: 50px; height: 50px;
+        border-radius: 50%;
+        background: radial-gradient(circle at 35% 30%, #F08488, #B84B4F);
+        box-shadow: 0 6px 12px -3px rgba(0, 0, 0, 0.2),
+          inset 0 -4px 8px rgba(0, 0, 0, 0.15),
+          inset 0 3px 6px rgba(255, 255, 255, 0.35);
+        bottom: 10px;
+      }
+      .strat-disc.d1 { left: 24px; }
+      .strat-disc.d2 { left: 70px; bottom: 50px; background: radial-gradient(circle at 35% 30%, #2A2826, #0E0C0A); }
+      .strat-disc.d3 { left: 142px; }
+      .strat-disc.d4 { left: 196px; bottom: 50px; background: radial-gradient(circle at 35% 30%, #2A2826, #0E0C0A); }
+
+      /* Featured-art piece: 8x8 chess board with a few starting pieces */
+      .strat-feat-board {
+        background: #5C3A1F;
+        border-radius: 12px;
+        padding: 12px;
+        display: grid;
+        grid-template-columns: repeat(8, 1fr);
+        grid-template-rows: repeat(8, 1fr);
+        gap: 0;
+        aspect-ratio: 1;
+        max-width: 260px;
+        margin: 0 auto;
+        box-shadow: 0 12px 30px -10px rgba(31, 58, 42, 0.4);
+        overflow: hidden;
+      }
+      .strat-feat-board .sq {
+        display: flex; align-items: center; justify-content: center;
+        font-size: 22px; line-height: 1;
+        font-family: 'Bricolage Grotesque', serif;
+      }
+      .strat-feat-board .sq.l { background: #E8D2A1; }
+      .strat-feat-board .sq.d { background: #A07B4F; }
+      .strat-feat-board .sq.w { color: #FFFEF6; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }
+      .strat-feat-board .sq.b { color: #1A1310; }
+    </style>
+</head>
+<body class="cat-root">
+
+    <nav class="cat-nav">
+        <div class="cat-nav-left">
+            <a class="cat-logo" href="..">
+                <img src="../assets/logo-96.png" alt="Limestone Games home" width="40" height="40">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="cat-nav-links">
+                <a href="../arcade/">Arcade</a>
+                <a href="../kids/">Kids</a>
+                <a href="" class="active">Strategy</a>
+                <a href="../casino/">Casino</a>
+            </div>
+        </div>
+        <div class="cat-nav-meta">
+            <span class="dot"></span>
+            6 games · beat the AI
+        </div>
+    </nav>
+
+    <div class="cat-crumb">
+        <a href="..">Home</a> &nbsp;/&nbsp; <span class="here">Strategy</span>
+    </div>
+
+    <div class="cat-stats">
+        <div class="cat-stats-main">
+            <div class="cat-stats-chip">★</div>
+            <div>
+                <h3>Your record</h3>
+                <div class="amt" id="strat-record-amt">0–0</div>
+                <div class="delta" id="strat-record-delta">Play your first match</div>
+            </div>
+        </div>
+        <div class="cat-stat-cell">
+            <div class="l">Games</div>
+            <div class="n">6</div>
+            <div class="s">3 new this month</div>
+        </div>
+        <div class="cat-stat-cell">
+            <div class="l">AI tiers</div>
+            <div class="n">3</div>
+            <div class="s">Easy · Medium · Hard</div>
+        </div>
+        <div class="cat-stat-cell">
+            <div class="l">Best streak</div>
+            <div class="n" id="strat-streak">—</div>
+            <div class="s">Across all strategy</div>
+        </div>
+    </div>
+
+    <header class="cat-hero">
+        <div class="cat-hero-left">
+            <div class="cat-hero-eyebrow">⬡ Strategy · Chess, checkers, backgammon · Beat the AI</div>
+            <h1>Six tables.<br><em>One AI</em>.</h1>
+            <p class="lede">Chess with the full rule book — castling, en passant, promotion, mate detection. American checkers with mandatory captures. Backgammon with the bar and bear-off. Plus Connect 4, Dots &amp; Boxes, and 2048. Three difficulty tiers everywhere.</p>
+            <div class="cat-hero-stats">
+                <div>6<span>Games</span></div>
+                <div>3<span>AI tiers</span></div>
+                <div>3<span>New</span></div>
+                <div>0<span>Ads inside</span></div>
+            </div>
+        </div>
+        <div class="cat-hero-right">
+            <div class="strat-shapes">
+                <div class="strat-piece king">♚</div>
+                <div class="strat-piece knight">♞</div>
+                <div class="strat-piece rook">♜</div>
+                <div class="strat-disc d1"></div>
+                <div class="strat-disc d2"></div>
+                <div class="strat-disc d3"></div>
+                <div class="strat-disc d4"></div>
+            </div>
+        </div>
+    </header>
+
+    <div class="cat-wrap">
+
+        <div class="cat-section-head">
+            <h2>Today's headliner</h2>
+            <div class="rule"></div>
+            <a class="more" href="#all-games">Browse all →</a>
+        </div>
+        <div class="cat-featured">
+            <div class="cat-featured-art">
+                <div class="strat-feat-board" aria-hidden="true">
+                    <!-- row 8 (black back rank) -->
+                    <div class="sq l b">♜</div><div class="sq d b">♞</div><div class="sq l b">♝</div><div class="sq d b">♛</div><div class="sq l b">♚</div><div class="sq d b">♝</div><div class="sq l b">♞</div><div class="sq d b">♜</div>
+                    <!-- row 7 (black pawns) -->
+                    <div class="sq d b">♟</div><div class="sq l b">♟</div><div class="sq d b">♟</div><div class="sq l b">♟</div><div class="sq d b">♟</div><div class="sq l b">♟</div><div class="sq d b">♟</div><div class="sq l b">♟</div>
+                    <!-- row 6 -->
+                    <div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div>
+                    <!-- row 5 -->
+                    <div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div>
+                    <!-- row 4 -->
+                    <div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l w">♙</div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div>
+                    <!-- row 3 -->
+                    <div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div>
+                    <!-- row 2 (white pawns) -->
+                    <div class="sq l w">♙</div><div class="sq d w">♙</div><div class="sq l w">♙</div><div class="sq d w">♙</div><div class="sq l"></div><div class="sq d w">♙</div><div class="sq l w">♙</div><div class="sq d w">♙</div>
+                    <!-- row 1 -->
+                    <div class="sq d w">♖</div><div class="sq l w">♘</div><div class="sq d w">♗</div><div class="sq l w">♕</div><div class="sq d w">♔</div><div class="sq l w">♗</div><div class="sq d w">♘</div><div class="sq l w">♖</div>
+                </div>
+            </div>
+            <div class="cat-featured-body">
+                <div class="cat-featured-tag">★ New flagship</div>
+                <h3>Chess</h3>
+                <p>Full rules. Castling on both sides, en passant, pawn promotion with a piece picker, check, checkmate, stalemate, and 50-move and threefold-repetition draws. The AI uses negamax with alpha-beta pruning across three difficulty tiers — Easy is forgiving; Hard adds quiescence search.</p>
+                <div class="cat-featured-stats">
+                    <div class="stat"><div class="l">Streak</div><div class="n accent" id="chess-streak">0</div></div>
+                    <div class="stat"><div class="l">Wins</div><div class="n" id="chess-wins">0</div></div>
+                    <div class="stat"><div class="l">AI tiers</div><div class="n">3</div></div>
+                </div>
+                <div class="cat-featured-cta">
+                    <a class="cat-btn" href="../chess/">Play chess →</a>
+                    <a class="cat-btn outline" href="../chess/#how">How to play</a>
+                </div>
+            </div>
+        </div>
+
+        <div id="all-games" class="cat-section-head">
+            <h2>All games</h2>
+            <span class="sub">6 games · all single-player vs. AI</span>
+            <div class="rule"></div>
+        </div>
+        <div class="cat-grid two-col">
+
+            <a class="cat-card featured" href="../chess/">
+                <span class="cat-card-tag">New</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#9B7EDC2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><path d="M28 8h8v6h6v6h-6l4 14h-16l4-14h-6v-6h6z" fill="#9B7EDC"/><rect x="18" y="40" width="28" height="6" rx="1" fill="#9B7EDC" opacity="0.7"/><rect x="14" y="48" width="36" height="8" rx="2" fill="#9B7EDC"/></svg>
+                    </div>
+                    <div>
+                        <h3>Chess</h3>
+                        <div class="desc">Full rules. Three difficulties.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Streak</div><div class="v accent" id="card-chess-streak">0</div></div>
+                    <div><div class="l">Wins</div><div class="v" id="card-chess-wins">0</div></div>
+                    <div><div class="l">AI tiers</div><div class="v sm">3</div></div>
+                    <div><div class="l">Rules</div><div class="v sm">Full</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Brand new</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../checkers/">
+                <span class="cat-card-tag">New</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#D23B332E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="40" r="14" fill="#D23B33"/><circle cx="32" cy="40" r="10" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/><circle cx="32" cy="22" r="14" fill="#1F1A1A"/><circle cx="32" cy="22" r="10" fill="none" stroke="#D23B33" stroke-width="1.5" opacity="0.5"/><polygon points="32,15 28,22 36,22" fill="#D23B33"/></svg>
+                    </div>
+                    <div>
+                        <h3>Checkers</h3>
+                        <div class="desc">Mandatory captures. Multi-jumps.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Streak</div><div class="v accent" id="card-checkers-streak">0</div></div>
+                    <div><div class="l">Wins</div><div class="v" id="card-checkers-wins">0</div></div>
+                    <div><div class="l">AI tiers</div><div class="v sm">3</div></div>
+                    <div><div class="l">Variant</div><div class="v sm">American</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Brand new</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../backgammon/">
+                <span class="cat-card-tag">New</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#A26F3C2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="10" width="52" height="44" rx="3" fill="#A26F3C" opacity="0.25"/><polygon points="10,12 16,12 13,30" fill="#A26F3C"/><polygon points="20,12 26,12 23,30" fill="#A26F3C" opacity="0.5"/><polygon points="30,12 36,12 33,30" fill="#A26F3C"/><polygon points="40,12 46,12 43,30" fill="#A26F3C" opacity="0.5"/><polygon points="50,12 56,12 53,30" fill="#A26F3C"/><polygon points="13,52 16,34 10,34" fill="#A26F3C" opacity="0.5"/><polygon points="23,52 26,34 20,34" fill="#A26F3C"/><circle cx="13" cy="48" r="4" fill="#1A1310"/><circle cx="23" cy="46" r="4" fill="#FFFEF6" stroke="#A26F3C" stroke-width="1"/></svg>
+                    </div>
+                    <div>
+                        <h3>Backgammon</h3>
+                        <div class="desc">Roll, race, bear off.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Streak</div><div class="v accent" id="card-backgammon-streak">0</div></div>
+                    <div><div class="l">Wins</div><div class="v" id="card-backgammon-wins">0</div></div>
+                    <div><div class="l">AI tiers</div><div class="v sm">3</div></div>
+                    <div><div class="l">Cube</div><div class="v sm">—</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Brand new</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../connect-4/">
+                <span class="cat-card-tag">Strategy</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#8FA8E62E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="10" width="48" height="44" rx="4" fill="#8FA8E6" opacity="0.25"/><circle cx="18" cy="22" r="4" fill="#8FA8E6"/><circle cx="32" cy="22" r="4" fill="#8FA8E6" opacity="0.5"/><circle cx="46" cy="22" r="4" fill="#8FA8E6"/><circle cx="18" cy="36" r="4" fill="#8FA8E6" opacity="0.5"/><circle cx="32" cy="36" r="4" fill="#8FA8E6"/><circle cx="46" cy="36" r="4" fill="#8FA8E6" opacity="0.5"/></svg>
+                    </div>
+                    <div>
+                        <h3>Connect 4</h3>
+                        <div class="desc">Four in a row beats the AI.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Streak</div><div class="v accent" id="card-c4-streak">—</div></div>
+                    <div><div class="l">Wins</div><div class="v" id="card-c4-wins">—</div></div>
+                    <div><div class="l">AI tiers</div><div class="v sm">3</div></div>
+                    <div><div class="l">Hint mode</div><div class="v sm">Yes</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Classic</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../connect-dots/">
+                <span class="cat-card-tag">Strategy</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#F084882E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><circle cx="14" cy="14" r="3" fill="#F08488"/><circle cx="32" cy="14" r="3" fill="#F08488"/><circle cx="50" cy="14" r="3" fill="#F08488"/><circle cx="14" cy="32" r="3" fill="#F08488"/><circle cx="32" cy="32" r="3" fill="#F08488"/><circle cx="50" cy="32" r="3" fill="#F08488"/><circle cx="14" cy="50" r="3" fill="#F08488"/><circle cx="32" cy="50" r="3" fill="#F08488"/><circle cx="50" cy="50" r="3" fill="#F08488"/><line x1="14" y1="14" x2="32" y2="14" stroke="#F08488" stroke-width="2.5"/><line x1="14" y1="14" x2="14" y2="32" stroke="#F08488" stroke-width="2.5"/><line x1="14" y1="32" x2="32" y2="32" stroke="#F08488" stroke-width="2.5"/><line x1="32" y1="14" x2="32" y2="32" stroke="#F08488" stroke-width="2.5"/></svg>
+                    </div>
+                    <div>
+                        <h3>Dots &amp; Boxes</h3>
+                        <div class="desc">Lines, boxes, strategy.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Streak</div><div class="v accent" id="card-dab-streak">—</div></div>
+                    <div><div class="l">Wins</div><div class="v" id="card-dab-wins">—</div></div>
+                    <div><div class="l">AI tiers</div><div class="v sm">3</div></div>
+                    <div><div class="l">Board</div><div class="v sm">5×5</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Classic</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../2048/">
+                <span class="cat-card-tag">Puzzle</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-glyph" style="background:#F2A65A2E">
+                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="8"  width="11" height="11" rx="2" fill="#F2A65A" opacity="0.3"/><rect x="20" y="8"  width="11" height="11" rx="2" fill="#F2A65A" opacity="0.45"/><rect x="33" y="8"  width="11" height="11" rx="2" fill="#F2A65A" opacity="0.6"/><rect x="45" y="8"  width="11" height="11" rx="2" fill="#F2A65A" opacity="0.4"/><rect x="8"  y="20" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.5"/><rect x="20" y="20" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.7"/><rect x="33" y="20" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.55"/><rect x="45" y="20" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.35"/><rect x="8"  y="33" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.45"/><rect x="20" y="33" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.6"/><rect x="33" y="33" width="23" height="23" rx="3" fill="#F2A65A"/><rect x="8"  y="45" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.5"/><rect x="20" y="45" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.4"/><text x="44.5" y="48.5" font-size="9" font-weight="800" fill="#fff" text-anchor="middle">2048</text></svg>
+                    </div>
+                    <div>
+                        <h3>2048</h3>
+                        <div class="desc">Merge tiles. Reach 2048.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Best score</div><div class="v accent" id="card-2048-best">—</div></div>
+                    <div><div class="l">High tile</div><div class="v" id="card-2048-tile">—</div></div>
+                    <div><div class="l">Board</div><div class="v sm">4×4</div></div>
+                    <div><div class="l">Mode</div><div class="v sm">Solo</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Solo puzzle</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+        </div>
+
+        <div class="cat-ad-row">
+            <div class="ad-slot">
+                <div>Sponsored · In-feed</div>
+                <div class="ad-size">728 × 90</div>
+                <ins class="adsbygoogle"
+                     style="display:none"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="horizontal"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+        <div class="cat-strategy">
+            <div class="cat-strategy-head">
+                <div><h2>Player notes</h2></div>
+                <span class="sub">One quick read per game</span>
+            </div>
+            <div class="cat-strategy-grid">
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Chess: castle early, then break the center</h4>
+                    <p>Get the king to safety on move 6–10. After castling, look for a central pawn break (e3-e4 or d3-d4) — that opens lines for your bishops and rooks. The AI on Hard punishes uncastled kings ruthlessly.</p>
+                    <ul>
+                        <li>Castle by move 10 <b>−40% loss</b></li>
+                        <li>Trade pieces when ahead <b>winning</b></li>
+                        <li>50-move rule <b>auto-draw</b></li>
+                    </ul>
+                </div>
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Checkers: forced captures cut both ways</h4>
+                    <p>Captures are mandatory in American rules — including for the AI. Setting up a position where the opponent's only legal move is a capture you've prepared a counter for is the classic trap. Push for kings; the back rank is gold.</p>
+                    <ul>
+                        <li>Capture chains <b>required</b></li>
+                        <li>King advancement <b>+streak</b></li>
+                        <li>Edge play <b>safer</b></li>
+                    </ul>
+                </div>
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Backgammon: race or block, never both</h4>
+                    <p>If you're ahead in pip count, race — bring everyone home and bear off. If you're behind, build a prime (4–6 consecutive points) and try to trap a back checker. Blots are punishments waiting to happen; cover them.</p>
+                    <ul>
+                        <li>Pip count diff <b>strategy gate</b></li>
+                        <li>5-point first <b>standard opening</b></li>
+                        <li>No doubling cube <b>v1</b></li>
+                    </ul>
+                </div>
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Connect 4: own the center column</h4>
+                    <p>The middle column passes through 7 of the 21 winning lines — more than any other column. Open with column 4 and the AI on hard mode loses about 60% as second player.</p>
+                    <ul>
+                        <li>Center first <b>+30% win</b></li>
+                        <li>Two threats <b>guaranteed</b></li>
+                        <li>Odd rows for first player <b>strong</b></li>
+                    </ul>
+                </div>
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> Dots &amp; Boxes: chain control</h4>
+                    <p>Late game is all about who gets stuck closing chains. Sacrifice a short chain to force your opponent to open a long one. "Hard-hearted handout" — give two boxes to claim five.</p>
+                    <ul>
+                        <li>Short chain (≤2) <b>sacrifice</b></li>
+                        <li>Long chain (3+) <b>steal</b></li>
+                        <li>Double-cross <b>+net 2</b></li>
+                    </ul>
+                </div>
+                <div class="cat-strategy-card">
+                    <h4><span class="dot"></span> 2048: build down the corner</h4>
+                    <p>Pick a corner — bottom-right is conventional — and never move the largest tile out of it. Build a snake pattern down one side and the merges cascade. Most early losses come from accidentally swiping the big tile away.</p>
+                    <ul>
+                        <li>Anchor the corner <b>required</b></li>
+                        <li>Snake pattern <b>cascading merges</b></li>
+                        <li>Avoid up-swipes <b>late game</b></li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+
+        <div class="cat-ad-row">
+            <div class="ad-slot">
+                <div>Sponsored · Bottom banner</div>
+                <div class="ad-size">728 × 90</div>
+                <ins class="adsbygoogle"
+                     style="display:none"
+                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+                     data-ad-slot="XXXXXXXXXX"
+                     data-ad-format="auto"
+                     data-full-width-responsive="true"></ins>
+                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+            </div>
+        </div>
+
+    </div>
+
+    <div class="cat-disclaimer">
+        <b>All games are single-player against the AI.</b> Three difficulty tiers everywhere. Wins and streaks save locally — clearing site data wipes your record.
+    </div>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="..">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="..">All games</a>
+            <a href="../privacy.html">Privacy</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <script>
+        (function () {
+            const readNum = (key) => {
+                const v = parseInt(localStorage.getItem(key), 10);
+                return isFinite(v) && v >= 0 ? v : null;
+            };
+            const set = (id, val) => {
+                const el = document.getElementById(id);
+                if (el && val != null) el.textContent = val;
+            };
+
+            const wins = {
+                chess: readNum('chessGamesWon'),
+                checkers: readNum('checkersGamesWon'),
+                backgammon: readNum('backgammonGamesWon'),
+                c4: readNum('connect4GamesWon'),
+                dab: readNum('dotsAndBoxesGamesWon'),
+            };
+            const streaks = {
+                chess: readNum('chessHighScore'),
+                checkers: readNum('checkersHighScore'),
+                backgammon: readNum('backgammonHighScore'),
+                c4: readNum('connect4HighScore'),
+                dab: readNum('dotsAndBoxesHighScore'),
+            };
+            const losses = {
+                chess: readNum('chessGamesLost'),
+                checkers: readNum('checkersGamesLost'),
+                backgammon: readNum('backgammonGamesLost'),
+                c4: readNum('connect4GamesLost'),
+                dab: readNum('dotsAndBoxesGamesLost'),
+            };
+
+            // Per-card values
+            set('chess-streak', streaks.chess ?? 0);
+            set('chess-wins', wins.chess ?? 0);
+            set('card-chess-streak', streaks.chess ?? 0);
+            set('card-chess-wins', wins.chess ?? 0);
+            set('card-checkers-streak', streaks.checkers ?? 0);
+            set('card-checkers-wins', wins.checkers ?? 0);
+            set('card-backgammon-streak', streaks.backgammon ?? 0);
+            set('card-backgammon-wins', wins.backgammon ?? 0);
+            if (wins.c4 != null) set('card-c4-wins', wins.c4);
+            if (streaks.c4 != null) set('card-c4-streak', streaks.c4);
+            if (wins.dab != null) set('card-dab-wins', wins.dab);
+            if (streaks.dab != null) set('card-dab-streak', streaks.dab);
+
+            const best2048 = readNum('2048HighScore');
+            if (best2048 != null) set('card-2048-best', best2048.toLocaleString());
+            const tile2048 = readNum('2048HighTile');
+            if (tile2048 != null) set('card-2048-tile', tile2048);
+
+            // Aggregate stats
+            const totalWins = Object.values(wins).reduce((s, v) => s + (v || 0), 0);
+            const totalLosses = Object.values(losses).reduce((s, v) => s + (v || 0), 0);
+            const bestStreak = Object.values(streaks).reduce((m, v) => Math.max(m, v || 0), 0);
+
+            if (totalWins > 0 || totalLosses > 0) {
+                set('strat-record-amt', totalWins + '–' + totalLosses);
+                const rate = totalWins / (totalWins + totalLosses);
+                set('strat-record-delta',
+                    (rate >= 0.5 ? '▲ ' : '▼ ') + Math.round(rate * 100) + '% win rate'
+                    + (bestStreak > 0 ? ` · best streak ${bestStreak}` : ''));
+            }
+            if (bestStreak > 0) set('strat-streak', bestStreak);
+        })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chess — Free Browser Chess vs. AI | Limestone Games</title>
+    <meta name="description" content="Play chess free in your browser against an AI. Full rules — castling, en passant, pawn promotion, check, checkmate, stalemate, draws. Three difficulty tiers, no downloads.">
+    <meta name="keywords" content="chess, online chess, free chess, browser chess, chess vs AI, chess game">
+    <link rel="canonical" href="https://limestonegames.com/chess/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Chess","description":"Play chess in your browser against an AI with three difficulty tiers. Full rules: castling, en passant, pawn promotion, check, checkmate, stalemate, 50-move and threefold-repetition draws.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Chess"}]}</script>
+    <meta property="og:title" content="Chess — Free Browser Chess vs. AI">
+    <meta property="og:description" content="Full rules. Three difficulties. No downloads, no installs.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/chess/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Chess — Free Browser Chess vs. AI">
+    <meta name="twitter:description" content="Full rules. Three difficulties. No downloads, no installs.">
+
+    <style>
+      :root {
+        --ink: #1A1310;
+        --paper: #F4ECD8;
+        --wood-light: #E8D2A1;
+        --wood-dark: #A07B4F;
+        --frame: #5C3A1F;
+        --accent: #9B7EDC;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, #F4ECD8 0%, #E8D2A1 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 16px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .top-bar {
+        width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        font-size: 14px; flex-wrap: wrap;
+      }
+      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
+      .top-bar a:hover { opacity: 1; }
+      h1 {
+        font-family: 'Bricolage Grotesque', serif;
+        font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
+        color: var(--frame);
+      }
+      .stats {
+        display: flex; gap: 14px; font-size: 14px; font-weight: 600;
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(6px);
+        padding: 10px 18px; border-radius: 999px;
+        box-shadow: 0 4px 12px rgba(26, 19, 16, 0.06);
+        flex-wrap: wrap; justify-content: center;
+      }
+      .stats > div { display: flex; gap: 6px; align-items: baseline; }
+      .stats .l { color: rgba(26, 19, 16, 0.55); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+      .stats .v { font-size: 17px; font-weight: 800; color: var(--accent); }
+      select.diff {
+        font: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+        padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(26, 19, 16, 0.2);
+        background: #fff;
+      }
+      .captured-row { display: flex; gap: 12px; width: 100%; max-width: 640px; font-size: 22px; min-height: 28px; }
+      .captured-row > div { flex: 1; padding: 4px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.4); }
+      .stage-wrap {
+        position: relative;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 12px 30px rgba(26, 19, 16, 0.10);
+        align-self: center;
+      }
+      canvas {
+        display: block;
+        background: var(--frame);
+        border-radius: 8px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .controls {
+        display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
+      }
+      button {
+        font: inherit; font-weight: 700;
+        padding: 10px 18px; border-radius: 999px;
+        border: 2px solid transparent;
+        background: var(--accent); color: #fff;
+        cursor: pointer; transition: transform 0.1s;
+        box-shadow: 0 4px 12px rgba(155, 126, 220, 0.3);
+      }
+      button:hover { transform: translateY(-1px); }
+      button:active { transform: translateY(1px); }
+      button.ghost { background: transparent; color: var(--ink); border-color: rgba(26, 19, 16, 0.2); box-shadow: none; }
+      .turn { font-size: 13px; color: rgba(26, 19, 16, 0.75); }
+      .game-over, .promo {
+        position: absolute; inset: 14px;
+        background: rgba(255, 250, 240, 0.96);
+        border-radius: 8px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        text-align: center; padding: 24px;
+      }
+      .game-over.show, .promo.show { opacity: 1; pointer-events: auto; }
+      .game-over h2 { font-size: 28px; color: var(--frame); }
+      .game-over p { font-size: 15px; color: rgba(26, 19, 16, 0.7); max-width: 380px; }
+      .promo h3 { font-size: 18px; color: var(--frame); }
+      .promo-choices { display: flex; gap: 8px; }
+      .promo-btn {
+        font-family: 'Segoe UI Symbol', serif;
+        font-size: 36px; line-height: 1;
+        padding: 8px 14px; background: #fff; color: var(--ink);
+        border: 2px solid var(--wood-dark); border-radius: 8px;
+        box-shadow: 0 3px 8px rgba(26, 19, 16, 0.1);
+      }
+      .promo-btn:hover { background: var(--wood-light); }
+      .hint { font-size: 13px; color: rgba(26, 19, 16, 0.6); text-align: center; max-width: 600px; }
+      #how { padding: 20px 16px; max-width: 600px; }
+      #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin-bottom: 8px; }
+      #how p { font-size: 14px; color: rgba(26, 19, 16, 0.75); margin-bottom: 8px; }
+      #how ul { padding-left: 20px; font-size: 14px; color: rgba(26, 19, 16, 0.8); }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../strategy/">All Strategy games</a>
+        </div>
+        <h1>Chess</h1>
+        <div class="stats">
+            <div><span class="l">Status</span><span class="v" id="turn">White to move</span></div>
+            <div><span class="l">Wins–Losses</span><span class="v" id="wins">0–0</span></div>
+            <div><span class="l">Streak</span><span class="v" id="streak">0</span></div>
+            <div><span class="l">Difficulty</span>
+                <select class="diff" id="difficulty" aria-label="Difficulty">
+                    <option>Easy</option>
+                    <option>Medium</option>
+                    <option>Hard</option>
+                </select>
+            </div>
+        </div>
+        <div class="captured-row" aria-label="Captured pieces">
+            <div id="capWhite" title="Pieces White has captured"></div>
+            <div id="capBlack" title="Pieces Black has captured"></div>
+        </div>
+        <div class="stage-wrap">
+            <canvas id="board" width="640" height="640"></canvas>
+            <div class="game-over" id="over">
+                <h2 id="overTitle">Checkmate</h2>
+                <p id="overText"></p>
+                <button id="overBtn">New game</button>
+            </div>
+            <div class="promo" id="promo">
+                <h3>Promote pawn to:</h3>
+                <div class="promo-choices" id="promoChoices"></div>
+            </div>
+        </div>
+        <div class="turn" id="status">Your move.</div>
+        <div class="controls">
+            <button id="newGame">New game</button>
+            <button id="resign" class="ghost">Resign</button>
+            <button id="flip" class="ghost">Switch sides</button>
+            <a href="../strategy/"><button class="ghost">More strategy games</button></a>
+        </div>
+        <p class="hint">Click a piece, then click where to move it. Green dots show legal moves; rings show captures. The AI plays the other color — switch sides any time.</p>
+
+        <section id="how" aria-label="How to play">
+            <h2>How to play</h2>
+            <p><b>Click a piece, then click a destination.</b> Legal moves are highlighted; illegal moves are simply ignored. The AI moves automatically after you.</p>
+            <p>All standard rules are enforced: <b>castling</b> on both sides, <b>en passant</b>, <b>pawn promotion</b> (with a piece picker), <b>check / checkmate / stalemate</b>, plus <b>50-move</b> and <b>threefold-repetition</b> draws.</p>
+            <ul>
+                <li><b>Easy</b> — depth 2, jittered move choice. Great for learning the rules.</li>
+                <li><b>Medium</b> — depth 3. Plays solidly; a strong club player will still beat it.</li>
+                <li><b>Hard</b> — depth 4 + quiescence search on captures. Targets ~1200–1500 club strength.</li>
+            </ul>
+            <p>Your wins, losses, and best streak save locally. Switching difficulty mid-game is fine; the AI just uses the new tier on its next move.</p>
+        </section>
+    </div>
+
+    <script src="engine.js"></script>
+    <script src="ai.js"></script>
+    <script src="chess.js"></script>
+</body>
+</html>

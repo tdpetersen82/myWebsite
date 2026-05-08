@@ -84,7 +84,7 @@
             ]
         },
         {
-            name: 'Strategy & Puzzles', icon: '\u{1F9E9}',
+            name: 'Strategy', icon: '\u{1F9E9}',
             games: [
                 { name: 'Connect 4', icon: I.connect4, url: 'connect-4/' },
                 { name: 'Dots & Boxes', icon: I.dots, url: 'connect-dots/' },

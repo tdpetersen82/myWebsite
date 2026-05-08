@@ -1,0 +1,1089 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Backgammon — Free Browser Backgammon vs. AI | Limestone Games</title>
+    <meta name="description" content="Play backgammon free in your browser against an AI. Standard rules — bar, bear-off, hits, doubles. Three difficulty tiers, no doubling cube, no downloads.">
+    <meta name="keywords" content="backgammon, online backgammon, free backgammon, browser backgammon, backgammon vs AI">
+    <link rel="canonical" href="https://limestonegames.com/backgammon/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Backgammon","description":"Play backgammon in your browser against an AI. Standard rules with bar, bear-off, doubles, and hit/blot mechanics. Three difficulty tiers.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Backgammon"}]}</script>
+    <meta property="og:title" content="Backgammon — Free Browser Backgammon vs. AI">
+    <meta property="og:description" content="Standard rules with bar, bear-off, hits, and doubles. Three difficulties. No downloads.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/backgammon/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Backgammon — Free Browser Backgammon vs. AI">
+    <meta name="twitter:description" content="Standard rules with bar, bear-off, hits, and doubles. Three difficulties.">
+
+    <style>
+      :root {
+        --ink: #1A1310;
+        --paper: #F5E5C9;
+        --frame: #3A1A12;
+        --wood: #6F4422;
+        --light-point: #E8C68A;
+        --dark-point: #6A2722;
+        --white-checker: #FBF6E5;
+        --black-checker: #1A1310;
+        --accent: #A26F3C;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, #F5E5C9 0%, #D6B485 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 16px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 880px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .top-bar {
+        width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        font-size: 14px; flex-wrap: wrap;
+      }
+      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
+      .top-bar a:hover { opacity: 1; }
+      h1 {
+        font-family: 'Bricolage Grotesque', serif;
+        font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
+        color: var(--frame);
+      }
+      .stats {
+        display: flex; gap: 14px; font-size: 14px; font-weight: 600;
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(6px);
+        padding: 10px 18px; border-radius: 999px;
+        box-shadow: 0 4px 12px rgba(26, 19, 16, 0.06);
+        flex-wrap: wrap; justify-content: center;
+      }
+      .stats > div { display: flex; gap: 6px; align-items: baseline; }
+      .stats .l { color: rgba(26, 19, 16, 0.55); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+      .stats .v { font-size: 17px; font-weight: 800; color: var(--accent); }
+      select.diff {
+        font: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+        padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(26, 19, 16, 0.2);
+        background: #fff;
+      }
+      .stage-wrap {
+        position: relative;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 16px;
+        padding: 12px;
+        box-shadow: 0 12px 30px rgba(58, 26, 18, 0.10);
+        align-self: center;
+      }
+      canvas {
+        display: block;
+        background: var(--frame);
+        border-radius: 8px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+      button {
+        font: inherit; font-weight: 700;
+        padding: 10px 18px; border-radius: 999px;
+        border: 2px solid transparent;
+        background: var(--accent); color: #fff;
+        cursor: pointer; transition: transform 0.1s;
+        box-shadow: 0 4px 12px rgba(162, 111, 60, 0.3);
+      }
+      button:hover { transform: translateY(-1px); }
+      button:active { transform: translateY(1px); }
+      button.ghost { background: transparent; color: var(--ink); border-color: rgba(26, 19, 16, 0.2); box-shadow: none; }
+      button:disabled { opacity: 0.4; cursor: default; transform: none; }
+      .turn { font-size: 13px; color: rgba(26, 19, 16, 0.75); text-align: center; }
+      .game-over {
+        position: absolute; inset: 12px;
+        background: rgba(255, 250, 240, 0.96);
+        border-radius: 8px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        text-align: center; padding: 24px;
+      }
+      .game-over.show { opacity: 1; pointer-events: auto; }
+      .game-over h2 { font-size: 28px; color: var(--accent); }
+      .game-over p { font-size: 15px; color: rgba(26, 19, 16, 0.7); max-width: 380px; }
+      .hint { font-size: 13px; color: rgba(26, 19, 16, 0.6); text-align: center; max-width: 600px; }
+      #how { padding: 20px 16px; max-width: 600px; }
+      #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin-bottom: 8px; }
+      #how p { font-size: 14px; color: rgba(26, 19, 16, 0.75); margin-bottom: 8px; }
+      #how ul { padding-left: 20px; font-size: 14px; color: rgba(26, 19, 16, 0.8); }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../strategy/">All Strategy games</a>
+        </div>
+        <h1>Backgammon</h1>
+        <div class="stats">
+            <div><span class="l">Turn</span><span class="v" id="turnLabel">Roll dice</span></div>
+            <div><span class="l">Wins–Losses</span><span class="v" id="wins">0–0</span></div>
+            <div><span class="l">Streak</span><span class="v" id="streak">0</span></div>
+            <div><span class="l">Difficulty</span>
+                <select class="diff" id="difficulty" aria-label="Difficulty">
+                    <option>Easy</option>
+                    <option>Medium</option>
+                    <option>Hard</option>
+                </select>
+            </div>
+        </div>
+        <div class="stage-wrap">
+            <canvas id="board" width="880" height="560"></canvas>
+            <div class="game-over" id="over">
+                <h2 id="overTitle">You win!</h2>
+                <p id="overText"></p>
+                <button id="overBtn">New game</button>
+            </div>
+        </div>
+        <div class="turn" id="status">Click "Roll" to start.</div>
+        <div class="controls">
+            <button id="rollBtn">Roll dice</button>
+            <button id="undoBtn" class="ghost" disabled>Undo</button>
+            <button id="endTurnBtn" class="ghost" disabled>End turn</button>
+            <button id="newGameBtn" class="ghost">New game</button>
+            <a href="../strategy/"><button class="ghost">More strategy games</button></a>
+        </div>
+        <p class="hint">Click "Roll dice", then click your checker (or the bar) and tap a destination point. Use both dice when possible — if only one can be used, the larger one is mandatory.</p>
+
+        <section id="how" aria-label="How to play">
+            <h2>How to play</h2>
+            <p>You play <b>white</b> (light checkers, moving counter-clockwise around the board). The AI plays <b>black</b>. Click <b>Roll dice</b> to start your turn, then make moves equal to each die.</p>
+            <p>You can move to a point if it's empty, holds your own checkers, or holds <b>exactly one enemy</b> checker (which gets sent to the bar). You cannot move to a point held by 2+ enemies.</p>
+            <p>If you have checkers on the <b>bar</b>, you must re-enter them all (in the opponent's home board) before making any other moves. <b>Bear off</b> when all 15 of your checkers are in your home board (points 1–6 from your perspective). Win by bearing off all 15.</p>
+            <p>Doubles give you four moves of that number. If you can't legally use a die, it's forfeited; if only one die is usable, you must use the larger if possible.</p>
+            <ul>
+                <li><b>Easy</b> — picks reasonable moves with some randomness.</li>
+                <li><b>Medium</b> — heuristic with stronger weighting on safety and points.</li>
+                <li><b>Hard</b> — higher-quality scoring; punishes blots near its home board.</li>
+            </ul>
+            <p>v1 has no doubling cube — single-game play only. Wins, losses, and best streak save locally.</p>
+        </section>
+    </div>
+
+    <script>
+    'use strict';
+    // ── Backgammon ──────────────────────────────────────────────────────────
+    // White (player) moves from high-numbered points to low. Bears off from point 0 side.
+    // Black (AI) moves from low to high. Bears off from point 23 side.
+    // Internal indexes: 0..23 for points; -1 for bear-off; 24 for "bar".
+
+    const W = 'w', B = 'b';
+
+    function startingState() {
+      const points = new Array(24).fill(0).map(() => ({ color: null, count: 0 }));
+      function place(idx, color, count) { points[idx] = { color, count }; }
+      // White: 23×2, 12×5, 7×3, 5×5
+      place(23, W, 2); place(12, W, 5); place(7, W, 3); place(5, W, 5);
+      // Black: 0×2, 11×5, 16×3, 18×5
+      place(0, B, 2); place(11, B, 5); place(16, B, 3); place(18, B, 5);
+      return {
+        points,
+        bar: { w: 0, b: 0 },
+        off: { w: 0, b: 0 },
+        turn: W,
+        dice: [],          // remaining dice this turn
+        rolledThisTurn: false,
+      };
+    }
+
+    function clone(s) {
+      return {
+        points: s.points.map(p => ({ color: p.color, count: p.count })),
+        bar: { w: s.bar.w, b: s.bar.b },
+        off: { w: s.off.w, b: s.off.b },
+        turn: s.turn,
+        dice: s.dice.slice(),
+        rolledThisTurn: s.rolledThisTurn,
+      };
+    }
+
+    function direction(c) { return c === W ? -1 : 1; }
+    function homeStart(c) { return c === W ? 0 : 18; }
+    function homeEnd(c) { return c === W ? 5 : 23; }
+    function entryPoint(c, die) {
+      // Re-entering from bar: white enters into points 24-die (i.e. 18-23 for a 6...1)
+      // Black enters into points die-1 (i.e. 0-5 for a 1..6).
+      return c === W ? 24 - die : die - 1;
+    }
+
+    function allInHome(state, c) {
+      if (state.bar[c] > 0) return false;
+      const start = c === W ? 6 : 0;
+      const end   = c === W ? 23 : 17;
+      for (let i = start; i <= end; i++) {
+        const p = state.points[i];
+        if (p.color === c && p.count > 0) return false;
+      }
+      return true;
+    }
+
+    function highestOccupied(state, c) {
+      // Returns the highest pip-distance-from-bear-off point holding the color's checker.
+      // For white (bears off from 0), it's the largest index 0..5.
+      // For black (bears off from 23), it's the smallest index 18..23.
+      if (c === W) {
+        for (let i = 5; i >= 0; i--) {
+          const p = state.points[i];
+          if (p.color === W && p.count > 0) return i;
+        }
+        return -1;
+      } else {
+        for (let i = 18; i <= 23; i++) {
+          const p = state.points[i];
+          if (p.color === B && p.count > 0) return i;
+        }
+        return -1;
+      }
+    }
+
+    // Try to move one checker using a die. Returns the resulting state on success, or null.
+    function tryMove(state, fromIdx, die) {
+      const c = state.turn;
+      const next = clone(state);
+      const sign = direction(c);
+
+      // From bar
+      if (fromIdx === 24) {
+        if (next.bar[c] === 0) return null;
+        const ent = entryPoint(c, die);
+        if (!canLandOn(next, ent, c)) return null;
+        next.bar[c]--;
+        landOn(next, ent, c);
+        return next;
+      }
+
+      // Must enter from bar before any other move
+      if (next.bar[c] > 0) return null;
+
+      const fp = next.points[fromIdx];
+      if (fp.color !== c || fp.count === 0) return null;
+
+      const target = fromIdx + sign * die;
+
+      // Bear-off?
+      if ((c === W && target < 0) || (c === B && target > 23)) {
+        if (!allInHome(next, c)) return null;
+        const high = highestOccupied(next, c);
+        // Allowed if exact die (target boundary == -1 or 24 means exact bear off when fromIdx exactly equals die-1 from the edge)
+        // Exact: c==W needs fromIdx === die - 1; c==B needs fromIdx === 24 - die
+        const exact = (c === W && fromIdx === die - 1) || (c === B && fromIdx === 24 - die);
+        if (exact) {
+          fp.count--;
+          if (fp.count === 0) fp.color = null;
+          next.off[c]++;
+          return next;
+        }
+        // Higher die OK only if from the highest occupied point AND no checker on a higher point
+        const overshoot = (c === W && fromIdx < die - 1) || (c === B && fromIdx > 24 - die);
+        if (!overshoot) return null;
+        if (c === W && fromIdx !== high) return null;
+        if (c === B && fromIdx !== high) return null;
+        fp.count--;
+        if (fp.count === 0) fp.color = null;
+        next.off[c]++;
+        return next;
+      }
+
+      // Regular move within board
+      if (target < 0 || target > 23) return null;
+      if (!canLandOn(next, target, c)) return null;
+      fp.count--;
+      if (fp.count === 0) fp.color = null;
+      landOn(next, target, c);
+      return next;
+    }
+
+    function canLandOn(state, idx, c) {
+      const p = state.points[idx];
+      if (p.color === null || p.color === c) return true;
+      // Hit allowed if exactly 1 enemy
+      return p.count === 1;
+    }
+    function landOn(state, idx, c) {
+      const p = state.points[idx];
+      if (p.color !== null && p.color !== c) {
+        // Hit
+        const enemy = p.color;
+        p.color = null; p.count = 0;
+        state.bar[enemy]++;
+      }
+      if (p.color === null) p.color = c;
+      p.count++;
+    }
+
+    function legalSourcesAndMoves(state, dieValue) {
+      // Returns array of { from } where from=24 (bar) or 0..23 such that tryMove succeeds.
+      const out = [];
+      const c = state.turn;
+      if (state.bar[c] > 0) {
+        if (tryMove(state, 24, dieValue)) out.push({ from: 24 });
+        return out;
+      }
+      for (let i = 0; i < 24; i++) {
+        const p = state.points[i];
+        if (p.color === c && p.count > 0) {
+          if (tryMove(state, i, dieValue)) out.push({ from: i });
+        }
+      }
+      return out;
+    }
+
+    // Enumerate all complete play sequences for a given dice array.
+    // A play uses as many dice as possible. Among all plays, only those using
+    // the maximum number of dice are returned.
+    // For ties on dice usage, if only one die is playable, the larger must be used.
+    function enumeratePlays(state, dice) {
+      const completed = [];
+      function recurse(s, remaining, sequence) {
+        if (remaining.length === 0) {
+          completed.push({ end: s, sequence: sequence.slice() });
+          return;
+        }
+        // Try each unique die value first (avoid duplicate enumerations)
+        const tried = new Set();
+        let any = false;
+        for (let di = 0; di < remaining.length; di++) {
+          const die = remaining[di];
+          if (tried.has(die)) continue;
+          tried.add(die);
+          const sources = legalSourcesAndMoves(s, die);
+          for (const src of sources) {
+            const next = tryMove(s, src.from, die);
+            if (!next) continue;
+            any = true;
+            const restDice = remaining.slice(0, di).concat(remaining.slice(di + 1));
+            sequence.push({ from: src.from, die });
+            recurse(next, restDice, sequence);
+            sequence.pop();
+          }
+        }
+        if (!any) {
+          // Dead end — record sequence with fewer dice used
+          completed.push({ end: s, sequence: sequence.slice() });
+        }
+      }
+      recurse(state, dice, []);
+      // Filter to plays using the maximum number of dice
+      let maxLen = 0;
+      for (const p of completed) if (p.sequence.length > maxLen) maxLen = p.sequence.length;
+      let best = completed.filter(p => p.sequence.length === maxLen);
+      // If maxLen == 1 and dice are different and only one die works, must use larger
+      if (maxLen === 1 && dice.length === 2 && dice[0] !== dice[1]) {
+        const larger = Math.max(dice[0], dice[1]);
+        const smaller = Math.min(dice[0], dice[1]);
+        const usingLarger = best.filter(p => p.sequence[0].die === larger);
+        if (usingLarger.length > 0) best = usingLarger;
+        // else falls through (only smaller is playable — allowed)
+      }
+      return best;
+    }
+
+    function rollDice() {
+      const a = 1 + Math.floor(Math.random() * 6);
+      const b = 1 + Math.floor(Math.random() * 6);
+      return a === b ? [a, a, a, a] : [a, b];
+    }
+
+    function gameStatus(state) {
+      if (state.off.w === 15) return 'white-wins';
+      if (state.off.b === 15) return 'black-wins';
+      return 'playing';
+    }
+
+    // ── AI ──────────────────────────────────────────────────────────────────
+    function pipCount(state, c) {
+      let pips = 0;
+      // Distance to bear-off from each point
+      for (let i = 0; i < 24; i++) {
+        const p = state.points[i];
+        if (p.color === c) {
+          const dist = c === W ? (i + 1) : (24 - i);
+          pips += dist * p.count;
+        }
+      }
+      pips += state.bar[c] * 25;
+      return pips;
+    }
+
+    function evaluate(state, asColor, weights) {
+      // Higher = better for asColor.
+      const me = asColor;
+      const opp = me === W ? B : W;
+      let score = 0;
+
+      // Pip lead (lower pip = better)
+      score += (pipCount(state, opp) - pipCount(state, me)) * weights.pip;
+
+      // Off checkers
+      score += (state.off[me] - state.off[opp]) * weights.off;
+
+      // Bar penalty/bonus
+      score += (state.bar[opp] - state.bar[me]) * weights.bar;
+
+      // Blots and made points
+      for (let i = 0; i < 24; i++) {
+        const p = state.points[i];
+        if (!p.color) continue;
+        if (p.color === me) {
+          if (p.count === 1) {
+            // Blot — penalty depends on enemy distance (close = riskier)
+            const enemyDist = me === W ? (24 - i) : (i + 1);
+            score -= weights.blot * Math.max(0, 13 - enemyDist);
+          } else if (p.count >= 2) {
+            score += weights.point;
+            // Home-board points bonus
+            if ((me === W && i <= 5) || (me === B && i >= 18)) score += weights.homePoint;
+            // Bar point (next to opponent's home) bonus
+            if ((me === W && i === 6) || (me === B && i === 17)) score += weights.barPoint;
+            if (p.count >= 3) score += weights.stack * (p.count - 2);
+          }
+        }
+      }
+
+      return score;
+    }
+
+    function chooseAIPlay(state, dice, difficulty) {
+      const weights = {
+        Easy:   { pip: 0.5, off: 8, bar: 5, blot: 1.0, point: 5, homePoint: 4, barPoint: 8, stack: -1.5, jitter: 6 },
+        Medium: { pip: 0.8, off: 12, bar: 8, blot: 1.5, point: 6, homePoint: 6, barPoint: 12, stack: -2, jitter: 3 },
+        Hard:   { pip: 1.0, off: 15, bar: 12, blot: 2.0, point: 8, homePoint: 9, barPoint: 16, stack: -2.5, jitter: 0 },
+      }[difficulty] || { pip: 0.8, off: 12, bar: 8, blot: 1.5, point: 6, homePoint: 6, barPoint: 12, stack: -2, jitter: 3 };
+
+      const plays = enumeratePlays(state, dice);
+      if (plays.length === 0) return null;
+      let best = -Infinity;
+      const scored = plays.map(p => {
+        const s = evaluate(p.end, B, weights);
+        if (s > best) best = s;
+        return { p, s };
+      });
+      const cands = scored.filter(x => best - x.s <= weights.jitter);
+      const pick = cands[Math.floor(Math.random() * cands.length)];
+      return pick.p;
+    }
+
+    // ── UI ──────────────────────────────────────────────────────────────────
+    const KEY_STREAK = 'backgammonHighScore';
+    const KEY_BEST   = 'backgammonBestStreak';
+    const KEY_WINS   = 'backgammonGamesWon';
+    const KEY_LOSS   = 'backgammonGamesLost';
+    const KEY_DIFF   = 'backgammonDifficulty';
+
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+    const CW = canvas.width, CH = canvas.height;
+
+    const turnLabelEl = document.getElementById('turnLabel');
+    const winsEl = document.getElementById('wins');
+    const streakEl = document.getElementById('streak');
+    const diffEl = document.getElementById('difficulty');
+    const rollBtn = document.getElementById('rollBtn');
+    const undoBtn = document.getElementById('undoBtn');
+    const endTurnBtn = document.getElementById('endTurnBtn');
+    const newGameBtn = document.getElementById('newGameBtn');
+    const overEl = document.getElementById('over');
+    const overTitleEl = document.getElementById('overTitle');
+    const overTextEl = document.getElementById('overText');
+    const overBtn = document.getElementById('overBtn');
+    const statusEl = document.getElementById('status');
+
+    let state = startingState();
+    let history = []; // for undo within a turn
+    let selected = null;     // selected source index (0-23 or 24=bar)
+    let availableTargets = []; // [{ to, die }]
+    let aiThinking = false;
+    let difficulty = localStorage.getItem(KEY_DIFF) || 'Medium';
+    diffEl.value = difficulty;
+
+    function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
+    function writeNum(k, v) { localStorage.setItem(k, String(v)); }
+    function refreshStats() {
+      winsEl.textContent = readNum(KEY_WINS) + '–' + readNum(KEY_LOSS);
+      streakEl.textContent = readNum(KEY_STREAK);
+    }
+    refreshStats();
+
+    // Geometry
+    // Board: split horizontally into two halves separated by bar (center).
+    // Top row: points 13..24 left-to-right (point 13 is leftmost top, point 24 is rightmost top)
+    //   Wait — by convention, top row holds points 13-24 and bottom row 1-12.
+    // For our board: bottom-right quadrant is white's home (points 1-6, indices 0-5).
+    // Layout:
+    //   Bottom-right (6 points right→left): indices 0..5 (point 1..6)
+    //   Bottom-left  (6 points right→left): indices 6..11 (point 7..12)
+    //   Top-left     (6 points left→right): indices 12..17 (point 13..18)
+    //   Top-right    (6 points left→right): indices 18..23 (point 19..24)
+    const PADDING = 24;
+    const BAR_WIDTH = 50;
+    const HALF_W = (CW - 2 * PADDING - BAR_WIDTH) / 2;
+    const POINT_W = HALF_W / 6;
+    const POINT_H = (CH - 2 * PADDING - 30) / 2;     // 30px gap in middle for dice
+    const TOP_Y = PADDING;
+    const BOT_Y = CH - PADDING;
+    const BEAR_W = 30;
+
+    function pointGeom(idx) {
+      // Returns { x, y (top of point), dir: 1 if going down, -1 if up }
+      let x, y, dir;
+      if (idx <= 5) {
+        // bottom-right: point 1 = idx 0 = rightmost
+        const col = 5 - idx;
+        x = PADDING + HALF_W + BAR_WIDTH + col * POINT_W;
+        y = BOT_Y; dir = -1;
+      } else if (idx <= 11) {
+        // bottom-left: idx 6 (point 7) = rightmost
+        const col = 11 - idx;
+        x = PADDING + col * POINT_W;
+        y = BOT_Y; dir = -1;
+      } else if (idx <= 17) {
+        // top-left: idx 12 (point 13) = leftmost
+        const col = idx - 12;
+        x = PADDING + col * POINT_W;
+        y = TOP_Y; dir = 1;
+      } else {
+        // top-right: idx 18 (point 19) = leftmost
+        const col = idx - 18;
+        x = PADDING + HALF_W + BAR_WIDTH + col * POINT_W;
+        y = TOP_Y; dir = 1;
+      }
+      return { x, y, dir };
+    }
+
+    function pointTriangleApex(idx) {
+      const g = pointGeom(idx);
+      return { x: g.x + POINT_W / 2, y: g.y + g.dir * POINT_H, dir: g.dir };
+    }
+
+    function checkerPosition(idx, n) {
+      // n = 0-based index of checker stack (0 = closest to base/edge)
+      const g = pointGeom(idx);
+      const cx = g.x + POINT_W / 2;
+      const r = Math.min(POINT_W * 0.42, 18);
+      const cy = g.y + g.dir * (r + 1 + n * (r * 2 - 1));
+      return { x: cx, y: cy, r };
+    }
+
+    function pointAtXY(px, py) {
+      // Returns idx 0..23, 24 (bar), -1 (white off), -2 (black off), or null
+      // White off (right edge, bottom)
+      if (px > CW - PADDING - BEAR_W && py > CH / 2) return -1;
+      // Black off (right edge, top)
+      if (px > CW - PADDING - BEAR_W && py < CH / 2) return -2;
+      // Wait — actually for our right-side bear-off, white bears off from bottom-right side.
+      // Let's reposition: bear-off is the rightmost strip BEYOND the right edge of points 1-6 / 19-24.
+      // Recompute: bear-off rect is at x = CW - PADDING (the right padding area).
+      // For UI simplicity, place bear-off as a tray on the right side of the board.
+
+      // Redo: we'll have a bear-off zone at right edge with two halves.
+      // Rect for white off: (CW - PADDING - BEAR_W .. CW - PADDING) × (CH/2..BOT_Y)
+      // Rect for black off: same x × (TOP_Y..CH/2)
+      const offX0 = CW - PADDING - BEAR_W;
+      const offX1 = CW - PADDING;
+      if (px >= offX0 && px <= offX1) {
+        if (py >= CH / 2 && py <= BOT_Y) return -1;
+        if (py >= TOP_Y && py <= CH / 2) return -2;
+      }
+
+      // Bar — vertical strip in middle
+      const barX0 = PADDING + HALF_W;
+      const barX1 = barX0 + BAR_WIDTH;
+      if (px >= barX0 && px <= barX1 && py >= TOP_Y && py <= BOT_Y) return 24;
+
+      // Points — find which point covers this xy
+      for (let i = 0; i < 24; i++) {
+        const g = pointGeom(i);
+        const xMin = g.x, xMax = g.x + POINT_W;
+        if (px < xMin || px > xMax) continue;
+        if (g.dir === 1) {
+          if (py >= TOP_Y && py <= TOP_Y + POINT_H) return i;
+        } else {
+          if (py >= BOT_Y - POINT_H && py <= BOT_Y) return i;
+        }
+      }
+      return null;
+    }
+
+    function draw() {
+      ctx.fillStyle = '#3A1A12';
+      ctx.fillRect(0, 0, CW, CH);
+
+      // Inner board
+      ctx.fillStyle = '#6F4422';
+      ctx.fillRect(PADDING, PADDING, CW - 2 * PADDING, CH - 2 * PADDING);
+
+      // Bar
+      ctx.fillStyle = '#3A1A12';
+      ctx.fillRect(PADDING + HALF_W, PADDING, BAR_WIDTH, CH - 2 * PADDING);
+
+      // Bear-off tray (right edge)
+      const offX0 = CW - PADDING - BEAR_W;
+      ctx.fillStyle = '#3A1A12';
+      ctx.fillRect(offX0, PADDING, BEAR_W, CH - 2 * PADDING);
+      ctx.strokeStyle = 'rgba(255, 220, 180, 0.25)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.moveTo(offX0, CH / 2); ctx.lineTo(CW - PADDING, CH / 2); ctx.stroke();
+
+      // Triangles for points
+      for (let i = 0; i < 24; i++) {
+        const g = pointGeom(i);
+        const apex = pointTriangleApex(i);
+        const isLight = ((i + (g.dir === 1 ? 0 : 1)) & 1) === 0; // alternate
+        ctx.fillStyle = isLight ? '#E8C68A' : '#6A2722';
+        ctx.beginPath();
+        ctx.moveTo(g.x, g.y);
+        ctx.lineTo(g.x + POINT_W, g.y);
+        ctx.lineTo(apex.x, apex.y);
+        ctx.closePath();
+        ctx.fill();
+      }
+
+      // Highlight selected point
+      if (selected != null) {
+        const g = selected === 24
+          ? { x: PADDING + HALF_W, y: TOP_Y, dir: 1 }
+          : pointGeom(selected);
+        const w = selected === 24 ? BAR_WIDTH : POINT_W;
+        const h = selected === 24 ? (CH - 2 * PADDING) : POINT_H;
+        ctx.fillStyle = 'rgba(80, 180, 240, 0.30)';
+        if (g.dir === 1) ctx.fillRect(g.x, g.y, w, h);
+        else ctx.fillRect(g.x, BOT_Y - h, w, h);
+      }
+
+      // Highlight available targets
+      for (const tgt of availableTargets) {
+        if (tgt.to === -1 || tgt.to === -2) {
+          ctx.fillStyle = 'rgba(40, 220, 90, 0.35)';
+          if (tgt.to === -1) ctx.fillRect(offX0, CH / 2, BEAR_W, CH / 2 - PADDING);
+          else ctx.fillRect(offX0, PADDING, BEAR_W, CH / 2 - PADDING);
+        } else {
+          const g = pointGeom(tgt.to);
+          ctx.strokeStyle = 'rgba(40, 220, 90, 0.85)';
+          ctx.lineWidth = 4;
+          if (g.dir === 1) ctx.strokeRect(g.x + 2, g.y + 2, POINT_W - 4, POINT_H - 4);
+          else ctx.strokeRect(g.x + 2, BOT_Y - POINT_H + 2, POINT_W - 4, POINT_H - 4);
+        }
+      }
+
+      // Checkers on points
+      for (let i = 0; i < 24; i++) {
+        const p = state.points[i];
+        if (!p.color || p.count === 0) continue;
+        const maxStack = 5;
+        const visible = Math.min(p.count, maxStack);
+        for (let n = 0; n < visible; n++) {
+          drawChecker(i, n, p.color);
+        }
+        if (p.count > maxStack) {
+          const pos = checkerPosition(i, maxStack - 1);
+          ctx.fillStyle = p.color === W ? '#1A1310' : '#FBF6E5';
+          ctx.font = 'bold 13px Inter, sans-serif';
+          ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+          ctx.fillText(p.count, pos.x, pos.y);
+        }
+      }
+
+      // Bar checkers
+      const barXmid = PADDING + HALF_W + BAR_WIDTH / 2;
+      // White bar checkers stack downward from middle
+      for (let i = 0; i < state.bar.w; i++) {
+        const cy = CH / 2 + 30 + i * 28;
+        drawCheckerXY(barXmid, cy, W);
+      }
+      for (let i = 0; i < state.bar.b; i++) {
+        const cy = CH / 2 - 30 - i * 28;
+        drawCheckerXY(barXmid, cy, B);
+      }
+
+      // Bear-off checkers
+      for (let i = 0; i < state.off.w; i++) {
+        const y = BOT_Y - 8 - i * 8;
+        ctx.fillStyle = '#FBF6E5';
+        ctx.fillRect(offX0 + 4, y - 4, BEAR_W - 8, 6);
+        ctx.strokeStyle = 'rgba(0,0,0,0.4)';
+        ctx.strokeRect(offX0 + 4, y - 4, BEAR_W - 8, 6);
+      }
+      for (let i = 0; i < state.off.b; i++) {
+        const y = TOP_Y + 8 + i * 8;
+        ctx.fillStyle = '#1A1310';
+        ctx.fillRect(offX0 + 4, y - 4, BEAR_W - 8, 6);
+      }
+
+      // Dice display in middle
+      drawDice();
+
+      // Pip count display
+      ctx.fillStyle = 'rgba(255, 220, 180, 0.85)';
+      ctx.font = 'bold 12px Inter, sans-serif';
+      ctx.textAlign = 'left';
+      ctx.fillText(`White pip: ${pipCount(state, W)}`, PADDING + 4, PADDING - 8);
+      ctx.fillText(`Black pip: ${pipCount(state, B)}`, PADDING + 4, CH - PADDING + 16);
+    }
+
+    function drawChecker(idx, n, color) {
+      const pos = checkerPosition(idx, n);
+      drawCheckerXY(pos.x, pos.y, color, pos.r);
+    }
+    function drawCheckerXY(x, y, color, r) {
+      r = r || 14;
+      const grad = ctx.createRadialGradient(x - r * 0.3, y - r * 0.3, r * 0.1, x, y, r);
+      if (color === W) {
+        grad.addColorStop(0, '#FFFFFF'); grad.addColorStop(0.6, '#FBF6E5'); grad.addColorStop(1, '#B5A37C');
+      } else {
+        grad.addColorStop(0, '#5A5A5A'); grad.addColorStop(0.6, '#1A1310'); grad.addColorStop(1, '#000');
+      }
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+      ctx.strokeStyle = color === W ? 'rgba(120, 90, 50, 0.5)' : 'rgba(80, 80, 80, 0.5)';
+      ctx.lineWidth = 1;
+      ctx.beginPath(); ctx.arc(x, y, r * 0.78, 0, Math.PI * 2); ctx.stroke();
+    }
+
+    function drawDice() {
+      if (state.dice.length === 0) return;
+      const cx = CW / 2;
+      const cy = CH / 2;
+      const sz = 32;
+      const gap = 10;
+      // Show used + remaining: state.dice contains remaining; we'll add a faded overlay for used by tracking startTurnDice
+      const all = currentTurnAllDice();
+      const remaining = state.dice.slice();
+      const totalW = all.length * sz + (all.length - 1) * gap;
+      let x = cx - totalW / 2;
+      const y = cy - sz / 2;
+      for (const d of all) {
+        const used = !consumeFrom(remaining, d);
+        ctx.fillStyle = used ? 'rgba(255, 245, 220, 0.35)' : '#FFFCEF';
+        ctx.fillRect(x, y, sz, sz);
+        ctx.strokeStyle = '#3A1A12'; ctx.lineWidth = 2;
+        ctx.strokeRect(x, y, sz, sz);
+        ctx.fillStyle = used ? 'rgba(40, 25, 18, 0.5)' : '#1A1310';
+        drawPips(x, y, sz, d);
+        x += sz + gap;
+      }
+    }
+    function consumeFrom(arr, v) {
+      const i = arr.indexOf(v);
+      if (i < 0) return false;
+      arr.splice(i, 1); return true;
+    }
+    function drawPips(x, y, sz, n) {
+      const r = 2.6;
+      const c = sz / 2;
+      const o = sz / 4;
+      const dot = (dx, dy) => { ctx.beginPath(); ctx.arc(x + dx, y + dy, r, 0, Math.PI * 2); ctx.fill(); };
+      const positions = {
+        1: [[c,c]],
+        2: [[o,o],[sz-o,sz-o]],
+        3: [[o,o],[c,c],[sz-o,sz-o]],
+        4: [[o,o],[sz-o,o],[o,sz-o],[sz-o,sz-o]],
+        5: [[o,o],[sz-o,o],[c,c],[o,sz-o],[sz-o,sz-o]],
+        6: [[o,o],[sz-o,o],[o,c],[sz-o,c],[o,sz-o],[sz-o,sz-o]],
+      };
+      for (const [px, py] of (positions[n] || [])) dot(px, py);
+    }
+
+    let _turnDiceMemo = null;
+    function currentTurnAllDice() {
+      // Reconstruct full original dice for this turn so we can render used ones faded.
+      // We track via _turnDiceMemo set when rolling.
+      return _turnDiceMemo || state.dice.slice();
+    }
+
+    function setStatus(s) { statusEl.textContent = s; }
+
+    function showOver(title, text) {
+      overTitleEl.textContent = title;
+      overTextEl.textContent = text;
+      overEl.classList.add('show');
+    }
+
+    function recordWin() {
+      writeNum(KEY_WINS, readNum(KEY_WINS) + 1);
+      const s = readNum(KEY_STREAK) + 1;
+      writeNum(KEY_STREAK, s);
+      if (s > readNum(KEY_BEST)) writeNum(KEY_BEST, s);
+      refreshStats();
+    }
+    function recordLoss() {
+      writeNum(KEY_LOSS, readNum(KEY_LOSS) + 1);
+      writeNum(KEY_STREAK, 0);
+      refreshStats();
+    }
+
+    function checkEnd() {
+      const s = gameStatus(state);
+      if (s === 'playing') return false;
+      if (s === 'white-wins') { recordWin(); showOver('You win!', 'All 15 white checkers borne off. Streak preserved.'); }
+      else { recordLoss(); showOver('You lost', 'AI bore off all 15. Streak reset.'); }
+      return true;
+    }
+
+    // Compute the set of (target, die) options for the currently selected source.
+    function recomputeAvailableTargets() {
+      availableTargets = [];
+      if (selected == null) return;
+      const remaining = state.dice.slice();
+      const seenDice = new Set();
+      for (const d of remaining) {
+        if (seenDice.has(d)) continue;
+        seenDice.add(d);
+        const next = tryMove(state, selected, d);
+        if (next) {
+          // Determine target index for highlight (-1 = white off, -2 = black off, else index)
+          let target;
+          if (selected === 24) target = entryPoint(state.turn, d);
+          else {
+            const dest = selected + direction(state.turn) * d;
+            if (state.turn === W && dest < 0) target = -1;
+            else if (state.turn === B && dest > 23) target = -2;
+            else target = dest;
+          }
+          availableTargets.push({ to: target, die: d });
+        }
+      }
+      // Filter to only sources that are part of a maximum-using-dice play.
+      // To keep UI responsive, we trust enumeratePlays semantics on End Turn.
+    }
+
+    function pushHistory() { history.push({ s: clone(state), dice: state.dice.slice() }); }
+    function undo() {
+      if (history.length === 0) return;
+      const h = history.pop();
+      state = h.s; state.dice = h.dice;
+      selected = null; availableTargets = [];
+      refreshButtons();
+      draw();
+    }
+
+    function refreshButtons() {
+      undoBtn.disabled = history.length === 0;
+      // End turn enabled only when no further moves possible OR all dice used
+      if (!state.rolledThisTurn || state.turn !== W) {
+        endTurnBtn.disabled = true;
+      } else if (state.dice.length === 0) {
+        endTurnBtn.disabled = false;
+      } else {
+        // Any further legal moves?
+        let any = false;
+        for (const d of state.dice) {
+          if (legalSourcesAndMoves(state, d).length > 0) { any = true; break; }
+        }
+        endTurnBtn.disabled = any && hasMustUsePlay();
+      }
+      rollBtn.disabled = state.turn !== W || state.rolledThisTurn || aiThinking;
+    }
+
+    function hasMustUsePlay() {
+      // True if there's a legal sequence using more dice than already used.
+      const startState = history.length > 0 ? history[0].s : state;
+      const fullDice = history.length > 0 ? history[0].dice : state.dice;
+      const plays = enumeratePlays(startState, fullDice);
+      const movesMade = (history.length > 0 ? history[0].dice.length : state.dice.length) - state.dice.length;
+      const maxLen = plays.length > 0 ? plays[0].sequence.length : 0;
+      return movesMade < maxLen;
+    }
+
+    canvas.addEventListener('click', (e) => {
+      if (aiThinking || state.turn !== W) return;
+      if (overEl.classList.contains('show')) return;
+      if (!state.rolledThisTurn || state.dice.length === 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const px = (e.clientX - rect.left) * (CW / rect.width);
+      const py = (e.clientY - rect.top) * (CH / rect.height);
+      const idx = pointAtXY(px, py);
+      if (idx == null) { selected = null; availableTargets = []; draw(); return; }
+
+      // If we have a selection, try to land on this idx
+      if (selected != null) {
+        for (const tgt of availableTargets) {
+          // tgt.to: -1 = white-off, -2 = black-off, else idx
+          if (tgt.to === idx
+              || (tgt.to === -1 && idx === -1)
+              || (tgt.to === -2 && idx === -2)) {
+            pushHistory();
+            const next = tryMove(state, selected, tgt.die);
+            if (next) {
+              state.points = next.points; state.bar = next.bar; state.off = next.off;
+              // Remove this die
+              const di = state.dice.indexOf(tgt.die);
+              if (di >= 0) state.dice.splice(di, 1);
+            } else {
+              history.pop();
+            }
+            selected = null; availableTargets = [];
+            refreshButtons();
+            draw();
+            // Auto-end turn when no more moves
+            if (state.dice.length === 0 || allDiceUnplayable()) maybeEndTurn();
+            return;
+          }
+        }
+      }
+
+      // Select source
+      if (state.bar[W] > 0 && idx !== 24) {
+        setStatus('You have a checker on the bar — re-enter it first (click the bar in the middle).');
+        return;
+      }
+      if (idx === 24) {
+        if (state.bar[W] === 0) return;
+        selected = 24;
+        recomputeAvailableTargets();
+        if (availableTargets.length === 0) setStatus('No legal entry from the bar with these dice.');
+        draw();
+        return;
+      }
+      if (idx < 0) return; // bear-off zone, not a source
+      const p = state.points[idx];
+      if (!p.color || p.color !== W) return;
+      selected = idx;
+      recomputeAvailableTargets();
+      if (availableTargets.length === 0) {
+        selected = null;
+        setStatus('That checker has no legal moves with the current dice.');
+      }
+      draw();
+    });
+
+    function allDiceUnplayable() {
+      for (const d of state.dice) {
+        if (legalSourcesAndMoves(state, d).length > 0) return false;
+      }
+      return true;
+    }
+
+    function maybeEndTurn() {
+      // Auto-end if all dice consumed or unplayable
+      if (state.dice.length === 0 || allDiceUnplayable()) {
+        endTurn();
+      }
+    }
+
+    function endTurn() {
+      if (state.turn !== W) return;
+      history = [];
+      _turnDiceMemo = null;
+      state.dice = [];
+      state.rolledThisTurn = false;
+      state.turn = B;
+      selected = null; availableTargets = [];
+      if (checkEnd()) return;
+      refreshButtons();
+      draw();
+      setStatus('AI is thinking…');
+      turnLabelEl.textContent = "AI's turn";
+      aiTurn();
+    }
+
+    function aiTurn() {
+      if (state.turn !== B) return;
+      aiThinking = true;
+      setTimeout(() => {
+        try {
+          const dice = rollDice();
+          state.dice = dice.slice();
+          _turnDiceMemo = dice.slice();
+          state.rolledThisTurn = true;
+          draw();
+          // Pause briefly so user can see the dice
+          setTimeout(() => {
+            const play = chooseAIPlay(state, dice, difficulty);
+            if (play) {
+              state.points = play.end.points;
+              state.bar = play.end.bar;
+              state.off = play.end.off;
+            }
+            state.dice = [];
+            state.rolledThisTurn = false;
+            state.turn = W;
+            _turnDiceMemo = null;
+            draw();
+            if (checkEnd()) { aiThinking = false; refreshButtons(); return; }
+            turnLabelEl.textContent = 'Your turn';
+            setStatus('Your turn — click "Roll dice".');
+            aiThinking = false;
+            refreshButtons();
+          }, 600);
+        } catch (e) {
+          aiThinking = false;
+          refreshButtons();
+        }
+      }, 50);
+    }
+
+    rollBtn.addEventListener('click', () => {
+      if (state.turn !== W || state.rolledThisTurn) return;
+      const dice = rollDice();
+      state.dice = dice.slice();
+      _turnDiceMemo = dice.slice();
+      state.rolledThisTurn = true;
+      history = [];
+      // If no legal play at all, end turn
+      const plays = enumeratePlays(state, dice);
+      if (plays.length === 0 || (plays[0].sequence.length === 0)) {
+        setStatus('No legal moves with this roll. Turn passes.');
+        setTimeout(() => endTurn(), 600);
+      } else {
+        turnLabelEl.textContent = 'Your turn';
+        setStatus(`Rolled ${dice.join(', ')}. Click a checker to move.`);
+      }
+      refreshButtons();
+      draw();
+    });
+    undoBtn.addEventListener('click', undo);
+    endTurnBtn.addEventListener('click', () => {
+      if (hasMustUsePlay()) {
+        setStatus('You must use as many dice as possible — there is a play that uses more dice.');
+        return;
+      }
+      endTurn();
+    });
+    overBtn.addEventListener('click', startGame);
+    newGameBtn.addEventListener('click', startGame);
+    diffEl.addEventListener('change', () => {
+      difficulty = diffEl.value;
+      localStorage.setItem(KEY_DIFF, difficulty);
+    });
+
+    function startGame() {
+      state = startingState();
+      history = [];
+      selected = null;
+      availableTargets = [];
+      aiThinking = false;
+      _turnDiceMemo = null;
+      overEl.classList.remove('show');
+      turnLabelEl.textContent = 'Your turn';
+      setStatus('Click "Roll dice" to start.');
+      refreshButtons();
+      draw();
+    }
+
+    startGame();
+
+    // Auto-scale
+    (function () {
+      const c = canvas;
+      const bw = c.width, bh = c.height;
+      function sc() {
+        const par = c.parentElement;
+        const ps = getComputedStyle(par);
+        const mw = par.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
+        const mh = window.innerHeight * 0.65;
+        const s = Math.min(mw / bw, mh / bh, 1);
+        c.style.width = (bw * s) + 'px';
+        c.style.height = (bh * s) + 'px';
+      }
+      window.addEventListener('resize', sc);
+      sc();
+    })();
+    </script>
+</body>
+</html>
