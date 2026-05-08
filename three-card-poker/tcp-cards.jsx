@@ -31,32 +31,15 @@ function TCPCardCorner({ rank, suit, flip = false, w = 78 }) {
 }
 
 function TCPCardFace({ rank, suit, w }) {
-  const color = TCP_SUITS[suit].color;
   return (
     <div style={{
       position: 'absolute', inset: 0,
-      background: 'linear-gradient(180deg, #fffdf6 0%, #f5edd9 100%)',
+      background: '#fffdf6',
       borderRadius: 10,
       boxShadow: '0 1px 0 rgba(255,255,255,.8) inset, 0 0 0 1px rgba(0,0,0,.1), 0 8px 18px rgba(0,0,0,.35), 0 2px 4px rgba(0,0,0,.2)',
-      overflow: 'hidden'
-    }}>
-      <TCPCardCorner rank={rank} suit={suit} w={w} />
-      <TCPCardCorner rank={rank} suit={suit} w={w} flip />
-
-      <div style={{
-        position: 'absolute', inset: 0, display: 'flex',
-        alignItems: 'center', justifyContent: 'center'
-      }}>
-        <div style={{
-          position: 'relative',
-          width: w * 0.62, height: w * 0.62,
-          display: 'flex', alignItems: 'center', justifyContent: 'center',
-          background: 'radial-gradient(circle, rgba(201,162,106,.18) 0%, transparent 65%)'
-        }}>
-          <span style={{ fontSize: w * 0.6, color, lineHeight: 1, fontFamily: 'serif' }}>{suit}</span>
-        </div>
-      </div>
-    </div>
+      overflow: 'hidden',
+      ...window.CASINO_CARDS.faceStyle(rank, suit)
+    }} />
   );
 }
 
