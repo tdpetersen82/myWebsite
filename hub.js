@@ -25,6 +25,7 @@
     { id: 'simon',             name: 'Simon',             cat: 'classic', desc: 'Watch. Repeat. Repeat longer.',    color: '#F08488', plays: '8.6k'  },
     { id: 'connect-4',         name: 'Connect 4',         cat: 'puzzle',  desc: 'Four in a row beats the AI.',      color: '#8FA8E6', plays: '14.3k' },
     { id: 'connect-dots',      name: 'Dots & Boxes',      cat: 'puzzle',  desc: 'Lines, boxes, strategy.',          color: '#F08488', plays: '5.8k'  },
+    { id: '2048',              name: '2048',              cat: 'puzzle',  desc: 'Merge tiles. Reach 2048.',          color: '#F2A65A', plays: '0',    isNew: true },
     { id: 'blackjack',         name: 'Blackjack',         cat: 'casino',  desc: 'Hit 21 with strategy hints.',      color: '#7BC97B', plays: '18.9k' },
     { id: 'roulette',          name: 'Roulette',          cat: 'casino',  desc: 'Spin the European wheel.',         color: '#F08488', plays: '6.4k'  },
     { id: 'video-poker',       name: 'Video Poker',       cat: 'casino',  desc: 'Jacks or Better. Hold smart.',     color: '#A78BFA', plays: '11.2k' },
@@ -55,6 +56,7 @@
     defender: 'defenderHighScore',
     'lunar-lander': 'lunarLanderHighScore',
     'spacex-lander': 'spacexLanderHighScore',
+    '2048': '2048HighScore',
   };
   function getBest(gameId) {
     const key = SCORE_KEYS[gameId];
@@ -79,6 +81,7 @@
     simon: '<path d="M32 8 A24 24 0 0 1 56 32 L32 32 Z" fill="C"/><path d="M56 32 A24 24 0 0 1 32 56 L32 32 Z" fill="C" opacity="0.7"/><path d="M32 56 A24 24 0 0 1 8 32 L32 32 Z" fill="C" opacity="0.5"/><path d="M8 32 A24 24 0 0 1 32 8 L32 32 Z" fill="C" opacity="0.85"/>',
     'connect-4': '<rect x="8" y="10" width="48" height="44" rx="4" fill="C" opacity="0.25"/><circle cx="18" cy="22" r="4" fill="C"/><circle cx="32" cy="22" r="4" fill="C" opacity="0.5"/><circle cx="46" cy="22" r="4" fill="C"/><circle cx="18" cy="36" r="4" fill="C" opacity="0.5"/><circle cx="32" cy="36" r="4" fill="C"/><circle cx="46" cy="36" r="4" fill="C" opacity="0.5"/>',
     'connect-dots': '<circle cx="14" cy="14" r="3" fill="C"/><circle cx="32" cy="14" r="3" fill="C"/><circle cx="50" cy="14" r="3" fill="C"/><circle cx="14" cy="32" r="3" fill="C"/><circle cx="32" cy="32" r="3" fill="C"/><circle cx="50" cy="32" r="3" fill="C"/><circle cx="14" cy="50" r="3" fill="C"/><circle cx="32" cy="50" r="3" fill="C"/><circle cx="50" cy="50" r="3" fill="C"/><line x1="14" y1="14" x2="32" y2="14" stroke="C" stroke-width="2.5"/><line x1="14" y1="14" x2="14" y2="32" stroke="C" stroke-width="2.5"/><line x1="14" y1="32" x2="32" y2="32" stroke="C" stroke-width="2.5"/><line x1="32" y1="14" x2="32" y2="32" stroke="C" stroke-width="2.5"/>',
+    '2048': '<rect x="8" y="8"  width="11" height="11" rx="2" fill="C" opacity="0.3"/><rect x="20" y="8"  width="11" height="11" rx="2" fill="C" opacity="0.45"/><rect x="33" y="8"  width="11" height="11" rx="2" fill="C" opacity="0.6"/><rect x="45" y="8"  width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="8"  y="20" width="11" height="11" rx="2" fill="C" opacity="0.5"/><rect x="20" y="20" width="11" height="11" rx="2" fill="C" opacity="0.7"/><rect x="33" y="20" width="11" height="11" rx="2" fill="C" opacity="0.55"/><rect x="45" y="20" width="11" height="11" rx="2" fill="C" opacity="0.35"/><rect x="8"  y="33" width="11" height="11" rx="2" fill="C" opacity="0.45"/><rect x="20" y="33" width="11" height="11" rx="2" fill="C" opacity="0.6"/><rect x="33" y="33" width="23" height="23" rx="3" fill="C"/><rect x="8"  y="45" width="11" height="11" rx="2" fill="C" opacity="0.5"/><rect x="20" y="45" width="11" height="11" rx="2" fill="C" opacity="0.4"/><text x="44.5" y="48.5" font-size="9" font-weight="800" fill="#fff" text-anchor="middle">2048</text>',
     blackjack: '<rect x="8" y="14" width="22" height="32" rx="3" fill="#fff" stroke="C" stroke-width="2"/><text x="13" y="26" font-size="10" fill="C" font-weight="700">A</text><rect x="32" y="18" width="22" height="32" rx="3" fill="C"/><text x="38" y="32" font-size="10" fill="#fff" font-weight="700">K</text>',
     roulette: '<circle cx="32" cy="32" r="22" fill="none" stroke="C" stroke-width="3"/><circle cx="32" cy="32" r="14" fill="none" stroke="C" stroke-width="2" opacity="0.5"/><circle cx="32" cy="32" r="4" fill="C"/><circle cx="32" cy="14" r="2.5" fill="C"/><circle cx="50" cy="32" r="2.5" fill="C" opacity="0.6"/>',
     'video-poker': '<rect x="6" y="14" width="14" height="22" rx="2" fill="#fff" stroke="C" stroke-width="1.5"/><rect x="22" y="14" width="14" height="22" rx="2" fill="C"/><rect x="38" y="14" width="14" height="22" rx="2" fill="#fff" stroke="C" stroke-width="1.5"/><rect x="6" y="42" width="46" height="6" rx="2" fill="C" opacity="0.4"/>',
