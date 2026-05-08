@@ -56,9 +56,9 @@ function buildLineup(playerName, buyin) {
   const arche = window.TH_PERSONALITY.ARCHETYPES;
   return [
     makeSeat({ id: 0, name: playerName, archetype: { id: 'player', name: playerName, color: '#e6c590', initials: (playerName[0] || 'Y').toUpperCase() }, isPlayer: true, stack: buyin }),
-    makeSeat({ id: 1, name: 'Tight Tom',  archetype: arche['tight-tom'],   isPlayer: false, stack: buyin }),
-    makeSeat({ id: 2, name: 'Loose Lucy', archetype: arche['loose-lucy'],  isPlayer: false, stack: buyin }),
-    makeSeat({ id: 3, name: 'Maniac Mike',archetype: arche['maniac-mike'], isPlayer: false, stack: buyin })
+    makeSeat({ id: 1, name: 'Marcus', archetype: arche['tight-tom'],   isPlayer: false, stack: buyin }),
+    makeSeat({ id: 2, name: 'Sarah',  archetype: arche['loose-lucy'],  isPlayer: false, stack: buyin }),
+    makeSeat({ id: 3, name: 'Jake',   archetype: arche['maniac-mike'], isPlayer: false, stack: buyin })
   ];
 }
 
@@ -471,7 +471,7 @@ function App() {
 
     // If current actor is AI, schedule a decision after a small delay so it feels paced.
     if (!cur.isPlayer) {
-      const timeoutMs = 700 + Math.random() * 700;
+      const timeoutMs = 220 + Math.random() * 280;
       const id = setTimeout(() => runAITurn(actorIdx), timeoutMs);
       return () => clearTimeout(id);
     }
@@ -534,7 +534,7 @@ function App() {
         return;
       }
       setActorIdx(nxt);
-    }, 350);
+    }, 180);
   }
 
   // Keep a ref of seats for use inside timed callbacks.
