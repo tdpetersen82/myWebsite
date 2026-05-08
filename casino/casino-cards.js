@@ -26,11 +26,13 @@
     'K': 12, 'k': 12
   };
 
+  // Suit glyphs as \u escapes (ASCII-only source) so the keys are invariant
+  // regardless of how the JS file is decoded by the browser.
   const SUIT_TO_ROW = {
-    '♠': 0, 'spades': 0, 'spade': 0, 's': 0, 'S': 0,
-    '♥': 1, 'hearts': 1, 'heart': 1, 'h': 1, 'H': 1,
-    '♦': 2, 'diamonds': 2, 'diamond': 2, 'd': 2, 'D': 2,
-    '♣': 3, 'clubs': 3, 'club': 3, 'c': 3, 'C': 3
+    '\u2660': 0, 'spades': 0, 'spade': 0, 's': 0, 'S': 0, // \u2660
+    '\u2665': 1, 'hearts': 1, 'heart': 1, 'h': 1, 'H': 1, // \u2665
+    '\u2666': 2, 'diamonds': 2, 'diamond': 2, 'd': 2, 'D': 2, // \u2666
+    '\u2663': 3, 'clubs': 3, 'club': 3, 'c': 3, 'C': 3 // \u2663
   };
 
   function rankIndex(rank) {
