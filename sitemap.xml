@@ -10,6 +10,8 @@
   <url><loc>https://limestonegames.com/backgammon/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/checkers/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/chess/</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://limestonegames.com/chinese-checkers/</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://limestonegames.com/othello/</loc><priority>0.85</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/asteroids/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/solitaire/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/bubble-pop/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>

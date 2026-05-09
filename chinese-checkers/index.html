@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chinese Checkers — Free Browser Game vs. AI | Limestone Games</title>
+    <meta name="description" content="Play Chinese Checkers free in your browser. 2-, 3-, or 6-player vs. AI on the classic 121-hole star board. Hop chains, three difficulty tiers, no downloads.">
+    <meta name="keywords" content="chinese checkers, halma, sternhalma, online chinese checkers, free chinese checkers, browser chinese checkers, chinese checkers vs AI">
+    <link rel="canonical" href="https://limestonegames.com/chinese-checkers/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Chinese Checkers","description":"Play Chinese Checkers in your browser against AI opponents. 2, 3, or 6 player modes on the classic star board. Three difficulty tiers.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Chinese Checkers"}]}</script>
+    <meta property="og:title" content="Chinese Checkers — Free Browser Game vs. AI">
+    <meta property="og:description" content="2-, 3-, or 6-player Chinese Checkers in your browser. Hop chains, three difficulties, no downloads.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/chinese-checkers/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Chinese Checkers — Free Browser Game vs. AI">
+    <meta name="twitter:description" content="2-, 3-, or 6-player Chinese Checkers vs. AI. Three difficulties.">
+
+    <style>
+      :root {
+        --ink: #15171F;
+        --paper: #ECF1F4;
+        --board-light: #FBE9D7;
+        --board-dark:  #E8B384;
+        --frame: #1B2F3A;
+        --accent: #2DA1A6;
+        --accent-deep: #1F767A;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, #ECF1F4 0%, #C5DDE3 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 16px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .top-bar {
+        width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        font-size: 14px; flex-wrap: wrap;
+      }
+      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
+      .top-bar a:hover { opacity: 1; }
+      h1 {
+        font-family: 'Bricolage Grotesque', serif;
+        font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
+        color: var(--frame);
+      }
+      .stats {
+        display: flex; gap: 14px; font-size: 14px; font-weight: 600;
+        background: rgba(255, 255, 255, 0.7);
+        backdrop-filter: blur(6px);
+        padding: 10px 18px; border-radius: 999px;
+        box-shadow: 0 4px 12px rgba(21, 23, 31, 0.08);
+        flex-wrap: wrap; justify-content: center;
+      }
+      .stats > div { display: flex; gap: 6px; align-items: baseline; }
+      .stats .l { color: rgba(21, 23, 31, 0.55); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+      .stats .v { font-size: 17px; font-weight: 800; color: var(--accent-deep); }
+      select.diff {
+        font: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+        padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(21, 23, 31, 0.2);
+        background: #fff;
+      }
+      .stage-wrap {
+        position: relative;
+        background: rgba(255, 255, 255, 0.7);
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 12px 30px rgba(31, 118, 122, 0.18);
+        align-self: center;
+      }
+      canvas {
+        display: block;
+        background: var(--frame);
+        border-radius: 8px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+      button {
+        font: inherit; font-weight: 700;
+        padding: 10px 18px; border-radius: 999px;
+        border: 2px solid transparent;
+        background: var(--accent); color: #fff;
+        cursor: pointer; transition: transform 0.1s;
+        box-shadow: 0 4px 12px rgba(45, 161, 166, 0.32);
+      }
+      button:hover { transform: translateY(-1px); }
+      button:active { transform: translateY(1px); }
+      button.ghost { background: transparent; color: var(--ink); border-color: rgba(21, 23, 31, 0.2); box-shadow: none; }
+      button.done {
+        background: #F2A65A; box-shadow: 0 4px 12px rgba(242, 166, 90, 0.32);
+        padding: 8px 16px; font-size: 14px;
+      }
+      button.done.hidden { display: none; }
+      .turn { font-size: 13px; color: rgba(21, 23, 31, 0.75); min-height: 18px; text-align: center; }
+      .roster {
+        display: flex; gap: 12px; flex-wrap: wrap; justify-content: center;
+        font-size: 12px; color: rgba(21, 23, 31, 0.7);
+      }
+      .roster .ent { display: flex; align-items: center; gap: 5px; }
+      .roster .swatch {
+        width: 12px; height: 12px; border-radius: 50%;
+        box-shadow: 0 1px 2px rgba(0, 0, 0, 0.25);
+      }
+      .roster .ent.cur { color: var(--accent-deep); font-weight: 700; }
+      .toast {
+        position: absolute; left: 50%; top: 30px; transform: translateX(-50%);
+        background: rgba(21, 23, 31, 0.85); color: #FFF;
+        padding: 8px 16px; border-radius: 999px;
+        font-size: 13px; font-weight: 600;
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.25s;
+      }
+      .toast.show { opacity: 1; }
+      .game-over {
+        position: absolute; inset: 14px;
+        background: rgba(236, 241, 244, 0.96);
+        border-radius: 8px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        text-align: center; padding: 24px;
+      }
+      .game-over.show { opacity: 1; pointer-events: auto; }
+      .game-over h2 { font-size: 28px; color: var(--accent-deep); }
+      .game-over p { font-size: 15px; color: rgba(21, 23, 31, 0.78); max-width: 380px; }
+      .hint { font-size: 13px; color: rgba(21, 23, 31, 0.6); text-align: center; max-width: 600px; }
+      #how { padding: 20px 16px; max-width: 600px; }
+      #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin-bottom: 8px; }
+      #how p { font-size: 14px; color: rgba(21, 23, 31, 0.78); margin-bottom: 8px; }
+      #how ul { padding-left: 20px; font-size: 14px; color: rgba(21, 23, 31, 0.82); }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../strategy/">All Strategy games</a>
+        </div>
+        <h1>Chinese Checkers</h1>
+        <div class="stats">
+            <div><span class="l">Turn</span><span class="v" id="turn">Your move</span></div>
+            <div><span class="l">Moves</span><span class="v" id="moves">0</span></div>
+            <div><span class="l">Wins–Losses</span><span class="v" id="wins">0–0</span></div>
+            <div><span class="l">Streak</span><span class="v" id="streak">0</span></div>
+            <div><span class="l">Players</span>
+                <select class="diff" id="players" aria-label="Player count">
+                    <option value="2">2</option>
+                    <option value="3">3</option>
+                    <option value="6">6</option>
+                </select>
+            </div>
+            <div><span class="l">Difficulty</span>
+                <select class="diff" id="difficulty" aria-label="Difficulty">
+                    <option>Easy</option>
+                    <option>Medium</option>
+                    <option>Hard</option>
+                </select>
+            </div>
+        </div>
+        <div class="stage-wrap">
+            <canvas id="board" width="640" height="720"></canvas>
+            <div class="toast" id="toast"></div>
+            <div class="game-over" id="over">
+                <h2 id="overTitle">You won!</h2>
+                <p id="overText"></p>
+                <button id="overBtn">New game</button>
+            </div>
+        </div>
+        <div class="roster" id="roster"></div>
+        <div class="turn" id="status">Click one of your marbles to see legal moves.</div>
+        <div class="controls">
+            <button id="newGame">New game</button>
+            <button id="doneJump" class="done hidden">Done jumping</button>
+            <a href="../strategy/"><button class="ghost">More strategy games</button></a>
+        </div>
+        <p class="hint">Step into an adjacent empty hole, or hop over any marble (yours or theirs) into the empty hole on the far side. Hops can chain. First to fill the opposite triangle wins.</p>
+
+        <section id="how" aria-label="How to play">
+            <h2>How to play</h2>
+            <p>You play the bottom-pointing triangle. Each turn either step a marble into an adjacent empty hole, or jump it over a neighbor (yours or any opponent's) to the empty hole on the far side. After a jump you may chain another jump from the new position. Click <b>Done jumping</b> to end your turn voluntarily; if no further jumps are possible the chain ends automatically.</p>
+            <p>The first player to land all 10 of their marbles in the opposite triangle wins. Once a marble enters its goal triangle it cannot leave — no shuffling pegs back and forth to stall.</p>
+            <ul>
+                <li><b>2 players</b> — head-to-head across the board.</li>
+                <li><b>3 players</b> — you plus two AIs at every-other points (classic 3-handed layout).</li>
+                <li><b>6 players</b> — full board, you plus five AIs. Chaotic; longer games.</li>
+            </ul>
+            <ul>
+                <li><b>Easy</b> — depth 2 with extra randomness.</li>
+                <li><b>Medium</b> — depth 3.</li>
+                <li><b>Hard</b> — depth 4 with longest-chain ordering.</li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+    'use strict';
+
+    // ── Hex board geometry ───────────────────────────────────────────────────
+    // Cube coords (x, y, z) with x + y + z = 0. Axial = (q, r) where q = x and r = z.
+    //   pixel_x = SIZE * (sqrt(3) * q + sqrt(3)/2 * r)  (pointy-top)
+    //   pixel_y = SIZE * 3/2 * r
+    // Regions (player slots correspond to home triangles):
+    //   0 = central hex (61 cells)
+    //   1 = top    triangle (z ≤ -5)        — opposite 4
+    //   2 = upper-right     (x ≥ 5)          — opposite 5
+    //   3 = upper-left      (y ≥ 5)          — opposite 6
+    //   4 = bottom triangle (z ≥ 5)          — opposite 1
+    //   5 = lower-left      (x ≤ -5)         — opposite 2
+    //   6 = lower-right     (y ≤ -5)         — opposite 3
+
+    const REGION_OPPOSITE = { 1: 4, 2: 5, 3: 6, 4: 1, 5: 2, 6: 3 };
+
+    const CELLS = [];     // [{ q, r, region, idx, px, py, neighbors:[6] }]
+    const CELL_BY_KEY = new Map();   // "q,r" → idx
+
+    (function buildBoard() {
+      function cellRegion(x, y, z) {
+        const inHex = Math.max(Math.abs(x), Math.abs(y), Math.abs(z)) <= 4;
+        if (inHex) return 0;
+        if (z <= -5 && Math.abs(x) <= 4 && Math.abs(y) <= 4) return 1;
+        if (z >=  5 && Math.abs(x) <= 4 && Math.abs(y) <= 4) return 4;
+        if (x >=  5 && Math.abs(y) <= 4 && Math.abs(z) <= 4) return 2;
+        if (x <= -5 && Math.abs(y) <= 4 && Math.abs(z) <= 4) return 5;
+        if (y >=  5 && Math.abs(x) <= 4 && Math.abs(z) <= 4) return 3;
+        if (y <= -5 && Math.abs(x) <= 4 && Math.abs(z) <= 4) return 6;
+        return -1;
+      }
+      for (let q = -8; q <= 8; q++) {
+        for (let r = -8; r <= 8; r++) {
+          const x = q, z = r, y = -q - r;
+          const region = cellRegion(x, y, z);
+          if (region < 0) continue;
+          CELLS.push({ q, r, region, idx: CELLS.length, px: 0, py: 0, neighbors: null });
+        }
+      }
+      for (const c of CELLS) CELL_BY_KEY.set(c.q + ',' + c.r, c.idx);
+      // Neighbor offsets in axial (q, r)
+      const NB = [[1,0],[-1,0],[0,1],[0,-1],[1,-1],[-1,1]];
+      for (const c of CELLS) {
+        const arr = new Int16Array(6);
+        for (let i = 0; i < 6; i++) {
+          const k = (c.q + NB[i][0]) + ',' + (c.r + NB[i][1]);
+          arr[i] = CELL_BY_KEY.has(k) ? CELL_BY_KEY.get(k) : -1;
+        }
+        c.neighbors = arr;
+      }
+      if (CELLS.length !== 121) console.warn('Cell count not 121:', CELLS.length);
+    })();
+
+    // ── Pixel layout ─────────────────────────────────────────────────────────
+    const CANVAS_W = 640, CANVAS_H = 720;
+    const HEX_SIZE = 26.5;     // chosen so 2*8*sqrt(3)/2*SIZE ≈ width and 12*SIZE ≈ height
+    const CX = CANVAS_W / 2;
+    const CY = CANVAS_H / 2;
+    const SQRT3 = Math.sqrt(3);
+    for (const c of CELLS) {
+      c.px = CX + HEX_SIZE * (SQRT3 * c.q + SQRT3 / 2 * c.r);
+      c.py = CY + HEX_SIZE * 1.5 * c.r;
+    }
+    const HOLE_R = HEX_SIZE * 0.46;
+
+    // ── Player colors ────────────────────────────────────────────────────────
+    // Player slots are 1..6 by their HOME region.
+    const PLAYER_COLORS = {
+      1: { fill: '#3D5A80', light: '#7B9DC9', name: 'Top'         },  // top — slate blue
+      2: { fill: '#9B5BD0', light: '#C9A1E8', name: 'Upper right' },  // upper-right — purple
+      3: { fill: '#E29F4D', light: '#F4C99B', name: 'Upper left'  },  // upper-left — amber
+      4: { fill: '#D23B33', light: '#EA7C76', name: 'You'         },  // bottom — red (player)
+      5: { fill: '#3FA866', light: '#86CFA1', name: 'Lower left'  },  // lower-left — green
+      6: { fill: '#D9B447', light: '#F0D484', name: 'Lower right' },  // lower-right — gold
+    };
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    // board: Int8Array(121), value 0 = empty, 1..6 = player slot occupying
+    // players: [{ slot, isAI, home, goal }]
+    // currentIdx: pointer into players[]
+    // moveCount: total turns the human has taken (used for stats and Moves display)
+    function newGameState(numPlayers) {
+      const board = new Int8Array(CELLS.length);
+      // Slot order (which regions are home for which mode):
+      //  - 2 players: 4 (you), 1 (top)
+      //  - 3 players: 4 (you), 2 (upper-right), 3 (upper-left)
+      //  - 6 players: 4, 1, 2, 3, 5, 6
+      let homeRegions;
+      if (numPlayers === 2) homeRegions = [4, 1];
+      else if (numPlayers === 3) homeRegions = [4, 2, 3];
+      else homeRegions = [4, 1, 2, 3, 5, 6];
+      const players = homeRegions.map((home, i) => ({
+        slot: home, isAI: i !== 0, home, goal: REGION_OPPOSITE[home],
+      }));
+      // Place 10 marbles per player in their home triangle
+      for (const p of players) {
+        for (const c of CELLS) {
+          if (c.region === p.home) board[c.idx] = p.slot;
+        }
+      }
+      return { board, players, currentIdx: 0, moveCount: 0, sinceProgress: 0 };
+    }
+
+    function clone(s) {
+      return {
+        board: new Int8Array(s.board),
+        players: s.players,   // immutable
+        currentIdx: s.currentIdx,
+        moveCount: s.moveCount,
+        sinceProgress: s.sinceProgress,
+      };
+    }
+
+    function currentPlayer(s) { return s.players[s.currentIdx]; }
+
+    function regionOf(idx) { return CELLS[idx].region; }
+
+    function inGoal(s, slot) {
+      const goal = s.players.find(p => p.slot === slot).goal;
+      let count = 0;
+      for (let i = 0; i < CELLS.length; i++) {
+        if (s.board[i] === slot && CELLS[i].region === goal) count++;
+      }
+      return count;
+    }
+
+    function pegsForSlot(s, slot) {
+      const out = [];
+      for (let i = 0; i < CELLS.length; i++) if (s.board[i] === slot) out.push(i);
+      return out;
+    }
+
+    // Anti-camping: a marble that has entered its goal triangle cannot leave.
+    function canLeaveCell(s, fromIdx, slot) {
+      const player = s.players.find(p => p.slot === slot);
+      if (!player) return true;
+      return CELLS[fromIdx].region !== player.goal;
+    }
+
+    // ── Move generation ──────────────────────────────────────────────────────
+    // Single-step moves from one peg
+    function singleSteps(s, fromIdx) {
+      const out = [];
+      for (let dir = 0; dir < 6; dir++) {
+        const n = CELLS[fromIdx].neighbors[dir];
+        if (n < 0) continue;
+        if (s.board[n] !== 0) continue;
+        out.push({ from: fromIdx, to: n, path: [fromIdx, n] });
+      }
+      return out;
+    }
+
+    // Jump-chains from one peg via DFS over LANDING squares (visited-set).
+    // Returns [{ from, to, path }] for every reachable distinct landing square.
+    function jumpChains(s, fromIdx) {
+      const results = [];
+      const visited = new Set([fromIdx]);
+      function dfs(cur, path) {
+        for (let dir = 0; dir < 6; dir++) {
+          const hop = CELLS[cur].neighbors[dir];
+          if (hop < 0 || s.board[hop] === 0) continue;
+          // Need cell exactly two steps in this direction. Compute via axial offsets.
+          const dq = CELLS[hop].q - CELLS[cur].q;
+          const dr = CELLS[hop].r - CELLS[cur].r;
+          const landKey = (CELLS[cur].q + 2 * dq) + ',' + (CELLS[cur].r + 2 * dr);
+          if (!CELL_BY_KEY.has(landKey)) continue;
+          const land = CELL_BY_KEY.get(landKey);
+          if (s.board[land] !== 0) continue;
+          if (visited.has(land)) continue;
+          visited.add(land);
+          const np = path.concat([land]);
+          results.push({ from: fromIdx, to: land, path: np });
+          dfs(land, np);
+        }
+      }
+      dfs(fromIdx, [fromIdx]);
+      return results;
+    }
+
+    function legalMovesForSlot(s, slot) {
+      const moves = [];
+      for (let i = 0; i < CELLS.length; i++) {
+        if (s.board[i] !== slot) continue;
+        if (!canLeaveCell(s, i, slot)) continue;
+        for (const m of singleSteps(s, i)) moves.push(m);
+        for (const m of jumpChains(s, i)) moves.push(m);
+      }
+      return moves;
+    }
+
+    function legalMovesFromCell(s, fromIdx, slot) {
+      if (s.board[fromIdx] !== slot) return [];
+      if (!canLeaveCell(s, fromIdx, slot)) return [];
+      return singleSteps(s, fromIdx).concat(jumpChains(s, fromIdx));
+    }
+
+    function applyMove(s, m) {
+      const slot = s.board[m.from];
+      s.board[m.from] = 0;
+      s.board[m.to] = slot;
+      // Progress check: was this peg in central hex now in goal? Simpler: any
+      // peg now in any home/goal vs. before? Just track if non-trivial movement
+      // toward goal happened.
+      s.sinceProgress++;
+      const player = s.players.find(p => p.slot === slot);
+      if (CELLS[m.to].region === player.goal && CELLS[m.from].region !== player.goal) {
+        s.sinceProgress = 0;
+      }
+      // Advance turn
+      s.currentIdx = (s.currentIdx + 1) % s.players.length;
+      if (slot === 4) s.moveCount++;
+    }
+
+    function checkWinner(s) {
+      for (const p of s.players) {
+        if (inGoal(s, p.slot) === 10) return p.slot;
+      }
+      return 0;   // none
+    }
+
+    // ── AI ───────────────────────────────────────────────────────────────────
+    // Progress = signed projection of cell pixel-y onto the player's goal axis.
+    // For player 4 (bottom) the goal is region 1 (top), so progress = -py.
+    // Generally, progress(slot, idx) = -(distance from idx to goal triangle center).
+    function regionCenter(region) {
+      const cells = CELLS.filter(c => c.region === region);
+      let sx = 0, sy = 0;
+      for (const c of cells) { sx += c.px; sy += c.py; }
+      return [sx / cells.length, sy / cells.length];
+    }
+    const REGION_CENTER = {};
+    for (let r = 1; r <= 6; r++) REGION_CENTER[r] = regionCenter(r);
+
+    function progressForSlot(s, slot) {
+      const player = s.players.find(p => p.slot === slot);
+      const [gx, gy] = REGION_CENTER[player.goal];
+      let total = 0;
+      let inGoalCount = 0;
+      for (let i = 0; i < CELLS.length; i++) {
+        if (s.board[i] !== slot) continue;
+        const dx = CELLS[i].px - gx, dy = CELLS[i].py - gy;
+        const dist = Math.sqrt(dx * dx + dy * dy);
+        total -= dist;             // closer to goal = higher (less negative)
+        if (CELLS[i].region === player.goal) {
+          inGoalCount++;
+          total += 60;             // goal-triangle bonus
+        }
+        if (CELLS[i].region === player.home) total -= 18;   // still-at-home penalty
+      }
+      return { score: total, inGoal: inGoalCount };
+    }
+
+    function evaluate(s, perspectiveSlot) {
+      const me = progressForSlot(s, perspectiveSlot);
+      // Other players: in 6-player mode use leader (max), else average.
+      const others = s.players.filter(p => p.slot !== perspectiveSlot);
+      let oppScore;
+      if (others.length >= 4) {
+        oppScore = -Infinity;
+        for (const o of others) {
+          const v = progressForSlot(s, o.slot).score;
+          if (v > oppScore) oppScore = v;
+        }
+      } else {
+        let sum = 0;
+        for (const o of others) sum += progressForSlot(s, o.slot).score;
+        oppScore = sum / others.length;
+      }
+      // Win bonus
+      if (me.inGoal === 10) return 1e6;
+      const opps = s.players.filter(p => p.slot !== perspectiveSlot);
+      for (const o of opps) {
+        if (progressForSlot(s, o.slot).inGoal === 10) return -1e6;
+      }
+      return me.score - oppScore;
+    }
+
+    // Pareto-prune dominated moves from the same `from` peg: among moves that
+    // share `from`, keep only those that aren't strictly dominated by another.
+    // "Dominance" = same direction and shorter (kept the longer one).
+    // Cheap implementation: group by `from`, sort each group by progress score
+    // for the moving slot, then keep top-K.
+    function paretoPrune(s, moves, slot, keepPerPeg) {
+      const player = s.players.find(p => p.slot === slot);
+      const [gx, gy] = REGION_CENTER[player.goal];
+      function progressOf(idx) {
+        const dx = CELLS[idx].px - gx, dy = CELLS[idx].py - gy;
+        return -Math.sqrt(dx * dx + dy * dy);
+      }
+      const groups = new Map();
+      for (const m of moves) {
+        if (!groups.has(m.from)) groups.set(m.from, []);
+        groups.get(m.from).push(m);
+      }
+      const kept = [];
+      for (const [from, ms] of groups) {
+        ms.sort((a, b) => progressOf(b.to) - progressOf(a.to));
+        for (let i = 0; i < Math.min(keepPerPeg, ms.length); i++) kept.push(ms[i]);
+      }
+      return kept;
+    }
+
+    function chooseAIMove(s, slot, difficulty) {
+      const cfg = {
+        Easy:   { depth: 2, jitter: 0.30, keepPerPeg: 3 },
+        Medium: { depth: 3, jitter: 0.05, keepPerPeg: 4 },
+        Hard:   { depth: 4, jitter: 0.0,  keepPerPeg: 6 },
+      }[difficulty] || { depth: 3, jitter: 0.05, keepPerPeg: 4 };
+
+      const moves = legalMovesForSlot(s, slot);
+      if (moves.length === 0) return null;
+
+      // Order: longer chains first
+      const ordered = paretoPrune(s, moves, slot, cfg.keepPerPeg);
+      ordered.sort((a, b) => b.path.length - a.path.length);
+
+      // For multi-player, "minimax" doesn't strictly apply — use paranoid:
+      // perspective = the AI; opponents' search picks moves that hurt me most.
+      function search(state, depth) {
+        if (depth === 0) return evaluate(state, slot);
+        const winner = checkWinner(state);
+        if (winner === slot) return 1e6 - depth;
+        if (winner !== 0) return -1e6 + depth;
+        const cur = currentPlayer(state).slot;
+        const subMoves = legalMovesForSlot(state, cur);
+        if (subMoves.length === 0) {
+          const next = clone(state);
+          next.currentIdx = (next.currentIdx + 1) % next.players.length;
+          return search(next, depth - 1);
+        }
+        const pruned = paretoPrune(state, subMoves, cur, cfg.keepPerPeg);
+        if (cur === slot) {
+          let best = -Infinity;
+          for (const m of pruned) {
+            const next = clone(state);
+            applyMove(next, m);
+            const v = search(next, depth - 1);
+            if (v > best) best = v;
+          }
+          return best;
+        } else {
+          let best = Infinity;
+          for (const m of pruned) {
+            const next = clone(state);
+            applyMove(next, m);
+            const v = search(next, depth - 1);
+            if (v < best) best = v;
+          }
+          return best;
+        }
+      }
+
+      const t0 = performance.now();
+      const SOFT_CAP_MS = difficulty === 'Hard' ? 800 : 400;
+      const scored = [];
+      let bestVal = -Infinity;
+      for (const m of ordered) {
+        if (performance.now() - t0 > SOFT_CAP_MS && scored.length >= 4) break;
+        const next = clone(s);
+        applyMove(next, m);
+        const v = search(next, cfg.depth - 1);
+        scored.push({ m, v });
+        if (v > bestVal) bestVal = v;
+      }
+      // Top-K (jitter)
+      scored.sort((a, b) => b.v - a.v);
+      const span = Math.abs(bestVal) || 1;
+      const cutoff = bestVal - cfg.jitter * Math.max(span, 50);
+      const candidates = scored.filter(x => x.v >= cutoff);
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      return pick.m;
+    }
+
+    // ── UI ───────────────────────────────────────────────────────────────────
+    const KEY_STREAK   = 'chineseCheckersHighScore';
+    const KEY_BEST     = 'chineseCheckersBestStreak';
+    const KEY_WINS     = 'chineseCheckersGamesWon';
+    const KEY_LOSS     = 'chineseCheckersGamesLost';
+    const KEY_DRAW     = 'chineseCheckersGamesDraw';
+    const KEY_DIFF     = 'chineseCheckersDifficulty';
+    const KEY_PLAYERS  = 'chineseCheckersPlayers';
+    const BEST_KEY = (n) => 'chineseCheckersBestMoves' + n + 'P';
+
+    const HOP_MS = 170;
+
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+
+    const turnEl = document.getElementById('turn');
+    const movesEl = document.getElementById('moves');
+    const winsEl = document.getElementById('wins');
+    const streakEl = document.getElementById('streak');
+    const diffEl = document.getElementById('difficulty');
+    const playersEl = document.getElementById('players');
+    const newGameBtn = document.getElementById('newGame');
+    const doneBtn = document.getElementById('doneJump');
+    const overEl = document.getElementById('over');
+    const overTitleEl = document.getElementById('overTitle');
+    const overTextEl = document.getElementById('overText');
+    const overBtn = document.getElementById('overBtn');
+    const statusEl = document.getElementById('status');
+    const toastEl = document.getElementById('toast');
+    const rosterEl = document.getElementById('roster');
+
+    let difficulty = localStorage.getItem(KEY_DIFF) || 'Medium';
+    diffEl.value = difficulty;
+    let numPlayers = parseInt(localStorage.getItem(KEY_PLAYERS), 10);
+    if (![2, 3, 6].includes(numPlayers)) numPlayers = 2;
+    playersEl.value = String(numPlayers);
+
+    let state = newGameState(numPlayers);
+    let selected = null;            // idx of currently selected peg (or null)
+    let availableMoves = [];        // legal moves from `selected`
+    let aiThinking = false;
+    let anim = null;                // { slot, path:[idx...], pathStart, segIdx, onDone }
+    let chainOrigin = null;         // when player is mid-chain: idx where the marble currently sits
+    let chainStartFrom = null;      // starting square of the chain (for back-out)
+    let chainWasJump = false;       // chain mode is ON only after a jump
+
+    function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
+    function writeNum(k, v) { localStorage.setItem(k, String(v)); }
+
+    function refreshStats() {
+      winsEl.textContent = readNum(KEY_WINS) + '–' + readNum(KEY_LOSS);
+      streakEl.textContent = readNum(KEY_STREAK);
+      movesEl.textContent = String(state.moveCount);
+    }
+
+    function renderRoster() {
+      rosterEl.innerHTML = '';
+      for (let i = 0; i < state.players.length; i++) {
+        const p = state.players[i];
+        const c = PLAYER_COLORS[p.slot];
+        const inG = inGoal(state, p.slot);
+        const ent = document.createElement('div');
+        ent.className = 'ent' + (i === state.currentIdx ? ' cur' : '');
+        ent.innerHTML = '<span class="swatch" style="background:' + c.fill + '"></span>'
+          + (p.isAI ? 'AI ' : '') + (p.slot === 4 ? 'You' : c.name)
+          + ' <b>' + inG + '/10</b>';
+        rosterEl.appendChild(ent);
+      }
+    }
+
+    function setStatus(s) { statusEl.textContent = s; }
+    function setTurnLabel(s) { turnEl.textContent = s; }
+
+    let toastTimer = null;
+    function showToast(msg, ms = 1100) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+    }
+
+    function pickGoalTint(slot) {
+      const c = PLAYER_COLORS[slot];
+      // 18%-opacity wash of the player color
+      return c.fill + '20';
+    }
+
+    function draw() {
+      // Wood-panel-ish background
+      const bg = ctx.createLinearGradient(0, 0, 0, CANVAS_H);
+      bg.addColorStop(0, '#2A4452');
+      bg.addColorStop(1, '#16252E');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, CANVAS_W, CANVAS_H);
+
+      // 1) Tint each home/goal triangle
+      const inUseHomes = new Set(state.players.map(p => p.home));
+      const inUseGoals = new Set(state.players.map(p => p.goal));
+      const playerSlot = 4;
+      for (let r = 1; r <= 6; r++) {
+        const cells = CELLS.filter(c => c.region === r);
+        if (cells.length === 0) continue;
+        let tint = null;
+        if (inUseHomes.has(r)) {
+          // home of whoever has this region as home
+          const owner = state.players.find(p => p.home === r);
+          tint = PLAYER_COLORS[owner.slot].fill + '14';
+        }
+        if (inUseGoals.has(r)) {
+          // goal: tint with the player whose goal this is, slightly stronger
+          const racer = state.players.find(p => p.goal === r);
+          tint = PLAYER_COLORS[racer.slot].fill + '28';
+        }
+        if (!tint) continue;
+        ctx.fillStyle = tint;
+        ctx.beginPath();
+        // Approximate triangle with a polygon over the cells' bounds
+        const xs = cells.map(c => c.px), ys = cells.map(c => c.py);
+        const minX = Math.min(...xs), maxX = Math.max(...xs);
+        const minY = Math.min(...ys), maxY = Math.max(...ys);
+        ctx.fillRect(minX - HOLE_R, minY - HOLE_R, (maxX - minX) + 2 * HOLE_R, (maxY - minY) + 2 * HOLE_R);
+      }
+
+      // 2) Draw all hole rings (every cell)
+      for (const c of CELLS) {
+        ctx.beginPath();
+        ctx.arc(c.px, c.py, HOLE_R, 0, Math.PI * 2);
+        ctx.fillStyle = 'rgba(0, 0, 0, 0.20)';
+        ctx.fill();
+        ctx.lineWidth = 1.5;
+        ctx.strokeStyle = 'rgba(255, 240, 220, 0.18)';
+        ctx.stroke();
+      }
+
+      // 3) Move targets / hints (when player is selecting)
+      if (!anim && !aiThinking && currentPlayer(state).slot === 4 && selected != null) {
+        for (const m of availableMoves) {
+          ctx.beginPath();
+          if (m.path.length > 2) {
+            // jump chain landing — ring
+            ctx.arc(CELLS[m.to].px, CELLS[m.to].py, HOLE_R + 2, 0, Math.PI * 2);
+            ctx.strokeStyle = 'rgba(80, 220, 180, 0.95)';
+            ctx.lineWidth = 3;
+            ctx.stroke();
+          } else {
+            // single step — small dot
+            ctx.arc(CELLS[m.to].px, CELLS[m.to].py, HOLE_R * 0.32, 0, Math.PI * 2);
+            ctx.fillStyle = 'rgba(80, 220, 180, 0.85)';
+            ctx.fill();
+          }
+        }
+      }
+
+      // 4) Marbles. Skip the moving peg's source idx during animation.
+      let animPeg = null;
+      let skipIdx = -1;
+      if (anim) {
+        const elapsed = performance.now() - anim.segStart;
+        const t = Math.min(1, elapsed / HOP_MS);
+        const a = CELLS[anim.path[anim.segIdx]];
+        const b = CELLS[anim.path[anim.segIdx + 1]];
+        animPeg = {
+          slot: anim.slot,
+          x: a.px + (b.px - a.px) * t,
+          y: a.py + (b.py - a.py) * t,
+        };
+        skipIdx = anim.path[anim.path.length - 1];
+      }
+
+      for (let i = 0; i < CELLS.length; i++) {
+        const v = state.board[i];
+        if (v === 0) continue;
+        if (i === skipIdx) continue;     // moving peg renders separately
+        drawMarble(CELLS[i].px, CELLS[i].py, v, i === selected || i === chainOrigin);
+      }
+      if (animPeg) drawMarble(animPeg.x, animPeg.y, animPeg.slot, false);
+
+      // 5) Highlight chain origin / "Done" hint
+      if (chainOrigin != null && !anim && !aiThinking) {
+        const c = CELLS[chainOrigin];
+        ctx.beginPath();
+        ctx.arc(c.px, c.py, HOLE_R + 5, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(242, 166, 90, 0.9)';
+        ctx.lineWidth = 3;
+        ctx.setLineDash([4, 4]);
+        ctx.stroke();
+        ctx.setLineDash([]);
+      }
+    }
+
+    function drawMarble(cx, cy, slot, highlighted) {
+      const col = PLAYER_COLORS[slot];
+      const r = HOLE_R * 0.94;
+      // Shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.30)';
+      ctx.beginPath();
+      ctx.ellipse(cx, cy + r * 0.25, r * 0.95, r * 0.4, 0, 0, Math.PI * 2);
+      ctx.fill();
+      // Body
+      const grad = ctx.createRadialGradient(cx - r * 0.3, cy - r * 0.3, r * 0.1, cx, cy, r);
+      grad.addColorStop(0, col.light);
+      grad.addColorStop(0.55, col.fill);
+      grad.addColorStop(1, '#15171F');
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+      // Inner ring
+      ctx.strokeStyle = 'rgba(255, 240, 220, 0.30)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(cx, cy, r * 0.72, 0, Math.PI * 2); ctx.stroke();
+      // Highlight ring
+      if (highlighted) {
+        ctx.strokeStyle = 'rgba(255, 255, 200, 0.95)';
+        ctx.lineWidth = 3;
+        ctx.beginPath(); ctx.arc(cx, cy, r + 3, 0, Math.PI * 2); ctx.stroke();
+      }
+    }
+
+    function showOver(title, text) {
+      overTitleEl.textContent = title;
+      overTextEl.textContent = text;
+      overEl.classList.add('show');
+    }
+
+    function recordWin() {
+      writeNum(KEY_WINS, readNum(KEY_WINS) + 1);
+      const s = readNum(KEY_STREAK) + 1;
+      writeNum(KEY_STREAK, s);
+      if (s > readNum(KEY_BEST)) writeNum(KEY_BEST, s);
+      // Best moves
+      const k = BEST_KEY(numPlayers);
+      const prev = readNum(k);
+      if (prev === 0 || state.moveCount < prev) writeNum(k, state.moveCount);
+    }
+    function recordLoss() {
+      writeNum(KEY_LOSS, readNum(KEY_LOSS) + 1);
+      writeNum(KEY_STREAK, 0);
+    }
+    function recordDraw() {
+      writeNum(KEY_DRAW, readNum(KEY_DRAW) + 1);
+      writeNum(KEY_STREAK, 0);
+    }
+
+    // Returns true if game ended.
+    function checkEnd() {
+      const winner = checkWinner(state);
+      if (winner) {
+        if (winner === 4) {
+          recordWin();
+          const best = readNum(BEST_KEY(numPlayers));
+          showOver('You won!', 'Reached the opposite triangle in ' + state.moveCount + ' moves' +
+            (best === state.moveCount && readNum(BEST_KEY(numPlayers)) > 0
+              ? ' — new personal best!'
+              : best > 0 ? ' (best: ' + best + ').' : '.'));
+        } else {
+          recordLoss();
+          // Find player rank
+          const ranked = [...state.players]
+            .map(p => ({ slot: p.slot, inGoal: inGoal(state, p.slot) }))
+            .sort((a, b) => b.inGoal - a.inGoal);
+          const myRank = ranked.findIndex(r => r.slot === 4) + 1;
+          const winnerName = state.players.find(p => p.slot === winner).slot === 4 ? 'You' : PLAYER_COLORS[winner].name;
+          showOver('You lost', winnerName + ' won. You finished ' + ordinal(myRank) +
+            ' with ' + ranked.find(r => r.slot === 4).inGoal + '/10 marbles home.');
+        }
+        refreshStats();
+        renderRoster();
+        return true;
+      }
+      // Stall draw
+      if (state.sinceProgress > 60 * state.players.length) {
+        recordDraw();
+        showOver('Draw', 'No progress in 60 turns — game called.');
+        refreshStats();
+        return true;
+      }
+      return false;
+    }
+
+    function ordinal(n) {
+      if (n === 1) return '1st'; if (n === 2) return '2nd'; if (n === 3) return '3rd';
+      return n + 'th';
+    }
+
+    function startMoveAnimation(path, slot, onDone) {
+      // path = [fromIdx, ..., toIdx]; we animate each segment HOP_MS long
+      anim = { slot, path, segIdx: 0, segStart: performance.now(), onDone };
+      requestAnimationFrame(animTick);
+    }
+
+    function animTick() {
+      if (!anim) return;
+      draw();
+      const elapsed = performance.now() - anim.segStart;
+      if (elapsed >= HOP_MS) {
+        anim.segIdx++;
+        if (anim.segIdx >= anim.path.length - 1) {
+          const done = anim.onDone;
+          anim = null;
+          draw();
+          if (done) done();
+          return;
+        }
+        anim.segStart = performance.now();
+      }
+      requestAnimationFrame(animTick);
+    }
+
+    function turnLabelFor(slot) {
+      if (slot === 4) return 'Your move';
+      return 'AI ' + (PLAYER_COLORS[slot].name.replace(/^./, m => m.toLowerCase())) + ' thinking';
+    }
+
+    function nextTurn() {
+      selected = null;
+      availableMoves = [];
+      chainOrigin = null;
+      chainStartFrom = null;
+      chainWasJump = false;
+      doneBtn.classList.add('hidden');
+      if (checkEnd()) { draw(); return; }
+      // If the current player has no legal moves, skip (record no progress).
+      const cur = currentPlayer(state);
+      const moves = legalMovesForSlot(state, cur.slot);
+      if (moves.length === 0) {
+        showToast(cur.slot === 4 ? 'You have no moves — pass' : (PLAYER_COLORS[cur.slot].name + ' has no moves — pass'));
+        state.currentIdx = (state.currentIdx + 1) % state.players.length;
+        state.sinceProgress++;
+        renderRoster();
+        setTimeout(nextTurn, 600);
+        return;
+      }
+      renderRoster();
+      if (cur.slot === 4) {
+        setTurnLabel('Your move');
+        setStatus('Click one of your marbles to see legal moves.');
+        draw();
+      } else {
+        setTurnLabel(turnLabelFor(cur.slot));
+        setStatus(PLAYER_COLORS[cur.slot].name + ' is thinking...');
+        draw();
+        aiThinking = true;
+        setTimeout(() => aiTurn(cur.slot), 80);
+      }
+    }
+
+    function aiTurn(slot) {
+      if (currentPlayer(state).slot !== slot) { aiThinking = false; return; }
+      const m = chooseAIMove(state, slot, difficulty);
+      if (!m) { aiThinking = false; nextTurn(); return; }
+      applyMove(state, m);
+      startMoveAnimation(m.path, slot, () => {
+        aiThinking = false;
+        refreshStats();
+        renderRoster();
+        // Small inter-turn delay so multi-AI cycles are readable
+        setTimeout(nextTurn, 200);
+      });
+    }
+
+    function applyPlayerMoveAndContinue(m, isJump) {
+      // Apply the move but DON'T advance turn yet for jumps (they may chain).
+      // Manual apply for chain mode:
+      const slot = state.board[m.from];
+      state.board[m.from] = 0;
+      state.board[m.to] = slot;
+      // Track progress for sinceProgress
+      const player = state.players.find(p => p.slot === slot);
+      if (CELLS[m.to].region === player.goal && CELLS[m.from].region !== player.goal) {
+        state.sinceProgress = 0;
+      } else {
+        state.sinceProgress++;
+      }
+      startMoveAnimation(m.path, slot, () => {
+        if (isJump) {
+          // Continue chain mode unless no further jumps
+          chainWasJump = true;
+          chainOrigin = m.to;
+          if (chainStartFrom == null) chainStartFrom = m.from;
+          const further = jumpChains(state, chainOrigin);
+          if (further.length === 0) {
+            finishPlayerTurn();
+          } else {
+            // Allow further jumps
+            availableMoves = further;
+            doneBtn.classList.remove('hidden');
+            setStatus('Continue jumping or click "Done jumping" to end your turn.');
+            draw();
+          }
+        } else {
+          finishPlayerTurn();
+        }
+      });
+    }
+
+    function finishPlayerTurn() {
+      // Advance turn
+      state.currentIdx = (state.currentIdx + 1) % state.players.length;
+      state.moveCount++;
+      refreshStats();
+      doneBtn.classList.add('hidden');
+      setTimeout(nextTurn, 150);
+    }
+
+    canvas.addEventListener('click', (e) => {
+      if (aiThinking || anim || currentPlayer(state).slot !== 4) return;
+      const rect = canvas.getBoundingClientRect();
+      const px = (e.clientX - rect.left) * (CANVAS_W / rect.width);
+      const py = (e.clientY - rect.top) * (CANVAS_H / rect.height);
+      // Find nearest cell within hit radius
+      let best = -1, bestD = Infinity;
+      for (const c of CELLS) {
+        const dx = c.px - px, dy = c.py - py;
+        const d = dx * dx + dy * dy;
+        if (d < bestD) { bestD = d; best = c.idx; }
+      }
+      if (best < 0 || bestD > (HOLE_R * 1.5) * (HOLE_R * 1.5)) return;
+      handleClickAt(best);
+    });
+
+    function handleClickAt(cellIdx) {
+      // If in chain mode, only landing on a valid further-jump square is allowed.
+      if (chainOrigin != null) {
+        for (const m of availableMoves) {
+          if (m.to === cellIdx) {
+            // Apply this jump segment
+            const segMove = { from: chainOrigin, to: m.to, path: [chainOrigin, m.to] };
+            applyPlayerMoveAndContinue(segMove, true);
+            return;
+          }
+        }
+        // Click on chainOrigin = no-op; click elsewhere = ignore
+        return;
+      }
+
+      // Normal selection / target click
+      if (selected != null) {
+        for (const m of availableMoves) {
+          if (m.to === cellIdx) {
+            // Single step or jump: if path > 2, it's a multi-jump shortcut —
+            // animate as a chain landing directly. We keep player in chain mode
+            // unless the move has no further jumps from the new spot (which is
+            // already implied by it being terminal in our generation).
+            const isJump = m.path.length > 2 || isHopBetween(m.from, m.to);
+            // For multi-jump shortcut: animate full path, then check if more jumps
+            applyPlayerMoveAndContinue(m, isJump);
+            return;
+          }
+        }
+        // Click on own piece reselects, otherwise deselect
+        if (state.board[cellIdx] === 4) {
+          const moves = legalMovesFromCell(state, cellIdx, 4);
+          if (moves.length > 0) {
+            selected = cellIdx;
+            availableMoves = moves;
+            draw();
+            return;
+          }
+        }
+        selected = null;
+        availableMoves = [];
+        draw();
+        return;
+      }
+      // No prior selection — must click own piece
+      if (state.board[cellIdx] === 4) {
+        const moves = legalMovesFromCell(state, cellIdx, 4);
+        if (moves.length === 0) {
+          setStatus('That marble has no legal moves.');
+          return;
+        }
+        selected = cellIdx;
+        availableMoves = moves;
+        draw();
+      }
+    }
+
+    // Is `to` a single hop (jump over neighbor) from `from`? Used to flag the
+    // first move of a chain so we enter chain mode after the animation.
+    function isHopBetween(from, to) {
+      const dq = CELLS[to].q - CELLS[from].q;
+      const dr = CELLS[to].r - CELLS[from].r;
+      // Hop = move of (±2, 0), (0, ±2), or (±2, ∓2) in axial
+      const sums = [Math.abs(dq), Math.abs(dr), Math.abs(dq + dr)];
+      return sums.includes(2) && Math.max(...sums) === 2;
+    }
+
+    doneBtn.addEventListener('click', () => {
+      if (chainOrigin == null) return;
+      finishPlayerTurn();
+    });
+
+    function startGame() {
+      state = newGameState(numPlayers);
+      selected = null;
+      availableMoves = [];
+      chainOrigin = null;
+      chainStartFrom = null;
+      anim = null;
+      aiThinking = false;
+      overEl.classList.remove('show');
+      doneBtn.classList.add('hidden');
+      setTurnLabel('Your move');
+      setStatus('Click one of your marbles to see legal moves.');
+      refreshStats();
+      renderRoster();
+      draw();
+    }
+
+    newGameBtn.addEventListener('click', startGame);
+    overBtn.addEventListener('click', startGame);
+    diffEl.addEventListener('change', () => {
+      difficulty = diffEl.value;
+      localStorage.setItem(KEY_DIFF, difficulty);
+    });
+    playersEl.addEventListener('change', () => {
+      const v = parseInt(playersEl.value, 10);
+      if (numPlayers === v) return;
+      // If a game is in progress, ask the user before resetting
+      const inProgress = state.moveCount > 0 && !checkWinner(state);
+      if (inProgress) {
+        const ok = confirm('Changing the player count will start a new game. Continue?');
+        if (!ok) {
+          playersEl.value = String(numPlayers);
+          return;
+        }
+      }
+      numPlayers = v;
+      localStorage.setItem(KEY_PLAYERS, String(numPlayers));
+      startGame();
+    });
+
+    startGame();
+
+    // Auto-scale
+    (function () {
+      const c = canvas;
+      const bw = c.width, bh = c.height;
+      function sc() {
+        c.style.width = bw + 'px';
+        c.style.height = bh + 'px';
+        const viewW = Math.min(window.innerWidth, document.documentElement.clientWidth);
+        const mw = Math.max(viewW - 64, 200);
+        const mh = window.innerHeight * 0.72;
+        const s = Math.min(mw / bw, mh / bh, 1);
+        c.style.width = (bw * s) + 'px';
+        c.style.height = (bh * s) + 'px';
+      }
+      window.addEventListener('resize', sc);
+      sc();
+    })();
+    </script>
+</body>
+</html>

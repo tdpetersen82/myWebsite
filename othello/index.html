@@ -1,0 +1,771 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Othello — Free Browser Reversi vs. AI | Limestone Games</title>
+    <meta name="description" content="Play Othello (Reversi) free in your browser against an AI. Standard rules, three difficulty tiers, perfect endgame solver on Hard. No downloads.">
+    <meta name="keywords" content="othello, reversi, online othello, free reversi, browser othello, othello vs AI">
+    <link rel="canonical" href="https://limestonegames.com/othello/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Othello","description":"Play Othello (Reversi) in your browser against an AI. Three difficulty tiers, perfect endgame solver on Hard.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Othello"}]}</script>
+    <meta property="og:title" content="Othello — Free Browser Reversi vs. AI">
+    <meta property="og:description" content="Play Othello (Reversi) in your browser against an AI. Three difficulty tiers. No downloads.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/othello/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Othello — Free Browser Reversi vs. AI">
+    <meta name="twitter:description" content="Othello with corners, edges, and a perfect endgame solver on Hard. Three difficulties.">
+
+    <style>
+      :root {
+        --ink: #0E2A1A;
+        --paper: #E8F0E4;
+        --felt-light: #2F8F4F;
+        --felt-dark:  #1A6B3A;
+        --frame: #0A2415;
+        --accent: #1A7B3F;
+        --black-piece: #14130E;
+        --white-piece: #F8F4E6;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, #E8F0E4 0%, #BBD9BB 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 16px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .top-bar {
+        width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        font-size: 14px; flex-wrap: wrap;
+      }
+      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
+      .top-bar a:hover { opacity: 1; }
+      h1 {
+        font-family: 'Bricolage Grotesque', serif;
+        font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
+        color: var(--frame);
+      }
+      .stats {
+        display: flex; gap: 14px; font-size: 14px; font-weight: 600;
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(6px);
+        padding: 10px 18px; border-radius: 999px;
+        box-shadow: 0 4px 12px rgba(14, 42, 26, 0.08);
+        flex-wrap: wrap; justify-content: center;
+      }
+      .stats > div { display: flex; gap: 6px; align-items: baseline; }
+      .stats .l { color: rgba(14, 42, 26, 0.55); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+      .stats .v { font-size: 17px; font-weight: 800; color: var(--accent); }
+      .stats .v.score { color: var(--ink); font-variant-numeric: tabular-nums; }
+      select.diff {
+        font: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+        padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(14, 42, 26, 0.2);
+        background: #fff;
+      }
+      .stage-wrap {
+        position: relative;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 12px 30px rgba(10, 36, 21, 0.12);
+        align-self: center;
+      }
+      canvas {
+        display: block;
+        background: var(--frame);
+        border-radius: 8px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+      button {
+        font: inherit; font-weight: 700;
+        padding: 10px 18px; border-radius: 999px;
+        border: 2px solid transparent;
+        background: var(--accent); color: #fff;
+        cursor: pointer; transition: transform 0.1s;
+        box-shadow: 0 4px 12px rgba(26, 123, 63, 0.3);
+      }
+      button:hover { transform: translateY(-1px); }
+      button:active { transform: translateY(1px); }
+      button.ghost { background: transparent; color: var(--ink); border-color: rgba(14, 42, 26, 0.2); box-shadow: none; }
+      .turn { font-size: 13px; color: rgba(14, 42, 26, 0.75); min-height: 18px; }
+      .toast {
+        position: absolute; left: 50%; top: 30px; transform: translateX(-50%);
+        background: rgba(20, 19, 14, 0.85); color: #F8F4E6;
+        padding: 8px 16px; border-radius: 999px;
+        font-size: 13px; font-weight: 600;
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.25s;
+      }
+      .toast.show { opacity: 1; }
+      .game-over {
+        position: absolute; inset: 14px;
+        background: rgba(232, 240, 228, 0.96);
+        border-radius: 8px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        text-align: center; padding: 24px;
+      }
+      .game-over.show { opacity: 1; pointer-events: auto; }
+      .game-over h2 { font-size: 28px; color: var(--accent); }
+      .game-over p { font-size: 15px; color: rgba(14, 42, 26, 0.75); max-width: 380px; }
+      .hint { font-size: 13px; color: rgba(14, 42, 26, 0.6); text-align: center; max-width: 600px; }
+      #how { padding: 20px 16px; max-width: 600px; }
+      #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin-bottom: 8px; }
+      #how p { font-size: 14px; color: rgba(14, 42, 26, 0.78); margin-bottom: 8px; }
+      #how ul { padding-left: 20px; font-size: 14px; color: rgba(14, 42, 26, 0.82); }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../strategy/">All Strategy games</a>
+        </div>
+        <h1>Othello</h1>
+        <div class="stats">
+            <div><span class="l">Turn</span><span class="v" id="turn">Your move</span></div>
+            <div><span class="l">Score</span><span class="v score" id="score">B 2 – W 2</span></div>
+            <div><span class="l">Wins–Losses</span><span class="v" id="wins">0–0</span></div>
+            <div><span class="l">Streak</span><span class="v" id="streak">0</span></div>
+            <div><span class="l">Difficulty</span>
+                <select class="diff" id="difficulty" aria-label="Difficulty">
+                    <option>Easy</option>
+                    <option>Medium</option>
+                    <option>Hard</option>
+                </select>
+            </div>
+        </div>
+        <div class="stage-wrap">
+            <canvas id="board" width="640" height="640"></canvas>
+            <div class="toast" id="toast"></div>
+            <div class="game-over" id="over">
+                <h2 id="overTitle">You win!</h2>
+                <p id="overText"></p>
+                <button id="overBtn">New game</button>
+            </div>
+        </div>
+        <div class="turn" id="status">Click a green-dot square to place your disc.</div>
+        <div class="controls">
+            <button id="newGame">New game</button>
+            <a href="../strategy/"><button class="ghost">More strategy games</button></a>
+        </div>
+        <p class="hint">You play Black; Black moves first. A move must flank at least one opponent disc — all flanked discs flip. If you have no legal move, your turn passes automatically.</p>
+
+        <section id="how" aria-label="How to play">
+            <h2>How to play</h2>
+            <p>You play Black, the AI plays White. Each move must place a disc so it sandwiches one or more of your opponent's discs in a straight line — horizontal, vertical, or diagonal. Every sandwiched disc flips to your color.</p>
+            <p>If you have no legal move, your turn passes automatically. When neither side can move (or the board fills up), the side with more discs wins.</p>
+            <ul>
+                <li><b>Easy</b> — depth 2 with extra randomness; will overlook tactics.</li>
+                <li><b>Medium</b> — depth 4 with positional weighting.</li>
+                <li><b>Hard</b> — depth 6 with mobility + corner play. Switches to a perfect endgame solver in the final 12 empty squares.</li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+    'use strict';
+
+    // ── Board representation ───────────────────────────────────────────────
+    // 8x8 board, index r*8+f. Values: 0 empty, 1 player (Black), -1 AI (White).
+    const PLAYER = 1;       // Black, moves first
+    const AI = -1;          // White
+    const DIRS = [
+      [-1,-1],[-1,0],[-1,1],
+      [ 0,-1],       [ 0,1],
+      [ 1,-1],[ 1,0],[ 1,1],
+    ];
+
+    function newGame() {
+      const board = new Int8Array(64);
+      // Standard starting diamond
+      board[3*8+3] = AI;     // d4 white
+      board[3*8+4] = PLAYER; // e4 black
+      board[4*8+3] = PLAYER; // d5 black
+      board[4*8+4] = AI;     // e5 white
+      return { board, turn: PLAYER, passes: 0 };
+    }
+
+    function clone(s) {
+      return { board: new Int8Array(s.board), turn: s.turn, passes: s.passes };
+    }
+
+    function inBoard(r, f) { return r >= 0 && r < 8 && f >= 0 && f < 8; }
+
+    // For a given square, return the list of indices that would flip if `side`
+    // played there. Empty list ⇒ illegal.
+    function flipsFor(board, idx, side) {
+      if (board[idx] !== 0) return [];
+      const r = idx >> 3, f = idx & 7;
+      const opp = -side;
+      const flips = [];
+      for (const [dr, df] of DIRS) {
+        const ray = [];
+        let nr = r + dr, nf = f + df;
+        while (inBoard(nr, nf) && board[nr*8+nf] === opp) {
+          ray.push(nr*8+nf);
+          nr += dr; nf += df;
+        }
+        if (ray.length > 0 && inBoard(nr, nf) && board[nr*8+nf] === side) {
+          for (const x of ray) flips.push(x);
+        }
+      }
+      return flips;
+    }
+
+    function legalMoves(state, side = state.turn) {
+      const list = [];
+      for (let i = 0; i < 64; i++) {
+        if (state.board[i] !== 0) continue;
+        const flips = flipsFor(state.board, i, side);
+        if (flips.length > 0) list.push({ idx: i, flips });
+      }
+      return list;
+    }
+
+    function applyMove(state, m) {
+      state.board[m.idx] = state.turn;
+      for (const x of m.flips) state.board[x] = state.turn;
+      state.passes = 0;
+      state.turn = -state.turn;
+    }
+
+    function applyPass(state) {
+      state.passes++;
+      state.turn = -state.turn;
+    }
+
+    function counts(board) {
+      let b = 0, w = 0;
+      for (let i = 0; i < 64; i++) {
+        if (board[i] === 1) b++;
+        else if (board[i] === -1) w++;
+      }
+      return { b, w, empty: 64 - b - w };
+    }
+
+    function gameStatus(state) {
+      if (state.passes >= 2) {
+        const { b, w } = counts(state.board);
+        if (b > w) return 'black-wins';
+        if (w > b) return 'white-wins';
+        return 'draw';
+      }
+      const { empty } = counts(state.board);
+      if (empty === 0) {
+        const { b, w } = counts(state.board);
+        if (b > w) return 'black-wins';
+        if (w > b) return 'white-wins';
+        return 'draw';
+      }
+      return 'playing';
+    }
+
+    // ── AI ──────────────────────────────────────────────────────────────────
+    // Positional weights — corners and stable edges high, X/C-squares dangerous.
+    const W_TABLE = [
+      120, -20,  20,   5,   5,  20, -20, 120,
+      -20, -40,  -5,  -5,  -5,  -5, -40, -20,
+       20,  -5,  15,   3,   3,  15,  -5,  20,
+        5,  -5,   3,   3,   3,   3,  -5,   5,
+        5,  -5,   3,   3,   3,   3,  -5,   5,
+       20,  -5,  15,   3,   3,  15,  -5,  20,
+      -20, -40,  -5,  -5,  -5,  -5, -40, -20,
+      120, -20,  20,   5,   5,  20, -20, 120,
+    ];
+    // Corner-aware adjustments: when a corner is owned, neighbors become safe.
+    const CORNERS = [0, 7, 56, 63];
+    const NEIGHBORS_OF_CORNER = {
+      0: [1, 8, 9],
+      7: [6, 14, 15],
+      56: [48, 49, 57],
+      63: [54, 55, 62],
+    };
+
+    function evaluate(board, sideToMove, opts) {
+      const { b, w, empty } = counts(board);
+      // Phase blend: positional dominates early, disc count late.
+      const phase = empty / 60;        // 1.0 early → 0 late
+      let pos = 0;
+      for (let i = 0; i < 64; i++) {
+        const v = board[i];
+        if (v === 0) continue;
+        let weight = W_TABLE[i];
+        // Soften X/C near owned corners
+        for (const c of CORNERS) {
+          if (board[c] !== 0 && NEIGHBORS_OF_CORNER[c].includes(i)) {
+            // If same color owns the corner, this neighbor is fine; if not, it's still risky but less so.
+            if (board[c] === v) weight = Math.max(weight, 8);
+          }
+        }
+        pos += v * weight;
+      }
+      // Mobility (cheap proxy: count legal moves both sides).
+      const myMoves = countLegal(board, sideToMove);
+      const oppMoves = countLegal(board, -sideToMove);
+      let mobility = 0;
+      if (myMoves + oppMoves > 0) {
+        mobility = 100 * (myMoves - oppMoves) / (myMoves + oppMoves);
+      }
+      // Disc differential
+      const disc = (b - w) * (sideToMove === 1 ? 1 : 1); // raw black-white differential
+      // Always score from BLACK's perspective; caller flips for negamax.
+      return phase * pos + (1 - phase) * disc * 10 + mobility * 4 * (sideToMove === 1 ? 1 : -1);
+    }
+
+    function countLegal(board, side) {
+      let c = 0;
+      for (let i = 0; i < 64; i++) {
+        if (board[i] !== 0) continue;
+        if (flipsFor(board, i, side).length > 0) c++;
+      }
+      return c;
+    }
+
+    // Negamax with alpha-beta. Returns score from `side`'s perspective.
+    function negamax(state, depth, alpha, beta, perfectMode) {
+      const moves = legalMoves(state);
+      if (moves.length === 0) {
+        // Pass — if both pass, terminal.
+        if (state.passes >= 1) {
+          const { b, w } = counts(state.board);
+          // Score from current side's perspective
+          const diff = (b - w) * state.turn;
+          return diff * 1000;
+        }
+        const next = clone(state);
+        applyPass(next);
+        return -negamax(next, depth, -beta, -alpha, perfectMode);
+      }
+      if (depth === 0) {
+        if (perfectMode) {
+          // Pure disc count from side-to-move's perspective
+          const { b, w } = counts(state.board);
+          return (b - w) * state.turn * 1000;
+        }
+        // evaluate is from black's perspective; flip for current side
+        return evaluate(state.board, state.turn) * state.turn;
+      }
+      // Move ordering: corners first, then by raw weight, then by flip count
+      moves.sort((a, b) => {
+        const wa = W_TABLE[a.idx] + a.flips.length;
+        const wb = W_TABLE[b.idx] + b.flips.length;
+        return wb - wa;
+      });
+      let best = -Infinity;
+      for (const m of moves) {
+        const next = clone(state);
+        applyMove(next, m);
+        const v = -negamax(next, depth - 1, -beta, -alpha, perfectMode);
+        if (v > best) best = v;
+        if (best > alpha) alpha = best;
+        if (alpha >= beta) break;
+      }
+      return best;
+    }
+
+    function chooseAIMove(state, difficulty) {
+      const moves = legalMoves(state);
+      if (moves.length === 0) return null;
+      const { empty } = counts(state.board);
+      const cfg = {
+        Easy:   { depth: 2, jitter: 12, perfectAt: 0  },
+        Medium: { depth: 4, jitter: 4,  perfectAt: 0  },
+        Hard:   { depth: 6, jitter: 0,  perfectAt: 12 },
+      }[difficulty] || { depth: 4, jitter: 4, perfectAt: 0 };
+      const usePerfect = empty <= cfg.perfectAt;
+      const searchDepth = usePerfect ? empty : cfg.depth;
+
+      // Score each move
+      const scored = [];
+      let bestScore = -Infinity;
+      for (const m of moves) {
+        const next = clone(state);
+        applyMove(next, m);
+        const v = -negamax(next, searchDepth - 1, -Infinity, Infinity, usePerfect);
+        scored.push({ m, v });
+        if (v > bestScore) bestScore = v;
+      }
+      const candidates = scored.filter(s => bestScore - s.v <= cfg.jitter);
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      return pick.m;
+    }
+
+    // ── UI ──────────────────────────────────────────────────────────────────
+    const KEY_STREAK = 'othelloHighScore';
+    const KEY_BEST   = 'othelloBestStreak';
+    const KEY_WINS   = 'othelloGamesWon';
+    const KEY_LOSS   = 'othelloGamesLost';
+    const KEY_DRAW   = 'othelloGamesDraw';
+    const KEY_DIFF   = 'othelloDifficulty';
+
+    const PLACE_MS = 200;
+    const FLIP_MS  = 220;
+    const FLIP_STAGGER = 45;
+
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    const SQ = W / 8;
+
+    const turnEl = document.getElementById('turn');
+    const scoreEl = document.getElementById('score');
+    const winsEl = document.getElementById('wins');
+    const streakEl = document.getElementById('streak');
+    const diffEl = document.getElementById('difficulty');
+    const newGameBtn = document.getElementById('newGame');
+    const overEl = document.getElementById('over');
+    const overTitleEl = document.getElementById('overTitle');
+    const overTextEl = document.getElementById('overText');
+    const overBtn = document.getElementById('overBtn');
+    const statusEl = document.getElementById('status');
+    const toastEl = document.getElementById('toast');
+
+    let state = newGame();
+    let aiThinking = false;
+    let anim = null;   // { placeIdx, side, flips: [{idx, start}], placeStart, done }
+    let difficulty = localStorage.getItem(KEY_DIFF) || 'Medium';
+    diffEl.value = difficulty;
+
+    function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
+    function writeNum(k, v) { localStorage.setItem(k, String(v)); }
+
+    function refreshStats() {
+      winsEl.textContent = readNum(KEY_WINS) + '–' + readNum(KEY_LOSS);
+      streakEl.textContent = readNum(KEY_STREAK);
+      const c = counts(state.board);
+      scoreEl.textContent = 'B ' + c.b + ' – W ' + c.w;
+    }
+
+    function squareXY(idx) {
+      const r = idx >> 3, f = idx & 7;
+      return { x: f * SQ, y: r * SQ };
+    }
+    function xyToSquare(px, py) {
+      const f = Math.floor(px / SQ), r = Math.floor(py / SQ);
+      if (f < 0 || f > 7 || r < 0 || r > 7) return -1;
+      return r * 8 + f;
+    }
+
+    function drawDisc(cx, cy, side, scaleX) {
+      // scaleX: 1 = full disc; 0 = edge-on (hidden); negative = mirrored (mid-flip).
+      // We render a filled ellipse with width = r * scaleX. Color is based on
+      // sign(scaleX): positive ⇒ side, negative ⇒ -side (the flipped face).
+      const r = SQ * 0.40;
+      const sx = Math.abs(scaleX);
+      if (sx < 0.02) return;
+      const showSide = scaleX >= 0 ? side : -side;
+      ctx.save();
+      ctx.translate(cx, cy);
+      ctx.scale(sx, 1);
+      // Shadow
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.18)';
+      ctx.beginPath(); ctx.arc(0, r * 0.18, r, 0, Math.PI * 2); ctx.fill();
+      // Disc body
+      const grad = ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.1, 0, 0, r);
+      if (showSide === 1) {
+        grad.addColorStop(0, '#3D3A30');
+        grad.addColorStop(0.6, '#1E1B14');
+        grad.addColorStop(1, '#000');
+      } else {
+        grad.addColorStop(0, '#FFFEF5');
+        grad.addColorStop(0.7, '#E8DEC8');
+        grad.addColorStop(1, '#A89876');
+      }
+      ctx.fillStyle = grad;
+      ctx.beginPath(); ctx.arc(0, 0, r, 0, Math.PI * 2); ctx.fill();
+      // Soft rim
+      ctx.strokeStyle = showSide === 1 ? 'rgba(120, 110, 90, 0.4)' : 'rgba(180, 160, 130, 0.5)';
+      ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(0, 0, r * 0.85, 0, Math.PI * 2); ctx.stroke();
+      ctx.restore();
+    }
+
+    function draw() {
+      // Felt background with subtle grid
+      ctx.fillStyle = 'var(--frame)';
+      // Felt: gradient
+      const bg = ctx.createLinearGradient(0, 0, W, H);
+      bg.addColorStop(0, '#1F7240');
+      bg.addColorStop(1, '#176032');
+      ctx.fillStyle = bg;
+      ctx.fillRect(0, 0, W, H);
+      // Grid lines
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.lineWidth = 1.5;
+      for (let i = 0; i <= 8; i++) {
+        ctx.beginPath();
+        ctx.moveTo(i * SQ + 0.5, 0);
+        ctx.lineTo(i * SQ + 0.5, H);
+        ctx.moveTo(0, i * SQ + 0.5);
+        ctx.lineTo(W, i * SQ + 0.5);
+        ctx.stroke();
+      }
+      // Tiny corner pips at the standard 4 markers (between squares 2-3, 5-6 in both axes)
+      ctx.fillStyle = 'rgba(0, 0, 0, 0.45)';
+      for (const [r, f] of [[2,2],[2,6],[6,2],[6,6]]) {
+        ctx.beginPath();
+        ctx.arc(f * SQ, r * SQ, 3, 0, Math.PI * 2);
+        ctx.fill();
+      }
+
+      const now = performance.now();
+
+      // Legal-move hints — only when it's the player's idle turn.
+      if (!anim && !aiThinking && state.turn === PLAYER) {
+        const moves = legalMoves(state);
+        for (const m of moves) {
+          const { x, y } = squareXY(m.idx);
+          ctx.fillStyle = 'rgba(120, 240, 160, 0.45)';
+          ctx.beginPath();
+          ctx.arc(x + SQ / 2, y + SQ / 2, SQ * 0.13, 0, Math.PI * 2);
+          ctx.fill();
+        }
+      }
+
+      // Determine which discs are mid-flip and their progress
+      const flipState = new Map();   // idx → scaleX in [-1..1]
+      let placingDisc = null;        // { idx, side, scale }
+      if (anim) {
+        // Place disc grows from 0 → 1 over PLACE_MS
+        const pt = Math.min(1, (now - anim.placeStart) / PLACE_MS);
+        placingDisc = { idx: anim.placeIdx, side: anim.side, scale: pt };
+        for (const f of anim.flips) {
+          const elapsed = now - f.start;
+          if (elapsed < 0) flipState.set(f.idx, 1);              // not started yet — show old color (side opposite anim.side)
+          else if (elapsed >= FLIP_MS) flipState.set(f.idx, -1); // fully flipped — show new color (anim.side)
+          else {
+            const t = elapsed / FLIP_MS;
+            // 1 → 0 (going edge-on) → -1 (flipped). We use 1 - 2t so at t=0.5 it's 0.
+            flipState.set(f.idx, 1 - 2 * t);
+          }
+        }
+      }
+
+      // Draw all static discs
+      for (let i = 0; i < 64; i++) {
+        const v = state.board[i];
+        if (v === 0) continue;
+        if (placingDisc && placingDisc.idx === i) continue;     // drawn separately
+        if (flipState.has(i)) continue;                          // animated
+        const { x, y } = squareXY(i);
+        drawDisc(x + SQ / 2, y + SQ / 2, v, 1);
+      }
+
+      // Draw flipping discs. For these, the *board* already reflects the new state,
+      // so the "side" we pass with positive scale is actually the OLD side (-side),
+      // and negative scale shows the new side (=side).
+      if (anim) {
+        for (const f of anim.flips) {
+          const sx = flipState.get(f.idx);
+          if (sx == null) continue;
+          const { x, y } = squareXY(f.idx);
+          // Pass -anim.side as the "drawn side"; with positive scale that shows old, negative shows new.
+          drawDisc(x + SQ / 2, y + SQ / 2, -anim.side, sx);
+        }
+        if (placingDisc) {
+          const { x, y } = squareXY(placingDisc.idx);
+          drawDisc(x + SQ / 2, y + SQ / 2, placingDisc.side, placingDisc.scale);
+        }
+      }
+    }
+
+    function setStatus(s) { statusEl.textContent = s; }
+    function setTurnLabel(s) { turnEl.textContent = s; }
+
+    let toastTimer = null;
+    function showToast(msg, ms = 1100) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+    }
+
+    function recordWin() {
+      writeNum(KEY_WINS, readNum(KEY_WINS) + 1);
+      const s = readNum(KEY_STREAK) + 1;
+      writeNum(KEY_STREAK, s);
+      if (s > readNum(KEY_BEST)) writeNum(KEY_BEST, s);
+    }
+    function recordLoss() {
+      writeNum(KEY_LOSS, readNum(KEY_LOSS) + 1);
+      writeNum(KEY_STREAK, 0);
+    }
+    function recordDraw() {
+      writeNum(KEY_DRAW, readNum(KEY_DRAW) + 1);
+      // Draws don't reset streak in checkers' precedent, but Othello tradition is to reset.
+      writeNum(KEY_STREAK, 0);
+    }
+
+    function showOver(title, text) {
+      overTitleEl.textContent = title;
+      overTextEl.textContent = text;
+      overEl.classList.add('show');
+    }
+
+    function checkEnd() {
+      const s = gameStatus(state);
+      if (s === 'playing') return false;
+      const c = counts(state.board);
+      const summary = `Final score: Black ${c.b} — White ${c.w}.`;
+      if (s === 'black-wins') { recordWin(); showOver('You win!', summary + ' Streak preserved.'); }
+      else if (s === 'white-wins') { recordLoss(); showOver('You lost', summary + ' Streak reset.'); }
+      else { recordDraw(); showOver('Draw', summary + ' Streak reset.'); }
+      refreshStats();
+      return true;
+    }
+
+    function startMoveAnimation(move, side, onDone) {
+      const startTs = performance.now();
+      const flips = move.flips.map((idx, i) => ({
+        idx,
+        start: startTs + PLACE_MS + i * FLIP_STAGGER,
+      }));
+      anim = { placeIdx: move.idx, side, flips, placeStart: startTs, onDone };
+      requestAnimationFrame(animTick);
+    }
+
+    function animTick() {
+      if (!anim) return;
+      draw();
+      const now = performance.now();
+      const lastFlip = anim.flips[anim.flips.length - 1];
+      const finished = anim.flips.length === 0
+        ? now - anim.placeStart >= PLACE_MS
+        : now - lastFlip.start >= FLIP_MS;
+      if (finished) {
+        const done = anim.onDone;
+        anim = null;
+        draw();
+        if (done) done();
+        return;
+      }
+      requestAnimationFrame(animTick);
+    }
+
+    // Auto-pass loop: while side-to-move has zero legal moves and game not over,
+    // pass and recurse. Returns true if game ended via double-pass.
+    function autoPassIfNeeded(onPass) {
+      const moves = legalMoves(state);
+      if (moves.length > 0) return false;
+      // Side with no moves passes
+      const passingSide = state.turn;
+      applyPass(state);
+      const sideName = passingSide === PLAYER ? 'You' : 'AI (White)';
+      showToast(sideName + ' has no move — pass');
+      onPass(); // caller decides what to do next
+      return true;
+    }
+
+    function nextTurn() {
+      // After any animation completes, check end / pass / hand off.
+      if (checkEnd()) return;
+      // If side-to-move has no legal moves → pass automatically.
+      const moves = legalMoves(state);
+      if (moves.length === 0) {
+        applyPass(state);
+        const passSide = -state.turn; // who just passed (we already swapped)
+        showToast((passSide === PLAYER ? 'You have' : 'AI has') + ' no move — pass');
+        if (checkEnd()) return;
+        // Recurse to handle the new side
+        setTimeout(nextTurn, 600);
+        return;
+      }
+      if (state.turn === PLAYER) {
+        setTurnLabel('Your move');
+        setStatus('Click a green-dot square to place your disc.');
+        refreshStats();
+        draw();
+      } else {
+        setTurnLabel('AI thinking');
+        setStatus('AI is calculating its response.');
+        refreshStats();
+        draw();
+        aiThinking = true;
+        setTimeout(aiTurn, 80);
+      }
+    }
+
+    function aiTurn() {
+      if (state.turn !== AI) { aiThinking = false; return; }
+      const m = chooseAIMove(state, difficulty);
+      if (!m) { aiThinking = false; nextTurn(); return; }
+      const side = state.turn;
+      applyMove(state, m);
+      startMoveAnimation(m, side, () => {
+        aiThinking = false;
+        refreshStats();
+        nextTurn();
+      });
+    }
+
+    canvas.addEventListener('click', (e) => {
+      if (aiThinking || anim || state.turn !== PLAYER) return;
+      const rect = canvas.getBoundingClientRect();
+      const px = (e.clientX - rect.left) * (W / rect.width);
+      const py = (e.clientY - rect.top) * (H / rect.height);
+      const s = xyToSquare(px, py);
+      if (s < 0) return;
+      const moves = legalMoves(state);
+      const m = moves.find(x => x.idx === s);
+      if (!m) {
+        setStatus('That square has no flips. Try a green-dotted square.');
+        return;
+      }
+      const side = state.turn;
+      applyMove(state, m);
+      startMoveAnimation(m, side, () => {
+        refreshStats();
+        nextTurn();
+      });
+    });
+
+    function startGame() {
+      state = newGame();
+      anim = null;
+      aiThinking = false;
+      overEl.classList.remove('show');
+      setTurnLabel('Your move');
+      setStatus('Click a green-dot square to place your disc.');
+      refreshStats();
+      draw();
+    }
+
+    newGameBtn.addEventListener('click', startGame);
+    overBtn.addEventListener('click', startGame);
+    diffEl.addEventListener('change', () => {
+      difficulty = diffEl.value;
+      localStorage.setItem(KEY_DIFF, difficulty);
+    });
+
+    startGame();
+
+    // Auto-scale
+    (function () {
+      const c = canvas;
+      const bw = c.width, bh = c.height;
+      function sc() {
+        // Reset canvas to natural size so the parent collapses to its true content,
+        // then measure available width capped by the viewport.
+        c.style.width = bw + 'px';
+        c.style.height = bh + 'px';
+        const viewW = Math.min(window.innerWidth, document.documentElement.clientWidth);
+        const mw = Math.max(viewW - 64, 200);   // body has 16px padding ea side + .stage-wrap 14px ea side ≈ 60
+        const mh = window.innerHeight * 0.72;
+        const s = Math.min(mw / bw, mh / bh, 1);
+        c.style.width = (bw * s) + 'px';
+        c.style.height = (bh * s) + 'px';
+      }
+      window.addEventListener('resize', sc);
+      sc();
+    })();
+    </script>
+</body>
+</html>

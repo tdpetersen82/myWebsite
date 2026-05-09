@@ -16,6 +16,11 @@
     <meta name="twitter:description" content="Lifetime stats and trophy case across all four categories.">
     <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
     <link rel="canonical" href="https://limestonegames.com/profile/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Profile","item":"https://limestonegames.com/profile/"}]}</script>
 
     <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -23,21 +28,22 @@
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../casino/casino.css">
     <link rel="stylesheet" href="profile.css">
+    <link rel="stylesheet" href="../site-nav.css">
 
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 </head>
-<body class="cas-root prof-root">
+<body class="cas-root prof-root" data-category="profile">
 
-    <!-- Top nav (mirrors casino-style hand-rolled nav) -->
-    <nav class="cas-nav">
-        <div class="cas-nav-left">
-            <a class="cas-logo" href="..">
-                <img src="../assets/logo-96.png" alt="Limestone Games home" width="40" height="40">
+    <!-- Top nav -->
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="..">
+                <span class="logo-mark">L</span>
                 <span class="wordmark">Limestone <span class="light">Games</span></span>
             </a>
-            <div class="cas-nav-links">
+            <div class="nav-links">
                 <a href="../arcade/">Arcade</a>
                 <a href="../kids/">Kids</a>
                 <a href="../strategy/">Strategy</a>
@@ -45,7 +51,7 @@
                 <a href="" class="active">Profile</a>
             </div>
         </div>
-        <div class="cas-tables-open">
+        <div class="nav-meta">
             <span class="dot"></span>
             <span id="prof-run-status">Run in progress</span>
         </div>

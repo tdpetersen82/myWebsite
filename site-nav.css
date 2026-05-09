@@ -1,0 +1,90 @@
+/* =====================================================================
+   Limestone Games — shared site nav (light, retintable)
+   Apply via <body data-category="arcade|kids|strategy|casino|profile">.
+   Link this stylesheet from each category page after that page's
+   primary stylesheet so token defaults can be overridden if needed.
+   ===================================================================== */
+
+:root {
+  --paper:        #FBF7EE;
+  --paper-soft:   #F3ECDC;
+  --nav-ink:      #1A140C;
+  --nav-ink2:     #4A4138;
+  --nav-ink3:     #8A7E6F;
+  --nav-line:     rgba(26,20,12,0.10);
+
+  /* Per-category accent — defaults to Arcade amber */
+  --cat-accent:   #C77A2A;
+  --cat-tint:     #FBEFD8;
+  --cat-glow:     rgba(199,122,42,0.35);
+}
+
+/* Category overrides — set data-category on <body> */
+[data-category="arcade"]   { --cat-accent:#C77A2A; --cat-tint:#FBEFD8; --cat-glow:rgba(199,122,42,0.35); }
+[data-category="kids"]     { --cat-accent:#2F9E73; --cat-tint:#E2F4EC; --cat-glow:rgba(47,158,115,0.35); }
+[data-category="strategy"] { --cat-accent:#3A4D6B; --cat-tint:#E5EAF3; --cat-glow:rgba(58,77,107,0.30); }
+[data-category="casino"]   { --cat-accent:#B83A4A; --cat-tint:#F7DEE0; --cat-glow:rgba(184,58,74,0.35); }
+[data-category="profile"]  { --cat-accent:#B83A4A; --cat-tint:#F7DEE0; --cat-glow:rgba(184,58,74,0.35); }
+
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 24px 36px 0; padding: 16px 22px;
+  background: #fff; color: var(--nav-ink);
+  border: 1px solid var(--nav-line); border-radius: 16px;
+  box-shadow: 0 1px 0 var(--nav-line), 0 14px 30px -18px rgba(0,0,0,0.45);
+  position: relative; overflow: hidden; z-index: 2;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+}
+.nav::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cat-accent), transparent);
+  opacity: 0.7; pointer-events: none;
+}
+.nav .nav-left { display: flex; align-items: center; gap: 28px; }
+.nav .logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+.nav .logo-mark {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: linear-gradient(135deg, #D89C56, #C25C2A);
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.18), inset 0 2px 4px rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  color: #FFF6E1; font-weight: 700; font-size: 14px;
+}
+.nav .wordmark {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  font-size: 16px; font-weight: 700; color: var(--nav-ink);
+  letter-spacing: -0.02em;
+}
+.nav .wordmark .light { opacity: 0.55; font-weight: 500; }
+.nav .nav-links { display: flex; gap: 4px; }
+.nav .nav-links a {
+  padding: 7px 14px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 500; text-decoration: none;
+  color: var(--nav-ink2);
+  transition: color .15s, background .15s;
+}
+.nav .nav-links a:hover { color: var(--nav-ink); background: var(--paper-soft); }
+.nav .nav-links a.active {
+  background: var(--cat-tint);
+  color: var(--cat-accent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cat-accent) 22%, transparent);
+}
+.nav .nav-meta {
+  display: flex; align-items: center; gap: 8px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px; color: var(--nav-ink2);
+  padding: 7px 14px; border-radius: 999px;
+  border: 1px solid var(--nav-line); background: var(--paper);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.nav .nav-meta .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--cat-accent);
+  box-shadow: 0 0 0 3px var(--cat-tint);
+}
+
+@media (max-width: 700px) {
+  .nav { margin: 18px; padding: 14px 16px; flex-wrap: wrap; gap: 12px; }
+  .nav .nav-left { gap: 16px; flex-wrap: wrap; }
+  .nav .nav-links { flex-wrap: wrap; }
+}

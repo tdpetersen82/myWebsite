@@ -1,297 +1,276 @@
-/* Shared theme for arcade game pages.
-   Activated by adding class="arc-game" (or "arc-game arc-fullscreen") to <body>.
-   Overrides selectors of the generic /styles.css to give arcade games a dark
-   cabinet-bezel aesthetic that matches the warm-orange arcade hub. */
+/* =====================================================================
+   Limestone Arcade — Game Chrome (Cabinet Hall)
+   Drop-in CSS for any game page in /arcade/<game>/
+   Wraps the canvas in a CRT bezel inside a wood-paneled hall, with a
+   shared top bar (back · title · score · hi-score · pause/restart/mute)
+   and an INSERT COIN status strip at the bottom.
 
-body.arc-game {
-  --arc-bg-1:    #1A0F08;
-  --arc-bg-2:    #261607;
-  --arc-bezel:   #0E0703;
-  --arc-brass:   #C97D3A;
-  --arc-cta:     #FF4F2D;
-  --arc-yellow:  #FFD93D;
-  --arc-cyan:    #4ECDC4;
-  --arc-text:    #F5E6D3;
-  --arc-text-dim:#A89070;
+   Markup contract (HTML):
+   <div class="ch-stage">
+     <header class="ch-topbar">
+       <a class="ch-back" href="..">← Arcade</a>
+       <div class="ch-title">
+         <div class="ch-eyebrow"><span class="ch-dot"></span>Cabinet · Pong</div>
+         <h1>Pong</h1>
+       </div>
+       <div class="ch-scores">
+         <div class="ch-score"><span class="ch-l">Score</span><b id="ch-score">0</b></div>
+         <div class="ch-score"><span class="ch-l">Hi</span><b id="ch-hi">21</b></div>
+       </div>
+       <div class="ch-controls">
+         <button class="ch-btn" data-act="pause">Pause</button>
+         <button class="ch-btn" data-act="restart">Restart</button>
+         <button class="ch-btn ch-btn-icon" data-act="mute" aria-label="Mute">♪</button>
+       </div>
+     </header>
 
+     <div class="ch-bezel">
+       <span class="ch-coin">INSERT COIN</span>
+       <canvas id="game" width="800" height="600"></canvas>
+     </div>
+
+     <footer class="ch-hint">
+       <span><kbd>↑</kbd><kbd>↓</kbd> move paddle</span>
+       <span><kbd>Space</kbd> pause</span>
+       <span><kbd>R</kbd> restart</span>
+     </footer>
+   </div>
+   ===================================================================== */
+
+:root {
+  --ch-bg:        #120A05;
+  --ch-panel:     #1B0F07;
+  --ch-panel2:    #241509;
+  --ch-bezel:     #08040A;
+  --ch-brass:     #D89C56;
+  --ch-brass-dim: #8E6534;
+  --ch-ember:     #FF5A2C;
+  --ch-amber:     #FFC34D;
+  --ch-ink:       #F4E6D2;
+  --ch-ink2:      #C7B196;
+  --ch-ink3:      #8E7A60;
+  --ch-line:      rgba(216, 156, 86, 0.18);
+  --ch-line-soft: rgba(216, 156, 86, 0.08);
+  --ch-display:   'Bricolage Grotesque', system-ui, sans-serif;
+  --ch-mono:      'JetBrains Mono', ui-monospace, monospace;
+  --ch-font:      'Inter', system-ui, -apple-system, sans-serif;
+}
+
+body.ch-game {
+  margin: 0; min-height: 100vh;
+  font-family: var(--ch-font); color: var(--ch-ink);
   background:
-    radial-gradient(900px 600px at 50% 0%, rgba(201, 125, 58, 0.18), transparent 70%),
-    linear-gradient(180deg, var(--arc-bg-2), var(--arc-bg-1)) !important;
-  color: var(--arc-text);
-  font-family: 'Inter', system-ui, -apple-system, sans-serif;
-  position: relative;
+    radial-gradient(900px 600px at 50% -20%, rgba(255,90,44,0.18), transparent 70%),
+    linear-gradient(180deg, var(--ch-panel) 0%, var(--ch-bg) 100%);
 }
-
-/* Faint 22px grid pattern matching the arcade hub */
-body.arc-game::before {
-  content: '';
-  position: fixed;
-  inset: 0;
-  pointer-events: none;
-  z-index: 0;
+body.ch-game::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none;
   background-image:
-    linear-gradient(0deg,  rgba(255, 217, 61, 0.04) 1px, transparent 1px),
-    linear-gradient(90deg, rgba(255, 217, 61, 0.04) 1px, transparent 1px);
-  background-size: 22px 22px;
+    linear-gradient(0deg,  rgba(255,217,61,0.03) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,217,61,0.03) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
 }
 
-/* Container = cabinet plywood */
-body.arc-game .container {
-  background: var(--arc-bg-2);
-  border: 1px solid rgba(201, 125, 58, 0.25);
+/* Hide each game's pre-existing in-page chrome — chrome JS owns these now.
+   The original markup stays in the DOM as the source of truth that the
+   chrome's MutationObserver mirrors into the topbar. */
+body.ch-game .container > h1,
+body.ch-game .container > h2,
+body.ch-game .container > .game-info,
+body.ch-game .container > .controls,
+body.ch-game .container > p { display: none; }
+body.ch-game .container { background: transparent !important; box-shadow: none !important; padding: 0 !important; max-width: none !important; }
+
+.ch-stage {
+  max-width: 1180px; margin: 24px auto; padding: 0 24px;
+  display: flex; flex-direction: column; gap: 14px;
+}
+
+/* ---------- Top bar ---------- */
+.ch-topbar {
+  display: grid;
+  grid-template-columns: auto 1fr auto auto;
+  gap: 24px; align-items: center;
+  padding: 14px 18px;
+  background: rgba(8,4,2,0.55);
+  backdrop-filter: blur(6px);
+  border: 1px solid var(--ch-line);
   border-radius: 18px;
-  box-shadow:
-    0 30px 60px -20px rgba(0, 0, 0, 0.7),
-    0 12px 24px -10px rgba(0, 0, 0, 0.5),
-    inset 0 1px 0 rgba(255, 217, 61, 0.08);
-  position: relative;
-  z-index: 1;
 }
 
-/* Heading */
-body.arc-game h1 {
-  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
-  color: var(--arc-text);
-  font-size: 1.8em;
-  letter-spacing: -0.02em;
-  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
-  margin-bottom: 6px;
+.ch-back {
+  display: inline-flex; align-items: center; gap: 6px;
+  padding: 9px 14px; border-radius: 999px;
+  background: transparent; border: 1px solid var(--ch-line);
+  color: var(--ch-ink2); text-decoration: none;
+  font-size: 12.5px; font-weight: 500;
+  font-family: var(--ch-font);
+  transition: color .15s, border-color .15s, background .15s;
+}
+.ch-back:hover { color: var(--ch-amber); border-color: var(--ch-amber); }
+
+.ch-title h1 {
+  font-family: var(--ch-display); font-size: 22px; font-weight: 700;
+  letter-spacing: -0.02em; margin: 2px 0 0;
+}
+.ch-eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-family: var(--ch-mono); font-size: 10px; letter-spacing: 0.2em;
+  text-transform: uppercase; color: var(--ch-amber);
+}
+.ch-dot {
+  width: 6px; height: 6px; border-radius: 50%;
+  background: var(--ch-ember); box-shadow: 0 0 8px var(--ch-ember);
+  animation: ch-pulse 1.6s ease-in-out infinite;
+}
+@keyframes ch-pulse {
+  50% { opacity: 0.4; box-shadow: 0 0 4px var(--ch-ember); }
 }
 
-/* Score / info pill */
-body.arc-game .game-info {
-  background: rgba(0, 0, 0, 0.35);
-  border: 1px solid rgba(201, 125, 58, 0.22);
-  border-radius: 12px;
-  padding: 8px 18px;
-  display: inline-flex;
-  justify-content: center;
-  gap: 24px;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.92em;
-  font-weight: 500;
-  color: var(--arc-text-dim);
-  letter-spacing: 0.04em;
-  text-transform: uppercase;
+.ch-scores { display: flex; gap: 28px; align-items: center; padding-right: 6px; }
+.ch-score { display: flex; flex-direction: column; align-items: flex-end; line-height: 1; }
+.ch-score .ch-l {
+  font-family: var(--ch-mono); font-size: 10px; letter-spacing: 0.18em;
+  color: var(--ch-ink3); text-transform: uppercase; margin-bottom: 6px;
 }
+.ch-score b {
+  font-family: var(--ch-mono); font-size: 22px; font-weight: 600;
+  color: var(--ch-amber); font-variant-numeric: tabular-nums;
+}
+.ch-score:first-child b { color: var(--ch-ink); }
 
-body.arc-game .game-info p { margin: 0; }
-body.arc-game .game-info span {
-  color: var(--arc-yellow);
-  font-weight: 600;
-  letter-spacing: 0.02em;
-}
-
-/* Cabinet bezel around primary canvas / Phaser container */
-body.arc-game canvas,
-body.arc-game #game-container,
-body.arc-game #phaser-container {
-  border: 6px solid var(--arc-bezel) !important;
-  background-color: #000 !important;
-  border-radius: 8px;
-  box-shadow:
-    0 0 0 2px rgba(201, 125, 58, 0.35),
-    0 12px 30px -10px rgba(0, 0, 0, 0.8),
-    inset 0 0 60px rgba(0, 0, 0, 0.4);
-}
-
-/* Phaser games leave the inner canvas borderless — the wrapper is the bezel */
-body.arc-game #game-container canvas,
-body.arc-game #phaser-container canvas {
-  border: none !important;
-  border-radius: 4px;
-  box-shadow: none;
-  background-color: transparent !important;
-}
-
-/* Controls block */
-body.arc-game .controls {
-  margin-top: 12px;
-}
-body.arc-game .controls p {
-  color: var(--arc-text-dim);
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 0.85em;
-  letter-spacing: 0.02em;
-}
-
-/* Restart / play button — orange CTA */
-body.arc-game .play-button {
-  background: linear-gradient(180deg, var(--arc-cta), #C93820);
-  color: #fff;
-  border: none;
-  border-radius: 999px;
-  padding: 10px 26px;
-  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
-  font-weight: 600;
-  font-size: 0.95em;
-  letter-spacing: 0.04em;
-  box-shadow:
-    0 4px 12px rgba(255, 79, 45, 0.4),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2),
-    inset 0 -2px 4px rgba(0, 0, 0, 0.2);
+.ch-controls { display: flex; gap: 6px; }
+.ch-btn {
+  appearance: none; -webkit-appearance: none;
+  padding: 8px 14px; border-radius: 999px;
+  border: 1px solid var(--ch-line);
+  background: rgba(0,0,0,0.25); color: var(--ch-ink2);
+  font-family: var(--ch-font); font-size: 12px; font-weight: 500;
   cursor: pointer;
-  transition: transform 0.18s ease, box-shadow 0.18s ease;
+  transition: color .15s, border-color .15s, background .15s, transform .1s;
 }
-body.arc-game .play-button:hover {
-  transform: translateY(-1px) scale(1.04);
+.ch-btn:hover { color: var(--ch-ink); border-color: var(--ch-amber); }
+.ch-btn:active { transform: translateY(1px); }
+.ch-btn-icon { width: 34px; padding: 8px 0; text-align: center; }
+.ch-btn[data-active="true"] {
+  background: var(--ch-amber); color: var(--ch-bg); border-color: var(--ch-amber);
+}
+
+/* ---------- Bezel + canvas ---------- */
+.ch-bezel {
+  position: relative;
+  background:
+    linear-gradient(135deg, #2A1A0E 0%, #1A0E08 100%);
+  padding: 28px;
+  border-radius: 20px;
   box-shadow:
-    0 6px 18px rgba(255, 79, 45, 0.55),
-    0 0 0 2px rgba(255, 217, 61, 0.35),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
-}
-body.arc-game .play-button:active {
-  transform: translateY(0) scale(0.98);
-}
-
-/* Game-info paragraph layout (some games put score & high-score side by side) */
-body.arc-game .game-info { color: var(--arc-text-dim); }
-
-/* Block Puzzle's "Next" mini-canvas — also gets the bezel */
-body.arc-game #nextCanvas {
-  border: 4px solid var(--arc-bezel) !important;
-  background: #000 !important;
-  box-shadow:
-    0 0 0 1.5px rgba(201, 125, 58, 0.35),
-    inset 0 0 20px rgba(0, 0, 0, 0.6);
-  border-radius: 6px;
-}
-
-/* Sidebar (similar games) — keep cream against dark body for contrast,
-   but tint the title rule to brass to tie back to the cabinet. */
-body.arc-game .similar-games-title {
-  border-bottom-color: var(--arc-brass);
-  color: #555;
-}
-
-/* Fullscreen variant: Defender, Missile Command, Simon — no chrome,
-   just paint the body so any letterbox bars match the cabinet. */
-body.arc-game.arc-fullscreen {
-  background: var(--arc-bg-1) !important;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  min-height: 100vh;
-  margin: 0;
-  padding: 0;
+    0 0 0 1px var(--ch-brass-dim),
+    inset 0 0 0 6px var(--ch-bezel),
+    inset 0 0 60px rgba(0,0,0,0.6),
+    0 30px 60px -30px rgba(0,0,0,0.7);
   overflow: hidden;
 }
-
-body.arc-game.arc-fullscreen #game-container,
-body.arc-game.arc-fullscreen #phaser-container {
-  border: none !important;
-  border-radius: 0;
-  box-shadow: none;
+.ch-bezel::before {
+  /* CRT scanlines + vignette over the whole bezel */
+  content: ''; position: absolute; inset: 6px; border-radius: 14px;
+  pointer-events: none; z-index: 3;
+  background-image: repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 1px, transparent 1px 3px);
+  -webkit-mask-image: radial-gradient(ellipse at center, #000 60%, transparent 100%);
+  mask-image: radial-gradient(ellipse at center, #000 60%, transparent 100%);
+  mix-blend-mode: multiply;
+}
+.ch-bezel::after {
+  /* glass highlight */
+  content: ''; position: absolute; inset: 6px; border-radius: 14px;
+  pointer-events: none; z-index: 4;
+  background: linear-gradient(180deg, rgba(255,255,255,0.05) 0%, transparent 30%);
+}
+.ch-bezel canvas, .ch-bezel > .ch-screen {
+  display: block; width: 100%; height: auto;
+  max-height: 70vh;
+  background: #050304;
+  border-radius: 8px;
+  position: relative; z-index: 1;
+  image-rendering: pixelated;
 }
 
-body.arc-game.arc-fullscreen::before { display: none; }
-
-/* Phone responsive — same overrides apply, but tighten container padding */
-@media (max-width: 768px) {
-  body.arc-game .container { border-radius: 14px; }
-  body.arc-game h1 { font-size: 1.4em; }
+/* Phaser containers must fill the bezel cleanly. Phaser injects its
+   canvas into one of these wrappers asynchronously; we hand the wrapper
+   to the bezel so Phaser.Scale.FIT computes against a sized parent. */
+.ch-bezel #phaser-container,
+.ch-bezel #game-container {
+  width: 100%;
+  max-height: 70vh;
+  aspect-ratio: 4 / 3;
+  position: relative; z-index: 1;
+}
+.ch-bezel #phaser-container canvas,
+.ch-bezel #game-container canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  image-rendering: pixelated;
 }
 
-/* ─────────── Top nav (nav.js) — reskin to cabinet palette ─────────── */
-body.arc-game .site-nav {
-  background: rgba(14, 7, 3, 0.92) !important;
-  backdrop-filter: blur(24px);
-  -webkit-backdrop-filter: blur(24px);
-  border-bottom: 1px solid rgba(201, 125, 58, 0.25);
-  box-shadow: 0 2px 18px rgba(0, 0, 0, 0.5);
-  font-family: 'Inter', system-ui, sans-serif;
+.ch-coin {
+  position: absolute; top: 14px; left: 50%; transform: translateX(-50%);
+  z-index: 5;
+  font-family: var(--ch-mono); font-size: 11px; letter-spacing: 0.32em;
+  color: var(--ch-amber); font-weight: 600;
+  text-shadow: 0 0 10px var(--ch-amber), 0 0 2px #fff;
+  animation: ch-blink 1.4s steps(2, end) infinite;
 }
-body.arc-game .site-nav-home { color: var(--arc-text); }
-body.arc-game .site-nav-home:hover { background: rgba(255, 217, 61, 0.08); }
+@keyframes ch-blink { 50% { opacity: 0.35; } }
 
-body.arc-game .site-nav-cat-btn {
-  color: var(--arc-text-dim);
-  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
-  letter-spacing: 0.02em;
+/* ---------- Hint footer ---------- */
+.ch-hint {
+  display: flex; gap: 22px; flex-wrap: wrap;
+  padding: 10px 18px;
+  font-family: var(--ch-mono); font-size: 11px;
+  color: var(--ch-ink3); letter-spacing: 0.06em;
 }
-body.arc-game .site-nav-cat-btn:hover,
-body.arc-game .site-nav-cat.open .site-nav-cat-btn {
-  background: rgba(255, 79, 45, 0.18);
-  color: var(--arc-text);
-}
-
-body.arc-game .site-nav-dropdown,
-body.arc-game .site-nav-search-dropdown,
-body.arc-game .site-nav-size-dropdown {
-  background: rgba(14, 7, 3, 0.97) !important;
-  border: 1px solid rgba(201, 125, 58, 0.3);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.7);
-}
-body.arc-game .site-nav-dropdown a,
-body.arc-game .site-nav-search-results a {
-  color: var(--arc-text-dim);
-}
-body.arc-game .site-nav-dropdown a:hover,
-body.arc-game .site-nav-search-results a:hover {
-  background: rgba(255, 79, 45, 0.18);
-  color: var(--arc-text);
-}
-body.arc-game .site-nav-dropdown a.active {
-  color: var(--arc-yellow);
-  background: rgba(255, 217, 61, 0.1);
+.ch-hint kbd {
+  display: inline-block;
+  padding: 2px 7px;
+  margin-right: 6px;
+  font-family: var(--ch-mono); font-size: 10.5px;
+  background: rgba(216,156,86,0.08);
+  border: 1px solid var(--ch-line);
+  border-bottom-width: 2px;
+  border-radius: 4px;
+  color: var(--ch-ink2);
 }
 
-body.arc-game .site-nav-search-btn,
-body.arc-game .site-nav-size-btn {
-  color: var(--arc-text-dim);
-}
-body.arc-game .site-nav-search-btn:hover,
-body.arc-game .site-nav-size-btn:hover {
-  background: rgba(255, 217, 61, 0.1);
-  color: var(--arc-text);
-}
-
-body.arc-game .site-nav-search-dropdown input {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(201, 125, 58, 0.3);
-  color: var(--arc-text);
-}
-body.arc-game .site-nav-search-dropdown input:focus {
-  border-color: var(--arc-cta);
+/* ---------- Pause overlay (use .ch-paused on .ch-bezel) ---------- */
+.ch-paused canvas { filter: brightness(0.4) saturate(0.6); }
+.ch-paused::after {
+  content: 'PAUSED';
+  position: absolute; inset: 6px; z-index: 6;
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--ch-display); font-size: 64px; font-weight: 700;
+  letter-spacing: 0.2em; color: var(--ch-amber);
+  text-shadow: 0 0 24px var(--ch-amber), 0 0 4px #fff;
+  background: rgba(8,4,2,0.5);
+  border-radius: 14px;
+  pointer-events: none;
 }
 
-body.arc-game .nav-size-btn {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(201, 125, 58, 0.25);
-  color: var(--arc-text-dim);
-}
-body.arc-game .nav-size-btn:hover {
-  background: rgba(255, 79, 45, 0.15);
-  color: var(--arc-text);
-}
-body.arc-game .nav-size-btn.active {
-  background: linear-gradient(135deg, var(--arc-cta), #C93820);
-  color: #fff;
-  border-color: transparent;
-}
-
-body.arc-game .site-nav-mobile-btn:hover { background: rgba(255, 217, 61, 0.1); }
-body.arc-game .site-nav-mobile-btn .bar { background: var(--arc-text); }
-
-body.arc-game .site-nav-mobile-panel {
-  background: rgba(14, 7, 3, 0.98);
-  border-top: 1px solid rgba(201, 125, 58, 0.25);
-}
-body.arc-game .site-nav-mobile-panel .mobile-search input {
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(201, 125, 58, 0.3);
-  color: var(--arc-text);
-}
-body.arc-game .site-nav-mobile-panel .mobile-cat-header {
-  color: var(--arc-text-dim);
-}
-body.arc-game .site-nav-mobile-panel .mobile-cat-header:hover {
-  background: rgba(255, 79, 45, 0.12);
-}
-body.arc-game .site-nav-mobile-panel .mobile-game-list a {
-  color: var(--arc-text-dim);
-}
-body.arc-game .site-nav-mobile-panel .mobile-game-list a:hover {
-  background: rgba(255, 79, 45, 0.12);
-  color: var(--arc-text);
+/* ---------- Mobile ---------- */
+@media (max-width: 760px) {
+  .ch-topbar {
+    grid-template-columns: auto 1fr;
+    grid-template-areas:
+      "back  title"
+      "scores controls";
+    gap: 12px 16px;
+  }
+  .ch-back     { grid-area: back; }
+  .ch-title    { grid-area: title; }
+  .ch-scores   { grid-area: scores; gap: 18px; }
+  .ch-controls { grid-area: controls; justify-self: end; }
+  .ch-title h1 { font-size: 18px; }
+  .ch-bezel { padding: 16px; }
+  .ch-coin { top: 6px; font-size: 9.5px; letter-spacing: 0.28em; }
 }

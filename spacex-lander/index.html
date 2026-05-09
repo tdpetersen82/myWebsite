@@ -35,14 +35,23 @@
     <meta name="twitter:title" content="SpaceX Lander — Free Online Game | Limestone Games">
     <meta name="twitter:description" content="Play SpaceX Lander free in your browser. Land the Falcon 9 first stage on the drone ship after re-entry! No downloads, no installs.">
     <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
-    <link rel="manifest" href="../manifest.json">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
     <!-- Google Analytics — replace G-DP6FGVETMV with your tracking ID -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 </head>
-<body class="arc-game">
+<body class="ch-game" data-category="arcade"
+      data-eyebrow="Cabinet · SpaceX Lander"
+      data-title="SpaceX Lander"
+      data-hint-1="↑ thrust ←→ grid fins"
+      data-hint-2="P pause"
+      data-hint-3="M mute">
     <div class="container">
         <h1>🚀 SpaceX Lander</h1>
         <div class="game-info">
@@ -120,6 +129,19 @@
 
         const game = new Phaser.Game(phaserConfig);
 
+        window.gameAPI = {
+            pause: () => {
+                const s = game.scene.scenes.find(x => x.scene.isActive());
+                if (!s) return;
+                s.scene.isPaused() ? s.scene.resume() : s.scene.pause();
+            },
+            restart: () => {
+                const s = game.scene.scenes.find(x => x.scene.isActive());
+                if (s) s.scene.restart();
+            },
+            mute: () => { game.sound.mute = !game.sound.mute; }
+        };
+
         // Update score display periodically
         setInterval(() => {
             const scoreEl = document.getElementById('score');
@@ -147,5 +169,6 @@
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
     <script src="../share.js"></script>
+    <script src="../arcade/arcade-chrome.js"></script>
 </body>
 </html>

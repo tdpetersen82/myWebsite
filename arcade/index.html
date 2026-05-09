@@ -1,625 +1,805 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Limestone Arcade — Classic &amp; 80s Browser Games</title>
-    <meta name="description" content="Eleven arcade cabinets — Pong, Breakout, Space Invasion, Block Puzzle, Asteroids, Lunar Lander, Defender, Frogger, Missile Command, SpaceX Lander, Simon. Pixel-perfect, two-second loads, scores save locally.">
-    <meta name="keywords" content="classic arcade games, pong, breakout, space invaders, block puzzle, asteroids, lunar lander, defender, frogger, missile command, simon, free browser games">
-    <meta property="og:title" content="Limestone Arcade — Classic &amp; 80s Browser Games">
-    <meta property="og:description" content="Eleven arcade cabinets — classic and 80s. Pixel-perfect, two-second loads.">
-    <meta property="og:type" content="website">
-    <meta property="og:url" content="https://limestonegames.com/arcade/">
-    <meta property="og:image" content="https://limestonegames.com/og-image.png">
-    <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Limestone Arcade — Classic &amp; 80s Browser Games">
-    <meta name="twitter:description" content="Eleven arcade cabinets — classic and 80s. Pixel-perfect, two-second loads.">
-    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
-    <link rel="canonical" href="https://limestonegames.com/arcade/">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Arcade","item":"https://limestonegames.com/arcade/"}]}</script>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Limestone Arcade — Classic &amp; 80s Browser Games</title>
+<meta name="description" content="Eleven arcade cabinets — Pong, Breakout, Space Invasion, Block Puzzle, Asteroids, Lunar Lander, Defender, Frogger, Missile Command, SpaceX Lander, Simon. Pixel-perfect, two-second loads, scores save locally.">
+<meta name="keywords" content="classic arcade games, pong, breakout, space invaders, block puzzle, asteroids, lunar lander, defender, frogger, missile command, simon, free browser games">
+<meta property="og:title" content="Limestone Arcade — Classic &amp; 80s Browser Games">
+<meta property="og:description" content="Eleven arcade cabinets — classic and 80s. Pixel-perfect, two-second loads.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://limestonegames.com/arcade/">
+<meta property="og:image" content="https://limestonegames.com/og-image.png">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Limestone Arcade — Classic &amp; 80s Browser Games">
+<meta name="twitter:description" content="Eleven arcade cabinets — classic and 80s. Pixel-perfect, two-second loads.">
+<meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+<link rel="canonical" href="https://limestonegames.com/arcade/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Arcade","item":"https://limestonegames.com/arcade/"}]}</script>
 
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="../category.css">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
 
-    <!-- Google Analytics -->
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
 
-    <!-- Google AdSense -->
-    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+<!-- Google AdSense -->
+<script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 
-    <style>
-      :root {
-        --cat-hero-bg: linear-gradient(135deg, #FFD89F 0%, #F2A65A 60%, #C97D3A 100%);
-        --cat-hero-ink: #3A1F0A;
-        --cat-eyebrow-color: #FF4F2D;
-        --cat-cta-bg: #FF4F2D;
-        --cat-cta-ink: #fff;
-        --cat-feat-art-bg: linear-gradient(135deg, #FFD89F, #F2A65A);
-      }
-      .cat-hero::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background-image:
-          linear-gradient(0deg, rgba(58, 31, 10, 0.08) 1px, transparent 1px),
-          linear-gradient(90deg, rgba(58, 31, 10, 0.08) 1px, transparent 1px);
-        background-size: 22px 22px;
-        opacity: 0.6;
-        pointer-events: none;
-      }
-      /* Hero motif: chunky joystick */
-      .arc-stick {
-        position: relative;
-        width: 240px;
-        height: 280px;
-        margin: 0 auto;
-      }
-      .arc-stick .base {
-        position: absolute;
-        bottom: 0; left: 50%;
-        transform: translateX(-50%);
-        width: 200px; height: 56px;
-        border-radius: 28px 28px 8px 8px;
-        background: #3A1F0A;
-        box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.3), inset 0 3px 6px rgba(255, 255, 255, 0.15);
-      }
-      .arc-stick .shaft {
-        position: absolute;
-        bottom: 48px; left: 50%;
-        transform: translateX(-50%);
-        width: 20px; height: 130px;
-        background: linear-gradient(180deg, #1F1108, #3A1F0A);
-        border-radius: 10px 10px 0 0;
-      }
-      .arc-stick .ball {
-        position: absolute;
-        bottom: 168px; left: 50%;
-        transform: translateX(-50%);
-        width: 64px; height: 64px;
-        border-radius: 50%;
-        background: radial-gradient(circle at 35% 35%, #FF4F2D, #B82A12);
-        box-shadow: 0 8px 18px -4px rgba(0, 0, 0, 0.4),
-          inset 0 -6px 12px rgba(0, 0, 0, 0.25),
-          inset 0 4px 8px rgba(255, 255, 255, 0.4);
-      }
-      .arc-stick .btn {
-        position: absolute;
-        bottom: 14px;
-        width: 26px; height: 26px;
-        border-radius: 50%;
-        box-shadow: inset 0 -2px 5px rgba(0, 0, 0, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.3);
-      }
-      .arc-stick .btn.b1 { right: 36px; background: radial-gradient(circle at 35% 35%, #FFD93D, #B8860B); }
-      .arc-stick .btn.b2 { right: 6px;  background: radial-gradient(circle at 35% 35%, #4ECDC4, #1A8B82); }
+<style>
+:root {
+  --ch-bg:        #120A05;
+  --ch-panel:     #1B0F07;
+  --ch-panel2:    #241509;
+  --ch-bezel:     #08040A;
+  --ch-brass:     #D89C56;
+  --ch-brass-dim: #8E6534;
+  --ch-ember:     #FF5A2C;
+  --ch-amber:     #FFC34D;
+  --ch-ink:       #F4E6D2;
+  --ch-ink2:      #C7B196;
+  --ch-ink3:      #8E7A60;
+  --ch-line:      rgba(216, 156, 86, 0.18);
+  --ch-line-soft: rgba(216, 156, 86, 0.08);
+  --ch-ok:        #7CC796;
+  --display:      'Bricolage Grotesque', system-ui, sans-serif;
+  --mono:         'JetBrains Mono', ui-monospace, monospace;
+  --font:         'Inter', system-ui, -apple-system, sans-serif;
 
-      /* Featured-art piece: stacked tetromino-like blocks */
-      .arc-feat-blocks {
-        display: grid;
-        grid-template-columns: repeat(3, 36px);
-        grid-auto-rows: 36px;
-        gap: 4px;
-      }
-      .arc-feat-blocks div {
-        border-radius: 6px;
-        box-shadow: inset 0 -3px 4px rgba(0, 0, 0, 0.18), inset 0 2px 4px rgba(255, 255, 255, 0.3);
-      }
-      .arc-feat-blocks div.c1 { background: #5DC4D9; }
-      .arc-feat-blocks div.c2 { background: #F2A65A; }
-      .arc-feat-blocks div.c3 { background: #FF4F2D; }
-      .arc-feat-blocks div.c4 { background: #FFD93D; }
-      .arc-feat-blocks div.empty { background: transparent; box-shadow: none; }
-    </style>
+  /* Light nav tokens */
+  --paper:        #FBF7EE;
+  --paper-soft:   #F3ECDC;
+  --nav-ink:      #1A140C;
+  --nav-ink2:     #4A4138;
+  --nav-ink3:     #8A7E6F;
+  --nav-line:     rgba(26,20,12,0.10);
+
+  /* Per-category accent — defaults to Arcade */
+  --cat-accent:   #C77A2A;
+  --cat-tint:     #FBEFD8;
+  --cat-glow:     rgba(199,122,42,0.35);
+}
+
+/* Category overrides — set data-category on <body> */
+[data-category="arcade"]   { --cat-accent:#C77A2A; --cat-tint:#FBEFD8; --cat-glow:rgba(199,122,42,0.35); }
+[data-category="kids"]     { --cat-accent:#2F9E73; --cat-tint:#E2F4EC; --cat-glow:rgba(47,158,115,0.35); }
+[data-category="strategy"] { --cat-accent:#3A4D6B; --cat-tint:#E5EAF3; --cat-glow:rgba(58,77,107,0.30); }
+[data-category="casino"]   { --cat-accent:#B83A4A; --cat-tint:#F7DEE0; --cat-glow:rgba(184,58,74,0.35); }
+[data-category="profile"]  { --cat-accent:#B83A4A; --cat-tint:#F7DEE0; --cat-glow:rgba(184,58,74,0.35); }
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; min-height: 100%; }
+body {
+  font-family: var(--font); color: var(--ch-ink);
+  background:
+    radial-gradient(1100px 700px at 50% -10%, rgba(255,90,44,0.22), transparent 70%),
+    radial-gradient(700px 500px at 100% 100%, rgba(216,156,86,0.10), transparent 60%),
+    linear-gradient(180deg, var(--ch-panel) 0%, var(--ch-bg) 100%);
+  -webkit-font-smoothing: antialiased;
+  position: relative; overflow-x: hidden;
+}
+body::before {
+  content: ''; position: fixed; inset: 0; pointer-events: none; z-index: 0;
+  background-image:
+    linear-gradient(0deg,  rgba(255, 217, 61, 0.035) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255, 217, 61, 0.035) 1px, transparent 1px);
+  background-size: 24px 24px;
+  -webkit-mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
+  mask-image: radial-gradient(ellipse at 50% 30%, #000 30%, transparent 80%);
+}
+h1, h2, h3, h4 { font-family: var(--display); margin: 0; letter-spacing: -0.02em; font-weight: 600; }
+
+/* Nav — light, with per-category accent */
+.nav {
+  display: flex; align-items: center; justify-content: space-between;
+  margin: 24px 36px 0; padding: 16px 22px;
+  background: #fff; color: var(--nav-ink);
+  border: 1px solid var(--nav-line); border-radius: 16px;
+  box-shadow: 0 1px 0 var(--nav-line), 0 14px 30px -18px rgba(0,0,0,0.45);
+  position: relative; overflow: hidden; z-index: 2;
+}
+.nav::after {
+  content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, var(--cat-accent), transparent);
+  opacity: 0.7; pointer-events: none;
+}
+.nav-left { display: flex; align-items: center; gap: 28px; }
+.logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
+.logo-mark {
+  width: 28px; height: 28px; border-radius: 7px;
+  background: linear-gradient(135deg, #D89C56, #C25C2A);
+  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.18), inset 0 2px 4px rgba(255,255,255,0.3);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); color: #FFF6E1; font-weight: 700; font-size: 14px;
+}
+.wordmark { font-family: var(--display); font-size: 16px; font-weight: 700; color: var(--nav-ink); }
+.wordmark .light { opacity: 0.55; font-weight: 500; }
+.nav-links { display: flex; gap: 4px; }
+.nav-links a {
+  padding: 7px 14px; border-radius: 999px;
+  font-size: 12.5px; font-weight: 500; text-decoration: none;
+  color: var(--nav-ink2);
+  transition: color .15s, background .15s;
+}
+.nav-links a:hover { color: var(--nav-ink); background: var(--paper-soft); }
+.nav-links a.active {
+  background: var(--cat-tint);
+  color: var(--cat-accent);
+  box-shadow: inset 0 0 0 1px color-mix(in oklab, var(--cat-accent) 22%, transparent);
+}
+.nav-meta {
+  display: flex; align-items: center; gap: 8px;
+  font-family: var(--mono); font-size: 11px; color: var(--nav-ink2);
+  padding: 7px 14px; border-radius: 999px;
+  border: 1px solid var(--nav-line); background: var(--paper);
+  letter-spacing: 0.1em; text-transform: uppercase;
+}
+.nav-meta .dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--cat-accent);
+  box-shadow: 0 0 0 3px var(--cat-tint);
+}
+
+/* Layout container */
+.wrap { padding: 0; position: relative; z-index: 1; }
+
+/* Hero */
+.hero {
+  margin: 24px 36px;
+  border-radius: 28px; overflow: hidden;
+  background: linear-gradient(135deg, #2B1808 0%, #15090C 60%, #0E0509 100%);
+  border: 1px solid var(--ch-line);
+  padding: 52px 48px; min-height: 380px;
+  display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px;
+  align-items: end; position: relative;
+}
+.hero-bulbs {
+  position: absolute; top: 18px; left: 18px; right: 18px; height: 6px;
+  display: flex; gap: 14px; justify-content: space-between;
+}
+.hero-bulbs span {
+  width: 6px; height: 6px; border-radius: 50%; background: rgba(255,195,77,0.25);
+}
+.hero-bulbs span:nth-child(3n) { background: var(--ch-amber); box-shadow: 0 0 8px var(--ch-amber); }
+.hero h1 {
+  font-size: 76px; line-height: 0.93; letter-spacing: -0.04em;
+  margin: 20px 0 18px;
+}
+.hero h1 em { font-style: normal; color: var(--ch-amber); }
+.hero p.lede {
+  font-size: 16.5px; line-height: 1.55; color: var(--ch-ink2);
+  max-width: 52ch; margin: 0 0 32px;
+}
+.eyebrow {
+  display: inline-flex; align-items: center; gap: 10px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.22em;
+  text-transform: uppercase; color: var(--ch-amber); font-weight: 500;
+}
+.eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ch-ember); box-shadow: 0 0 8px var(--ch-ember); }
+.hero-stats {
+  display: flex; gap: 56px; padding-top: 22px;
+  border-top: 1px solid var(--ch-line); flex-wrap: wrap;
+}
+.stat-l {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ch-ink3);
+}
+.stat-v {
+  font-family: var(--display); font-size: 28px; font-weight: 600;
+  margin-top: 4px; line-height: 1; color: var(--ch-ink);
+}
+.stat-v.accent { color: var(--ch-amber); }
+.stat-v.mono { font-family: var(--mono); }
+
+/* Cabinet illustration */
+.cab { position: relative; width: 240px; height: 320px; margin: 0 auto; }
+.cab .marquee {
+  position: absolute; top: 0; left: 8px; right: 8px; height: 60px;
+  background: linear-gradient(180deg, var(--ch-ember), #B83014);
+  border-radius: 14px 14px 4px 4px;
+  box-shadow: inset 0 -3px 8px rgba(0,0,0,0.35), inset 0 2px 0 rgba(255,255,255,0.2);
+  display: flex; align-items: center; justify-content: center;
+  font-family: var(--display); font-size: 22px; font-weight: 700;
+  color: var(--ch-amber); letter-spacing: 0.06em;
+  text-shadow: 0 0 14px var(--ch-amber), 0 0 2px #fff;
+}
+.cab .screen {
+  position: absolute; top: 68px; left: 0; right: 0; height: 150px;
+  background: #0A0608; border: 8px solid #1A0E08; border-radius: 16px;
+  box-shadow: 0 0 0 2px var(--ch-brass-dim), inset 0 0 60px rgba(0,0,0,0.7);
+  overflow: hidden;
+  display: flex; align-items: center; justify-content: center;
+}
+.cab .screen::before {
+  content: ''; position: absolute; inset: 0;
+  background:
+    repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 3px),
+    radial-gradient(ellipse at center, #1A2A1F 0%, #050A07 70%);
+}
+.cab .screen-text {
+  position: relative; font-family: var(--mono); font-size: 14px;
+  color: var(--ch-amber); text-shadow: 0 0 6px var(--ch-amber);
+  letter-spacing: 0.2em;
+}
+.cab .deck {
+  position: absolute; bottom: 30px; left: -8px; right: -8px; height: 60px;
+  background: linear-gradient(180deg, #2A1A0A, #15090A);
+  border-radius: 6px 6px 12px 12px;
+  box-shadow: inset 0 2px 0 var(--ch-brass-dim), inset 0 -3px 6px rgba(0,0,0,0.5);
+}
+.cab .ball {
+  position: absolute; top: -16px; left: 50px;
+  width: 28px; height: 28px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, var(--ch-ember), #8B1F0A);
+  box-shadow: 0 6px 12px rgba(0,0,0,0.4);
+}
+.cab .btn { position: absolute; top: 20px; width: 18px; height: 18px; border-radius: 50%; box-shadow: inset 0 -2px 3px rgba(0,0,0,0.4); }
+.cab .b1 { right: 16px; background: radial-gradient(circle at 35% 35%, var(--ch-amber), #8E5A0A); }
+.cab .b2 { right: 46px; background: radial-gradient(circle at 35% 35%, #5DC4D9, #1A6B66); }
+.cab .b3 { right: 76px; background: radial-gradient(circle at 35% 35%, var(--ch-ember), #8B1F0A); }
+.cab .base {
+  position: absolute; bottom: 0; left: 12px; right: 12px; height: 30px;
+  background: linear-gradient(180deg, #1A0F08, #08040A);
+  border-radius: 0 0 6px 6px;
+}
+
+/* Stats widget — dark Cabinet Hall style */
+.ch-stats {
+  margin: 24px 36px;
+  display: grid; grid-template-columns: 1.6fr 1fr 1fr 1fr; gap: 18px;
+  padding: 22px 26px; background: var(--ch-panel2);
+  border: 1px solid var(--ch-line); border-radius: 20px;
+  align-items: center;
+}
+.ch-stats-main { display: flex; align-items: center; gap: 16px; }
+.ch-stats-chip {
+  width: 52px; height: 52px; border-radius: 50%; flex-shrink: 0;
+  background: radial-gradient(circle at 35% 35%, var(--ch-amber), #8E5A0A);
+  box-shadow: 0 0 0 2px var(--ch-brass-dim), inset 0 -3px 6px rgba(0,0,0,0.35), inset 0 3px 5px rgba(255,255,255,0.25);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 22px; color: #15090A;
+}
+.ch-stats-main h3 {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ch-ink3); font-weight: 500;
+  margin: 0 0 4px;
+}
+.ch-stats-main .amt {
+  font-family: var(--display); font-size: 30px; font-weight: 600; line-height: 1;
+  color: var(--ch-amber);
+}
+.ch-stats-main .delta {
+  font-family: var(--mono); font-size: 11px; color: var(--ch-ok);
+  margin-top: 4px; letter-spacing: 0.04em;
+}
+.ch-stat-cell { padding-left: 18px; border-left: 1px solid var(--ch-line); }
+.ch-stat-cell .l {
+  font-family: var(--mono); font-size: 10px; letter-spacing: 0.16em;
+  text-transform: uppercase; color: var(--ch-ink3);
+}
+.ch-stat-cell .n {
+  font-family: var(--display); font-size: 22px; font-weight: 600; line-height: 1.1;
+  color: var(--ch-ink); margin-top: 6px;
+}
+.ch-stat-cell .s {
+  font-family: var(--mono); font-size: 10.5px; color: var(--ch-ink3);
+  margin-top: 4px; letter-spacing: 0.04em;
+}
+
+/* Section heads */
+.sec-head { display: flex; align-items: baseline; gap: 14px; margin: 8px 0 18px; }
+.sec-head h2 { font-size: 28px; }
+.sec-head .rule { flex: 1; height: 1px; background: var(--ch-line); }
+.sec-head .meta {
+  font-family: var(--mono); font-size: 11px; color: var(--ch-ink3);
+  letter-spacing: 0.12em; text-transform: uppercase;
+}
+.sec-head .more {
+  font-family: var(--mono); font-size: 12px; color: var(--ch-ink2);
+  letter-spacing: 0.1em; text-transform: uppercase; text-decoration: none;
+}
+.sec-head .more:hover { color: var(--ch-amber); }
+
+/* Featured */
+.featured {
+  display: grid; grid-template-columns: 1.1fr 1fr;
+  background: var(--ch-panel2); border-radius: 24px; overflow: hidden;
+  border: 1px solid var(--ch-line);
+}
+.featured-art {
+  background: linear-gradient(135deg, #1A0E08, #0A0608);
+  padding: 48px; min-height: 360px;
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.featured-art::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.025) 0 1px, transparent 1px 3px);
+}
+.fa-blocks {
+  display: grid; grid-template-columns: repeat(4, 32px);
+  grid-auto-rows: 32px; gap: 4px; position: relative;
+}
+.fa-blocks span {
+  border-radius: 4px;
+  box-shadow: inset 0 -3px 4px rgba(0,0,0,0.25), inset 0 2px 3px rgba(255,255,255,0.25);
+}
+.fa-blocks .e { background: transparent; box-shadow: none; }
+.fa-blocks .c1 { background: #5DC4D9; }
+.fa-blocks .c2 { background: var(--ch-ember); }
+.fa-blocks .c3 { background: var(--ch-amber); }
+.fa-blocks .c4 { background: #9B7EDC; }
+
+.featured-body { padding: 48px; display: flex; flex-direction: column; justify-content: center; }
+.featured-body h3 {
+  font-size: 52px; margin: 14px 0 12px; line-height: 1; letter-spacing: -0.03em;
+}
+.featured-body p {
+  font-size: 14.5px; color: var(--ch-ink2); line-height: 1.55;
+  margin: 0 0 26px; max-width: 40ch;
+}
+.featured-stats {
+  display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px;
+  padding: 18px 0; border-top: 1px solid var(--ch-line);
+  border-bottom: 1px solid var(--ch-line); margin-bottom: 24px;
+}
+.cta {
+  padding: 12px 24px; border-radius: 999px;
+  background: var(--ch-ember); color: #fff; font-weight: 600; font-size: 14px;
+  text-decoration: none; display: inline-flex; align-items: center; gap: 6px;
+  box-shadow: 0 6px 16px rgba(255,90,44,0.4), inset 0 1px 0 rgba(255,255,255,0.2);
+  transition: transform 0.15s, box-shadow 0.15s;
+}
+.cta:hover { transform: translateY(-1px); box-shadow: 0 8px 22px rgba(255,90,44,0.55), inset 0 1px 0 rgba(255,255,255,0.2); }
+.cta.ghost {
+  background: transparent; color: var(--ch-ink); border: 1px solid var(--ch-line);
+  box-shadow: none;
+}
+.cta.ghost:hover { border-color: var(--ch-amber); color: var(--ch-amber); }
+.cta-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+/* Arcade row carousel */
+.row { padding: 0 0 0 36px; }
+.row-track {
+  display: flex; gap: 16px; padding: 4px 36px 18px 0;
+  overflow-x: auto; scroll-snap-type: x mandatory;
+  scrollbar-width: thin; scrollbar-color: var(--ch-brass-dim) transparent;
+}
+.row-track::-webkit-scrollbar { height: 8px; }
+.row-track::-webkit-scrollbar-thumb { background: var(--ch-brass-dim); border-radius: 4px; }
+.cab-card {
+  flex: 0 0 280px; scroll-snap-align: start;
+  background: linear-gradient(180deg, var(--ch-panel2), var(--ch-panel));
+  border: 1px solid var(--ch-line); border-radius: 18px;
+  padding: 20px; display: flex; flex-direction: column; gap: 16px;
+  position: relative; overflow: hidden; text-decoration: none; color: inherit;
+  transition: transform 0.2s, border-color 0.2s, box-shadow 0.2s;
+}
+.cab-card:hover {
+  transform: translateY(-4px); border-color: var(--ch-amber);
+  box-shadow: 0 24px 40px -20px rgba(0,0,0,0.6);
+}
+.cab-card .tag {
+  position: absolute; top: 14px; right: 14px;
+  font-family: var(--mono); font-size: 9px; letter-spacing: 0.16em;
+  color: var(--ch-ink3); padding: 3px 8px; border-radius: 999px;
+  border: 1px solid var(--ch-line); background: rgba(0,0,0,0.3);
+}
+.cab-card .glyph-bezel {
+  width: 100%; aspect-ratio: 4 / 3;
+  border: 4px solid var(--ch-bezel); border-radius: 10px;
+  box-shadow: 0 0 0 1.5px var(--ch-brass-dim), inset 0 0 30px rgba(0,0,0,0.6);
+  display: flex; align-items: center; justify-content: center;
+  position: relative; overflow: hidden;
+}
+.cab-card .glyph-bezel::before {
+  content: ''; position: absolute; inset: 0;
+  background-image: repeating-linear-gradient(0deg, rgba(255,255,255,0.04) 0 1px, transparent 1px 3px);
+}
+.cab-card .glyph-bezel svg { position: relative; z-index: 1; }
+.cab-card h3 { font-size: 19px; }
+.cab-card .hi {
+  font-family: var(--mono); font-size: 11px; color: var(--ch-ink3);
+  margin-top: 4px; letter-spacing: 0.08em;
+}
+.cab-card .hi b { color: var(--ch-amber); font-weight: 600; }
+
+/* Two-col: challenge + hall */
+.twocol {
+  display: grid; grid-template-columns: 1.4fr 1fr; gap: 18px;
+  margin: 32px 36px;
+}
+.challenge {
+  background: linear-gradient(135deg, #2B1808, #15090C);
+  border-radius: 24px; padding: 32px;
+  border: 1px solid var(--ch-line); position: relative; overflow: hidden;
+}
+.challenge::before {
+  content: ''; position: absolute; top: -30%; right: -10%;
+  width: 60%; height: 140%;
+  background: radial-gradient(circle, rgba(255,90,44,0.2), transparent 60%);
+}
+.challenge > * { position: relative; }
+.challenge h3 { font-size: 34px; margin: 14px 0 12px; line-height: 1.05; letter-spacing: -0.03em; }
+.challenge p { font-size: 14px; color: var(--ch-ink2); line-height: 1.55; margin: 0 0 22px; max-width: 46ch; }
+.challenge-stats {
+  display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px;
+  padding: 16px 0; border-top: 1px solid var(--ch-line);
+  border-bottom: 1px solid var(--ch-line); margin-bottom: 22px;
+}
+
+.hall {
+  background: var(--ch-panel2); border-radius: 24px; padding: 26px;
+  border: 1px solid var(--ch-line);
+}
+.hall h3 { font-size: 18px; margin: 0 0 4px; }
+.hall .sub {
+  font-family: var(--mono); font-size: 10.5px; color: var(--ch-ink3);
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 16px;
+}
+.hall-row {
+  display: grid; grid-template-columns: 24px 1fr auto; gap: 12px;
+  padding: 11px 0; border-bottom: 1px dashed var(--ch-line-soft);
+  align-items: center;
+}
+.hall-row:last-child { border-bottom: none; }
+.hall-row .pos { font-family: var(--display); font-size: 17px; font-weight: 700; color: var(--ch-ink3); }
+.hall-row .pos.p1 { color: #D89C56; }
+.hall-row .pos.p2 { color: #A89678; }
+.hall-row .pos.p3 { color: #B27E5F; }
+.hall-row .who { font-size: 13px; font-weight: 600; }
+.hall-row .who.you { color: var(--ch-ember); }
+.hall-row .game {
+  font-size: 10.5px; font-family: var(--mono); color: var(--ch-ink3);
+  letter-spacing: 0.06em; margin-top: 2px;
+}
+.hall-row .amt { font-family: var(--mono); font-size: 12.5px; font-weight: 600; color: var(--ch-amber); }
+
+/* Strategy */
+.strategy {
+  margin: 0 36px 32px;
+  background: var(--ch-panel2); border-radius: 24px; padding: 32px;
+  border: 1px solid var(--ch-line);
+}
+.strategy-head {
+  display: flex; align-items: baseline; justify-content: space-between;
+  margin-bottom: 20px; flex-wrap: wrap; gap: 12px;
+}
+.strategy-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+.tip {
+  padding: 22px; background: rgba(0,0,0,0.25);
+  border: 1px solid var(--ch-line-soft); border-radius: 16px;
+}
+.tip h4 {
+  font-size: 14.5px; margin: 0 0 10px;
+  display: flex; align-items: center; gap: 8px; line-height: 1.3;
+}
+.tip h4::before {
+  content: ''; width: 7px; height: 7px; border-radius: 50%; background: var(--ch-ember);
+}
+.tip p { font-size: 12.5px; color: var(--ch-ink2); line-height: 1.55; margin: 0 0 12px; }
+.tip ul {
+  list-style: none; margin: 0; padding: 10px 0 0;
+  border-top: 1px dashed var(--ch-line-soft);
+}
+.tip li {
+  display: flex; justify-content: space-between; padding: 5px 0; font-size: 11.5px;
+  color: var(--ch-ink3);
+}
+.tip li b { font-family: var(--mono); color: var(--ch-amber); font-weight: 500; }
+
+/* Ad slots — dark Cabinet Hall styling */
+.ch-ad-row {
+  margin: 24px 36px;
+  display: flex; justify-content: center;
+}
+.ch-ad-slot {
+  width: 100%; max-width: 728px; min-height: 90px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 4px; padding: 18px;
+  background: var(--ch-panel2); border: 1px dashed var(--ch-line);
+  border-radius: 12px;
+  font-family: var(--mono); font-size: 11px; letter-spacing: 0.12em;
+  text-transform: uppercase; color: var(--ch-ink3);
+}
+.ch-ad-slot .ad-size { color: var(--ch-ink2); font-size: 10.5px; }
+
+/* Footer */
+footer {
+  margin: 0 36px; padding: 24px 0;
+  border-top: 1px solid var(--ch-line);
+  display: flex; justify-content: space-between; align-items: center;
+  font-family: var(--mono); font-size: 11px; color: var(--ch-ink3);
+  letter-spacing: 0.1em; text-transform: uppercase; flex-wrap: wrap; gap: 12px;
+}
+footer a { color: inherit; text-decoration: none; }
+footer a:hover { color: var(--ch-amber); }
+
+@media (max-width: 1100px) {
+  .hero { grid-template-columns: 1fr; padding: 40px 32px; }
+  .hero h1 { font-size: 56px; }
+  .featured { grid-template-columns: 1fr; }
+  .twocol { grid-template-columns: 1fr; }
+  .strategy-grid { grid-template-columns: 1fr; }
+  .ch-stats { grid-template-columns: 1fr 1fr; }
+  .ch-stat-cell { padding-left: 0; border-left: none; padding-top: 12px; border-top: 1px solid var(--ch-line); }
+}
+@media (max-width: 700px) {
+  .nav, .hero, .twocol, .strategy, .ch-stats, .ch-ad-row, footer { margin-left: 18px; margin-right: 18px; padding-left: 18px; padding-right: 18px; }
+  .row { padding-left: 18px; }
+  .row-track { padding-right: 18px; }
+  .hero h1 { font-size: 44px; }
+  .ch-stats { grid-template-columns: 1fr; }
+}
+</style>
 </head>
-<body class="cat-root">
+<body data-category="arcade">
 
-    <nav class="cat-nav">
-        <div class="cat-nav-left">
-            <a class="cat-logo" href="..">
-                <img src="../assets/logo-96.png" alt="Limestone Games home" width="40" height="40">
-                <span class="wordmark">Limestone <span class="light">Games</span></span>
-            </a>
-            <div class="cat-nav-links">
-                <a href="" class="active">Arcade</a>
-                <a href="../kids/">Kids</a>
-                <a href="../strategy/">Strategy</a>
-                <a href="../casino/">Casino</a>
-                <a href="../profile/">Profile</a>
-            </div>
-        </div>
-        <div class="cat-nav-meta">
-            <span class="dot"></span>
-            11 cabinets · always on
-        </div>
-    </nav>
-
-    <div class="cat-crumb">
-        <a href="..">Home</a> &nbsp;/&nbsp; <span class="here">Arcade</span>
+<nav class="nav">
+  <div class="nav-left">
+    <a class="logo" href="..">
+      <span class="logo-mark">L</span>
+      <span class="wordmark">Limestone <span class="light">Games</span></span>
+    </a>
+    <div class="nav-links">
+      <a href="" class="active">Arcade</a>
+      <a href="../kids/">Kids</a>
+      <a href="../strategy/">Strategy</a>
+      <a href="../casino/">Casino</a>
+      <a href="../profile/">Profile</a>
     </div>
+  </div>
+  <div class="nav-meta">
+    <span class="dot"></span>
+    11 cabinets · powered on
+  </div>
+</nav>
 
-    <div class="cat-stats">
-        <div class="cat-stats-main">
-            <div class="cat-stats-chip">★</div>
-            <div>
-                <h3>Your top score</h3>
-                <div class="amt">38,400</div>
-                <div class="delta">▲ +2,200 this week · Block Puzzle</div>
-            </div>
-        </div>
-        <div class="cat-stat-cell">
-            <div class="l">Total plays</div>
-            <div class="n">87</div>
-            <div class="s">Across 11 cabinets</div>
-        </div>
-        <div class="cat-stat-cell">
-            <div class="l">Streak</div>
-            <div class="n">11 days</div>
-            <div class="s">Longest: 14 days</div>
-        </div>
-        <div class="cat-stat-cell">
-            <div class="l">Favorite</div>
-            <div class="n">Block Puzzle</div>
-            <div class="s">31 sessions</div>
-        </div>
+<header class="hero">
+  <div class="hero-bulbs">
+    <span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span><span></span>
+  </div>
+  <div>
+    <span class="eyebrow"><span class="dot"></span>Arcade · 11 cabinets · Free play</span>
+    <h1>Press start.<br>Beat the <em>cabinet</em>.</h1>
+    <p class="lede">Eleven cabinets, classic and 80s alike. Pixel-perfect remakes that load in two seconds and play forever. Scores save locally — no accounts, no quarters.</p>
+    <div class="hero-stats">
+      <div><div class="stat-l">Cabinets</div><div class="stat-v">11</div></div>
+      <div><div class="stat-l">Top score</div><div class="stat-v accent">38,400</div></div>
+      <div><div class="stat-l">Streak</div><div class="stat-v">11d</div></div>
+      <div><div class="stat-l">Plays</div><div class="stat-v">87</div></div>
     </div>
-
-    <header class="cat-hero">
-        <div class="cat-hero-left">
-            <div class="cat-hero-eyebrow">⬡ Arcade · 11 cabinets · Free play</div>
-            <h1>Press start.<br>Beat the <em>cabinet</em>.</h1>
-            <p class="lede">Eleven cabinets, classic and 80s alike — Pong, Breakout, Space Invasion, Block Puzzle, plus Asteroids, Lunar Lander, Defender, Frogger, Missile Command, SpaceX Lander, and Simon. Pixel-perfect remakes that load in two seconds and play forever. Your scores save locally.</p>
-            <div class="cat-hero-stats">
-                <div>11<span>Cabinets</span></div>
-                <div>38,400<span>Top score</span></div>
-                <div>11d<span>Streak</span></div>
-                <div>87<span>Plays</span></div>
-            </div>
-        </div>
-        <div class="cat-hero-right">
-            <div class="arc-stick">
-                <div class="ball"></div>
-                <div class="shaft"></div>
-                <div class="base"></div>
-                <div class="btn b1"></div>
-                <div class="btn b2"></div>
-            </div>
-        </div>
-    </header>
-
-    <div class="cat-wrap">
-
-        <div class="cat-section-head">
-            <h2>Tonight's featured cabinet</h2>
-            <div class="rule"></div>
-            <a class="more" href="#all-cabinets">Browse all →</a>
-        </div>
-        <div class="cat-featured">
-            <div class="cat-featured-art">
-                <div class="arc-feat-blocks">
-                    <div class="empty"></div><div class="c4"></div><div class="empty"></div>
-                    <div class="c1"></div><div class="c4"></div><div class="empty"></div>
-                    <div class="c1"></div><div class="c1"></div><div class="empty"></div>
-                    <div class="c2"></div><div class="c1"></div><div class="c3"></div>
-                    <div class="c2"></div><div class="c2"></div><div class="c3"></div>
-                    <div class="c2"></div><div class="c3"></div><div class="c3"></div>
-                </div>
-            </div>
-            <div class="cat-featured-body">
-                <div class="cat-featured-tag">★ All-time leader</div>
-                <h3>Block Puzzle</h3>
-                <p>Stack falling tetrominoes, clear lines, score forever. Hard drop with space, soft drop with down. Your high score saves the second you land it.</p>
-                <div class="cat-featured-stats">
-                    <div class="stat"><div class="l">Top score</div><div class="n accent">38,400</div></div>
-                    <div class="stat"><div class="l">Plays</div><div class="n">22.6k</div></div>
-                    <div class="stat"><div class="l">Difficulty</div><div class="n">Easy</div></div>
-                </div>
-                <div class="cat-featured-cta">
-                    <a class="cat-btn" href="../block-puzzle/">Drop in →</a>
-                    <a class="cat-btn outline" href="../block-puzzle/">How to play</a>
-                </div>
-            </div>
-        </div>
-
-        <div id="all-cabinets" class="cat-section-head">
-            <h2>All cabinets</h2>
-            <span class="sub">11 games · scores save locally</span>
-            <div class="rule"></div>
-        </div>
-        <div class="cat-grid">
-
-            <a class="cat-card featured" href="../block-puzzle/">
-                <span class="cat-card-tag">Easy</span>
-                <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#5DC4D92E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="40" width="10" height="10" rx="2" fill="#5DC4D9"/><rect x="18" y="40" width="10" height="10" rx="2" fill="#5DC4D9"/><rect x="18" y="30" width="10" height="10" rx="2" fill="#5DC4D9"/><rect x="28" y="40" width="10" height="10" rx="2" fill="#5DC4D9" opacity="0.7"/><rect x="38" y="40" width="10" height="10" rx="2" fill="#5DC4D9" opacity="0.7"/><rect x="38" y="30" width="10" height="10" rx="2" fill="#5DC4D9" opacity="0.7"/><rect x="38" y="12" width="10" height="10" rx="2" fill="#5DC4D9" opacity="0.4"/></svg>
-                    </div>
-                    <div>
-                        <h3>Block Puzzle</h3>
-                        <div class="desc">Stack, clear, score.</div>
-                    </div>
-                </div>
-                <div class="cat-card-meta">
-                    <div><div class="l">Top score</div><div class="v accent">38,400</div></div>
-                    <div><div class="l">Plays</div><div class="v">22.6k</div></div>
-                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
-                    <div><div class="l">Your best</div><div class="v sm">38,400</div></div>
-                </div>
-                <div class="cat-card-foot">
-                    <span class="plays">31 sessions</span>
-                    <span class="play-btn">Play →</span>
-                </div>
-            </a>
-
-            <a class="cat-card" href="../pong/">
-                <span class="cat-card-tag">Easy</span>
-                <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#8FA8E62E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="10" y="14" width="6" height="34" rx="3" fill="#8FA8E6"/><rect x="48" y="20" width="6" height="34" rx="3" fill="#8FA8E6" opacity="0.7"/><circle cx="32" cy="32" r="4" fill="#8FA8E6"/></svg>
-                    </div>
-                    <div>
-                        <h3>Pong</h3>
-                        <div class="desc">Paddle vs. AI. Keep it alive.</div>
-                    </div>
-                </div>
-                <div class="cat-card-meta">
-                    <div><div class="l">Top score</div><div class="v accent">21</div></div>
-                    <div><div class="l">Plays</div><div class="v">8.2k</div></div>
-                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
-                    <div><div class="l">Your best</div><div class="v sm">21</div></div>
-                </div>
-                <div class="cat-card-foot">
-                    <span class="plays">12 sessions</span>
-                    <span class="play-btn">Play →</span>
-                </div>
-            </a>
-
-            <a class="cat-card" href="../breakout/">
-                <span class="cat-card-tag">Medium</span>
-                <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#F2A65A2E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="10" width="12" height="6" rx="2" fill="#F2A65A"/><rect x="22" y="10" width="12" height="6" rx="2" fill="#F2A65A" opacity="0.7"/><rect x="36" y="10" width="12" height="6" rx="2" fill="#F2A65A"/><rect x="8" y="18" width="12" height="6" rx="2" fill="#F2A65A" opacity="0.6"/><rect x="22" y="18" width="12" height="6" rx="2" fill="#F2A65A"/><rect x="20" y="50" width="24" height="5" rx="2.5" fill="#F2A65A"/><circle cx="32" cy="40" r="3.5" fill="#F2A65A" opacity="0.8"/></svg>
-                    </div>
-                    <div>
-                        <h3>Breakout</h3>
-                        <div class="desc">Bricks, ball, bounce.</div>
-                    </div>
-                </div>
-                <div class="cat-card-meta">
-                    <div><div class="l">Top score</div><div class="v accent">4,720</div></div>
-                    <div><div class="l">Plays</div><div class="v">15.1k</div></div>
-                    <div><div class="l">Difficulty</div><div class="v sm">Medium</div></div>
-                    <div><div class="l">Your best</div><div class="v sm">4,720</div></div>
-                </div>
-                <div class="cat-card-foot">
-                    <span class="plays">14 sessions</span>
-                    <span class="play-btn">Play →</span>
-                </div>
-            </a>
-
-            <a class="cat-card" href="../space-invaders/">
-                <span class="cat-card-tag">Medium</span>
-                <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#9B7EDC2E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="20" y="14" width="6" height="6" fill="#9B7EDC"/><rect x="38" y="14" width="6" height="6" fill="#9B7EDC"/><rect x="14" y="20" width="36" height="10" rx="2" fill="#9B7EDC"/><rect x="10" y="26" width="6" height="8" fill="#9B7EDC"/><rect x="48" y="26" width="6" height="8" fill="#9B7EDC"/><rect x="20" y="34" width="8" height="4" fill="#9B7EDC"/><rect x="36" y="34" width="8" height="4" fill="#9B7EDC"/><rect x="28" y="48" width="8" height="6" rx="1" fill="#9B7EDC" opacity="0.7"/></svg>
-                    </div>
-                    <div>
-                        <h3>Space Invasion</h3>
-                        <div class="desc">Defend Earth from alien waves.</div>
-                    </div>
-                </div>
-                <div class="cat-card-meta">
-                    <div><div class="l">Top score</div><div class="v accent">9,650</div></div>
-                    <div><div class="l">Plays</div><div class="v">11.8k</div></div>
-                    <div><div class="l">Difficulty</div><div class="v sm">Medium</div></div>
-                    <div><div class="l">Your best</div><div class="v sm">9,650</div></div>
-                </div>
-                <div class="cat-card-foot">
-                    <span class="plays">11 sessions</span>
-                    <span class="play-btn">Play →</span>
-                </div>
-            </a>
-
-            <a class="cat-card" href="../asteroids/">
-                <span class="cat-card-tag">Medium</span>
-                <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#A78BFA2E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,8 22,14 14,22 18,32 14,42 28,46 42,42 46,32 42,22 38,14" fill="none" stroke="#A78BFA" stroke-width="3" stroke-linejoin="round"/><polygon points="32,28 28,34 32,40 36,34" fill="#A78BFA"/></svg>
-                    </div>
-                    <div>
-                        <h3>Asteroids</h3>
-                        <div class="desc">Pilot through the rocks.</div>
-                    </div>
-                </div>
-                <div class="cat-card-meta">
-                    <div><div class="l">Top score</div><div class="v accent">12,200</div></div>
-                    <div><div class="l">Plays</div><div class="v">9.4k</div></div>
-                    <div><div class="l">Difficulty</div><div class="v sm">Medium</div></div>
-                    <div><div class="l">Your best</div><div class="v sm">12,200</div></div>
-                </div>
-                <div class="cat-card-foot">
-                    <span class="plays">22 sessions</span>
-                    <span class="play-btn">Play →</span>
-                </div>
-            </a>
-
-            <a class="cat-card" href="../simon/">
-                <span class="cat-card-tag">Memory</span>
-                <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#F084882E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><path d="M32 8 A24 24 0 0 1 56 32 L32 32 Z" fill="#F08488"/><path d="M56 32 A24 24 0 0 1 32 56 L32 32 Z" fill="#F08488" opacity="0.7"/><path d="M32 56 A24 24 0 0 1 8 32 L32 32 Z" fill="#F08488" opacity="0.5"/><path d="M8 32 A24 24 0 0 1 32 8 L32 32 Z" fill="#F08488" opacity="0.85"/></svg>
-                    </div>
-                    <div>
-                        <h3>Simon</h3>
-                        <div class="desc">Watch. Repeat. Repeat longer.</div>
-                    </div>
-                </div>
-                <div class="cat-card-meta">
-                    <div><div class="l">Top score</div><div class="v accent">27</div></div>
-                    <div><div class="l">Plays</div><div class="v">8.6k</div></div>
-                    <div><div class="l">Difficulty</div><div class="v sm">Memory</div></div>
-                    <div><div class="l">Your best</div><div class="v sm">27</div></div>
-                </div>
-                <div class="cat-card-foot">
-                    <span class="plays">9 sessions</span>
-                    <span class="play-btn">Play →</span>
-                </div>
-            </a>
-
-            <a class="cat-card" href="../spacex-lander/">
-                <span class="cat-card-tag">Tricky</span>
-                <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#5DC4D92E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="28" y="10" width="8" height="26" rx="3" fill="#5DC4D9"/><polygon points="28,36 22,48 30,48" fill="#5DC4D9" opacity="0.7"/><polygon points="36,36 42,48 34,48" fill="#5DC4D9" opacity="0.7"/><rect x="10" y="50" width="44" height="4" rx="1" fill="#5DC4D9" opacity="0.4"/></svg>
-                    </div>
-                    <div>
-                        <h3>SpaceX Lander</h3>
-                        <div class="desc">Land the Falcon 9.</div>
-                    </div>
-                </div>
-                <div class="cat-card-meta">
-                    <div><div class="l">Top score</div><div class="v accent">7,100</div></div>
-                    <div><div class="l">Plays</div><div class="v">7.1k</div></div>
-                    <div><div class="l">Difficulty</div><div class="v sm">Tricky</div></div>
-                    <div><div class="l">Your best</div><div class="v sm">—</div></div>
-                </div>
-                <div class="cat-card-foot">
-                    <span class="plays">7 sessions</span>
-                    <span class="play-btn">Play →</span>
-                </div>
-            </a>
-
-            <a class="cat-card" href="../frogger/">
-                <span class="cat-card-tag">Easy</span>
-                <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#7BC97B2E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><ellipse cx="32" cy="34" rx="12" ry="9" fill="#7BC97B"/><circle cx="26" cy="26" r="4" fill="#7BC97B"/><circle cx="38" cy="26" r="4" fill="#7BC97B"/><circle cx="26" cy="25" r="1.5" fill="#fff"/><circle cx="38" cy="25" r="1.5" fill="#fff"/></svg>
-                    </div>
-                    <div>
-                        <h3>Frogger</h3>
-                        <div class="desc">Hop home through traffic.</div>
-                    </div>
-                </div>
-                <div class="cat-card-meta">
-                    <div><div class="l">Top score</div><div class="v accent">880</div></div>
-                    <div><div class="l">Plays</div><div class="v">6.7k</div></div>
-                    <div><div class="l">Difficulty</div><div class="v sm">Easy</div></div>
-                    <div><div class="l">Your best</div><div class="v sm">880</div></div>
-                </div>
-                <div class="cat-card-foot">
-                    <span class="plays">5 sessions</span>
-                    <span class="play-btn">Play →</span>
-                </div>
-            </a>
-
-            <a class="cat-card" href="../lunar-lander/">
-                <span class="cat-card-tag">Tricky</span>
-                <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#8FA8E62E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,12 22,28 42,28" fill="#8FA8E6"/><rect x="26" y="28" width="12" height="6" fill="#8FA8E6" opacity="0.8"/><line x1="22" y1="28" x2="16" y2="40" stroke="#8FA8E6" stroke-width="2"/><line x1="42" y1="28" x2="48" y2="40" stroke="#8FA8E6" stroke-width="2"/><rect x="14" y="44" width="36" height="6" rx="1" fill="#8FA8E6" opacity="0.3"/></svg>
-                    </div>
-                    <div>
-                        <h3>Lunar Lander</h3>
-                        <div class="desc">Touch down softly.</div>
-                    </div>
-                </div>
-                <div class="cat-card-meta">
-                    <div><div class="l">Top score</div><div class="v accent">5,500</div></div>
-                    <div><div class="l">Plays</div><div class="v">5.5k</div></div>
-                    <div><div class="l">Difficulty</div><div class="v sm">Tricky</div></div>
-                    <div><div class="l">Your best</div><div class="v sm">—</div></div>
-                </div>
-                <div class="cat-card-foot">
-                    <span class="plays">6 sessions</span>
-                    <span class="play-btn">Play →</span>
-                </div>
-            </a>
-
-            <a class="cat-card" href="../missile-command/">
-                <span class="cat-card-tag">Hectic</span>
-                <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#F2A65A2E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><circle cx="20" cy="38" r="3" fill="#F2A65A"/><line x1="20" y1="38" x2="40" y2="14" stroke="#F2A65A" stroke-width="2.5" stroke-dasharray="3 3"/><polygon points="40,12 36,18 44,18" fill="#F2A65A"/><rect x="10" y="44" width="44" height="6" rx="2" fill="#F2A65A" opacity="0.4"/></svg>
-                    </div>
-                    <div>
-                        <h3>Missile Command</h3>
-                        <div class="desc">Defend cities from above.</div>
-                    </div>
-                </div>
-                <div class="cat-card-meta">
-                    <div><div class="l">Top score</div><div class="v accent">4,900</div></div>
-                    <div><div class="l">Plays</div><div class="v">4.9k</div></div>
-                    <div><div class="l">Difficulty</div><div class="v sm">Hectic</div></div>
-                    <div><div class="l">Your best</div><div class="v sm">—</div></div>
-                </div>
-                <div class="cat-card-foot">
-                    <span class="plays">4 sessions</span>
-                    <span class="play-btn">Play →</span>
-                </div>
-            </a>
-
-            <a class="cat-card" href="../defender/">
-                <span class="cat-card-tag">Hard</span>
-                <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#9B7EDC2E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><path d="M8 32 Q20 22 32 30 T56 28" fill="none" stroke="#9B7EDC" stroke-width="3"/><circle cx="14" cy="34" r="2" fill="#9B7EDC"/><circle cx="48" cy="32" r="2" fill="#9B7EDC" opacity="0.7"/></svg>
-                    </div>
-                    <div>
-                        <h3>Defender</h3>
-                        <div class="desc">Save the humanoids.</div>
-                    </div>
-                </div>
-                <div class="cat-card-meta">
-                    <div><div class="l">Top score</div><div class="v accent">3,200</div></div>
-                    <div><div class="l">Plays</div><div class="v">3.2k</div></div>
-                    <div><div class="l">Difficulty</div><div class="v sm">Hard</div></div>
-                    <div><div class="l">Your best</div><div class="v sm">—</div></div>
-                </div>
-                <div class="cat-card-foot">
-                    <span class="plays">3 sessions</span>
-                    <span class="play-btn">Play →</span>
-                </div>
-            </a>
-
-        </div>
-
-        <div class="cat-ad-row">
-            <div class="ad-slot">
-                <div>Sponsored · In-feed</div>
-                <div class="ad-size">728 × 90</div>
-                <ins class="adsbygoogle"
-                     style="display:none"
-                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                     data-ad-slot="XXXXXXXXXX"
-                     data-ad-format="horizontal"
-                     data-full-width-responsive="true"></ins>
-                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-            </div>
-        </div>
-
-        <div class="cat-twocol">
-            <div class="cat-challenge">
-                <div class="cat-challenge-eyebrow"><span class="cat-challenge-dot"></span> Today only · resets at midnight</div>
-                <h3>Daily high-score<br>challenge</h3>
-                <p>Same starting seed for every player. Top score on the leaderboard at midnight wins bragging rights and the chip glow on your profile for 24 hours.</p>
-                <div class="cat-challenge-grid">
-                    <div><div class="l">Players today</div><div class="n">317</div></div>
-                    <div><div class="l">Top score</div><div class="n accent">42,180</div></div>
-                    <div><div class="l">Your rank</div><div class="n">#23</div></div>
-                    <div><div class="l">Cabinet</div><div class="n">Block Puzzle</div></div>
-                </div>
-                <div class="cat-challenge-cta">
-                    <a class="primary" href="../block-puzzle/">Take the challenge →</a>
-                    <button class="ghost" type="button">Yesterday's winners</button>
-                </div>
-            </div>
-            <div class="cat-hall">
-                <h3>Hall of fame</h3>
-                <div class="sub">All-time top scores · all cabinets</div>
-                <div class="cat-hall-row">
-                    <div class="pos p1">1</div>
-                    <div class="who">pixel.eight<span>Block Puzzle</span></div>
-                    <div class="amt">186,200</div>
-                </div>
-                <div class="cat-hall-row">
-                    <div class="pos p2">2</div>
-                    <div class="who">brickbreaker<span>Breakout</span></div>
-                    <div class="amt">94,400</div>
-                </div>
-                <div class="cat-hall-row">
-                    <div class="pos p3">3</div>
-                    <div class="who">snakecharmer<span>Snake</span></div>
-                    <div class="amt">12,850</div>
-                </div>
-                <div class="cat-hall-row">
-                    <div class="pos">4</div>
-                    <div class="who">arcadeknight<span>Space Invasion</span></div>
-                    <div class="amt">88,200</div>
-                </div>
-                <div class="cat-hall-row">
-                    <div class="pos">5</div>
-                    <div class="who">paddlepro<span>Pong</span></div>
-                    <div class="amt">72</div>
-                </div>
-                <div class="cat-hall-row">
-                    <div class="pos">6</div>
-                    <div class="who you">You<span>Block Puzzle</span></div>
-                    <div class="amt">38,400</div>
-                </div>
-            </div>
-        </div>
-
-        <div class="cat-strategy">
-            <div class="cat-strategy-head">
-                <div><h2>Cabinet wisdom</h2></div>
-                <span class="sub">Quick tips · keyboard shortcuts · score multipliers</span>
-            </div>
-            <div class="cat-strategy-grid">
-                <div class="cat-strategy-card">
-                    <h4><span class="dot"></span> Block Puzzle: keep the right column open</h4>
-                    <p>Tetrominoes only clear when a row is full. Save your rightmost column for I-pieces and you'll get four-line clears (Tetrises) consistently.</p>
-                    <ul>
-                        <li>Single line <b>100 pts</b></li>
-                        <li>Tetris (4 lines) <b>800 pts</b></li>
-                        <li>Soft drop <b>+1 per cell</b></li>
-                    </ul>
-                </div>
-                <div class="cat-strategy-card">
-                    <h4><span class="dot"></span> Snake: hug the walls early</h4>
-                    <p>Run the perimeter for the first 30 segments — it builds reflexes and clears the middle for tight spirals once the snake is long.</p>
-                    <ul>
-                        <li>Each food <b>+10 pts</b></li>
-                        <li>Length 50+ <b>2× points</b></li>
-                        <li>Length 100+ <b>3× points</b></li>
-                    </ul>
-                </div>
-                <div class="cat-strategy-card">
-                    <h4><span class="dot"></span> Breakout: aim for the corners</h4>
-                    <p>The ball bounces sharper off paddle edges. Clip the side of the paddle to angle the ball into untouched columns and you'll dismantle the wall faster.</p>
-                    <ul>
-                        <li>Top row brick <b>50 pts</b></li>
-                        <li>Bottom row brick <b>10 pts</b></li>
-                        <li>All bricks cleared <b>+1,000</b></li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-
-        <div class="cat-ad-row">
-            <div class="ad-slot">
-                <div>Sponsored · Bottom banner</div>
-                <div class="ad-size">728 × 90</div>
-                <ins class="adsbygoogle"
-                     style="display:none"
-                     data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-                     data-ad-slot="XXXXXXXXXX"
-                     data-ad-format="auto"
-                     data-full-width-responsive="true"></ins>
-                <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-            </div>
-        </div>
-
+  </div>
+  <div style="display:flex;align-items:flex-end;justify-content:center;height:320px">
+    <div class="cab">
+      <div class="marquee">ARCADE</div>
+      <div class="screen"><span class="screen-text">HI 38400</span></div>
+      <div class="deck">
+        <div class="ball"></div>
+        <div class="btn b1"></div>
+        <div class="btn b2"></div>
+        <div class="btn b3"></div>
+      </div>
+      <div class="base"></div>
     </div>
+  </div>
+</header>
 
-    <div class="cat-disclaimer">
-        <b>Free arcade.</b> No accounts, no purchases, no ads inside the games. Scores save locally to your browser — clearing site data wipes your records.
+<div class="ch-stats">
+  <div class="ch-stats-main">
+    <div class="ch-stats-chip">★</div>
+    <div>
+      <h3>Your top score</h3>
+      <div class="amt">38,400</div>
+      <div class="delta">▲ +2,200 this week · Block Puzzle</div>
     </div>
+  </div>
+  <div class="ch-stat-cell">
+    <div class="l">Total plays</div>
+    <div class="n">87</div>
+    <div class="s">Across 11 cabinets</div>
+  </div>
+  <div class="ch-stat-cell">
+    <div class="l">Streak</div>
+    <div class="n">11 days</div>
+    <div class="s">Longest: 14 days</div>
+  </div>
+  <div class="ch-stat-cell">
+    <div class="l">Favorite</div>
+    <div class="n">Block Puzzle</div>
+    <div class="s">31 sessions</div>
+  </div>
+</div>
 
-    <footer class="cat-foot">
-        <a class="cat-logo" href="..">
-            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
-                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
-                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
-            </svg>
-            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
-        </a>
-        <div class="cat-foot-links">
-            <a href="..">All games</a>
-            <a href="../privacy.html">Privacy</a>
-            <span>© 2026 Limestone Games</span>
-        </div>
-    </footer>
+<div style="margin: 8px 36px 32px">
+  <div class="sec-head">
+    <h2>Tonight's featured cabinet</h2>
+    <div class="rule"></div>
+    <a class="more" href="#all-cabinets">Browse all →</a>
+  </div>
+  <div class="featured">
+    <div class="featured-art">
+      <div class="fa-blocks">
+        <span class="e"></span><span class="c1"></span><span class="e"></span><span class="e"></span>
+        <span class="c1"></span><span class="c1"></span><span class="e"></span><span class="e"></span>
+        <span class="c1"></span><span class="c1"></span><span class="e"></span><span class="c2"></span>
+        <span class="c3"></span><span class="c3"></span><span class="c2"></span><span class="c2"></span>
+        <span class="c3"></span><span class="c3"></span><span class="c2"></span><span class="c4"></span>
+        <span class="c3"></span><span class="c2"></span><span class="c2"></span><span class="c4"></span>
+      </div>
+    </div>
+    <div class="featured-body">
+      <span class="eyebrow"><span class="dot"></span>★ All-time leader</span>
+      <h3>Block Puzzle</h3>
+      <p>Stack falling tetrominoes, clear lines, score forever. Hard drop with space, soft drop with down. Your high score saves the second you land it.</p>
+      <div class="featured-stats">
+        <div><div class="stat-l">Top score</div><div class="stat-v accent mono">38,400</div></div>
+        <div><div class="stat-l">Plays</div><div class="stat-v mono">22.6k</div></div>
+        <div><div class="stat-l">Difficulty</div><div class="stat-v">Easy</div></div>
+      </div>
+      <div class="cta-row">
+        <a class="cta" href="../block-puzzle/">Drop in →</a>
+        <a class="cta ghost" href="../block-puzzle/">How to play</a>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section id="all-cabinets" class="row">
+  <div style="padding-right:36px"><div class="sec-head">
+    <h2>Walk the floor</h2>
+    <div class="rule"></div>
+    <span class="meta">11 cabinets · scroll →</span>
+  </div></div>
+  <div class="row-track">
+    <a class="cab-card" href="../block-puzzle/"><span class="tag">EASY</span>
+      <div class="glyph-bezel"><svg width="48" height="48" viewBox="0 0 64 64"><rect x="8" y="40" width="10" height="10" rx="2" fill="#5DC4D9"/><rect x="18" y="40" width="10" height="10" rx="2" fill="#5DC4D9"/><rect x="18" y="30" width="10" height="10" rx="2" fill="#5DC4D9"/><rect x="28" y="40" width="10" height="10" rx="2" fill="#5DC4D9" opacity=".7"/><rect x="38" y="40" width="10" height="10" rx="2" fill="#5DC4D9" opacity=".7"/><rect x="38" y="30" width="10" height="10" rx="2" fill="#5DC4D9" opacity=".7"/></svg></div>
+      <div><h3>Block Puzzle</h3><div class="hi">HI <b>38,400</b></div></div></a>
+    <a class="cab-card" href="../pong/"><span class="tag">EASY</span>
+      <div class="glyph-bezel"><svg width="48" height="48" viewBox="0 0 64 64"><rect x="10" y="14" width="6" height="34" rx="3" fill="#8FA8E6"/><rect x="48" y="20" width="6" height="34" rx="3" fill="#8FA8E6" opacity=".7"/><circle cx="32" cy="32" r="4" fill="#8FA8E6"/></svg></div>
+      <div><h3>Pong</h3><div class="hi">HI <b>21</b></div></div></a>
+    <a class="cab-card" href="../breakout/"><span class="tag">MEDIUM</span>
+      <div class="glyph-bezel"><svg width="48" height="48" viewBox="0 0 64 64"><rect x="8" y="10" width="12" height="6" rx="2" fill="#F2A65A"/><rect x="22" y="10" width="12" height="6" rx="2" fill="#F2A65A" opacity=".7"/><rect x="36" y="10" width="12" height="6" rx="2" fill="#F2A65A"/><rect x="20" y="50" width="24" height="5" rx="2.5" fill="#F2A65A"/><circle cx="32" cy="40" r="3.5" fill="#F2A65A"/></svg></div>
+      <div><h3>Breakout</h3><div class="hi">HI <b>4,720</b></div></div></a>
+    <a class="cab-card" href="../space-invaders/"><span class="tag">MEDIUM</span>
+      <div class="glyph-bezel"><svg width="48" height="48" viewBox="0 0 64 64"><rect x="20" y="14" width="6" height="6" fill="#9B7EDC"/><rect x="38" y="14" width="6" height="6" fill="#9B7EDC"/><rect x="14" y="20" width="36" height="10" rx="2" fill="#9B7EDC"/><rect x="20" y="34" width="8" height="4" fill="#9B7EDC"/><rect x="36" y="34" width="8" height="4" fill="#9B7EDC"/></svg></div>
+      <div><h3>Space Invasion</h3><div class="hi">HI <b>9,650</b></div></div></a>
+    <a class="cab-card" href="../asteroids/"><span class="tag">MEDIUM</span>
+      <div class="glyph-bezel"><svg width="48" height="48" viewBox="0 0 64 64"><polygon points="32,8 22,14 14,22 18,32 14,42 28,46 42,42 46,32 42,22 38,14" fill="none" stroke="#A78BFA" stroke-width="3" stroke-linejoin="round"/><polygon points="32,28 28,34 32,40 36,34" fill="#A78BFA"/></svg></div>
+      <div><h3>Asteroids</h3><div class="hi">HI <b>12,200</b></div></div></a>
+    <a class="cab-card" href="../simon/"><span class="tag">MEMORY</span>
+      <div class="glyph-bezel"><svg width="48" height="48" viewBox="0 0 64 64"><path d="M32 8 A24 24 0 0 1 56 32 L32 32 Z" fill="#F08488"/><path d="M56 32 A24 24 0 0 1 32 56 L32 32 Z" fill="#F08488" opacity=".7"/><path d="M32 56 A24 24 0 0 1 8 32 L32 32 Z" fill="#F08488" opacity=".5"/><path d="M8 32 A24 24 0 0 1 32 8 L32 32 Z" fill="#F08488" opacity=".85"/></svg></div>
+      <div><h3>Simon</h3><div class="hi">HI <b>27</b></div></div></a>
+    <a class="cab-card" href="../spacex-lander/"><span class="tag">TRICKY</span>
+      <div class="glyph-bezel"><svg width="48" height="48" viewBox="0 0 64 64"><rect x="28" y="10" width="8" height="26" rx="3" fill="#5DC4D9"/><polygon points="28,36 22,48 30,48" fill="#5DC4D9" opacity=".7"/><polygon points="36,36 42,48 34,48" fill="#5DC4D9" opacity=".7"/></svg></div>
+      <div><h3>SpaceX Lander</h3><div class="hi">HI <b>7,100</b></div></div></a>
+    <a class="cab-card" href="../frogger/"><span class="tag">EASY</span>
+      <div class="glyph-bezel"><svg width="48" height="48" viewBox="0 0 64 64"><ellipse cx="32" cy="34" rx="12" ry="9" fill="#7BC97B"/><circle cx="26" cy="26" r="4" fill="#7BC97B"/><circle cx="38" cy="26" r="4" fill="#7BC97B"/><circle cx="26" cy="25" r="1.5" fill="#fff"/><circle cx="38" cy="25" r="1.5" fill="#fff"/></svg></div>
+      <div><h3>Frogger</h3><div class="hi">HI <b>880</b></div></div></a>
+    <a class="cab-card" href="../lunar-lander/"><span class="tag">TRICKY</span>
+      <div class="glyph-bezel"><svg width="48" height="48" viewBox="0 0 64 64"><polygon points="32,12 22,28 42,28" fill="#8FA8E6"/><rect x="26" y="28" width="12" height="6" fill="#8FA8E6" opacity=".8"/><line x1="22" y1="28" x2="16" y2="40" stroke="#8FA8E6" stroke-width="2"/><line x1="42" y1="28" x2="48" y2="40" stroke="#8FA8E6" stroke-width="2"/></svg></div>
+      <div><h3>Lunar Lander</h3><div class="hi">HI <b>5,500</b></div></div></a>
+    <a class="cab-card" href="../missile-command/"><span class="tag">HECTIC</span>
+      <div class="glyph-bezel"><svg width="48" height="48" viewBox="0 0 64 64"><circle cx="20" cy="38" r="3" fill="#F2A65A"/><line x1="20" y1="38" x2="40" y2="14" stroke="#F2A65A" stroke-width="2.5" stroke-dasharray="3 3"/><polygon points="40,12 36,18 44,18" fill="#F2A65A"/></svg></div>
+      <div><h3>Missile Command</h3><div class="hi">HI <b>4,900</b></div></div></a>
+    <a class="cab-card" href="../defender/"><span class="tag">HARD</span>
+      <div class="glyph-bezel"><svg width="48" height="48" viewBox="0 0 64 64"><path d="M8 32 Q20 22 32 30 T56 28" fill="none" stroke="#9B7EDC" stroke-width="3"/><circle cx="14" cy="34" r="2" fill="#9B7EDC"/><circle cx="48" cy="32" r="2" fill="#9B7EDC" opacity=".7"/></svg></div>
+      <div><h3>Defender</h3><div class="hi">HI <b>3,200</b></div></div></a>
+  </div>
+</section>
+
+<div class="ch-ad-row">
+  <div class="ch-ad-slot">
+    <div>Sponsored · In-feed</div>
+    <div class="ad-size">728 × 90</div>
+    <ins class="adsbygoogle"
+         style="display:none"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="XXXXXXXXXX"
+         data-ad-format="horizontal"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+</div>
+
+<section class="twocol">
+  <div class="challenge">
+    <span class="eyebrow"><span class="dot"></span>Today only · resets at midnight</span>
+    <h3>Daily high-score<br>challenge</h3>
+    <p>Same starting seed for every player. Top score on the leaderboard at midnight wins bragging rights and the chip glow on your profile for 24 hours.</p>
+    <div class="challenge-stats">
+      <div><div class="stat-l">Players today</div><div class="stat-v mono">317</div></div>
+      <div><div class="stat-l">Top score</div><div class="stat-v accent mono">42,180</div></div>
+      <div><div class="stat-l">Your rank</div><div class="stat-v mono">#23</div></div>
+      <div><div class="stat-l">Cabinet</div><div class="stat-v">Block Puzzle</div></div>
+    </div>
+    <div class="cta-row">
+      <a class="cta" href="../block-puzzle/">Take the challenge →</a>
+      <a class="cta ghost" href="#">Yesterday's winners</a>
+    </div>
+  </div>
+  <div class="hall">
+    <h3>Hall of fame</h3>
+    <div class="sub">All-time top scores</div>
+    <div class="hall-row"><span class="pos p1">1</span><div><div class="who">pixel.eight</div><div class="game">Block Puzzle</div></div><span class="amt">186,200</span></div>
+    <div class="hall-row"><span class="pos p2">2</span><div><div class="who">brickbreaker</div><div class="game">Breakout</div></div><span class="amt">94,400</span></div>
+    <div class="hall-row"><span class="pos p3">3</span><div><div class="who">snakecharmer</div><div class="game">Snake</div></div><span class="amt">12,850</span></div>
+    <div class="hall-row"><span class="pos">4</span><div><div class="who">arcadeknight</div><div class="game">Space Invasion</div></div><span class="amt">88,200</span></div>
+    <div class="hall-row"><span class="pos">5</span><div><div class="who">paddlepro</div><div class="game">Pong</div></div><span class="amt">72</span></div>
+    <div class="hall-row"><span class="pos">—</span><div><div class="who you">You</div><div class="game">Block Puzzle</div></div><span class="amt">38,400</span></div>
+  </div>
+</section>
+
+<section class="strategy">
+  <div class="strategy-head">
+    <h2>Cabinet wisdom</h2>
+    <span class="meta" style="font-family:var(--mono);font-size:11px;color:var(--ch-ink3);letter-spacing:.12em;text-transform:uppercase">3 quick reads</span>
+  </div>
+  <div class="strategy-grid">
+    <div class="tip">
+      <h4>Block Puzzle: keep the right column open</h4>
+      <p>Tetrominoes only clear when a row is full. Save your rightmost column for I-pieces and you'll get four-line clears (Tetrises) consistently.</p>
+      <ul><li>Single line <b>100 pts</b></li><li>Tetris (4 lines) <b>800 pts</b></li><li>Soft drop <b>+1 per cell</b></li></ul>
+    </div>
+    <div class="tip">
+      <h4>Breakout: aim for the corners</h4>
+      <p>The ball bounces sharper off paddle edges. Clip the side of the paddle to angle the ball into untouched columns and you'll dismantle the wall faster.</p>
+      <ul><li>Top row brick <b>50 pts</b></li><li>Bottom row brick <b>10 pts</b></li><li>All cleared <b>+1,000</b></li></ul>
+    </div>
+    <div class="tip">
+      <h4>Asteroids: thrust in pulses</h4>
+      <p>Continuous thrust kills you. Tap thrust to drift, point and fire — the inertia of small rocks is your best friend.</p>
+      <ul><li>Large rock <b>20 pts</b></li><li>Medium rock <b>50 pts</b></li><li>Small rock <b>100 pts</b></li></ul>
+    </div>
+  </div>
+</section>
+
+<div class="ch-ad-row">
+  <div class="ch-ad-slot">
+    <div>Sponsored · Bottom banner</div>
+    <div class="ad-size">728 × 90</div>
+    <ins class="adsbygoogle"
+         style="display:none"
+         data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
+         data-ad-slot="XXXXXXXXXX"
+         data-ad-format="auto"
+         data-full-width-responsive="true"></ins>
+    <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
+  </div>
+</div>
+
+<footer>
+  <a href="..">Limestone Games · Arcade</a>
+  <span>© 2026 · Scores save locally</span>
+</footer>
+
+<script>
+// Subtle UI chirp on hover/click of interactive elements
+(function(){
+  let ctx;
+  function chirp(freq, dur, vol){
+    try {
+      ctx = ctx || new (window.AudioContext || window.webkitAudioContext)();
+      if (ctx.state === 'suspended') ctx.resume();
+      const o = ctx.createOscillator(), g = ctx.createGain();
+      o.type = 'square'; o.frequency.value = freq;
+      g.gain.value = vol; g.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + dur);
+      o.connect(g); g.connect(ctx.destination);
+      o.start(); o.stop(ctx.currentTime + dur);
+    } catch(e){}
+  }
+  const sel = '.cab-card, .cta, .nav-links a';
+  document.addEventListener('mouseover', e => { if (e.target.closest(sel)) chirp(880, 0.04, 0.018); });
+  document.addEventListener('click',     e => { if (e.target.closest(sel)) chirp(1320, 0.06, 0.04); });
+})();
+</script>
 
 </body>
 </html>

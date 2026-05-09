@@ -28,14 +28,23 @@
     <meta name="twitter:title" content="Block Puzzle — Free Online Game | Limestone Games">
     <meta name="twitter:description" content="Play Block Puzzle free in your browser. Stack falling blocks to complete lines and score big in this classic puzzle game! No downloads, no installs.">
     <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
-    <link rel="manifest" href="../manifest.json">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
     <!-- Google Analytics — replace G-DP6FGVETMV with your tracking ID -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 </head>
-<body class="arc-game">
+<body class="ch-game" data-category="arcade"
+      data-eyebrow="Cabinet · Block Puzzle"
+      data-title="Block Puzzle"
+      data-hint-1="←→ move ↑ rotate"
+      data-hint-2="↓ soft drop"
+      data-hint-3="R restart">
     <div class="container">
         <h1>🟦 Block Puzzle</h1>
         <div class="game-info" style="display:flex;justify-content:center;align-items:flex-start;gap:24px;flex-wrap:wrap;">
@@ -70,7 +79,9 @@
         // Sound effects using Web Audio API
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
+        let muted = false;
         function playSound(frequency, duration, type = 'sine') {
+            if (muted) return;
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             
@@ -372,6 +383,12 @@
 
         restartBtn.addEventListener('click', startGame);
 
+        window.gameAPI = {
+            pause:   () => { gameRunning = !gameRunning; if (gameRunning) { lastDrop = performance.now(); gameLoop = requestAnimationFrame(update); } },
+            restart: () => startGame(),
+            mute:    () => { muted = !muted; }
+        };
+
         // Draw initial empty board
         drawBoard();
 
@@ -413,5 +430,6 @@
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
     <script src="../share.js"></script>
+    <script src="../arcade/arcade-chrome.js"></script>
 </body>
 </html>

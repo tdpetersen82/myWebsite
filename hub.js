@@ -29,6 +29,8 @@
     { id: 'chess',             name: 'Chess',             cat: 'puzzle',  desc: 'Beat the AI. Full rules, three difficulties.', color: '#9B7EDC', plays: '0', isNew: true },
     { id: 'checkers',          name: 'Checkers',          cat: 'puzzle',  desc: 'Mandatory captures. Multi-jumps. Crown me.',   color: '#D23B33', plays: '0', isNew: true },
     { id: 'backgammon',        name: 'Backgammon',        cat: 'puzzle',  desc: 'Roll, race, bear off. Pip-count strategy.',     color: '#A26F3C', plays: '0', isNew: true },
+    { id: 'othello',           name: 'Othello',           cat: 'puzzle',  desc: 'Flip flanked discs. Hold the corners.',         color: '#1A7B3F', plays: '0', isNew: true },
+    { id: 'chinese-checkers',  name: 'Chinese Checkers',  cat: 'puzzle',  desc: 'Hop chains. 2, 3, or 6 players.',               color: '#2DA1A6', plays: '0', isNew: true },
     { id: 'blackjack',         name: 'Blackjack',         cat: 'casino',  desc: 'Hit 21 with strategy hints.',      color: '#7BC97B', plays: '18.9k' },
     { id: 'roulette',          name: 'Roulette',          cat: 'casino',  desc: 'Spin the European wheel.',         color: '#F08488', plays: '6.4k'  },
     { id: 'video-poker',       name: 'Video Poker',       cat: 'casino',  desc: 'Jacks or Better. Hold smart.',     color: '#A78BFA', plays: '11.2k' },
@@ -63,6 +65,8 @@
     chess: 'chessHighScore',
     checkers: 'checkersHighScore',
     backgammon: 'backgammonHighScore',
+    othello: 'othelloHighScore',
+    'chinese-checkers': 'chineseCheckersHighScore',
   };
   function getBest(gameId) {
     const key = SCORE_KEYS[gameId];
@@ -98,6 +102,8 @@
     chess: '<path d="M28 8h8v6h6v6h-6l4 14h-16l4-14h-6v-6h6z" fill="C"/><rect x="18" y="40" width="28" height="6" rx="1" fill="C" opacity="0.7"/><rect x="14" y="48" width="36" height="8" rx="2" fill="C"/>',
     checkers: '<circle cx="32" cy="42" r="14" fill="C"/><circle cx="32" cy="42" r="10" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.5"/><circle cx="32" cy="22" r="14" fill="C" opacity="0.55"/><polygon points="32,15 28,22 36,22" fill="C"/>',
     backgammon: '<rect x="6" y="10" width="52" height="44" rx="3" fill="C" opacity="0.25"/><polygon points="10,12 16,12 13,30" fill="C"/><polygon points="20,12 26,12 23,30" fill="C" opacity="0.5"/><polygon points="30,12 36,12 33,30" fill="C"/><polygon points="40,12 46,12 43,30" fill="C" opacity="0.5"/><polygon points="50,12 56,12 53,30" fill="C"/><polygon points="13,52 16,34 10,34" fill="C" opacity="0.5"/><polygon points="23,52 26,34 20,34" fill="C"/><circle cx="13" cy="48" r="4" fill="C"/><circle cx="23" cy="46" r="4" fill="#fff" stroke="C" stroke-width="1"/>',
+    othello: '<rect x="6" y="6" width="52" height="52" rx="4" fill="C"/><circle cx="22" cy="22" r="7" fill="#fff"/><circle cx="42" cy="22" r="7" fill="#1A1310"/><circle cx="22" cy="42" r="7" fill="#1A1310"/><circle cx="42" cy="42" r="7" fill="#fff"/>',
+    'chinese-checkers': '<polygon points="32,4 38,22 58,22 42,33 48,52 32,40 16,52 22,33 6,22 26,22" fill="C" opacity="0.18"/><circle cx="32" cy="14" r="4" fill="#3D5A80"/><circle cx="32" cy="50" r="4" fill="#D23B33"/><circle cx="13" cy="22" r="4" fill="#E29F4D"/><circle cx="51" cy="22" r="4" fill="#9B5BD0"/><circle cx="13" cy="42" r="4" fill="#3FA866"/><circle cx="51" cy="42" r="4" fill="#D9B447"/>',
     'bubble-pop': '<circle cx="20" cy="22" r="9" fill="C" opacity="0.55"/><circle cx="17" cy="19" r="2.5" fill="#fff" opacity="0.9"/><circle cx="42" cy="34" r="11" fill="C" opacity="0.45"/><circle cx="38" cy="30" r="3" fill="#fff" opacity="0.9"/><circle cx="28" cy="46" r="7" fill="C" opacity="0.65"/><circle cx="26" cy="44" r="2" fill="#fff" opacity="0.9"/>',
     'memory-match': '<rect x="6"  y="10" width="16" height="20" rx="3" fill="C"/><rect x="24" y="10" width="16" height="20" rx="3" fill="C" opacity="0.55"/><rect x="42" y="10" width="16" height="20" rx="3" fill="C"/><rect x="6"  y="34" width="16" height="20" rx="3" fill="C" opacity="0.55"/><rect x="24" y="34" width="16" height="20" rx="3" fill="C"/><rect x="42" y="34" width="16" height="20" rx="3" fill="C" opacity="0.55"/><circle cx="32" cy="44" r="3" fill="#fff"/>',
     'shape-sorter': '<circle cx="14" cy="14" r="6" fill="C"/><rect x="26" y="8" width="12" height="12" rx="2" fill="C" opacity="0.7"/><polygon points="50,8 56,20 44,20" fill="C"/><rect x="6" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5"/><rect x="26" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5" opacity="0.7"/><rect x="46" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5"/>',

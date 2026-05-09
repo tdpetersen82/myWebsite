@@ -28,14 +28,23 @@
     <meta name="twitter:title" content="Pong — Free Online Game | Limestone Games">
     <meta name="twitter:description" content="Play Pong free in your browser. Move the paddle and keep the ball in play against the AI in the original arcade game! No downloads, no installs.">
     <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
-    <link rel="manifest" href="../manifest.json">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
     <!-- Google Analytics — replace G-DP6FGVETMV with your tracking ID -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 </head>
-<body class="arc-game">
+<body class="ch-game" data-category="arcade"
+      data-eyebrow="Cabinet · Pong"
+      data-title="Pong"
+      data-hint-1="↑↓ paddle"
+      data-hint-2="Space pause"
+      data-hint-3="R restart">
     <div class="container">
         <h1>🏓 Pong Game</h1>
         <div class="game-info">
@@ -61,6 +70,7 @@
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
         
         function playSound(frequency, duration, type = 'sine') {
+            if (muted) return;
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
             
@@ -121,6 +131,7 @@
         let highScore = localStorage.getItem('pongHighScore') || 0;
         let gameRunning = false;
         let isGameOver = false;
+        let muted = false;
         let gameLoop;
         let lastFrameTime = 0;
         const targetFPS = 60;
@@ -310,6 +321,12 @@
 
         restartBtn.addEventListener('click', startGame);
 
+        window.gameAPI = {
+            pause:   () => { gameRunning = !gameRunning; if (gameRunning) lastFrameTime = performance.now(); },
+            restart: () => { isGameOver = false; startGame(); },
+            mute:    () => { muted = !muted; }
+        };
+
         // Start game loop
         requestAnimationFrame(gameLoopFunction);
 
@@ -346,5 +363,6 @@
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
     <script src="../share.js"></script>
+    <script src="../arcade/arcade-chrome.js"></script>
 </body>
 </html>
