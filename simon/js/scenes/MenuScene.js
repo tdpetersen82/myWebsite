@@ -8,6 +8,12 @@ class MenuScene extends Phaser.Scene {
         this.selectedDifficulty = 'NORMAL';
     }
 
+    init() {
+        if (!SIMON_CONFIG.DIFFICULTY[this.selectedDifficulty]) {
+            this.selectedDifficulty = 'NORMAL';
+        }
+    }
+
     create() {
         const { WIDTH, HEIGHT } = SIMON_CONFIG;
 
@@ -67,11 +73,12 @@ class MenuScene extends Phaser.Scene {
             }).setOrigin(0.5);
 
             const zone = this.add.zone(x, y, 130, 45).setInteractive({ useHandCursor: true });
-            zone.on('pointerdown', () => {
-                audioManager.playClick();
+            const select = () => {
                 this.selectedDifficulty = diff;
                 this.updateDifficultyDisplay();
-            });
+                try { audioManager.playClick(); } catch (e) {}
+            };
+            zone.on('pointerdown', select);
             zone.on('pointerover', () => {
                 if (this.selectedDifficulty !== diff) {
                     txt.setColor('#ccccff');

@@ -375,21 +375,29 @@
         // Draw initial empty board
         drawBoard();
 
-        // Auto-scale canvas to fit viewport
+        // Auto-scale canvas to fit viewport. Block Puzzle's canvas (300x600) is
+        // tall, so a fixed-fraction-of-viewport budget can't account for the
+        // header, score panel, controls, ad slot and share row. Measure the
+        // actual chrome each pass and give the canvas the rest. Re-run on
+        // window.load so nav.js / share.js / ad slot heights are included.
         (function() {
             const c = document.getElementById('gameCanvas');
             const bw = c.width, bh = c.height;
             function sc() {
+                c.style.transform = 'none';
+                c.style.marginBottom = '0';
                 const par = c.parentElement;
                 const ps = getComputedStyle(par);
                 const mw = par.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
-                const mh = window.innerHeight * 0.75;
+                const chromeH = document.body.scrollHeight - bh;
+                const mh = Math.max(240, window.innerHeight - chromeH - 16);
                 const s = Math.min(mw / bw, mh / bh, 1);
                 c.style.transformOrigin = 'top center';
                 c.style.transform = 'scale(' + s + ')';
                 c.style.marginBottom = (-(bh * (1 - s))) + 'px';
             }
             window.addEventListener('resize', sc);
+            window.addEventListener('load', sc);
             sc();
         })();
     </script>
