@@ -48,6 +48,38 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
+.prof-sync {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 2px 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  font-family: 'JetBrains Mono', monospace;
+  font-size: 11px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--ink-soft);
+  cursor: help;
+}
+.prof-sync-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #888;
+  box-shadow: 0 0 0 0 rgba(0,0,0,0);
+  flex-shrink: 0;
+}
+.prof-sync[data-state="idle"]    .prof-sync-dot { background: #888; }
+.prof-sync[data-state="syncing"] .prof-sync-dot { background: #f5c542; animation: prof-sync-pulse 1s ease-in-out infinite; }
+.prof-sync[data-state="synced"]  .prof-sync-dot { background: #4ade80; box-shadow: 0 0 6px rgba(74, 222, 128, 0.5); }
+.prof-sync[data-state="offline"] .prof-sync-dot { background: #f87171; }
+@keyframes prof-sync-pulse {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0.35; }
+}
 .prof-name-row {
   font-size: 32px;
   margin: 4px 0 6px;

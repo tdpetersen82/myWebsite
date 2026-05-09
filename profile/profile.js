@@ -292,6 +292,24 @@
     });
   }
 
+  function bindSyncStatus() {
+    const pill = $('prof-sync');
+    const label = $('prof-sync-label');
+    if (!pill || !label) return;
+    const COPY = {
+      idle:    'Cloud backup',
+      syncing: 'Syncing…',
+      synced:  'Synced',
+      offline: 'Offline · saved locally',
+    };
+    window.addEventListener('casino:sync-status', (e) => {
+      const state = (e.detail && e.detail.state) || 'idle';
+      pill.dataset.state = state;
+      label.textContent = COPY[state] || COPY.idle;
+    });
+    window.addEventListener('casino:hydrated', update);
+  }
+
   function init() {
     if (!window.CASINO_BANKROLL || !window.CASINO_PLAYER || !window.CASINO_STATS) {
       console.warn('[profile] Required casino modules not loaded');
@@ -300,6 +318,7 @@
     update();
     bindNameEdit();
     bindCashout();
+    bindSyncStatus();
     window.addEventListener('storage', (e) => {
       if (!e.key) return;
       if (e.key === window.CASINO_STATS.KEY ||

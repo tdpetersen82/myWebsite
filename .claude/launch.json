@@ -7,6 +7,13 @@
       "runtimeArgs": ["-m", "http.server", "8091"],
       "port": 8091,
       "autoPort": true
+    },
+    {
+      "name": "wrangler",
+      "runtimeExecutable": "./node_modules/.bin/wrangler",
+      "runtimeArgs": ["dev", "--port", "8093", "--local"],
+      "port": 8093,
+      "autoPort": true
     }
   ]
 }

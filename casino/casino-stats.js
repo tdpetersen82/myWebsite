@@ -17,6 +17,13 @@
   const STARTING = 1000;
   let migrated = false;
 
+  function newRunId() {
+    try {
+      if (crypto && crypto.randomUUID) return crypto.randomUUID();
+    } catch (e) {}
+    return 'r-' + Date.now().toString(36) + '-' + Math.random().toString(36).slice(2, 10);
+  }
+
   function defaults() {
     return {
       schemaVersion: SCHEMA,
@@ -45,6 +52,7 @@
         },
       },
       run: {
+        runId: newRunId(),
         peakBankroll: STARTING,
         handsPlayed: 0,
         winStreak: 0,
@@ -70,7 +78,13 @@
     if (migrated) return;
     migrated = true;
     const existing = readBlob();
-    if (existing && existing.schemaVersion === SCHEMA) return;
+    if (existing && existing.schemaVersion === SCHEMA) {
+      if (existing.run && !existing.run.runId) {
+        existing.run.runId = newRunId();
+        writeBlob(existing);
+      }
+      return;
+    }
 
     const blob = defaults();
 
@@ -238,6 +252,7 @@
       blob.lifetime.bestRunPeak = blob.run.peakBankroll;
     }
     blob.run = {
+      runId: newRunId(),
       peakBankroll: STARTING,
       handsPlayed: 0,
       winStreak: 0,

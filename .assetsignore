@@ -11,3 +11,6 @@ _design_handoff
 PRE-PUBLISH-CHECKLIST.md
 CLAUDE.md
 wrangler.jsonc
+workers
+package.json
+package-lock.json

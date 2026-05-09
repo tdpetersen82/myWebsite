@@ -39,7 +39,16 @@
         <h2 style="font-size:1.3em; color:#667eea; margin:24px 0 12px;">Cookies &amp; Local Storage</h2>
         <p style="color:#555; line-height:1.7; margin-bottom:16px;">
             We use <strong>localStorage</strong> to save your game preferences (such as high scores and display settings).
-            This data stays on your device and is never transmitted to our servers.
+            Most of this data stays on your device and is never transmitted.
+        </p>
+        <p style="color:#555; line-height:1.7; margin-bottom:16px;">
+            <strong>Casino stats cloud backup.</strong> To let your casino stats survive a browser cache wipe, we mirror
+            them to a small storage record on Cloudflare. The record is keyed by a random per-device ID generated in
+            your browser; we do not collect or store your name, email, or any other personal information for this
+            backup. The backup contains only your in-game stats (bankroll, hand counts, peak amounts, rare-event
+            counters) and an optional display name you chose locally. Anyone who knows your random device ID can read
+            or modify that backup, so treat it like any other browser-stored secret. Clearing your browser data ends
+            your access to the backup; a future "Disconnect" button will let you delete it explicitly.
         </p>
         <p style="color:#555; line-height:1.7; margin-bottom:16px;">
             Third-party services, including Google AdSense, may use cookies to serve ads based on your

@@ -2,13 +2,21 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "limestonegames",
   "compatibility_date": "2026-05-05",
+  "main": "workers/api/casino/index.js",
   "observability": {
     "enabled": true
   },
   "assets": {
-    "directory": "."
+    "directory": ".",
+    "binding": "ASSETS"
   },
   "compatibility_flags": [
     "nodejs_compat"
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CASINO_KV",
+      "id": "TODO_CREATE_KV_NAMESPACE_AND_PASTE_ID_HERE"
+    }
   ]
 }

@@ -61,7 +61,13 @@
         <div class="prof-header-left">
             <div class="prof-avatar">★</div>
             <div>
-                <div class="prof-eyebrow">Player profile · Local-only</div>
+                <div class="prof-eyebrow">
+                    Player profile ·
+                    <span class="prof-sync" id="prof-sync" data-state="idle" title="Stats are mirrored to the cloud, keyed by an anonymous device ID.">
+                        <span class="prof-sync-dot"></span>
+                        <span class="prof-sync-label" id="prof-sync-label">Cloud backup</span>
+                    </span>
+                </div>
                 <h1 class="prof-name-row">
                     <span id="prof-name-display">Friend</span>
                     <button class="prof-name-edit" type="button" id="prof-name-edit" aria-label="Edit name">✎</button>
@@ -243,9 +249,11 @@
         </div>
     </div>
 
+    <script src="../casino/casino-config.js?v=20260508a"></script>
+    <script src="../casino/casino-sync.js?v=20260508a"></script>
     <script src="../casino/casino-bankroll.js"></script>
     <script src="../casino/casino-player.js"></script>
-    <script src="../casino/casino-stats.js"></script>
+    <script src="../casino/casino-stats.js?v=20260508b"></script>
     <script src="profile.js"></script>
 </body>
 </html>
