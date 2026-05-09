@@ -315,12 +315,12 @@ function App() {
       setBankroll(br => br - insAmt);
       setInsurance(insAmt);
     }
-    setHoleRevealed(true);
     const dBJ = isBlackjack(dealer);
     const pBJ = isBlackjack(hands[0].cards);
     setTimeout(() => {
       if (dBJ) {
         // dealer BJ — insurance pays 2:1 if taken
+        setHoleRevealed(true);
         if (yes) {
           setBankroll(br => br + insAmt * 3); // win insurance: stake + 2x stake
         }
@@ -330,8 +330,9 @@ function App() {
         if (pBJ) say('push', 'idle');
         else say('dealer_win', 'happy');
       } else {
-        // No dealer BJ — insurance lost (if taken)
+        // No dealer BJ — insurance lost (if taken). Hole stays hidden; dealer peeked privately.
         if (pBJ) {
+          setHoleRevealed(true);
           finishHand(0, 'blackjack', totalBet, Math.floor(totalBet * 1.5));
           setPhase('resolved');
           setBankroll(br => br + totalBet + Math.floor(totalBet * 1.5));
