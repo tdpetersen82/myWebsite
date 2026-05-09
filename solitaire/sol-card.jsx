@@ -67,7 +67,7 @@ function CardBack() {
 
 function PlayingCard({
   rank, suit, faceDown = false,
-  w = 84, h = 120,
+  w = 84, h = 118,
   dealIndex = 0, fromX = 360, fromY = -240,
   glow = false, selected = false,
   onClick, onDoubleClick, dealing = false

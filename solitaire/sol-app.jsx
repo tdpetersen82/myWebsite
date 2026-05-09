@@ -982,7 +982,7 @@ function DealtTableauColumn({ col, cards, selection, hintIds, onCardClick, onCar
   if (cards.length === 0) {
     return (
       <div onClick={onEmptyClick} style={{
-        width: 84, height: 120, borderRadius: 10,
+        width: 84, height: 118, borderRadius: 10,
         border: '1.5px dashed rgba(201,162,106,.4)',
         background: 'rgba(0,0,0,.18)',
         display:'flex', alignItems:'center', justifyContent:'center',
@@ -998,10 +998,10 @@ function DealtTableauColumn({ col, cards, selection, hintIds, onCardClick, onCar
     offsets.push(cum);
     cum += cards[i].faceUp ? 26 : 8;
   }
-  const totalH = offsets[offsets.length - 1] + 120;
+  const totalH = offsets[offsets.length - 1] + 118;
 
   return (
-    <div style={{ position:'relative', width: 84, height: Math.max(totalH, 120) }}>
+    <div style={{ position:'relative', width: 84, height: Math.max(totalH, 118) }}>
       {cards.map((card, i) => {
         const isSelected = selection && selection.source === 'tableau' && selection.col === col && i >= selection.idx;
         const hinted = hintIds && hintIds.includes(card.id);
@@ -1016,7 +1016,7 @@ function DealtTableauColumn({ col, cards, selection, hintIds, onCardClick, onCar
               rank={card.rank}
               suit={card.suit}
               faceDown={!card.faceUp}
-              w={84} h={120}
+              w={84} h={118}
               selected={isSelected}
               glow={hinted}
               dealing={isDealing}

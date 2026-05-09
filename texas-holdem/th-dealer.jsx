@@ -328,7 +328,7 @@ function THOpponentSeat({
                 key={c.id || i}
                 card={c}
                 faceDown={!holeRevealed}
-                w={36} h={50}
+                w={36} h={51}
                 dealIndex={i}
                 fromX={0} fromY={-150}
                 dim={dim}
@@ -337,13 +337,13 @@ function THOpponentSeat({
           ) : (
             <>
               <div style={{
-                width: 36, height: 50,
+                width: 36, height: 51,
                 border:'2px dashed rgba(201,162,106,.25)',
                 borderRadius: 7,
                 background:'rgba(0,0,0,.18)'
               }}/>
               <div style={{
-                width: 36, height: 50,
+                width: 36, height: 51,
                 border:'2px dashed rgba(201,162,106,.25)',
                 borderRadius: 7,
                 background:'rgba(0,0,0,.18)'

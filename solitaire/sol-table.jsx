@@ -165,7 +165,7 @@ function BrassRail({
   );
 }
 
-function PileSlot({ label, w = 84, h = 120, children, onClick, glow, dim, label_sub }) {
+function PileSlot({ label, w = 84, h = 118, children, onClick, glow, dim, label_sub }) {
   return (
     <div onClick={onClick} style={{
       position:'relative',
@@ -197,7 +197,7 @@ function StockPile({ stock, waste, onDraw, drawMode, passes, isHinted }) {
   const empty = stock.length === 0;
   return (
     <div onClick={onDraw} style={{
-      position:'relative', width: 84, height: 120,
+      position:'relative', width: 84, height: 118,
       borderRadius: 10,
       border: empty ? '1.5px dashed rgba(201,162,106,.55)' : 'none',
       background: empty ? 'rgba(0,0,0,.18)' : 'transparent',
@@ -224,7 +224,7 @@ function StockPile({ stock, waste, onDraw, drawMode, passes, isHinted }) {
             }} />
           )}
           <div style={{ position:'absolute', inset:0 }}>
-            <PlayingCard rank="A" suit="♠" faceDown w={84} h={120} />
+            <PlayingCard rank="A" suit="♠" faceDown w={84} h={118} />
           </div>
           {stock.length > 1 && (
             <div style={{
@@ -248,7 +248,7 @@ function WastePile({ waste, drawMode, selection, onSelect, onDblClick }) {
   const startIdx = waste.length - visibleCount;
   const isSelected = selection && selection.source === 'waste';
   return (
-    <div style={{ position:'relative', width: 84 + (visibleCount - 1) * 22, height: 120 }}>
+    <div style={{ position:'relative', width: 84 + (visibleCount - 1) * 22, height: 118 }}>
       {waste.slice(startIdx).map((card, i) => {
         const absIdx = startIdx + i;
         const isTop = absIdx === waste.length - 1;
@@ -260,7 +260,7 @@ function WastePile({ waste, drawMode, selection, onSelect, onDblClick }) {
               rank={card.rank}
               suit={card.suit}
               w={84}
-              h={120}
+              h={118}
               selected={isTop && isSelected}
               onClick={isTop ? onSelect : undefined}
               onDoubleClick={isTop ? onDblClick : undefined}
@@ -278,7 +278,7 @@ function FoundationSlot({ suit, cards, onClick, glow, isHinted }) {
     const color = SUIT_COLORS[suit];
     return (
       <div onClick={onClick} style={{
-        position:'relative', width: 84, height: 120, borderRadius: 10,
+        position:'relative', width: 84, height: 118, borderRadius: 10,
         border: '1.5px dashed rgba(201,162,106,.4)',
         background: 'rgba(0,0,0,.18)',
         display:'flex', alignItems:'center', justifyContent:'center',
@@ -294,12 +294,12 @@ function FoundationSlot({ suit, cards, onClick, glow, isHinted }) {
   }
   return (
     <div onClick={onClick} style={{
-      position:'relative', width: 84, height: 120,
+      position:'relative', width: 84, height: 118,
       cursor: onClick ? 'pointer' : 'default',
       filter: (glow || isHinted) ? 'drop-shadow(0 0 18px rgba(230,197,144,.85))' : 'none',
       transition: 'filter .3s ease'
     }}>
-      <PlayingCard rank={top.rank} suit={top.suit} w={84} h={120} />
+      <PlayingCard rank={top.rank} suit={top.suit} w={84} h={118} />
     </div>
   );
 }
@@ -308,7 +308,7 @@ function TableauColumn({ col, cards, selection, hintIds, onCardClick, onEmptyCli
   if (cards.length === 0) {
     return (
       <div onClick={onEmptyClick} style={{
-        width: 84, height: 120, borderRadius: 10,
+        width: 84, height: 118, borderRadius: 10,
         border: '1.5px dashed rgba(201,162,106,.4)',
         background: 'rgba(0,0,0,.18)',
         display:'flex', alignItems:'center', justifyContent:'center',
@@ -324,10 +324,10 @@ function TableauColumn({ col, cards, selection, hintIds, onCardClick, onEmptyCli
     offsets.push(cum);
     cum += cards[i].faceUp ? 26 : 8;
   }
-  const totalH = offsets[offsets.length - 1] + 120;
+  const totalH = offsets[offsets.length - 1] + 118;
 
   return (
-    <div style={{ position:'relative', width: 84, height: Math.max(totalH, 120) }}>
+    <div style={{ position:'relative', width: 84, height: Math.max(totalH, 118) }}>
       {cards.map((card, i) => {
         const isSelected = selection
           && selection.source === 'tableau'
@@ -343,7 +343,7 @@ function TableauColumn({ col, cards, selection, hintIds, onCardClick, onEmptyCli
               rank={card.rank}
               suit={card.suit}
               faceDown={!card.faceUp}
-              w={84} h={120}
+              w={84} h={118}
               selected={isSelected}
               glow={hinted}
               onClick={() => onCardClick(col, i, card)}

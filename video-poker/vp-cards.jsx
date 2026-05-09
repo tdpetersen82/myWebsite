@@ -65,7 +65,7 @@ function CardBack() {
 const SUIT_GLYPHS = { hearts:'♥', diamonds:'♦', clubs:'♣', spades:'♠' };
 
 // CardSlot — one of five slots in the row. Clickable to toggle hold.
-function CardSlot({ card, held, onToggleHold, dealIndex = 0, faceDown = false, justDrew = false, w = 110, h = 156 }) {
+function CardSlot({ card, held, onToggleHold, dealIndex = 0, faceDown = false, justDrew = false, w = 110, h = 155 }) {
   const ranklike = card?.rank;
   const suitGlyph = card ? SUIT_GLYPHS[card.suit] : null;
 

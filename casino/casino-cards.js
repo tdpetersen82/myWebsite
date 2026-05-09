@@ -9,10 +9,12 @@
 // ('spades'/'hearts'/'diamonds'/'clubs') so each existing game keeps using
 // its own data shape.
 //
-// faceStyle(rank, suit, w, h) returns the background-image properties to use
-// on a card-face element of size w×h. Aspect of the source cells is taller
-// than the typical 78×110 box, so cards render slightly compressed vertically
-// at default sizes — readable, no layout breakage.
+// faceStyle(rank, suit) returns the background-image properties for a
+// card-face element. Source cells are 156×220 (aspect 78:110); render the
+// face on a container with that aspect to avoid sub-pixel rendering at the
+// cell boundaries. All games use sizes that match: 78×110 (blackjack,
+// three-card-poker, texas-holdem default), 84×118 (texas-holdem table,
+// solitaire), 110×155 (video-poker), 36×51 (texas-holdem dealer minis).
 (function () {
   const URL = '../assets/cards.png';
   const COLS = 13;
@@ -25,6 +27,14 @@
     'Q': 11, 'q': 11,
     'K': 12, 'k': 12
   };
+
+  // Each rank's art in cards.png is not perfectly centered in its 156-px-wide
+  // cell. These offsets nudge each rank's bg-position to recenter the art —
+  // capped at each cell's available padding so we never expose neighbor-cell
+  // pixels at the edges (which would show as faint boundary lines). Cards
+  // whose art touches a cell edge in the source (9, 10, K) cannot be shifted
+  // toward that edge and stay slightly off-center.
+  const COL_SHIFT_X = [-2, -3, -2, -2, -2.5, -3, -1, -2.5, 0, 0, -2, -2.5, 0];
 
   // Suit glyphs as \u escapes (ASCII-only source) so the keys are invariant
   // regardless of how the JS file is decoded by the browser.
@@ -45,17 +55,20 @@
     return typeof v === 'number' ? v : 0;
   }
 
-  // Percentage-based — caller's element provides explicit width/height; the
-  // sprite scales to fit each card cell into that box (slight vertical squish
-  // on default 78×110-ish sizes, but no layout breakage). No `w`/`h` needed.
+  // Percentage-based bg-size+position: each cell is rendered at exactly the
+  // container's box. Caller is responsible for keeping container aspect at
+  // 78:110 (== source cell aspect) — otherwise the bg image scales
+  // non-uniformly and adjacent cells can bleed through at the edges.
+  const CELL_W = 156;
   function faceStyle(rank, suit) {
     const col = rankIndex(rank);
     const row = suitIndex(suit);
+    const xPct = (col * CELL_W + COL_SHIFT_X[col]) / ((COLS - 1) * CELL_W) * 100;
     return {
       backgroundImage: 'url(' + URL + ')',
       backgroundRepeat: 'no-repeat',
       backgroundSize: (COLS * 100) + '% ' + (ROWS * 100) + '%',
-      backgroundPosition: (col / (COLS - 1) * 100) + '% ' + (row / (ROWS - 1) * 100) + '%'
+      backgroundPosition: xPct + '% ' + (row / (ROWS - 1) * 100) + '%'
     };
   }
 
