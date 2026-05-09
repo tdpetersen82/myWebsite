@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Block Puzzle — Free Online Game | Limestone Games</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../arcade/arcade-game.css">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -14,6 +13,16 @@
             display: block;
             margin: 20px auto;
         }
+        .top-bar {
+            display: flex; justify-content: space-between; align-items: center;
+            gap: 10px; font-size: 14px; flex-wrap: wrap;
+            max-width: 600px; margin: 0 auto 14px;
+            padding: 0 8px;
+        }
+        .top-bar a {
+            color: inherit; text-decoration: none; font-weight: 600; opacity: 0.7;
+        }
+        .top-bar a:hover { opacity: 1; }
     </style>
     <meta name="description" content="Play Block Puzzle free in your browser. Stack falling blocks to complete lines and score big in this classic puzzle game! No downloads, no installs.">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Block Puzzle","description":"Play Block Puzzle free in your browser. Stack falling blocks to complete lines and score big in this classic puzzle game! No downloads, no installs.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
@@ -39,14 +48,13 @@
     <!-- Google AdSense — replace ca-pub-XXXXXXXXXXXXXXXX with your publisher ID -->
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 </head>
-<body class="ch-game" data-category="arcade"
-      data-eyebrow="Cabinet · Block Puzzle"
-      data-title="Block Puzzle"
-      data-hint-1="←→ move ↑ rotate"
-      data-hint-2="↓ soft drop"
-      data-hint-3="R restart">
+<body>
     <div class="container">
-        <h1>🟦 Block Puzzle</h1>
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../arcade/">All Arcade games</a>
+        </div>
+        <h1>Block Puzzle</h1>
         <div class="game-info" style="display:flex;justify-content:center;align-items:flex-start;gap:24px;flex-wrap:wrap;">
             <div>
                 <p>Score: <span id="score">0</span></p>
@@ -429,7 +437,5 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../share.js"></script>
-    <script src="../arcade/arcade-chrome.js"></script>
 </body>
 </html>
