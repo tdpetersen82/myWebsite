@@ -260,6 +260,14 @@ function App() {
         biggestBankroll: Math.max(prev.biggestBankroll, newBankroll)
       };
     });
+    if (window.CASINO_STATS) {
+      window.CASINO_STATS.recordEvent('videoPoker', {
+        won: payout > 0,
+        payout: Math.max(0, payout),
+        rare: result.key === 'royal-flush' ? 'royalFlush' : null,
+      });
+      window.CASINO_STATS.recordPeak(bankroll + payout);
+    }
 
     if (payout > 0) {
       setBankroll(br => br + payout);
@@ -442,6 +450,7 @@ function App() {
           <TweakToggle label="Sound" value={tweaks.soundOn} onChange={v => setTweak('soundOn', v)} />
           <TweakButton label="Reset bankroll" onClick={() => {
             setBankroll(STARTING_BANKROLL);
+            if (window.CASINO_STATS) window.CASINO_STATS.resetAll();
             setStats({ handsPlayed:0, handsWon:0, royalFlushes:0, biggestBankroll: STARTING_BANKROLL });
             setLossStreak(0);
           }} />
@@ -461,9 +470,7 @@ function App() {
           playerName={tweaks.playerName}
           message={`Machine ate the last of it, ${tweaks.playerName}. Time for a fresh stake.`}
           onReload={() => {
-            const v = window.CASINO_BANKROLL ? window.CASINO_BANKROLL.reload() : STARTING_BANKROLL;
-            setBankroll(v);
-            setShowBrokeModal(false);
+            window.location.href = '../profile/?from=video-poker';
           }}
         />
       )}
@@ -512,7 +519,7 @@ function BrokeModal({ playerName, message, onReload }) {
             fontSize:10, fontWeight:700, letterSpacing:'.18em', textTransform:'uppercase',
             cursor:'pointer',
             boxShadow:'0 4px 12px rgba(230,197,144,.4)'
-          }}>Reload $1,000</button>
+          }}>Cash out · profile</button>
         </div>
       </div>
     </div>

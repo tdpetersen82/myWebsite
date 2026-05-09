@@ -704,7 +704,7 @@ function BrokeModal({ playerName, onReload }) {
             fontSize: 10, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase',
             cursor: 'pointer',
             boxShadow: '0 4px 12px rgba(230,197,144,.4)'
-          }}>Reload $1,000</button>
+          }}>Cash out · profile</button>
         </div>
       </div>
     </div>

@@ -55,19 +55,23 @@ function SlotApp() {
 
     setTimeout(function () {
       setSpinning(false);
+      let postBalance = postBet;
       if (result.win > 0) {
         const post = window.CASINO_BANKROLL.read() + result.win;
         window.CASINO_BANKROLL.write(post);
         setBankroll(post);
+        postBalance = post;
+      }
+      if (window.CASINO_STATS) {
+        window.CASINO_STATS.recordEvent('slotMachine', {
+          won: result.win > 0,
+          payout: Math.max(0, result.win),
+          rare: result.kind === 'jackpot' ? 'slotJackpot' : null,
+        });
+        window.CASINO_STATS.recordPeak(postBalance);
       }
       setLastResult(result);
     }, TOTAL_SPIN);
-  }
-
-  function reload() {
-    if (spinning) return;
-    const v = window.CASINO_BANKROLL.reload();
-    setBankroll(v);
   }
 
   // Build the paytable rows for the current theme. Highest payout first.
@@ -90,9 +94,9 @@ function SlotApp() {
         </h1>
         <div className="slot-bank">
           <div className="slot-bank-amt" id="slot-bank-amt">${bankroll.toLocaleString()}</div>
-          <button type="button" className="slot-reload" onClick={reload} disabled={spinning}>
-            Reload $1,000
-          </button>
+          <a className="slot-reload" href="../profile/?from=slot-machine">
+            Cash out · profile
+          </a>
         </div>
       </div>
 

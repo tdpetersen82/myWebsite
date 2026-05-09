@@ -334,7 +334,8 @@ body.cas-root {
   align-items: stretch;
   gap: 6px;
 }
-.cas-bank-reload button {
+.cas-bank-reload button,
+.cas-bank-reload a {
   font-family: 'Bricolage Grotesque', sans-serif;
   font-weight: 600;
   font-size: 14px;
@@ -347,12 +348,17 @@ body.cas-root {
   letter-spacing: 0.04em;
   transition: transform .15s ease, box-shadow .15s ease;
   box-shadow: 0 2px 8px rgba(0,0,0,.35), inset 0 1px 0 rgba(255,255,255,.3);
+  text-decoration: none;
+  text-align: center;
+  display: inline-block;
 }
-.cas-bank-reload button:hover {
+.cas-bank-reload button:hover,
+.cas-bank-reload a:hover {
   transform: translateY(-1px);
   box-shadow: 0 4px 14px rgba(0,0,0,.45), inset 0 1px 0 rgba(255,255,255,.4);
 }
-.cas-bank-reload button.broke {
+.cas-bank-reload button.broke,
+.cas-bank-reload a.broke {
   background: linear-gradient(180deg, #ff7a5a, #c0392b);
   color: #fff;
   animation: brokePulse 1.4s ease-in-out infinite;

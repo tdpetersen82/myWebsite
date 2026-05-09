@@ -791,6 +791,16 @@ function App() {
       };
       return next;
     });
+    if (window.CASINO_STATS) {
+      const isSF = bestHand && /straight\s*flush|royal/i.test(bestHand);
+      window.CASINO_STATS.recordEvent('texasHoldem', {
+        won,
+        payout: won ? Math.max(0, potSize) : 0,
+        rare: won && isSF ? 'straightFlush' : null,
+        pot: potSize,
+      });
+      window.CASINO_STATS.recordPeak(bankroll);
+    }
   }
 
   function queueNextHand(delayMs = 2800) {
@@ -1082,6 +1092,7 @@ function App() {
           <TweakButton label="Reset stats" secondary onClick={() => {
             const empty = { handsPlayed: 0, handsWon: 0, biggestPot: 0, biggestWin: 0, bestHand: null };
             setStats(empty);
+            if (window.CASINO_STATS) window.CASINO_STATS.resetAll();
           }} />
         </TweakSection>
       </TweaksPanel>
@@ -1111,21 +1122,7 @@ function App() {
           playerName={tweaks.playerName}
           onLeave={() => { setShowBroke(false); leaveTable(true); }}
           onReload={() => {
-            const v = window.CASINO_BANKROLL ? window.CASINO_BANKROLL.reload() : 1000;
-            setBankroll(v);
-            setShowBroke(false);
-            // Restart the seat.
-            setTimeout(() => {
-              if (tier) {
-                setBankroll(b => b - tier.buyin);
-                setSeats(prev => {
-                  const r = prev.slice();
-                  r[0] = { ...r[0], stack: tier.buyin, status: 'live' };
-                  startHand(r, buttonIdx, tier);
-                  return r;
-                });
-              }
-            }, 200);
+            window.location.href = '../profile/?from=texas-holdem';
           }}
         />
       )}

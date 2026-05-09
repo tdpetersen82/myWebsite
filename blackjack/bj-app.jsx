@@ -393,6 +393,20 @@ function App() {
       if (kind === 'blackjack') next[idx] = { ...next[idx], stood: true };
       return next;
     });
+    recordHandEvent({ kind, betAmt, payout });
+  }
+
+  // Per-hand stats recording — used for both natural BJ paths (via finishHand)
+  // and the multi-hand resolveAll path (called in a loop).
+  function recordHandEvent(r) {
+    if (!window.CASINO_STATS) return;
+    const won = r.kind === 'win' || r.kind === 'blackjack';
+    const payout = won ? Math.max(0, Number(r.payout) || 0) : 0;
+    window.CASINO_STATS.recordEvent('blackjack', {
+      won,
+      payout,
+      rare: r.kind === 'blackjack' ? 'blackjack' : null,
+    });
   }
 
   // Player actions
@@ -574,6 +588,9 @@ function App() {
 
     setResults(newResults);
     setBankroll(br => br + totalReturn);
+    // Record each non-natural hand resolution (natural BJ paths use finishHand)
+    newResults.forEach(recordHandEvent);
+    if (window.CASINO_STATS) window.CASINO_STATS.recordPeak(bankroll + totalReturn);
 
     // streaks based on net result
     const wins = newResults.filter(r => r.kind === 'win' || r.kind === 'blackjack').length;
@@ -869,7 +886,7 @@ function App() {
           <TweakToggle label="Strategy hints" value={tweaks.showHints} onChange={v => setTweak('showHints', v)} />
           <TweakToggle label="Sound" value={tweaks.soundOn} onChange={v => setTweak('soundOn', v)} />
           <TweakNumber label="Starting bankroll" value={tweaks.startingBankroll} onChange={v => setTweak('startingBankroll', Number(v))} min={100} max={100000} step={100} />
-          <TweakButton label="Reset bankroll" onClick={() => { setBankroll(tweaks.startingBankroll); setStats({played:0,won:0,bj:0,best:tweaks.startingBankroll,tipsGiven:0}); setStreak(0); setLossStreak(0); }} />
+          <TweakButton label="Reset bankroll" onClick={() => { setBankroll(tweaks.startingBankroll); setStats({played:0,won:0,bj:0,best:tweaks.startingBankroll,tipsGiven:0}); setStreak(0); setLossStreak(0); if (window.CASINO_STATS) window.CASINO_STATS.resetAll(); }} />
         </TweakSection>
       </TweaksPanel>
 
@@ -886,9 +903,7 @@ function App() {
           playerName={tweaks.playerName}
           message={`Looks like the table cleaned you out, ${tweaks.playerName}.`}
           onReload={() => {
-            const v = window.CASINO_BANKROLL ? window.CASINO_BANKROLL.reload() : 1000;
-            setBankroll(v);
-            setShowBrokeModal(false);
+            window.location.href = '../profile/?from=blackjack';
           }}
         />
       )}
@@ -937,7 +952,7 @@ function BrokeModal({ playerName, message, onReload }) {
             fontSize:10, fontWeight:700, letterSpacing:'.18em', textTransform:'uppercase',
             cursor:'pointer',
             boxShadow:'0 4px 12px rgba(230,197,144,.4)'
-          }}>Reload $1,000</button>
+          }}>Cash out · profile</button>
         </div>
       </div>
     </div>

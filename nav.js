@@ -199,6 +199,11 @@
 /* Tools area (right side) */\
 .site-nav-tools{display:flex;align-items:center;gap:4px;flex-shrink:0}\
 \
+/* Profile link */\
+.site-nav-profile-btn{width:36px;height:36px;border:none;background:none;color:rgba(255,255,255,0.7);font-size:1.05em;cursor:pointer;border-radius:8px;transition:background .2s,color .2s;display:flex;align-items:center;justify-content:center;text-decoration:none}\
+.site-nav-profile-btn:hover{background:rgba(255,255,255,0.1);color:#fff}\
+.site-nav-profile-btn.active{background:rgba(102,126,234,0.18);color:#a78bfa}\
+\
 /* Search */\
 .site-nav-search{position:relative}\
 .site-nav-search-btn{width:36px;height:36px;border:none;background:none;color:rgba(255,255,255,0.7);font-size:1.1em;cursor:pointer;border-radius:8px;transition:background .2s,color .2s;display:flex;align-items:center;justify-content:center}\
@@ -437,6 +442,15 @@ body.mobile-nav-open{overflow:hidden}\
     // Tools area
     var tools = document.createElement('div');
     tools.className = 'site-nav-tools';
+
+    // Profile link
+    var profileLink = document.createElement('a');
+    profileLink.className = 'site-nav-profile-btn';
+    profileLink.href = basePath + 'profile/';
+    profileLink.setAttribute('aria-label', 'Player profile');
+    profileLink.innerHTML = '\u{1F464}'; // bust in silhouette
+    if (currentPage === 'profile/') profileLink.classList.add('active');
+    tools.appendChild(profileLink);
 
     // Search
     var searchWrap = document.createElement('div');

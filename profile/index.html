@@ -1,0 +1,251 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Player Profile — Limestone Games</title>
+    <meta name="description" content="Your player profile: lifetime stats, peak bankroll, biggest payout, rare events, and per-game volume across the casino, arcade, kids, and strategy categories.">
+    <meta name="keywords" content="player profile, casino stats, lifetime stats, bankroll, limestone games">
+    <meta property="og:title" content="Player Profile — Limestone Games">
+    <meta property="og:description" content="Lifetime stats and trophy case — across casino, arcade, kids, and strategy.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/profile/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Player Profile — Limestone Games">
+    <meta name="twitter:description" content="Lifetime stats and trophy case across all four categories.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/profile/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Profile","item":"https://limestonegames.com/profile/"}]}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../casino/casino.css">
+    <link rel="stylesheet" href="profile.css">
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+</head>
+<body class="cas-root prof-root">
+
+    <!-- Top nav (mirrors casino-style hand-rolled nav) -->
+    <nav class="cas-nav">
+        <div class="cas-nav-left">
+            <a class="cas-logo" href="..">
+                <img src="../assets/logo-96.png" alt="Limestone Games home" width="40" height="40">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="cas-nav-links">
+                <a href="../arcade/">Arcade</a>
+                <a href="../kids/">Kids</a>
+                <a href="../strategy/">Strategy</a>
+                <a href="../casino/">Casino</a>
+                <a href="" class="active">Profile</a>
+            </div>
+        </div>
+        <div class="cas-tables-open">
+            <span class="dot"></span>
+            <span id="prof-run-status">Run in progress</span>
+        </div>
+    </nav>
+
+    <!-- Breadcrumb -->
+    <div class="cas-crumb">
+        <a href="..">Home</a> &nbsp;/&nbsp; <span class="here">Profile</span>
+    </div>
+
+    <!-- Header card: name + cash out -->
+    <header class="prof-header">
+        <div class="prof-header-left">
+            <div class="prof-avatar">★</div>
+            <div>
+                <div class="prof-eyebrow">Player profile · Local-only</div>
+                <h1 class="prof-name-row">
+                    <span id="prof-name-display">Friend</span>
+                    <button class="prof-name-edit" type="button" id="prof-name-edit" aria-label="Edit name">✎</button>
+                </h1>
+                <div class="prof-meta">
+                    <span id="prof-runs-summary">No runs banked yet</span>
+                </div>
+            </div>
+        </div>
+        <div class="prof-header-right">
+            <button class="prof-cashout" id="prof-cashout" type="button">
+                <span class="prof-cashout-label">Cash out &amp; start over</span>
+                <span class="prof-cashout-sub">End run · keep lifetime stats</span>
+            </button>
+        </div>
+    </header>
+
+    <!-- Hero strip: 4 lifetime tiles -->
+    <div class="prof-hero">
+        <div class="prof-hero-tile">
+            <div class="l">Bankroll now</div>
+            <div class="n" id="prof-bankroll">$1,000</div>
+            <div class="s" id="prof-bankroll-sub">Starting stake</div>
+        </div>
+        <div class="prof-hero-tile">
+            <div class="l">Peak bankroll ever</div>
+            <div class="n accent" id="prof-peak-ever">$1,000</div>
+            <div class="s">High-water mark</div>
+        </div>
+        <div class="prof-hero-tile">
+            <div class="l">Net won lifetime</div>
+            <div class="n" id="prof-net-won">$0</div>
+            <div class="s">Banked across runs · since this update</div>
+        </div>
+        <div class="prof-hero-tile">
+            <div class="l">Runs played</div>
+            <div class="n" id="prof-runs">0</div>
+            <div class="s">Cash-outs · since this update</div>
+        </div>
+    </div>
+
+    <div class="cas-wrap">
+
+        <!-- ───────────── Casino — The Floor ───────────── -->
+        <div class="cas-section-head">
+            <h2>Casino · The floor</h2>
+            <div class="rule"></div>
+            <span class="count" id="prof-casino-count">8 tables</span>
+        </div>
+
+        <!-- Run scope row -->
+        <div class="prof-row">
+            <div class="prof-row-label">This run</div>
+            <div class="prof-row-tiles">
+                <div class="prof-mini">
+                    <div class="l">Peak this run</div>
+                    <div class="n" id="prof-run-peak">$1,000</div>
+                </div>
+                <div class="prof-mini">
+                    <div class="l">Hands this run</div>
+                    <div class="n" id="prof-run-hands">0</div>
+                </div>
+                <div class="prof-mini">
+                    <div class="l">Win streak</div>
+                    <div class="n" id="prof-run-streak">0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Lifetime highlights row -->
+        <div class="prof-row">
+            <div class="prof-row-label">Lifetime highlights</div>
+            <div class="prof-row-tiles">
+                <div class="prof-mini wide">
+                    <div class="l">Biggest single payout</div>
+                    <div class="n accent" id="prof-biggest-payout">—</div>
+                    <div class="s" id="prof-biggest-payout-sub">No wins yet</div>
+                </div>
+                <div class="prof-mini">
+                    <div class="l">Best-run peak</div>
+                    <div class="n" id="prof-best-run-peak">$1,000</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rare event chips -->
+        <div class="prof-row">
+            <div class="prof-row-label">Trophy case</div>
+            <div class="prof-rare">
+                <div class="prof-chip" id="prof-rare-royal">
+                    <span class="ico">♦</span>
+                    <span class="n">0</span>
+                    <span class="l">Royal flushes</span>
+                </div>
+                <div class="prof-chip" id="prof-rare-bj">
+                    <span class="ico">♠</span>
+                    <span class="n">0</span>
+                    <span class="l">Blackjacks</span>
+                </div>
+                <div class="prof-chip" id="prof-rare-sf">
+                    <span class="ico">♣</span>
+                    <span class="n">0</span>
+                    <span class="l">Straight flushes</span>
+                </div>
+                <div class="prof-chip" id="prof-rare-jp">
+                    <span class="ico">★</span>
+                    <span class="n">0</span>
+                    <span class="l">Slot jackpots</span>
+                </div>
+                <div class="prof-chip" id="prof-rare-pt">
+                    <span class="ico">●</span>
+                    <span class="n">0</span>
+                    <span class="l">Points made</span>
+                </div>
+            </div>
+        </div>
+
+        <!-- 8 per-game cards -->
+        <div class="prof-game-grid" id="prof-casino-grid">
+            <!-- populated by profile.js -->
+        </div>
+
+        <!-- ───────────── Arcade (skeleton) ───────────── -->
+        <div class="cas-section-head">
+            <h2>Arcade · High scores</h2>
+            <div class="rule"></div>
+            <span class="count" id="prof-arcade-count">—</span>
+        </div>
+        <div class="prof-skel-grid" id="prof-arcade-grid">
+            <!-- populated by profile.js -->
+        </div>
+
+        <!-- ───────────── Kids (skeleton) ───────────── -->
+        <div class="cas-section-head">
+            <h2>Kids · Best results</h2>
+            <div class="rule"></div>
+            <span class="count" id="prof-kids-count">—</span>
+        </div>
+        <div class="prof-skel-grid" id="prof-kids-grid">
+            <!-- populated by profile.js -->
+        </div>
+
+        <!-- ───────────── Strategy & Puzzles (skeleton) ───────────── -->
+        <div class="cas-section-head">
+            <h2>Strategy &amp; Puzzles</h2>
+            <div class="rule"></div>
+            <span class="count" id="prof-strat-count">—</span>
+        </div>
+        <div class="prof-skel-grid" id="prof-strat-grid">
+            <!-- populated by profile.js -->
+        </div>
+
+    </div>
+
+    <div class="cas-disclaimer">
+        <b>Play money only.</b> All stats are stored locally in your browser; clearing site data wipes them. Reloading bankroll ends your active run and folds it into lifetime totals.
+    </div>
+
+    <footer class="cas-foot">
+        <a class="cas-logo" href="..">
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cas-foot-links">
+            <a href="..">All games</a>
+            <a href="../privacy.html">Privacy</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <!-- Confirm dialog -->
+    <div class="prof-modal" id="prof-confirm" aria-hidden="true">
+        <div class="prof-modal-box" role="dialog" aria-labelledby="prof-confirm-title" aria-modal="true">
+            <h3 id="prof-confirm-title">End this run?</h3>
+            <p>This resets bankroll to $1,000 and ends your current run. Lifetime stats — peak bankroll, biggest payouts, runs played, rare events, and per-game volume — are kept.</p>
+            <div class="prof-modal-actions">
+                <button type="button" class="ghost" id="prof-confirm-cancel">Keep playing</button>
+                <button type="button" class="primary" id="prof-confirm-ok">End run · cash out</button>
+            </div>
+        </div>
+    </div>
+
+    <script src="../casino/casino-bankroll.js"></script>
+    <script src="../casino/casino-player.js"></script>
+    <script src="../casino/casino-stats.js"></script>
+    <script src="profile.js"></script>
+</body>
+</html>

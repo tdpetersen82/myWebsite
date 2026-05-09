@@ -294,6 +294,18 @@ function App() {
       peak: Math.max(s.peak, bankroll + result.totalReturn),
       biggestPP: Math.max(s.biggestPP, result.pairPlus)
     }));
+    if (window.CASINO_STATS) {
+      const evp = window.TCP_HAND.evaluate(playerCards);
+      const isSF = evp.rank === window.TCP_HAND.RANKS.STRAIGHT_FLUSH;
+      const won = result.net > 0;
+      window.CASINO_STATS.recordEvent('threeCardPoker', {
+        won,
+        payout: Math.max(0, result.net),
+        rare: isSF ? 'straightFlush' : null,
+        pp: result.pairPlus,
+      });
+      window.CASINO_STATS.recordPeak(bankroll + result.totalReturn);
+    }
 
     if (result.net > 0) {
       setStreak(st => st + 1);
@@ -595,6 +607,7 @@ function App() {
           <TweakButton label="Reload bankroll" onClick={() => {
             const v = window.CASINO_BANKROLL ? window.CASINO_BANKROLL.reload() : 1000;
             setBankroll(v);
+            if (window.CASINO_STATS) window.CASINO_STATS.resetAll();
             setStats({ played: 0, won: 0, bonuses: 0, peak: v, biggestPP: 0 });
             setStreak(0);
           }} />
@@ -614,9 +627,7 @@ function App() {
           playerName={tweaks.playerName}
           message={`The table cleaned you out, ${tweaks.playerName}.`}
           onReload={() => {
-            const v = window.CASINO_BANKROLL ? window.CASINO_BANKROLL.reload() : 1000;
-            setBankroll(v);
-            setShowBrokeModal(false);
+            window.location.href = '../profile/?from=three-card-poker';
           }}
         />
       )}
@@ -803,7 +814,7 @@ function BrokeModal({ playerName, message, onReload }) {
             fontSize: 10, fontWeight: 700, letterSpacing: '.18em', textTransform: 'uppercase',
             cursor: 'pointer',
             boxShadow: '0 4px 12px rgba(230,197,144,.4)'
-          }}>Reload $1,000</button>
+          }}>Cash out · profile</button>
         </div>
       </div>
     </div>

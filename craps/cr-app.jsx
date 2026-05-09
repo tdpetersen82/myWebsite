@@ -332,6 +332,15 @@ function App() {
       comeWins: s.comeWins + result.messages.filter(m => m.startsWith('Come ') && m.includes('+$')).length,
       bestBankroll: Math.max(s.bestBankroll, bankroll + result.winnings)
     }));
+    if (window.CASINO_STATS) {
+      const passWin = result.bannerKind === 'natural' || result.bannerKind === 'point_made';
+      window.CASINO_STATS.recordEvent('craps', {
+        won: passWin || result.winnings > 0,
+        payout: Math.max(0, result.winnings),
+        rare: result.bannerKind === 'point_made' ? 'pointMade' : null,
+      });
+      window.CASINO_STATS.recordPeak(bankroll + result.winnings);
+    }
 
     if (result.bannerKind === 'natural' || result.bannerKind === 'point_made') {
       setStreak(s => {
@@ -702,6 +711,7 @@ function App() {
         <TweakNumber label="Starting bankroll" value={tweaks.startingBankroll} onChange={v => setTweak('startingBankroll', Number(v))} min={100} max={100000} step={100} />
         <TweakButton label="Reset bankroll" onClick={() => {
           setBankroll(tweaks.startingBankroll);
+          if (window.CASINO_STATS) window.CASINO_STATS.resetAll();
           setStats({ rolls: 0, passWins: 0, dontPassWins: 0, comeWins: 0, bestBankroll: tweaks.startingBankroll });
           setStreak(0); setLossStreak(0);
         }} />
@@ -719,9 +729,7 @@ function App() {
         <BrokeModal
           playerName={tweaks.playerName}
           onReload={() => {
-            const v = window.CASINO_BANKROLL ? window.CASINO_BANKROLL.reload() : tweaks.startingBankroll;
-            setBankroll(v);
-            setShowBrokeModal(false);
+            window.location.href = '../profile/?from=craps';
           }}
         />
       )}

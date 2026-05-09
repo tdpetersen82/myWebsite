@@ -244,6 +244,13 @@ function App() {
       };
       return next;
     });
+    if (window.CASINO_STATS) {
+      window.CASINO_STATS.recordEvent('roulette', {
+        won: profit > 0,
+        payout: Math.max(0, profit),
+      });
+      window.CASINO_STATS.recordPeak(bankroll - totalBet + winnings);
+    }
     setHistory(h => [num, ...h].slice(0, 30));
 
     // Result banner
@@ -472,6 +479,7 @@ function App() {
           <TweakNumber label="Starting bankroll" value={tweaks.startingBankroll} onChange={v => setTweak('startingBankroll', Number(v))} min={100} max={100000} step={100} />
           <TweakButton label="Reset bankroll" onClick={() => {
             setBankroll(tweaks.startingBankroll);
+            if (window.CASINO_STATS) window.CASINO_STATS.resetAll();
             setStats({ spinsPlayed:0, spinsWon:0, biggestWin:0, biggestBankroll: tweaks.startingBankroll });
             setHistory([]);
           }} />
@@ -491,9 +499,7 @@ function App() {
           playerName={tweaks.playerName}
           message={`Wheel was unkind tonight, ${tweaks.playerName}. Last of your chips just rode the rail.`}
           onReload={() => {
-            const v = window.CASINO_BANKROLL ? window.CASINO_BANKROLL.reload() : STARTING_BANKROLL;
-            setBankroll(v);
-            setShowBrokeModal(false);
+            window.location.href = '../profile/?from=roulette';
           }}
         />
       )}
@@ -542,7 +548,7 @@ function BrokeModal({ playerName, message, onReload }) {
             fontSize:10, fontWeight:700, letterSpacing:'.18em', textTransform:'uppercase',
             cursor:'pointer',
             boxShadow:'0 4px 12px rgba(230,197,144,.4)'
-          }}>Reload $1,000</button>
+          }}>Cash out · profile</button>
         </div>
       </div>
     </div>

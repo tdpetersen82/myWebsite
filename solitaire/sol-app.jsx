@@ -565,6 +565,9 @@ function App() {
         }));
       } catch (_) {}
     }, 0);
+    if (window.CASINO_STATS) {
+      window.CASINO_STATS.recordEvent('solitaire', { won, payout: 0 });
+    }
   }
 
   function onTableauClick(col, idx, card) {

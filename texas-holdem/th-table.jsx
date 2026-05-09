@@ -655,7 +655,7 @@ function THBrokeModal({ playerName, message, onReload, onLeave }) {
             color:'#1a1208', fontSize:10, fontWeight:700,
             letterSpacing:'.18em', textTransform:'uppercase',
             cursor:'pointer', fontFamily:'inherit'
-          }}>Reload Bankroll</button>
+          }}>Cash out · profile</button>
         </div>
       </div>
     </div>

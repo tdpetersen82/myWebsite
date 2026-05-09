@@ -15,6 +15,7 @@
   function update() {
     const bankroll = window.CASINO_BANKROLL.read();
     const name = window.CASINO_PLAYER.read();
+    const stats = window.CASINO_STATS ? window.CASINO_STATS.read() : null;
 
     // Bankroll amount
     const amtEl = document.getElementById('cas-bank-amount');
@@ -24,42 +25,66 @@
     const deltaEl = document.getElementById('cas-bank-greeting');
     if (deltaEl) deltaEl.textContent = name ? `Welcome back, ${name}` : 'Pull up a seat — chips on the house.';
 
-    // Cross-game stats
-    const rl = readJson('rouletteStats') || {};
-    const vp = readJson('videoPokerStats') || {};
-    const th = readJson('texasHoldemStats') || {};
-    const rlStats = rl.stats || {};
-    const vpStats = vp.stats || {};
-
-    const totalHands = (rlStats.spinsPlayed || 0) + (vpStats.handsPlayed || 0) + (th.handsPlayed || 0);
-    const totalWins  = (rlStats.spinsWon   || 0) + (vpStats.handsWon   || 0) + (th.handsWon || 0);
-    const winRate    = totalHands > 0 ? Math.round((totalWins / totalHands) * 100) : null;
-
-    // "Biggest pot" — best single roulette win, best video-poker bankroll above
-    // $1000, or the biggest hold'em pot a player has won.
-    const biggestRoulette = rlStats.biggestWin || 0;
-    const biggestVP       = Math.max(0, (vpStats.biggestBankroll || 1000) - 1000);
-    const biggestTH       = th.biggestWin || 0;
-    const biggestPot      = Math.max(biggestRoulette, biggestVP, biggestTH);
+    // Cross-game stats from CASINO_STATS (with legacy fallback so the page
+    // still works on a stale tab without the new module).
+    let totalHands = 0, totalWins = 0, biggestPot = 0;
+    let thHands = 0, thBiggestWin = 0;
+    if (stats) {
+      const pg = stats.lifetime.perGame;
+      const sumPlayed =
+        (pg.blackjack.handsPlayed       || 0) +
+        (pg.roulette.spinsPlayed        || 0) +
+        (pg.videoPoker.handsPlayed      || 0) +
+        (pg.solitaire.gamesPlayed       || 0) +
+        (pg.craps.rollsPlayed           || 0) +
+        (pg.threeCardPoker.handsPlayed  || 0) +
+        (pg.texasHoldem.handsPlayed     || 0) +
+        (pg.slotMachine.spinsPlayed     || 0);
+      const sumWon =
+        (pg.blackjack.handsWon       || 0) +
+        (pg.roulette.spinsWon        || 0) +
+        (pg.videoPoker.handsWon      || 0) +
+        (pg.solitaire.gamesWon       || 0) +
+        (pg.craps.passWins           || 0) +
+        (pg.threeCardPoker.handsWon  || 0) +
+        (pg.texasHoldem.handsWon     || 0);
+      totalHands = sumPlayed;
+      totalWins  = sumWon;
+      biggestPot = stats.lifetime.biggestPayout.amount || 0;
+      thHands = pg.texasHoldem.handsPlayed || 0;
+      thBiggestWin = pg.texasHoldem.biggestWin || 0;
+    } else {
+      // Legacy fallback
+      const rl = readJson('rouletteStats') || {};
+      const vp = readJson('videoPokerStats') || {};
+      const th = readJson('texasHoldemStats') || {};
+      const rlStats = rl.stats || {}; const vpStats = vp.stats || {};
+      totalHands = (rlStats.spinsPlayed || 0) + (vpStats.handsPlayed || 0) + (th.handsPlayed || 0);
+      totalWins  = (rlStats.spinsWon   || 0) + (vpStats.handsWon   || 0) + (th.handsWon || 0);
+      biggestPot = Math.max(rlStats.biggestWin || 0, Math.max(0, (vpStats.biggestBankroll || 1000) - 1000), th.biggestWin || 0);
+      thHands = th.handsPlayed || 0;
+      thBiggestWin = th.biggestWin || 0;
+    }
+    const winRate = totalHands > 0 ? Math.round((totalWins / totalHands) * 100) : null;
 
     // Per-game tile stats for hold'em.
     const thHandsEl = document.getElementById('cas-th-hands');
-    if (thHandsEl) thHandsEl.textContent = (th.handsPlayed || 0) > 0
-      ? `${th.handsPlayed.toLocaleString()} hand${th.handsPlayed === 1 ? '' : 's'}`
+    if (thHandsEl) thHandsEl.textContent = thHands > 0
+      ? `${thHands.toLocaleString()} hand${thHands === 1 ? '' : 's'}`
       : 'New table';
     const thBestEl = document.getElementById('cas-th-best');
-    if (thBestEl) thBestEl.textContent = (th.biggestWin || 0) > 0 ? `+$${th.biggestWin.toLocaleString()}` : '—';
+    if (thBestEl) thBestEl.textContent = thBiggestWin > 0 ? `+$${thBiggestWin.toLocaleString()}` : '—';
 
     setStat('cas-stat-biggest', biggestPot > 0 ? fmt(biggestPot) : '—', biggestPot > 0 ? 'Single best win' : 'No wins yet');
     setStat('cas-stat-hands',   totalHands.toLocaleString(),
             winRate != null ? `${totalWins} W · ${winRate}%` : 'No hands yet');
 
-    // Reload button — emphasized when below MIN_PLAYABLE
+    // Reload link — emphasized when below MIN_PLAYABLE
     const reload = document.getElementById('cas-reload');
     if (reload) {
       const broke = bankroll < window.CASINO_BANKROLL.MIN_PLAYABLE;
       reload.classList.toggle('broke', broke);
-      reload.textContent = broke ? 'Reload — Out of chips!' : 'Reload $1,000';
+      reload.textContent = broke ? 'Out of chips · Cash out →' : 'Cash out · profile';
     }
   }
 
@@ -72,15 +97,6 @@
     if (s) s.textContent = sub;
   }
 
-  function bindReload() {
-    const btn = document.getElementById('cas-reload');
-    if (!btn) return;
-    btn.addEventListener('click', function () {
-      window.CASINO_BANKROLL.reload();
-      update();
-    });
-  }
-
   function init() {
     if (!window.CASINO_BANKROLL) {
       console.warn('[casino] casino-bankroll.js not loaded');
@@ -90,11 +106,16 @@
       console.warn('[casino] casino-player.js not loaded');
       return;
     }
+    if (!window.CASINO_STATS) {
+      console.warn('[casino] casino-stats.js not loaded — using legacy fallback');
+    }
     update();
-    bindReload();
-    // Refresh whenever another tab updates the bankroll.
+    // Refresh whenever another tab updates relevant storage.
     window.addEventListener('storage', function (e) {
-      if (e.key === window.CASINO_BANKROLL.KEY || e.key === window.CASINO_PLAYER.KEY || e.key === 'rouletteStats' || e.key === 'videoPokerStats' || e.key === 'texasHoldemStats') {
+      if (!e.key) return;
+      if (e.key === window.CASINO_BANKROLL.KEY ||
+          e.key === window.CASINO_PLAYER.KEY ||
+          (window.CASINO_STATS && e.key === window.CASINO_STATS.KEY)) {
         update();
       }
     });
