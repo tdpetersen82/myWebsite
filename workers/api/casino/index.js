@@ -35,7 +35,7 @@ async function handleStats(request, env) {
   const key = `casino:${deviceId}`;
 
   if (request.method === 'GET') {
-    const raw = await env.CASINO_KV.get(key);
+    const raw = await env.LIMESTONE_KV.get(key);
     if (!raw) return json({});
     try { return json(JSON.parse(raw)); }
     catch { return json({}); }
@@ -53,12 +53,12 @@ async function handleStats(request, env) {
       return json({ error: 'invalid blob' }, { status: 400 });
     }
     body.updatedAt = Date.now();
-    await env.CASINO_KV.put(key, JSON.stringify(body));
+    await env.LIMESTONE_KV.put(key, JSON.stringify(body));
     return json(body);
   }
 
   if (request.method === 'DELETE') {
-    await env.CASINO_KV.delete(key);
+    await env.LIMESTONE_KV.delete(key);
     return json({ ok: true });
   }
 
