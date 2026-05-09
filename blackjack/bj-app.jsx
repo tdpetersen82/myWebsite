@@ -702,10 +702,33 @@ function App() {
   const pBJ = phase !== 'idle' && hands.length === 1 && isBlackjack(pCards);
   const dBJ = holeRevealed && isBlackjack(dealer);
 
-  const canDouble = phase === 'player' && activeHand && activeHand.cards.length === 2 && bankroll >= activeHand.bet && !activeHand.isSplitAces;
-  const canSplit = phase === 'player' && activeHand && activeHand.cards.length === 2 &&
-    activeHand.cards[0].rank === activeHand.cards[1].rank && bankroll >= activeHand.bet && hands.length < 4;
-  const canSurrender = phase === 'player' && activeHand && activeHand.cards.length === 2 && hands.length === 1;
+  function doubleAvailability() {
+    if (phase !== 'player' || !activeHand) return { enabled: false, reason: '' };
+    if (activeHand.cards.length !== 2) return { enabled: false, reason: 'Double is only available on your first two cards. You\'ve already taken a hit.' };
+    if (activeHand.isSplitAces) return { enabled: false, reason: 'You can\'t double after splitting aces — only one card is dealt.' };
+    if (bankroll < activeHand.bet) return { enabled: false, reason: `Need $${activeHand.bet - bankroll} more in your bankroll to match the original bet.` };
+    return { enabled: true, reason: '' };
+  }
+  function splitAvailability() {
+    if (phase !== 'player' || !activeHand) return { enabled: false, reason: '' };
+    if (activeHand.cards.length !== 2) return { enabled: false, reason: 'Split is only available on your first two cards.' };
+    if (activeHand.cards[0].rank !== activeHand.cards[1].rank) return { enabled: false, reason: 'Split requires a pair — both cards must be the same rank.' };
+    if (hands.length >= 4) return { enabled: false, reason: 'You\'re already at the maximum of 4 hands.' };
+    if (bankroll < activeHand.bet) return { enabled: false, reason: `Need $${activeHand.bet - bankroll} more in your bankroll to match the original bet.` };
+    return { enabled: true, reason: '' };
+  }
+  function surrenderAvailability() {
+    if (phase !== 'player' || !activeHand) return { enabled: false, reason: '' };
+    if (activeHand.cards.length !== 2) return { enabled: false, reason: 'Surrender is only available on your first two cards.' };
+    if (hands.length !== 1) return { enabled: false, reason: 'You can\'t surrender after splitting.' };
+    return { enabled: true, reason: '' };
+  }
+  const dblAvail = doubleAvailability();
+  const splAvail = splitAvailability();
+  const surAvail = surrenderAvailability();
+  const canDouble = dblAvail.enabled;
+  const canSplit = splAvail.enabled;
+  const canSurrender = surAvail.enabled;
 
   const overallResult = useMemo(() => {
     if (phase !== 'resolved' || !results.length) return null;
@@ -839,6 +862,9 @@ function App() {
                   canDouble={canDouble}
                   canSplit={canSplit}
                   canSurrender={canSurrender}
+                  doubleReason={dblAvail.reason}
+                  splitReason={splAvail.reason}
+                  surrenderReason={surAvail.reason}
                   onHit={hit}
                   onStand={stand}
                   onDouble={double}
@@ -1358,16 +1384,16 @@ function SmallBtn({ children, onClick, disabled }) {
   );
 }
 
-function ActionZone({ hint, canDouble, canSplit, canSurrender, onHit, onStand, onDouble, onSplit, onSurrender, betAmount }) {
+function ActionZone({ hint, canDouble, canSplit, canSurrender, doubleReason, splitReason, surrenderReason, onHit, onStand, onDouble, onSplit, onSurrender, betAmount }) {
   const ha = hint?.action;
   return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap: 12, paddingTop: 4, flexWrap:'wrap' }}>
       <ActionButton label="Hit"    onClick={onHit}    hint={ha==='Hit'}    sub="Take a card" />
       <ActionButton label="Stand"  onClick={onStand}  hint={ha==='Stand'}  sub="Lock it in" />
-      <ActionButton label="Double" onClick={onDouble} hint={ha==='Double'} disabled={!canDouble} sub={`+$${betAmount}`} />
-      <ActionButton label="Split"  onClick={onSplit}  hint={ha==='Split'}  disabled={!canSplit} sub={`+$${betAmount}`} />
+      <ActionButton label="Double" onClick={onDouble} hint={ha==='Double'} disabled={!canDouble} disabledReason={doubleReason} sub={`+$${betAmount}`} />
+      <ActionButton label="Split"  onClick={onSplit}  hint={ha==='Split'}  disabled={!canSplit} disabledReason={splitReason} sub={`+$${betAmount}`} />
       <div style={{ width: 1, height: 60, background:'rgba(201,162,106,.25)', margin:'0 4px' }}/>
-      <ActionButton label="Surrender" onClick={onSurrender} hint={ha==='Surrender'} disabled={!canSurrender} sub="½ back" />
+      <ActionButton label="Surrender" onClick={onSurrender} hint={ha==='Surrender'} disabled={!canSurrender} disabledReason={surrenderReason} sub="½ back" />
     </div>
   );
 }

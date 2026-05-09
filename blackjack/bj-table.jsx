@@ -91,9 +91,11 @@ function ChipStack({ chips, onClear }) {
 
 function HandValue({ value, soft, isBust, isBJ, label }) {
   const color = isBust ? '#ff6b5a' : isBJ ? '#ffd97a' : '#fff';
+  const showBoth = soft && !isBJ && !isBust;
+  const low = showBoth ? value - 10 : null;
   return (
     <div style={{
-      display:'inline-flex', alignItems:'center', gap: 10,
+      display:'inline-flex', alignItems:'baseline', gap: 10,
       padding:'4px 14px',
       background:'rgba(0,0,0,.45)',
       backdropFilter:'blur(6px)',
@@ -109,19 +111,20 @@ function HandValue({ value, soft, isBust, isBJ, label }) {
         fontFamily:"'Playfair Display', serif",
         fontSize: 22, fontWeight: 700, color, lineHeight: 1
       }}>
-        {isBJ ? 'BJ' : value}{soft && !isBJ && !isBust ? <span style={{ fontSize: 13, opacity:.7, fontWeight:500 }}>&nbsp;soft</span> : null}
+        {isBJ ? 'BJ' : showBoth ? `${low} / ${value}` : value}
       </span>
       {isBust && <span style={{ fontSize: 10, fontWeight: 700, color:'#ff6b5a', letterSpacing:'.2em' }}>BUST</span>}
     </div>
   );
 }
 
-function ActionButton({ label, onClick, hint, disabled, accent, sub }) {
+function ActionButton({ label, onClick, hint, disabled, accent, sub, disabledReason }) {
   const isHint = hint;
   return (
     <button
       onClick={onClick}
       disabled={disabled}
+      title={disabled && disabledReason ? disabledReason : undefined}
       style={{
         position:'relative',
         padding:'14px 22px',
@@ -284,8 +287,8 @@ function HintPanel({ hint }) {
           fontSize: 9, letterSpacing:'.18em', color:'var(--brass)', textTransform:'uppercase',
           display:'flex', gap: 10, justifyContent:'center', flexWrap:'wrap'
         }}>
-          {hint.odds.dealerBust !== undefined && <span>DEALER BUST {hint.odds.dealerBust}%</span>}
-          {hint.odds.playerBust !== undefined && <span>· YOUR HIT {hint.odds.playerBust}%</span>}
+          {hint.odds.dealerBust !== undefined && <span>DEALER BUSTS {hint.odds.dealerBust}%</span>}
+          {hint.odds.playerBust !== undefined && <span>· BUST IF HIT {hint.odds.playerBust}%</span>}
         </div>
       )}
     </div>
