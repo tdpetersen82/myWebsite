@@ -127,6 +127,14 @@
       }
     }
 
+    // Hide the "INSERT COIN" attract text once the player has interacted
+    // with the game (first keypress, canvas click, or restart). Add the
+    // .ch-started class to the bezel; CSS hides .ch-coin from then on.
+    const markStarted = () => bezel.classList.add('ch-started');
+    window.addEventListener('keydown', markStarted, { once: true });
+    canvas.addEventListener('click', markStarted, { once: true });
+    canvas.addEventListener('touchstart', markStarted, { once: true, passive: true });
+
     stage.querySelector('[data-act="pause"]').addEventListener('click', () => {
       paused = !paused;
       bezel.classList.toggle('ch-paused', paused);
@@ -134,6 +142,7 @@
     });
     stage.querySelector('[data-act="restart"]').addEventListener('click', () => {
       paused = false; bezel.classList.remove('ch-paused');
+      markStarted();
       call('restart', 'r');
     });
     const muteBtn = stage.querySelector('[data-act="mute"]');

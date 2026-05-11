@@ -222,6 +222,7 @@ body.ch-game .container { background: transparent !important; box-shadow: none !
   text-shadow: 0 0 10px var(--ch-amber), 0 0 2px #fff;
   animation: ch-blink 1.4s steps(2, end) infinite;
 }
+.ch-bezel.ch-started .ch-coin { display: none; }
 @keyframes ch-blink { 50% { opacity: 0.35; } }
 
 /* ---------- Hint footer ---------- */
