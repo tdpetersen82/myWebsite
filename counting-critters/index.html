@@ -20,45 +20,13 @@
     <meta property="og:url" content="https://limestonegames.com/counting-critters/">
     <meta property="og:image" content="https://limestonegames.com/og-image.png">
 
+    <link rel="stylesheet" href="../kids/kids-game.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-      :root {
-        --ink: #1F1A2E;
-        --bg-1: #FFF8DC;
-        --bg-2: #FFE4F0;
-        --bg-3: #DCEEFF;
-        --accent: #FF4F8B;
-      }
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body {
-        font-family: 'Segoe UI', Tahoma, sans-serif;
-        background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
-        color: var(--ink);
-        min-height: 100vh;
-        display: flex; flex-direction: column; align-items: center;
-        padding: 20px 16px 32px;
-      }
-      .game-shell { width: 100%; max-width: 760px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-      .top-bar { width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px; font-size: 14px; flex-wrap: wrap; }
-      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
-      .top-bar a:hover { opacity: 1; }
-      h1 {
-        font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
-        background: linear-gradient(135deg, #FFA751, #FF4F8B);
-        -webkit-background-clip: text; background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-      .stats {
-        display: flex; gap: 18px; font-size: 14px; font-weight: 600;
-        background: rgba(255, 255, 255, 0.6);
-        padding: 10px 18px; border-radius: 999px;
-        box-shadow: 0 4px 12px rgba(31, 26, 46, 0.06);
-        flex-wrap: wrap; justify-content: center;
-      }
-      .stats div { display: flex; gap: 6px; align-items: baseline; }
-      .stats .l { color: rgba(31, 26, 46, 0.55); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-      .stats .v { font-size: 18px; font-weight: 800; color: var(--accent); }
       .stage {
-        background: rgba(255, 255, 255, 0.7);
+        background: var(--card);
         border-radius: 24px;
         padding: 24px 18px;
         width: 100%;
@@ -105,27 +73,15 @@
       .answers button:hover { transform: translateY(-2px); border-color: var(--accent); }
       .answers button.correct { background: #B8F2C0; border-color: #4DAF5C; }
       .answers button.wrong { background: #FFD0DA; border-color: #FF4F8B; }
-      .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
-      button.action {
-        font: inherit; font-weight: 700;
-        padding: 12px 22px; border-radius: 999px;
-        border: 2px solid transparent;
-        background: var(--accent); color: #fff;
-        cursor: pointer; transition: transform 0.1s;
-        box-shadow: 0 4px 12px rgba(255, 79, 139, 0.3);
-      }
-      button.action.ghost { background: transparent; color: var(--ink); border-color: rgba(31, 26, 46, 0.2); box-shadow: none; }
-      button.action:hover { transform: translateY(-1px); }
       .progress {
         height: 8px; width: 100%; max-width: 560px;
         background: rgba(31, 26, 46, 0.1);
         border-radius: 999px; overflow: hidden;
       }
       .progress-bar {
-        height: 100%; background: linear-gradient(90deg, #FFA751, var(--accent));
+        height: 100%; background: linear-gradient(90deg, var(--accent-2), var(--accent));
         transition: width 0.3s;
       }
-      .hint { font-size: 13px; color: rgba(31, 26, 46, 0.6); text-align: center; max-width: 540px; }
       .end-card { text-align: center; padding: 12px; }
       .end-card h2 { font-size: 32px; color: var(--accent); margin-bottom: 8px; }
       .end-card p { font-size: 16px; color: rgba(31, 26, 46, 0.7); margin-bottom: 14px; }

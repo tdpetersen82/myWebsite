@@ -23,6 +23,7 @@
     <link rel="manifest" href="/manifest.json">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Animal Detective","description":"Ask Zookeeper Maddie yes-or-no questions to guess the mystery animal. A twenty-questions style game with 76 friendly creatures for kids 4-10.","url":"https://limestonegames.com/animal-detective/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Kids","item":"https://limestonegames.com/kids/"},{"@type":"ListItem","position":3,"name":"Animal Detective"}]}</script>
+<link rel="stylesheet" href="../kids/kids-game.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700;12..96,800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
@@ -32,26 +33,22 @@
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
 
 <style>
+  /* Animal Detective uses a 1380x860 fixed-design that auto-scales — override
+     kids-game.css body layout so the scaled wrapper isn't pushed by padding. */
   :root {
-    --ink: #1F1A2E;
     --ink-soft: rgba(31, 26, 46, 0.7);
     --ink-faint: rgba(31, 26, 46, 0.4);
-    --accent: #FF4F8B;
     --accent-soft: #FF8FA3;
     --sun: #FFD93D;
     --sky: #6DD5FA;
     --leaf: #7BC97B;
     --paper: #FFFDF6;
-    --bg-1: #FFF8DC;
-    --bg-2: #FFE4F0;
-    --bg-3: #DCEEFF;
   }
-  * { box-sizing: border-box; margin: 0; padding: 0; }
   html, body { height: 100%; overflow: hidden; }
   body {
-    background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
-    font-family: 'Inter', system-ui, sans-serif;
-    color: var(--ink);
+    padding: 0;
+    display: block;
+    align-items: initial;
   }
   button { font-family: inherit; }
 

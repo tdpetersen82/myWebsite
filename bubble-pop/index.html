@@ -20,88 +20,22 @@
     <meta property="og:url" content="https://limestonegames.com/bubble-pop/">
     <meta property="og:image" content="https://limestonegames.com/og-image.png">
 
+    <link rel="stylesheet" href="../kids/kids-game.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
-      :root {
-        --ink: #1F1A2E;
-        --bg-1: #FFF8DC;
-        --bg-2: #FFE4F0;
-        --bg-3: #DCEEFF;
-        --accent: #FF4F8B;
-      }
-      * { box-sizing: border-box; margin: 0; padding: 0; }
-      body {
-        font-family: 'Segoe UI', Tahoma, sans-serif;
-        background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
-        color: var(--ink);
-        min-height: 100vh;
-        display: flex; flex-direction: column; align-items: center;
-        padding: 20px 16px 32px;
-      }
-      .game-shell { width: 100%; max-width: 832px; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-      .top-bar {
-        width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
-        font-size: 14px; flex-wrap: wrap;
-      }
-      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
-      .top-bar a:hover { opacity: 1; }
-      h1 {
-        font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
-        background: linear-gradient(135deg, #FFA751, #FF4F8B);
-        -webkit-background-clip: text; background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-      .stats {
-        display: flex; gap: 18px; font-size: 14px; font-weight: 600;
-        background: rgba(255, 255, 255, 0.6);
-        backdrop-filter: blur(6px);
-        padding: 10px 18px; border-radius: 999px;
-        box-shadow: 0 4px 12px rgba(31, 26, 46, 0.06);
-      }
-      .stats div { display: flex; gap: 6px; align-items: baseline; }
-      .stats .l { color: rgba(31, 26, 46, 0.55); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
-      .stats .v { font-size: 18px; font-weight: 800; color: var(--accent); }
-      .stage-wrap {
-        position: relative;
-        background: rgba(255, 255, 255, 0.65);
-        border-radius: 24px;
-        padding: 14px;
-        box-shadow: 0 10px 30px rgba(31, 26, 46, 0.08);
-        align-self: stretch;
-        display: flex;
-        justify-content: center;
-      }
+      .game-shell { max-width: 832px; }
       canvas {
         display: block;
         background: linear-gradient(180deg, #DDF1FF 0%, #FFE4F0 100%);
         border-radius: 14px;
         cursor: pointer;
         touch-action: manipulation;
+        max-width: 100%;
       }
-      .controls {
-        display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
-      }
-      button {
-        font: inherit; font-weight: 700;
-        padding: 12px 22px; border-radius: 999px;
-        border: 2px solid transparent;
-        background: var(--accent); color: #fff;
-        cursor: pointer; transition: transform 0.1s;
-        box-shadow: 0 4px 12px rgba(255, 79, 139, 0.3);
-      }
-      button:hover { transform: translateY(-1px); }
-      button:active { transform: translateY(1px); }
-      button.ghost { background: transparent; color: var(--ink); border-color: rgba(31, 26, 46, 0.2); box-shadow: none; }
-      .hint { font-size: 13px; color: rgba(31, 26, 46, 0.6); text-align: center; max-width: 540px; }
-      .game-over {
-        position: absolute; inset: 14px;
-        background: rgba(255, 255, 255, 0.92);
-        border-radius: 14px;
-        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
-        opacity: 0; pointer-events: none; transition: opacity 0.25s;
-      }
-      .game-over.show { opacity: 1; pointer-events: auto; }
-      .game-over h2 { font-size: 32px; color: var(--accent); }
-      .game-over p { font-size: 16px; color: rgba(31, 26, 46, 0.7); }
+      .stage-wrap { padding: 14px; }
+      .game-over { inset: 14px; border-radius: 14px; }
     </style>
 </head>
 <body>
@@ -122,12 +56,12 @@
             <div class="game-over" id="over">
                 <h2 id="overTitle">Nice run!</h2>
                 <p id="overText">Reached level 1.</p>
-                <button onclick="restart()">Play again</button>
+                <button class="action" onclick="restart()">Play again</button>
             </div>
         </div>
         <div class="controls">
-            <button onclick="restart()">Restart</button>
-            <a href="../kids/"><button class="ghost">More kids games</button></a>
+            <button class="action" onclick="restart()">Restart</button>
+            <a href="../kids/"><button class="action ghost">More kids games</button></a>
         </div>
         <p class="hint">Tap or click each bubble before it drifts off the top. Five misses ends the round.</p>
     </div>

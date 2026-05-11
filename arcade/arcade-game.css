@@ -172,15 +172,6 @@ body.ch-game .container { background: transparent !important; box-shadow: none !
     0 30px 60px -30px rgba(0,0,0,0.7);
   overflow: hidden;
 }
-.ch-bezel::before {
-  /* CRT scanlines + vignette over the whole bezel */
-  content: ''; position: absolute; inset: 6px; border-radius: 14px;
-  pointer-events: none; z-index: 3;
-  background-image: repeating-linear-gradient(0deg, rgba(0,0,0,0.18) 0 1px, transparent 1px 3px);
-  -webkit-mask-image: radial-gradient(ellipse at center, #000 60%, transparent 100%);
-  mask-image: radial-gradient(ellipse at center, #000 60%, transparent 100%);
-  mix-blend-mode: multiply;
-}
 .ch-bezel::after {
   /* glass highlight */
   content: ''; position: absolute; inset: 6px; border-radius: 14px;

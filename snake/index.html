@@ -4,13 +4,17 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Snake — Free Online Game | Limestone Games</title>
-    <link rel="stylesheet" href="../styles.css">
+    <link rel="stylesheet" href="../kids/kids-game.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <style>
+        :root { --accent: #4CAF50; --accent-2: #FFD93D; }
         canvas {
-            border: 2px solid #333;
-            background-color: #111;
             display: block;
-            margin: 20px auto;
+            background-color: #111;
+            border-radius: 14px;
+            max-width: 100%;
         }
     </style>
     <meta name="description" content="Play Snake free in your browser. Eat food, grow longer, and avoid hitting the walls or yourself! No downloads, no installs.">
@@ -37,17 +41,24 @@
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
 </head>
 <body>
-    <div class="container">
-        <h1>🐍 Snake Game</h1>
-        <div class="game-info">
-            <p>Score: <span id="score">0</span></p>
-            <p>High Score: <span id="highScore">0</span></p>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../kids/">All Kids games</a>
         </div>
-        <canvas id="gameCanvas" width="400" height="400"></canvas>
+        <h1>Snake</h1>
+        <div class="stats">
+            <div><span class="l">Score</span><span class="v" id="score">0</span></div>
+            <div><span class="l">Best</span><span class="v" id="highScore">0</span></div>
+        </div>
+        <div class="stage-wrap">
+            <canvas id="gameCanvas" width="400" height="400"></canvas>
+        </div>
         <div class="controls">
-            <p>Use Arrow Keys or WASD to move</p>
-            <button id="restartBtn" class="play-button">Restart Game</button>
+            <button id="restartBtn" class="action">Restart</button>
+            <a href="../kids/"><button class="action ghost">More kids games</button></a>
         </div>
+        <p class="hint">Use arrow keys or WASD to move. Eat apples, avoid your tail and the walls.</p>
 
         <section class="game-overview" aria-label="About Snake">
             <h2>How to play Snake</h2>
@@ -541,7 +552,6 @@
         sc();
     })();
     </script>
-    <script src="../nav.js"></script>
     <!-- Ad Slot: Game Page Banner -->
     <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
         <ins class="adsbygoogle"
@@ -552,6 +562,5 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../share.js"></script>
 </body>
 </html>

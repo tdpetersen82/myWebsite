@@ -1,0 +1,206 @@
+/* =====================================================================
+   Limestone Kids — shared kids-game chrome
+   Linked from each /<kids-game>/index.html. Each game's inline <style>
+   keeps only game-specific bits (canvas / board / stage / overlays);
+   everything below is shared so the kids games match.
+
+   Markup contract:
+
+     <body>
+       <div class="game-shell">
+         <div class="top-bar">
+           <a href="../">← Limestone Games</a>
+           <a href="../kids/">All Kids games</a>
+         </div>
+         <h1>Game Title</h1>
+         <div class="stats">
+           <div><span class="l">Label</span><span class="v" id="...">0</span></div>
+           ...
+         </div>
+         <!-- game-specific stage / board / canvas wrapper -->
+         <div class="controls">
+           <button class="action" onclick="restart()">New game</button>
+           <a href="../kids/"><button class="action ghost">More kids games</button></a>
+         </div>
+         <p class="hint">Friendly instructions.</p>
+       </div>
+     </body>
+
+   Each game can override --accent to keep its identity color.
+   ===================================================================== */
+
+:root {
+  --ink: #1F1A2E;
+  --bg-1: #FFF8DC;
+  --bg-2: #FFE4F0;
+  --bg-3: #DCEEFF;
+  --accent: #FF4F8B;
+  --accent-2: #FFA751;
+  --card: rgba(255, 255, 255, 0.65);
+  --card-strong: rgba(255, 255, 255, 0.92);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+  font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+  background: linear-gradient(160deg, var(--bg-1) 0%, var(--bg-2) 50%, var(--bg-3) 100%);
+  color: var(--ink);
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 20px 16px 32px;
+}
+
+.game-shell {
+  width: 100%; max-width: 760px;
+  display: flex; flex-direction: column; align-items: center; gap: 14px;
+}
+
+.top-bar {
+  width: 100%; display: flex; justify-content: space-between; align-items: center;
+  gap: 10px; font-size: 14px; flex-wrap: wrap;
+}
+.top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
+.top-bar a:hover { opacity: 1; }
+
+h1 {
+  font-family: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+  font-size: 28px; font-weight: 800; letter-spacing: -0.5px;
+  background: linear-gradient(135deg, var(--accent-2), var(--accent));
+  -webkit-background-clip: text; background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.stats {
+  display: flex; gap: 18px; font-size: 14px; font-weight: 600;
+  background: var(--card);
+  padding: 10px 18px; border-radius: 999px;
+  box-shadow: 0 4px 12px rgba(31, 26, 46, 0.06);
+  flex-wrap: wrap; justify-content: center;
+}
+.stats > div { display: flex; gap: 6px; align-items: baseline; }
+.stats .l { color: rgba(31, 26, 46, 0.55); font-weight: 500; font-size: 12px; text-transform: uppercase; letter-spacing: 0.5px; }
+.stats .v { font-size: 18px; font-weight: 800; color: var(--accent); }
+
+.controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+button.action {
+  font: inherit; font-weight: 700;
+  padding: 12px 22px; border-radius: 999px;
+  border: 2px solid transparent;
+  background: var(--accent); color: #fff;
+  cursor: pointer; transition: transform 0.1s, box-shadow 0.15s;
+  box-shadow: 0 4px 12px rgba(255, 79, 139, 0.3);
+}
+button.action:hover { transform: translateY(-1px); }
+button.action:active { transform: translateY(1px); }
+button.action.ghost {
+  background: transparent; color: var(--ink);
+  border-color: rgba(31, 26, 46, 0.2); box-shadow: none;
+}
+
+.hint {
+  font-size: 13px; color: rgba(31, 26, 46, 0.6);
+  text-align: center; max-width: 540px;
+}
+
+/* Generic stage wrappers — use as the parent of <canvas>, <div id="board">,
+   etc. Games may override padding/sizing as needed. */
+.stage-wrap, .board-wrap {
+  position: relative;
+  background: var(--card);
+  border-radius: 24px;
+  padding: 18px;
+  box-shadow: 0 10px 30px rgba(31, 26, 46, 0.08);
+  align-self: stretch;
+  display: flex; justify-content: center;
+}
+
+/* Generic overlay base (game-over / win). Each game's inline <style> still
+   sets specific copy/colors; this provides positioning + animation. */
+.game-over, .win {
+  position: absolute; inset: 18px;
+  background: rgba(255, 255, 255, 0.94);
+  border-radius: 18px;
+  display: flex; flex-direction: column; align-items: center; justify-content: center;
+  gap: 10px; text-align: center; padding: 16px;
+  opacity: 0; pointer-events: none; transition: opacity 0.25s;
+}
+.game-over.show, .win.show { opacity: 1; pointer-events: auto; }
+.game-over h2, .win h2 { font-size: 32px; color: var(--accent); }
+.game-over p, .win p { font-size: 16px; color: rgba(31, 26, 46, 0.7); max-width: 380px; }
+
+/* Optional segmented level/difficulty picker (memory-match style). */
+.level-pick { display: flex; gap: 8px; flex-wrap: wrap; justify-content: center; }
+.level-pick button {
+  padding: 8px 18px; border-radius: 999px;
+  border: 2px solid rgba(31, 26, 46, 0.12);
+  background: rgba(255, 255, 255, 0.65); color: var(--ink);
+  font: inherit; font-weight: 700; cursor: pointer;
+  transition: background 0.15s, color 0.15s, border-color 0.15s;
+}
+.level-pick button:hover { border-color: var(--accent); }
+.level-pick button.active { background: var(--accent); color: #fff; border-color: var(--accent); }
+
+/* SEO panel — for games that ship a How-to-play / Tips / FAQ block (e.g. Snake).
+   Same friendly card look on the kids background. */
+.game-overview {
+  width: 100%; max-width: 720px;
+  margin: 24px auto 0;
+  padding: 24px 28px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 18px;
+  color: var(--ink);
+  line-height: 1.6;
+  text-align: left;
+}
+.game-overview h2 {
+  font-family: 'Bricolage Grotesque', 'Inter', system-ui, sans-serif;
+  font-size: 1.5em; color: var(--ink);
+  margin: 0 0 12px;
+  background: none; -webkit-text-fill-color: currentColor;
+}
+.game-overview h3 {
+  font-size: 1.05em; color: var(--accent);
+  margin: 20px 0 8px; font-weight: 700;
+}
+.game-overview p { margin: 0 0 12px; font-size: 0.95em; }
+.game-overview ul { margin: 0 0 12px; padding-left: 22px; }
+.game-overview ul li { margin-bottom: 6px; font-size: 0.95em; }
+.game-overview b { color: var(--ink); }
+.game-overview kbd {
+  display: inline-block; padding: 1px 7px;
+  background: rgba(255, 255, 255, 0.8);
+  border: 1px solid rgba(31, 26, 46, 0.15); border-bottom-width: 2px;
+  border-radius: 4px;
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 0.85em; color: var(--ink);
+  margin: 0 1px;
+}
+.game-overview .related-games-list {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  list-style: none; padding-left: 0; margin-top: 0;
+}
+.game-overview .related-games-list li { margin-bottom: 0; }
+.game-overview .related-games-list a {
+  display: inline-block;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgba(255, 79, 139, 0.1);
+  color: var(--accent);
+  text-decoration: none; font-weight: 700; font-size: 0.9em;
+  transition: background 0.2s, color 0.2s;
+}
+.game-overview .related-games-list a:hover {
+  background: var(--accent); color: #fff;
+}
+
+/* ---------- Mobile ---------- */
+@media (max-width: 760px) {
+  body { padding: 16px 12px 28px; }
+  h1 { font-size: 24px; }
+  .game-shell { gap: 12px; }
+  .stats { gap: 14px; padding: 8px 14px; }
+  .stats .v { font-size: 16px; }
+  .game-overview { padding: 20px 22px; }
+  .game-overview h2 { font-size: 1.25em; }
+  .game-overview h3 { font-size: 1em; }
+}
