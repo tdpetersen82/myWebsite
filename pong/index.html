@@ -19,6 +19,7 @@
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Pong","description":"Play Pong free in your browser. Move the paddle and keep the ball in play against the AI in the original arcade game! No downloads, no installs.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <link rel="canonical" href="https://limestonegames.com/pong/">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Arcade","item":"https://limestonegames.com/arcade/"},{"@type":"ListItem","position":3,"name":"Pong"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Pong?","acceptedAnswer":{"@type":"Answer","text":"Press Space to start, then use the arrow keys (↑↓) to move your paddle. Don't let the ball get past you."}},{"@type":"Question","name":"Is Pong free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs."}},{"@type":"Question","name":"Can I play Pong with two players?","acceptedAnswer":{"@type":"Answer","text":"This version is single-player against an AI opponent. A two-player mode isn't supported yet."}},{"@type":"Question","name":"Does my Pong high score save?","acceptedAnswer":{"@type":"Answer","text":"Yes — your best Pong score is stored locally in your browser via localStorage."}}]}</script>
     <meta property="og:title" content="Pong — Free Online Game | Limestone Games">
     <meta property="og:description" content="Play Pong free in your browser. Move the paddle and keep the ball in play against the AI in the original arcade game! No downloads, no installs.">
     <meta property="og:type" content="website">
@@ -57,6 +58,43 @@
             <p>Press Space to start</p>
             <button id="restartBtn" class="play-button">Restart Game</button>
         </div>
+
+        <section class="game-overview" aria-label="About Pong">
+            <h2>How to play Pong</h2>
+            <p>Pong is the original arcade ball-and-paddle game &mdash; Atari's first hit and the title that lit the spark for the entire video-game industry. You control one paddle, the computer controls the other, and you bounce a ball back and forth. Miss the ball off your side and the round ends.</p>
+
+            <h3>Controls</h3>
+            <ul>
+                <li><kbd>&uarr;</kbd> <kbd>&darr;</kbd> &mdash; move your paddle up and down</li>
+                <li><kbd>Space</kbd> &mdash; start or pause the game</li>
+                <li><kbd>R</kbd> &mdash; restart after a game over</li>
+            </ul>
+
+            <h3>Tips &amp; strategy</h3>
+            <ul>
+                <li><b>Aim with the paddle edges.</b> Hitting near the top of the paddle sends the ball up; the bottom sends it down. The center sends it back flat.</li>
+                <li><b>Don't hover at the center.</b> Drift toward the side the ball is heading &mdash; early position beats fast reaction.</li>
+                <li><b>Force the angle.</b> A steep return is harder for the AI to chase down than a flat one.</li>
+                <li><b>Use the wall rebounds.</b> A ball bouncing off the top or bottom wall buys you extra read time.</li>
+            </ul>
+
+            <h3>About Pong</h3>
+            <p>Pong shipped from Atari in 1972 as the first commercially successful arcade game, designed by Allan Alcorn as a training exercise for new engineer Nolan Bushnell. The home console version, released in 1975, sold out of Sears in days and kicked off the home video-game market. The mechanic is two paddles, one ball, no instructions &mdash; the original cabinet's only direction read "Avoid missing ball for high score."</p>
+
+            <h3>Frequently asked</h3>
+            <p><b>How do I play Pong?</b> Press Space to start, then use the arrow keys to move your paddle. Don't let the ball get past you.</p>
+            <p><b>Is Pong free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
+            <p><b>Can I play Pong with two players?</b> This version is single-player against an AI. Two-player mode isn't supported yet.</p>
+            <p><b>Does my high score save?</b> Yes &mdash; your best Pong score is stored locally in your browser.</p>
+
+            <h3>More arcade games</h3>
+            <ul class="related-games-list">
+                <li><a href="../breakout/">Breakout</a></li>
+                <li><a href="../asteroids/">Asteroids</a></li>
+                <li><a href="../space-invaders/">Space Invaders</a></li>
+                <li><a href="../arcade/">All arcade games &rarr;</a></li>
+            </ul>
+        </section>
     </div>
 
     <script>

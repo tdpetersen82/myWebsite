@@ -23,6 +23,7 @@
     <link rel="manifest" href="/manifest.json">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Slot Machine","description":"Three-reel slot machine with three switchable visual themes. Single payline, wild substitutions, jackpot on three wilds.","url":"https://limestonegames.com/slot-machine/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Slot Machine"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Slot Machine?","acceptedAnswer":{"@type":"Answer","text":"Pick a bet, then pull the lever (or press Spin). Three reels spin and stop on a payline of symbols. Match symbols across the payline to win — bigger matches pay bigger multiples of your bet."}},{"@type":"Question","name":"Is Slot Machine free?","acceptedAnswer":{"@type":"Answer","text":"Yes — entirely play money. No real betting, no deposits, no signup required."}},{"@type":"Question","name":"What are the themes?","acceptedAnswer":{"@type":"Answer","text":"Three switchable themes share the same paytable: Classic (cherries and sevens), Lucky (bells and horseshoes), and Mythic (runes and dragons)."}},{"@type":"Question","name":"What's the best strategy?","acceptedAnswer":{"@type":"Answer","text":"Slot machines are pure chance — there's no skill component. Bet smaller to stretch your bankroll through normal variance; bet bigger to chase the jackpot."}}]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
@@ -46,7 +47,7 @@
     --ink-2:#1a2820;
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  html,body{min-height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
   body{
     background:
       radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
@@ -54,7 +55,29 @@
       #0a0805;
   }
   #root{width:100%;height:100%}
-  #game-wrapper{width:1380px;height:860px;transform-origin:top center;margin:0 auto;position:relative}
+  #game-wrapper{width:1380px;height:860px;transform-origin:top left;margin:0 auto;position:relative}
+  /* SEO overview block below the game (casino dark theme) */
+  .game-overview{
+    max-width: 720px;
+    margin: 24px auto 40px;
+    padding: 0 24px;
+    color: var(--ivory);
+    font-family:'Inter',system-ui,sans-serif;
+    line-height: 1.6;
+    text-align: left;
+  }
+  .game-overview h2{font-family:'Bricolage Grotesque',serif;font-size:28px;font-weight:700;color:var(--brass-2);margin:0 0 12px;letter-spacing:0.3px;}
+  .game-overview h3{font-family:'Bricolage Grotesque',serif;font-size:18px;font-weight:600;color:var(--brass);margin:22px 0 8px;}
+  .game-overview p{font-size:14.5px;color:var(--ivory-dim);margin:0 0 10px;}
+  .game-overview ul{padding-left:22px;margin:0 0 10px;font-size:14.5px;color:var(--ivory-dim);}
+  .game-overview ul li{margin-bottom:5px;}
+  .game-overview b{color:var(--ivory);} .game-overview i{color:var(--ivory);}
+  .game-overview kbd{display:inline-block;padding:1px 7px;background:rgba(201,162,106,0.08);border:1px solid rgba(201,162,106,0.25);border-bottom-width:2px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ivory);margin:0 1px;}
+  .game-overview .related-games-list{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding-left:0;margin-top:0;}
+  .game-overview .related-games-list li{margin-bottom:0;}
+  .game-overview .related-games-list a{display:inline-block;padding:7px 16px;border-radius:999px;background:rgba(201,162,106,0.12);color:var(--brass-2);text-decoration:none;font-weight:600;font-size:13px;border:1px solid rgba(201,162,106,0.25);}
+  .game-overview .related-games-list a:hover{background:var(--brass);color:var(--ink);border-color:var(--brass);}
+  @media (max-width:768px){.game-overview{padding:0 18px;} .game-overview h2{font-size:22px;} .game-overview h3{font-size:16px;}}
   button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
   button:disabled{cursor:not-allowed;opacity:.55}
   a{color:inherit;text-decoration:none}
@@ -362,6 +385,52 @@
   <div id="root"></div>
 </div>
 
+<section class="game-overview" aria-label="About Slot Machine">
+    <h2>How to play Slot Machine</h2>
+    <p>Slot Machine is the classic three-reel one-armed bandit, in the browser. Set your bet, pull the lever (or press Spin), and watch the reels stop on a payline of symbols. Match symbols across the payline to win &mdash; bigger matches pay bigger multiples of your bet. Wild symbols substitute for anything, and three wilds is the jackpot.</p>
+
+    <h3>Controls</h3>
+    <ul>
+        <li>Click <b>Spin</b> or pull the lever to start a round</li>
+        <li>Click the bet selector to change wager size</li>
+        <li>Pick a <b>theme</b> &mdash; Classic, Lucky, or Mythic &mdash; from the menu</li>
+        <li><kbd>Space</kbd> &mdash; spin (when the reels are stopped)</li>
+    </ul>
+
+    <h3>Themes &amp; paytable</h3>
+    <ul>
+        <li><b>Classic</b> &mdash; cherries, lemons, bars, and sevens. The fruit-machine OG.</li>
+        <li><b>Lucky</b> &mdash; bells, horseshoes, clovers, and gold coins. Slightly higher mid-tier payouts.</li>
+        <li><b>Mythic</b> &mdash; runes, dragons, swords, and crowns. Highest jackpot, also highest variance.</li>
+        <li>All three themes share the same RTP &mdash; the math underneath is the same, only the art differs.</li>
+    </ul>
+
+    <h3>Tips &amp; strategy</h3>
+    <ul>
+        <li><b>There's no skill.</b> The reels are independent random draws. No "due" symbols, no pattern reads &mdash; just probability.</li>
+        <li><b>Bet to your bankroll.</b> Smaller bets stretch your session longer. Larger bets are higher-variance.</li>
+        <li><b>Set a session limit.</b> Decide on a buy-in and walk when it's gone. Slots reward discipline more than skill.</li>
+        <li><b>Try every theme.</b> Same odds, different vibe. The variance feels different even though the math doesn't.</li>
+    </ul>
+
+    <h3>About slot machines</h3>
+    <p>The first three-reel slot machine, the Liberty Bell, was built in San Francisco by Charles Fey in 1899. The fruit symbols arrived in 1907 as a workaround during anti-gambling crackdowns &mdash; cherry, lemon, plum, and orange originally signaled the flavor of gum the machine dispensed instead of cash. Modern digital slots use the same one-armed-bandit silhouette but a software random-number generator behind the reels.</p>
+
+    <h3>Frequently asked</h3>
+    <p><b>How do I play Slot Machine?</b> Pick a bet, then pull the lever (or press Spin). Three reels spin and stop on a payline of symbols. Match symbols to win.</p>
+    <p><b>Is Slot Machine free?</b> Yes &mdash; entirely play money. No real betting, no deposits.</p>
+    <p><b>What are the themes?</b> Three switchable themes share the same paytable: Classic, Lucky, and Mythic.</p>
+    <p><b>What's the best strategy?</b> Slot machines are pure chance &mdash; bet smaller to stretch your bankroll, larger to chase the jackpot. There's no skill component.</p>
+
+    <h3>More casino games</h3>
+    <ul class="related-games-list">
+        <li><a href="../blackjack/">Blackjack</a></li>
+        <li><a href="../roulette/">Roulette</a></li>
+        <li><a href="../video-poker/">Video Poker</a></li>
+        <li><a href="../casino/">All casino games &rarr;</a></li>
+    </ul>
+</section>
+
 <script>
 (function() {
   var wrapper = document.getElementById('game-wrapper');
@@ -369,7 +438,8 @@
     var W = 1380, H = 860;
     var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
     wrapper.style.transform = 'scale(' + s + ')';
-    wrapper.style.marginTop = Math.max(0, (window.innerHeight - H * s) / 2) + 'px';
+    // Claw back the empty layout space below the scaled wrapper so SEO sits flush.
+    wrapper.style.marginBottom = (-(H * (1 - s))) + 'px';
   }
   window.addEventListener('resize', resize);
   resize();

@@ -23,6 +23,7 @@
     <link rel="manifest" href="/manifest.json">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Animal Detective","description":"Ask Zookeeper Maddie yes-or-no questions to guess the mystery animal. A twenty-questions style game with 76 friendly creatures for kids 4-10.","url":"https://limestonegames.com/animal-detective/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Kids","item":"https://limestonegames.com/kids/"},{"@type":"ListItem","position":3,"name":"Animal Detective"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Animal Detective?","acceptedAnswer":{"@type":"Answer","text":"Zookeeper Maddie picks a mystery animal. Tap yes/no questions in the four category panels to narrow it down, then hit \"I think I know!\" and pick the animal you suspect from the grid."}},{"@type":"Question","name":"Is Animal Detective free?","acceptedAnswer":{"@type":"Answer","text":"Yes — every game on Limestone Games is completely free, no signup required."}},{"@type":"Question","name":"How many animals are in the game?","acceptedAnswer":{"@type":"Answer","text":"76 friendly creatures, ranging from common pets to zoo favorites to a few rarities."}},{"@type":"Question","name":"What's the question limit?","acceptedAnswer":{"@type":"Answer","text":"You have up to 20 questions per case, plus you can use one hint per round to eliminate roughly half the remaining candidates."}}]}</script>
 <link rel="stylesheet" href="../kids/kids-game.css">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -44,7 +45,7 @@
     --leaf: #7BC97B;
     --paper: #FFFDF6;
   }
-  html, body { height: 100%; overflow: hidden; }
+  html, body { min-height: 100%; overflow-x: hidden; }
   body {
     padding: 0;
     display: block;
@@ -891,6 +892,45 @@
 <!-- Reveal overlay -->
 <div id="reveal-overlay" class="reveal-overlay"></div>
 
+<section class="game-overview" aria-label="About Animal Detective" style="max-width:720px;margin:24px auto 40px;padding:24px 28px;background:rgba(255,255,255,0.7);border-radius:18px;color:var(--ink);line-height:1.6;text-align:left;">
+    <h2 style="font-family:'Bricolage Grotesque',sans-serif;font-size:1.5em;color:var(--ink);margin:0 0 12px;background:none;-webkit-text-fill-color:currentColor;">How to play Animal Detective</h2>
+    <p>Animal Detective is a friendly twenty-questions game for kids. Zookeeper Maddie picks a mystery animal from her menagerie of 76 creatures, and your job is to figure out which one. You ask yes-or-no questions from four categories &mdash; Body &amp; Size, Habitat, Food &amp; Behavior, and People &mdash; and use the clues to narrow the suspects down. When you're confident, tap "I think I know!" and pick the animal you suspect.</p>
+
+    <h3>Controls</h3>
+    <ul>
+        <li>Tap a category tab to switch question pools (Body, Habitat, Food, People)</li>
+        <li>Tap any question to ask it &mdash; Maddie answers yes or no</li>
+        <li>Tap <b>I think I know!</b> to open the animal grid and lock in your guess</li>
+        <li>Tap the <b>Hint</b> button (one per round) to eliminate roughly half of the remaining suspects</li>
+    </ul>
+
+    <h3>Tips &amp; strategy</h3>
+    <ul>
+        <li><b>Start broad.</b> "Is it a mammal?" or "Is it bigger than a person?" cuts the field in half on the first question.</li>
+        <li><b>Then narrow by habitat.</b> Land, water, air, or extreme &mdash; habitat questions slice the remaining group fast.</li>
+        <li><b>Save the hint for late.</b> The hint is most valuable when you're stuck between 6 or 8 finalists, not when there are 70 suspects left.</li>
+        <li><b>Eliminate, don't confirm.</b> "Does it have feathers?" rules out every mammal at once. Each yes/no answer should kill a category, not pick one animal.</li>
+        <li><b>Don't waste questions on close cousins.</b> If you've narrowed it to two cats, just guess. You only get 20 questions per round.</li>
+    </ul>
+
+    <h3>About Animal Detective</h3>
+    <p>Animal Detective is built on the classic twenty-questions game, scoped for ages 4 to 10 with friendly art and clear yes/no logic. The 76 animals range from familiar pets and farm animals to zoo favorites and a handful of obscure creatures &mdash; chosen to give kids real "I didn't know that!" moments. The Zookeeper Maddie character is the narrator and answer-giver throughout.</p>
+
+    <h3>Frequently asked</h3>
+    <p><b>How do I play Animal Detective?</b> Tap yes-or-no questions to gather clues about Maddie's mystery animal, then guess from the animal grid when you're confident.</p>
+    <p><b>Is Animal Detective free?</b> Yes &mdash; no signup, no ads on the gameplay, no downloads.</p>
+    <p><b>How many animals?</b> 76 creatures across mammals, birds, reptiles, amphibians, fish, and a few invertebrates.</p>
+    <p><b>What's the question limit?</b> Up to 20 questions per case, plus one hint that eliminates roughly half the remaining suspects.</p>
+
+    <h3>More kids games</h3>
+    <ul class="related-games-list" style="display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding-left:0;margin-top:0;">
+        <li><a href="../memory-match/" style="display:inline-block;padding:6px 14px;border-radius:999px;background:rgba(255,79,139,0.1);color:var(--accent);text-decoration:none;font-weight:700;font-size:0.9em;">Memory Match</a></li>
+        <li><a href="../counting-critters/" style="display:inline-block;padding:6px 14px;border-radius:999px;background:rgba(255,79,139,0.1);color:var(--accent);text-decoration:none;font-weight:700;font-size:0.9em;">Counting Critters</a></li>
+        <li><a href="../bubble-pop/" style="display:inline-block;padding:6px 14px;border-radius:999px;background:rgba(255,79,139,0.1);color:var(--accent);text-decoration:none;font-weight:700;font-size:0.9em;">Bubble Pop</a></li>
+        <li><a href="../kids/" style="display:inline-block;padding:6px 14px;border-radius:999px;background:rgba(255,79,139,0.1);color:var(--accent);text-decoration:none;font-weight:700;font-size:0.9em;">All kids games &rarr;</a></li>
+    </ul>
+</section>
+
 <!-- Auto-scaling IIFE — leaves a 24px breathing margin top and bottom so
      the bottom-bar isn't flush against the screen edge. -->
 <script>
@@ -900,7 +940,11 @@
     var W = 1380, H = 860, pad = 24;
     var s = Math.min(window.innerWidth / W, (window.innerHeight - pad * 2) / H, 1);
     wrapper.style.transform = 'scale(' + s + ')';
-    wrapper.style.marginTop = Math.max(pad, (window.innerHeight - H * s) / 2) + 'px';
+    wrapper.style.marginTop = pad + 'px';
+    // Claw back the empty layout space below the scaled wrapper so the SEO
+    // section sits flush. (Replaces vertical centering — now there's content
+    // below the cabinet that wants to flow naturally.)
+    wrapper.style.marginBottom = (-(H * (1 - s)) + pad) + 'px';
   }
   window.addEventListener('resize', resize);
   resize();

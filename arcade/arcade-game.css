@@ -249,6 +249,58 @@ body.ch-game .container { background: transparent !important; box-shadow: none !
   pointer-events: none;
 }
 
+/* ---------- SEO content panel (below the cabinet) ----------
+   For arcade games that ship a How-to-play / Tips / FAQ block. The
+   .ch-stage CSS hides .container > h1, .game-info etc., but a
+   <section class="game-overview"> stays visible and uses these rules. */
+body.ch-game .game-overview {
+  width: 100%; max-width: 760px;
+  margin: 32px auto 16px; padding: 28px 32px;
+  background: rgba(8,4,2,0.55);
+  border: 1px solid var(--ch-line);
+  border-radius: 18px;
+  color: var(--ch-ink2); line-height: 1.65;
+  text-align: left;
+}
+body.ch-game .game-overview h2 {
+  font-family: var(--ch-display); font-size: 22px; font-weight: 700;
+  color: var(--ch-ink); margin: 0 0 12px; letter-spacing: -0.01em;
+}
+body.ch-game .game-overview h3 {
+  font-family: var(--ch-display); font-size: 15px; font-weight: 700;
+  color: var(--ch-amber); margin: 20px 0 8px; letter-spacing: 0.02em;
+}
+body.ch-game .game-overview p { margin: 0 0 12px; font-size: 14.5px; }
+body.ch-game .game-overview ul { margin: 0 0 12px; padding-left: 22px; }
+body.ch-game .game-overview ul li { margin-bottom: 6px; font-size: 14.5px; }
+body.ch-game .game-overview b, body.ch-game .game-overview strong { color: var(--ch-ink); }
+body.ch-game .game-overview i { color: var(--ch-ink); }
+body.ch-game .game-overview kbd {
+  display: inline-block; padding: 1px 7px;
+  background: rgba(216,156,86,0.08);
+  border: 1px solid var(--ch-line); border-bottom-width: 2px;
+  border-radius: 4px;
+  font-family: var(--ch-mono); font-size: 12px;
+  color: var(--ch-ink2); margin: 0 1px;
+}
+body.ch-game .game-overview .related-games-list {
+  display: flex; flex-wrap: wrap; gap: 8px;
+  list-style: none; padding-left: 0; margin-top: 0;
+}
+body.ch-game .game-overview .related-games-list li { margin-bottom: 0; }
+body.ch-game .game-overview .related-games-list a {
+  display: inline-block;
+  padding: 6px 14px; border-radius: 999px;
+  background: rgba(216,156,86,0.08);
+  color: var(--ch-amber);
+  text-decoration: none; font-weight: 600; font-size: 13px;
+  border: 1px solid var(--ch-line);
+  transition: background .15s, color .15s, border-color .15s;
+}
+body.ch-game .game-overview .related-games-list a:hover {
+  background: var(--ch-amber); color: var(--ch-bg); border-color: var(--ch-amber);
+}
+
 /* ---------- Mobile ---------- */
 @media (max-width: 760px) {
   .ch-topbar {
