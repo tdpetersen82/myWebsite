@@ -14,6 +14,7 @@
     <link rel="manifest" href="/manifest.json">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Chess","description":"Play chess in your browser against an AI with three difficulty tiers. Full rules: castling, en passant, pawn promotion, check, checkmate, stalemate, 50-move and threefold-repetition draws.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Chess"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play chess against the AI?","acceptedAnswer":{"@type":"Answer","text":"Click a piece, then click a legal destination square. The AI plays the other color and replies automatically after your move."}},{"@type":"Question","name":"Is this chess free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs. All games on Limestone Games are free."}},{"@type":"Question","name":"What difficulty should I pick?","acceptedAnswer":{"@type":"Answer","text":"Beginners start on Easy. Once you can win consistently on Easy, move to Medium. Hard targets roughly 1200–1500 club strength with depth 4 and quiescence search on captures."}},{"@type":"Question","name":"Can I switch sides mid-game?","acceptedAnswer":{"@type":"Answer","text":"Yes — hit Switch sides any time and the AI continues the game from your position with the other color."}}]}</script>
     <meta property="og:title" content="Chess — Free Browser Chess vs. AI">
     <meta property="og:description" content="Full rules. Three difficulties. No downloads, no installs.">
     <meta property="og:type" content="website">
@@ -123,10 +124,18 @@
       }
       .promo-btn:hover { background: var(--wood-light); }
       .hint { font-size: 13px; color: rgba(26, 19, 16, 0.6); text-align: center; max-width: 600px; }
-      #how { padding: 20px 16px; max-width: 600px; }
-      #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin-bottom: 8px; }
-      #how p { font-size: 14px; color: rgba(26, 19, 16, 0.75); margin-bottom: 8px; }
-      #how ul { padding-left: 20px; font-size: 14px; color: rgba(26, 19, 16, 0.8); }
+      #how { padding: 20px 16px; max-width: 640px; width: 100%; }
+      #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin: 0 0 10px; }
+      #how h3 { font-family: 'Bricolage Grotesque', serif; font-size: 16px; color: var(--frame); margin: 18px 0 6px; }
+      #how p { font-size: 14px; color: rgba(26, 19, 16, 0.8); line-height: 1.55; margin: 0 0 10px; }
+      #how ul { padding-left: 20px; font-size: 14px; color: rgba(26, 19, 16, 0.8); line-height: 1.55; margin: 0 0 10px; }
+      #how ul li { margin-bottom: 4px; }
+      #how b { color: var(--ink); }
+      #how kbd { display: inline-block; padding: 1px 7px; background: rgba(255, 255, 255, 0.7); border: 1px solid rgba(26, 19, 16, 0.18); border-bottom-width: 2px; border-radius: 4px; font-family: 'JetBrains Mono', monospace; font-size: 12px; color: var(--ink); }
+      #how .related-games-list { display: flex; flex-wrap: wrap; gap: 8px; list-style: none; padding-left: 0; margin-top: 0; }
+      #how .related-games-list li { margin-bottom: 0; }
+      #how .related-games-list a { display: inline-block; padding: 6px 14px; border-radius: 999px; background: rgba(26, 19, 16, 0.06); color: var(--frame); text-decoration: none; font-weight: 700; font-size: 13px; transition: background 0.18s, color 0.18s; }
+      #how .related-games-list a:hover { background: var(--accent); color: #fff; }
     </style>
 </head>
 <body>
@@ -173,16 +182,52 @@
         </div>
         <p class="hint">Click a piece, then click where to move it. Green dots show legal moves; rings show captures. The AI plays the other color — switch sides any time.</p>
 
-        <section id="how" aria-label="How to play">
-            <h2>How to play</h2>
-            <p><b>Click a piece, then click a destination.</b> Legal moves are highlighted; illegal moves are simply ignored. The AI moves automatically after you.</p>
-            <p>All standard rules are enforced: <b>castling</b> on both sides, <b>en passant</b>, <b>pawn promotion</b> (with a piece picker), <b>check / checkmate / stalemate</b>, plus <b>50-move</b> and <b>threefold-repetition</b> draws.</p>
+        <section id="how" aria-label="How to play Chess">
+            <h2>How to play Chess</h2>
+            <p>Chess is the two-player strategy game where you maneuver six piece types around an 8&times;8 board with one goal: trap your opponent's king in <b>checkmate</b>. Each piece moves in its own pattern &mdash; pawns advance, knights jump in an L-shape, bishops slide diagonally, rooks slide in straight lines, the queen does both, and the king moves one square in any direction. Capture by moving onto a square the other side occupies.</p>
+
+            <h3>Controls</h3>
             <ul>
-                <li><b>Easy</b> — depth 2, jittered move choice. Great for learning the rules.</li>
-                <li><b>Medium</b> — depth 3. Plays solidly; a strong club player will still beat it.</li>
-                <li><b>Hard</b> — depth 4 + quiescence search on captures. Targets ~1200–1500 club strength.</li>
+                <li><b>Click a piece</b>, then click a destination square</li>
+                <li>Green dots show legal squares; rings show captures</li>
+                <li>The AI plays the opposite color and replies automatically after your move</li>
+                <li>Use the <b>Difficulty</b> dropdown anytime &mdash; the AI adopts the new tier on its next move</li>
+                <li>Hit <b>Switch sides</b> to swap colors and let the AI continue from your position</li>
             </ul>
-            <p>Your wins, losses, and best streak save locally. Switching difficulty mid-game is fine; the AI just uses the new tier on its next move.</p>
+
+            <h3>Difficulty tiers</h3>
+            <ul>
+                <li><b>Easy</b> &mdash; depth 2 with jittered move choice. Great for learning the rules.</li>
+                <li><b>Medium</b> &mdash; depth 3. Plays solidly; a strong club player can still beat it.</li>
+                <li><b>Hard</b> &mdash; depth 4 plus quiescence search on captures. Targets roughly 1200&ndash;1500 club strength.</li>
+            </ul>
+            <p>All standard rules are enforced: <b>castling</b> on both sides, <b>en passant</b>, <b>pawn promotion</b> with a piece picker, <b>check</b>, <b>checkmate</b>, <b>stalemate</b>, plus <b>50-move</b> and <b>threefold-repetition</b> draws. Your wins, losses, and best streak save locally.</p>
+
+            <h3>Tips &amp; strategy</h3>
+            <ul>
+                <li><b>Control the center.</b> The four central squares (d4, d5, e4, e5) give pieces the most mobility &mdash; lose the center and you lose tempo.</li>
+                <li><b>Develop before you attack.</b> Knights and bishops out first, castle early, and don't move the same piece twice in the opening without a reason.</li>
+                <li><b>Look for forks, pins, and skewers.</b> Tactical shots win more club-level games than deep positional plans.</li>
+                <li><b>Don't trade into a worse structure.</b> A trade that doubles your pawns and undoubles theirs is a positional loss even when material is even.</li>
+                <li><b>Improve your worst piece.</b> When you're stuck for a move, find the piece doing the least work and give it a job.</li>
+            </ul>
+
+            <h3>About Chess</h3>
+            <p>Chess descends from the 7th-century Indian game <i>chaturanga</i>, traveled west through Persia (where the cry "sh&#257;h m&#257;t" &mdash; the king is helpless &mdash; became <i>checkmate</i>), and reached Europe by the 10th century. The modern queen and bishop moves are 15th-century European additions. FIDE has governed competitive chess since 1924. Top human players rate around 2850 Elo today; the strongest engines exceed 3500.</p>
+
+            <h3>Frequently asked</h3>
+            <p><b>How do I play chess against the AI?</b> Click a piece, then click a legal destination &mdash; the AI replies automatically.</p>
+            <p><b>Is this chess free?</b> Yes. No signup, no downloads, no installs.</p>
+            <p><b>What difficulty should I pick?</b> Beginners start on Easy. Once you can beat Easy consistently, move to Medium; Hard targets roughly 1200&ndash;1500 club strength.</p>
+            <p><b>Can I switch sides mid-game?</b> Yes &mdash; hit "Switch sides" any time and the AI continues from your position.</p>
+
+            <h3>More strategy games</h3>
+            <ul class="related-games-list">
+                <li><a href="../checkers/">Checkers</a></li>
+                <li><a href="../backgammon/">Backgammon</a></li>
+                <li><a href="../connect-4/">Connect 4</a></li>
+                <li><a href="../strategy/">All strategy games &rarr;</a></li>
+            </ul>
         </section>
     </div>
 
