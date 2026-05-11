@@ -159,6 +159,133 @@
     font-weight:700;
   }
 
+  /* Stage: main column (frame + controls + paytable) + right sidebar (stats + history) */
+  .slot-stage{
+    flex:1; min-height:0;
+    display:grid;
+    grid-template-columns: minmax(0, 1fr) 340px;
+    gap:30px;
+    padding-top:6px;
+  }
+  .slot-main{
+    display:flex; flex-direction:column; align-items:center;
+    min-width:0;
+  }
+  .slot-sidebar{
+    display:flex; flex-direction:column; gap:14px;
+    min-width:0;
+  }
+
+  /* Sidebar cards */
+  .slot-card-head{
+    display:flex; align-items:center; justify-content:space-between;
+    margin-bottom:12px;
+  }
+  .slot-card-title{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:10px; letter-spacing:.22em; text-transform:uppercase;
+    color:var(--brass);
+  }
+  .slot-card-meta{
+    font-size:10px; letter-spacing:.12em; text-transform:uppercase;
+    color:var(--ivory-dim); opacity:.65;
+  }
+  .slot-stats-card, .slot-history-card{
+    background:rgba(8,4,2,.55);
+    border:1px solid rgba(201,162,106,.22);
+    border-radius:14px;
+    padding:14px 16px;
+  }
+  .slot-reset{
+    font-family:'Inter', system-ui, sans-serif;
+    font-size:10px; font-weight:600; letter-spacing:.08em; text-transform:uppercase;
+    padding:4px 10px; border-radius:999px;
+    border:1px solid rgba(201,162,106,.25);
+    background:rgba(0,0,0,.25); color:var(--ivory-dim);
+    cursor:pointer; transition:all .15s;
+  }
+  .slot-reset:hover:not(:disabled){color:var(--brass); border-color:var(--brass);}
+  .slot-reset:disabled{opacity:.35; cursor:not-allowed;}
+
+  /* Session stats grid */
+  .slot-stats-grid{
+    display:grid; grid-template-columns:1fr 1fr; gap:10px 14px;
+  }
+  .slot-stat{display:flex; flex-direction:column; gap:2px;}
+  .slot-stat-l{
+    font-size:9px; letter-spacing:.14em; text-transform:uppercase;
+    color:var(--ivory-dim); opacity:.6;
+  }
+  .slot-stat-v{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:17px; font-weight:700; color:var(--ivory);
+  }
+  .slot-stat-v.pos{color:#7ed8a1;}
+  .slot-stat-v.neg{color:#e8786f;}
+
+  /* Recent spins list */
+  .slot-history-list{
+    display:flex; flex-direction:column; gap:6px;
+    max-height:340px; overflow-y:auto;
+    padding-right:4px;
+  }
+  .slot-history-list::-webkit-scrollbar{width:6px;}
+  .slot-history-list::-webkit-scrollbar-thumb{background:rgba(201,162,106,.25); border-radius:3px;}
+  .slot-history-empty{
+    font-size:11px; color:var(--ivory-dim); opacity:.55;
+    text-align:center; padding:18px 8px;
+    font-style:italic;
+  }
+  .slot-history-row{
+    display:grid; grid-template-columns:auto 1fr auto;
+    gap:10px; align-items:center;
+    padding:6px 10px; border-radius:8px;
+    background:rgba(0,0,0,.22);
+    border:1px solid rgba(201,162,106,.10);
+  }
+  .slot-history-row.win{background:rgba(126,216,161,.07); border-color:rgba(126,216,161,.22);}
+  .slot-history-row.jackpot{
+    background:rgba(230,197,144,.10);
+    border-color:rgba(230,197,144,.50);
+    animation: slotHistGlow 1.4s ease-in-out 2;
+  }
+  @keyframes slotHistGlow{
+    0%,100%{box-shadow:0 0 0 0 rgba(230,197,144,.0)}
+    50%{box-shadow:0 0 14px 1px rgba(230,197,144,.45)}
+  }
+  .slot-history-syms{display:flex; gap:2px;}
+  .slot-history-sym{
+    display:inline-block; flex-shrink:0;
+    background-image:url('../assets/slot.png');
+    background-repeat:no-repeat;
+    border-radius:3px;
+  }
+  .slot-history-mid{
+    display:flex; flex-direction:column; gap:2px;
+    font-size:10px;
+    min-width:0;
+  }
+  .slot-history-mid .bet{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    color:var(--ivory); font-weight:600;
+  }
+  .slot-history-mid .ts{color:var(--ivory-dim); opacity:.55;}
+  .slot-history-payout{
+    font-family:'JetBrains Mono', ui-monospace, monospace;
+    font-size:13px; font-weight:700; color:var(--ivory-dim);
+    white-space:nowrap;
+  }
+  .slot-history-payout.win{color:#7ed8a1;}
+  .slot-history-payout.loss{color:#e8786f; opacity:.85;}
+  .slot-history-payout.jackpot{color:var(--brass-2); font-size:14px;}
+
+  /* Compact paytable for the new layout — single column inside main */
+  .slot-main .slot-paytable{margin-top:14px; width:100%;}
+
+  /* The slot-root is a fixed 1380x860 scaled-design wrapper, so we keep the
+     2-column stage proportional at every viewport — everything scales together.
+     No media-query reflow that would break the wrapper's fixed height. */
+
   /* Cabinet frame */
   .slot-frame{
     position:relative;
