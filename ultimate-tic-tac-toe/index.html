@@ -1,0 +1,755 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ultimate Tic-Tac-Toe — Free Browser Game vs. AI | Limestone Games</title>
+    <meta name="description" content="Play Ultimate Tic-Tac-Toe free in your browser against an AI. Nine boards inside one, your move sends the opponent to a specific board. Three difficulties, no downloads.">
+    <meta name="keywords" content="ultimate tic-tac-toe, ultimate tic tac toe, super tic tac toe, browser tic tac toe, tic tac toe vs AI, free tic tac toe">
+    <link rel="canonical" href="https://limestonegames.com/ultimate-tic-tac-toe/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Ultimate Tic-Tac-Toe","description":"Play Ultimate Tic-Tac-Toe in your browser against an AI. Nine boards in one — your move sends your opponent to a specific board. Three difficulty tiers.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Ultimate Tic-Tac-Toe"}]}</script>
+    <meta property="og:title" content="Ultimate Tic-Tac-Toe — Free Browser Game vs. AI">
+    <meta property="og:description" content="Nine boards in one, three difficulties. The strategic twist on the classic.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/ultimate-tic-tac-toe/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+
+    <style>
+      :root {
+        --ink: #2A1F0E;
+        --paper: #FAF5E8;
+        --frame: #1F1810;
+        --accent: #C57E1B;
+        --accent-soft: #E8A330;
+        --x-color: #C53B33;
+        --o-color: #2E6CB4;
+        --board-bg: #FFFEF5;
+        --board-line: #2A1F0E;
+        --active-glow: rgba(232, 163, 48, 0.35);
+        --won-x: rgba(197, 59, 51, 0.22);
+        --won-o: rgba(46, 108, 180, 0.22);
+        --won-draw: rgba(120, 110, 90, 0.18);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, #FAF5E8 0%, #E8D4A8 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 16px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .top-bar {
+        width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        font-size: 14px; flex-wrap: wrap;
+      }
+      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
+      .top-bar a:hover { opacity: 1; }
+      h1 {
+        font-family: 'Bricolage Grotesque', serif;
+        font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
+        color: var(--frame);
+      }
+      .stats {
+        display: flex; gap: 14px; font-size: 14px; font-weight: 600;
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(6px);
+        padding: 10px 18px; border-radius: 999px;
+        box-shadow: 0 4px 12px rgba(42, 31, 14, 0.08);
+        flex-wrap: wrap; justify-content: center;
+      }
+      .stats > div { display: flex; gap: 6px; align-items: baseline; }
+      .stats .l { color: rgba(42, 31, 14, 0.55); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+      .stats .v { font-size: 17px; font-weight: 800; color: var(--accent); }
+      select.diff {
+        font: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+        padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(42, 31, 14, 0.2);
+        background: #fff;
+      }
+      .stage-wrap {
+        position: relative;
+        background: rgba(255, 255, 255, 0.55);
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 12px 30px rgba(31, 24, 16, 0.12);
+        align-self: center;
+      }
+      canvas {
+        display: block;
+        background: var(--paper);
+        border-radius: 8px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+      button {
+        font: inherit; font-weight: 700;
+        padding: 10px 18px; border-radius: 999px;
+        border: 2px solid transparent;
+        background: var(--accent); color: #fff;
+        cursor: pointer; transition: transform 0.1s;
+        box-shadow: 0 4px 12px rgba(197, 126, 27, 0.3);
+      }
+      button:hover { transform: translateY(-1px); }
+      button:active { transform: translateY(1px); }
+      button.ghost { background: transparent; color: var(--ink); border-color: rgba(42, 31, 14, 0.2); box-shadow: none; }
+      .turn { font-size: 13px; color: rgba(42, 31, 14, 0.75); min-height: 18px; }
+      .toast {
+        position: absolute; left: 50%; top: 30px; transform: translateX(-50%);
+        background: rgba(42, 31, 14, 0.88); color: #FAF5E8;
+        padding: 8px 16px; border-radius: 999px;
+        font-size: 13px; font-weight: 600;
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.25s;
+      }
+      .toast.show { opacity: 1; }
+      .game-over {
+        position: absolute; inset: 14px;
+        background: rgba(250, 245, 232, 0.96);
+        border-radius: 8px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        text-align: center; padding: 24px;
+      }
+      .game-over.show { opacity: 1; pointer-events: auto; }
+      .game-over h2 { font-size: 28px; color: var(--accent); }
+      .game-over p { font-size: 15px; color: rgba(42, 31, 14, 0.75); max-width: 380px; }
+      .hint { font-size: 13px; color: rgba(42, 31, 14, 0.6); text-align: center; max-width: 600px; }
+      #how { padding: 20px 16px; max-width: 600px; }
+      #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin-bottom: 8px; }
+      #how p { font-size: 14px; color: rgba(42, 31, 14, 0.78); margin-bottom: 8px; }
+      #how ul { padding-left: 20px; font-size: 14px; color: rgba(42, 31, 14, 0.82); }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../strategy/">All Strategy games</a>
+        </div>
+        <h1>Ultimate Tic-Tac-Toe</h1>
+        <div class="stats">
+            <div><span class="l">Turn</span><span class="v" id="turn">Your move</span></div>
+            <div><span class="l">Wins–Losses</span><span class="v" id="wins">0–0</span></div>
+            <div><span class="l">Streak</span><span class="v" id="streak">0</span></div>
+            <div><span class="l">Difficulty</span>
+                <select class="diff" id="difficulty" aria-label="Difficulty">
+                    <option>Easy</option>
+                    <option>Medium</option>
+                    <option>Hard</option>
+                </select>
+            </div>
+        </div>
+        <div class="stage-wrap">
+            <canvas id="board" width="600" height="600"></canvas>
+            <div class="toast" id="toast"></div>
+            <div class="game-over" id="over">
+                <h2 id="overTitle">You win!</h2>
+                <p id="overText"></p>
+                <button id="overBtn">New game</button>
+            </div>
+        </div>
+        <div class="turn" id="status">Click any cell to begin. You play X; X moves first.</div>
+        <div class="controls">
+            <button id="newGame">New game</button>
+            <a href="../strategy/"><button class="ghost">More strategy games</button></a>
+        </div>
+        <p class="hint">Your move's <i>position</i> within a mini-board determines which mini-board your opponent must play in. Sent to a finished board? Play anywhere. Three mini-board wins in a row on the meta board wins the game.</p>
+
+        <section id="how" aria-label="How to play">
+            <h2>How to play</h2>
+            <p>The board is a 3×3 grid of nine smaller tic-tac-toe boards. You play X, the AI plays O. X moves first and can pick any cell on the board.</p>
+            <p>After your move, the position you played (top-left, center, bottom-right, etc.) tells your opponent which mini-board they must play in next. If that mini-board is already won or full, the opponent gets a free choice anywhere on the board.</p>
+            <p>Win a mini-board by getting three in a row inside it — that claims the matching cell on the meta board. Win three mini-boards in a row on the meta board to win the game.</p>
+            <ul>
+                <li><b>Easy</b> — depth 2 with extra randomness; misses tactics.</li>
+                <li><b>Medium</b> — depth 4 with positional weighting and threat detection.</li>
+                <li><b>Hard</b> — depth 6 with meta-aware scoring; plays for long-term board control.</li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+    'use strict';
+
+    // ── Board model ─────────────────────────────────────────────────────────
+    // 81 cells. Cell index = mini * 9 + cell, where mini and cell are 0..8 in
+    // row-major order. Values: 0 empty, 1 player (X), -1 AI (O).
+    // Mini-board status: 0 in-play, 1 X won, -1 O won, 2 drawn.
+    const PLAYER = 1;        // X
+    const AI = -1;           // O
+    const LINES = [
+      [0,1,2],[3,4,5],[6,7,8],   // rows
+      [0,3,6],[1,4,7],[2,5,8],   // cols
+      [0,4,8],[2,4,6],           // diagonals
+    ];
+
+    function newGame() {
+      return {
+        cells: new Int8Array(81),
+        meta: new Int8Array(9),
+        turn: PLAYER,
+        nextMini: -1,          // -1 = free choice
+        winner: 0,             // 0 in-play, 1 X, -1 O, 2 draw
+        winLine: null,         // [a,b,c] indices on meta for the win line
+      };
+    }
+
+    function clone(s) {
+      return {
+        cells: new Int8Array(s.cells),
+        meta: new Int8Array(s.meta),
+        turn: s.turn,
+        nextMini: s.nextMini,
+        winner: s.winner,
+        winLine: s.winLine,
+      };
+    }
+
+    function miniStatus(cells, m) {
+      // Returns { status, line } — status: 0 in-play, 1 X, -1 O, 2 draw; line for win.
+      const base = m * 9;
+      for (const [a,b,c] of LINES) {
+        const v = cells[base + a];
+        if (v !== 0 && v === cells[base + b] && v === cells[base + c]) {
+          return { status: v, line: [a,b,c] };
+        }
+      }
+      // Drawn if no empty cell
+      for (let i = 0; i < 9; i++) if (cells[base + i] === 0) return { status: 0, line: null };
+      return { status: 2, line: null };
+    }
+
+    function metaStatus(meta) {
+      // Same as miniStatus but uses meta[] directly. Returns 1/-1/2/0.
+      for (const [a,b,c] of LINES) {
+        const v = meta[a];
+        if ((v === 1 || v === -1) && v === meta[b] && v === meta[c]) {
+          return { status: v, line: [a,b,c] };
+        }
+      }
+      for (let i = 0; i < 9; i++) if (meta[i] === 0) return { status: 0, line: null };
+      return { status: 2, line: null };
+    }
+
+    function legalMoves(state) {
+      const list = [];
+      if (state.winner !== 0) return list;
+      const freeChoice = state.nextMini === -1 || state.meta[state.nextMini] !== 0;
+      if (freeChoice) {
+        for (let m = 0; m < 9; m++) {
+          if (state.meta[m] !== 0) continue;
+          const base = m * 9;
+          for (let c = 0; c < 9; c++) {
+            if (state.cells[base + c] === 0) list.push(m * 9 + c);
+          }
+        }
+      } else {
+        const m = state.nextMini;
+        const base = m * 9;
+        for (let c = 0; c < 9; c++) {
+          if (state.cells[base + c] === 0) list.push(m * 9 + c);
+        }
+      }
+      return list;
+    }
+
+    function applyMove(state, idx) {
+      const m = (idx / 9) | 0;
+      const c = idx % 9;
+      state.cells[idx] = state.turn;
+      // Update mini status if this completes it
+      const ms = miniStatus(state.cells, m);
+      if (ms.status !== 0) state.meta[m] = ms.status;
+      // Update game winner
+      const meta = metaStatus(state.meta);
+      if (meta.status !== 0) {
+        state.winner = meta.status;
+        state.winLine = meta.line;
+      }
+      // Next mini = the cell-position just played; freed if that mini is decided
+      state.nextMini = state.meta[c] !== 0 ? -1 : c;
+      state.turn = -state.turn;
+    }
+
+    // ── Evaluation ──────────────────────────────────────────────────────────
+    // Position weights (center > corners > edges) applied at both mini and meta.
+    const POS_W = [1, 2, 1, 2, 3, 2, 1, 2, 1];
+
+    function lineScore3(a, b, c) {
+      // For three values in a line: return a small heuristic favoring X.
+      let x = 0, o = 0;
+      if (a === 1) x++; else if (a === -1) o++;
+      if (b === 1) x++; else if (b === -1) o++;
+      if (c === 1) x++; else if (c === -1) o++;
+      if (x > 0 && o > 0) return 0;
+      if (x === 3) return 1000;
+      if (o === 3) return -1000;
+      if (x === 2) return 10;
+      if (o === 2) return -10;
+      if (x === 1) return 1;
+      if (o === 1) return -1;
+      return 0;
+    }
+
+    function lineScore3WithWeights(a, b, c) {
+      // Weighted variant used at meta level — "almost-won" lines matter much
+      // more than "one mark" lines.
+      let x = 0, o = 0;
+      if (a === 1) x++; else if (a === -1) o++;
+      if (b === 1) x++; else if (b === -1) o++;
+      if (c === 1) x++; else if (c === -1) o++;
+      if (x > 0 && o > 0) return 0;
+      if (x === 3) return 100000;
+      if (o === 3) return -100000;
+      if (x === 2) return 80;
+      if (o === 2) return -80;
+      if (x === 1) return 4;
+      if (o === 1) return -4;
+      return 0;
+    }
+
+    function evaluate(state) {
+      // Score from PLAYER's perspective. Combines mini-board progress + meta
+      // progress + positional weights.
+      if (state.winner === PLAYER) return 1_000_000;
+      if (state.winner === AI) return -1_000_000;
+      if (state.winner === 2) return 0;
+
+      let score = 0;
+
+      // Meta board: huge weight
+      for (const [a,b,c] of LINES) {
+        score += lineScore3WithWeights(state.meta[a], state.meta[b], state.meta[c]);
+      }
+
+      // Each in-play mini-board: aggregate line score with position weight
+      for (let m = 0; m < 9; m++) {
+        if (state.meta[m] !== 0) continue;
+        const base = m * 9;
+        let miniScore = 0;
+        for (const [a,b,c] of LINES) {
+          miniScore += lineScore3(state.cells[base+a], state.cells[base+b], state.cells[base+c]);
+        }
+        // Center mini-board worth 2.5x, corners 1.5x, edges 1x
+        score += miniScore * (POS_W[m] / 2);
+      }
+
+      // Penalty: sending the opponent to a board where they can already complete
+      // a meta-line is bad. Approximate by checking each empty cell in the
+      // target board for a winning mini-completion.
+      // (Cheap proxy via line scores above is usually enough; skip explicit term.)
+
+      return score;
+    }
+
+    // ── AI ──────────────────────────────────────────────────────────────────
+    function negamax(state, depth, alpha, beta) {
+      if (state.winner !== 0 || depth === 0) {
+        return evaluate(state) * state.turn;
+      }
+      const moves = legalMoves(state);
+      if (moves.length === 0) {
+        return evaluate(state) * state.turn;
+      }
+      // Move ordering: prefer center cells / center-mini, prefer moves that
+      // don't send opponent to free choice.
+      moves.sort((a, b) => orderKey(state, b) - orderKey(state, a));
+      let best = -Infinity;
+      for (const idx of moves) {
+        const next = clone(state);
+        applyMove(next, idx);
+        const v = -negamax(next, depth - 1, -beta, -alpha);
+        if (v > best) best = v;
+        if (best > alpha) alpha = best;
+        if (alpha >= beta) break;
+      }
+      return best;
+    }
+
+    function orderKey(state, idx) {
+      const m = (idx / 9) | 0;
+      const c = idx % 9;
+      // Center cell of a board, plus center mini-board, scored higher
+      return POS_W[c] + POS_W[m] * 2;
+    }
+
+    function chooseAIMove(state, difficulty) {
+      const moves = legalMoves(state);
+      if (moves.length === 0) return null;
+      const cfg = {
+        Easy:   { depth: 2, jitter: 60 },
+        Medium: { depth: 4, jitter: 12 },
+        Hard:   { depth: 6, jitter: 0  },
+      }[difficulty] || { depth: 4, jitter: 12 };
+      // Quick immediate-win + immediate-block for all levels
+      for (const idx of moves) {
+        const next = clone(state);
+        applyMove(next, idx);
+        if (next.winner === AI) return idx;
+      }
+      // Block: if opponent has a one-move win on next turn from any of their replies,
+      // we can't easily check here without a one-ply lookup. Negamax handles it.
+
+      const scored = [];
+      let bestScore = -Infinity;
+      for (const idx of moves) {
+        const next = clone(state);
+        applyMove(next, idx);
+        const v = -negamax(next, cfg.depth - 1, -Infinity, Infinity);
+        scored.push({ idx, v });
+        if (v > bestScore) bestScore = v;
+      }
+      const candidates = scored.filter(s => bestScore - s.v <= cfg.jitter);
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      return pick.idx;
+    }
+
+    // ── UI / rendering ──────────────────────────────────────────────────────
+    const KEY_STREAK = 'ultimateTicTacToeHighScore';
+    const KEY_BEST   = 'ultimateTicTacToeBestStreak';
+    const KEY_WINS   = 'ultimateTicTacToeGamesWon';
+    const KEY_LOSS   = 'ultimateTicTacToeGamesLost';
+    const KEY_DRAW   = 'ultimateTicTacToeGamesDraw';
+    const KEY_DIFF   = 'ultimateTicTacToeDifficulty';
+
+    const PLACE_MS = 220;
+
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+    // Layout: 3x3 mini-boards. Outer gap 0, inner gap 8px between minis.
+    const PAD = 14;
+    const GAP = 8;
+    const MINI_SIZE = (W - PAD * 2 - GAP * 2) / 3;
+    const CELL_SIZE = MINI_SIZE / 3;
+
+    const turnEl = document.getElementById('turn');
+    const winsEl = document.getElementById('wins');
+    const streakEl = document.getElementById('streak');
+    const diffEl = document.getElementById('difficulty');
+    const newGameBtn = document.getElementById('newGame');
+    const overEl = document.getElementById('over');
+    const overTitleEl = document.getElementById('overTitle');
+    const overTextEl = document.getElementById('overText');
+    const overBtn = document.getElementById('overBtn');
+    const statusEl = document.getElementById('status');
+    const toastEl = document.getElementById('toast');
+
+    let state = newGame();
+    let aiThinking = false;
+    let anim = null;            // { idx, side, start }
+    let difficulty = localStorage.getItem(KEY_DIFF) || 'Medium';
+    diffEl.value = difficulty;
+
+    function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
+    function writeNum(k, v) { localStorage.setItem(k, String(v)); }
+
+    function refreshStats() {
+      winsEl.textContent = readNum(KEY_WINS) + '–' + readNum(KEY_LOSS);
+      streakEl.textContent = readNum(KEY_STREAK);
+    }
+
+    function miniXY(m) {
+      const col = m % 3, row = (m / 3) | 0;
+      return {
+        x: PAD + col * (MINI_SIZE + GAP),
+        y: PAD + row * (MINI_SIZE + GAP),
+      };
+    }
+    function cellXY(idx) {
+      const m = (idx / 9) | 0, c = idx % 9;
+      const { x, y } = miniXY(m);
+      const col = c % 3, row = (c / 3) | 0;
+      return {
+        x: x + col * CELL_SIZE,
+        y: y + row * CELL_SIZE,
+      };
+    }
+    function xyToCell(px, py) {
+      for (let m = 0; m < 9; m++) {
+        const { x, y } = miniXY(m);
+        if (px < x || px >= x + MINI_SIZE || py < y || py >= y + MINI_SIZE) continue;
+        const col = Math.floor((px - x) / CELL_SIZE);
+        const row = Math.floor((py - y) / CELL_SIZE);
+        if (col < 0 || col > 2 || row < 0 || row > 2) return -1;
+        return m * 9 + (row * 3 + col);
+      }
+      return -1;
+    }
+
+    function drawX(cx, cy, size, alpha) {
+      const r = size * 0.30;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#C53B33';
+      ctx.lineCap = 'round';
+      ctx.lineWidth = Math.max(2, size * 0.10);
+      ctx.beginPath();
+      ctx.moveTo(cx - r, cy - r); ctx.lineTo(cx + r, cy + r);
+      ctx.moveTo(cx + r, cy - r); ctx.lineTo(cx - r, cy + r);
+      ctx.stroke();
+      ctx.restore();
+    }
+    function drawO(cx, cy, size, alpha) {
+      const r = size * 0.30;
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.strokeStyle = '#2E6CB4';
+      ctx.lineWidth = Math.max(2, size * 0.10);
+      ctx.beginPath();
+      ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+
+    function draw() {
+      const now = performance.now();
+      // Background
+      ctx.fillStyle = '#FAF5E8';
+      ctx.fillRect(0, 0, W, H);
+
+      const freeChoice = state.winner === 0 && (state.nextMini === -1 || state.meta[state.nextMini] !== 0);
+
+      // Mini-boards
+      for (let m = 0; m < 9; m++) {
+        const { x, y } = miniXY(m);
+        const status = state.meta[m];
+
+        // Highlight active board. On free choice we don't shout — every playable
+        // board would get a heavy ring, which is visually loud and conveys nothing
+        // the status text doesn't already. Only emphasize when the player is
+        // constrained to a specific mini.
+        const constrained = !freeChoice && state.nextMini === m;
+        const isActive = state.winner === 0 && constrained;
+        if (isActive && state.turn === PLAYER) {
+          ctx.fillStyle = 'rgba(232, 163, 48, 0.18)';
+          ctx.fillRect(x - 3, y - 3, MINI_SIZE + 6, MINI_SIZE + 6);
+        }
+
+        // Board background
+        ctx.fillStyle = '#FFFEF5';
+        ctx.fillRect(x, y, MINI_SIZE, MINI_SIZE);
+
+        // Grid lines (thin)
+        ctx.strokeStyle = 'rgba(42, 31, 14, 0.35)';
+        ctx.lineWidth = 1.5;
+        for (let i = 1; i < 3; i++) {
+          ctx.beginPath();
+          ctx.moveTo(x + i * CELL_SIZE, y + 4);
+          ctx.lineTo(x + i * CELL_SIZE, y + MINI_SIZE - 4);
+          ctx.moveTo(x + 4, y + i * CELL_SIZE);
+          ctx.lineTo(x + MINI_SIZE - 4, y + i * CELL_SIZE);
+          ctx.stroke();
+        }
+
+        // Marks
+        for (let c = 0; c < 9; c++) {
+          const idx = m * 9 + c;
+          const v = state.cells[idx];
+          if (v === 0) continue;
+          const col = c % 3, row = (c / 3) | 0;
+          const cx = x + col * CELL_SIZE + CELL_SIZE / 2;
+          const cy = y + row * CELL_SIZE + CELL_SIZE / 2;
+          let alpha = 1;
+          if (anim && anim.idx === idx) {
+            const t = Math.min(1, (now - anim.start) / PLACE_MS);
+            alpha = t;
+          }
+          if (v === 1) drawX(cx, cy, CELL_SIZE, alpha);
+          else drawO(cx, cy, CELL_SIZE, alpha);
+        }
+
+        // Won mini overlay
+        if (status === 1 || status === -1) {
+          ctx.fillStyle = status === 1 ? 'rgba(197, 59, 51, 0.22)' : 'rgba(46, 108, 180, 0.22)';
+          ctx.fillRect(x, y, MINI_SIZE, MINI_SIZE);
+          if (status === 1) drawX(x + MINI_SIZE/2, y + MINI_SIZE/2, MINI_SIZE * 0.95, 0.85);
+          else drawO(x + MINI_SIZE/2, y + MINI_SIZE/2, MINI_SIZE * 0.95, 0.85);
+        } else if (status === 2) {
+          ctx.fillStyle = 'rgba(120, 110, 90, 0.18)';
+          ctx.fillRect(x, y, MINI_SIZE, MINI_SIZE);
+        }
+
+        // Mini border
+        ctx.strokeStyle = isActive ? '#C57E1B' : 'rgba(42, 31, 14, 0.5)';
+        ctx.lineWidth = isActive ? 3 : 1.5;
+        ctx.strokeRect(x + 0.5, y + 0.5, MINI_SIZE - 1, MINI_SIZE - 1);
+      }
+
+      // Game-over meta line
+      if (state.winner !== 0 && state.winLine) {
+        const [a, b, c] = state.winLine;
+        const ca = miniXY(a), cc = miniXY(c);
+        ctx.save();
+        ctx.strokeStyle = state.winner === 1 ? '#C53B33' : '#2E6CB4';
+        ctx.lineWidth = 10;
+        ctx.lineCap = 'round';
+        ctx.globalAlpha = 0.75;
+        ctx.beginPath();
+        ctx.moveTo(ca.x + MINI_SIZE/2, ca.y + MINI_SIZE/2);
+        ctx.lineTo(cc.x + MINI_SIZE/2, cc.y + MINI_SIZE/2);
+        ctx.stroke();
+        ctx.restore();
+      }
+    }
+
+    function setStatus(s) { statusEl.textContent = s; }
+    function setTurnLabel(s) { turnEl.textContent = s; }
+
+    let toastTimer = null;
+    function showToast(msg, ms = 1100) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+    }
+
+    function recordWin() {
+      writeNum(KEY_WINS, readNum(KEY_WINS) + 1);
+      const s = readNum(KEY_STREAK) + 1;
+      writeNum(KEY_STREAK, s);
+      if (s > readNum(KEY_BEST)) writeNum(KEY_BEST, s);
+    }
+    function recordLoss() {
+      writeNum(KEY_LOSS, readNum(KEY_LOSS) + 1);
+      writeNum(KEY_STREAK, 0);
+    }
+    function recordDraw() {
+      writeNum(KEY_DRAW, readNum(KEY_DRAW) + 1);
+      writeNum(KEY_STREAK, 0);
+    }
+
+    function showOver(title, text) {
+      overTitleEl.textContent = title;
+      overTextEl.textContent = text;
+      overEl.classList.add('show');
+    }
+
+    function checkEnd() {
+      if (state.winner === 0) return false;
+      const wonMinis = [...state.meta].filter(v => v === 1).length;
+      const lostMinis = [...state.meta].filter(v => v === -1).length;
+      const summary = `Mini-boards: X ${wonMinis} — O ${lostMinis}.`;
+      if (state.winner === 1) { recordWin(); showOver('You win!', summary + ' Streak preserved.'); }
+      else if (state.winner === -1) { recordLoss(); showOver('You lost', summary + ' Streak reset.'); }
+      else { recordDraw(); showOver('Draw', summary + ' Streak reset.'); }
+      refreshStats();
+      return true;
+    }
+
+    function animTick() {
+      if (!anim) return;
+      draw();
+      const now = performance.now();
+      if (now - anim.start >= PLACE_MS) {
+        const done = anim.onDone;
+        anim = null;
+        draw();
+        if (done) done();
+        return;
+      }
+      requestAnimationFrame(animTick);
+    }
+
+    function startMoveAnim(idx, onDone) {
+      anim = { idx, start: performance.now(), onDone };
+      requestAnimationFrame(animTick);
+    }
+
+    function nextTurn() {
+      if (checkEnd()) return;
+      if (state.turn === PLAYER) {
+        const freeChoice = state.nextMini === -1 || state.meta[state.nextMini] !== 0;
+        setTurnLabel('Your move');
+        setStatus(freeChoice
+          ? 'Free choice — play in any open mini-board.'
+          : 'You must play in the highlighted mini-board.');
+        refreshStats();
+        draw();
+      } else {
+        setTurnLabel('AI thinking');
+        setStatus('AI is calculating its response.');
+        refreshStats();
+        draw();
+        aiThinking = true;
+        setTimeout(aiTurn, 100);
+      }
+    }
+
+    function aiTurn() {
+      if (state.turn !== AI) { aiThinking = false; return; }
+      const idx = chooseAIMove(state, difficulty);
+      if (idx == null) { aiThinking = false; nextTurn(); return; }
+      applyMove(state, idx);
+      startMoveAnim(idx, () => {
+        aiThinking = false;
+        refreshStats();
+        nextTurn();
+      });
+    }
+
+    canvas.addEventListener('click', (e) => {
+      if (aiThinking || anim || state.turn !== PLAYER || state.winner !== 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const px = (e.clientX - rect.left) * (W / rect.width);
+      const py = (e.clientY - rect.top) * (H / rect.height);
+      const idx = xyToCell(px, py);
+      if (idx < 0) return;
+      const legal = legalMoves(state);
+      if (!legal.includes(idx)) {
+        const m = (idx / 9) | 0;
+        if (state.cells[idx] !== 0) setStatus('That cell is taken.');
+        else if (state.meta[m] !== 0) setStatus('That mini-board is decided.');
+        else setStatus('You must play in the highlighted mini-board.');
+        return;
+      }
+      applyMove(state, idx);
+      startMoveAnim(idx, () => {
+        refreshStats();
+        nextTurn();
+      });
+    });
+
+    function startGame() {
+      state = newGame();
+      anim = null;
+      aiThinking = false;
+      overEl.classList.remove('show');
+      setTurnLabel('Your move');
+      setStatus('Free choice — play in any cell on the board.');
+      refreshStats();
+      draw();
+    }
+
+    newGameBtn.addEventListener('click', startGame);
+    overBtn.addEventListener('click', startGame);
+    diffEl.addEventListener('change', () => {
+      difficulty = diffEl.value;
+      localStorage.setItem(KEY_DIFF, difficulty);
+    });
+
+    startGame();
+
+    // Auto-scale
+    (function () {
+      const c = canvas;
+      const bw = c.width, bh = c.height;
+      function sc() {
+        c.style.width = bw + 'px';
+        c.style.height = bh + 'px';
+        const viewW = Math.min(window.innerWidth, document.documentElement.clientWidth);
+        const mw = Math.max(viewW - 64, 200);
+        const mh = window.innerHeight * 0.72;
+        const s = Math.min(mw / bw, mh / bh, 1);
+        c.style.width = (bw * s) + 'px';
+        c.style.height = (bh * s) + 'px';
+      }
+      window.addEventListener('resize', sc);
+      sc();
+    })();
+    </script>
+</body>
+</html>

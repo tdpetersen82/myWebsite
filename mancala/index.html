@@ -1,0 +1,826 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mancala — Free Browser Kalah vs. AI | Limestone Games</title>
+    <meta name="description" content="Play Mancala (Kalah rules) free in your browser against an AI. Sow seeds, capture across, and claim your store. Three difficulty tiers, no downloads.">
+    <meta name="keywords" content="mancala, kalah, online mancala, free mancala, browser mancala, mancala vs AI, sowing game">
+    <link rel="canonical" href="https://limestonegames.com/mancala/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Mancala","description":"Play Mancala (Kalah rules) in your browser against an AI. Three difficulty tiers, capture rule, free-turn on store, sweep at game end.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Mancala"}]}</script>
+    <meta property="og:title" content="Mancala — Free Browser Kalah vs. AI">
+    <meta property="og:description" content="Sow seeds, capture across, claim your store. Three difficulties, no downloads.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/mancala/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+
+    <style>
+      :root {
+        --ink: #2A1B12;
+        --paper: #F4E5D2;
+        --frame: #4A2F1E;
+        --board: #8B5A2B;
+        --board-dark: #5D3B1E;
+        --pit: #3A2818;
+        --accent: #B85C38;
+        --seed-a: #D9B889;
+        --seed-b: #E8B05B;
+        --seed-c: #C09060;
+        --highlight: rgba(232, 176, 91, 0.5);
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, #F4E5D2 0%, #D9B889 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 16px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 900px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .top-bar {
+        width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        font-size: 14px; flex-wrap: wrap;
+      }
+      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
+      .top-bar a:hover { opacity: 1; }
+      h1 {
+        font-family: 'Bricolage Grotesque', serif;
+        font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
+        color: var(--frame);
+      }
+      .stats {
+        display: flex; gap: 14px; font-size: 14px; font-weight: 600;
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(6px);
+        padding: 10px 18px; border-radius: 999px;
+        box-shadow: 0 4px 12px rgba(42, 27, 18, 0.08);
+        flex-wrap: wrap; justify-content: center;
+      }
+      .stats > div { display: flex; gap: 6px; align-items: baseline; }
+      .stats .l { color: rgba(42, 27, 18, 0.55); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+      .stats .v { font-size: 17px; font-weight: 800; color: var(--accent); }
+      .stats .v.score { color: var(--ink); font-variant-numeric: tabular-nums; }
+      select.diff {
+        font: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+        padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(42, 27, 18, 0.2);
+        background: #fff;
+      }
+      .stage-wrap {
+        position: relative;
+        background: rgba(255, 255, 255, 0.5);
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 12px 30px rgba(42, 27, 18, 0.16);
+        align-self: center;
+      }
+      canvas {
+        display: block;
+        background: var(--paper);
+        border-radius: 8px;
+        cursor: pointer;
+        touch-action: manipulation;
+      }
+      .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+      button {
+        font: inherit; font-weight: 700;
+        padding: 10px 18px; border-radius: 999px;
+        border: 2px solid transparent;
+        background: var(--accent); color: #fff;
+        cursor: pointer; transition: transform 0.1s;
+        box-shadow: 0 4px 12px rgba(184, 92, 56, 0.3);
+      }
+      button:hover { transform: translateY(-1px); }
+      button:active { transform: translateY(1px); }
+      button.ghost { background: transparent; color: var(--ink); border-color: rgba(42, 27, 18, 0.2); box-shadow: none; }
+      .turn { font-size: 13px; color: rgba(42, 27, 18, 0.75); min-height: 18px; }
+      .toast {
+        position: absolute; left: 50%; top: 30px; transform: translateX(-50%);
+        background: rgba(42, 27, 18, 0.88); color: #F4E5D2;
+        padding: 8px 16px; border-radius: 999px;
+        font-size: 13px; font-weight: 600;
+        opacity: 0; pointer-events: none;
+        transition: opacity 0.25s;
+      }
+      .toast.show { opacity: 1; }
+      .game-over {
+        position: absolute; inset: 14px;
+        background: rgba(244, 229, 210, 0.96);
+        border-radius: 8px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        text-align: center; padding: 24px;
+      }
+      .game-over.show { opacity: 1; pointer-events: auto; }
+      .game-over h2 { font-size: 28px; color: var(--accent); }
+      .game-over p { font-size: 15px; color: rgba(42, 27, 18, 0.75); max-width: 380px; }
+      .hint { font-size: 13px; color: rgba(42, 27, 18, 0.6); text-align: center; max-width: 660px; }
+      #how { padding: 20px 16px; max-width: 660px; }
+      #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin-bottom: 8px; }
+      #how p { font-size: 14px; color: rgba(42, 27, 18, 0.78); margin-bottom: 8px; }
+      #how ul { padding-left: 20px; font-size: 14px; color: rgba(42, 27, 18, 0.82); }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../strategy/">All Strategy games</a>
+        </div>
+        <h1>Mancala</h1>
+        <div class="stats">
+            <div><span class="l">Turn</span><span class="v" id="turn">Your move</span></div>
+            <div><span class="l">Score</span><span class="v score" id="score">You 0 – AI 0</span></div>
+            <div><span class="l">Wins–Losses</span><span class="v" id="wins">0–0</span></div>
+            <div><span class="l">Streak</span><span class="v" id="streak">0</span></div>
+            <div><span class="l">Difficulty</span>
+                <select class="diff" id="difficulty" aria-label="Difficulty">
+                    <option>Easy</option>
+                    <option>Medium</option>
+                    <option>Hard</option>
+                </select>
+            </div>
+        </div>
+        <div class="stage-wrap">
+            <canvas id="board" width="820" height="340"></canvas>
+            <div class="toast" id="toast"></div>
+            <div class="game-over" id="over">
+                <h2 id="overTitle">You win!</h2>
+                <p id="overText"></p>
+                <button id="overBtn">New game</button>
+            </div>
+        </div>
+        <div class="turn" id="status">Click one of your pits (bottom row) to sow seeds.</div>
+        <div class="controls">
+            <button id="newGame">New game</button>
+            <a href="../strategy/"><button class="ghost">More strategy games</button></a>
+        </div>
+        <p class="hint">Pick a pit on your side (bottom). Seeds drop one-per-pit counter-clockwise, skipping your opponent's store. Land your last seed in your store for another turn; land it in your own empty pit to capture the seeds across.</p>
+
+        <section id="how" aria-label="How to play">
+            <h2>How to play</h2>
+            <p>The board has 12 small pits — six per side — and one large store on each end. You play the bottom row; the AI plays the top. Your store is on the right, the AI's on the left. The game starts with 4 seeds in every small pit.</p>
+            <p>On your turn, pick one of your six pits. Take all its seeds and drop one into each pit going counter-clockwise (rightward on your row, then up to the AI's row going left), skipping the AI's store. Land the last seed in your own store → take another turn. Land the last seed in one of your own previously-empty pits → capture all seeds in the opposite pit (plus your seed) into your store.</p>
+            <p>The game ends as soon as one side has no seeds in any of its six pits. The other player sweeps any remaining seeds on their side into their store. Most seeds in store wins.</p>
+            <ul>
+                <li><b>Easy</b> — depth 2 with randomness; misses most captures.</li>
+                <li><b>Medium</b> — depth 6 with capture-aware scoring.</li>
+                <li><b>Hard</b> — depth 10 with mobility and chain-turn heuristics.</li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+    'use strict';
+
+    // ── Board model ─────────────────────────────────────────────────────────
+    // 14 indices, 0..13. Player pits 0..5, player store 6, AI pits 7..12, AI store 13.
+    // Seeds flow counter-clockwise: 0→1→2→3→4→5→6→7→8→9→10→11→12→0 (skipping 13 for player; for AI, skip 6).
+    const PLAYER = 1;
+    const AI = -1;
+    const PLAYER_STORE = 6;
+    const AI_STORE = 13;
+    const PLAYER_PITS = [0,1,2,3,4,5];
+    const AI_PITS = [7,8,9,10,11,12];
+    const OPPOSITE = { 0:12, 1:11, 2:10, 3:9, 4:8, 5:7, 7:5, 8:4, 9:3, 10:2, 11:1, 12:0 };
+
+    function newGame() {
+      const pits = new Int8Array(14);
+      for (const p of PLAYER_PITS) pits[p] = 4;
+      for (const p of AI_PITS) pits[p] = 4;
+      return { pits, turn: PLAYER, winner: 0 }; // winner: 0 in-play, 1 player, -1 AI, 2 draw
+    }
+
+    function clone(s) {
+      return { pits: new Int8Array(s.pits), turn: s.turn, winner: s.winner };
+    }
+
+    function legalMoves(state) {
+      if (state.winner !== 0) return [];
+      const pits = state.turn === PLAYER ? PLAYER_PITS : AI_PITS;
+      return pits.filter(p => state.pits[p] > 0);
+    }
+
+    // Apply a move. Returns { capture, freeTurn, lastIdx, sweep } describing what happened
+    // (for animation purposes), and mutates state.
+    function applyMove(state, pit) {
+      const side = state.turn;
+      const ownStore = side === PLAYER ? PLAYER_STORE : AI_STORE;
+      const oppStore = side === PLAYER ? AI_STORE : PLAYER_STORE;
+      const ownPits = side === PLAYER ? PLAYER_PITS : AI_PITS;
+      const ownPitSet = new Set(ownPits);
+
+      let seeds = state.pits[pit];
+      state.pits[pit] = 0;
+      let idx = pit;
+      while (seeds > 0) {
+        idx = (idx + 1) % 14;
+        if (idx === oppStore) continue;
+        state.pits[idx]++;
+        seeds--;
+      }
+      const lastIdx = idx;
+
+      // Capture: last seed in own empty pit (now 1), opposite has seeds
+      let capture = null;
+      if (ownPitSet.has(lastIdx) && state.pits[lastIdx] === 1) {
+        const opp = OPPOSITE[lastIdx];
+        if (state.pits[opp] > 0) {
+          const captured = state.pits[opp] + state.pits[lastIdx];
+          state.pits[opp] = 0;
+          state.pits[lastIdx] = 0;
+          state.pits[ownStore] += captured;
+          capture = { from: opp, last: lastIdx, count: captured };
+        }
+      }
+
+      // Free turn?
+      const freeTurn = (lastIdx === ownStore);
+
+      // End check: if one side has zero seeds in pits, sweep the other side.
+      const playerEmpty = PLAYER_PITS.every(p => state.pits[p] === 0);
+      const aiEmpty = AI_PITS.every(p => state.pits[p] === 0);
+      let sweep = null;
+      if (playerEmpty || aiEmpty) {
+        const sweepPits = playerEmpty ? AI_PITS : PLAYER_PITS;
+        const sweepStore = playerEmpty ? AI_STORE : PLAYER_STORE;
+        let total = 0;
+        for (const p of sweepPits) { total += state.pits[p]; state.pits[p] = 0; }
+        state.pits[sweepStore] += total;
+        sweep = { pits: sweepPits.slice(), store: sweepStore, count: total };
+        const ps = state.pits[PLAYER_STORE];
+        const as = state.pits[AI_STORE];
+        if (ps > as) state.winner = PLAYER;
+        else if (as > ps) state.winner = AI;
+        else state.winner = 2;
+      }
+
+      if (!freeTurn && state.winner === 0) state.turn = -state.turn;
+
+      return { capture, freeTurn, lastIdx, sweep };
+    }
+
+    // ── AI ──────────────────────────────────────────────────────────────────
+    function evaluate(state) {
+      // From player perspective.
+      if (state.winner === PLAYER) return 10000;
+      if (state.winner === AI) return -10000;
+      if (state.winner === 2) return 0;
+      const psd = state.pits[PLAYER_STORE] - state.pits[AI_STORE];
+      // Sum of seeds on each side
+      let pseeds = 0, aseeds = 0;
+      for (const p of PLAYER_PITS) pseeds += state.pits[p];
+      for (const p of AI_PITS) aseeds += state.pits[p];
+      // Capture potential: if any opp pit is empty AND opposite mine has seeds, they can capture mine
+      // For each player pit with seeds, check if a single sow can reach our store; bonus.
+      let chainBonus = 0;
+      for (const p of PLAYER_PITS) {
+        const dist = PLAYER_STORE - p;
+        if (state.pits[p] === dist) chainBonus += 3; // free turn available
+      }
+      for (const p of AI_PITS) {
+        const dist = AI_STORE - p;
+        if (state.pits[p] === dist) chainBonus -= 3;
+      }
+      return psd * 10 + (pseeds - aseeds) * 1 + chainBonus;
+    }
+
+    function negamax(state, depth, alpha, beta) {
+      if (state.winner !== 0 || depth === 0) {
+        return evaluate(state) * state.turn;
+      }
+      const moves = legalMoves(state);
+      if (moves.length === 0) {
+        return evaluate(state) * state.turn;
+      }
+      // Move ordering: prefer free-turn moves (reach own store exactly)
+      const ownStore = state.turn === PLAYER ? PLAYER_STORE : AI_STORE;
+      moves.sort((a, b) => {
+        const da = ownStore - a, db = ownStore - b;
+        const fa = (state.pits[a] === (da > 0 ? da : 14 + da)) ? 1 : 0;
+        const fb = (state.pits[b] === (db > 0 ? db : 14 + db)) ? 1 : 0;
+        return fb - fa;
+      });
+      let best = -Infinity;
+      for (const m of moves) {
+        const next = clone(state);
+        const info = applyMove(next, m);
+        const sameSide = (next.turn === state.turn);
+        const v = sameSide
+          ? negamax(next, depth - 1, alpha, beta)
+          : -negamax(next, depth - 1, -beta, -alpha);
+        if (v > best) best = v;
+        if (best > alpha) alpha = best;
+        if (alpha >= beta) break;
+      }
+      return best;
+    }
+
+    function chooseAIMove(state, difficulty) {
+      const moves = legalMoves(state);
+      if (moves.length === 0) return null;
+      const cfg = {
+        Easy:   { depth: 2,  jitter: 8 },
+        Medium: { depth: 6,  jitter: 2 },
+        Hard:   { depth: 10, jitter: 0 },
+      }[difficulty] || { depth: 6, jitter: 2 };
+
+      const scored = [];
+      let bestScore = -Infinity;
+      for (const m of moves) {
+        const next = clone(state);
+        const info = applyMove(next, m);
+        const sameSide = (next.turn === state.turn);
+        const v = sameSide
+          ? negamax(next, cfg.depth - 1, -Infinity, Infinity)
+          : -negamax(next, cfg.depth - 1, -Infinity, Infinity);
+        scored.push({ m, v });
+        if (v > bestScore) bestScore = v;
+      }
+      const candidates = scored.filter(s => bestScore - s.v <= cfg.jitter);
+      const pick = candidates[Math.floor(Math.random() * candidates.length)];
+      return pick.m;
+    }
+
+    // ── UI / rendering ──────────────────────────────────────────────────────
+    const KEY_STREAK = 'mancalaHighScore';
+    const KEY_BEST   = 'mancalaBestStreak';
+    const KEY_WINS   = 'mancalaGamesWon';
+    const KEY_LOSS   = 'mancalaGamesLost';
+    const KEY_DRAW   = 'mancalaGamesDraw';
+    const KEY_DIFF   = 'mancalaDifficulty';
+
+    const SOW_MS = 130;       // per-seed sow animation
+    const CAPTURE_MS = 280;
+    const PAUSE_MS = 180;
+
+    const canvas = document.getElementById('board');
+    const ctx = canvas.getContext('2d');
+    const W = canvas.width, H = canvas.height;
+
+    // Layout
+    const PAD = 18;
+    const STORE_W = 110;
+    const PIT_GAP = 10;
+    const ROW_GAP = 14;
+    const PIT_AREA_W = W - 2 * PAD - 2 * STORE_W - 4 * PIT_GAP;
+    const PIT_W = (PIT_AREA_W - 5 * PIT_GAP) / 6;
+    const PIT_H = (H - 2 * PAD - ROW_GAP) / 2;
+
+    // Pit center coordinates indexed by pit id
+    const PIT_XY = (() => {
+      const xy = {};
+      // Player pits 0..5 left→right on bottom row
+      const rowYBot = PAD + PIT_H + ROW_GAP + PIT_H / 2;
+      const rowYTop = PAD + PIT_H / 2;
+      const firstX = PAD + STORE_W + PIT_GAP * 2 + PIT_W / 2;
+      for (let i = 0; i < 6; i++) {
+        const x = firstX + i * (PIT_W + PIT_GAP);
+        xy[i] = { x, y: rowYBot };       // player 0..5
+        xy[12 - i] = { x, y: rowYTop };  // AI pits run right→left as ids 12..7
+      }
+      // Stores: 6 (player) on right, 13 (AI) on left
+      xy[PLAYER_STORE] = { x: W - PAD - STORE_W / 2, y: H / 2 };
+      xy[AI_STORE] = { x: PAD + STORE_W / 2, y: H / 2 };
+      return xy;
+    })();
+
+    const turnEl = document.getElementById('turn');
+    const scoreEl = document.getElementById('score');
+    const winsEl = document.getElementById('wins');
+    const streakEl = document.getElementById('streak');
+    const diffEl = document.getElementById('difficulty');
+    const newGameBtn = document.getElementById('newGame');
+    const overEl = document.getElementById('over');
+    const overTitleEl = document.getElementById('overTitle');
+    const overTextEl = document.getElementById('overText');
+    const overBtn = document.getElementById('overBtn');
+    const statusEl = document.getElementById('status');
+    const toastEl = document.getElementById('toast');
+
+    let state = newGame();
+    let aiThinking = false;
+    let anim = null;
+    let difficulty = localStorage.getItem(KEY_DIFF) || 'Medium';
+    diffEl.value = difficulty;
+
+    function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
+    function writeNum(k, v) { localStorage.setItem(k, String(v)); }
+
+    function refreshStats() {
+      winsEl.textContent = readNum(KEY_WINS) + '–' + readNum(KEY_LOSS);
+      streakEl.textContent = readNum(KEY_STREAK);
+      scoreEl.textContent = 'You ' + state.pits[PLAYER_STORE] + ' – AI ' + state.pits[AI_STORE];
+    }
+
+    function pitRect(idx) {
+      if (idx === PLAYER_STORE) return { x: W - PAD - STORE_W, y: PAD, w: STORE_W, h: H - 2 * PAD };
+      if (idx === AI_STORE)     return { x: PAD,                y: PAD, w: STORE_W, h: H - 2 * PAD };
+      const c = PIT_XY[idx];
+      return { x: c.x - PIT_W/2, y: c.y - PIT_H/2, w: PIT_W, h: PIT_H };
+    }
+
+    function xyToPit(px, py) {
+      for (let i = 0; i <= 13; i++) {
+        const r = pitRect(i);
+        if (px >= r.x && px <= r.x + r.w && py >= r.y && py <= r.y + r.h) return i;
+      }
+      return -1;
+    }
+
+    function drawSeed(cx, cy, r, color, alpha = 1) {
+      ctx.save();
+      ctx.globalAlpha = alpha;
+      ctx.fillStyle = 'rgba(0,0,0,0.18)';
+      ctx.beginPath(); ctx.ellipse(cx, cy + r * 0.4, r, r * 0.4, 0, 0, Math.PI * 2); ctx.fill();
+      const g = ctx.createRadialGradient(cx - r*0.3, cy - r*0.3, r*0.1, cx, cy, r);
+      g.addColorStop(0, '#FFF6E2');
+      g.addColorStop(0.5, color);
+      g.addColorStop(1, '#6B4A2C');
+      ctx.fillStyle = g;
+      ctx.beginPath(); ctx.arc(cx, cy, r, 0, Math.PI * 2); ctx.fill();
+      ctx.restore();
+    }
+
+    // Pseudo-random arrangement of seeds inside a pit/store. Deterministic by index.
+    function seedPositions(rect, count, idx) {
+      const cx = rect.x + rect.w / 2;
+      const cy = rect.y + rect.h / 2;
+      const isStore = (idx === PLAYER_STORE || idx === AI_STORE);
+      const maxR = isStore ? Math.min(rect.w, rect.h) * 0.42 : Math.min(rect.w, rect.h) * 0.35;
+      const seedR = isStore ? 7 : 6;
+      const out = [];
+      let seed = idx * 1000 + 1;
+      function rand() { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; }
+      // Place seeds with rejection in an ellipse
+      let attempts = 0;
+      while (out.length < count && attempts < count * 30 + 50) {
+        attempts++;
+        const ang = rand() * Math.PI * 2;
+        const rr = Math.sqrt(rand()) * (maxR - seedR);
+        const x = cx + Math.cos(ang) * rr * (isStore ? 0.5 : 1);
+        const y = cy + Math.sin(ang) * rr;
+        let ok = true;
+        for (const p of out) {
+          const dx = p.x - x, dy = p.y - y;
+          if (dx*dx + dy*dy < (seedR * 1.7) * (seedR * 1.7)) { ok = false; break; }
+        }
+        if (ok) out.push({ x, y, r: seedR, color: [/*alt*/'#D9B889','#E8B05B','#C09060'][out.length % 3] });
+      }
+      // If we couldn't place them all without overlap, just stack the rest
+      while (out.length < count) {
+        out.push({ x: cx + (rand() - 0.5) * maxR * 0.8, y: cy + (rand() - 0.5) * maxR * 0.8, r: seedR, color: '#D9B889' });
+      }
+      return out;
+    }
+
+    function draw() {
+      const now = performance.now();
+
+      // Background board
+      ctx.fillStyle = '#F4E5D2';
+      ctx.fillRect(0, 0, W, H);
+
+      // Board panel
+      const panelX = PAD, panelY = PAD, panelW = W - 2 * PAD, panelH = H - 2 * PAD;
+      const bg = ctx.createLinearGradient(0, panelY, 0, panelY + panelH);
+      bg.addColorStop(0, '#9D6A38');
+      bg.addColorStop(1, '#7A4F26');
+      ctx.fillStyle = bg;
+      roundRect(panelX, panelY, panelW, panelH, 14);
+      ctx.fill();
+      // Subtle inner shadow
+      ctx.strokeStyle = 'rgba(0,0,0,0.25)';
+      ctx.lineWidth = 2;
+      roundRect(panelX + 1, panelY + 1, panelW - 2, panelH - 2, 13);
+      ctx.stroke();
+
+      // Stores (left = AI, right = player)
+      for (const idx of [AI_STORE, PLAYER_STORE]) {
+        const r = pitRect(idx);
+        ctx.save();
+        // Recessed bowl
+        const sg = ctx.createRadialGradient(r.x + r.w/2, r.y + r.h/2, 8, r.x + r.w/2, r.y + r.h/2, Math.max(r.w, r.h) * 0.6);
+        sg.addColorStop(0, '#2E1D10');
+        sg.addColorStop(1, '#5D3B1E');
+        ctx.fillStyle = sg;
+        roundRect(r.x, r.y, r.w, r.h, 40);
+        ctx.fill();
+        // Inner rim
+        ctx.strokeStyle = 'rgba(0,0,0,0.45)';
+        ctx.lineWidth = 2;
+        roundRect(r.x + 2, r.y + 2, r.w - 4, r.h - 4, 38);
+        ctx.stroke();
+        ctx.restore();
+
+        // Count label
+        ctx.fillStyle = 'rgba(244, 229, 210, 0.85)';
+        ctx.font = '700 22px "Bricolage Grotesque", Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        ctx.fillText(String(state.pits[idx]), r.x + r.w/2, r.y + r.h - 26);
+      }
+
+      // Player turn highlight: light glow under player pits
+      const myTurn = state.turn === PLAYER && !aiThinking && !anim && state.winner === 0;
+
+      // Pits
+      for (let i = 0; i <= 12; i++) {
+        if (i === PLAYER_STORE) continue;
+        const r = pitRect(i);
+        const isPlayer = PLAYER_PITS.includes(i);
+        const isLegal = myTurn && isPlayer && state.pits[i] > 0;
+
+        ctx.save();
+        // Pit glow when legal
+        if (isLegal) {
+          ctx.fillStyle = 'rgba(232, 176, 91, 0.18)';
+          roundRect(r.x - 3, r.y - 3, r.w + 6, r.h + 6, 36);
+          ctx.fill();
+        }
+        const pg = ctx.createRadialGradient(r.x + r.w/2, r.y + r.h/2, 6, r.x + r.w/2, r.y + r.h/2, Math.max(r.w, r.h) * 0.7);
+        pg.addColorStop(0, '#2E1D10');
+        pg.addColorStop(1, '#4A2F1E');
+        ctx.fillStyle = pg;
+        roundRect(r.x, r.y, r.w, r.h, Math.min(r.w, r.h) * 0.45);
+        ctx.fill();
+        ctx.strokeStyle = isLegal ? 'rgba(232, 176, 91, 0.65)' : 'rgba(0,0,0,0.35)';
+        ctx.lineWidth = isLegal ? 2.5 : 1.5;
+        roundRect(r.x + 1, r.y + 1, r.w - 2, r.h - 2, Math.min(r.w, r.h) * 0.43);
+        ctx.stroke();
+        ctx.restore();
+
+        // Count label
+        ctx.fillStyle = 'rgba(244, 229, 210, 0.85)';
+        ctx.font = '700 14px "Bricolage Grotesque", Inter, sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const labelY = isPlayer ? r.y + r.h - 14 : r.y + 14;
+        ctx.fillText(String(state.pits[i]), r.x + r.w/2, labelY);
+      }
+
+      // Seeds — draw count seeds inside each pit/store
+      for (let i = 0; i <= 13; i++) {
+        const r = pitRect(i);
+        const positions = seedPositions(r, state.pits[i], i);
+        for (const p of positions) drawSeed(p.x, p.y, p.r, p.color);
+      }
+
+      // Side labels
+      ctx.save();
+      ctx.fillStyle = 'rgba(244, 229, 210, 0.6)';
+      ctx.font = '600 11px Inter, sans-serif';
+      ctx.textAlign = 'center';
+      ctx.fillText("YOUR STORE", W - PAD - STORE_W/2, H - PAD - 6);
+      ctx.fillText("AI STORE", PAD + STORE_W/2, H - PAD - 6);
+      ctx.restore();
+
+      // Animated flying seed (for sowing)
+      if (anim && anim.kind === 'sow') {
+        const elapsed = now - anim.start;
+        const totalMs = anim.steps.length * SOW_MS;
+        if (elapsed < totalMs) {
+          const stepIdx = Math.floor(elapsed / SOW_MS);
+          const stepT = (elapsed % SOW_MS) / SOW_MS;
+          if (stepIdx < anim.steps.length) {
+            const step = anim.steps[stepIdx];
+            const from = step.from, to = step.to;
+            const fx = PIT_XY[from].x, fy = PIT_XY[from].y;
+            const tx = PIT_XY[to].x, ty = PIT_XY[to].y;
+            const cx = fx + (tx - fx) * stepT;
+            const arc = -Math.sin(stepT * Math.PI) * 22;
+            const cy = fy + (ty - fy) * stepT + arc;
+            drawSeed(cx, cy, 7, '#E8B05B');
+          }
+        }
+      }
+      // Capture flash overlay
+      if (anim && anim.kind === 'capture') {
+        const elapsed = now - anim.start;
+        if (elapsed < CAPTURE_MS) {
+          const r = pitRect(anim.from);
+          const t = 1 - elapsed / CAPTURE_MS;
+          ctx.save();
+          ctx.fillStyle = 'rgba(232, 176, 91, ' + (0.6 * t) + ')';
+          roundRect(r.x - 4, r.y - 4, r.w + 8, r.h + 8, 32);
+          ctx.fill();
+          ctx.restore();
+        }
+      }
+    }
+
+    function roundRect(x, y, w, h, r) {
+      ctx.beginPath();
+      ctx.moveTo(x + r, y);
+      ctx.arcTo(x + w, y, x + w, y + h, r);
+      ctx.arcTo(x + w, y + h, x, y + h, r);
+      ctx.arcTo(x, y + h, x, y, r);
+      ctx.arcTo(x, y, x + w, y, r);
+      ctx.closePath();
+    }
+
+    function setStatus(s) { statusEl.textContent = s; }
+    function setTurnLabel(s) { turnEl.textContent = s; }
+
+    let toastTimer = null;
+    function showToast(msg, ms = 1100) {
+      toastEl.textContent = msg;
+      toastEl.classList.add('show');
+      if (toastTimer) clearTimeout(toastTimer);
+      toastTimer = setTimeout(() => toastEl.classList.remove('show'), ms);
+    }
+
+    function recordWin() {
+      writeNum(KEY_WINS, readNum(KEY_WINS) + 1);
+      const s = readNum(KEY_STREAK) + 1;
+      writeNum(KEY_STREAK, s);
+      if (s > readNum(KEY_BEST)) writeNum(KEY_BEST, s);
+    }
+    function recordLoss() {
+      writeNum(KEY_LOSS, readNum(KEY_LOSS) + 1);
+      writeNum(KEY_STREAK, 0);
+    }
+    function recordDraw() {
+      writeNum(KEY_DRAW, readNum(KEY_DRAW) + 1);
+      writeNum(KEY_STREAK, 0);
+    }
+
+    function showOver(title, text) {
+      overTitleEl.textContent = title;
+      overTextEl.textContent = text;
+      overEl.classList.add('show');
+    }
+
+    function checkEnd() {
+      if (state.winner === 0) return false;
+      const ps = state.pits[PLAYER_STORE], as = state.pits[AI_STORE];
+      const summary = `Final: You ${ps} — AI ${as}.`;
+      if (state.winner === PLAYER) { recordWin(); showOver('You win!', summary + ' Streak preserved.'); }
+      else if (state.winner === AI) { recordLoss(); showOver('You lost', summary + ' Streak reset.'); }
+      else { recordDraw(); showOver('Draw', summary + ' Streak reset.'); }
+      refreshStats();
+      return true;
+    }
+
+    // Run a move with seed-by-seed sowing animation. Calls onDone when finished.
+    function performMove(pit, onDone) {
+      // Pre-compute the sequence of (from, to) sowing steps, then apply once at end.
+      // We compute against a snapshot before applying, but for state correctness, apply
+      // immediately and animate against the captured trajectory.
+      const side = state.turn;
+      const oppStore = side === PLAYER ? AI_STORE : PLAYER_STORE;
+      const seedsCount = state.pits[pit];
+      const steps = [];
+      let idx = pit;
+      let from = pit;
+      for (let s = 0; s < seedsCount; s++) {
+        do { idx = (idx + 1) % 14; } while (idx === oppStore);
+        steps.push({ from, to: idx });
+        from = idx;
+      }
+      // Snapshot to detect capture/sweep visuals
+      const info = applyMove(state, pit);
+      anim = { kind: 'sow', start: performance.now(), steps, onDone: () => {
+        // After sow, do capture flash if needed
+        if (info.capture) {
+          anim = { kind: 'capture', start: performance.now(), from: info.capture.from, onDone: () => {
+            anim = null;
+            refreshStats();
+            draw();
+            if (onDone) onDone(info);
+          }};
+          requestAnimationFrame(animTick);
+          draw();
+        } else if (info.sweep) {
+          // Brief pause then end
+          anim = null;
+          refreshStats();
+          draw();
+          setTimeout(() => { if (onDone) onDone(info); }, PAUSE_MS);
+        } else {
+          anim = null;
+          refreshStats();
+          draw();
+          if (onDone) onDone(info);
+        }
+      }};
+      requestAnimationFrame(animTick);
+    }
+
+    function animTick() {
+      if (!anim) return;
+      draw();
+      const now = performance.now();
+      let elapsed = now - anim.start;
+      let totalMs;
+      if (anim.kind === 'sow') totalMs = anim.steps.length * SOW_MS;
+      else if (anim.kind === 'capture') totalMs = CAPTURE_MS;
+      else totalMs = 0;
+      if (elapsed >= totalMs) {
+        const done = anim.onDone;
+        // Don't null anim here; onDone may set a follow-up animation
+        if (done) done();
+        return;
+      }
+      requestAnimationFrame(animTick);
+    }
+
+    function nextTurn() {
+      if (checkEnd()) return;
+      if (state.turn === PLAYER) {
+        setTurnLabel('Your move');
+        setStatus('Pick a pit on your side (bottom row) to sow.');
+        refreshStats();
+        draw();
+      } else {
+        setTurnLabel('AI thinking');
+        setStatus('AI is calculating its response.');
+        refreshStats();
+        draw();
+        aiThinking = true;
+        setTimeout(aiTurn, 120);
+      }
+    }
+
+    function aiTurn() {
+      if (state.turn !== AI) { aiThinking = false; return; }
+      const m = chooseAIMove(state, difficulty);
+      if (m == null) { aiThinking = false; nextTurn(); return; }
+      const before = state.turn;
+      performMove(m, (info) => {
+        if (info.freeTurn && state.winner === 0) {
+          showToast('AI lands in its store — another turn');
+          setTimeout(aiTurn, 350);
+          return;
+        }
+        if (info.capture && state.winner === 0) {
+          showToast('AI captures ' + info.capture.count + ' seeds');
+        }
+        aiThinking = false;
+        nextTurn();
+      });
+    }
+
+    canvas.addEventListener('click', (e) => {
+      if (aiThinking || anim || state.turn !== PLAYER || state.winner !== 0) return;
+      const rect = canvas.getBoundingClientRect();
+      const px = (e.clientX - rect.left) * (W / rect.width);
+      const py = (e.clientY - rect.top) * (H / rect.height);
+      const idx = xyToPit(px, py);
+      if (idx < 0) return;
+      if (!PLAYER_PITS.includes(idx)) { setStatus('Tap one of YOUR pits (bottom row).'); return; }
+      if (state.pits[idx] === 0) { setStatus('That pit is empty — pick another.'); return; }
+      performMove(idx, (info) => {
+        if (info.freeTurn && state.winner === 0) {
+          showToast('You land in your store — another turn');
+          nextTurn();   // turn is still player
+          return;
+        }
+        if (info.capture && state.winner === 0) {
+          showToast('You capture ' + info.capture.count + ' seeds!');
+        }
+        nextTurn();
+      });
+    });
+
+    function startGame() {
+      state = newGame();
+      anim = null;
+      aiThinking = false;
+      overEl.classList.remove('show');
+      setTurnLabel('Your move');
+      setStatus('Pick a pit on your side (bottom row) to sow.');
+      refreshStats();
+      draw();
+    }
+
+    newGameBtn.addEventListener('click', startGame);
+    overBtn.addEventListener('click', startGame);
+    diffEl.addEventListener('change', () => {
+      difficulty = diffEl.value;
+      localStorage.setItem(KEY_DIFF, difficulty);
+    });
+
+    startGame();
+
+    // Auto-scale
+    (function () {
+      const c = canvas;
+      const bw = c.width, bh = c.height;
+      function sc() {
+        c.style.width = bw + 'px';
+        c.style.height = bh + 'px';
+        const viewW = Math.min(window.innerWidth, document.documentElement.clientWidth);
+        const mw = Math.max(viewW - 64, 200);
+        const mh = window.innerHeight * 0.72;
+        const s = Math.min(mw / bw, mh / bh, 1);
+        c.style.width = (bw * s) + 'px';
+        c.style.height = (bh * s) + 'px';
+      }
+      window.addEventListener('resize', sc);
+      sc();
+    })();
+    </script>
+</body>
+</html>
