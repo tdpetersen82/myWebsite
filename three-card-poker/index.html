@@ -23,6 +23,13 @@
     <link rel="manifest" href="/manifest.json">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Three Card Poker","description":"Play Three Card Poker free in your browser. Ante, Pair Plus, and Play — beat the dealer with strategy hints.","url":"https://limestonegames.com/three-card-poker/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Three Card Poker"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is this three card poker free?","acceptedAnswer":{"@type":"Answer","text":"Yes. No downloads, no installs, no real money — just play-money chips. Bankroll and stats save in your browser."}},
+  {"@type":"Question","name":"What does \"qualify\" mean?","acceptedAnswer":{"@type":"Answer","text":"The dealer needs Queen-high or better to qualify. If the dealer doesn't qualify, your Ante pays even money and your Play bet pushes (ties)."}},
+  {"@type":"Question","name":"What's the hand ranking in three card poker?","acceptedAnswer":{"@type":"Answer","text":"Straight flush > three of a kind > straight > flush > pair > high card. Three of a kind ranks above a straight because three of a kind is statistically rarer with only three cards."}},
+  {"@type":"Question","name":"Should I play Pair Plus?","acceptedAnswer":{"@type":"Answer","text":"Pair Plus is a side bet with about a 7% house edge — high variance and fun, but it has a worse expected return than the main Ante/Play bet."}},
+  {"@type":"Question","name":"What's the optimal play threshold?","acceptedAnswer":{"@type":"Answer","text":"Play any hand of Q-6-4 or better. Fold anything weaker. This is the mathematical breakeven point — below it, folding loses less than playing on average."}}
+]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -47,7 +54,28 @@
     --shadow-deep: 0 30px 60px -20px rgba(0,0,0,.6), 0 12px 24px -10px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  html,body{min-height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
+  .game-stage{min-height:100vh;display:grid;place-items:center;overflow:hidden}
+  .game-info{background:#0a0805;color:var(--ivory-dim);padding:64px 24px;border-top:1px solid rgba(201,162,106,.18)}
+  .game-info-inner{max-width:760px;margin:0 auto;line-height:1.65}
+  .game-info h2{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:600;color:var(--brass-2);margin:40px 0 14px;letter-spacing:.01em}
+  .game-info h2:first-child{margin-top:0}
+  .game-info p{margin:0 0 16px}
+  .game-info ul{margin:0 0 16px;padding-left:22px}
+  .game-info li{margin:0 0 8px}
+  .game-info b,.game-info strong{color:var(--ivory)}
+  .game-info a{color:var(--brass-2);text-decoration:none;border-bottom:1px solid rgba(230,197,144,.3)}
+  .game-info a:hover{border-bottom-color:var(--brass-2)}
+  .game-info details{margin:0 0 10px;border-bottom:1px solid rgba(201,162,106,.12);padding-bottom:10px}
+  .game-info summary{cursor:pointer;color:var(--ivory);font-weight:500;padding:8px 0;list-style:none}
+  .game-info summary::-webkit-details-marker{display:none}
+  .game-info summary::before{content:'+';display:inline-block;width:18px;color:var(--brass)}
+  .game-info details[open] summary::before{content:'−'}
+  .game-info details p{padding:6px 0 8px 18px;margin:0}
+  .similar-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;list-style:none;padding:0}
+  .similar-games li{margin:0}
+  .similar-games a{display:block;padding:10px 14px;background:rgba(201,162,106,.06);border:1px solid rgba(201,162,106,.18);border-radius:6px;color:var(--ivory);font-weight:500}
+  .similar-games a:hover{background:rgba(201,162,106,.12);border-color:rgba(201,162,106,.35)}
   body{
     background:
       radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
@@ -122,9 +150,55 @@
 </style>
 </head>
 <body>
+<section class="game-stage">
 <div id="game-wrapper">
   <div id="root"></div>
 </div>
+</section>
+
+<article class="game-info" aria-labelledby="how-h">
+  <div class="game-info-inner">
+    <h2 id="how-h">How to play three card poker</h2>
+    <p>Three Card Poker is a simplified poker variant — fewer cards, faster decisions, two ways to win on every hand. Place an <b>Ante</b> bet to start the round. You and the dealer each get three cards from a single deck. Look at your three, then decide:</p>
+    <ul>
+      <li><b>Fold</b> — forfeit your Ante, end the hand.</li>
+      <li><b>Play</b> — match your Ante with an equal Play bet to compete against the dealer's hand.</li>
+    </ul>
+    <p>The dealer's hand must <b>qualify</b> with Queen-high or better. If the dealer doesn't qualify, your Ante pays 1:1 and your Play bet pushes (ties). If the dealer qualifies and beats you, both bets lose. Beat a qualifying dealer and both bets pay 1:1.</p>
+    <p><b>Ante Bonus</b> pays automatically on strong hands regardless of the dealer: straight pays 1:1, three of a kind 4:1, straight flush 5:1.</p>
+    <p><b>Pair Plus</b> is an optional side bet that pays on your hand alone — pair 1:1, flush 4:1, straight 6:1, three of a kind 30:1, straight flush 40:1. It pays whether or not you beat the dealer.</p>
+    <p>Hand rankings differ from standard 5-card poker: straight flush &gt; three of a kind &gt; straight &gt; flush &gt; pair &gt; high card. Three of a kind beats a straight because it's mathematically rarer when you're only dealt three cards.</p>
+
+    <h2>Tips &amp; strategy</h2>
+    <ul>
+      <li><b>Play any hand of Q-6-4 or better. Fold weaker.</b> This is the mathematical optimal threshold — anything below loses less by folding.</li>
+      <li><b>Skip Pair Plus unless you like variance.</b> About 7% house edge — fun for the big payouts, bad for long-run results.</li>
+      <li><b>Ante Bonus is free upside.</b> Strong hands pay regardless of the dealer's hand, so an Ante-only player benefits without extra risk.</li>
+      <li><b>Don't deviate on a feeling.</b> Q-6-4 isn't a vibe — it's the breakeven calculation across millions of hands.</li>
+      <li><b>Don't chase losses with bigger Antes.</b> Variance is high enough already.</li>
+    </ul>
+
+    <h2>About three card poker</h2>
+    <p>Three Card Poker was invented in 1994 by Derek Webb, a British poker player who set out to design a casino-floor game faster than standard poker and more interesting than Caribbean Stud. Within a decade it became one of the most successful new casino games of the modern era — simple, fast, and forgiving for casual players, with a roughly 3.4% Ante house edge under optimal play.</p>
+
+    <h2>Frequently asked questions</h2>
+    <details><summary>Is this three card poker free?</summary><p>Yes. No downloads, no installs, no real money. Bankroll and stats save in your browser.</p></details>
+    <details><summary>What does "qualify" mean?</summary><p>The dealer needs Queen-high or better. If not, Ante pays 1:1 and Play pushes (ties).</p></details>
+    <details><summary>What's the hand ranking?</summary><p>Straight flush &gt; three of a kind &gt; straight &gt; flush &gt; pair &gt; high card. Three of a kind ranks above straight because it's rarer with only three cards.</p></details>
+    <details><summary>Should I play Pair Plus?</summary><p>About 7% house edge — fun for the big payouts, but a worse expected return than the main bet.</p></details>
+    <details><summary>What's the optimal threshold?</summary><p>Play Q-6-4 or better. Fold anything weaker.</p></details>
+
+    <h2>Similar games</h2>
+    <ul class="similar-games">
+      <li><a href="../blackjack/">Blackjack</a></li>
+      <li><a href="../video-poker/">Video Poker</a></li>
+      <li><a href="../texas-holdem/">Texas Hold'em</a></li>
+      <li><a href="../solitaire/">Solitaire</a></li>
+      <li><a href="../roulette/">Roulette</a></li>
+      <li><a href="../craps/">Craps</a></li>
+    </ul>
+  </div>
+</article>
 
 <script>
 (function() {

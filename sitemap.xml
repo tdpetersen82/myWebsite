@@ -37,5 +37,8 @@
   <url><loc>https://limestonegames.com/texas-holdem/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/three-card-poker/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/video-poker/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://limestonegames.com/mancala/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://limestonegames.com/ultimate-tic-tac-toe/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://limestonegames.com/slot-machine/</loc><priority>0.8</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/privacy.html</loc><priority>0.3</priority><changefreq>yearly</changefreq></url>
 </urlset>

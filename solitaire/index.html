@@ -23,6 +23,13 @@
     <link rel="manifest" href="/manifest.json">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Solitaire","description":"Klondike Solitaire — beat the deck. A casino host deals you in. Draw 1 or 3, undo, hints, Vegas scoring.","url":"https://limestonegames.com/solitaire/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Solitaire"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is this solitaire game free?","acceptedAnswer":{"@type":"Answer","text":"Yes. No downloads, no installs, no real money. Stats and progress save in your browser."}},
+  {"@type":"Question","name":"Is every deal winnable?","acceptedAnswer":{"@type":"Answer","text":"No. About 15–20% of random Klondike deals are unsolvable from the start, regardless of play."}},
+  {"@type":"Question","name":"Should I play Draw 1 or Draw 3?","acceptedAnswer":{"@type":"Answer","text":"Draw 1 is easier with a much higher win rate. Draw 3 is the harder traditional variant — more strategy, fewer wins."}},
+  {"@type":"Question","name":"What's the highest win rate possible?","acceptedAnswer":{"@type":"Answer","text":"Studies suggest about 79–82% of solvable Klondike deals can be won with perfect play. Most players win much less."}},
+  {"@type":"Question","name":"What is Vegas scoring?","acceptedAnswer":{"@type":"Answer","text":"Vegas scoring treats each game like a casino round — you \"buy\" the deck for $52 and earn $5 per card moved to the foundation. Net positive at the end means you won money."}}
+]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -47,7 +54,28 @@
     --shadow-deep: 0 30px 60px -20px rgba(0,0,0,.6), 0 12px 24px -10px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  html,body{min-height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
+  .game-stage{min-height:100vh;display:grid;place-items:center;overflow:hidden}
+  .game-info{background:#0a0805;color:var(--ivory-dim);padding:64px 24px;border-top:1px solid rgba(201,162,106,.18)}
+  .game-info-inner{max-width:760px;margin:0 auto;line-height:1.65}
+  .game-info h2{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:600;color:var(--brass-2);margin:40px 0 14px;letter-spacing:.01em}
+  .game-info h2:first-child{margin-top:0}
+  .game-info p{margin:0 0 16px}
+  .game-info ul{margin:0 0 16px;padding-left:22px}
+  .game-info li{margin:0 0 8px}
+  .game-info b,.game-info strong{color:var(--ivory)}
+  .game-info a{color:var(--brass-2);text-decoration:none;border-bottom:1px solid rgba(230,197,144,.3)}
+  .game-info a:hover{border-bottom-color:var(--brass-2)}
+  .game-info details{margin:0 0 10px;border-bottom:1px solid rgba(201,162,106,.12);padding-bottom:10px}
+  .game-info summary{cursor:pointer;color:var(--ivory);font-weight:500;padding:8px 0;list-style:none}
+  .game-info summary::-webkit-details-marker{display:none}
+  .game-info summary::before{content:'+';display:inline-block;width:18px;color:var(--brass)}
+  .game-info details[open] summary::before{content:'−'}
+  .game-info details p{padding:6px 0 8px 18px;margin:0}
+  .similar-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;list-style:none;padding:0}
+  .similar-games li{margin:0}
+  .similar-games a{display:block;padding:10px 14px;background:rgba(201,162,106,.06);border:1px solid rgba(201,162,106,.18);border-radius:6px;color:var(--ivory);font-weight:500}
+  .similar-games a:hover{background:rgba(201,162,106,.12);border-color:rgba(201,162,106,.35)}
   body{
     background:
       radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
@@ -106,9 +134,49 @@
 </style>
 </head>
 <body>
+<section class="game-stage">
 <div id="game-wrapper">
   <div id="root"></div>
 </div>
+</section>
+
+<article class="game-info" aria-labelledby="how-h">
+  <div class="game-info-inner">
+    <h2 id="how-h">How to play Klondike solitaire</h2>
+    <p>Klondike is the one-player card game most people picture when they hear "solitaire." It's played with a standard 52-card deck. Seven columns make up the tableau — the first has 1 card, the second 2, up to 7 in the seventh, and only the top card of each column starts face-up. The remaining cards form the stock pile. Four foundation slots wait empty at the top, one per suit.</p>
+    <p>Your goal: move all 52 cards to the foundations, building each one from ace through king in suit. In the tableau, build descending sequences alternating colors — red seven on black eight, black six on red seven, and so on. When you can't move anything, draw from the stock. Reveal face-down cards by clearing what sits on top of them. Win the game by getting all 52 cards onto the four foundations.</p>
+
+    <h2>Tips &amp; strategy</h2>
+    <ul>
+      <li><b>Play aces and twos to the foundation immediately.</b> They unblock the tableau and never need to stay below other cards.</li>
+      <li><b>Don't empty a column without a king ready.</b> Empty columns are prime real estate — only kings can fill them, so waste one and you lose a key tool.</li>
+      <li><b>Flip face-down cards before building.</b> Each face-down flipped is a new option. Always prefer moves that reveal a hidden card.</li>
+      <li><b>Slow your stock cycling.</b> Once you start mindlessly drawing through the stock, you commit to what's left in front. Pause and play the visible cards first.</li>
+      <li><b>Don't auto-foundation low cards too early.</b> A 4 on the foundation can't help you in the tableau. Sometimes a 3 or 4 is more useful staying down to receive cards.</li>
+      <li><b>Some deals are simply unwinnable.</b> Don't beat yourself up over a loss. Even perfect play wins only ~80% of solvable deals, and 15–20% of random deals are unsolvable from the start.</li>
+    </ul>
+
+    <h2>About solitaire</h2>
+    <p>Klondike solitaire traces to the Klondike Gold Rush of the 1890s, where prospectors reportedly played it to pass long Yukon winters. The game went global in 1990 when Microsoft bundled it with Windows 3.0 — a move intended to teach users how to drag-and-drop the mouse. It worked, and Klondike became maybe the most-played video game in history. Today it's still a daily ritual for millions of players.</p>
+
+    <h2>Frequently asked questions</h2>
+    <details><summary>Is this solitaire game free?</summary><p>Yes. No downloads, no installs, no real money. Stats save in your browser.</p></details>
+    <details><summary>Is every deal winnable?</summary><p>No. About 15–20% of random deals are unsolvable from the start, regardless of play.</p></details>
+    <details><summary>Draw 1 or Draw 3?</summary><p>Draw 1 is easier with a higher win rate. Draw 3 is the harder traditional variant — more strategy, fewer wins.</p></details>
+    <details><summary>What's the best possible win rate?</summary><p>About 79–82% of solvable Klondike deals can be won with perfect play. Most players win far less.</p></details>
+    <details><summary>What's Vegas scoring?</summary><p>Vegas scoring treats each game like a casino round — you "buy" the deck for $52 and earn $5 per foundation card. Net positive means you won money.</p></details>
+
+    <h2>Similar games</h2>
+    <ul class="similar-games">
+      <li><a href="../blackjack/">Blackjack</a></li>
+      <li><a href="../three-card-poker/">Three Card Poker</a></li>
+      <li><a href="../video-poker/">Video Poker</a></li>
+      <li><a href="../texas-holdem/">Texas Hold'em</a></li>
+      <li><a href="../roulette/">Roulette</a></li>
+      <li><a href="../craps/">Craps</a></li>
+    </ul>
+  </div>
+</article>
 
 <script>
 (function() {

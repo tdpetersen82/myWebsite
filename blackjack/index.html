@@ -23,6 +23,13 @@
     <link rel="manifest" href="/manifest.json">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Blackjack","description":"Play Blackjack free in your browser. Hit, stand, double, or split — beat the dealer to 21 with basic-strategy hints.","url":"https://limestonegames.com/blackjack/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Blackjack"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is this blackjack game free?","acceptedAnswer":{"@type":"Answer","text":"Yes. No downloads, no installs, no real money — just play-money chips. Your bankroll and stats save in your browser."}},
+  {"@type":"Question","name":"What's a soft hand in blackjack?","acceptedAnswer":{"@type":"Answer","text":"A hand with an ace counted as 11 — for example, an ace and a six is a soft 17. If hitting would bust the soft total, the ace flips to 1 and you keep playing."}},
+  {"@type":"Question","name":"Should I take insurance?","acceptedAnswer":{"@type":"Answer","text":"No. Insurance pays 2:1 but the dealer hits blackjack only about 30% of the time, so the bet loses money in the long run."}},
+  {"@type":"Question","name":"Can I count cards here?","acceptedAnswer":{"@type":"Answer","text":"Not effectively — the shoe is shuffled often enough that counting won't give you a meaningful edge. Use it to practice basic strategy instead."}},
+  {"@type":"Question","name":"Does the dealer hit on soft 17?","acceptedAnswer":{"@type":"Answer","text":"No. Our table uses the player-friendly Stand on Soft 17 (S17) rule. The dealer must hit any hard total of 16 or less and stand on any 17 or higher."}}
+]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -47,7 +54,28 @@
     --shadow-deep: 0 30px 60px -20px rgba(0,0,0,.6), 0 12px 24px -10px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  html,body{min-height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
+  .game-stage{min-height:100vh;display:grid;place-items:center;overflow:hidden}
+  .game-info{background:#0a0805;color:var(--ivory-dim);padding:64px 24px;border-top:1px solid rgba(201,162,106,.18)}
+  .game-info-inner{max-width:760px;margin:0 auto;line-height:1.65}
+  .game-info h2{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:600;color:var(--brass-2);margin:40px 0 14px;letter-spacing:.01em}
+  .game-info h2:first-child{margin-top:0}
+  .game-info p{margin:0 0 16px}
+  .game-info ul{margin:0 0 16px;padding-left:22px}
+  .game-info li{margin:0 0 8px}
+  .game-info b,.game-info strong{color:var(--ivory)}
+  .game-info a{color:var(--brass-2);text-decoration:none;border-bottom:1px solid rgba(230,197,144,.3)}
+  .game-info a:hover{border-bottom-color:var(--brass-2)}
+  .game-info details{margin:0 0 10px;border-bottom:1px solid rgba(201,162,106,.12);padding-bottom:10px}
+  .game-info summary{cursor:pointer;color:var(--ivory);font-weight:500;padding:8px 0;list-style:none}
+  .game-info summary::-webkit-details-marker{display:none}
+  .game-info summary::before{content:'+';display:inline-block;width:18px;color:var(--brass)}
+  .game-info details[open] summary::before{content:'−'}
+  .game-info details p{padding:6px 0 8px 18px;margin:0}
+  .similar-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;list-style:none;padding:0}
+  .similar-games li{margin:0}
+  .similar-games a{display:block;padding:10px 14px;background:rgba(201,162,106,.06);border:1px solid rgba(201,162,106,.18);border-bottom:1px solid rgba(201,162,106,.18);border-radius:6px;color:var(--ivory);font-weight:500}
+  .similar-games a:hover{background:rgba(201,162,106,.12);border-color:rgba(201,162,106,.35)}
   body{
     background:
       radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
@@ -134,9 +162,57 @@
 </style>
 </head>
 <body>
+<section class="game-stage">
 <div id="game-wrapper">
   <div id="root"></div>
 </div>
+</section>
+
+<article class="game-info" aria-labelledby="how-h">
+  <div class="game-info-inner">
+    <h2 id="how-h">How to play blackjack</h2>
+    <p>Blackjack is a card game between you and the dealer. Build a hand closer to 21 than the dealer's — without going over. Number cards score at face value, face cards count 10, and an ace is worth 1 or 11, whichever helps you most.</p>
+    <p>Place a bet to start the round. You and the dealer each get two cards; yours are face-up, the dealer's second card stays hidden. Then choose your action:</p>
+    <ul>
+      <li><b>Hit</b> — take another card. Keep hitting until you stand or bust.</li>
+      <li><b>Stand</b> — keep your total. The dealer plays next.</li>
+      <li><b>Double</b> — double your bet for one and only one more card. Best on 9, 10, or 11.</li>
+      <li><b>Split</b> — when dealt a pair, split it into two hands with a new second card on each. Each hand plays independently.</li>
+    </ul>
+    <p>If your total goes over 21, you bust and lose the bet immediately. Once you finish, the dealer flips their hidden card and draws until they reach 17 or more — our table uses the player-friendly Stand-on-Soft-17 rule. Beat the dealer's total and you win even money. Land a natural blackjack (ace plus a 10-value card on the first two cards) and you win 3:2.</p>
+
+    <h2>Tips &amp; strategy</h2>
+    <ul>
+      <li><b>Always split aces and eights.</b> Aces give you two shots at 21; two eights make a weak 16 that's almost always better split into two hands.</li>
+      <li><b>Never split fives or tens.</b> Two fives total a strong 10 — better to double. Splitting tens breaks up a 20, the second-best hand in the game.</li>
+      <li><b>Double on 11.</b> One card away from 21 with a four-in-thirteen chance of getting it. Double whenever the dealer shows 2 through 10.</li>
+      <li><b>Hit 12–16 when the dealer shows 7+.</b> A strong dealer up-card will likely make 17–21 anyway. Take the risk.</li>
+      <li><b>Stand on 12–16 when the dealer shows 2–6.</b> Weak up-cards bust often. Let them.</li>
+      <li><b>Skip insurance.</b> The math doesn't work — long-term it's a losing side bet.</li>
+      <li><b>Never deviate from basic strategy on a hunch.</b> Every chart move is the mathematically best decision given the cards. Hunches cost money.</li>
+    </ul>
+
+    <h2>About blackjack</h2>
+    <p>Blackjack traces to 18th-century French casinos as Vingt-et-Un — "twenty-one." It crossed to America in the 1800s and exploded in popularity through the 20th century, becoming the most-played table game in the world. Ed Thorp's 1962 book <i>Beat the Dealer</i> proved a skilled player could beat the house by counting cards, kicking off both a cultural fascination and a long cat-and-mouse game with casinos. Today blackjack remains one of the lowest-house-edge games in the casino — basic strategy gets you down to about a 0.5% disadvantage.</p>
+
+    <h2>Frequently asked questions</h2>
+    <details><summary>Is this blackjack game free?</summary><p>Yes. No downloads, no installs, no real money — just play-money chips. Your bankroll and stats save in your browser.</p></details>
+    <details><summary>What's a "soft" hand?</summary><p>A hand with an ace counted as 11. For example, ace + six is a soft 17. If hitting would bust the soft total, the ace flips to 1 and you keep playing.</p></details>
+    <details><summary>Should I take insurance?</summary><p>No. Insurance pays 2:1 but the dealer hits blackjack only about 30% of the time, so the bet loses money in the long run.</p></details>
+    <details><summary>Can I count cards here?</summary><p>Not effectively — the shoe is reshuffled often enough that counting won't give you a meaningful edge. Use it to practice basic strategy instead.</p></details>
+    <details><summary>Does the dealer hit on soft 17?</summary><p>No. Our table uses the player-friendly Stand on Soft 17 (S17) rule. The dealer hits any hard total of 16 or less and stands on any 17 or higher.</p></details>
+
+    <h2>Similar games</h2>
+    <ul class="similar-games">
+      <li><a href="../three-card-poker/">Three Card Poker</a></li>
+      <li><a href="../video-poker/">Video Poker</a></li>
+      <li><a href="../texas-holdem/">Texas Hold'em</a></li>
+      <li><a href="../solitaire/">Solitaire</a></li>
+      <li><a href="../craps/">Craps</a></li>
+      <li><a href="../roulette/">Roulette</a></li>
+    </ul>
+  </div>
+</article>
 
 <script>
 (function() {

@@ -23,6 +23,13 @@
     <link rel="manifest" href="/manifest.json">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Craps","description":"Play Craps free in your browser. Pass line, come, place, field, odds — roll the bones with strategy hints.","url":"https://limestonegames.com/craps/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Craps"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is this craps game free?","acceptedAnswer":{"@type":"Answer","text":"Yes. No downloads, no real money — just play-money chips. Bankroll and stats save in your browser."}},
+  {"@type":"Question","name":"What does \"seven out\" mean?","acceptedAnswer":{"@type":"Answer","text":"Once the point is established, rolling a 7 ends the shooter's roll — Pass Line bets lose, the dice change hands. It's the most common way a roll ends."}},
+  {"@type":"Question","name":"Why is the Pass Line so popular?","acceptedAnswer":{"@type":"Answer","text":"Low house edge (1.41%), simple to understand, and you can back it with Odds — a true zero-edge bet that lets you play a near-fair game long-run."}},
+  {"@type":"Question","name":"What are Odds bets?","acceptedAnswer":{"@type":"Answer","text":"After a point is set, you can place an Odds bet behind your Pass Line bet. Odds pay true odds with zero house edge — the single best bet in any casino. Always take the maximum allowed."}},
+  {"@type":"Question","name":"Are the dice truly random?","acceptedAnswer":{"@type":"Answer","text":"Yes. Each roll uses two independent random dice. There's no memory between rolls — \"hot\" and \"cold\" tables are pattern-finding after the fact."}}
+]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -47,7 +54,28 @@
     --shadow-deep: 0 30px 60px -20px rgba(0,0,0,.6), 0 12px 24px -10px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  html,body{min-height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
+  .game-stage{min-height:100vh;display:grid;place-items:center;overflow:hidden}
+  .game-info{background:#0a0805;color:var(--ivory-dim);padding:64px 24px;border-top:1px solid rgba(201,162,106,.18)}
+  .game-info-inner{max-width:760px;margin:0 auto;line-height:1.65}
+  .game-info h2{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:600;color:var(--brass-2);margin:40px 0 14px;letter-spacing:.01em}
+  .game-info h2:first-child{margin-top:0}
+  .game-info p{margin:0 0 16px}
+  .game-info ul{margin:0 0 16px;padding-left:22px}
+  .game-info li{margin:0 0 8px}
+  .game-info b,.game-info strong{color:var(--ivory)}
+  .game-info a{color:var(--brass-2);text-decoration:none;border-bottom:1px solid rgba(230,197,144,.3)}
+  .game-info a:hover{border-bottom-color:var(--brass-2)}
+  .game-info details{margin:0 0 10px;border-bottom:1px solid rgba(201,162,106,.12);padding-bottom:10px}
+  .game-info summary{cursor:pointer;color:var(--ivory);font-weight:500;padding:8px 0;list-style:none}
+  .game-info summary::-webkit-details-marker{display:none}
+  .game-info summary::before{content:'+';display:inline-block;width:18px;color:var(--brass)}
+  .game-info details[open] summary::before{content:'−'}
+  .game-info details p{padding:6px 0 8px 18px;margin:0}
+  .similar-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;list-style:none;padding:0}
+  .similar-games li{margin:0}
+  .similar-games a{display:block;padding:10px 14px;background:rgba(201,162,106,.06);border:1px solid rgba(201,162,106,.18);border-radius:6px;color:var(--ivory);font-weight:500}
+  .similar-games a:hover{background:rgba(201,162,106,.12);border-color:rgba(201,162,106,.35)}
   body{
     background:
       radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
@@ -142,9 +170,57 @@
 </style>
 </head>
 <body>
+<section class="game-stage">
 <div id="game-wrapper">
   <div id="root"></div>
 </div>
+</section>
+
+<article class="game-info" aria-labelledby="how-h">
+  <div class="game-info-inner">
+    <h2 id="how-h">How to play craps</h2>
+    <p>Craps is the loudest, most social game on a casino floor — a dice game with dozens of possible bets where everyone at the table is rooting for the shooter. The shooter rolls two dice. The first roll of a hand is the <b>come-out roll</b>. If it's 7 or 11, Pass Line bets win. If it's 2, 3, or 12 (craps), Pass Line bets lose. Anything else (4, 5, 6, 8, 9, 10) sets the <b>point</b>.</p>
+    <p>Once the point is set, the shooter keeps rolling until they either roll the point again (Pass Line wins) or roll a 7 (Pass Line loses, "seven out") — then the dice pass to the next shooter.</p>
+    <p>Key bets:</p>
+    <ul>
+      <li><b>Pass Line</b> — 1:1, low house edge (1.41%). The default bet for most players.</li>
+      <li><b>Don't Pass</b> — 1:1, mathematically slightly better (1.36% edge). Bets against the shooter.</li>
+      <li><b>Come / Don't Come</b> — work like Pass / Don't Pass but placed after the point is established.</li>
+      <li><b>Odds</b> — placed behind Pass / Don't Pass once a point is set. Zero house edge. The best bet in any casino.</li>
+      <li><b>Place bets</b> — wager that a specific number rolls before a 7. House edge varies by number (best on 6 and 8 at 1.52%).</li>
+      <li><b>Field bet</b> — single-roll on 2, 3, 4, 9, 10, 11, or 12. Looks tempting but 5.56% edge.</li>
+    </ul>
+
+    <h2>Tips &amp; strategy</h2>
+    <ul>
+      <li><b>Pass + max Odds is the lowest combined edge.</b> Backing your Pass Line with maximum allowed Odds dilutes the overall house edge to roughly 0.2–0.5%, depending on table rules.</li>
+      <li><b>Don't Pass beats Pass by the math.</b> 1.36% vs. 1.41%. Marginal but real. The tradeoff: you're rooting against everyone else at the table.</li>
+      <li><b>Avoid the center proposition bets.</b> Hardways, Any Seven, Horn, World, Hi-Lo — these are sucker bets with 9–17% house edges. Stay on the line.</li>
+      <li><b>Don't chase losses.</b> Variance is brutal. A long roll feels great; a quick seven-out can wipe a session.</li>
+      <li><b>The dice don't have memory.</b> "Hot" and "cold" tables are pattern-finding after the fact.</li>
+    </ul>
+
+    <h2>About craps</h2>
+    <p>Craps evolved from Hazard, an English dice game played as far back as the Crusades. American slang turned the snake-eyes outcome (rolling 2) into "crabs," eventually giving the game its modern name. New Orleans gambling halls in the early 1800s shaped the game we know today, and craps became a staple of mid-century Vegas, where it remains one of the most action-packed games on the floor.</p>
+
+    <h2>Frequently asked questions</h2>
+    <details><summary>Is this craps game free?</summary><p>Yes. No downloads, no real money. Bankroll and stats save in your browser.</p></details>
+    <details><summary>What does "seven out" mean?</summary><p>After a point is set, rolling a 7 ends the shooter's roll — Pass Line loses, dice change hands.</p></details>
+    <details><summary>Why is Pass Line so popular?</summary><p>Low house edge (1.41%), simple to understand, and you can back it with zero-edge Odds bets.</p></details>
+    <details><summary>What are Odds bets?</summary><p>After the point is set, you can place an Odds bet behind your Pass Line. Odds pay true odds with zero house edge — the single best bet in any casino.</p></details>
+    <details><summary>Are the dice random?</summary><p>Yes. Every roll uses two independent random dice. No memory, no patterns.</p></details>
+
+    <h2>Similar games</h2>
+    <ul class="similar-games">
+      <li><a href="../blackjack/">Blackjack</a></li>
+      <li><a href="../roulette/">Roulette</a></li>
+      <li><a href="../video-poker/">Video Poker</a></li>
+      <li><a href="../three-card-poker/">Three Card Poker</a></li>
+      <li><a href="../texas-holdem/">Texas Hold'em</a></li>
+      <li><a href="../solitaire/">Solitaire</a></li>
+    </ul>
+  </div>
+</article>
 
 <script>
 (function() {

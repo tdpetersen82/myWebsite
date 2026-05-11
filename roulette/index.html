@@ -23,6 +23,13 @@
     <link rel="manifest" href="/manifest.json">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Roulette","description":"Play Roulette free in your browser. Place inside or outside bets, spin the wheel, and try your luck.","url":"https://limestonegames.com/roulette/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Roulette"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is this roulette game free?","acceptedAnswer":{"@type":"Answer","text":"Yes — free play, no real money. Your bankroll and stats save in your browser."}},
+  {"@type":"Question","name":"Is this European or American roulette?","acceptedAnswer":{"@type":"Answer","text":"European — a single zero. The house edge is 2.7%, half of American roulette's 5.26%."}},
+  {"@type":"Question","name":"Can I bet on multiple things at once?","acceptedAnswer":{"@type":"Answer","text":"Yes. Stack any combination of inside (straight, split, street, corner) and outside (red/black, odd/even, dozens, columns) bets across the layout."}},
+  {"@type":"Question","name":"Does the Martingale system actually work?","acceptedAnswer":{"@type":"Answer","text":"No. Doubling after each loss requires unlimited bankroll and no table limits — neither exists. A long losing streak will wipe you out before a win recovers it."}},
+  {"@type":"Question","name":"Are the spins truly random?","acceptedAnswer":{"@type":"Answer","text":"Yes. Each spin uses an independent random outcome. Past results have zero influence on the next — there are no due numbers."}}
+]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -47,7 +54,28 @@
     --shadow-deep: 0 30px 60px -20px rgba(0,0,0,.6), 0 12px 24px -10px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  html,body{min-height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
+  .game-stage{min-height:100vh;display:grid;place-items:center;overflow:hidden}
+  .game-info{background:#0a0805;color:var(--ivory-dim);padding:64px 24px;border-top:1px solid rgba(201,162,106,.18)}
+  .game-info-inner{max-width:760px;margin:0 auto;line-height:1.65}
+  .game-info h2{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:600;color:var(--brass-2);margin:40px 0 14px;letter-spacing:.01em}
+  .game-info h2:first-child{margin-top:0}
+  .game-info p{margin:0 0 16px}
+  .game-info ul{margin:0 0 16px;padding-left:22px}
+  .game-info li{margin:0 0 8px}
+  .game-info b,.game-info strong{color:var(--ivory)}
+  .game-info a{color:var(--brass-2);text-decoration:none;border-bottom:1px solid rgba(230,197,144,.3)}
+  .game-info a:hover{border-bottom-color:var(--brass-2)}
+  .game-info details{margin:0 0 10px;border-bottom:1px solid rgba(201,162,106,.12);padding-bottom:10px}
+  .game-info summary{cursor:pointer;color:var(--ivory);font-weight:500;padding:8px 0;list-style:none}
+  .game-info summary::-webkit-details-marker{display:none}
+  .game-info summary::before{content:'+';display:inline-block;width:18px;color:var(--brass)}
+  .game-info details[open] summary::before{content:'−'}
+  .game-info details p{padding:6px 0 8px 18px;margin:0}
+  .similar-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;list-style:none;padding:0}
+  .similar-games li{margin:0}
+  .similar-games a{display:block;padding:10px 14px;background:rgba(201,162,106,.06);border:1px solid rgba(201,162,106,.18);border-radius:6px;color:var(--ivory);font-weight:500}
+  .similar-games a:hover{background:rgba(201,162,106,.12);border-color:rgba(201,162,106,.35)}
   body{
     background:
       radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
@@ -147,9 +175,50 @@
 </style>
 </head>
 <body>
+<section class="game-stage">
 <div id="game-wrapper">
   <div id="root"></div>
 </div>
+</section>
+
+<article class="game-info" aria-labelledby="how-h">
+  <div class="game-info-inner">
+    <h2 id="how-h">How to play roulette</h2>
+    <p>European roulette is a casino classic. A wheel with 37 numbered pockets — 0 through 36 — spins one way; a small ball spins the other. Bet on where the ball lands before the croupier closes the table. When the ball settles, winning bets pay automatically.</p>
+    <p>You can wager on a single number (straight, 35:1), pairs and lines (split 17:1, street 11:1, corner 8:1), columns or dozens (2:1), or even-money outside bets like red/black, odd/even, and high/low (1:1). Stack any combination across the layout — there's no limit on how many bets per spin.</p>
+    <p>The single zero pocket is what gives the house its edge. On every bet, the math returns about 97.3 cents on the dollar long-term, leaving a 2.7% house edge — half the edge of American roulette, which adds a 00 pocket.</p>
+
+    <h2>Tips &amp; strategy</h2>
+    <ul>
+      <li><b>Stick to European, not American.</b> Half the house edge for the same game.</li>
+      <li><b>Outside bets last longer.</b> Red/black wins about 48.6% of the time. Great for slow grinding.</li>
+      <li><b>Inside bets pay big but lose often.</b> A straight number hits once every 37 spins on average.</li>
+      <li><b>No betting system fixes the house edge.</b> Martingale, Fibonacci, D'Alembert — all eventually lose to the math.</li>
+      <li><b>The wheel has no memory.</b> Red five times in a row doesn't make black "due." Every spin is independent.</li>
+      <li><b>Set a session bankroll and a stop-loss.</b> Bankroll discipline is the only real edge.</li>
+    </ul>
+
+    <h2>About roulette</h2>
+    <p>Roulette — French for "little wheel" — was invented in 17th-century France, with the modern single-zero layout established by François and Louis Blanc in the 1840s. The double-zero American version emerged later in U.S. casinos. The game's mathematical purity (every spin truly independent, every bet's expectation calculable) makes it a favorite of probability writers and statistics teachers alike.</p>
+
+    <h2>Frequently asked questions</h2>
+    <details><summary>Is this roulette game free?</summary><p>Yes — free play, no real money. Your bankroll and stats save in your browser.</p></details>
+    <details><summary>Is this European or American roulette?</summary><p>European — a single zero. The house edge is 2.7%, half of American roulette's 5.26%.</p></details>
+    <details><summary>Can I bet on multiple things at once?</summary><p>Yes. Stack any combination of inside and outside bets across the layout.</p></details>
+    <details><summary>Does Martingale actually work?</summary><p>No. Doubling after each loss requires unlimited bankroll and no table limits — neither exists.</p></details>
+    <details><summary>Are spins truly random?</summary><p>Yes. Each spin uses an independent random outcome. Past results have zero influence on the next — there are no "due" numbers.</p></details>
+
+    <h2>Similar games</h2>
+    <ul class="similar-games">
+      <li><a href="../blackjack/">Blackjack</a></li>
+      <li><a href="../craps/">Craps</a></li>
+      <li><a href="../video-poker/">Video Poker</a></li>
+      <li><a href="../three-card-poker/">Three Card Poker</a></li>
+      <li><a href="../texas-holdem/">Texas Hold'em</a></li>
+      <li><a href="../solitaire/">Solitaire</a></li>
+    </ul>
+  </div>
+</article>
 
 <script>
 (function() {

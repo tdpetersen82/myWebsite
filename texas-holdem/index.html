@@ -23,6 +23,13 @@
     <link rel="manifest" href="/manifest.json">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Texas Hold'em","description":"Play Texas Hold'em free in your browser. 4-handed cash game with equity-based hints.","url":"https://limestonegames.com/texas-holdem/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Texas Hold'em"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is this Texas Hold'em free?","acceptedAnswer":{"@type":"Answer","text":"Yes. No downloads, no installs, no real money — just play-money chips. Bankroll and stats save in your browser."}},
+  {"@type":"Question","name":"How many AI opponents are at the table?","acceptedAnswer":{"@type":"Answer","text":"Three — a 4-handed cash game. Each AI has a slightly different style, and difficulty tiers control how strict they play."}},
+  {"@type":"Question","name":"What does \"equity\" mean?","acceptedAnswer":{"@type":"Answer","text":"Your probability of winning the hand given the known cards. The in-game hint panel shows your equity vs. each opponent so you can compare it to pot odds."}},
+  {"@type":"Question","name":"What's the best starting hand?","acceptedAnswer":{"@type":"Answer","text":"Pocket aces (AA) — wins about 85% against any random hand heads-up. Other premium starters: KK, QQ, AKs, AKo, JJ, AQs."}},
+  {"@type":"Question","name":"Can I rebuy if I bust?","acceptedAnswer":{"@type":"Answer","text":"Yes. Your chip stack resets when you hit zero, so you can keep playing indefinitely."}}
+]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -47,7 +54,28 @@
     --shadow-deep: 0 30px 60px -20px rgba(0,0,0,.6), 0 12px 24px -10px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  html,body{min-height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
+  .game-stage{min-height:100vh;display:grid;place-items:center;overflow:hidden}
+  .game-info{background:#0a0805;color:var(--ivory-dim);padding:64px 24px;border-top:1px solid rgba(201,162,106,.18)}
+  .game-info-inner{max-width:760px;margin:0 auto;line-height:1.65}
+  .game-info h2{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:600;color:var(--brass-2);margin:40px 0 14px;letter-spacing:.01em}
+  .game-info h2:first-child{margin-top:0}
+  .game-info p{margin:0 0 16px}
+  .game-info ul{margin:0 0 16px;padding-left:22px}
+  .game-info li{margin:0 0 8px}
+  .game-info b,.game-info strong{color:var(--ivory)}
+  .game-info a{color:var(--brass-2);text-decoration:none;border-bottom:1px solid rgba(230,197,144,.3)}
+  .game-info a:hover{border-bottom-color:var(--brass-2)}
+  .game-info details{margin:0 0 10px;border-bottom:1px solid rgba(201,162,106,.12);padding-bottom:10px}
+  .game-info summary{cursor:pointer;color:var(--ivory);font-weight:500;padding:8px 0;list-style:none}
+  .game-info summary::-webkit-details-marker{display:none}
+  .game-info summary::before{content:'+';display:inline-block;width:18px;color:var(--brass)}
+  .game-info details[open] summary::before{content:'−'}
+  .game-info details p{padding:6px 0 8px 18px;margin:0}
+  .similar-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;list-style:none;padding:0}
+  .similar-games li{margin:0}
+  .similar-games a{display:block;padding:10px 14px;background:rgba(201,162,106,.06);border:1px solid rgba(201,162,106,.18);border-radius:6px;color:var(--ivory);font-weight:500}
+  .similar-games a:hover{background:rgba(201,162,106,.12);border-color:rgba(201,162,106,.35)}
   body{
     background:
       radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
@@ -142,9 +170,58 @@
 </style>
 </head>
 <body>
+<section class="game-stage">
 <div id="game-wrapper">
   <div id="root"></div>
 </div>
+</section>
+
+<article class="game-info" aria-labelledby="how-h">
+  <div class="game-info-inner">
+    <h2 id="how-h">How to play Texas Hold'em</h2>
+    <p>Texas Hold'em is the most popular poker variant in the world. Each player gets two private "hole" cards. Five community cards are then dealt face-up across the table over three rounds — the <b>flop</b> (3 cards), the <b>turn</b> (1 card), and the <b>river</b> (1 card). Make the best five-card poker hand using any combination of your two hole cards and the five community cards.</p>
+    <p>Four betting rounds: preflop (after hole cards), flop, turn, river. On each round you can:</p>
+    <ul>
+      <li><b>Fold</b> — give up the hand, lose any chips already in the pot.</li>
+      <li><b>Check</b> — pass the action when no one has bet yet.</li>
+      <li><b>Call</b> — match the current bet to stay in the hand.</li>
+      <li><b>Raise</b> — increase the current bet. Opponents must call your new amount to stay.</li>
+      <li><b>All-in</b> — push your entire stack into the pot.</li>
+    </ul>
+    <p>Two blinds — the small blind and big blind — are posted before each deal to force action. This is a 4-handed cash game against three AI opponents. Standard hand rankings: straight flush &gt; four of a kind &gt; full house &gt; flush &gt; straight &gt; three of a kind &gt; two pair &gt; pair &gt; high card.</p>
+
+    <h2>Tips &amp; strategy</h2>
+    <ul>
+      <li><b>Position is power.</b> Acting last is hugely valuable — you see what everyone does first. Tighten up early position, loosen up late position.</li>
+      <li><b>Fold most starting hands.</b> Premium starters (AA, KK, QQ, AKs, AKo, JJ, AQs) are about 6% of all hands. Fold ~70% of what you're dealt.</li>
+      <li><b>Suited matters slightly.</b> Same-suit hole cards add ~3% to your equity through flush potential.</li>
+      <li><b>Compare pot odds to drawing odds.</b> If the pot offers you 4:1 and you need 5:1 to complete your draw, fold.</li>
+      <li><b>Bluff selectively.</b> Never bluffing makes you predictable. Bluffing too often makes you exploitable. Pick spots where the story makes sense.</li>
+      <li><b>Mind your stack.</b> Short stacks lose fold equity. Don't grind down to a few big blinds before pushing.</li>
+      <li><b>Watch the equity hints.</b> The in-game panel shows your win probability — use it to develop intuition for when to call and when to fold.</li>
+    </ul>
+
+    <h2>About Texas Hold'em</h2>
+    <p>Texas Hold'em traces back to the early 1900s in Robstown, Texas. It spread to Las Vegas in the 1960s and was officially recognized by the World Series of Poker, founded in 1970. The 2003 Main Event win by online qualifier Chris Moneymaker — a player who'd never been to a casino before — kicked off the modern poker boom. Hold'em remains the marquee event of the WSOP and the default game in every cardroom worldwide.</p>
+
+    <h2>Frequently asked questions</h2>
+    <details><summary>Is this Texas Hold'em free?</summary><p>Yes. No downloads, no real money. Bankroll and stats save in your browser.</p></details>
+    <details><summary>How many AI opponents?</summary><p>Three — a 4-handed cash game. Each AI has a different style; difficulty tiers control strictness.</p></details>
+    <details><summary>What's "equity"?</summary><p>Your probability of winning the hand given the known cards. The hint panel shows it so you can compare to pot odds.</p></details>
+    <details><summary>Best starting hand?</summary><p>Pocket aces (AA). Wins about 85% heads-up vs. a random hand.</p></details>
+    <details><summary>Can I rebuy?</summary><p>Yes — your stack resets when you bust so you can keep playing.</p></details>
+
+    <h2>Similar games</h2>
+    <ul class="similar-games">
+      <li><a href="../blackjack/">Blackjack</a></li>
+      <li><a href="../three-card-poker/">Three Card Poker</a></li>
+      <li><a href="../video-poker/">Video Poker</a></li>
+      <li><a href="../solitaire/">Solitaire</a></li>
+      <li><a href="../roulette/">Roulette</a></li>
+      <li><a href="../craps/">Craps</a></li>
+    </ul>
+  </div>
+</article>
 
 <script>
 (function() {

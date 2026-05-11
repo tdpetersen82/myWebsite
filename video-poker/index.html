@@ -23,6 +23,13 @@
     <link rel="manifest" href="/manifest.json">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Video Poker","description":"Play Video Poker free in your browser. Hold the cards you want, draw for a winning hand, and chase the royal flush.","url":"https://limestonegames.com/video-poker/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Video Poker"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is this video poker free?","acceptedAnswer":{"@type":"Answer","text":"Yes. Free to play, no downloads, no real money. Your bankroll and stats save in your browser."}},
+  {"@type":"Question","name":"What variant is this?","acceptedAnswer":{"@type":"Answer","text":"Jacks or Better — the most popular video poker game and the easiest to learn perfect strategy for."}},
+  {"@type":"Question","name":"Does skill actually matter in video poker?","acceptedAnswer":{"@type":"Answer","text":"Hugely. Perfect play on full-pay Jacks or Better returns about 99.54%. Random holds return roughly 95%. The difference is your hold decisions."}},
+  {"@type":"Question","name":"How often do royal flushes hit?","acceptedAnswer":{"@type":"Answer","text":"About once every 40,000 hands with optimal play. Always bet max coins — the royal flush pays its big bonus only on the max bet."}},
+  {"@type":"Question","name":"What's a low pair worth?","acceptedAnswer":{"@type":"Answer","text":"Low pairs (twos through tens) pay nothing on their own but are a strong hold — they can improve to two pair, three of a kind, full house, or four of a kind."}}
+]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,500;0,600;0,700;1,500&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -48,7 +55,28 @@
     --shadow-deep: 0 30px 60px -20px rgba(0,0,0,.6), 0 12px 24px -10px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box;margin:0;padding:0}
-  html,body{height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow:hidden}
+  html,body{min-height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
+  .game-stage{min-height:100vh;display:grid;place-items:center;overflow:hidden}
+  .game-info{background:#0a0805;color:var(--ivory-dim);padding:64px 24px;border-top:1px solid rgba(201,162,106,.18)}
+  .game-info-inner{max-width:760px;margin:0 auto;line-height:1.65}
+  .game-info h2{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:600;color:var(--brass-2);margin:40px 0 14px;letter-spacing:.01em}
+  .game-info h2:first-child{margin-top:0}
+  .game-info p{margin:0 0 16px}
+  .game-info ul{margin:0 0 16px;padding-left:22px}
+  .game-info li{margin:0 0 8px}
+  .game-info b,.game-info strong{color:var(--ivory)}
+  .game-info a{color:var(--brass-2);text-decoration:none;border-bottom:1px solid rgba(230,197,144,.3)}
+  .game-info a:hover{border-bottom-color:var(--brass-2)}
+  .game-info details{margin:0 0 10px;border-bottom:1px solid rgba(201,162,106,.12);padding-bottom:10px}
+  .game-info summary{cursor:pointer;color:var(--ivory);font-weight:500;padding:8px 0;list-style:none}
+  .game-info summary::-webkit-details-marker{display:none}
+  .game-info summary::before{content:'+';display:inline-block;width:18px;color:var(--brass)}
+  .game-info details[open] summary::before{content:'−'}
+  .game-info details p{padding:6px 0 8px 18px;margin:0}
+  .similar-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;list-style:none;padding:0}
+  .similar-games li{margin:0}
+  .similar-games a{display:block;padding:10px 14px;background:rgba(201,162,106,.06);border:1px solid rgba(201,162,106,.18);border-radius:6px;color:var(--ivory);font-weight:500}
+  .similar-games a:hover{background:rgba(201,162,106,.12);border-color:rgba(201,162,106,.35)}
   body{
     background:
       radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
@@ -121,9 +149,51 @@
 </style>
 </head>
 <body>
+<section class="game-stage">
 <div id="game-wrapper">
   <div id="root"></div>
 </div>
+</section>
+
+<article class="game-info" aria-labelledby="how-h">
+  <div class="game-info-inner">
+    <h2 id="how-h">How to play video poker (Jacks or Better)</h2>
+    <p>Video poker is the casino's most skill-rewarding machine game. You're dealt five cards from a standard 52-card deck. Decide which to keep ("hold") and which to discard. Press Draw to replace discarded cards with fresh ones from the same deck. The final five-card hand is paid by the paytable.</p>
+    <p>Standard paytable (per coin bet): jacks-or-better pair pays 1:1, two pair 2:1, three of a kind 3:1, straight 4:1, flush 6:1, full house 9:1, four of a kind 25:1, straight flush 50:1, and royal flush 800:1 — only when betting max coins.</p>
+    <p>The whole game lives in one decision: which cards to hold. Every starting hand has a mathematically optimal hold. The closer you get to playing that optimal hold every time, the closer to 99.54% your long-run return.</p>
+
+    <h2>Tips &amp; strategy</h2>
+    <ul>
+      <li><b>Always bet max coins.</b> The royal flush 800:1 bonus only triggers at max bet. Anything less leaves money on the table.</li>
+      <li><b>Hold any low pair.</b> A pair of 2s beats no pair — and can improve to three of a kind or four of a kind.</li>
+      <li><b>Four to a flush is worth drawing.</b> About a 19% chance of completing it.</li>
+      <li><b>Four to an outside straight is worth drawing.</b> About a 17% chance.</li>
+      <li><b>Don't break a winning hand to chase a bigger one.</b> Two pair stays as two pair — don't discard one for a long-shot full house.</li>
+      <li><b>High cards over kickers.</b> If you have no pair, hold any jack, queen, king, or ace over lower cards.</li>
+      <li><b>Memorize the hold priority.</b> Royal &gt; straight flush &gt; four of a kind &gt; four to royal &gt; flush &gt; straight &gt; three of a kind &gt; etc.</li>
+    </ul>
+
+    <h2>About video poker</h2>
+    <p>Video poker became a casino staple in the 1980s, popularized by Si Redd and IGT. Unlike slot machines — where the outcome is fixed by an RNG — video poker uses a real 52-card deck, so the math is transparent and player skill measurably matters. Full-pay Jacks or Better returns 99.54% with perfect play, making it one of the highest-return games on any casino floor.</p>
+
+    <h2>Frequently asked questions</h2>
+    <details><summary>Is this video poker free?</summary><p>Yes. No downloads, no real money — just play-money chips and a real 52-card simulation.</p></details>
+    <details><summary>What variant is this?</summary><p>Jacks or Better, the most popular video poker game. Standard 9/6 paytable.</p></details>
+    <details><summary>Does skill matter?</summary><p>Yes — perfect play returns about 99.54%, vs. ~95% with random holds. The hold decision is the entire game.</p></details>
+    <details><summary>How often do royal flushes hit?</summary><p>About once every 40,000 hands with optimal play. Always bet max coins so the bonus applies when it does.</p></details>
+    <details><summary>What does "9/6" mean?</summary><p>Full house pays 9 coins and flush pays 6 coins per coin bet. Lower paytables (8/5, 7/5) have worse returns.</p></details>
+
+    <h2>Similar games</h2>
+    <ul class="similar-games">
+      <li><a href="../blackjack/">Blackjack</a></li>
+      <li><a href="../three-card-poker/">Three Card Poker</a></li>
+      <li><a href="../texas-holdem/">Texas Hold'em</a></li>
+      <li><a href="../solitaire/">Solitaire</a></li>
+      <li><a href="../roulette/">Roulette</a></li>
+      <li><a href="../craps/">Craps</a></li>
+    </ul>
+  </div>
+</article>
 
 <script>
 (function() {
