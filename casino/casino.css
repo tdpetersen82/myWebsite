@@ -101,18 +101,6 @@ body.cas-root {
   background: var(--chip-green);
 }
 
-/* Breadcrumb */
-.cas-crumb {
-  font-size: 12px;
-  color: var(--ink-soft);
-  padding: 14px 40px 0;
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  letter-spacing: 0.04em;
-}
-.cas-crumb a { color: inherit; text-decoration: none; }
-.cas-crumb a:hover { color: var(--ink); }
-.cas-crumb .here { color: var(--ink); }
-
 /* ───────────── HERO ───────────── */
 .cas-hero {
   margin: 24px 40px 32px;
