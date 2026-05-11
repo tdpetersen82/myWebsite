@@ -11,6 +11,7 @@ window.AD_QUESTIONS = [
   { id: "has-wings",          category: "body",    text: "Does it have wings?",                      fn: a => a.hasWings },
   { id: "has-feathers",       category: "body",    text: "Does it have feathers?",                   fn: a => a.hasFeathers },
   { id: "has-scales",         category: "body",    text: "Does it have scales?",                     fn: a => a.hasScales },
+  { id: "has-fur",            category: "body",    text: "Does it have fur?",                        fn: a => a.hasFur },
   { id: "stripes-or-spots",   category: "body",    text: "Does it have stripes or spots?",           fn: a => a.hasStripes || a.hasSpots },
 
   // ── Habitat ────────────────────────────────────────────────────────────
@@ -20,23 +21,22 @@ window.AD_QUESTIONS = [
   { id: "lives-desert",       category: "habitat", text: "Does it live in the desert?",              fn: a => a.habitat.includes("desert") },
   { id: "can-fly",            category: "habitat", text: "Can it fly?",                              fn: a => a.canFly },
   { id: "lives-in-water",     category: "habitat", text: "Does it live in water?",                   fn: a => a.livesInWater },
+  { id: "can-swim",           category: "habitat", text: "Can it swim?",                             fn: a => a.canSwim },
   { id: "can-climb-trees",    category: "habitat", text: "Can it climb trees?",                      fn: a => a.canClimbTrees },
 
   // ── Food & Behavior ────────────────────────────────────────────────────
   { id: "eats-meat",          category: "food",    text: "Does it eat meat?",                        fn: a => a.diet === "carnivore" || a.diet === "omnivore" },
   { id: "only-plants",        category: "food",    text: "Does it only eat plants?",                 fn: a => a.diet === "herbivore" },
-  { id: "eats-bugs",          category: "food",    text: "Does it eat bugs?",                        fn: a => a.diet === "insectivore" || a.diet === "omnivore" },
   { id: "lays-eggs",          category: "food",    text: "Does it lay eggs?",                        fn: a => a.laysEggs },
   { id: "is-nocturnal",       category: "food",    text: "Is it active at night?",                   fn: a => a.isNocturnal },
   { id: "hibernates",         category: "food",    text: "Does it hibernate in winter?",             fn: a => a.hibernates },
   { id: "is-loud",            category: "food",    text: "Is it loud?",                              fn: a => a.isLoud },
-  { id: "has-tail",           category: "food",    text: "Does it have a tail?",                     fn: a => a.hasTail },
+  { id: "has-shell",          category: "food",    text: "Does it have a shell?",                    fn: a => a.hasShell },
 
   // ── People ─────────────────────────────────────────────────────────────
   { id: "is-pet",             category: "people",  text: "Could it be a pet?",                       fn: a => a.type === "pet" },
   { id: "on-farm",            category: "people",  text: "Would you find it on a farm?",             fn: a => a.type === "farm" },
   { id: "at-zoo",             category: "people",  text: "Would you see it at the zoo?",             fn: a => a.type === "zoo" },
-  { id: "in-wild",            category: "people",  text: "Does it live in the wild?",                fn: a => a.type === "wild" },
   { id: "black-and-white",    category: "people",  text: "Is it usually black and white?",           fn: a => a.isBlackAndWhite },
   { id: "has-horns",          category: "people",  text: "Does it have horns or tusks?",             fn: a => a.hasHorns },
   { id: "many-legs",          category: "people",  text: "Does it have more than 4 legs?",           fn: a => a.legs > 4 },
