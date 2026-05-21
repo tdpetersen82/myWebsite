@@ -42,14 +42,7 @@
 }
 .nav .nav-left { display: flex; align-items: center; gap: 28px; }
 .nav .logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
-.nav .logo-mark {
-  width: 28px; height: 28px; border-radius: 7px;
-  background: linear-gradient(135deg, #D89C56, #C25C2A);
-  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.18), inset 0 2px 4px rgba(255,255,255,0.3);
-  display: flex; align-items: center; justify-content: center;
-  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
-  color: #FFF6E1; font-weight: 700; font-size: 14px;
-}
+.nav .logo img { display: block; width: 28px; height: 28px; mix-blend-mode: multiply; }
 .nav .wordmark {
   font-family: 'Bricolage Grotesque', system-ui, sans-serif;
   font-size: 16px; font-weight: 700; color: var(--nav-ink);

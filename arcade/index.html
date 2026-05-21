@@ -112,13 +112,7 @@ h1, h2, h3, h4 { font-family: var(--display); margin: 0; letter-spacing: -0.02em
 }
 .nav-left { display: flex; align-items: center; gap: 28px; }
 .logo { display: inline-flex; align-items: center; gap: 10px; text-decoration: none; color: inherit; }
-.logo-mark {
-  width: 28px; height: 28px; border-radius: 7px;
-  background: linear-gradient(135deg, #D89C56, #C25C2A);
-  box-shadow: inset 0 -2px 4px rgba(0,0,0,0.18), inset 0 2px 4px rgba(255,255,255,0.3);
-  display: flex; align-items: center; justify-content: center;
-  font-family: var(--display); color: #FFF6E1; font-weight: 700; font-size: 14px;
-}
+.logo img { display: block; width: 28px; height: 28px; mix-blend-mode: multiply; }
 .wordmark { font-family: var(--display); font-size: 16px; font-weight: 700; color: var(--nav-ink); }
 .wordmark .light { opacity: 0.55; font-weight: 500; }
 .nav-links { display: flex; gap: 4px; }
@@ -545,7 +539,7 @@ footer a:hover { color: var(--ch-amber); }
 <nav class="nav">
   <div class="nav-left">
     <a class="logo" href="..">
-      <span class="logo-mark">L</span>
+      <img src="../assets/logo-96.png" alt="" width="28" height="28">
       <span class="wordmark">Limestone <span class="light">Games</span></span>
     </a>
     <div class="nav-links">

@@ -48,9 +48,22 @@ body.hub-root {
   align-items: center;
   justify-content: space-between;
   gap: 24px;
-  padding: 24px 0;
-  border-bottom: 1px solid var(--line);
-  margin-bottom: 24px;
+  margin: 24px 0;
+  padding: 16px 22px;
+  background: #fff;
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  box-shadow: 0 1px 0 var(--line), 0 14px 30px -18px rgba(0, 0, 0, 0.45);
+  position: relative;
+  overflow: hidden;
+}
+.hub-nav::after {
+  content: '';
+  position: absolute;
+  left: 0; right: 0; bottom: 0; height: 2px;
+  background: linear-gradient(90deg, transparent, #C77A2A, transparent);
+  opacity: 0.7;
+  pointer-events: none;
 }
 .hub-nav-left {
   display: flex;
