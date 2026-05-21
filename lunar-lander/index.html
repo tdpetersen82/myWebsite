@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Lunar Lander — Play the Classic Lander Game Online Free | Limestone Games</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../arcade/arcade-game.css">
+    <link rel="stylesheet" href="../arcade/arcade-game.css?v=20260521a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -52,7 +52,8 @@
       data-title="Lunar Lander"
       data-hint-1="↑ thrust ←→ rotate"
       data-hint-2="P pause"
-      data-hint-3="M mute">
+      data-hint-3="M mute"
+      data-touch="◀:ArrowLeft,▶:ArrowRight | ▲:ArrowUp">
     <div class="container">
         <h1>🚀 Lunar Lander</h1>
         <div class="game-info">
@@ -72,7 +73,6 @@
             <ul>
                 <li><kbd>&uarr;</kbd> &mdash; main thruster</li>
                 <li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> &mdash; rotate the lander</li>
-                <li><kbd>R</kbd> &mdash; restart</li>
             </ul>
 
             <h3>Tips &amp; strategy</h3>
@@ -173,8 +173,7 @@
             restart: () => {
                 const s = game.scene.scenes.find(x => x.scene.isActive());
                 if (s) s.scene.restart();
-            },
-            mute: () => { game.sound.mute = !game.sound.mute; }
+            }
         };
 
         // Update score display periodically
@@ -202,6 +201,6 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../arcade/arcade-chrome.js"></script>
+    <script src="../arcade/arcade-chrome.js?v=20260521a"></script>
 </body>
 </html>

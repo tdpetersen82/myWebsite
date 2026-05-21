@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Space Invaders — Play the Classic Arcade Game Online Free | Limestone Games</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../arcade/arcade-game.css">
+    <link rel="stylesheet" href="../arcade/arcade-game.css?v=20260521a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -45,7 +45,8 @@
       data-title="Space Invaders"
       data-hint-1="←→ move"
       data-hint-2="Space fire"
-      data-hint-3="R restart">
+      data-hint-3="R restart"
+      data-touch="◀:ArrowLeft,▶:ArrowRight | FIRE:~Space">
     <div class="container">
         <h1>👾 Space Invaders</h1>
         <div class="game-info">
@@ -61,19 +62,19 @@
         </div>
         <section class="game-overview" aria-label="About Space Invaders">
             <h2>How to play Space Invaders</h2>
-            <p>Space Invaders is the alien-shooting cabinet that defined the shoot-em-up genre. A grid of aliens marches sideways and slowly descends; you fire from a cannon at the bottom, and you have three bunkers to hide behind. Clear the wave before they reach the ground.</p>
+            <p>Space Invaders is the alien-shooting cabinet that defined the shoot-em-up genre. A grid of aliens marches sideways and slowly descends; you fire from a cannon at the bottom, protected by a shield that soaks up a few hits. Clear the wave before they reach the ground.</p>
 
             <h3>Controls</h3>
             <ul>
                 <li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> or <kbd>A</kbd> <kbd>D</kbd> &mdash; move your cannon</li>
-                <li><kbd>Space</kbd> &mdash; fire (one shot at a time)</li>
+                <li><kbd>Space</kbd> &mdash; fire (up to two shots)</li>
                 <li><kbd>R</kbd> &mdash; restart</li>
             </ul>
 
             <h3>Tips &amp; strategy</h3>
             <ul>
                 <li><b>Pick off the edges.</b> Killing the leftmost or rightmost column shrinks the formation and gives the wave less ground to descend before reaching you.</li>
-                <li><b>Use the bunkers.</b> Hide under your bunkers when an alien shot is coming, but don't camp &mdash; the bunkers erode every time they take a hit.</li>
+                <li><b>Mind your shield.</b> The shield bar soaks up incoming fire, but only a few hits &mdash; it recharges a little after each wave, so don't lean on it.</li>
                 <li><b>Watch the speed.</b> Fewer aliens means each remaining alien moves faster. The last few are the hardest.</li>
                 <li><b>Snipe the mystery UFO.</b> The flying saucer that crosses the top is worth bonus points &mdash; lead the shot.</li>
             </ul>
@@ -487,6 +488,7 @@
         }
 
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') { startGame(); return; }
             if (e.key === ' ' || e.key === 'Spacebar') {
                 e.preventDefault();
                 if (!gameRunning) {
@@ -496,15 +498,18 @@
                 }
             }
 
-            if (e.key === 'ArrowLeft') {
+            if (e.key === 'ArrowLeft' || e.key === 'a' || e.key === 'A') {
+                e.preventDefault();
                 player.dx = -player.speed;
-            } else if (e.key === 'ArrowRight') {
+            } else if (e.key === 'ArrowRight' || e.key === 'd' || e.key === 'D') {
+                e.preventDefault();
                 player.dx = player.speed;
             }
         });
 
         document.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+            if (e.key === 'ArrowLeft' || e.key === 'ArrowRight' ||
+                e.key === 'a' || e.key === 'A' || e.key === 'd' || e.key === 'D') {
                 player.dx = 0;
             }
         });
@@ -512,6 +517,7 @@
         restartBtn.addEventListener('click', startGame);
 
         window.gameAPI = {
+            start:   () => { if (!gameRunning) startGame(); },
             pause:   () => { gameRunning = !gameRunning; if (gameRunning) { lastFrameTime = performance.now(); gameLoop = requestAnimationFrame(update); } },
             restart: () => startGame(),
             mute:    () => { muted = !muted; }
@@ -549,6 +555,6 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../arcade/arcade-chrome.js"></script>
+    <script src="../arcade/arcade-chrome.js?v=20260521a"></script>
 </body>
 </html>

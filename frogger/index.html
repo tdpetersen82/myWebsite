@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Frogger — Play the Classic Arcade Game Online Free | Limestone Games</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../arcade/arcade-game.css">
+    <link rel="stylesheet" href="../arcade/arcade-game.css?v=20260521a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -65,8 +65,9 @@
       data-eyebrow="Cabinet · Frogger"
       data-title="Frogger"
       data-hint-1="↑↓←→ hop"
-      data-hint-2="WASD also works"
-      data-hint-3="R restart">
+      data-hint-2="↑ hop forward"
+      data-hint-3="R restart"
+      data-touch="◀:ArrowLeft,▶:ArrowRight | ▲:ArrowUp,▼:ArrowDown">
     <div class="container">
         <h1>🐸 Frogger</h1>
         <div class="game-info">
@@ -135,7 +136,9 @@
         highScoreEl.textContent = highScore;
 
         // ─── Web Audio API sounds ───
+        let soundMuted = false;
         function playSound(freq, type, duration) {
+            if (soundMuted) return;
             try {
                 const ctx = new (window.AudioContext || window.webkitAudioContext)();
                 const osc = ctx.createOscillator();
@@ -517,6 +520,7 @@
                 this.input.keyboard.on('keyup-LEFT', () => { this.keyJustPressed.left = false; });
                 this.input.keyboard.on('keydown-RIGHT', () => { if (!this.keyJustPressed.right) { this.keyJustPressed.right = true; this.moveFrog(1, 0); } });
                 this.input.keyboard.on('keyup-RIGHT', () => { this.keyJustPressed.right = false; });
+                this.input.keyboard.on('keydown-R', () => { this.restartGame(); });
             }
 
             moveFrog(dx, dy) {
@@ -876,7 +880,7 @@
                 const scene = game.scene.getScene('GameScene');
                 if (scene && scene.restartGame) scene.restartGame();
             },
-            mute: () => { game.sound.mute = !game.sound.mute; }
+            mute: () => { soundMuted = !soundMuted; game.sound.mute = soundMuted; }
         };
 
         // Restart button
@@ -895,6 +899,6 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../arcade/arcade-chrome.js"></script>
+    <script src="../arcade/arcade-chrome.js?v=20260521a"></script>
 </body>
 </html>

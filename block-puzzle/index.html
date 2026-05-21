@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Block Puzzle — Play Free Online, No Download | Limestone Games</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../arcade/arcade-game.css">
+    <link rel="stylesheet" href="../arcade/arcade-game.css?v=20260521a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -23,6 +23,10 @@
             max-width: 100%;
             aspect-ratio: 1 / 2;
             margin: 0 auto;
+        }
+        /* Leave room for the on-screen d-pad on phones. */
+        @media (max-width: 760px) {
+            .ch-bezel #gameCanvas { max-height: 54vh; }
         }
     </style>
     <meta name="description" content="Play Block Puzzle free in your browser. Stack falling blocks to complete lines and score big in this classic puzzle game! No downloads, no installs.">
@@ -53,9 +57,10 @@
 <body class="ch-game" data-category="arcade"
       data-eyebrow="Cabinet · Block Puzzle"
       data-title="Block Puzzle"
-      data-hint-1="←→ move ↑ rotate"
-      data-hint-2="↓ soft drop"
-      data-hint-3="R restart">
+      data-hint-1="←→ move · ↑ rotate"
+      data-hint-2="↓ soft · Space hard"
+      data-hint-3="R restart"
+      data-touch="◀:~ArrowLeft,▶:~ArrowRight | ↻:ArrowUp,▼:~ArrowDown,⤓:Space">
     <div class="container">
         <canvas id="gameCanvas" width="300" height="600"></canvas>
         <h1>Block Puzzle</h1>
@@ -81,7 +86,7 @@
                 <li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> &mdash; slide piece sideways</li>
                 <li><kbd>&uarr;</kbd> &mdash; rotate clockwise</li>
                 <li><kbd>&darr;</kbd> &mdash; soft drop (faster fall)</li>
-                <li><kbd>Space</kbd> &mdash; hard drop / pause</li>
+                <li><kbd>Space</kbd> &mdash; hard drop</li>
                 <li><kbd>R</kbd> &mdash; restart</li>
             </ul>
 
@@ -411,8 +416,16 @@
             gameLoop = requestAnimationFrame(update);
         }
 
+        function hardDrop() {
+            while (!collision(0, 1)) currentY++;
+            moveDown(); // now colliding below → locks, clears, spawns next
+        }
+
         document.addEventListener('keydown', (e) => {
-            if (e.key.startsWith('Arrow')) e.preventDefault();
+            if (e.key.startsWith('Arrow') || e.key === ' ') e.preventDefault();
+
+            // Restart works any time — including game over and before first start.
+            if (e.key === 'r' || e.key === 'R') { startGame(); return; }
 
             if (!gameRunning && e.key.startsWith('Arrow')) {
                 startGame();
@@ -434,6 +447,9 @@
                 case 'ArrowUp':
                     rotate();
                     break;
+                case ' ':
+                    hardDrop();
+                    break;
             }
 
             drawBoard();
@@ -443,7 +459,8 @@
         restartBtn.addEventListener('click', startGame);
 
         window.gameAPI = {
-            pause:   () => { gameRunning = !gameRunning; if (gameRunning) { lastDrop = performance.now(); gameLoop = requestAnimationFrame(update); } },
+            start:   () => { if (!gameRunning) startGame(); },
+            pause:   () => { if (!currentPiece) return; gameRunning = !gameRunning; if (gameRunning) { lastDrop = performance.now(); gameLoop = requestAnimationFrame(update); } },
             restart: () => startGame(),
             mute:    () => { muted = !muted; }
         };
@@ -463,6 +480,6 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../arcade/arcade-chrome.js"></script>
+    <script src="../arcade/arcade-chrome.js?v=20260521a"></script>
 </body>
 </html>

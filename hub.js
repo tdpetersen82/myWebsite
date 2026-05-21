@@ -6,41 +6,41 @@
 
   // ── Game catalog ───────────────────────────────────────────────────────
   const GAMES = [
-    { id: 'snake',             name: 'Snake',             cat: 'kids',    desc: "Eat, grow, don't crash.",         color: '#7BC97B', plays: '12.4k' },
-    { id: 'bubble-pop',        name: 'Bubble Pop',        cat: 'kids',    desc: 'Tap bubbles before they float away.', color: '#FF8FA3', plays: '0',    isNew: true },
-    { id: 'memory-match',      name: 'Memory Match',      cat: 'kids',    desc: 'Flip cards. Find the pairs.',      color: '#FFD93D', plays: '0',    isNew: true },
-    { id: 'shape-sorter',      name: 'Shape Sorter',      cat: 'kids',    desc: 'Drag shapes into matching buckets.', color: '#6DD5FA', plays: '0',    isNew: true },
-    { id: 'counting-critters', name: 'Counting Critters', cat: 'kids',    desc: 'How many critters? Tap the number.', color: '#A78BFA', plays: '0',    isNew: true },
-    { id: 'animal-detective',  name: 'Animal Detective',  cat: 'kids',    desc: 'Guess the animal in 20 yes-or-no questions.', color: '#FF6F61', plays: '0',    isNew: true },
-    { id: 'pong',              name: 'Pong',              cat: 'classic', desc: 'Paddle vs. AI. Keep it alive.',    color: '#8FA8E6', plays: '8.2k'  },
-    { id: 'breakout',          name: 'Breakout',          cat: 'classic', desc: 'Bricks, ball, bounce.',            color: '#F2A65A', plays: '15.1k' },
-    { id: 'space-invaders',    name: 'Space Invaders',    cat: 'classic', desc: 'Defend Earth from alien waves.',   color: '#9B7EDC', plays: '11.8k' },
-    { id: 'block-puzzle',      name: 'Block Puzzle',      cat: 'classic', desc: 'Stack, clear, score.',             color: '#5DC4D9', plays: '22.6k' },
-    { id: 'asteroids',         name: 'Asteroids',         cat: 'classic', desc: 'Pilot through the rocks.',         color: '#A78BFA', plays: '9.4k'  },
-    { id: 'frogger',           name: 'Frogger',           cat: 'classic', desc: 'Hop home through traffic.',        color: '#7BC97B', plays: '6.7k'  },
-    { id: 'missile-command',   name: 'Missile Command',   cat: 'classic', desc: 'Defend cities from above.',        color: '#F2A65A', plays: '4.9k'  },
-    { id: 'lunar-lander',      name: 'Lunar Lander',      cat: 'classic', desc: 'Touch down softly.',               color: '#8FA8E6', plays: '5.5k'  },
-    { id: 'spacex-lander',     name: 'SpaceX Lander',     cat: 'classic', desc: 'Land the Falcon 9.',               color: '#5DC4D9', plays: '7.1k'  },
-    { id: 'defender',          name: 'Defender',          cat: 'classic', desc: 'Save the humanoids.',              color: '#9B7EDC', plays: '3.2k'  },
-    { id: 'simon',             name: 'Simon',             cat: 'classic', desc: 'Watch. Repeat. Repeat longer.',    color: '#F08488', plays: '8.6k'  },
-    { id: 'connect-4',         name: 'Connect 4',         cat: 'puzzle',  desc: 'Four in a row beats the AI.',      color: '#8FA8E6', plays: '14.3k' },
-    { id: 'connect-dots',      name: 'Dots & Boxes',      cat: 'puzzle',  desc: 'Lines, boxes, strategy.',          color: '#F08488', plays: '5.8k'  },
-    { id: '2048',              name: '2048',              cat: 'puzzle',  desc: 'Merge tiles. Reach 2048.',          color: '#F2A65A', plays: '0',    isNew: true },
-    { id: 'chess',             name: 'Chess',             cat: 'puzzle',  desc: 'Beat the AI. Full rules, three difficulties.', color: '#9B7EDC', plays: '0', isNew: true },
-    { id: 'checkers',          name: 'Checkers',          cat: 'puzzle',  desc: 'Mandatory captures. Multi-jumps. Crown me.',   color: '#D23B33', plays: '0', isNew: true },
-    { id: 'backgammon',        name: 'Backgammon',        cat: 'puzzle',  desc: 'Roll, race, bear off. Pip-count strategy.',     color: '#A26F3C', plays: '0', isNew: true },
-    { id: 'othello',           name: 'Othello',           cat: 'puzzle',  desc: 'Flip flanked discs. Hold the corners.',         color: '#1A7B3F', plays: '0', isNew: true },
-    { id: 'chinese-checkers',  name: 'Chinese Checkers',  cat: 'puzzle',  desc: 'Hop chains. 2, 3, or 6 players.',               color: '#2DA1A6', plays: '0', isNew: true },
-    { id: 'ultimate-tic-tac-toe', name: 'Ultimate Tic-Tac-Toe', cat: 'puzzle', desc: 'Nine boards in one. Your move picks the next.', color: '#E8A330', plays: '0', isNew: true },
-    { id: 'mancala',           name: 'Mancala',           cat: 'puzzle',  desc: 'Sow seeds. Capture across. Claim the store.',   color: '#B85C38', plays: '0', isNew: true },
-    { id: 'blackjack',         name: 'Blackjack',         cat: 'casino',  desc: 'Hit 21 with strategy hints.',      color: '#7BC97B', plays: '18.9k' },
-    { id: 'roulette',          name: 'Roulette',          cat: 'casino',  desc: 'Spin the European wheel.',         color: '#F08488', plays: '6.4k'  },
-    { id: 'video-poker',       name: 'Video Poker',       cat: 'casino',  desc: 'Jacks or Better. Hold smart.',     color: '#A78BFA', plays: '11.2k' },
-    { id: 'solitaire',         name: 'Solitaire',         cat: 'casino',  desc: 'Klondike — beat the deck.',        color: '#5DC4D9', plays: '4.2k'  },
-    { id: 'craps',             name: 'Craps',             cat: 'casino',  desc: 'Roll the bones.',                  color: '#5DC4D9', plays: '4.1k'  },
-    { id: 'three-card-poker',  name: 'Three Card Poker',  cat: 'casino',  desc: 'Play or fold? Three cards.',       color: '#9B7EDC', plays: '5.3k'  },
-    { id: 'texas-holdem',      name: "Texas Hold'em",     cat: 'casino',  desc: '4-handed cash game. Equity hints.', color: '#E8B05B', plays: '0',    isNew: true },
-    { id: 'slot-machine',      name: 'Slot Machine',      cat: 'casino',  desc: 'Three reels, three themes.',       color: '#C8A14A', plays: '0',    isNew: true },
+    { id: 'snake',             name: 'Snake',             cat: 'kids',    desc: "Eat, grow, don't crash.",         color: '#7BC97B' },
+    { id: 'bubble-pop',        name: 'Bubble Pop',        cat: 'kids',    desc: 'Tap bubbles before they float away.', color: '#FF8FA3', isNew: true },
+    { id: 'memory-match',      name: 'Memory Match',      cat: 'kids',    desc: 'Flip cards. Find the pairs.',      color: '#FFD93D', isNew: true },
+    { id: 'shape-sorter',      name: 'Shape Sorter',      cat: 'kids',    desc: 'Drag shapes into matching buckets.', color: '#6DD5FA', isNew: true },
+    { id: 'counting-critters', name: 'Counting Critters', cat: 'kids',    desc: 'How many critters? Tap the number.', color: '#A78BFA', isNew: true },
+    { id: 'animal-detective',  name: 'Animal Detective',  cat: 'kids',    desc: 'Guess the animal in 20 yes-or-no questions.', color: '#FF6F61', isNew: true },
+    { id: 'pong',              name: 'Pong',              cat: 'classic', desc: 'Paddle vs. AI. Keep it alive.',    color: '#8FA8E6'  },
+    { id: 'breakout',          name: 'Breakout',          cat: 'classic', desc: 'Bricks, ball, bounce.',            color: '#F2A65A' },
+    { id: 'space-invaders',    name: 'Space Invaders',    cat: 'classic', desc: 'Defend Earth from alien waves.',   color: '#9B7EDC' },
+    { id: 'block-puzzle',      name: 'Block Puzzle',      cat: 'classic', desc: 'Stack, clear, score.',             color: '#5DC4D9' },
+    { id: 'asteroids',         name: 'Asteroids',         cat: 'classic', desc: 'Pilot through the rocks.',         color: '#A78BFA'  },
+    { id: 'frogger',           name: 'Frogger',           cat: 'classic', desc: 'Hop home through traffic.',        color: '#7BC97B'  },
+    { id: 'missile-command',   name: 'Missile Command',   cat: 'classic', desc: 'Defend cities from above.',        color: '#F2A65A'  },
+    { id: 'lunar-lander',      name: 'Lunar Lander',      cat: 'classic', desc: 'Touch down softly.',               color: '#8FA8E6'  },
+    { id: 'spacex-lander',     name: 'SpaceX Lander',     cat: 'classic', desc: 'Land the Falcon 9.',               color: '#5DC4D9'  },
+    { id: 'defender',          name: 'Defender',          cat: 'classic', desc: 'Save the humanoids.',              color: '#9B7EDC'  },
+    { id: 'simon',             name: 'Simon',             cat: 'classic', desc: 'Watch. Repeat. Repeat longer.',    color: '#F08488'  },
+    { id: 'connect-4',         name: 'Connect 4',         cat: 'puzzle',  desc: 'Four in a row beats the AI.',      color: '#8FA8E6' },
+    { id: 'connect-dots',      name: 'Dots & Boxes',      cat: 'puzzle',  desc: 'Lines, boxes, strategy.',          color: '#F08488'  },
+    { id: '2048',              name: '2048',              cat: 'puzzle',  desc: 'Merge tiles. Reach 2048.',          color: '#F2A65A', isNew: true },
+    { id: 'chess',             name: 'Chess',             cat: 'puzzle',  desc: 'Beat the AI. Full rules, three difficulties.', color: '#9B7EDC', isNew: true },
+    { id: 'checkers',          name: 'Checkers',          cat: 'puzzle',  desc: 'Mandatory captures. Multi-jumps. Crown me.',   color: '#D23B33', isNew: true },
+    { id: 'backgammon',        name: 'Backgammon',        cat: 'puzzle',  desc: 'Roll, race, bear off. Pip-count strategy.',     color: '#A26F3C', isNew: true },
+    { id: 'othello',           name: 'Othello',           cat: 'puzzle',  desc: 'Flip flanked discs. Hold the corners.',         color: '#1A7B3F', isNew: true },
+    { id: 'chinese-checkers',  name: 'Chinese Checkers',  cat: 'puzzle',  desc: 'Hop chains. 2, 3, or 6 players.',               color: '#2DA1A6', isNew: true },
+    { id: 'ultimate-tic-tac-toe', name: 'Ultimate Tic-Tac-Toe', cat: 'puzzle', desc: 'Nine boards in one. Your move picks the next.', color: '#E8A330', isNew: true },
+    { id: 'mancala',           name: 'Mancala',           cat: 'puzzle',  desc: 'Sow seeds. Capture across. Claim the store.',   color: '#B85C38', isNew: true },
+    { id: 'blackjack',         name: 'Blackjack',         cat: 'casino',  desc: 'Hit 21 with strategy hints.',      color: '#7BC97B' },
+    { id: 'roulette',          name: 'Roulette',          cat: 'casino',  desc: 'Spin the European wheel.',         color: '#F08488'  },
+    { id: 'video-poker',       name: 'Video Poker',       cat: 'casino',  desc: 'Jacks or Better. Hold smart.',     color: '#A78BFA' },
+    { id: 'solitaire',         name: 'Solitaire',         cat: 'casino',  desc: 'Klondike — beat the deck.',        color: '#5DC4D9'  },
+    { id: 'craps',             name: 'Craps',             cat: 'casino',  desc: 'Roll the bones.',                  color: '#5DC4D9'  },
+    { id: 'three-card-poker',  name: 'Three Card Poker',  cat: 'casino',  desc: 'Play or fold? Three cards.',       color: '#9B7EDC'  },
+    { id: 'texas-holdem',      name: "Texas Hold'em",     cat: 'casino',  desc: '4-handed cash game. Equity hints.', color: '#E8B05B', isNew: true },
+    { id: 'slot-machine',      name: 'Slot Machine',      cat: 'casino',  desc: 'Three reels, three themes.',       color: '#C8A14A', isNew: true },
   ];
 
   const CATEGORIES = [
@@ -134,16 +134,6 @@
   ];
   const FEATURED_IDS = FEATURED_LAYOUT.map(f => f.id);
 
-  // Plays count → numeric for sorting (e.g. '12.4k' → 12400).
-  function playsToNum(s) {
-    const m = String(s).match(/^([\d.]+)(k|m)?$/i);
-    if (!m) return 0;
-    let n = parseFloat(m[1]);
-    if ((m[2] || '').toLowerCase() === 'k') n *= 1000;
-    if ((m[2] || '').toLowerCase() === 'm') n *= 1000000;
-    return n;
-  }
-
   // ── DOM helpers ────────────────────────────────────────────────────────
   function el(html) {
     const t = document.createElement('template');
@@ -174,7 +164,7 @@
           <h3>${game.name}</h3>
           ${hero}
           <div class="meta-row">
-            <span>▸ ${game.plays}</span>
+            <span>▸ Free</span>
             ${best != null ? `<span class="best">★ ${best}</span>` : ''}
           </div>
           ${heroCta}
@@ -297,28 +287,6 @@
       </div>
     `);
     side.appendChild(stats);
-
-    // Trending
-    const trending = el(`
-      <div class="side-card">
-        <h4>Trending this week <span class="more">Top 5</span></h4>
-      </div>
-    `);
-    GAMES.slice()
-      .sort((a, b) => playsToNum(b.plays) - playsToNum(a.plays))
-      .slice(0, 5)
-      .forEach((g, i) => {
-        const row = el(`
-          <a class="rank" href="${gameUrl(g)}">
-            <div class="pos">${String(i + 1).padStart(2, '0')}</div>
-            <div class="glyph" style="background:${g.color}33">${glyph(g, 24)}</div>
-            <div class="name">${g.name}</div>
-            <div class="score">${g.plays}</div>
-          </a>
-        `);
-        trending.appendChild(row);
-      });
-    side.appendChild(trending);
 
     // Sidebar ad
     side.appendChild(el(`

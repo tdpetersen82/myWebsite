@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Defender — Play the Classic Arcade Shooter Online Free | Limestone Games</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../arcade/arcade-game.css">
+    <link rel="stylesheet" href="../arcade/arcade-game.css?v=20260521a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -45,7 +45,8 @@
       data-title="Defender"
       data-hint-1="←→ direction ↑↓ altitude"
       data-hint-2="Space fire"
-      data-hint-3="B smart bomb">
+      data-hint-3="B smart bomb"
+      data-touch="◀:ArrowLeft,▶:ArrowRight,▲:ArrowUp,▼:ArrowDown | FIRE:~Space,BOMB:B">
     <div id="phaser-container"></div>
 
         <section class="game-overview" aria-label="About Defender">
@@ -57,7 +58,7 @@
                 <li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> &mdash; thrust horizontally</li>
                 <li><kbd>&uarr;</kbd> <kbd>&darr;</kbd> &mdash; ascend / descend</li>
                 <li><kbd>Space</kbd> &mdash; fire laser</li>
-                <li><kbd>Shift</kbd> &mdash; smart bomb (clears the screen)</li>
+                <li><kbd>B</kbd> &mdash; smart bomb (clears the screen)</li>
                 <li><kbd>R</kbd> &mdash; restart</li>
             </ul>
 
@@ -130,8 +131,7 @@
             restart: () => {
                 const s = game.scene.scenes.find(x => x.scene.isActive());
                 if (s) s.scene.restart();
-            },
-            mute: () => { game.sound.mute = !game.sound.mute; }
+            }
         };
     </script>
 
@@ -146,6 +146,6 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../arcade/arcade-chrome.js"></script>
+    <script src="../arcade/arcade-chrome.js?v=20260521a"></script>
 </body>
 </html>

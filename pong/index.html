@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Pong — Play the Classic Arcade Game Online Free | Limestone Games</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../arcade/arcade-game.css">
+    <link rel="stylesheet" href="../arcade/arcade-game.css?v=20260521a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -44,8 +44,9 @@
       data-eyebrow="Cabinet · Pong"
       data-title="Pong"
       data-hint-1="↑↓ paddle"
-      data-hint-2="Space pause"
-      data-hint-3="R restart">
+      data-hint-2="Space serve"
+      data-hint-3="R restart"
+      data-touch="▲:ArrowUp,▼:ArrowDown | Serve:Space">
     <div class="container">
         <h1>🏓 Pong Game</h1>
         <div class="game-info">
@@ -337,6 +338,8 @@
         }
 
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') { gameRunning = false; isGameOver = false; startGame(); return; }
+
             if (e.key === ' ' || e.key === 'Spacebar') {
                 e.preventDefault();
                 if (!gameRunning) {
@@ -345,8 +348,10 @@
             }
 
             if (e.key === 'ArrowUp') {
+                e.preventDefault();
                 paddle.dy = -paddle.speed;
             } else if (e.key === 'ArrowDown') {
+                e.preventDefault();
                 paddle.dy = paddle.speed;
             }
         });
@@ -360,8 +365,9 @@
         restartBtn.addEventListener('click', startGame);
 
         window.gameAPI = {
-            pause:   () => { gameRunning = !gameRunning; if (gameRunning) lastFrameTime = performance.now(); },
-            restart: () => { isGameOver = false; startGame(); },
+            start:   () => { startGame(); },
+            pause:   () => { if (isGameOver) return; gameRunning = !gameRunning; if (gameRunning) lastFrameTime = performance.now(); },
+            restart: () => { gameRunning = false; isGameOver = false; startGame(); },
             mute:    () => { muted = !muted; }
         };
 
@@ -399,6 +405,6 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../arcade/arcade-chrome.js"></script>
+    <script src="../arcade/arcade-chrome.js?v=20260521a"></script>
 </body>
 </html>

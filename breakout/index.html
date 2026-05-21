@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Breakout — Play the Classic Brick Breaker Online Free | Limestone Games</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../arcade/arcade-game.css">
+    <link rel="stylesheet" href="../arcade/arcade-game.css?v=20260521a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -45,7 +45,8 @@
       data-title="Breakout"
       data-hint-1="←→ paddle"
       data-hint-2="Space launch"
-      data-hint-3="R restart">
+      data-hint-3="R restart"
+      data-touch="◀:ArrowLeft,▶:ArrowRight | Launch:Space">
     <div class="container">
         <h1>🧱 Breakout</h1>
         <div class="game-info">
@@ -66,7 +67,7 @@
             <h3>Controls</h3>
             <ul>
                 <li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> or <kbd>A</kbd> <kbd>D</kbd> &mdash; move paddle</li>
-                <li><kbd>Space</kbd> &mdash; launch the ball / pause</li>
+                <li><kbd>Space</kbd> &mdash; launch the ball</li>
                 <li><kbd>R</kbd> &mdash; restart</li>
             </ul>
 
@@ -361,8 +362,8 @@
             lastFrameTime = currentTime - (deltaTime % frameDelay);
 
             // Move paddle — poll held keys every frame so direction reverses instantly
-            if (keys['ArrowLeft']) paddle.dx = -paddle.speed;
-            else if (keys['ArrowRight']) paddle.dx = paddle.speed;
+            if (keys['ArrowLeft'] || keys['a'] || keys['A']) paddle.dx = -paddle.speed;
+            else if (keys['ArrowRight'] || keys['d'] || keys['D']) paddle.dx = paddle.speed;
             else paddle.dx = 0;
 
             paddle.x += paddle.dx;
@@ -455,6 +456,7 @@
 
         const keys = {};
         document.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') { startGame(); return; }
             keys[e.key] = true;
             if (e.key === ' ' || e.key === 'Spacebar') {
                 e.preventDefault();
@@ -487,6 +489,7 @@
         restartBtn.addEventListener('click', startGame);
 
         window.gameAPI = {
+            start:   () => { if (!gameRunning) startGame(); },
             pause:   () => { gameRunning = !gameRunning; if (gameRunning) { lastFrameTime = performance.now(); gameLoop = requestAnimationFrame(update); } },
             restart: () => startGame(),
             mute:    () => { muted = !muted; }
@@ -524,6 +527,6 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../arcade/arcade-chrome.js"></script>
+    <script src="../arcade/arcade-chrome.js?v=20260521a"></script>
 </body>
 </html>

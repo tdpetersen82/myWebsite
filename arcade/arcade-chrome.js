@@ -65,9 +65,9 @@
     const d = body.dataset;
     const title    = d.title    || document.title.split('—')[0].trim() || 'Game';
     const eyebrow  = d.eyebrow  || ('Cabinet · ' + title);
-    const hint1    = d.hint1    || '←→ move';
-    const hint2    = d.hint2    || 'Space pause';
-    const hint3    = d.hint3    || 'R restart';
+    const hint1    = body.getAttribute('data-hint-1') || '←→ move';
+    const hint2    = body.getAttribute('data-hint-2') || 'Space pause';
+    const hint3    = body.getAttribute('data-hint-3') || 'R restart';
     const backHref = d.back     || '..';
 
     // Read initial values from each game's existing in-page elements (the
@@ -122,8 +122,7 @@
       if (window.gameAPI && typeof window.gameAPI[name] === 'function') {
         window.gameAPI[name]();
       } else if (key) {
-        const ev = new KeyboardEvent('keydown', { key, bubbles: true });
-        window.dispatchEvent(ev);
+        fireKey('keydown', key);
       }
     }
 
@@ -153,10 +152,72 @@
       call('mute', 'm');
     });
 
+    // ── Real Start overlay ───────────────────────────────────────────────
+    // Games that expose window.gameAPI.start get a clear, clickable/tappable
+    // "Press Start" panel instead of the cosmetic INSERT COIN. Any first key
+    // (or a synthetic key from a touch button) also begins. gameAPI.start is
+    // expected to be a no-op if the game is already running.
+    if (window.gameAPI && typeof window.gameAPI.start === 'function') {
+      const coin = bezel.querySelector('.ch-coin');
+      if (coin) coin.remove();
+      const startEl = document.createElement('button');
+      startEl.type = 'button';
+      startEl.className = 'ch-start';
+      startEl.innerHTML =
+        '<span class="ch-start-btn">▶ Press Start</span>' +
+        '<span class="ch-start-sub">Tap, click, or press a key</span>';
+      bezel.appendChild(startEl);
+      const begin = () => {
+        if (startEl.parentNode) startEl.remove();
+        markStarted();
+        try { window.gameAPI.start(); } catch (e) {}
+      };
+      startEl.addEventListener('click', begin);
+      window.addEventListener('keydown', begin, { once: true });
+    }
+
+    // ── On-screen touch controls (per-game data-touch spec) ───────────────
+    // Spec: groups separated by "|", buttons by ",", each "glyph:Key".
+    // Prefix the key with "~" for hold-to-repeat (movement). Example:
+    //   data-touch="◀:~ArrowLeft,▶:~ArrowRight | ↻:ArrowUp,FIRE:Space"
+    if (d.touch) {
+      const pad = document.createElement('div');
+      pad.className = 'ch-touch';
+      d.touch.split('|').forEach((groupSpec) => {
+        const group = document.createElement('div');
+        group.className = 'ch-touch-group';
+        groupSpec.split(',').forEach((btnSpec) => {
+          const spec = btnSpec.trim();
+          const ci = spec.indexOf(':');
+          if (ci < 0) return;
+          const label = spec.slice(0, ci).trim();
+          let keyName = spec.slice(ci + 1).trim();
+          const repeat = keyName.charAt(0) === '~';
+          if (repeat) keyName = keyName.slice(1);
+          const b = document.createElement('button');
+          b.type = 'button';
+          b.className = 'ch-touch-btn';
+          b.textContent = label;
+          b.setAttribute('aria-label', keyName);
+          wireTouchButton(b, keyName, repeat, markStarted);
+          group.appendChild(b);
+        });
+        pad.appendChild(group);
+      });
+      bezel.insertAdjacentElement('afterend', pad);
+    }
+
     // Mirror the page's existing score / hi elements into the chrome topbar.
     // No localStorage writes — each game owns persistence (CF JSON or local).
     const chScoreEl = stage.querySelector('#ch-score');
     const chHiEl    = stage.querySelector('#ch-hi');
+
+    // Games that keep score only on their own canvas (no #score element) get
+    // no frozen "0" in the chrome topbar — hide the score block entirely.
+    if (!pageScoreEl && !pageHiEl) {
+      const sc = stage.querySelector('.ch-scores');
+      if (sc) sc.style.display = 'none';
+    }
 
     if (pageScoreEl) {
       new MutationObserver(() => {
@@ -168,6 +229,71 @@
         chHiEl.textContent = pageHiEl.textContent.trim();
       }).observe(pageHiEl, { childList: true, characterData: true, subtree: true });
     }
+  }
+
+  // ── Synthetic key dispatch ───────────────────────────────────────────
+  // Drives both vanilla games (which read event.key) and Phaser games (which
+  // look the Key up by event.keyCode). The KeyboardEvent constructor ignores
+  // keyCode/which, so we redefine them. Dispatched on document so it reaches
+  // document-level listeners AND bubbles up to window-level (Phaser) ones.
+  const KEYCODES = { ArrowLeft:37, ArrowUp:38, ArrowRight:39, ArrowDown:40, Space:32, ' ':32, Enter:13, Escape:27, Esc:27, Shift:16 };
+  function keyCodeFor(k) {
+    if (KEYCODES[k] != null) return KEYCODES[k];
+    if (k.length === 1) return k.toUpperCase().charCodeAt(0);
+    return 0;
+  }
+  function codeFor(k) {
+    if (k === ' ' || k === 'Space') return 'Space';
+    if (/^Arrow/.test(k)) return k;
+    if (k === 'Enter') return 'Enter';
+    if (k === 'Escape' || k === 'Esc') return 'Escape';
+    if (k === 'Shift') return 'ShiftLeft';
+    if (k.length === 1) return (/[a-z]/i.test(k) ? 'Key' + k.toUpperCase() : 'Digit' + k);
+    return k;
+  }
+  function fireKey(type, keyName) {
+    const kc = keyCodeFor(keyName);
+    const key = (keyName === 'Space') ? ' ' : keyName;
+    const ev = new KeyboardEvent(type, { key: key, code: codeFor(keyName), bubbles: true, cancelable: true });
+    try {
+      Object.defineProperty(ev, 'keyCode', { get: function () { return kc; } });
+      Object.defineProperty(ev, 'which',   { get: function () { return kc; } });
+    } catch (e) {}
+    document.dispatchEvent(ev);
+  }
+
+  // Wire one on-screen touch button to hold-to-press a key. Movement keys pass
+  // repeat=true so holding the button auto-repeats after a short delay.
+  function wireTouchButton(btn, keyName, repeat, markStarted) {
+    let holdTimer = null, repTimer = null, down = false;
+    const press = (e) => {
+      if (e) e.preventDefault();
+      if (down) return;
+      down = true;
+      markStarted();
+      fireKey('keydown', keyName);
+      if (repeat) {
+        holdTimer = setTimeout(() => {
+          repTimer = setInterval(() => fireKey('keydown', keyName), 80);
+        }, 260);
+      }
+      btn.classList.add('ch-touch-active');
+    };
+    const release = () => {
+      if (!down) return;
+      down = false;
+      if (holdTimer) clearTimeout(holdTimer);
+      if (repTimer) clearInterval(repTimer);
+      holdTimer = repTimer = null;
+      fireKey('keyup', keyName);
+      btn.classList.remove('ch-touch-active');
+    };
+    btn.addEventListener('pointerdown', press);
+    btn.addEventListener('pointerup', release);
+    btn.addEventListener('pointercancel', release);
+    btn.addEventListener('pointerleave', release);
+    btn.addEventListener('lostpointercapture', release);
+    window.addEventListener('blur', release);
   }
 
   function kbd(s) {

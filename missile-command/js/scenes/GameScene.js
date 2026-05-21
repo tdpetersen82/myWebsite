@@ -170,7 +170,7 @@ class GameScene extends Phaser.Scene {
         this.input.on('pointerdown', (pointer) => this._handleClick(pointer));
 
         this.input.keyboard.on('keydown', (event) => {
-            if (event.key === CONFIG.KEYS.PAUSE || event.key === 'Escape') {
+            if (event.key === CONFIG.KEYS.PAUSE || event.key === 'p' || event.key === 'Escape') {
                 this._togglePause();
             } else if (event.key === CONFIG.KEYS.MUTE || event.key === 'm') {
                 const muted = audioManager.toggleMute();

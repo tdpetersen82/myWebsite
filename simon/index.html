@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Simon — Play the Classic Memory Game Online Free | Limestone Games</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../arcade/arcade-game.css">
+    <link rel="stylesheet" href="../arcade/arcade-game.css?v=20260521a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -50,7 +50,7 @@
 <body class="ch-game" data-category="arcade"
       data-eyebrow="Cabinet · Simon"
       data-title="Simon"
-      data-hint-1="Click pads"
+      data-hint-1="Tap the pads"
       data-hint-2="Repeat the sequence"
       data-hint-3="R restart">
     <div id="game-container"></div>
@@ -103,7 +103,7 @@
 
     <!-- Scenes -->
     <script src="js/scenes/MenuScene.js"></script>
-    <script src="js/scenes/GameScene.js"></script>
+    <script src="js/scenes/GameScene.js?v=20260521a"></script>
     <script src="js/scenes/GameOverScene.js"></script>
 
     <!-- Game initialization -->
@@ -133,8 +133,7 @@
             restart: () => {
                 const s = game.scene.scenes.find(x => x.scene.isActive());
                 if (s) s.scene.restart();
-            },
-            mute: () => { game.sound.mute = !game.sound.mute; }
+            }
         };
     </script>
 
@@ -148,6 +147,6 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../arcade/arcade-chrome.js"></script>
+    <script src="../arcade/arcade-chrome.js?v=20260521a"></script>
 </body>
 </html>

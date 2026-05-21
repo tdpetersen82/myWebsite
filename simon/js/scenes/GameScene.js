@@ -123,6 +123,12 @@ class GameScene extends Phaser.Scene {
             return;
         }
 
+        // Restart
+        if (event.key === 'r' || event.key === 'R') {
+            this.scene.restart();
+            return;
+        }
+
         // Number keys 1-4 for pad input
         if (this.isPlayerTurn && !this.isPaused) {
             const num = parseInt(event.key);

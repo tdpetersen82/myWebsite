@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Asteroids — Play the Classic Arcade Shooter Online Free | Limestone Games</title>
     <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../arcade/arcade-game.css">
+    <link rel="stylesheet" href="../arcade/arcade-game.css?v=20260521a">
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
@@ -52,7 +52,8 @@
       data-title="Asteroids"
       data-hint-1="←→ rotate ↑ thrust"
       data-hint-2="Space fire"
-      data-hint-3="Shift hyperspace">
+      data-hint-3="Shift hyperspace"
+      data-touch="◀:ArrowLeft,▶:ArrowRight | ▲:ArrowUp,FIRE:~Space">
     <div class="container">
         <h1>☄️ Asteroids</h1>
         <div class="game-info">
@@ -108,10 +109,11 @@
     // ===================== Web Audio API Sound Effects =====================
     const AudioCtx = window.AudioContext || window.webkitAudioContext;
     let audioCtx = null;
+    let sfxMuted = false;
 
     function ensureAudioCtx() {
         if (!audioCtx) audioCtx = new AudioCtx();
-        if (audioCtx.state === 'suspended') audioCtx.resume();
+        if (!sfxMuted && audioCtx.state === 'suspended') audioCtx.resume();
         return audioCtx;
     }
 
@@ -1288,7 +1290,7 @@
             const scene = game.scene.getScene('GameScene');
             if (scene && scene.restartGame) scene.restartGame();
         },
-        mute: () => { game.sound.mute = !game.sound.mute; }
+        mute: () => { sfxMuted = !sfxMuted; if (audioCtx) { sfxMuted ? audioCtx.suspend() : audioCtx.resume(); } game.sound.mute = sfxMuted; }
     };
 
     // Restart button
@@ -1313,6 +1315,6 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../arcade/arcade-chrome.js"></script>
+    <script src="../arcade/arcade-chrome.js?v=20260521a"></script>
 </body>
 </html>
