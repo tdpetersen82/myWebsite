@@ -19,75 +19,98 @@
     <meta name="twitter:title" content="Contact — Limestone Games">
     <meta name="twitter:description" content="Get in touch with Limestone Games.">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"ContactPage","name":"Contact Limestone Games","url":"https://limestonegames.com/contact.html","publisher":{"@type":"Organization","name":"Limestone Games","url":"https://limestonegames.com"}}</script>
-    <link rel="stylesheet" href="styles.css">
-    <!-- Google tag (gtag.js) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="site-nav.css?v=20260521a">
+    <link rel="stylesheet" href="info.css?v=20260521a">
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
-    <style>
-        .contact-field { display:block; margin-bottom:16px; }
-        .contact-field label { display:block; font-size:0.9em; color:#444; font-weight:600; margin-bottom:6px; }
-        .contact-field input, .contact-field textarea {
-            width:100%; box-sizing:border-box; padding:10px 12px; font:inherit; font-size:15px;
-            border:1px solid #ccc; border-radius:8px; background:#fff; color:#222;
-        }
-        .contact-field input:focus, .contact-field textarea:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,0.15); }
-        .contact-submit {
-            font:inherit; font-weight:600; font-size:15px; padding:11px 22px; border:none; border-radius:999px;
-            background:#667eea; color:#fff; cursor:pointer; transition:background .15s;
-        }
-        .contact-submit:hover { background:#5568d3; }
-        .contact-submit:disabled { opacity:.6; cursor:default; }
-        .hp { position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
-    </style>
 </head>
-<body>
-    <div class="container" style="text-align:left; max-width:800px;">
-        <h1 style="font-size:2em; margin-bottom:20px;">Contact</h1>
+<body class="info-root">
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <span class="logo-mark">L</span>
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="arcade/">Arcade</a>
+                <a href="kids/">Kids</a>
+                <a href="strategy/">Strategy</a>
+                <a href="casino/">Casino</a>
+                <a href="profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta"><span class="dot"></span> Free browser games</div>
+    </nav>
 
-        <p style="color:#555; line-height:1.7; margin-bottom:24px;">
-            Found a bug, want to suggest a game, or just want to say hello? Send a note below. It's a one-person
-            project, so I read every message myself. If you'd like a reply, leave an email — otherwise it's
-            optional. Please don't include passwords or other sensitive information.
-        </p>
+    <div class="info-wrap">
+        <div class="info-card">
+            <div class="info-eyebrow">Contact</div>
+            <h1>Get in touch</h1>
+            <p class="info-lede">
+                Found a bug, want to suggest a game, or just want to say hello? Send a note below. It's a
+                one-person project, so I read every message myself.
+            </p>
+            <p>
+                If you'd like a reply, leave an email — otherwise it's optional. Please don't include passwords
+                or other sensitive information.
+            </p>
 
-        <form id="contact-form" novalidate>
-            <div class="hp" aria-hidden="true">
-                <label>Leave this field empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
-            </div>
-            <div class="contact-field">
-                <label for="cf-name">Name <span style="color:#999;font-weight:400;">(optional)</span></label>
-                <input id="cf-name" name="name" type="text" maxlength="200" autocomplete="name">
-            </div>
-            <div class="contact-field">
-                <label for="cf-email">Email <span style="color:#999;font-weight:400;">(optional — for a reply)</span></label>
-                <input id="cf-email" name="email" type="email" maxlength="200" autocomplete="email">
-            </div>
-            <div class="contact-field">
-                <label for="cf-message">Message</label>
-                <textarea id="cf-message" name="message" rows="6" maxlength="5000" required></textarea>
-            </div>
-            <button type="submit" class="contact-submit">Send message</button>
-            <div id="contact-status" role="status" aria-live="polite" style="margin-top:14px; font-size:0.95em; line-height:1.6;"></div>
-        </form>
-
-        <a href="index.html" class="back-button" style="margin-top:28px;">&larr; Back to Games</a>
+            <form id="contact-form" novalidate>
+                <div class="info-hp" aria-hidden="true">
+                    <label>Leave this field empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+                </div>
+                <div class="info-field">
+                    <label for="cf-name">Name <span class="opt">(optional)</span></label>
+                    <input id="cf-name" name="name" type="text" maxlength="200" autocomplete="name">
+                </div>
+                <div class="info-field">
+                    <label for="cf-email">Email <span class="opt">(optional — for a reply)</span></label>
+                    <input id="cf-email" name="email" type="email" maxlength="200" autocomplete="email">
+                </div>
+                <div class="info-field">
+                    <label for="cf-message">Message</label>
+                    <textarea id="cf-message" name="message" rows="6" maxlength="5000" required></textarea>
+                </div>
+                <button type="submit" class="info-submit">Send message</button>
+                <div id="contact-status" class="info-status" role="status" aria-live="polite"></div>
+            </form>
+        </div>
     </div>
+
+    <footer class="info-foot">
+        <a class="info-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true"><path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/><circle cx="30" cy="26" r="2.4" fill="#F08488"/></svg>
+            <span>Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="info-foot-links">
+            <a href="/">All games</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <a href="privacy.html">Privacy</a>
+            <a href="terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
 
     <script>
     (function () {
         var form = document.getElementById('contact-form');
         var statusEl = document.getElementById('contact-status');
-        var btn = form.querySelector('.contact-submit');
+        var btn = form.querySelector('.info-submit');
         form.addEventListener('submit', function (e) {
             e.preventDefault();
             var message = form.elements['message'].value.trim();
             if (!message) {
-                statusEl.style.color = '#c0392b';
+                statusEl.style.color = '#C0392B';
                 statusEl.textContent = 'Please enter a message.';
                 return;
             }
             btn.disabled = true;
-            statusEl.style.color = '#888';
+            statusEl.style.color = '#5C5346';
             statusEl.textContent = 'Sending…';
             fetch('/api/contact', {
                 method: 'POST',
@@ -104,20 +127,19 @@
                 btn.disabled = false;
                 if (res.ok) {
                     form.reset();
-                    statusEl.style.color = '#2e7d32';
+                    statusEl.style.color = '#2F7D52';
                     statusEl.textContent = 'Thanks — your message was sent. I read everything.';
                 } else {
-                    statusEl.style.color = '#c0392b';
+                    statusEl.style.color = '#C0392B';
                     statusEl.textContent = res.j && res.j.error ? ('Couldn’t send: ' + res.j.error) : 'Something went wrong. Please try again.';
                 }
             }).catch(function () {
                 btn.disabled = false;
-                statusEl.style.color = '#c0392b';
+                statusEl.style.color = '#C0392B';
                 statusEl.textContent = 'Network error — please try again in a moment.';
             });
         });
     })();
     </script>
-    <script src="nav.js"></script>
 </body>
 </html>

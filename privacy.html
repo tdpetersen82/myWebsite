@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Privacy Policy — Limestone Games</title>
-    <meta name="description" content="Privacy Policy for Limestone Games. Learn how we handle your data, cookies, and third-party advertising.">
+    <meta name="description" content="Privacy Policy for Limestone Games. Learn how we handle your data, cookies, local storage, and third-party advertising.">
     <link rel="canonical" href="https://limestonegames.com/privacy.html">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -19,79 +19,118 @@
     <meta name="twitter:title" content="Privacy Policy — Limestone Games">
     <meta name="twitter:description" content="Privacy Policy for Limestone Games.">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebPage","name":"Privacy Policy","url":"https://limestonegames.com/privacy.html","publisher":{"@type":"Organization","name":"Limestone Games"}}</script>
-    <link rel="stylesheet" href="styles.css">
-    <!-- Google tag (gtag.js) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="site-nav.css?v=20260521a">
+    <link rel="stylesheet" href="info.css?v=20260521a">
+    <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
 </head>
-<body>
-    <div class="container" style="text-align:left; max-width:800px;">
-        <h1 style="font-size:2em; margin-bottom:20px;">Privacy Policy</h1>
-        <p style="color:#999; font-size:0.9em; margin-bottom:30px;">Last updated: March 27, 2026</p>
+<body class="info-root">
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <span class="logo-mark">L</span>
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="arcade/">Arcade</a>
+                <a href="kids/">Kids</a>
+                <a href="strategy/">Strategy</a>
+                <a href="casino/">Casino</a>
+                <a href="profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta"><span class="dot"></span> Free browser games</div>
+    </nav>
 
-        <h2 style="font-size:1.3em; color:#667eea; margin:24px 0 12px;">Information We Collect</h2>
-        <p style="color:#555; line-height:1.7; margin-bottom:16px;">
-            Limestone Games does not require user registration or collect personal information directly.
-            We may collect non-personally identifiable information automatically, including browser type,
-            device type, pages visited, and time spent on pages through analytics and advertising services.
-        </p>
+    <div class="info-wrap">
+        <div class="info-card">
+            <div class="info-eyebrow">Legal</div>
+            <h1>Privacy Policy</h1>
+            <p class="info-updated">Last updated: March 27, 2026</p>
 
-        <h2 style="font-size:1.3em; color:#667eea; margin:24px 0 12px;">Cookies &amp; Local Storage</h2>
-        <p style="color:#555; line-height:1.7; margin-bottom:16px;">
-            We use <strong>localStorage</strong> to save your game preferences (such as high scores and display settings).
-            Most of this data stays on your device and is never transmitted.
-        </p>
-        <p style="color:#555; line-height:1.7; margin-bottom:16px;">
-            <strong>Casino stats cloud backup.</strong> To let your casino stats survive a browser cache wipe, we mirror
-            them to a small storage record on Cloudflare. The record is keyed by a random per-device ID generated in
-            your browser; we do not collect or store your name, email, or any other personal information for this
-            backup. The backup contains only your in-game stats (bankroll, hand counts, peak amounts, rare-event
-            counters) and an optional display name you chose locally. Anyone who knows your random device ID can read
-            or modify that backup, so treat it like any other browser-stored secret. Clearing your browser data ends
-            your access to the backup; a future "Disconnect" button will let you delete it explicitly.
-        </p>
-        <p style="color:#555; line-height:1.7; margin-bottom:16px;">
-            Third-party services, including Google AdSense, may use cookies to serve ads based on your
-            prior visits to this website or other websites. You can opt out of personalized advertising
-            by visiting <a href="https://www.google.com/settings/ads" style="color:#667eea;">Google Ads Settings</a>.
-        </p>
+            <h2>Information we collect</h2>
+            <p>
+                Limestone Games does not require user registration or collect personal information directly. We
+                may collect non-personally identifiable information automatically, including browser type, device
+                type, pages visited, and time spent on pages through analytics and advertising services.
+            </p>
 
-        <h2 style="font-size:1.3em; color:#667eea; margin:24px 0 12px;">Third-Party Advertising</h2>
-        <p style="color:#555; line-height:1.7; margin-bottom:16px;">
-            We use Google AdSense to display advertisements. Google, as a third-party vendor, uses cookies
-            to serve ads on our site. Google's use of the DART cookie enables it to serve ads to our users
-            based on their visit to our site and other sites on the Internet. Users may opt out of the use
-            of the DART cookie by visiting the
-            <a href="https://policies.google.com/technologies/ads" style="color:#667eea;">Google ad and content network privacy policy</a>.
-        </p>
-        <p style="color:#555; line-height:1.7; margin-bottom:16px;">
-            Third-party ad servers or ad networks may use technologies like cookies, JavaScript, or web beacons
-            in their advertisements and links that appear on Limestone Games. These are sent directly to your
-            browser and they automatically receive your IP address. These technologies are used to measure the
-            effectiveness of advertising campaigns and/or to personalize the advertising content you see.
-        </p>
+            <h2>Cookies &amp; local storage</h2>
+            <p>
+                We use <strong>localStorage</strong> to save your game preferences (such as high scores and
+                display settings). Most of this data stays on your device and is never transmitted.
+            </p>
+            <p>
+                <strong>Casino stats cloud backup.</strong> To let your casino stats survive a browser cache
+                wipe, we mirror them to a small storage record on Cloudflare. The record is keyed by a random
+                per-device ID generated in your browser; we do not collect or store your name, email, or any
+                other personal information for this backup. The backup contains only your in-game stats
+                (bankroll, hand counts, peak amounts, rare-event counters) and an optional display name you chose
+                locally. Anyone who knows your random device ID can read or modify that backup, so treat it like
+                any other browser-stored secret. Clearing your browser data ends your access to the backup; a
+                future "Disconnect" button will let you delete it explicitly.
+            </p>
+            <p>
+                Third-party services, including Google AdSense, may use cookies to serve ads based on your prior
+                visits to this website or other websites. You can opt out of personalized advertising by visiting
+                <a href="https://www.google.com/settings/ads">Google Ads Settings</a>.
+            </p>
 
-        <h2 style="font-size:1.3em; color:#667eea; margin:24px 0 12px;">Children's Privacy</h2>
-        <p style="color:#555; line-height:1.7; margin-bottom:16px;">
-            Limestone Games does not knowingly collect any personal identifiable information from children
-            under the age of 13. If you think that your child has provided this kind of information on our
-            website, we strongly encourage you to contact us immediately and we will promptly remove such
-            information from our records.
-        </p>
+            <h2>Third-party advertising</h2>
+            <p>
+                We use Google AdSense to display advertisements. Google, as a third-party vendor, uses cookies to
+                serve ads on our site. Google's use of the DART cookie enables it to serve ads to our users based
+                on their visit to our site and other sites on the Internet. Users may opt out of the use of the
+                DART cookie by visiting the
+                <a href="https://policies.google.com/technologies/ads">Google ad and content network privacy policy</a>.
+            </p>
+            <p>
+                Third-party ad servers or ad networks may use technologies like cookies, JavaScript, or web
+                beacons in their advertisements and links that appear on Limestone Games. These are sent directly
+                to your browser and they automatically receive your IP address. These technologies are used to
+                measure the effectiveness of advertising campaigns and/or to personalize the advertising content
+                you see.
+            </p>
 
-        <h2 style="font-size:1.3em; color:#667eea; margin:24px 0 12px;">Changes to This Policy</h2>
-        <p style="color:#555; line-height:1.7; margin-bottom:16px;">
-            We may update this Privacy Policy from time to time. Any changes will be posted on this page
-            with an updated revision date.
-        </p>
+            <h2>Children's privacy</h2>
+            <p>
+                Limestone Games does not knowingly collect any personally identifiable information from children
+                under the age of 13. If you think that your child has provided this kind of information on our
+                website, we strongly encourage you to <a href="contact.html">contact us</a> immediately and we
+                will promptly remove such information from our records.
+            </p>
 
-        <h2 style="font-size:1.3em; color:#667eea; margin:24px 0 12px;">Contact</h2>
-        <p style="color:#555; line-height:1.7; margin-bottom:16px;">
-            If you have any questions about this Privacy Policy, please <a href="contact.html" style="color:#667eea;">contact us</a>.
-        </p>
+            <h2>Changes to this policy</h2>
+            <p>
+                We may update this Privacy Policy from time to time. Any changes will be posted on this page with
+                an updated revision date.
+            </p>
 
-        <a href="index.html" class="back-button">&larr; Back to Games</a>
+            <h2>Contact</h2>
+            <p>
+                If you have any questions about this Privacy Policy, please
+                <a href="contact.html">contact us</a>.
+            </p>
+        </div>
     </div>
-    <script src="nav.js"></script>
+
+    <footer class="info-foot">
+        <a class="info-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true"><path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/><circle cx="30" cy="26" r="2.4" fill="#F08488"/></svg>
+            <span>Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="info-foot-links">
+            <a href="/">All games</a>
+            <a href="about.html">About</a>
+            <a href="contact.html">Contact</a>
+            <a href="privacy.html">Privacy</a>
+            <a href="terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
 </body>
 </html>

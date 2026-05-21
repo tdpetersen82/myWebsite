@@ -1,0 +1,110 @@
+/* =====================================================================
+   Limestone Games — shared styling for info / legal pages
+   (about, contact, privacy, terms). Pair with site-nav.css for the nav.
+   ===================================================================== */
+
+:root {
+  --bg:        #F5F0E6;
+  --paper:     #FFFFFF;
+  --paper-2:   #FBF7EE;
+  --ink:       #1A1612;
+  --ink-soft:  #5C5346;
+  --line:      rgba(26, 22, 18, 0.10);
+  --line-2:    rgba(26, 22, 18, 0.05);
+  --accent:    #C77A2A;
+  --ok:        #2F7D52;
+  --err:       #C0392B;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; min-height: 100%; background: var(--bg); }
+body.info-root {
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  padding-bottom: 40px;
+}
+
+/* Content shell */
+.info-wrap { max-width: 820px; margin: 0 auto; padding: 0 24px; }
+.info-card {
+  background: var(--paper);
+  border: 1px solid var(--line);
+  border-radius: 24px;
+  padding: 44px 48px;
+  margin-top: 28px;
+  box-shadow: 0 1px 0 var(--line), 0 18px 44px -28px rgba(26, 22, 18, 0.30);
+}
+
+.info-card h1 {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  font-size: 40px; font-weight: 600; letter-spacing: -0.025em;
+  line-height: 1.05; margin: 0 0 6px;
+}
+.info-eyebrow {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 11px; letter-spacing: 0.16em; text-transform: uppercase;
+  color: var(--accent); margin-bottom: 14px;
+}
+.info-updated {
+  font-family: 'JetBrains Mono', ui-monospace, monospace;
+  font-size: 12px; color: var(--ink-soft); margin: 0 0 28px;
+}
+.info-card h2 {
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif;
+  font-size: 21px; font-weight: 600; letter-spacing: -0.01em;
+  color: var(--ink); margin: 30px 0 10px;
+}
+.info-card p, .info-card li {
+  font-size: 15.5px; line-height: 1.72; color: var(--ink-soft); margin: 0 0 16px;
+}
+.info-card ul { margin: 0 0 16px; padding-left: 20px; }
+.info-card li { margin-bottom: 6px; }
+.info-card strong { color: var(--ink); font-weight: 600; }
+.info-lede { font-size: 17px !important; color: var(--ink) !important; }
+.info-card a { color: var(--accent); text-decoration: none; font-weight: 500; }
+.info-card a:hover { text-decoration: underline; }
+
+/* Contact form */
+.info-field { display: block; margin-bottom: 18px; }
+.info-field label { display: block; font-size: 13px; font-weight: 600; color: var(--ink); margin-bottom: 6px; }
+.info-field label .opt { color: var(--ink-soft); font-weight: 400; }
+.info-field input, .info-field textarea {
+  width: 100%; padding: 11px 14px; font: inherit; font-size: 15px;
+  border: 1px solid var(--line); border-radius: 12px; background: var(--paper-2); color: var(--ink);
+}
+.info-field input:focus, .info-field textarea:focus {
+  outline: none; border-color: var(--accent);
+  box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
+  background: var(--paper);
+}
+.info-submit {
+  font: inherit; font-weight: 600; font-size: 15px; padding: 12px 26px; border: none; border-radius: 999px;
+  background: var(--ink); color: var(--bg); cursor: pointer; transition: transform .15s, background .15s;
+}
+.info-submit:hover { transform: translateY(-1px); background: var(--accent); }
+.info-submit:disabled { opacity: .55; cursor: default; transform: none; }
+.info-status { margin-top: 14px; font-size: 14px; line-height: 1.6; }
+.info-hp { position: absolute; left: -9999px; width: 1px; height: 1px; overflow: hidden; }
+
+/* Footer */
+.info-foot {
+  max-width: 820px; margin: 32px auto 0; padding: 24px;
+  border-top: 1px solid var(--line);
+  display: flex; justify-content: space-between; align-items: center;
+  flex-wrap: wrap; gap: 14px;
+  color: var(--ink-soft); font-size: 12.5px;
+}
+.info-foot .info-logo {
+  display: inline-flex; align-items: center; gap: 9px; text-decoration: none; color: inherit;
+  font-family: 'Bricolage Grotesque', system-ui, sans-serif; font-weight: 700; font-size: 14px;
+}
+.info-foot .info-logo .light { opacity: 0.55; font-weight: 500; }
+.info-foot-links { display: flex; gap: 18px; flex-wrap: wrap; }
+.info-foot-links a { color: inherit; text-decoration: none; }
+.info-foot-links a:hover { color: var(--ink); }
+
+@media (max-width: 640px) {
+  .info-card { padding: 28px 22px; border-radius: 18px; }
+  .info-card h1 { font-size: 31px; }
+}
