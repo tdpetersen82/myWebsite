@@ -34,33 +34,13 @@ body.cas-root {
   margin: 0;
 }
 
-/* ───────────── Top nav ───────────── */
-.cas-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 40px;
-  border-bottom: 1px solid var(--line);
-  flex-wrap: wrap;
-  gap: 16px;
-}
-.cas-nav-left {
-  display: flex;
-  align-items: center;
-  gap: 32px;
-}
+/* ───────────── Footer logo ───────────── */
 .cas-logo {
   display: inline-flex;
   align-items: center;
   gap: 10px;
   text-decoration: none;
   color: inherit;
-}
-.cas-logo img {
-  display: block;
-  width: 40px;
-  height: 40px;
-  mix-blend-mode: multiply;
 }
 .cas-logo .wordmark {
   font-family: 'Bricolage Grotesque', system-ui, sans-serif;
@@ -70,40 +50,9 @@ body.cas-root {
 }
 .cas-logo .wordmark .light { font-weight: 500; opacity: 0.7; }
 
-.cas-nav-links { display: flex; gap: 4px; }
-.cas-nav-links a {
-  padding: 8px 12px;
-  border-radius: 999px;
-  font-size: 13px;
-  font-weight: 500;
-  color: var(--ink-soft);
-  text-decoration: none;
-  transition: all 0.15s;
-}
-.cas-nav-links a:hover { color: var(--ink); }
-.cas-nav-links a.active { background: var(--ink); color: var(--bg); }
-
-.cas-tables-open {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 14px;
-  background: var(--paper);
-  border-radius: 999px;
-  border: 1px solid var(--line);
-  font-size: 13px;
-  color: var(--ink-soft);
-}
-.cas-tables-open .dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--chip-green);
-}
-
 /* ───────────── HERO ───────────── */
 .cas-hero {
-  margin: 24px 40px 32px;
+  margin: 24px 36px 32px;
   border-radius: 32px;
   overflow: hidden;
   position: relative;
@@ -237,14 +186,14 @@ body.cas-root {
 .cas-chip.c4 { background: var(--chip-black); top: 126px; transform: translate(-50%, 0) rotate(7deg);  }
 
 /* ───────────── Wraps ───────────── */
-.cas-wrap { padding: 0 40px; }
+.cas-wrap { padding: 0 36px; }
 
 /* Bankroll widget */
 .cas-bankroll {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 14px;
-  margin: 24px 40px 32px;
+  margin: 24px 36px 32px;
   padding: 22px;
   background: var(--ink);
   color: var(--bg);
@@ -651,185 +600,6 @@ body.cas-root {
 }
 .cas-card-game:hover .play-btn { background: var(--accent); }
 
-/* ───────────── Two-column row ───────────── */
-.cas-twocol {
-  display: grid;
-  grid-template-columns: 1.4fr 1fr;
-  gap: 18px;
-  margin-bottom: 32px;
-}
-
-/* Tournament */
-.cas-tourney {
-  background: linear-gradient(135deg, #2A1F14, #1A1612);
-  color: #F2EFE6;
-  border-radius: 28px;
-  padding: 36px;
-  position: relative;
-  overflow: hidden;
-}
-.cas-tourney::before {
-  content: '';
-  position: absolute;
-  top: -40%;
-  right: -10%;
-  width: 60%;
-  height: 140%;
-  background: radial-gradient(circle, rgba(200, 161, 74, 0.18), transparent 60%);
-}
-.cas-tourney-eyebrow {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 10px;
-  letter-spacing: 0.16em;
-  text-transform: uppercase;
-  color: var(--gold);
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  margin-bottom: 18px;
-  position: relative;
-  z-index: 1;
-}
-.cas-tourney-dot {
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  background: var(--gold);
-  animation: cas-pulse 1.4s ease-in-out infinite;
-}
-@keyframes cas-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.5; transform: scale(1.4); }
-}
-.cas-tourney h3 {
-  font-size: 32px;
-  line-height: 1.1;
-  margin-bottom: 12px;
-  position: relative;
-  z-index: 1;
-}
-.cas-tourney p {
-  font-size: 14px;
-  opacity: 0.7;
-  max-width: 46ch;
-  line-height: 1.5;
-  margin-bottom: 24px;
-  position: relative;
-  z-index: 1;
-}
-.cas-tourney-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: 16px;
-  margin-bottom: 24px;
-  padding: 18px 0;
-  border-top: 1px solid rgba(255, 255, 255, 0.1);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-  position: relative;
-  z-index: 1;
-}
-.cas-tourney-grid .l {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 9.5px;
-  letter-spacing: 0.12em;
-  text-transform: uppercase;
-  opacity: 0.55;
-}
-.cas-tourney-grid .n {
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 22px;
-  font-weight: 600;
-  margin-top: 3px;
-  line-height: 1.1;
-}
-.cas-tourney-grid .n.gold { color: var(--gold); }
-
-.cas-tourney-cta {
-  display: flex;
-  gap: 10px;
-  position: relative;
-  z-index: 1;
-  flex-wrap: wrap;
-}
-.cas-tourney-cta button,
-.cas-tourney-cta a {
-  padding: 12px 22px;
-  border-radius: 999px;
-  font: inherit;
-  font-weight: 600;
-  font-size: 14px;
-  cursor: pointer;
-  text-decoration: none;
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-}
-.cas-tourney-cta .primary {
-  background: var(--gold);
-  color: #2A2008;
-  border: none;
-}
-.cas-tourney-cta .primary:hover { background: #D5B25A; }
-.cas-tourney-cta .ghost {
-  background: transparent;
-  color: #F2EFE6;
-  border: 1px solid rgba(255, 255, 255, 0.2);
-}
-
-/* Hall of fame */
-.cas-hall {
-  background: var(--paper);
-  border: 1px solid var(--line);
-  border-radius: 28px;
-  padding: 28px;
-}
-.cas-hall h3 {
-  font-size: 18px;
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-.cas-hall .sub {
-  font-size: 12px;
-  color: var(--ink-soft);
-  margin-bottom: 18px;
-}
-.cas-hall-row {
-  display: grid;
-  grid-template-columns: 24px 1fr auto;
-  gap: 12px;
-  padding: 12px 0;
-  border-bottom: 1px dashed var(--line);
-  align-items: center;
-}
-.cas-hall-row:last-child { border: none; }
-.cas-hall-row .pos {
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-size: 18px;
-  font-weight: 600;
-  color: var(--ink-soft);
-}
-.cas-hall-row .pos.p1 { color: var(--gold); }
-.cas-hall-row .pos.p2 { color: #A89678; }
-.cas-hall-row .pos.p3 { color: #B27E5F; }
-.cas-hall-row .who {
-  font-size: 14px;
-  font-weight: 600;
-}
-.cas-hall-row .who span {
-  font-size: 11px;
-  color: var(--ink-soft);
-  font-weight: 500;
-  display: block;
-  margin-top: 2px;
-}
-.cas-hall-row .who.you { color: var(--accent); }
-.cas-hall-row .amt {
-  font-family: 'JetBrains Mono', ui-monospace, monospace;
-  font-size: 13px;
-  font-weight: 600;
-  color: var(--felt);
-}
-
 /* Strategy */
 .cas-strategy {
   background: var(--paper);
@@ -929,7 +699,7 @@ body.cas-root {
   border-radius: 14px;
   font-size: 12px;
   color: var(--ink-soft);
-  margin: 24px 40px 0;
+  margin: 24px 36px 0;
   line-height: 1.5;
 }
 
@@ -937,7 +707,7 @@ body.cas-root {
 .cas-foot {
   padding-top: 32px;
   border-top: 1px solid var(--line);
-  margin: 48px 40px 0;
+  margin: 48px 36px 0;
   display: flex;
   justify-content: space-between;
   align-items: center;
@@ -962,12 +732,12 @@ body.cas-root {
   .cas-bankroll { grid-template-columns: 1fr 1fr; }
   .cas-featured { grid-template-columns: 1fr; }
   .cas-grid { grid-template-columns: repeat(2, 1fr); }
-  .cas-twocol { grid-template-columns: 1fr; }
   .cas-strategy-grid { grid-template-columns: 1fr; }
 }
 
 @media (max-width: 700px) {
-  .cas-nav, .cas-wrap, .cas-bankroll, .cas-foot { padding: 16px 18px; margin-left: 0; margin-right: 0; }
+  .cas-wrap, .cas-foot { padding: 16px 18px; margin-left: 0; margin-right: 0; }
+  .cas-bankroll { padding: 16px 18px; margin: 24px 18px 32px; }
   .cas-hero { margin: 16px 18px 24px; padding: 32px 24px 0; }
   .cas-hero h1 { font-size: 48px; }
   .cas-bankroll { grid-template-columns: 1fr; }

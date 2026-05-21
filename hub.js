@@ -14,7 +14,7 @@
     { id: 'animal-detective',  name: 'Animal Detective',  cat: 'kids',    desc: 'Guess the animal in 20 yes-or-no questions.', color: '#FF6F61', plays: '0',    isNew: true },
     { id: 'pong',              name: 'Pong',              cat: 'classic', desc: 'Paddle vs. AI. Keep it alive.',    color: '#8FA8E6', plays: '8.2k'  },
     { id: 'breakout',          name: 'Breakout',          cat: 'classic', desc: 'Bricks, ball, bounce.',            color: '#F2A65A', plays: '15.1k' },
-    { id: 'space-invaders',    name: 'Space Invasion',    cat: 'classic', desc: 'Defend Earth from alien waves.',   color: '#9B7EDC', plays: '11.8k' },
+    { id: 'space-invaders',    name: 'Space Invaders',    cat: 'classic', desc: 'Defend Earth from alien waves.',   color: '#9B7EDC', plays: '11.8k' },
     { id: 'block-puzzle',      name: 'Block Puzzle',      cat: 'classic', desc: 'Stack, clear, score.',             color: '#5DC4D9', plays: '22.6k' },
     { id: 'asteroids',         name: 'Asteroids',         cat: 'classic', desc: 'Pilot through the rocks.',         color: '#A78BFA', plays: '9.4k'  },
     { id: 'frogger',           name: 'Frogger',           cat: 'classic', desc: 'Hop home through traffic.',        color: '#7BC97B', plays: '6.7k'  },
@@ -40,6 +40,7 @@
     { id: 'craps',             name: 'Craps',             cat: 'casino',  desc: 'Roll the bones.',                  color: '#5DC4D9', plays: '4.1k'  },
     { id: 'three-card-poker',  name: 'Three Card Poker',  cat: 'casino',  desc: 'Play or fold? Three cards.',       color: '#9B7EDC', plays: '5.3k'  },
     { id: 'texas-holdem',      name: "Texas Hold'em",     cat: 'casino',  desc: '4-handed cash game. Equity hints.', color: '#E8B05B', plays: '0',    isNew: true },
+    { id: 'slot-machine',      name: 'Slot Machine',      cat: 'casino',  desc: 'Three reels, three themes.',       color: '#C8A14A', plays: '0',    isNew: true },
   ];
 
   const CATEGORIES = [
@@ -114,6 +115,7 @@
     'memory-match': '<rect x="6"  y="10" width="16" height="20" rx="3" fill="C"/><rect x="24" y="10" width="16" height="20" rx="3" fill="C" opacity="0.55"/><rect x="42" y="10" width="16" height="20" rx="3" fill="C"/><rect x="6"  y="34" width="16" height="20" rx="3" fill="C" opacity="0.55"/><rect x="24" y="34" width="16" height="20" rx="3" fill="C"/><rect x="42" y="34" width="16" height="20" rx="3" fill="C" opacity="0.55"/><circle cx="32" cy="44" r="3" fill="#fff"/>',
     'shape-sorter': '<circle cx="14" cy="14" r="6" fill="C"/><rect x="26" y="8" width="12" height="12" rx="2" fill="C" opacity="0.7"/><polygon points="50,8 56,20 44,20" fill="C"/><rect x="6" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5"/><rect x="26" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5" opacity="0.7"/><rect x="46" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5"/>',
     'counting-critters': '<circle cx="14" cy="20" r="6" fill="C"/><circle cx="32" cy="20" r="6" fill="C" opacity="0.7"/><circle cx="50" cy="20" r="6" fill="C"/><text x="32" y="50" font-size="20" font-weight="800" text-anchor="middle" fill="C">3</text>',
+    'slot-machine': '<rect x="8" y="16" width="14" height="32" rx="2" fill="C" opacity="0.22"/><rect x="25" y="16" width="14" height="32" rx="2" fill="C" opacity="0.22"/><rect x="42" y="16" width="14" height="32" rx="2" fill="C" opacity="0.22"/><text x="15" y="37" font-size="13" font-weight="800" text-anchor="middle" fill="C">7</text><text x="32" y="37" font-size="13" font-weight="800" text-anchor="middle" fill="C">7</text><text x="49" y="37" font-size="13" font-weight="800" text-anchor="middle" fill="C">7</text>',
   };
 
   function glyph(game, size) {

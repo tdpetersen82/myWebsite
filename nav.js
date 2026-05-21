@@ -1,5 +1,5 @@
 // ============================================================
-// Arcade Game Hub — Persistent Top Navigation Bar
+// Limestone Games — Persistent Top Navigation Bar
 // Include this script on every page: <script src="nav.js"></script>
 // ============================================================
 
@@ -306,7 +306,7 @@ body.mobile-nav-open{overflow:hidden}\
     var homeLink = document.createElement('a');
     homeLink.href = basePath + 'index.html';
     homeLink.className = 'site-nav-home';
-    homeLink.innerHTML = '<span class="site-nav-home-icon">\u{1F3AE}</span> <span>Arcade Hub</span>';
+    homeLink.innerHTML = '<span class="site-nav-home-icon">\u{1F3AE}</span> <span>Limestone Games</span>';
     inner.appendChild(homeLink);
 
     // Category triggers (desktop)

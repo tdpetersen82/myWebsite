@@ -1,10 +1,10 @@
-/* share.js — Social share bar for Arcade Game Hub game pages */
+/* share.js — Social share bar for Limestone Games game pages */
 (function () {
   'use strict';
 
   var title = document.title.split(' — ')[0].split(' | ')[0];
   var url = window.location.href;
-  var text = 'I\'m playing ' + title + ' for free on Arcade Game Hub!';
+  var text = 'I\'m playing ' + title + ' for free on Limestone Games!';
 
   var bar = document.createElement('div');
   bar.className = 'share-bar';

@@ -3,6 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <title>Chinese Checkers — Free Browser Game vs. AI | Limestone Games</title>
     <meta name="description" content="Play Chinese Checkers free in your browser. 2-, 3-, or 6-player vs. AI on the classic 121-hole star board. Hop chains, three difficulty tiers, no downloads.">
     <meta name="keywords" content="chinese checkers, halma, sternhalma, online chinese checkers, free chinese checkers, browser chinese checkers, chinese checkers vs AI">
@@ -638,7 +641,7 @@
         ent.className = 'ent' + (i === state.currentIdx ? ' cur' : '');
         ent.innerHTML = '<span class="swatch" style="background:' + c.fill + '"></span>'
           + (p.isAI ? 'AI ' : '') + (p.slot === 4 ? 'You' : c.name)
-          + ' <b>' + inG + '/10</b>';
+          + ' <b>' + inG + '</b>/10';
         rosterEl.appendChild(ent);
       }
     }

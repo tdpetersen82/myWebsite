@@ -1,2 +1,93 @@
+# Category renames
 /puzzles/      /strategy/      301
 /puzzles/*     /strategy/:splat 301
+
+# Removed content with explicit successors
+/baccarat/            /solitaire/    301
+/baccarat/*           /solitaire/    301
+/bubble-shooter/      /bubble-pop/   301
+/bubble-shooter/*     /bubble-pop/   301
+/bubble-shooter-hd/   /bubble-pop/   301
+/bubble-shooter-hd/*  /bubble-pop/   301
+/chess-solver/        /chess/        301
+/chess-solver/*       /chess/        301
+
+# Retired section, content folded into Arcade
+/retro/    /arcade/   301
+/retro/*   /arcade/   301
+
+# Retired utilities section, no replacement
+/utilities/    /   301
+/utilities/*   /   301
+
+# Retired arcade-era games, redirect to the Arcade category
+/beat-em-up/            /arcade/   301
+/beat-em-up/*           /arcade/   301
+/bomberman/             /arcade/   301
+/bomberman/*            /arcade/   301
+/centipede/             /arcade/   301
+/centipede/*            /arcade/   301
+/color-switch/          /arcade/   301
+/color-switch/*         /arcade/   301
+/crowd-evacuation/      /arcade/   301
+/crowd-evacuation/*     /arcade/   301
+/dig-dug/               /arcade/   301
+/dig-dug/*              /arcade/   301
+/donkey-kong/           /arcade/   301
+/donkey-kong/*          /arcade/   301
+/drift-boss/            /arcade/   301
+/drift-boss/*           /arcade/   301
+/emoto-database/        /arcade/   301
+/emoto-database/*       /arcade/   301
+/endless-runner/        /arcade/   301
+/endless-runner/*       /arcade/   301
+/fantastic-contraption/   /arcade/   301
+/fantastic-contraption/*  /arcade/   301
+/flappy-bird/           /arcade/   301
+/flappy-bird/*          /arcade/   301
+/fruit-catcher/         /arcade/   301
+/fruit-catcher/*        /arcade/   301
+/fruit-ninja/           /arcade/   301
+/fruit-ninja/*          /arcade/   301
+/galaga/                /arcade/   301
+/galaga/*               /arcade/   301
+/hex-defense/           /arcade/   301
+/hex-defense/*          /arcade/   301
+/hill-climb/            /arcade/   301
+/hill-climb/*           /arcade/   301
+/horse-feeding/         /arcade/   301
+/horse-feeding/*        /arcade/   301
+/joust/                 /arcade/   301
+/joust/*                /arcade/   301
+/knife-hit/             /arcade/   301
+/knife-hit/*            /arcade/   301
+/labyrinth-babylonjs/   /arcade/   301
+/labyrinth-babylonjs/*  /arcade/   301
+/labyrinth-threejs/     /arcade/   301
+/labyrinth-threejs/*    /arcade/   301
+/lemmings/              /arcade/   301
+/lemmings/*             /arcade/   301
+/mario-bot/             /arcade/   301
+/mario-bot/*            /arcade/   301
+/merge-fruit/           /arcade/   301
+/merge-fruit/*          /arcade/   301
+/moto-x3m/              /arcade/   301
+/moto-x3m/*             /arcade/   301
+/motorcycle-game/       /arcade/   301
+/motorcycle-game/*      /arcade/   301
+/off-road/              /arcade/   301
+/off-road/*             /arcade/   301
+/pac-man/               /arcade/   301
+/pac-man/*              /arcade/   301
+/qbert/                 /arcade/   301
+/qbert/*                /arcade/   301
+/slope-run/             /arcade/   301
+/slope-run/*            /arcade/   301
+/stack-tower/           /arcade/   301
+/stack-tower/*          /arcade/   301
+/tempest/               /arcade/   301
+/tempest/*              /arcade/   301
+/tron/                  /arcade/   301
+/tron/*                 /arcade/   301
+/whack-a-mole/          /arcade/   301
+/whack-a-mole/*         /arcade/   301

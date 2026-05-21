@@ -39,26 +39,10 @@ body.cat-root {
   margin: 0;
 }
 
-/* ───────────── Top nav ───────────── */
-.cat-nav {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 24px 40px;
-  border-bottom: 1px solid var(--cat-line);
-  flex-wrap: wrap;
-  gap: 16px;
-}
-.cat-nav-left { display: flex; align-items: center; gap: 32px; }
+/* ───────────── Footer logo ───────────── */
 .cat-logo {
   display: inline-flex; align-items: center; gap: 10px;
   text-decoration: none; color: inherit;
-}
-.cat-logo img {
-  display: block;
-  width: 40px;
-  height: 40px;
-  mix-blend-mode: multiply;
 }
 .cat-logo .wordmark {
   font-family: 'Bricolage Grotesque', system-ui, sans-serif;
@@ -66,30 +50,9 @@ body.cat-root {
 }
 .cat-logo .wordmark .light { font-weight: 500; opacity: 0.7; }
 
-.cat-nav-links { display: flex; gap: 4px; }
-.cat-nav-links a {
-  padding: 8px 12px; border-radius: 999px;
-  font-size: 13px; font-weight: 500;
-  color: var(--cat-ink-soft); text-decoration: none;
-  transition: all 0.15s;
-}
-.cat-nav-links a:hover { color: var(--cat-ink); }
-.cat-nav-links a.active { background: var(--cat-ink); color: var(--cat-bg); }
-
-.cat-nav-meta {
-  display: flex; align-items: center; gap: 8px;
-  padding: 8px 14px; background: var(--cat-paper);
-  border-radius: 999px; border: 1px solid var(--cat-line);
-  font-size: 13px; color: var(--cat-ink-soft);
-}
-.cat-nav-meta .dot {
-  width: 8px; height: 8px; border-radius: 50%;
-  background: #5C9A6E;
-}
-
 /* ───────────── HERO ───────────── */
 .cat-hero {
-  margin: 24px 40px 32px;
+  margin: 24px 36px 32px;
   border-radius: 32px;
   overflow: hidden;
   position: relative;
@@ -154,14 +117,14 @@ body.cat-root {
 .cat-hero-right { position: relative; z-index: 1; padding-bottom: 32px; }
 
 /* ───────────── Wraps ───────────── */
-.cat-wrap { padding: 0 40px; }
+.cat-wrap { padding: 0 36px; }
 
 /* Stat widget (replaces casino bankroll) */
 .cat-stats {
   display: grid;
   grid-template-columns: 2fr 1fr 1fr 1fr;
   gap: 14px;
-  margin: 24px 40px 32px;
+  margin: 24px 36px 32px;
   padding: 22px;
   background: var(--cat-stat-card-bg);
   color: var(--cat-stat-card-ink);
@@ -605,7 +568,7 @@ body.cat-root {
   border: 1px solid var(--cat-line);
   border-radius: 14px;
   font-size: 12px; color: var(--cat-ink-soft);
-  margin: 24px 40px 0;
+  margin: 24px 36px 0;
   line-height: 1.5;
 }
 
@@ -613,7 +576,7 @@ body.cat-root {
 .cat-foot {
   padding-top: 32px;
   border-top: 1px solid var(--cat-line);
-  margin: 48px 40px 0;
+  margin: 48px 36px 0;
   display: flex; justify-content: space-between; align-items: center;
   color: var(--cat-ink-soft); font-size: 12.5px;
   flex-wrap: wrap; gap: 16px;
@@ -636,7 +599,8 @@ body.cat-root {
 }
 
 @media (max-width: 700px) {
-  .cat-nav, .cat-stats, .cat-foot { padding: 16px 18px; margin-left: 0; margin-right: 0; }
+  .cat-foot { padding: 16px 18px; margin-left: 0; margin-right: 0; }
+  .cat-stats { padding: 16px 18px; margin: 24px 18px 32px; }
   .cat-hero { margin: 16px 18px 24px; padding: 32px 24px 0; }
   .cat-hero h1 { font-size: 48px; }
   .cat-stats { grid-template-columns: 1fr; }

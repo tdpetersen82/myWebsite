@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Contact — Limestone Games</title>
+    <meta name="description" content="Contact Limestone Games. Report a bug, suggest a game, or just say hello. A small independent free-games site.">
+    <link rel="canonical" href="https://limestonegames.com/contact.html">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <meta property="og:title" content="Contact — Limestone Games">
+    <meta property="og:description" content="Report a bug, suggest a game, or just say hello.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/contact.html">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary">
+    <meta name="twitter:title" content="Contact — Limestone Games">
+    <meta name="twitter:description" content="Get in touch with Limestone Games.">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"ContactPage","name":"Contact Limestone Games","url":"https://limestonegames.com/contact.html","publisher":{"@type":"Organization","name":"Limestone Games","url":"https://limestonegames.com"}}</script>
+    <link rel="stylesheet" href="styles.css">
+    <!-- Google tag (gtag.js) -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+    <style>
+        .contact-field { display:block; margin-bottom:16px; }
+        .contact-field label { display:block; font-size:0.9em; color:#444; font-weight:600; margin-bottom:6px; }
+        .contact-field input, .contact-field textarea {
+            width:100%; box-sizing:border-box; padding:10px 12px; font:inherit; font-size:15px;
+            border:1px solid #ccc; border-radius:8px; background:#fff; color:#222;
+        }
+        .contact-field input:focus, .contact-field textarea:focus { outline:none; border-color:#667eea; box-shadow:0 0 0 3px rgba(102,126,234,0.15); }
+        .contact-submit {
+            font:inherit; font-weight:600; font-size:15px; padding:11px 22px; border:none; border-radius:999px;
+            background:#667eea; color:#fff; cursor:pointer; transition:background .15s;
+        }
+        .contact-submit:hover { background:#5568d3; }
+        .contact-submit:disabled { opacity:.6; cursor:default; }
+        .hp { position:absolute; left:-9999px; width:1px; height:1px; overflow:hidden; }
+    </style>
+</head>
+<body>
+    <div class="container" style="text-align:left; max-width:800px;">
+        <h1 style="font-size:2em; margin-bottom:20px;">Contact</h1>
+
+        <p style="color:#555; line-height:1.7; margin-bottom:24px;">
+            Found a bug, want to suggest a game, or just want to say hello? Send a note below. It's a one-person
+            project, so I read every message myself. If you'd like a reply, leave an email — otherwise it's
+            optional. Please don't include passwords or other sensitive information.
+        </p>
+
+        <form id="contact-form" novalidate>
+            <div class="hp" aria-hidden="true">
+                <label>Leave this field empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+            </div>
+            <div class="contact-field">
+                <label for="cf-name">Name <span style="color:#999;font-weight:400;">(optional)</span></label>
+                <input id="cf-name" name="name" type="text" maxlength="200" autocomplete="name">
+            </div>
+            <div class="contact-field">
+                <label for="cf-email">Email <span style="color:#999;font-weight:400;">(optional — for a reply)</span></label>
+                <input id="cf-email" name="email" type="email" maxlength="200" autocomplete="email">
+            </div>
+            <div class="contact-field">
+                <label for="cf-message">Message</label>
+                <textarea id="cf-message" name="message" rows="6" maxlength="5000" required></textarea>
+            </div>
+            <button type="submit" class="contact-submit">Send message</button>
+            <div id="contact-status" role="status" aria-live="polite" style="margin-top:14px; font-size:0.95em; line-height:1.6;"></div>
+        </form>
+
+        <a href="index.html" class="back-button" style="margin-top:28px;">&larr; Back to Games</a>
+    </div>
+
+    <script>
+    (function () {
+        var form = document.getElementById('contact-form');
+        var statusEl = document.getElementById('contact-status');
+        var btn = form.querySelector('.contact-submit');
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            var message = form.elements['message'].value.trim();
+            if (!message) {
+                statusEl.style.color = '#c0392b';
+                statusEl.textContent = 'Please enter a message.';
+                return;
+            }
+            btn.disabled = true;
+            statusEl.style.color = '#888';
+            statusEl.textContent = 'Sending…';
+            fetch('/api/contact', {
+                method: 'POST',
+                headers: { 'content-type': 'application/json' },
+                body: JSON.stringify({
+                    name: form.elements['name'].value,
+                    email: form.elements['email'].value,
+                    message: message,
+                    website: form.elements['website'].value
+                })
+            }).then(function (r) {
+                return r.json().catch(function () { return {}; }).then(function (j) { return { ok: r.ok, j: j }; });
+            }).then(function (res) {
+                btn.disabled = false;
+                if (res.ok) {
+                    form.reset();
+                    statusEl.style.color = '#2e7d32';
+                    statusEl.textContent = 'Thanks — your message was sent. I read everything.';
+                } else {
+                    statusEl.style.color = '#c0392b';
+                    statusEl.textContent = res.j && res.j.error ? ('Couldn’t send: ' + res.j.error) : 'Something went wrong. Please try again.';
+                }
+            }).catch(function () {
+                btn.disabled = false;
+                statusEl.style.color = '#c0392b';
+                statusEl.textContent = 'Network error — please try again in a moment.';
+            });
+        });
+    })();
+    </script>
+    <script src="nav.js"></script>
+</body>
+</html>

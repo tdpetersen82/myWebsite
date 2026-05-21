@@ -12,6 +12,7 @@
 
 const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const MAX_BLOB_BYTES = 64 * 1024;
+const MAX_CONTACT_BYTES = 8 * 1024;
 
 function json(body, init = {}) {
   return new Response(JSON.stringify(body), {
@@ -65,11 +66,49 @@ async function handleStats(request, env) {
   return json({ error: 'method not allowed' }, { status: 405 });
 }
 
+// Contact form: POST { name, email, message, website (honeypot) }.
+// Each submission is stored under contact:{iso-timestamp}:{rand} in KV.
+// Read them with: wrangler kv key list --binding LIMESTONE_KV --prefix contact:
+async function handleContact(request, env) {
+  if (request.method !== 'POST') {
+    return json({ error: 'method not allowed' }, { status: 405 });
+  }
+  const text = await request.text();
+  if (text.length > MAX_CONTACT_BYTES) {
+    return json({ error: 'message too large' }, { status: 413 });
+  }
+  let body;
+  try { body = JSON.parse(text); }
+  catch { return json({ error: 'invalid json' }, { status: 400 }); }
+  if (!body || typeof body !== 'object') {
+    return json({ error: 'invalid request' }, { status: 400 });
+  }
+  // Honeypot: humans leave "website" blank; bots fill it. Accept silently, store nothing.
+  if (body.website) return json({ ok: true });
+
+  const name = String(body.name || '').trim().slice(0, 200);
+  const email = String(body.email || '').trim().slice(0, 200);
+  const message = String(body.message || '').trim().slice(0, 5000);
+  if (!message) return json({ error: 'message is required' }, { status: 400 });
+
+  const ts = new Date().toISOString();
+  const key = `contact:${ts}:${crypto.randomUUID().slice(0, 8)}`;
+  await env.LIMESTONE_KV.put(key, JSON.stringify({
+    name, email, message, ts,
+    ip: request.headers.get('cf-connecting-ip') || '',
+    ua: request.headers.get('user-agent') || '',
+  }));
+  return json({ ok: true });
+}
+
 export default {
   async fetch(request, env) {
     const url = new URL(request.url);
     if (url.pathname === '/api/casino/stats') {
       return handleStats(request, env);
+    }
+    if (url.pathname === '/api/contact') {
+      return handleContact(request, env);
     }
     if (url.pathname.startsWith('/api/')) {
       return json({ error: 'not found' }, { status: 404 });
