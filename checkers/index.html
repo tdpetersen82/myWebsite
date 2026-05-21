@@ -827,9 +827,10 @@
       const c = canvas;
       const bw = c.width, bh = c.height;
       function sc() {
-        const par = c.parentElement;
-        const ps = getComputedStyle(par);
-        const mw = par.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
+        c.style.width = bw + 'px';
+        c.style.height = bh + 'px';
+        const viewW = Math.min(window.innerWidth, document.documentElement.clientWidth);
+        const mw = Math.max(viewW - 64, 200);
         const mh = window.innerHeight * 0.72;
         const s = Math.min(mw / bw, mh / bh, 1);
         c.style.width = (bw * s) + 'px';

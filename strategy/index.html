@@ -311,10 +311,10 @@
                     </div>
                 </div>
                 <div class="cat-card-meta">
-                    <div><div class="l">Streak</div><div class="v accent" id="card-c4-streak">—</div></div>
-                    <div><div class="l">Wins</div><div class="v" id="card-c4-wins">—</div></div>
+                    <div><div class="l">Streak</div><div class="v accent" id="card-c4-streak">0</div></div>
+                    <div><div class="l">Wins</div><div class="v" id="card-c4-wins">0</div></div>
                     <div><div class="l">AI tiers</div><div class="v sm">3</div></div>
-                    <div><div class="l">Hint mode</div><div class="v sm">Yes</div></div>
+                    <div><div class="l">Grid</div><div class="v sm">7×6</div></div>
                 </div>
                 <div class="cat-card-foot">
                     <span class="plays">Classic</span>
@@ -334,10 +334,10 @@
                     </div>
                 </div>
                 <div class="cat-card-meta">
-                    <div><div class="l">Streak</div><div class="v accent" id="card-dab-streak">—</div></div>
-                    <div><div class="l">Wins</div><div class="v" id="card-dab-wins">—</div></div>
+                    <div><div class="l">Streak</div><div class="v accent" id="card-dab-streak">0</div></div>
+                    <div><div class="l">Wins</div><div class="v" id="card-dab-wins">0</div></div>
                     <div><div class="l">AI tiers</div><div class="v sm">3</div></div>
-                    <div><div class="l">Board</div><div class="v sm">5×5</div></div>
+                    <div><div class="l">Board</div><div class="v sm">to 5×5</div></div>
                 </div>
                 <div class="cat-card-foot">
                     <span class="plays">Classic</span>
@@ -649,10 +649,10 @@
             set('card-checkers-wins', wins.checkers ?? 0);
             set('card-backgammon-streak', streaks.backgammon ?? 0);
             set('card-backgammon-wins', wins.backgammon ?? 0);
-            if (wins.c4 != null) set('card-c4-wins', wins.c4);
-            if (streaks.c4 != null) set('card-c4-streak', streaks.c4);
-            if (wins.dab != null) set('card-dab-wins', wins.dab);
-            if (streaks.dab != null) set('card-dab-streak', streaks.dab);
+            set('card-c4-wins', wins.c4 ?? 0);
+            set('card-c4-streak', streaks.c4 ?? 0);
+            set('card-dab-wins', wins.dab ?? 0);
+            set('card-dab-streak', streaks.dab ?? 0);
             set('card-othello-streak', streaks.othello ?? 0);
             set('card-othello-wins', wins.othello ?? 0);
             set('card-cc-streak', streaks.cc ?? 0);
@@ -670,7 +670,18 @@
             // Aggregate stats
             const totalWins = Object.values(wins).reduce((s, v) => s + (v || 0), 0);
             const totalLosses = Object.values(losses).reduce((s, v) => s + (v || 0), 0);
-            const bestStreak = Object.values(streaks).reduce((m, v) => Math.max(m, v || 0), 0);
+            const bests = {
+                chess: readNum('chessBestStreak'),
+                checkers: readNum('checkersBestStreak'),
+                backgammon: readNum('backgammonBestStreak'),
+                c4: readNum('connect4BestStreak'),
+                dab: readNum('dotsAndBoxesBestStreak'),
+                othello: readNum('othelloBestStreak'),
+                cc: readNum('chineseCheckersBestStreak'),
+                uttt: readNum('ultimateTicTacToeBestStreak'),
+                mancala: readNum('mancalaBestStreak'),
+            };
+            const bestStreak = Object.values(bests).reduce((m, v) => Math.max(m, v || 0), 0);
 
             if (totalWins > 0 || totalLosses > 0) {
                 set('strat-record-amt', totalWins + '–' + totalLosses);

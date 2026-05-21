@@ -3,72 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <title>2048 — Free Online Puzzle Game | Limestone Games</title>
-    <link rel="stylesheet" href="../styles.css">
-    <link rel="stylesheet" href="../arcade/arcade-game.css?v=20260521b">
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <style>
-        canvas {
-            display: block;
-            margin: 16px auto;
-            touch-action: none;
-            transform-origin: 0 0 !important;
-        }
-        .g2048-banner {
-            position: fixed;
-            display: none;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: rgba(31, 27, 22, 0.78);
-            color: #F5E6D3;
-            border-radius: 12px;
-            font-family: 'Bricolage Grotesque', sans-serif;
-            text-align: center;
-            padding: 24px;
-            z-index: 2;
-            box-sizing: border-box;
-        }
-        .g2048-banner.show { display: flex; }
-        .g2048-banner h2 {
-            font-size: 2.4em;
-            margin: 0 0 8px;
-            letter-spacing: 0.02em;
-        }
-        .g2048-banner p {
-            font-size: 1.05em;
-            margin: 0 0 18px;
-            opacity: 0.85;
-        }
-        .g2048-banner .actions {
-            display: flex;
-            gap: 12px;
-            flex-wrap: wrap;
-            justify-content: center;
-        }
-        .g2048-banner button {
-            font: 600 0.95em 'Inter', sans-serif;
-            padding: 10px 18px;
-            border-radius: 8px;
-            border: 0;
-            cursor: pointer;
-            background: #F2A65A;
-            color: #1F1B16;
-        }
-        .g2048-banner button.outline {
-            background: transparent;
-            color: #F5E6D3;
-            border: 1.5px solid #F5E6D3;
-        }
-        .g2048-banner button:hover { filter: brightness(1.06); }
-    </style>
     <meta name="description" content="Play 2048 free in your browser. Slide tiles, merge matching numbers, reach the 2048 tile. Arrow keys, WASD, or swipe — high scores saved locally.">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"2048","description":"Play 2048 free in your browser. Slide tiles, merge matching numbers, reach the 2048 tile.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <meta name="keywords" content="2048, 2048 game, online 2048, free 2048, browser 2048, tile merge puzzle">
     <link rel="canonical" href="https://limestonegames.com/2048/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"2048","description":"Play 2048 free in your browser. Slide tiles, merge matching numbers, reach the 2048 tile.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"2048"}]}</script>
-    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play 2048?", "acceptedAnswer": {"@type": "Answer", "text": "Use the arrow keys (or WASD, or swipe) to slide every tile in that direction. Tiles with matching numbers merge into one tile with the sum. Make the 2048 tile to win."}}, {"@type": "Question", "name": "Is 2048 free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Can I keep playing past 2048?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — reaching 2048 triggers a win banner, but the game keeps going. Some players target 4096 or higher."}}, {"@type": "Question", "name": "Does my high score save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your best score is stored locally in your browser."}}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play 2048?", "acceptedAnswer": {"@type": "Answer", "text": "Use the arrow keys (or WASD, or swipe) to slide every tile in that direction. Tiles with matching numbers merge into one tile with the sum. Make the 2048 tile to win."}}, {"@type": "Question", "name": "Is 2048 free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Can I keep playing past 2048?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — reaching 2048 triggers a win banner, but the game keeps going. Some players target 4096 or higher."}}, {"@type": "Question", "name": "Does my high score save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your best score and highest tile are stored locally in your browser."}}]}</script>
     <meta property="og:title" content="2048 — Free Online Puzzle Game | Limestone Games">
     <meta property="og:description" content="Play 2048 free in your browser. Slide tiles, merge matching numbers, reach the 2048 tile.">
     <meta property="og:type" content="website">
@@ -83,32 +27,139 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.json">
-    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
-    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      :root {
+        --ink: #2A2017;
+        --paper: #F7EFE1;
+        --frame: #2A2017;
+        --accent: #C96F2A;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, #F7EFE1 0%, #E8D9C0 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 16px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .top-bar {
+        width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
+        font-size: 14px; flex-wrap: wrap;
+      }
+      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
+      .top-bar a:hover { opacity: 1; }
+      h1 {
+        font-family: 'Bricolage Grotesque', serif;
+        font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
+        color: var(--frame);
+      }
+      .stats {
+        display: flex; gap: 14px; font-size: 14px; font-weight: 600;
+        background: rgba(255, 255, 255, 0.65);
+        backdrop-filter: blur(6px);
+        padding: 10px 18px; border-radius: 999px;
+        box-shadow: 0 4px 12px rgba(42, 32, 23, 0.08);
+        flex-wrap: wrap; justify-content: center;
+      }
+      .stats > div { display: flex; gap: 6px; align-items: baseline; }
+      .stats .l { color: rgba(42, 32, 23, 0.55); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
+      .stats .v { font-size: 17px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+      .stats .v.score { color: var(--ink); }
+      .stage-wrap {
+        position: relative;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 12px 30px rgba(42, 32, 23, 0.12);
+        align-self: center;
+      }
+      canvas {
+        display: block;
+        background: var(--frame);
+        border-radius: 8px;
+        touch-action: none;
+      }
+      .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+      button {
+        font: inherit; font-weight: 700;
+        padding: 10px 18px; border-radius: 999px;
+        border: 2px solid transparent;
+        background: var(--accent); color: #fff;
+        cursor: pointer; transition: transform 0.1s;
+        box-shadow: 0 4px 12px rgba(201, 111, 42, 0.3);
+      }
+      button:hover { transform: translateY(-1px); }
+      button:active { transform: translateY(1px); }
+      button.ghost { background: transparent; color: var(--ink); border-color: rgba(42, 32, 23, 0.2); box-shadow: none; }
+      .turn { font-size: 13px; color: rgba(42, 32, 23, 0.75); min-height: 18px; text-align: center; }
+      .game-over {
+        position: absolute; inset: 14px;
+        background: rgba(247, 239, 225, 0.96);
+        border-radius: 8px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
+        opacity: 0; pointer-events: none; transition: opacity 0.25s;
+        text-align: center; padding: 24px;
+      }
+      .game-over.show { opacity: 1; pointer-events: auto; }
+      .game-over h2 { font-family: 'Bricolage Grotesque', serif; font-size: 28px; color: var(--accent); }
+      .game-over p { font-size: 15px; color: rgba(42, 32, 23, 0.75); max-width: 380px; }
+      .game-over .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+      .hint { font-size: 13px; color: rgba(42, 32, 23, 0.6); text-align: center; max-width: 600px; }
+      #how { padding: 20px 16px; max-width: 640px; }
+      #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin-bottom: 8px; }
+      #how h3 { font-family: 'Bricolage Grotesque', serif; font-size: 16px; color: var(--frame); margin: 16px 0 6px; }
+      #how p { font-size: 14px; color: rgba(42, 32, 23, 0.78); margin-bottom: 8px; }
+      #how ul { padding-left: 20px; font-size: 14px; color: rgba(42, 32, 23, 0.82); margin-bottom: 8px; }
+      #how li { margin-bottom: 4px; }
+      #how kbd {
+        display: inline-block; padding: 1px 7px; border-radius: 5px;
+        background: rgba(42, 32, 23, 0.08); border: 1px solid rgba(42, 32, 23, 0.18);
+        font-family: ui-monospace, monospace; font-size: 12px;
+      }
+      .related-games-list { list-style: none; padding-left: 0 !important; display: flex; flex-wrap: wrap; gap: 8px; }
+      .related-games-list a {
+        display: inline-block; padding: 6px 14px; border-radius: 999px;
+        background: rgba(201, 111, 42, 0.12); color: var(--accent);
+        text-decoration: none; font-weight: 700; font-size: 13px;
+      }
+      .related-games-list a:hover { background: rgba(201, 111, 42, 0.2); }
+    </style>
 </head>
-<body class="arc-game">
-    <div class="container">
-        <h1>🔢 2048</h1>
-        <div class="game-info" style="display:flex;justify-content:center;align-items:center;gap:28px;flex-wrap:wrap;">
-            <div><p style="margin:0">Score</p><p style="margin:0;font-weight:700;font-size:1.4em" id="score">0</p></div>
-            <div><p style="margin:0">Best</p><p style="margin:0;font-weight:700;font-size:1.4em" id="best">0</p></div>
-            <div><p style="margin:0">Moves</p><p style="margin:0;font-weight:700;font-size:1.4em" id="moves">0</p></div>
+<body>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../strategy/">All Strategy games</a>
         </div>
-        <canvas id="gameCanvas" width="520" height="520"></canvas>
-        <div class="g2048-banner" id="banner">
-            <h2 id="bannerTitle">You win!</h2>
-            <p id="bannerSub">Tile 2048 reached.</p>
-            <div class="actions">
-                <button id="bannerKeep" type="button">Keep going</button>
-                <button id="bannerRestart" type="button" class="outline">New game</button>
+        <h1>2048</h1>
+        <div class="stats">
+            <div><span class="l">Score</span><span class="v score" id="score">0</span></div>
+            <div><span class="l">Best</span><span class="v" id="best">0</span></div>
+            <div><span class="l">High tile</span><span class="v" id="highTile">—</span></div>
+        </div>
+        <div class="stage-wrap">
+            <canvas id="gameCanvas" width="520" height="520"></canvas>
+            <div class="game-over" id="over">
+                <h2 id="overTitle">You win!</h2>
+                <p id="overText"></p>
+                <div class="actions">
+                    <button id="overKeep" type="button">Keep going</button>
+                    <button id="overNew" type="button" class="ghost">New game</button>
+                </div>
             </div>
         </div>
+        <div class="turn" id="status">Arrow keys, WASD, or swipe to slide the tiles.</div>
         <div class="controls">
-            <p>← ↑ → ↓ or W A S D · swipe on touch</p>
-            <button id="restartBtn" class="play-button">Restart Game</button>
+            <button id="newGame">New game</button>
+            <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <section class="game-overview" aria-label="About 2048">
+        <p class="hint">Slide all tiles with the arrow keys, WASD, or a swipe. Matching tiles merge into their sum. Reach 2048 to win — then keep going for a higher tile.</p>
+
+        <section id="how" aria-label="How to play 2048">
             <h2>How to play 2048</h2>
             <p>2048 is the puzzle phenomenon where you slide numbered tiles around a 4×4 grid, merging matching pairs into bigger numbers. Two 2s become a 4, two 4s become an 8, and so on &mdash; until you build the 2048 tile and win. (Or keep going past it.)</p>
 
@@ -128,13 +179,13 @@
             </ul>
 
             <h3>About 2048</h3>
-            <p>Originally written in March 2014 by Italian developer Gabriele Cirulli over a single weekend, 2048 was inspired by 1024 and Threes! It went viral within days and racked up over 4 million unique players in its first week. The math is the same as the Fibonacci-style merge games before it &mdash; what made 2048 famous was the open-source, free, no-install, mobile-friendly version Cirulli released to GitHub.</p>
+            <p>Originally written in March 2014 by Italian developer Gabriele Cirulli over a single weekend, 2048 was inspired by 1024 and Threes! It went viral within days and racked up over 4 million unique players in its first week. What made 2048 famous was the open-source, free, no-install, mobile-friendly version Cirulli released to GitHub.</p>
 
             <h3>Frequently asked</h3>
             <p><b>How do I play 2048?</b> Use the arrow keys (or WASD, or swipe) to slide every tile in that direction. Tiles with matching numbers merge into one tile with the sum. Make the 2048 tile to win.</p>
             <p><b>Is 2048 free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
             <p><b>Can I keep playing past 2048?</b> Yes &mdash; reaching 2048 triggers a win banner, but the game keeps going. Some players target 4096 or higher.</p>
-            <p><b>Does my high score save?</b> Yes &mdash; your best score is stored locally in your browser.</p>
+            <p><b>Does my high score save?</b> Yes &mdash; your best score and highest tile are stored locally in your browser.</p>
 
             <h3>More strategy games</h3>
             <ul class="related-games-list">
@@ -154,13 +205,14 @@
         const ctx = canvas.getContext('2d');
         const scoreEl = document.getElementById('score');
         const bestEl = document.getElementById('best');
-        const movesEl = document.getElementById('moves');
-        const restartBtn = document.getElementById('restartBtn');
-        const banner = document.getElementById('banner');
-        const bannerTitle = document.getElementById('bannerTitle');
-        const bannerSub = document.getElementById('bannerSub');
-        const bannerKeep = document.getElementById('bannerKeep');
-        const bannerRestart = document.getElementById('bannerRestart');
+        const highTileEl = document.getElementById('highTile');
+        const newGameBtn = document.getElementById('newGame');
+        const overEl = document.getElementById('over');
+        const overTitleEl = document.getElementById('overTitle');
+        const overTextEl = document.getElementById('overText');
+        const overKeepBtn = document.getElementById('overKeep');
+        const overNewBtn = document.getElementById('overNew');
+        const statusEl = document.getElementById('status');
 
         const SIZE = 4;
         const PAD = 14;
@@ -171,6 +223,7 @@
         const POP_MS = 110;
         const APPEAR_MS = 130;
         const HS_KEY = '2048HighScore';
+        const HT_KEY = '2048HighTile';
 
         const COLORS = {
             2:    { bg: '#EFE6D6', fg: '#1F1B16' },
@@ -190,15 +243,12 @@
         const CELL_BG = 'rgba(31, 27, 22, 0.10)';
         const BOARD_BG = '#C9BCA3';
 
-        let board, score, best, moves, won, over, keepPlaying;
+        let board, score, best, highTile, won, over, keepPlaying;
         let sprites = [];
         let lastMoveTime = 0;
 
-        function loadBest() {
-            const n = parseInt(localStorage.getItem(HS_KEY), 10);
-            return isFinite(n) && n > 0 ? n : 0;
-        }
-        function saveBest(n) { try { localStorage.setItem(HS_KEY, String(n)); } catch (e) {} }
+        function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n > 0 ? n : 0; }
+        function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} }
 
         function newBoard() { return Array.from({length: SIZE}, () => Array(SIZE).fill(0)); }
 
@@ -217,15 +267,19 @@
             return { r, c, v };
         }
 
-        // Slide a single 4-length line toward index 0. Returns:
-        // { line, mergesAt: Set<int>, sources: int[] (for each output idx, original idx, or -1) }
-        // For merges, sources[i] is the FIRST source (closer to dest); we also collect the second source.
+        function maxTile(b) {
+            let m = 0;
+            for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) if (b[r][c] > m) m = b[r][c];
+            return m;
+        }
+
+        // Slide a single 4-length line toward index 0.
         function slideLine(line) {
             const filtered = [];
             for (let i = 0; i < SIZE; i++) if (line[i] !== 0) filtered.push({ v: line[i], src: i });
             const out = [0, 0, 0, 0];
             const sources = [-1, -1, -1, -1];
-            const secondSrc = [-1, -1, -1, -1]; // for merged: src of second tile
+            const secondSrc = [-1, -1, -1, -1];
             const merges = new Set();
             let scoreGain = 0;
             let oi = 0;
@@ -248,16 +302,12 @@
             return { line: out, sources, secondSrc, merges, scoreGain };
         }
 
-        // Returns { newBoard, sprites, scoreGain, changed }
-        // sprites: { fromR, fromC, toR, toC, value, merged }
         function move(b, dir) {
             const nb = newBoard();
             const moveSprites = [];
             let scoreGain = 0;
             let changed = false;
 
-            // Build line accessors per dir.
-            // For each "track" (row or column), reading direction.
             for (let t = 0; t < SIZE; t++) {
                 let line = [0, 0, 0, 0];
                 for (let i = 0; i < SIZE; i++) {
@@ -283,7 +333,6 @@
                     const src1 = res.sources[i];
                     const src2 = res.secondSrc[i];
 
-                    // First source sprite (lands here, may be a merge)
                     let f1R, f1C;
                     if (dir === 'left')  { f1R = t; f1C = src1; }
                     if (dir === 'right') { f1R = t; f1C = SIZE - 1 - src1; }
@@ -327,14 +376,8 @@
 
         // ── Drawing ────────────────────────────────────────────────────────
         function cellRect(r, c) {
-            return {
-                x: PAD + c * (CELL + GAP),
-                y: PAD + r * (CELL + GAP),
-                w: CELL,
-                h: CELL,
-            };
+            return { x: PAD + c * (CELL + GAP), y: PAD + r * (CELL + GAP), w: CELL, h: CELL };
         }
-
         function roundRect(x, y, w, h, rad) {
             ctx.beginPath();
             ctx.moveTo(x + rad, y);
@@ -344,16 +387,12 @@
             ctx.arcTo(x, y, x + w, y, rad);
             ctx.closePath();
         }
-
         function drawBackground() {
             ctx.fillStyle = BG;
             ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-            // board panel
             roundRect(4, 4, canvas.width - 8, canvas.height - 8, 12);
             ctx.fillStyle = BOARD_BG;
             ctx.fill();
-
             for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
                 const { x, y, w, h } = cellRect(r, c);
                 roundRect(x, y, w, h, RADIUS);
@@ -361,11 +400,7 @@
                 ctx.fill();
             }
         }
-
-        function tileColors(v) {
-            return COLORS[v] || SUPER;
-        }
-
+        function tileColors(v) { return COLORS[v] || SUPER; }
         function tileFontSize(v) {
             const digits = String(v).length;
             if (digits <= 2) return 56;
@@ -373,7 +408,6 @@
             if (digits === 4) return 40;
             return 32;
         }
-
         function drawTile(x, y, w, h, v, scale) {
             const sw = w * scale, sh = h * scale;
             const sx = x + (w - sw) / 2;
@@ -382,14 +416,12 @@
             roundRect(sx, sy, sw, sh, RADIUS);
             ctx.fillStyle = bg;
             ctx.fill();
-
             ctx.fillStyle = fg;
             ctx.font = `700 ${tileFontSize(v) * scale}px "Bricolage Grotesque", "Inter", sans-serif`;
             ctx.textAlign = 'center';
             ctx.textBaseline = 'middle';
             ctx.fillText(String(v), sx + sw / 2, sy + sh / 2 + 2);
         }
-
         function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
         function easeOutBack(t) {
             const c1 = 1.70158, c3 = c1 + 1;
@@ -398,11 +430,9 @@
 
         function render(now) {
             drawBackground();
-
             const since = now - lastMoveTime;
             const sliding = since < SLIDE_MS;
             const popping  = since >= SLIDE_MS && since < SLIDE_MS + POP_MS;
-            const settled  = since >= SLIDE_MS + POP_MS;
 
             if (sliding) {
                 const t = easeOutCubic(since / SLIDE_MS);
@@ -415,13 +445,11 @@
                     drawTile(x, y, CELL, CELL, s.value, 1);
                 }
             } else {
-                // After slide: draw current board, with pop for merged cells & appear for new cell.
                 for (let r = 0; r < SIZE; r++) for (let c = 0; c < SIZE; c++) {
                     const v = board[r][c];
                     if (!v) continue;
                     const { x, y, w, h } = cellRect(r, c);
                     let scale = 1;
-
                     if (popping) {
                         const isMergedCell = sprites.some(s => s.kind === 'merged-result' && s.toR === r && s.toC === c);
                         const isAppearCell = sprites.some(s => s.kind === 'appear' && s.toR === r && s.toC === c);
@@ -433,42 +461,30 @@
                             scale = easeOutBack(t);
                         }
                     }
-
                     drawTile(x, y, w, h, v, scale);
                 }
-
-                if (popping) {
-                    requestAnimationFrame(render);
-                }
+                if (popping) requestAnimationFrame(render);
             }
-
             if (sliding) requestAnimationFrame(render);
         }
 
         function performMove(dir) {
             if (over && !keepPlaying) return;
-            if (banner.classList.contains('show') && !keepPlaying) return;
+            if (overEl.classList.contains('show') && !keepPlaying) return;
 
             const res = move(board, dir);
             if (!res.changed) return;
 
             board = res.newBoard;
             score += res.scoreGain;
-            moves += 1;
             scoreEl.textContent = score;
-            movesEl.textContent = moves;
             if (score > best) {
                 best = score;
                 bestEl.textContent = best;
-                saveBest(best);
+                writeNum(HS_KEY, best);
             }
 
-            // Build sprite list for animation
-            sprites = res.sprites.map(s => ({
-                ...s,
-                kind: s.merged ? 'merged-source' : 'slide',
-            }));
-            // Add merged-result markers for pop animation
+            sprites = res.sprites.map(s => ({ ...s, kind: s.merged ? 'merged-source' : 'slide' }));
             const seenMerge = new Set();
             for (const s of res.sprites) {
                 if (s.merged) {
@@ -481,64 +497,55 @@
             }
 
             const spawned = spawn(board);
-            if (spawned) {
-                sprites.push({ kind: 'appear', toR: spawned.r, toC: spawned.c, value: spawned.v });
+            if (spawned) sprites.push({ kind: 'appear', toR: spawned.r, toC: spawned.c, value: spawned.v });
+
+            // Track highest tile reached (persisted across games).
+            const curMax = maxTile(board);
+            if (curMax > highTile) {
+                highTile = curMax;
+                highTileEl.textContent = highTile;
+                writeNum(HT_KEY, highTile);
             }
 
             // Win detection (first time)
-            if (!won && board.flat().some(v => v >= 2048)) {
+            if (!won && curMax >= 2048) {
                 won = true;
-                showBanner('You win!', 'You reached the 2048 tile.', true);
+                showOver('You win!', 'You reached the 2048 tile. Keep going for a higher tile.', true);
             }
-
             // Game over
             if (!hasMoves(board)) {
                 over = true;
-                showBanner('Game over', 'No moves left. Score: ' + score + '.', false);
+                showOver('Game over', 'No moves left. Final score: ' + score + '.', false);
             }
 
             lastMoveTime = performance.now();
             requestAnimationFrame(render);
         }
 
-        function positionBanner() {
-            const r = canvas.getBoundingClientRect();
-            banner.style.left = r.left + 'px';
-            banner.style.top = r.top + 'px';
-            banner.style.width = r.width + 'px';
-            banner.style.height = r.height + 'px';
+        function showOver(title, text, keepGoingAvailable) {
+            overTitleEl.textContent = title;
+            overTextEl.textContent = text;
+            overKeepBtn.style.display = keepGoingAvailable ? '' : 'none';
+            overEl.classList.add('show');
         }
-        function showBanner(title, sub, keepGoingAvailable) {
-            bannerTitle.textContent = title;
-            bannerSub.textContent = sub;
-            bannerKeep.style.display = keepGoingAvailable ? '' : 'none';
-            positionBanner();
-            banner.classList.add('show');
-        }
-        function hideBanner() { banner.classList.remove('show'); }
-        window.addEventListener('resize', () => {
-            if (banner.classList.contains('show')) positionBanner();
-        });
-        window.addEventListener('scroll', () => {
-            if (banner.classList.contains('show')) positionBanner();
-        });
+        function hideOver() { overEl.classList.remove('show'); }
 
         function startGame() {
             board = newBoard();
             score = 0;
-            moves = 0;
             won = false;
             over = false;
             keepPlaying = false;
-            best = loadBest();
+            best = readNum(HS_KEY);
+            highTile = readNum(HT_KEY);
             scoreEl.textContent = score;
-            movesEl.textContent = moves;
             bestEl.textContent = best;
+            highTileEl.textContent = highTile > 0 ? highTile : '—';
             spawn(board);
             spawn(board);
             sprites = [];
             lastMoveTime = -10000; // skip slide on first paint
-            hideBanner();
+            hideOver();
             requestAnimationFrame(render);
         }
 
@@ -555,7 +562,6 @@
             performMove(dir);
         });
 
-        // Touch swipe
         let touchStart = null;
         canvas.addEventListener('touchstart', (e) => {
             const t = e.touches[0];
@@ -572,37 +578,30 @@
             performMove(adx > ady ? (dx > 0 ? 'right' : 'left') : (dy > 0 ? 'down' : 'up'));
         }, { passive: true });
 
-        restartBtn.addEventListener('click', startGame);
-        bannerRestart.addEventListener('click', startGame);
-        bannerKeep.addEventListener('click', () => { keepPlaying = true; hideBanner(); });
-
-        // Expose for testing autopilot.
-        window.__g2048 = {
-            performMove,
-            getBoard: () => board.map(r => r.slice()),
-            setBoard: (b) => { board = b.map(r => r.slice()); requestAnimationFrame(render); },
-            getScore: () => score,
-            getBest: () => best,
-            isOver: () => over,
-            isWon: () => won,
-        };
+        newGameBtn.addEventListener('click', startGame);
+        overNewBtn.addEventListener('click', startGame);
+        overKeepBtn.addEventListener('click', () => { keepPlaying = true; hideOver(); });
 
         startGame();
 
-        // Canvas auto-scaling is handled by ../nav.js (it looks for #gameCanvas
-        // and applies the saved viewport size with transform-origin: top center).
+        // Auto-scale to fit the viewport (matches the other strategy games).
+        (function () {
+            const c = canvas;
+            const bw = c.width, bh = c.height;
+            function sc() {
+                c.style.width = bw + 'px';
+                c.style.height = bh + 'px';
+                const viewW = Math.min(window.innerWidth, document.documentElement.clientWidth);
+                const mw = Math.max(viewW - 64, 200);
+                const mh = window.innerHeight * 0.72;
+                const s = Math.min(mw / bw, mh / bh, 1);
+                c.style.width = (bw * s) + 'px';
+                c.style.height = (bh * s) + 'px';
+            }
+            window.addEventListener('resize', sc);
+            sc();
+        })();
     })();
     </script>
-    <script src="../nav.js"></script>
-    <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
-        <ins class="adsbygoogle"
-             style="display:block"
-             data-ad-client="ca-pub-XXXXXXXXXXXXXXXX"
-             data-ad-slot="XXXXXXXXXX"
-             data-ad-format="horizontal"
-             data-full-width-responsive="true"></ins>
-        <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
-    </div>
-    <script src="../share.js"></script>
 </body>
 </html>
