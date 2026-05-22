@@ -47,34 +47,59 @@
       }
       .game-shell { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
       .top-bar {
-        width: 100%; display: flex; justify-content: space-between; align-items: center; gap: 10px;
-        font-size: 14px; flex-wrap: wrap;
+        width: 100%; display: flex; align-items: center; gap: 16px;
+        padding: 11px 16px 12px;
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(8px);
+        border: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+        border-radius: 16px;
+        box-shadow: 0 10px 28px -16px color-mix(in oklab, var(--frame) 55%, transparent);
+        position: relative; overflow: hidden;
+        flex-wrap: wrap;
       }
-      .top-bar a { color: var(--ink); text-decoration: none; font-weight: 600; opacity: 0.7; }
-      .top-bar a:hover { opacity: 1; }
+      .top-bar::after {
+        content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        opacity: 0.65; pointer-events: none;
+      }
+      .tb-back {
+        display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+        padding: 8px 14px; border-radius: 999px;
+        border: 1px solid color-mix(in oklab, var(--ink) 16%, transparent);
+        background: rgba(255, 255, 255, 0.55);
+        color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 600;
+        transition: border-color 0.15s, color 0.15s;
+      }
+      .tb-back:hover { border-color: var(--accent); color: var(--accent); }
+      .tb-title { display: flex; flex-direction: column; gap: 3px; margin-right: auto; }
+      .tb-eyebrow {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+        color: var(--accent);
+      }
+      .tb-dot {
+        width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
+      }
       h1 {
         font-family: 'Bricolage Grotesque', serif;
-        font-size: 32px; font-weight: 800; letter-spacing: -0.5px;
+        font-size: 22px; font-weight: 800; letter-spacing: -0.4px; line-height: 1;
         color: var(--frame);
       }
       .stats {
-        display: flex; gap: 14px; font-size: 14px; font-weight: 600;
-        background: rgba(255, 255, 255, 0.65);
-        backdrop-filter: blur(6px);
-        padding: 10px 18px; border-radius: 999px;
-        box-shadow: 0 4px 12px rgba(26, 19, 16, 0.06);
-        flex-wrap: wrap; justify-content: center;
+        display: flex; gap: 18px; font-size: 14px; font-weight: 600;
+        flex-wrap: wrap; align-items: center;
       }
-      .stats > div { display: flex; gap: 6px; align-items: baseline; }
-      .stats .l { color: rgba(26, 19, 16, 0.55); font-weight: 500; font-size: 11px; text-transform: uppercase; letter-spacing: 0.4px; }
-      .stats .v { font-size: 17px; font-weight: 800; color: var(--accent); }
+      .stats > div { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; line-height: 1; }
+      .stats .l { color: color-mix(in oklab, var(--ink) 50%, transparent); font-weight: 600; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.12em; }
+      .stats .v { font-size: 16px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+      .stats .v.score { color: var(--ink); }
       select.diff {
         font: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
-        padding: 4px 10px; border-radius: 999px; border: 1px solid rgba(26, 19, 16, 0.2);
+        padding: 4px 10px; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--ink) 20%, transparent);
         background: #fff;
       }
-      .captured-row { display: flex; gap: 12px; width: 100%; max-width: 640px; font-size: 22px; min-height: 28px; }
-      .captured-row > div { flex: 1; padding: 4px 8px; border-radius: 6px; background: rgba(255, 255, 255, 0.4); }
       .stage-wrap {
         position: relative;
         background: rgba(255, 255, 255, 0.65);
@@ -143,16 +168,17 @@
 </head>
 <body>
     <div class="game-shell">
-        <div class="top-bar">
-            <a href="../">← Limestone Games</a>
-            <a href="../strategy/">All Strategy games</a>
-        </div>
-        <h1>Chess</h1>
-        <div class="stats">
+        <header class="top-bar">
+            <a class="tb-back" href="../strategy/">← Strategy</a>
+            <div class="tb-title">
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Chess · vs AI</span>
+                <h1>Chess</h1>
+            </div>
+            <div class="stats">
             <div><span class="l">Status</span><span class="v" id="turn">White to move</span></div>
-            <div><span class="l">Wins–Losses</span><span class="v" id="wins">0–0</span></div>
+            <div><span class="l">Record</span><span class="v" id="wins">0–0</span></div>
             <div><span class="l">Streak</span><span class="v" id="streak">0</span></div>
-            <div><span class="l">Difficulty</span>
+            <div><span class="l">Level</span>
                 <select class="diff" id="difficulty" aria-label="Difficulty">
                     <option>Easy</option>
                     <option>Medium</option>
@@ -160,6 +186,7 @@
                 </select>
             </div>
         </div>
+        </header>
         <div class="captured-row" aria-label="Captured pieces">
             <div id="capWhite" title="Pieces White has captured"></div>
             <div id="capBlack" title="Pieces Black has captured"></div>
