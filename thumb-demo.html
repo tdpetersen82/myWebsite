@@ -1,0 +1,110 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Screenshot thumbnail concept — Limestone Games</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500&display=swap" rel="stylesheet">
+<style>
+  :root { --ink:#1F1B16; --ink-soft:#6F6557; --bg:#F5F0E6; --accent:#F08488; }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--ink);
+    font-family: 'Inter', system-ui, sans-serif;
+    -webkit-font-smoothing: antialiased; padding: 48px 40px 80px;
+  }
+  .wrap { max-width: 1100px; margin: 0 auto; }
+  h1 { font-family: 'Bricolage Grotesque', sans-serif; letter-spacing: -0.03em; font-size: 34px; margin: 0 0 6px; }
+  .sub { color: var(--ink-soft); font-size: 15px; margin: 0 0 8px; max-width: 60ch; line-height: 1.5; }
+  h2.section { font-family: 'JetBrains Mono', monospace; text-transform: uppercase; letter-spacing: 0.16em;
+    font-size: 11px; color: var(--ink-soft); margin: 40px 0 16px; font-weight: 500; }
+  .row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 22px; }
+
+  /* ---- Style A: title overlaid on the screenshot ---- */
+  .tile {
+    position: relative; border-radius: 20px; overflow: hidden; cursor: pointer;
+    text-decoration: none; color: #fff; display: block; aspect-ratio: 1 / 1;
+    border: 1px solid rgba(31,27,22,0.10);
+    box-shadow: 0 1px 0 rgba(31,27,22,0.04), 0 18px 40px -28px rgba(31,27,22,0.5);
+    transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s;
+  }
+  .tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tile .scrim { position: absolute; inset: 0; pointer-events: none;
+    background: linear-gradient(to top, rgba(15,11,6,0.78) 0%, rgba(15,11,6,0.30) 30%, transparent 55%); }
+  .tile .meta { position: absolute; left: 18px; bottom: 16px; right: 18px; }
+  .tile .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 10px; letter-spacing: 0.16em;
+    text-transform: uppercase; opacity: 0.85; }
+  .tile h3 { font-family: 'Bricolage Grotesque', sans-serif; letter-spacing: -0.02em; font-weight: 600;
+    font-size: 26px; margin: 2px 0 0; }
+  .tile .play { position: absolute; top: 14px; right: 14px; background: rgba(255,255,255,0.92); color: #1F1B16;
+    font-size: 12px; font-weight: 600; padding: 7px 13px; border-radius: 999px; opacity: 0; transform: translateY(-4px);
+    transition: opacity .25s, transform .25s; }
+  .tile:hover { transform: translateY(-6px); box-shadow: 0 30px 60px -28px rgba(31,27,22,0.55); }
+  .tile:hover .play { opacity: 1; transform: translateY(0); }
+
+  /* ---- Style B: title in a footer below the screenshot ---- */
+  .tileb {
+    border-radius: 20px; overflow: hidden; cursor: pointer; text-decoration: none; color: var(--ink);
+    display: block; background: #fff; border: 1px solid rgba(31,27,22,0.10);
+    box-shadow: 0 1px 0 rgba(31,27,22,0.04), 0 18px 40px -30px rgba(31,27,22,0.5);
+    transition: transform .35s cubic-bezier(.2,.8,.2,1), box-shadow .35s;
+  }
+  .tileb .shot { aspect-ratio: 4 / 3; overflow: hidden; }
+  .tileb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .tileb .foot { display: flex; align-items: center; justify-content: space-between; padding: 13px 16px; }
+  .tileb .eyebrow { font-family: 'JetBrains Mono', monospace; font-size: 9.5px; letter-spacing: 0.14em;
+    text-transform: uppercase; color: var(--ink-soft); }
+  .tileb h3 { font-family: 'Bricolage Grotesque', sans-serif; letter-spacing: -0.02em; font-weight: 600;
+    font-size: 19px; margin: 1px 0 0; }
+  .tileb .play { background: var(--ink); color: #fff; font-size: 12px; font-weight: 600;
+    padding: 8px 14px; border-radius: 999px; white-space: nowrap; }
+  .tileb:hover { transform: translateY(-6px); box-shadow: 0 30px 60px -30px rgba(31,27,22,0.55); }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <h1>Screenshot thumbnails — concept</h1>
+  <p class="sub">Three real game frames captured straight from the games, cropped to a consistent square and styled two ways. No illustration — the games are their own art.</p>
+
+  <h2 class="section">Style A · title overlaid</h2>
+  <div class="row">
+    <a class="tile" href="chess/">
+      <img src="assets/thumbs/chess.webp" alt="Chess" width="600" height="600">
+      <div class="scrim"></div>
+      <span class="play">Play ▶</span>
+      <div class="meta"><div class="eyebrow">Strategy</div><h3>Chess</h3></div>
+    </a>
+    <a class="tile" href="connect-4/">
+      <img src="assets/thumbs/connect-4.webp" alt="Connect 4" width="600" height="600">
+      <div class="scrim"></div>
+      <span class="play">Play ▶</span>
+      <div class="meta"><div class="eyebrow">Strategy</div><h3>Connect 4</h3></div>
+    </a>
+    <a class="tile" href="backgammon/">
+      <img src="assets/thumbs/backgammon.webp" alt="Backgammon" width="600" height="600">
+      <div class="scrim"></div>
+      <span class="play">Play ▶</span>
+      <div class="meta"><div class="eyebrow">Strategy</div><h3>Backgammon</h3></div>
+    </a>
+  </div>
+
+  <h2 class="section">Style B · title below (4:3 crop)</h2>
+  <div class="row">
+    <a class="tileb" href="chess/">
+      <div class="shot"><img src="assets/thumbs/chess.webp" alt="Chess" width="600" height="600"></div>
+      <div class="foot"><div><div class="eyebrow">Strategy</div><h3>Chess</h3></div><span class="play">Play</span></div>
+    </a>
+    <a class="tileb" href="connect-4/">
+      <div class="shot"><img src="assets/thumbs/connect-4.webp" alt="Connect 4" width="600" height="600"></div>
+      <div class="foot"><div><div class="eyebrow">Strategy</div><h3>Connect 4</h3></div><span class="play">Play</span></div>
+    </a>
+    <a class="tileb" href="backgammon/">
+      <div class="shot"><img src="assets/thumbs/backgammon.webp" alt="Backgammon" width="600" height="600"></div>
+      <div class="foot"><div><div class="eyebrow">Strategy</div><h3>Backgammon</h3></div><span class="play">Play</span></div>
+    </a>
+  </div>
+</div>
+</body>
+</html>
