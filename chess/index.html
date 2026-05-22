@@ -45,7 +45,7 @@
         display: flex; flex-direction: column; align-items: center;
         padding: 16px 16px 32px;
       }
-      .game-shell { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .game-shell { width: 100%; max-width: 1000px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
       .top-bar {
         width: 100%; display: flex; align-items: center; gap: 16px;
         padding: 11px 16px 12px;
@@ -100,20 +100,126 @@
         padding: 4px 10px; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--ink) 20%, transparent);
         background: #fff;
       }
-      .stage-wrap {
+      .board-area { position: relative; align-self: center; }
+      .board {
         position: relative;
-        background: rgba(255, 255, 255, 0.65);
-        border-radius: 16px;
-        padding: 14px;
-        box-shadow: 0 12px 30px rgba(26, 19, 16, 0.10);
-        align-self: center;
+        width: var(--board-size);
+        aspect-ratio: 1;
+        border-radius: 10px;
+        overflow: hidden;
+        box-shadow: 0 18px 44px -14px rgba(26, 19, 16, 0.5), 0 0 0 6px var(--frame);
+        --b-light: var(--wood-light);
+        --b-dark: var(--wood-dark);
+        touch-action: none;
+        user-select: none; -webkit-user-select: none;
       }
-      canvas {
-        display: block;
-        background: var(--frame);
-        border-radius: 8px;
-        cursor: pointer;
-        touch-action: manipulation;
+      .board > div { position: absolute; inset: 0; }
+      .sq { position: absolute; width: 12.5%; height: 12.5%; top: 0; left: 0; }
+      .sq.light { background: var(--b-light); }
+      .sq.dark { background: var(--b-dark); }
+      .coord {
+        position: absolute; font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: clamp(7px, 1.5vw, 11px); font-weight: 700; opacity: 0.78; pointer-events: none;
+      }
+      .coord.rank { top: 3%; left: 5%; }
+      .coord.file { bottom: 2%; right: 6%; }
+      .sq.light .coord { color: var(--b-dark); }
+      .sq.dark .coord { color: var(--b-light); }
+      .sq.sq-last { box-shadow: inset 0 0 0 9999px rgba(245, 205, 70, 0.42); }
+      .sq.sq-check { box-shadow: inset 0 0 0 9999px rgba(220, 60, 50, 0.46); }
+      .sq.sq-sel { box-shadow: inset 0 0 0 9999px rgba(90, 160, 220, 0.42); }
+      .sq.sq-hint { box-shadow: inset 0 0 0 9999px color-mix(in oklab, var(--accent) 42%, transparent); }
+      .sq.sq-move::after {
+        content: ''; position: absolute; left: 50%; top: 50%; width: 30%; height: 30%;
+        transform: translate(-50%, -50%); border-radius: 50%; background: rgba(40, 150, 75, 0.5);
+      }
+      .sq.sq-cap::after {
+        content: ''; position: absolute; left: 50%; top: 50%; width: 86%; height: 86%;
+        box-sizing: border-box; transform: translate(-50%, -50%); border-radius: 50%;
+        border: 5px solid rgba(40, 150, 75, 0.55);
+      }
+      .pieces { z-index: 2; }
+      .piece {
+        position: absolute; width: 12.5%; height: 12.5%; top: 0; left: 0;
+        background-size: 86% 86%; background-position: center; background-repeat: no-repeat;
+        transition: transform 0.19s cubic-bezier(0.2, 0.7, 0.3, 1), opacity 0.18s;
+        will-change: transform; cursor: grab;
+      }
+      .board.no-anim .piece { transition: none; }
+      .piece.dragging { transition: none; z-index: 30; cursor: grabbing; }
+      .piece.moving { z-index: 20; }
+      .piece.gone { opacity: 0; }
+      .layout { display: flex; gap: 16px; align-items: flex-start; justify-content: center; width: 100%; }
+      .board-col { --board-size: min(90vw, 64vh, 560px); display: flex; flex-direction: column; align-items: center; min-width: 0; }
+      .board-row { display: flex; gap: 8px; align-items: stretch; }
+      .board-stack { display: flex; flex-direction: column; gap: 7px; align-items: center; min-width: 0; }
+      .eval-bar { position: relative; width: 16px; flex-shrink: 0; align-self: stretch; background: #2b2b2b; border-radius: 6px; overflow: hidden; }
+      .eval-fill { position: absolute; left: 0; right: 0; bottom: 0; height: 50%; background: #f4f4ee; transition: height 0.35s ease; }
+      .eval-bar.flip .eval-fill { bottom: auto; top: 0; }
+      .eval-num { position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 800; color: #2b2b2b; pointer-events: none; }
+      .eval-bar.flip .eval-num { color: #f4f4ee; }
+      .eval-bar[hidden] { display: none; }
+      .cap-strip {
+        display: flex; align-items: center; gap: 4px;
+        width: var(--board-size); min-height: 26px; padding: 0 2px;
+      }
+      .cap-strip .pieces-mini { display: flex; flex-wrap: wrap; align-items: center; }
+      .cap-strip img { width: 22px; height: 22px; margin-right: -5px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25)); }
+      .cap-adv { font-weight: 800; font-size: 13px; color: var(--frame); font-variant-numeric: tabular-nums; margin-left: 8px; }
+      .panel {
+        width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px;
+        background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(8px);
+        border: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+        border-radius: 16px; padding: 14px;
+        box-shadow: 0 10px 28px -16px color-mix(in oklab, var(--frame) 55%, transparent);
+      }
+      .panel-status {
+        font-family: 'Bricolage Grotesque', serif; font-size: 17px; font-weight: 700;
+        color: var(--frame); padding: 4px 2px 8px; border-bottom: 1px solid color-mix(in oklab, var(--ink) 10%, transparent);
+      }
+      .panel .controls { display: flex; gap: 8px; }
+      .panel .controls button { flex: 1; padding: 9px 10px; font-size: 13px; }
+      .panel-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .seg { flex: 1; display: flex; flex-direction: column; gap: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: color-mix(in oklab, var(--ink) 55%, transparent); }
+      .seg select {
+        font: inherit; font-size: 13px; font-weight: 700; text-transform: none; letter-spacing: 0; color: var(--ink);
+        padding: 7px 8px; border-radius: 10px; border: 1px solid color-mix(in oklab, var(--ink) 20%, transparent); background: #fff; cursor: pointer;
+      }
+      .panel-link { font-size: 13px; font-weight: 700; color: var(--accent); text-decoration: none; text-align: center; padding: 4px; }
+      .panel-link:hover { text-decoration: underline; }
+      .movelist {
+        max-height: 200px; overflow-y: auto; min-height: 46px;
+        display: grid; grid-template-columns: auto 1fr 1fr; gap: 1px 4px; align-content: start;
+        background: color-mix(in oklab, var(--ink) 5%, transparent); border-radius: 10px; padding: 6px 8px;
+      }
+      .movelist .moveno { color: color-mix(in oklab, var(--ink) 45%, transparent); font-variant-numeric: tabular-nums; font-size: 12px; padding: 3px 2px; align-self: center; }
+      .movelist .mv {
+        cursor: pointer; padding: 3px 6px; border-radius: 6px; font-size: 13px; font-weight: 600;
+        font-family: 'JetBrains Mono', ui-monospace, monospace; color: var(--ink); white-space: nowrap;
+      }
+      .movelist .mv:hover { background: color-mix(in oklab, var(--accent) 20%, transparent); }
+      .movelist .mv.active { background: var(--accent); color: #fff; }
+      .movelist .empty { grid-column: 1 / -1; color: color-mix(in oklab, var(--ink) 45%, transparent); text-align: center; padding: 10px 4px; font-size: 13px; }
+      .review-bar {
+        display: flex; align-items: center; justify-content: space-between; gap: 8px;
+        background: color-mix(in oklab, var(--accent) 14%, transparent);
+        border: 1px solid color-mix(in oklab, var(--accent) 40%, transparent);
+        border-radius: 10px; padding: 7px 10px; font-size: 12px; font-weight: 600; color: var(--frame);
+      }
+      .review-bar button { padding: 5px 10px; font-size: 12px; }
+      .review-bar[hidden] { display: none; }
+      .annot { font-size: 11px; font-weight: 800; margin-left: 2px; }
+      .a-inacc { color: #C99A2E; }
+      .a-mistake { color: #E08A2B; }
+      .a-blunder { color: #D24B3F; }
+      .mv.active .annot { color: #fff; }
+      .analysis-out { background: color-mix(in oklab, var(--accent) 12%, transparent); border: 1px solid color-mix(in oklab, var(--accent) 35%, transparent); border-radius: 10px; padding: 8px 10px; font-size: 12px; color: var(--frame); line-height: 1.5; }
+      .analysis-out[hidden] { display: none; }
+      .analysis-out .acc-row { font-weight: 800; font-size: 13px; margin-top: 2px; }
+      .analysis-out .dim { color: color-mix(in oklab, var(--ink) 55%, transparent); font-weight: 600; }
+      @media (max-width: 880px) {
+        .layout { flex-direction: column; align-items: center; }
+        .panel { width: min(94vw, 600px); }
       }
       .controls {
         display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
@@ -131,26 +237,25 @@
       button.ghost { background: transparent; color: var(--ink); border-color: rgba(26, 19, 16, 0.2); box-shadow: none; }
       .turn { font-size: 13px; color: rgba(26, 19, 16, 0.75); }
       .game-over, .promo {
-        position: absolute; inset: 14px;
-        background: rgba(255, 250, 240, 0.96);
-        border-radius: 8px;
+        position: absolute; inset: 0; z-index: 40;
+        background: color-mix(in oklab, var(--paper) 92%, transparent);
+        backdrop-filter: blur(3px);
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
         opacity: 0; pointer-events: none; transition: opacity 0.25s;
         text-align: center; padding: 24px;
       }
       .game-over.show, .promo.show { opacity: 1; pointer-events: auto; }
-      .game-over h2 { font-size: 28px; color: var(--frame); }
+      .game-over h2 { font-family: 'Bricolage Grotesque', serif; font-size: clamp(22px, 5vw, 30px); color: var(--frame); }
       .game-over p { font-size: 15px; color: rgba(26, 19, 16, 0.7); max-width: 380px; }
       .promo h3 { font-size: 18px; color: var(--frame); }
       .promo-choices { display: flex; gap: 8px; }
       .promo-btn {
-        font-family: 'Segoe UI Symbol', serif;
-        font-size: 36px; line-height: 1;
-        padding: 8px 14px; background: #fff; color: var(--ink);
-        border: 2px solid var(--wood-dark); border-radius: 8px;
-        box-shadow: 0 3px 8px rgba(26, 19, 16, 0.1);
+        padding: 6px; background: #fff; line-height: 0;
+        border: 2px solid var(--wood-dark); border-radius: 10px;
+        box-shadow: 0 3px 8px rgba(26, 19, 16, 0.12); cursor: pointer; transition: transform 0.1s, background 0.15s;
       }
-      .promo-btn:hover { background: var(--wood-light); }
+      .promo-btn img { width: clamp(38px, 9vw, 52px); height: clamp(38px, 9vw, 52px); display: block; }
+      .promo-btn:hover { background: var(--wood-light); transform: translateY(-2px); }
       .hint { font-size: 13px; color: rgba(26, 19, 16, 0.6); text-align: center; max-width: 600px; }
       #how { padding: 20px 16px; max-width: 640px; width: 100%; }
       #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin: 0 0 10px; }
@@ -187,30 +292,90 @@
             </div>
         </div>
         </header>
-        <div class="captured-row" aria-label="Captured pieces">
-            <div id="capWhite" title="Pieces White has captured"></div>
-            <div id="capBlack" title="Pieces Black has captured"></div>
-        </div>
-        <div class="stage-wrap">
-            <canvas id="board" width="640" height="640"></canvas>
-            <div class="game-over" id="over">
-                <h2 id="overTitle">Checkmate</h2>
-                <p id="overText"></p>
-                <button id="overBtn">New game</button>
+        <div class="layout">
+            <div class="board-col">
+                <div class="board-row">
+                    <div class="eval-bar" id="evalWrap" aria-label="Position evaluation">
+                        <div class="eval-fill" id="evalFill"></div>
+                        <span class="eval-num" id="evalNum">0.0</span>
+                    </div>
+                    <div class="board-stack">
+                        <div class="cap-strip" id="capTop" aria-label="Pieces captured by the top player"></div>
+                        <div class="board-area">
+                            <div class="board" id="board">
+                                <div class="squares" id="squares"></div>
+                                <div class="pieces" id="pieces"></div>
+                                <div class="game-over" id="over">
+                                    <h2 id="overTitle">Checkmate</h2>
+                                    <p id="overText"></p>
+                                    <button id="overBtn">New game</button>
+                                </div>
+                                <div class="promo" id="promo">
+                                    <h3>Promote pawn to:</h3>
+                                    <div class="promo-choices" id="promoChoices"></div>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="cap-strip" id="capBottom" aria-label="Pieces captured by the bottom player"></div>
+                    </div>
+                </div>
             </div>
-            <div class="promo" id="promo">
-                <h3>Promote pawn to:</h3>
-                <div class="promo-choices" id="promoChoices"></div>
-            </div>
+            <aside class="panel">
+                <div class="panel-status" id="status">Your move.</div>
+                <div class="movelist" id="movelist"><span class="empty">Moves will appear here.</span></div>
+                <div class="review-bar" id="reviewBar" hidden>
+                    <span>Viewing an earlier position</span>
+                    <button id="toLive">Return to game</button>
+                </div>
+                <div class="controls">
+                    <button id="newGame">New game</button>
+                    <button id="undo" class="ghost">Undo</button>
+                    <button id="hint" class="ghost">Hint</button>
+                </div>
+                <div class="controls">
+                    <button id="resign" class="ghost">Resign</button>
+                    <button id="flip" class="ghost">Switch sides</button>
+                    <button id="flipBoard" class="ghost">Flip</button>
+                </div>
+                <div class="controls">
+                    <button id="copyPgn" class="ghost">Copy PGN</button>
+                    <button id="copyFen" class="ghost">Copy FEN</button>
+                    <button id="review" class="ghost">Review</button>
+                </div>
+                <div class="analysis-out" id="analysisOut" hidden></div>
+                <div class="panel-settings">
+                    <label class="seg">Board
+                        <select id="boardTheme" aria-label="Board theme">
+                            <option>Wood</option>
+                            <option>Green</option>
+                            <option>Blue</option>
+                            <option>Gray</option>
+                        </select>
+                    </label>
+                    <label class="seg">Pieces
+                        <select id="pieceSetSel" aria-label="Piece set">
+                            <option value="cburnett">Classic</option>
+                            <option value="maestro">Maestro</option>
+                            <option value="staunty">Staunty</option>
+                        </select>
+                    </label>
+                    <label class="seg">Sound
+                        <select id="soundSel" aria-label="Sound">
+                            <option value="on">On</option>
+                            <option value="off">Off</option>
+                        </select>
+                    </label>
+                    <label class="seg">Eval bar
+                        <select id="analysisSel" aria-label="Analysis and eval bar">
+                            <option value="on">On</option>
+                            <option value="off">Off</option>
+                        </select>
+                    </label>
+                </div>
+                <a class="panel-link" href="../strategy/">More strategy games →</a>
+            </aside>
         </div>
-        <div class="turn" id="status">Your move.</div>
-        <div class="controls">
-            <button id="newGame">New game</button>
-            <button id="resign" class="ghost">Resign</button>
-            <button id="flip" class="ghost">Switch sides</button>
-            <a href="../strategy/"><button class="ghost">More strategy games</button></a>
-        </div>
-        <p class="hint">Click a piece, then click where to move it. Green dots show legal moves; rings show captures. The AI plays the other color — switch sides any time.</p>
+        <p class="hint">Drag a piece to move it — or click it, then click a highlighted square. Dots show legal moves; rings show captures. The AI plays the other color — switch sides any time.</p>
 
         <section id="how" aria-label="How to play Chess">
             <h2>How to play Chess</h2>
@@ -218,11 +383,19 @@
 
             <h3>Controls</h3>
             <ul>
-                <li><b>Click a piece</b>, then click a destination square</li>
-                <li>Green dots show legal squares; rings show captures</li>
+                <li><b>Drag a piece</b> to move it, or <b>click it then click a destination</b> &mdash; dots show legal squares, rings show captures</li>
                 <li>The AI plays the opposite color and replies automatically after your move</li>
                 <li>Use the <b>Difficulty</b> dropdown anytime &mdash; the AI adopts the new tier on its next move</li>
-                <li>Hit <b>Switch sides</b> to swap colors and let the AI continue from your position</li>
+                <li><b>Undo</b> takes back your last move; <b>Switch sides</b> swaps colors; <b>Flip</b> rotates the board</li>
+                <li>The <b>move list</b> records every move in algebraic notation &mdash; click any move to replay the position</li>
+            </ul>
+
+            <h3>Analysis, coaching &amp; sharing</h3>
+            <ul>
+                <li>The <b>evaluation bar</b> beside the board shows who stands better at a glance</li>
+                <li>Tap <b>Hint</b> to highlight a strong move, and <b>Review</b> after a game for approximate accuracy and a count of your blunders and mistakes</li>
+                <li><b>Copy PGN</b> or <b>Copy FEN</b> to save a game or share a position with any chess tool</li>
+                <li>Pick your <b>board colors</b>, <b>piece set</b>, and toggle <b>sound</b> from the panel &mdash; your choices are remembered</li>
             </ul>
 
             <h3>Difficulty tiers</h3>
@@ -263,6 +436,9 @@
 
     <script src="engine.js"></script>
     <script src="ai.js"></script>
-    <script src="chess.js?v=20260521b"></script>
+    <script src="notation.js?v=20260522i"></script>
+    <script src="sound.js?v=20260522i"></script>
+    <script src="analysis.js?v=20260522i"></script>
+    <script src="chess.js?v=20260522i"></script>
 </body>
 </html>
