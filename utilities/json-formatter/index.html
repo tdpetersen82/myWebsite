@@ -1,0 +1,309 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>JSON Formatter &amp; Validator — Free Online Tool | Limestone Games</title>
+    <meta name="description" content="Format, validate, and minify JSON in your browser. Pretty-print with syntax highlighting, instant error messages with line and column numbers, and one-click copy. Free, no sign-up — runs entirely on your device.">
+    <meta name="keywords" content="json formatter, json validator, json beautifier, json minifier, format json online, pretty print json, json lint, validate json">
+    <meta property="og:title" content="JSON Formatter &amp; Validator — Free Online Tool">
+    <meta property="og:description" content="Format, validate, and minify JSON with syntax highlighting and clear error messages. Runs entirely in your browser.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/utilities/json-formatter/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="JSON Formatter &amp; Validator — Free Online Tool">
+    <meta name="twitter:description" content="Format, validate, and minify JSON with syntax highlighting and clear error messages. Runs entirely in your browser.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/utilities/json-formatter/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://limestonegames.com/utilities/"},{"@type":"ListItem","position":3,"name":"JSON Formatter","item":"https://limestonegames.com/utilities/json-formatter/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"JSON Formatter & Validator","url":"https://limestonegames.com/utilities/json-formatter/","applicationCategory":"DeveloperApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Format, validate, and minify JSON in the browser with syntax highlighting and line-level error messages."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../category.css?v=20260521a">
+    <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../../utility.css?v=20260521a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      .json-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      .json-grid .u-textarea { min-height: 360px; }
+      .json-grid .u-pre { min-height: 360px; height: 100%; }
+      @media (max-width: 760px) { .json-grid { grid-template-columns: 1fr; } }
+      .u-stats { margin-top: 18px; }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/" class="active">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/utilities/">Utilities</a><span class="sep">/</span>
+            <span class="cur">JSON Formatter</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Developer · JSON</span>
+            <h1>JSON Formatter <em>&amp; Validator</em></h1>
+            <p class="u-lede">Paste JSON to pretty-print it with syntax highlighting, or minify it to a single line. Invalid input is caught instantly with the line and column of the problem. Nothing is uploaded — it all runs on your device.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="u-panel-head">
+                <h2>JSON tool</h2>
+                <div class="u-toolbar">
+                    <label class="u-toolnote" for="indent">Indent</label>
+                    <select id="indent" class="u-select" style="width:auto;padding:8px 34px 8px 12px;font-size:13px" aria-label="Indent size">
+                        <option value="2">2 spaces</option>
+                        <option value="4">4 spaces</option>
+                        <option value="\t">Tab</option>
+                    </select>
+                    <button class="u-btn" id="btn-format" type="button">Format</button>
+                    <button class="u-btn ghost" id="btn-minify" type="button">Minify</button>
+                    <button class="u-btn ghost" id="btn-sample" type="button">Sample</button>
+                    <button class="u-btn ghost" id="btn-clear" type="button">Clear</button>
+                </div>
+            </div>
+
+            <div class="json-grid">
+                <div>
+                    <label class="u-label" for="in">Input</label>
+                    <textarea id="in" class="u-textarea code" spellcheck="false" placeholder='{ "paste": "your JSON here" }' autocomplete="off" autocapitalize="off"></textarea>
+                </div>
+                <div>
+                    <label class="u-label" for="out">Output <button class="u-btn ghost" id="btn-copy" type="button" style="float:right;margin-top:-6px;padding:5px 12px;font-size:12px">Copy</button></label>
+                    <pre id="out" class="u-pre" aria-live="polite"></pre>
+                </div>
+            </div>
+
+            <div class="u-msg" id="msg" role="status"></div>
+
+            <div class="u-stats">
+                <div class="u-stat"><div class="n accent" id="st-status">—</div><div class="l">Status</div></div>
+                <div class="u-stat"><div class="n" id="st-size">0 B</div><div class="l">Output size</div></div>
+                <div class="u-stat"><div class="n" id="st-keys">0</div><div class="l">Keys</div></div>
+                <div class="u-stat"><div class="n" id="st-depth">0</div><div class="l">Nesting depth</div></div>
+            </div>
+        </section>
+
+        <section class="u-about">
+            <h2>About this JSON formatter</h2>
+            <p>This is a JSON beautifier, validator, and minifier in one. Paste raw JSON into the input and it is parsed and re-rendered with color-coded keys, strings, numbers, booleans, and <code>null</code>. Use <b>Format</b> to indent it for reading, or <b>Minify</b> to strip every space and newline for the smallest possible payload — handy before pasting into a config file or a URL.</p>
+
+            <h3>How to use it</h3>
+            <ul>
+                <li>Paste or type JSON into the input panel — formatting happens as you type.</li>
+                <li>Pick a 2-space, 4-space, or tab indent to match your project's style.</li>
+                <li>If the JSON is malformed, the status turns to <b>Invalid</b> and the message shows what broke and where (line and column).</li>
+                <li>Click <b>Copy</b> to grab the formatted output, or <b>Minify</b> for a one-line version.</li>
+            </ul>
+
+            <h3>Is my data private?</h3>
+            <p>Yes. The parser is plain JavaScript running in your browser. Your JSON never leaves the page — there is no server, no upload, and no logging of what you paste.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>What counts as valid JSON?</summary>
+                    <p>Strict JSON: double-quoted keys and strings, no trailing commas, no comments, and no single quotes. If you paste a JavaScript object literal it may be rejected — the error message will point you to the first character that breaks the rules.</p>
+                </details>
+                <details>
+                    <summary>Why does minify make the size smaller?</summary>
+                    <p>Minifying removes all insignificant whitespace — indentation, line breaks, and the spaces after colons and commas. The data is identical; only the formatting bytes are dropped, which matters for network payloads.</p>
+                </details>
+                <details>
+                    <summary>Does it handle large files?</summary>
+                    <p>It handles anything your browser can hold in memory, which is typically several megabytes without trouble. Very large inputs may take a moment to highlight.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/utilities/">All utilities</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <div class="u-toast" id="toast">Copied to clipboard</div>
+
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+        const input = $('in'), out = $('out'), msg = $('msg');
+        const stStatus = $('st-status'), stSize = $('st-size'), stKeys = $('st-keys'), stDepth = $('st-depth');
+        let mode = 'pretty';
+
+        const SAMPLE = {
+            site: "Limestone Games",
+            url: "https://limestonegames.com",
+            categories: ["arcade", "kids", "strategy", "casino", "utilities"],
+            free: true,
+            games: 35,
+            launched: null,
+            meta: { downloads: 0, requiresLogin: false, rating: 4.8 }
+        };
+
+        function escapeHtml(s) {
+            return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+        }
+
+        function highlight(json) {
+            return escapeHtml(json).replace(
+                /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false)\b|\bnull\b|(-?\d+(?:\.\d+)?(?:[eE][+\-]?\d+)?)/g,
+                (m, str, colon, bool, num) => {
+                    if (str !== undefined) {
+                        if (colon !== undefined)
+                            return '<span class="tk-key">' + str + '</span><span class="tk-punc">' + colon + '</span>';
+                        return '<span class="tk-str">' + str + '</span>';
+                    }
+                    if (bool !== undefined) return '<span class="tk-bool">' + m + '</span>';
+                    if (num !== undefined) return '<span class="tk-num">' + m + '</span>';
+                    return '<span class="tk-null">' + m + '</span>';
+                }
+            );
+        }
+
+        function lineCol(text, pos) {
+            const upto = text.slice(0, pos);
+            const line = upto.split('\n').length;
+            const col = pos - upto.lastIndexOf('\n');
+            return line + ', column ' + col;
+        }
+
+        function errorDetail(e, text) {
+            const m = /position (\d+)/.exec(e.message);
+            if (m) return e.message.replace(/in JSON .*$/, '').trim() + ' — line ' + lineCol(text, +m[1]);
+            return e.message;
+        }
+
+        function analyse(data) {
+            let keys = 0, depth = 0;
+            (function walk(v, d) {
+                if (d > depth) depth = d;
+                if (Array.isArray(v)) v.forEach((x) => walk(x, d + 1));
+                else if (v && typeof v === 'object') {
+                    const k = Object.keys(v);
+                    keys += k.length;
+                    k.forEach((key) => walk(v[key], d + 1));
+                }
+            })(data, 0);
+            return { keys, depth };
+        }
+
+        function fmtBytes(n) {
+            if (n < 1024) return n + ' B';
+            if (n < 1048576) return (n / 1024).toFixed(1) + ' KB';
+            return (n / 1048576).toFixed(2) + ' MB';
+        }
+
+        function setMsg(type, text) { msg.className = 'u-msg show ' + type; msg.textContent = text; }
+        function clearMsg() { msg.className = 'u-msg'; msg.textContent = ''; }
+
+        function describe(data) {
+            if (Array.isArray(data)) return 'array of ' + data.length + ' item' + (data.length === 1 ? '' : 's');
+            if (data && typeof data === 'object') {
+                const n = Object.keys(data).length;
+                return 'object with ' + n + ' top-level key' + (n === 1 ? '' : 's');
+            }
+            return typeof data;
+        }
+
+        function run(announce) {
+            const raw = input.value.trim();
+            if (!raw) {
+                out.innerHTML = ''; clearMsg();
+                stStatus.textContent = '—'; stSize.textContent = '0 B';
+                stKeys.textContent = '0'; stDepth.textContent = '0';
+                return;
+            }
+            let data;
+            try { data = JSON.parse(raw); }
+            catch (e) {
+                out.innerHTML = '';
+                setMsg('err', 'Invalid JSON · ' + errorDetail(e, raw));
+                stStatus.textContent = 'Invalid';
+                stSize.textContent = '0 B'; stKeys.textContent = '0'; stDepth.textContent = '0';
+                return;
+            }
+            const indent = $('indent').value === '\\t' ? '\t' : parseInt($('indent').value, 10);
+            const formatted = mode === 'min' ? JSON.stringify(data) : JSON.stringify(data, null, indent);
+            out.innerHTML = highlight(formatted);
+            const { keys, depth } = analyse(data);
+            stStatus.textContent = 'Valid';
+            stSize.textContent = fmtBytes(new TextEncoder().encode(formatted).length);
+            stKeys.textContent = keys.toLocaleString();
+            stDepth.textContent = depth;
+            if (announce) setMsg('ok', 'Valid JSON · ' + describe(data));
+            else clearMsg();
+        }
+
+        let timer;
+        input.addEventListener('input', () => { clearTimeout(timer); timer = setTimeout(() => run(false), 200); });
+        $('indent').addEventListener('change', () => run(false));
+        $('btn-format').addEventListener('click', () => { mode = 'pretty'; run(true); });
+        $('btn-minify').addEventListener('click', () => { mode = 'min'; run(true); });
+        $('btn-clear').addEventListener('click', () => { input.value = ''; mode = 'pretty'; run(false); input.focus(); });
+        $('btn-sample').addEventListener('click', () => { input.value = JSON.stringify(SAMPLE, null, 2); mode = 'pretty'; run(true); });
+
+        const toast = $('toast');
+        let toastTimer;
+        $('btn-copy').addEventListener('click', () => {
+            const text = out.textContent;
+            if (!text) return;
+            navigator.clipboard.writeText(text).then(() => {
+                toast.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => toast.classList.remove('show'), 1600);
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

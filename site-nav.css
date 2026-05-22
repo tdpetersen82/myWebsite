@@ -24,6 +24,7 @@
 [data-category="kids"]     { --cat-accent:#2F9E73; --cat-tint:#E2F4EC; --cat-glow:rgba(47,158,115,0.35); }
 [data-category="strategy"] { --cat-accent:#1F6B43; --cat-tint:#DCEFE2; --cat-glow:rgba(31,107,67,0.30); }
 [data-category="casino"]   { --cat-accent:#B83A4A; --cat-tint:#F7DEE0; --cat-glow:rgba(184,58,74,0.35); }
+[data-category="utilities"]{ --cat-accent:#147C7C; --cat-tint:#DCEFEC; --cat-glow:rgba(20,124,124,0.30); }
 [data-category="profile"]  { --cat-accent:#B83A4A; --cat-tint:#F7DEE0; --cat-glow:rgba(184,58,74,0.35); }
 
 .nav {

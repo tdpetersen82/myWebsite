@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>Text Counter — Word, Character &amp; Reading Time Counter | Limestone Games</title>
+    <meta name="description" content="Count words, characters, sentences, paragraphs, and lines as you type. See estimated reading and speaking time plus keyword density. Free online word counter — runs entirely in your browser.">
+    <meta name="keywords" content="word counter, character counter, text counter, count words online, reading time calculator, sentence counter, paragraph counter, keyword density">
+    <meta property="og:title" content="Text Counter — Word, Character &amp; Reading Time Counter">
+    <meta property="og:description" content="Live word, character, sentence, and paragraph counts with reading time and keyword density.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/utilities/text-counter/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Text Counter — Word, Character &amp; Reading Time Counter">
+    <meta name="twitter:description" content="Live word, character, sentence, and paragraph counts with reading time and keyword density.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/utilities/text-counter/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://limestonegames.com/utilities/"},{"@type":"ListItem","position":3,"name":"Text Counter","item":"https://limestonegames.com/utilities/text-counter/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Text Counter","url":"https://limestonegames.com/utilities/text-counter/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Count words, characters, sentences, and paragraphs with reading time and keyword density."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../category.css?v=20260521a">
+    <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../../utility.css?v=20260521a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      .tc-area { min-height: 220px; }
+      .u-stats { grid-template-columns: repeat(4, 1fr); }
+      .tc-extra { margin-top: 14px; font-family: var(--u-mono); font-size: 12px; color: var(--cat-ink-soft); display: flex; flex-wrap: wrap; gap: 18px; }
+      .tc-extra b { color: var(--cat-ink); font-weight: 600; }
+      @media (max-width: 760px) { .u-stats { grid-template-columns: repeat(2, 1fr); } }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/" class="active">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/utilities/">Utilities</a><span class="sep">/</span>
+            <span class="cur">Text Counter</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Text · Writing</span>
+            <h1>Text <em>Counter</em></h1>
+            <p class="u-lede">Paste or type and watch the counts update live — words, characters, sentences, paragraphs, lines, plus estimated reading and speaking time. A keyword breakdown shows what your text leans on most.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="u-panel-head">
+                <h2>Your text</h2>
+                <div class="u-toolbar">
+                    <button class="u-btn ghost" id="btn-paste" type="button">Paste</button>
+                    <button class="u-btn ghost" id="btn-sample" type="button">Sample</button>
+                    <button class="u-btn ghost" id="btn-clear" type="button">Clear</button>
+                </div>
+            </div>
+            <textarea id="in" class="u-textarea tc-area" placeholder="Start typing or paste your text here…" spellcheck="false"></textarea>
+
+            <div class="u-stats" style="margin-top:18px">
+                <div class="u-stat"><div class="n accent" id="st-words">0</div><div class="l">Words</div></div>
+                <div class="u-stat"><div class="n" id="st-chars">0</div><div class="l">Characters</div></div>
+                <div class="u-stat"><div class="n" id="st-chars-ns">0</div><div class="l">Chars (no spaces)</div></div>
+                <div class="u-stat"><div class="n" id="st-sentences">0</div><div class="l">Sentences</div></div>
+                <div class="u-stat"><div class="n" id="st-paras">0</div><div class="l">Paragraphs</div></div>
+                <div class="u-stat"><div class="n" id="st-lines">0</div><div class="l">Lines</div></div>
+                <div class="u-stat"><div class="n" id="st-read">0s</div><div class="l">Reading time</div></div>
+                <div class="u-stat"><div class="n" id="st-speak">0s</div><div class="l">Speaking time</div></div>
+            </div>
+
+            <div class="tc-extra">
+                <span>Longest word <b id="x-longest">—</b></span>
+                <span>Avg word length <b id="x-avg">—</b></span>
+                <span>Unique words <b id="x-unique">0</b></span>
+            </div>
+        </section>
+
+        <section class="u-panel">
+            <div class="u-panel-head"><h2>Keyword density</h2></div>
+            <div class="u-chips" id="keywords"><span class="u-toolnote">Common words appear here once you've written a sentence or two.</span></div>
+        </section>
+
+        <section class="u-about">
+            <h2>About this text counter</h2>
+            <p>A live word and character counter for writers, students, and anyone working to a limit. It's built for the places counts matter: a 280-character social post, a 160-character SMS, a meta description around 155 characters, or an essay with a word target. Everything recalculates the instant you type.</p>
+
+            <h3>What each number means</h3>
+            <ul>
+                <li><b>Words</b> — runs of non-space characters, so hyphenated terms count as one.</li>
+                <li><b>Characters</b> — every character including spaces; <b>chars (no spaces)</b> excludes all whitespace.</li>
+                <li><b>Sentences</b> — segments ending in <code>.</code>, <code>!</code>, or <code>?</code>.</li>
+                <li><b>Reading time</b> assumes 200 words per minute; <b>speaking time</b> assumes 130.</li>
+                <li><b>Keyword density</b> lists your most-repeated meaningful words, skipping common filler like "the" and "and".</li>
+            </ul>
+
+            <h3>Is my text private?</h3>
+            <p>Completely. The counting happens in your browser with JavaScript — nothing you type is sent anywhere or stored.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>Does it count words the same way as my word processor?</summary>
+                    <p>Very closely. Like most editors, it counts whitespace-separated runs as words. Tiny differences can appear around symbols, em-dashes, or numbers, but for essays and articles the totals match.</p>
+                </details>
+                <details>
+                    <summary>How is reading time calculated?</summary>
+                    <p>Word count divided by 200 words per minute — a common average for silent adult reading. Speaking time uses 130 wpm, closer to a measured presentation pace.</p>
+                </details>
+                <details>
+                    <summary>Why is keyword density useful?</summary>
+                    <p>It surfaces the words you repeat most, which helps you spot overused terms in writing and gauge topical focus when drafting content for search.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/utilities/">All utilities</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <div class="u-toast" id="toast">Pasted from clipboard</div>
+
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+        const input = $('in');
+
+        const STOP = new Set(('a an the and or but of to in on for with as at by from is are was were be been being it this that these those i you he ' +
+            'she we they me him her us them my your his its our their not no nor do does did has have had having will would shall should can could may ' +
+            'might must if then else than so up out down off over under again once about into onto upon out very just only also too more most some such ' +
+            'who whom whose which what when where why how all any each few other own same s t don now').split(/\s+/));
+
+        const SAMPLE = "Limestone Games is a small studio building browser games that load fast and play forever. No downloads, no installs, no sign-up. " +
+            "Every game runs straight in your browser and saves your scores on your own device. From arcade classics to strategy boards against the AI, " +
+            "the idea is the same: quick to start, easy to enjoy, and free to play.";
+
+        function fmtTime(words, wpm) {
+            if (words === 0) return '0s';
+            const secs = Math.round((words / wpm) * 60);
+            if (secs < 60) return secs + 's';
+            const m = Math.floor(secs / 60), s = secs % 60;
+            return m + 'm' + (s ? ' ' + s + 's' : '');
+        }
+
+        function update() {
+            const text = input.value;
+            const tokens = text.trim().length ? text.trim().match(/\S+/g) || [] : [];
+            const words = tokens.length;
+
+            $('st-words').textContent = words.toLocaleString();
+            $('st-chars').textContent = text.length.toLocaleString();
+            $('st-chars-ns').textContent = text.replace(/\s/g, '').length.toLocaleString();
+            $('st-sentences').textContent = text.split(/[.!?…]+/).filter((s) => /\S/.test(s) && /[a-zA-Z0-9]/.test(s)).length.toLocaleString();
+            $('st-paras').textContent = text.split(/\n\s*\n/).filter((p) => /\S/.test(p)).length.toLocaleString();
+            $('st-lines').textContent = (text.length ? text.split('\n').length : 0).toLocaleString();
+            $('st-read').textContent = fmtTime(words, 200);
+            $('st-speak').textContent = fmtTime(words, 130);
+
+            // Cleaned words for analytics
+            const clean = tokens.map((t) => t.toLowerCase().replace(/[^a-z0-9']+/g, '').replace(/^'+|'+$/g, '')).filter((w) => w.length);
+            let longest = '';
+            clean.forEach((w) => { if (w.length > longest.length) longest = w; });
+            const totalLen = clean.reduce((s, w) => s + w.length, 0);
+            const uniq = new Set(clean);
+            $('x-longest').textContent = longest || '—';
+            $('x-avg').textContent = clean.length ? (totalLen / clean.length).toFixed(1) : '—';
+            $('x-unique').textContent = uniq.size.toLocaleString();
+
+            // Keyword density
+            const counts = {};
+            clean.forEach((w) => { if (w.length >= 3 && !STOP.has(w) && !/^\d+$/.test(w)) counts[w] = (counts[w] || 0) + 1; });
+            const top = Object.keys(counts).sort((a, b) => counts[b] - counts[a] || a.localeCompare(b)).slice(0, 8);
+            const box = $('keywords');
+            if (!top.length) {
+                box.innerHTML = '<span class="u-toolnote">Common words appear here once you’ve written a sentence or two.</span>';
+            } else {
+                box.innerHTML = top.map((w) => '<span class="u-chip"><b>' + w + '</b><span class="ct">' + counts[w] + '</span></span>').join('');
+            }
+        }
+
+        input.addEventListener('input', update);
+        $('btn-clear').addEventListener('click', () => { input.value = ''; update(); input.focus(); });
+        $('btn-sample').addEventListener('click', () => { input.value = SAMPLE; update(); });
+
+        const toast = $('toast');
+        let toastTimer;
+        $('btn-paste').addEventListener('click', async () => {
+            try {
+                const text = await navigator.clipboard.readText();
+                if (text) {
+                    input.value = (input.value ? input.value + '\n' : '') + text;
+                    update();
+                    toast.classList.add('show');
+                    clearTimeout(toastTimer);
+                    toastTimer = setTimeout(() => toast.classList.remove('show'), 1600);
+                }
+            } catch (e) {
+                input.focus();
+            }
+        });
+
+        update();
+    })();
+    </script>
+</body>
+</html>

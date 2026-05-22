@@ -1,0 +1,300 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>Unit Converter — Length, Weight, Temperature &amp; More | Limestone Games</title>
+    <meta name="description" content="Convert between metric and imperial units instantly — length, mass, temperature, volume, area, and speed. Live results plus a full breakdown in every unit. Free, no sign-up, runs in your browser.">
+    <meta name="keywords" content="unit converter, metric to imperial, length converter, weight converter, temperature converter, celsius to fahrenheit, km to miles, kg to pounds, volume converter">
+    <meta property="og:title" content="Unit Converter — Length, Weight, Temperature &amp; More">
+    <meta property="og:description" content="Convert length, mass, temperature, volume, area, and speed between metric and imperial, with a full breakdown in every unit.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/utilities/unit-converter/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Unit Converter — Length, Weight, Temperature &amp; More">
+    <meta name="twitter:description" content="Convert length, mass, temperature, volume, area, and speed between metric and imperial.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/utilities/unit-converter/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://limestonegames.com/utilities/"},{"@type":"ListItem","position":3,"name":"Unit Converter","item":"https://limestonegames.com/utilities/unit-converter/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Unit Converter","url":"https://limestonegames.com/utilities/unit-converter/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Convert length, mass, temperature, volume, area, and speed between metric and imperial units."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../category.css?v=20260521a">
+    <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../../utility.css?v=20260521a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      .conv-row { display: grid; grid-template-columns: 1.1fr 1.3fr auto 1.3fr; gap: 12px; align-items: end; }
+      .conv-row .swap {
+        height: 44px; width: 44px; padding: 0; font-size: 18px;
+        align-self: end; border-radius: 12px;
+      }
+      .conv-eq { font-family: var(--u-mono); font-size: 12px; letter-spacing: 0.04em; color: var(--cat-ink-soft); margin: 22px 0 6px; }
+      .conv-result-box {
+        background: var(--cat-bg); border: 1px solid var(--cat-line);
+        border-radius: 18px; padding: 22px 24px; margin-bottom: 4px;
+      }
+      .u-kv.hot .ku, .u-kv.hot .kvv { color: var(--cat-eyebrow-color); font-weight: 600; }
+      @media (max-width: 760px) {
+        .conv-row { grid-template-columns: 1fr 1fr; }
+        .conv-row .swap { grid-column: 1 / -1; width: 100%; }
+      }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/" class="active">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/utilities/">Utilities</a><span class="sep">/</span>
+            <span class="cur">Unit Converter</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Conversions · Measurement</span>
+            <h1>Unit <em>Converter</em></h1>
+            <p class="u-lede">Convert length, mass, temperature, volume, area, and speed between metric and imperial. Type a value and the result updates live, with a full breakdown in every other unit underneath.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="u-tabs" id="tabs" role="tablist"></div>
+
+            <div class="conv-row">
+                <div class="u-field">
+                    <label class="u-label" for="val">Value</label>
+                    <input id="val" class="u-input" type="text" inputmode="decimal" value="1" autocomplete="off">
+                </div>
+                <div class="u-field">
+                    <label class="u-label" for="from">From</label>
+                    <select id="from" class="u-select"></select>
+                </div>
+                <button class="u-btn ghost swap" id="swap" type="button" title="Swap units" aria-label="Swap from and to units">⇄</button>
+                <div class="u-field">
+                    <label class="u-label" for="to">To</label>
+                    <select id="to" class="u-select"></select>
+                </div>
+            </div>
+
+            <div class="conv-eq" id="eq">1 metre equals</div>
+            <div class="conv-result-box">
+                <div class="u-result"><span id="res">—</span> <small id="resU"></small></div>
+            </div>
+
+            <div class="u-panel-head" style="margin-top:22px;margin-bottom:6px">
+                <h2>All units</h2>
+            </div>
+            <div id="rows" class="u-rows"></div>
+        </section>
+
+        <section class="u-about">
+            <h2>About this unit converter</h2>
+            <p>A single converter for the measurements you reach for most: <b>length</b> (millimetres to miles), <b>mass</b> (milligrams to stone), <b>temperature</b> (Celsius, Fahrenheit, Kelvin), <b>volume</b> (millilitres to US gallons), <b>area</b> (square centimetres to acres), and <b>speed</b> (m/s to knots). Every conversion uses exact internationally-defined factors — for example, one inch is exactly 0.0254 metres and one pound is exactly 0.45359237 kilograms.</p>
+
+            <h3>How to use it</h3>
+            <ul>
+                <li>Pick a category from the tabs — Length, Mass, Temperature, Volume, Area, or Speed.</li>
+                <li>Type your value and choose the <b>From</b> and <b>To</b> units; the answer updates as you type.</li>
+                <li>Press the <b>⇄</b> button to swap the two units and reverse the conversion.</li>
+                <li>The <b>All units</b> list shows your value expressed in every unit at once.</li>
+            </ul>
+
+            <h3>Common conversions</h3>
+            <ul>
+                <li>0&nbsp;°C = 32&nbsp;°F · 100&nbsp;°C = 212&nbsp;°F (water's freezing and boiling points)</li>
+                <li>1&nbsp;mile = 1.609&nbsp;km · 1&nbsp;km = 0.621&nbsp;miles</li>
+                <li>1&nbsp;kg = 2.205&nbsp;lb · 1&nbsp;lb = 453.6&nbsp;g</li>
+                <li>1&nbsp;US gallon = 3.785&nbsp;litres</li>
+            </ul>
+
+            <div class="u-faq">
+                <details>
+                    <summary>Are these US or imperial gallons?</summary>
+                    <p>Volume uses US customary units (US gallon, quart, pint, cup, fluid ounce). A US gallon is 3.785&nbsp;litres; the UK imperial gallon is larger at 4.546&nbsp;litres.</p>
+                </details>
+                <details>
+                    <summary>Why does temperature work differently?</summary>
+                    <p>Temperature scales have different zero points, so they can't be converted with a single multiply. Each value is first converted to Celsius, then to the target scale using the standard formulas.</p>
+                </details>
+                <details>
+                    <summary>How precise are the results?</summary>
+                    <p>Conversions are computed with full double-precision factors and shown to a sensible number of significant figures. Very large or very small results switch to scientific notation.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/utilities/">All utilities</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+
+        const CATS = {
+            length: { label: 'Length', from: 'm', to: 'ft', units: {
+                mm: { n: 'Millimetre', s: 'mm', f: 0.001 }, cm: { n: 'Centimetre', s: 'cm', f: 0.01 }, m: { n: 'Metre', s: 'm', f: 1 }, km: { n: 'Kilometre', s: 'km', f: 1000 },
+                in: { n: 'Inch', s: 'in', f: 0.0254 }, ft: { n: 'Foot', s: 'ft', f: 0.3048 }, yd: { n: 'Yard', s: 'yd', f: 0.9144 }, mi: { n: 'Mile', s: 'mi', f: 1609.344 }, nmi: { n: 'Nautical mile', s: 'nmi', f: 1852 }
+            } },
+            mass: { label: 'Mass', from: 'kg', to: 'lb', units: {
+                mg: { n: 'Milligram', s: 'mg', f: 1e-6 }, g: { n: 'Gram', s: 'g', f: 0.001 }, kg: { n: 'Kilogram', s: 'kg', f: 1 }, t: { n: 'Tonne', s: 't', f: 1000 },
+                oz: { n: 'Ounce', s: 'oz', f: 0.028349523125 }, lb: { n: 'Pound', s: 'lb', f: 0.45359237 }, st: { n: 'Stone', s: 'st', f: 6.35029318 }
+            } },
+            temperature: { label: 'Temperature', temp: true, from: 'C', to: 'F', units: {
+                C: { n: 'Celsius', s: '°C' }, F: { n: 'Fahrenheit', s: '°F' }, K: { n: 'Kelvin', s: 'K' }
+            } },
+            volume: { label: 'Volume', from: 'l', to: 'gal', units: {
+                ml: { n: 'Millilitre', s: 'mL', f: 0.001 }, l: { n: 'Litre', s: 'L', f: 1 }, m3: { n: 'Cubic metre', s: 'm³', f: 1000 },
+                tsp: { n: 'Teaspoon (US)', s: 'tsp', f: 0.00492892159 }, tbsp: { n: 'Tablespoon (US)', s: 'tbsp', f: 0.0147867648 }, floz: { n: 'Fluid ounce (US)', s: 'fl oz', f: 0.0295735296 },
+                cup: { n: 'Cup (US)', s: 'cup', f: 0.2365882365 }, pt: { n: 'Pint (US)', s: 'pt', f: 0.473176473 }, qt: { n: 'Quart (US)', s: 'qt', f: 0.946352946 }, gal: { n: 'Gallon (US)', s: 'gal', f: 3.785411784 }
+            } },
+            area: { label: 'Area', from: 'm2', to: 'ft2', units: {
+                cm2: { n: 'Square centimetre', s: 'cm²', f: 0.0001 }, m2: { n: 'Square metre', s: 'm²', f: 1 }, ha: { n: 'Hectare', s: 'ha', f: 10000 }, km2: { n: 'Square kilometre', s: 'km²', f: 1e6 },
+                in2: { n: 'Square inch', s: 'in²', f: 0.00064516 }, ft2: { n: 'Square foot', s: 'ft²', f: 0.09290304 }, yd2: { n: 'Square yard', s: 'yd²', f: 0.83612736 }, ac: { n: 'Acre', s: 'ac', f: 4046.8564224 }, mi2: { n: 'Square mile', s: 'mi²', f: 2589988.110336 }
+            } },
+            speed: { label: 'Speed', from: 'km/h', to: 'mph', units: {
+                'm/s': { n: 'Metres / second', s: 'm/s', f: 1 }, 'km/h': { n: 'Kilometres / hour', s: 'km/h', f: 0.2777777778 }, mph: { n: 'Miles / hour', s: 'mph', f: 0.44704 }, 'ft/s': { n: 'Feet / second', s: 'ft/s', f: 0.3048 }, kn: { n: 'Knot', s: 'kn', f: 0.5144444444 }
+            } }
+        };
+
+        let cat = 'length';
+
+        function toCelsius(v, u) { return u === 'C' ? v : u === 'F' ? (v - 32) * 5 / 9 : v - 273.15; }
+        function fromCelsius(v, u) { return u === 'C' ? v : u === 'F' ? v * 9 / 5 + 32 : v + 273.15; }
+
+        function convert(value, from, to) {
+            const c = CATS[cat];
+            if (c.temp) return fromCelsius(toCelsius(value, from), to);
+            return value * c.units[from].f / c.units[to].f;
+        }
+
+        function fmt(n) {
+            if (!isFinite(n)) return '—';
+            const abs = Math.abs(n);
+            if (abs !== 0 && (abs < 1e-4 || abs >= 1e12)) return n.toExponential(4).replace('e', ' × 10^').replace('+', '');
+            return Number((Math.round(n * 1e6) / 1e6)).toLocaleString(undefined, { maximumFractionDigits: 6 });
+        }
+
+        function fillSelect(sel, selected) {
+            const c = CATS[cat];
+            sel.innerHTML = '';
+            for (const key in c.units) {
+                const o = document.createElement('option');
+                o.value = key;
+                o.textContent = c.units[key].n + ' (' + c.units[key].s + ')';
+                if (key === selected) o.selected = true;
+                sel.appendChild(o);
+            }
+        }
+
+        function update() {
+            const c = CATS[cat];
+            const raw = $('val').value.trim().replace(/,/g, '');
+            const value = parseFloat(raw);
+            const from = $('from').value, to = $('to').value;
+            const valid = isFinite(value);
+
+            $('eq').textContent = (valid ? fmt(value) : '—') + ' ' + c.units[from].s + ' equals';
+            $('res').textContent = valid ? fmt(convert(value, from, to)) : '—';
+            $('resU').textContent = valid ? c.units[to].s : '';
+
+            const rows = $('rows');
+            rows.innerHTML = '';
+            for (const key in c.units) {
+                const div = document.createElement('div');
+                div.className = 'u-kv' + (key === to ? ' hot' : '');
+                const v = valid ? fmt(convert(value, from, key)) : '—';
+                div.innerHTML = '<span class="ku">' + c.units[key].n + '</span><span class="kvv">' + v + '</span>';
+                rows.appendChild(div);
+            }
+        }
+
+        function buildTabs() {
+            const tabs = $('tabs');
+            tabs.innerHTML = '';
+            for (const key in CATS) {
+                const b = document.createElement('button');
+                b.className = 'u-tab' + (key === cat ? ' active' : '');
+                b.textContent = CATS[key].label;
+                b.type = 'button';
+                b.addEventListener('click', () => {
+                    cat = key;
+                    document.querySelectorAll('.u-tab').forEach((t) => t.classList.remove('active'));
+                    b.classList.add('active');
+                    fillSelect($('from'), CATS[cat].from);
+                    fillSelect($('to'), CATS[cat].to);
+                    update();
+                });
+                tabs.appendChild(b);
+            }
+        }
+
+        $('swap').addEventListener('click', () => {
+            const f = $('from').value;
+            $('from').value = $('to').value;
+            $('to').value = f;
+            update();
+        });
+        $('val').addEventListener('input', update);
+        $('from').addEventListener('change', update);
+        $('to').addEventListener('change', update);
+
+        buildTabs();
+        fillSelect($('from'), CATS[cat].from);
+        fillSelect($('to'), CATS[cat].to);
+        update();
+    })();
+    </script>
+</body>
+</html>

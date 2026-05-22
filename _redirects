@@ -16,10 +16,6 @@
 /retro/    /arcade/   301
 /retro/*   /arcade/   301
 
-# Retired utilities section, no replacement
-/utilities/    /   301
-/utilities/*   /   301
-
 # Retired arcade-era games, redirect to the Arcade category
 /beat-em-up/            /arcade/   301
 /beat-em-up/*           /arcade/   301
