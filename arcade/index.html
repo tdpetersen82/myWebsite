@@ -150,7 +150,7 @@ h1, h2, h3, h4 { font-family: var(--display); margin: 0; letter-spacing: -0.02em
   border-radius: 28px; overflow: hidden;
   background: linear-gradient(135deg, #2B1808 0%, #15090C 60%, #0E0509 100%);
   border: 1px solid var(--ch-line);
-  padding: 52px 48px; min-height: 380px;
+  padding: 26px 48px; min-height: 190px;
   display: grid; grid-template-columns: 1.4fr 1fr; gap: 32px;
   align-items: end; position: relative;
 }
@@ -163,13 +163,14 @@ h1, h2, h3, h4 { font-family: var(--display); margin: 0; letter-spacing: -0.02em
 }
 .hero-bulbs span:nth-child(3n) { background: var(--ch-amber); box-shadow: 0 0 8px var(--ch-amber); }
 .hero h1 {
-  font-size: 76px; line-height: 0.93; letter-spacing: -0.04em;
-  margin: 20px 0 18px;
+  font-size: 44px; line-height: 0.95; letter-spacing: -0.04em;
+  margin: 8px 0 10px;
 }
 .hero h1 em { font-style: normal; color: var(--ch-amber); }
 .hero p.lede {
-  font-size: 16.5px; line-height: 1.55; color: var(--ch-ink2);
-  max-width: 52ch; margin: 0 0 32px;
+  font-size: 15px; line-height: 1.4; color: var(--ch-ink2);
+  max-width: 52ch; margin: 0 0 14px;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
 }
 .eyebrow {
   display: inline-flex; align-items: center; gap: 10px;
@@ -178,7 +179,7 @@ h1, h2, h3, h4 { font-family: var(--display); margin: 0; letter-spacing: -0.02em
 }
 .eyebrow .dot { width: 7px; height: 7px; border-radius: 50%; background: var(--ch-ember); box-shadow: 0 0 8px var(--ch-ember); }
 .hero-stats {
-  display: flex; gap: 56px; padding-top: 22px;
+  display: flex; gap: 40px; padding-top: 12px;
   border-top: 1px solid var(--ch-line); flex-wrap: wrap;
 }
 .stat-l {
@@ -186,14 +187,14 @@ h1, h2, h3, h4 { font-family: var(--display); margin: 0; letter-spacing: -0.02em
   text-transform: uppercase; color: var(--ch-ink3);
 }
 .stat-v {
-  font-family: var(--display); font-size: 28px; font-weight: 600;
+  font-family: var(--display); font-size: 22px; font-weight: 600;
   margin-top: 4px; line-height: 1; color: var(--ch-ink);
 }
 .stat-v.accent { color: var(--ch-amber); }
 .stat-v.mono { font-family: var(--mono); }
 
 /* Cabinet illustration */
-.cab { position: relative; width: 240px; height: 320px; margin: 0 auto; }
+.cab { position: relative; width: 240px; height: 320px; margin: 0 auto; transform: scale(0.5); transform-origin: bottom center; }
 .cab .marquee {
   position: absolute; top: 0; left: 8px; right: 8px; height: 60px;
   background: linear-gradient(180deg, var(--ch-ember), #B83014);
@@ -517,8 +518,8 @@ footer a { color: inherit; text-decoration: none; }
 footer a:hover { color: var(--ch-amber); }
 
 @media (max-width: 1100px) {
-  .hero { grid-template-columns: 1fr; padding: 40px 32px; }
-  .hero h1 { font-size: 56px; }
+  .hero { grid-template-columns: 1fr; padding: 28px 32px; }
+  .hero h1 { font-size: 40px; }
   .featured { grid-template-columns: 1fr; }
   .twocol { grid-template-columns: 1fr; }
   .strategy-grid { grid-template-columns: 1fr; }
@@ -529,7 +530,7 @@ footer a:hover { color: var(--ch-amber); }
   .nav, .hero, .twocol, .strategy, .ch-stats, .ch-ad-row, footer { margin-left: 18px; margin-right: 18px; padding-left: 18px; padding-right: 18px; }
   .row { padding-left: 18px; }
   .row-track { padding-right: 18px; }
-  .hero h1 { font-size: 44px; }
+  .hero h1 { font-size: 34px; }
   .ch-stats { grid-template-columns: 1fr; }
 }
 </style>
@@ -598,7 +599,7 @@ footer a:hover { color: var(--ch-amber); }
       <div><div class="stat-l">Installs</div><div class="stat-v">None</div></div>
     </div>
   </div>
-  <div style="display:flex;align-items:flex-end;justify-content:center;height:320px">
+  <div style="display:flex;align-items:flex-end;justify-content:center;height:160px">
     <div class="cab">
       <div class="marquee">ARCADE</div>
       <div class="screen"><span class="screen-text">FREE PLAY</span></div>
