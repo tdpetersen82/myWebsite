@@ -320,6 +320,18 @@ body.hub-root {
   pointer-events: none;
   z-index: 1;
 }
+.ch-scene {
+  position: absolute;
+  top: 50%;
+  right: 24px;
+  transform: translateY(-50%);
+  width: 188px;
+  height: 188px;
+  z-index: 1;
+  pointer-events: none;
+}
+/* Cabinet is tall — drop it so its marquee clears the stat pill. */
+.ch-scene-arcade { top: 57%; }
 
 /* — Classic Arcade — pixel grid + chunky joystick — */
 .ch-card.cat-classic {
@@ -336,60 +348,7 @@ body.hub-root {
   background-size: 22px 22px;
   opacity: 0.7;
 }
-.ch-stick {
-  position: absolute;
-  right: 24px;
-  top: 30px;
-  width: 180px;
-  height: 200px;
-  pointer-events: none;
-}
-.ch-stick .base {
-  position: absolute;
-  bottom: 0;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 140px;
-  height: 40px;
-  border-radius: 20px 20px 6px 6px;
-  background: #3A1F0A;
-  box-shadow: inset 0 -3px 6px rgba(0, 0, 0, 0.3), inset 0 3px 6px rgba(255, 255, 255, 0.15);
-}
-.ch-stick .shaft {
-  position: absolute;
-  bottom: 34px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 14px;
-  height: 90px;
-  background: linear-gradient(180deg, #1F1108, #3A1F0A);
-  border-radius: 7px 7px 0 0;
-}
-.ch-stick .ball {
-  position: absolute;
-  bottom: 118px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 46px;
-  height: 46px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 35% 35%, #FF4F2D, #B82A12);
-  box-shadow: 0 6px 14px -4px rgba(0, 0, 0, 0.4),
-    inset 0 -5px 10px rgba(0, 0, 0, 0.25),
-    inset 0 3px 6px rgba(255, 255, 255, 0.4);
-}
-.ch-stick .btn {
-  position: absolute;
-  bottom: 10px;
-  width: 18px;
-  height: 18px;
-  border-radius: 50%;
-  box-shadow: inset 0 -2px 5px rgba(0, 0, 0, 0.35), inset 0 2px 4px rgba(255, 255, 255, 0.3);
-}
-.ch-stick .btn.b1 { right: 30px; background: radial-gradient(circle at 35% 35%, #FFD93D, #B8860B); }
-.ch-stick .btn.b2 { right: 6px; background: radial-gradient(circle at 35% 35%, #4ECDC4, #1A8B82); }
-
-/* — Kids — bright primaries, rainbow + balloons + sun — */
+/* — Kids — bright primaries — */
 .ch-card.cat-kids {
   background: linear-gradient(160deg, #FFF8DC 0%, #FFE4F0 60%, #DCEEFF 100%);
   color: #1F1A2E;
@@ -415,82 +374,7 @@ body.hub-root {
   opacity: 0.7;
   pointer-events: none;
 }
-.ch-rainbow {
-  position: absolute;
-  right: 38px;
-  top: 56px;
-  width: 140px;
-  height: 70px;
-  overflow: hidden;
-}
-.ch-rainbow .band {
-  position: absolute;
-  left: 0;
-  bottom: 0;
-  border-radius: 140px 140px 0 0;
-  border-style: solid;
-  border-bottom: none;
-}
-.ch-rainbow .band.b1 {
-  width: 140px; height: 70px;
-  border-color: #FF6F61;
-  border-width: 8px 8px 0 8px;
-}
-.ch-rainbow .band.b2 {
-  left: 14px; width: 112px; height: 56px;
-  border-color: #FFD93D;
-  border-width: 8px 8px 0 8px;
-}
-.ch-rainbow .band.b3 {
-  left: 28px; width: 84px; height: 42px;
-  border-color: #6DD5FA;
-  border-width: 8px 8px 0 8px;
-}
-.ch-sun {
-  position: absolute;
-  right: 168px;
-  top: 28px;
-  width: 56px;
-  height: 56px;
-  border-radius: 50%;
-  background: radial-gradient(circle at 38% 38%, #FFE066, #FFA751 80%);
-  box-shadow:
-    0 0 0 6px rgba(255, 217, 61, 0.25),
-    0 0 0 14px rgba(255, 217, 61, 0.12);
-}
-.ch-balloon {
-  position: absolute;
-  width: 36px;
-  height: 44px;
-  border-radius: 50% 50% 50% 50% / 60% 60% 40% 40%;
-  box-shadow: inset -4px -6px 8px rgba(0, 0, 0, 0.12), inset 3px 4px 6px rgba(255, 255, 255, 0.5);
-}
-.ch-balloon::after {
-  content: '';
-  position: absolute;
-  left: 50%;
-  bottom: -28px;
-  width: 1px;
-  height: 28px;
-  background: rgba(31, 26, 46, 0.35);
-}
-.ch-balloon.b1 {
-  left: 56px; bottom: 96px;
-  background: radial-gradient(circle at 35% 30%, #FFE066, #FFA751);
-  transform: rotate(-6deg);
-}
-.ch-balloon.b2 {
-  left: 110px; bottom: 70px;
-  background: radial-gradient(circle at 35% 30%, #FF8FA3, #FF4F8B);
-  transform: rotate(4deg);
-}
-.ch-balloon.b3 {
-  left: 26px; bottom: 50px;
-  background: radial-gradient(circle at 35% 30%, #6DD5FA, #4AA9D6);
-  transform: rotate(-10deg);
-}
-
-/* — Strategy & Puzzles — overlapping discs + tangram — */
+/* — Strategy & Puzzles — */
 .ch-card.cat-puzzle {
   background: linear-gradient(135deg, #DCEFE0 0%, #A8D4B5 70%, #6FA383 100%);
   color: #1F3A2A;
@@ -502,50 +386,7 @@ body.hub-root {
   background-image: radial-gradient(circle at 30% 60%, rgba(255, 255, 255, 0.4) 0%, transparent 50%);
   mix-blend-mode: overlay;
 }
-.ch-puzzle-shapes {
-  position: absolute;
-  right: -30px;
-  top: -20px;
-  width: 280px;
-  height: 240px;
-}
-.ch-disc {
-  position: absolute;
-  border-radius: 50%;
-  width: 50px;
-  height: 50px;
-  box-shadow: 0 6px 14px -4px rgba(0, 0, 0, 0.18),
-    inset 0 -4px 8px rgba(0, 0, 0, 0.08),
-    inset 0 3px 6px rgba(255, 255, 255, 0.4);
-}
-.ch-disc.d1 { top: 84px; left: 60px; background: radial-gradient(circle at 35% 35%, #F08488, #B84B4F); }
-.ch-disc.d2 { top: 40px; left: 118px; background: radial-gradient(circle at 35% 35%, #F2D14E, #A88B14); }
-.ch-disc.d3 { top: 130px; left: 118px; background: radial-gradient(circle at 35% 35%, #F08488, #B84B4F); }
-.ch-disc.d4 { top: 90px; left: 176px; background: radial-gradient(circle at 35% 35%, #F2D14E, #A88B14); }
-.ch-disc.d5 { top: 40px; left: 176px; background: radial-gradient(circle at 35% 35%, #F08488, #B84B4F); }
-.ch-tri {
-  position: absolute;
-  top: 44px;
-  left: 36px;
-  width: 0;
-  height: 0;
-  border-left: 30px solid transparent;
-  border-right: 30px solid transparent;
-  border-bottom: 50px solid rgba(255, 255, 255, 0.42);
-  transform: rotate(-12deg);
-}
-.ch-square {
-  position: absolute;
-  top: 24px;
-  right: 30px;
-  width: 42px;
-  height: 42px;
-  background: rgba(31, 90, 61, 0.18);
-  border-radius: 7px;
-  transform: rotate(20deg);
-}
-
-/* — Casino — felt + chip stack — */
+/* — Casino — felt — */
 .ch-card.cat-casino {
   background: radial-gradient(circle at 70% 30%, #2D6A52 0%, #1F4938 60%, #0F2A1E 100%);
   color: #F2EFE6;
@@ -564,55 +405,6 @@ body.hub-root {
   inset: 0;
   background-image: repeating-linear-gradient(0deg, rgba(255, 255, 255, 0.012) 0 1px, transparent 1px 3px);
 }
-.ch-chips {
-  position: absolute;
-  right: 48px;
-  top: 36px;
-  width: 120px;
-  height: 170px;
-}
-.ch-cchip {
-  position: absolute;
-  width: 78px;
-  height: 78px;
-  border-radius: 50%;
-  left: 50%;
-  box-shadow: 0 8px 18px -6px rgba(0, 0, 0, 0.45),
-    inset 0 -3px 8px rgba(0, 0, 0, 0.2),
-    inset 0 2px 5px rgba(255, 255, 255, 0.18);
-}
-.ch-cchip::before {
-  content: '';
-  position: absolute;
-  inset: 9px;
-  border-radius: 50%;
-  border: 2px dashed rgba(255, 255, 255, 0.35);
-}
-.ch-cchip::after {
-  content: '';
-  position: absolute;
-  inset: 18px;
-  border-radius: 50%;
-  background: rgba(255, 255, 255, 0.06);
-}
-.ch-cchip .v {
-  position: absolute;
-  inset: 0;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: 'Bricolage Grotesque', sans-serif;
-  font-weight: 700;
-  font-size: 14px;
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4);
-  z-index: 1;
-}
-.ch-cchip.cc1 { background: #D14B4B; top: 0;   transform: translate(-58%, 0) rotate(-7deg); }
-.ch-cchip.cc2 { background: #5176B0; top: 26px; transform: translate(-44%, 0) rotate(5deg); }
-.ch-cchip.cc3 { background: #1A1612; top: 52px; transform: translate(-52%, 0) rotate(-3deg); }
-.ch-cchip.cc4 { background: #C8A14A; top: 78px; transform: translate(-46%, 0) rotate(8deg); }
-
 @media (max-width: 1100px) {
   .ch-grid { grid-template-columns: 1fr; }
   .ch-head { max-width: 100%; }
@@ -1241,5 +1033,5 @@ body.hub-root {
   .ch-card { padding: 16px 22px; min-height: 130px; }
   .ch-head h3 { font-size: 36px; }
   .ch-head .tag { font-size: 14px; }
-  .ch-stick, .ch-saucer, .ch-puzzle-shapes, .ch-chips { transform: scale(0.7); transform-origin: top right; }
+  .ch-scene { width: 132px; height: 132px; right: 8px; }
 }

@@ -26,7 +26,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="limestone.css?v=20260522a">
+    <link rel="stylesheet" href="limestone.css?v=20260522b">
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
@@ -120,13 +120,57 @@
             <!-- Arcade -->
             <button class="ch-card cat-classic light" data-cat="classic" type="button">
                 <div class="ch-art ch-art-classic"></div>
-                <div class="ch-stick">
-                    <div class="ball"></div>
-                    <div class="shaft"></div>
-                    <div class="base"></div>
-                    <div class="btn b1"></div>
-                    <div class="btn b2"></div>
-                </div>
+                <svg class="ch-scene ch-scene-arcade" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="arc-body" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stop-color="#4A2A12"/><stop offset="1" stop-color="#1E0F04"/>
+                        </linearGradient>
+                        <linearGradient id="arc-side" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0" stop-color="#2A1608"/><stop offset="1" stop-color="#120902"/>
+                        </linearGradient>
+                        <linearGradient id="arc-marquee" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stop-color="#FFD68A"/><stop offset="1" stop-color="#FF7A2D"/>
+                        </linearGradient>
+                        <linearGradient id="arc-screen" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stop-color="#12273F"/><stop offset="1" stop-color="#050C18"/>
+                        </linearGradient>
+                        <radialGradient id="arc-ball" cx="0.35" cy="0.3" r="0.8">
+                            <stop offset="0" stop-color="#FF9468"/><stop offset="1" stop-color="#B82A12"/>
+                        </radialGradient>
+                        <filter id="arc-shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4"/></filter>
+                    </defs>
+                    <ellipse cx="99" cy="181" rx="54" ry="8" fill="#160B02" opacity="0.3" filter="url(#arc-shadow)"/>
+                    <path d="M137 38 L150 46 L150 166 L137 174 Z" fill="url(#arc-side)"/>
+                    <rect x="56" y="32" width="82" height="142" rx="11" fill="url(#arc-body)"/>
+                    <rect x="60" y="42" width="5" height="122" rx="2.5" fill="#FFFFFF" opacity="0.08"/>
+                    <rect x="51" y="21" width="92" height="22" rx="6" fill="url(#arc-marquee)"/>
+                    <rect x="51" y="21" width="92" height="8" rx="6" fill="#FFFFFF" opacity="0.28"/>
+                    <text x="97" y="36" text-anchor="middle" font-family="'JetBrains Mono',monospace" font-size="9" font-weight="700" letter-spacing="2.5" fill="#6B2E08">ARCADE</text>
+                    <rect x="61" y="49" width="72" height="50" rx="7" fill="#090502"/>
+                    <rect x="66" y="54" width="62" height="40" rx="4" fill="url(#arc-screen)"/>
+                    <g>
+                        <rect x="74" y="60" width="7" height="6" rx="1" fill="#43E0C8"/>
+                        <rect x="93" y="60" width="7" height="6" rx="1" fill="#FF7AB0"/>
+                        <rect x="112" y="60" width="7" height="6" rx="1" fill="#43E0C8"/>
+                        <rect x="83" y="69" width="7" height="6" rx="1" fill="#FF7AB0"/>
+                        <rect x="102" y="69" width="7" height="6" rx="1" fill="#43E0C8"/>
+                    </g>
+                    <path d="M97 92 l-6 0 3 -7 3 7 z" fill="#FFE066"/>
+                    <rect x="96" y="80" width="2" height="6" fill="#FFFFFF" opacity="0.85"/>
+                    <path d="M66 54 H128 V62 Q97 71 66 62 Z" fill="#FFFFFF" opacity="0.06"/>
+                    <path d="M56 103 H138 L132 121 H62 Z" fill="#39220F"/>
+                    <rect x="56" y="99" width="82" height="6" rx="2" fill="#5C391C"/>
+                    <ellipse cx="81" cy="116" rx="10" ry="4" fill="#150B02"/>
+                    <rect x="79" y="103" width="4" height="11" rx="2" fill="#241204"/>
+                    <circle cx="81" cy="102" r="7" fill="url(#arc-ball)"/>
+                    <circle cx="78.5" cy="99.5" r="2" fill="#FFFFFF" opacity="0.6"/>
+                    <circle cx="108" cy="115" r="5" fill="#F2C235"/><circle cx="106.5" cy="113.5" r="1.6" fill="#FFFFFF" opacity="0.65"/>
+                    <circle cx="122" cy="115" r="5" fill="#3FC9BC"/><circle cx="120.5" cy="113.5" r="1.6" fill="#FFFFFF" opacity="0.65"/>
+                    <rect x="62" y="125" width="70" height="45" rx="4" fill="#241204"/>
+                    <rect x="68" y="131" width="58" height="3" rx="1.5" fill="#3A2210"/>
+                    <rect x="90" y="139" width="14" height="4" rx="1" fill="#090502"/>
+                    <circle cx="97" cy="157" r="6" fill="#090502" opacity="0.6"/>
+                </svg>
                 <div class="ch-stat-pill"></div>
                 <div class="ch-head">
                     <span class="ch-eyebrow">Eleven cabinets, one quarter</span>
@@ -149,15 +193,50 @@
             <!-- Kids -->
             <button class="ch-card cat-kids light" data-cat="kids" type="button">
                 <div class="ch-art ch-art-kids"></div>
-                <div class="ch-rainbow">
-                    <div class="band b1"></div>
-                    <div class="band b2"></div>
-                    <div class="band b3"></div>
-                </div>
-                <div class="ch-sun"></div>
-                <div class="ch-balloon b1"></div>
-                <div class="ch-balloon b2"></div>
-                <div class="ch-balloon b3"></div>
+                <svg class="ch-scene ch-scene-kids" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+                    <defs>
+                        <radialGradient id="kid-sun" cx="0.4" cy="0.36" r="0.72">
+                            <stop offset="0" stop-color="#FFEFB0"/><stop offset="1" stop-color="#FF9F3D"/>
+                        </radialGradient>
+                        <radialGradient id="kid-balloon" cx="0.34" cy="0.28" r="0.85">
+                            <stop offset="0" stop-color="#FFA7BC"/><stop offset="1" stop-color="#EE4D7A"/>
+                        </radialGradient>
+                        <filter id="kid-shadow" x="-50%" y="-50%" width="200%" height="200%"><feGaussianBlur stdDeviation="3"/></filter>
+                    </defs>
+                    <g>
+                        <circle cx="139" cy="58" r="30" fill="#FFD24D" opacity="0.16"/>
+                        <g stroke="#FFBE43" stroke-width="4" stroke-linecap="round">
+                            <line x1="139" y1="20" x2="139" y2="30"/>
+                            <line x1="167" y1="30" x2="160" y2="37"/>
+                            <line x1="177" y1="58" x2="167" y2="58"/>
+                            <line x1="167" y1="86" x2="160" y2="79"/>
+                            <line x1="111" y1="30" x2="118" y2="37"/>
+                        </g>
+                        <circle cx="139" cy="58" r="19" fill="url(#kid-sun)"/>
+                        <circle cx="132" cy="51" r="6" fill="#FFFFFF" opacity="0.5"/>
+                    </g>
+                    <g fill="none" stroke-width="7.5" stroke-linecap="round">
+                        <path d="M42 150 A58 58 0 0 1 158 150" stroke="#FF6F61"/>
+                        <path d="M49.5 150 A50.5 50.5 0 0 1 150.5 150" stroke="#FFAE4A"/>
+                        <path d="M57 150 A43 43 0 0 1 143 150" stroke="#FFD93D"/>
+                        <path d="M64.5 150 A35.5 35.5 0 0 1 135.5 150" stroke="#7BC97B"/>
+                        <path d="M72 150 A28 28 0 0 1 128 150" stroke="#6DB6FA"/>
+                    </g>
+                    <g>
+                        <ellipse cx="50" cy="158" rx="26" ry="13" fill="#9AA7C4" opacity="0.22" filter="url(#kid-shadow)"/>
+                        <g fill="#FFFFFF">
+                            <ellipse cx="46" cy="150" rx="16" ry="12"/><ellipse cx="58" cy="153" rx="13" ry="10"/><ellipse cx="35" cy="154" rx="11" ry="9"/><rect x="32" y="151" width="34" height="11" rx="5.5"/>
+                        </g>
+                        <ellipse cx="150" cy="158" rx="26" ry="13" fill="#9AA7C4" opacity="0.22" filter="url(#kid-shadow)"/>
+                        <g fill="#FFFFFF">
+                            <ellipse cx="154" cy="150" rx="16" ry="12"/><ellipse cx="142" cy="153" rx="13" ry="10"/><ellipse cx="165" cy="154" rx="11" ry="9"/><rect x="134" y="151" width="34" height="11" rx="5.5"/>
+                        </g>
+                    </g>
+                    <path d="M61 84 Q56 90 60 96" stroke="#D98AA4" stroke-width="1.5" fill="none"/>
+                    <ellipse cx="61" cy="64" rx="16" ry="19" fill="url(#kid-balloon)"/>
+                    <path d="M61 82 l-4 5 8 0 z" fill="#EE4D7A"/>
+                    <ellipse cx="55" cy="57" rx="4" ry="6" fill="#FFFFFF" opacity="0.5"/>
+                </svg>
                 <div class="ch-stat-pill"></div>
                 <div class="ch-head">
                     <span class="ch-eyebrow">✿ Bright &amp; playful</span>
@@ -180,15 +259,48 @@
             <!-- Strategy & Puzzles -->
             <button class="ch-card cat-puzzle light" data-cat="puzzle" type="button">
                 <div class="ch-art ch-art-puzzle"></div>
-                <div class="ch-puzzle-shapes">
-                    <div class="ch-tri"></div>
-                    <div class="ch-disc d2"></div>
-                    <div class="ch-disc d4"></div>
-                    <div class="ch-disc d1"></div>
-                    <div class="ch-disc d3"></div>
-                    <div class="ch-disc d5"></div>
-                </div>
-                <div class="ch-square"></div>
+                <svg class="ch-scene ch-scene-strategy" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+                    <defs>
+                        <linearGradient id="str-ivory" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stop-color="#FCF6E6"/><stop offset="1" stop-color="#DBC9A2"/>
+                        </linearGradient>
+                        <linearGradient id="str-shade" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0" stop-color="#7A6840" stop-opacity="0"/><stop offset="1" stop-color="#6B5733" stop-opacity="0.55"/>
+                        </linearGradient>
+                        <linearGradient id="str-dark" x1="0" y1="0" x2="0" y2="1">
+                            <stop offset="0" stop-color="#3C4E43"/><stop offset="1" stop-color="#16201A"/>
+                        </linearGradient>
+                        <linearGradient id="str-darkshade" x1="0" y1="0" x2="1" y2="0">
+                            <stop offset="0" stop-color="#000000" stop-opacity="0"/><stop offset="1" stop-color="#000000" stop-opacity="0.4"/>
+                        </linearGradient>
+                        <filter id="str-shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="3.5"/></filter>
+                    </defs>
+                    <g opacity="0.9">
+                        <polygon points="56,140 144,140 152,172 48,172" fill="#214A37"/>
+                        <polygon points="56,140 78,140 68,172 40,172" fill="#EAE0C6" opacity="0.82"/>
+                        <polygon points="100,140 122,140 124,172 96,172" fill="#EAE0C6" opacity="0.82"/>
+                        <polygon points="56,140 144,140 144,143 56,143" fill="#FFFFFF" opacity="0.12"/>
+                    </g>
+                    <ellipse cx="82" cy="151" rx="25" ry="6" fill="#0F2018" opacity="0.4" filter="url(#str-shadow)"/>
+                    <ellipse cx="128" cy="150" rx="18" ry="5" fill="#0F2018" opacity="0.4" filter="url(#str-shadow)"/>
+                    <g>
+                        <path id="str-king" d="M82,56 L95,58 L93,66 L97,68 L99,74 Q92,77 89,79 C99,90 102,96 101,108 C100,120 90,124 88,134 Q88,145 104,148 L104,151 L82,151 Z" fill="url(#str-ivory)"/>
+                        <use href="#str-king" transform="translate(164,0) scale(-1,1)"/>
+                        <path d="M82,56 L95,58 L93,66 L97,68 L99,74 Q92,77 89,79 C99,90 102,96 101,108 C100,120 90,124 88,134 Q88,145 104,148 L104,151 L82,151 Z" fill="url(#str-shade)"/>
+                        <circle cx="82" cy="50" r="5.5" fill="url(#str-ivory)"/>
+                        <rect x="80" y="36" width="4" height="15" rx="1.5" fill="url(#str-ivory)"/>
+                        <rect x="75" y="41" width="14" height="4" rx="1.5" fill="url(#str-ivory)"/>
+                        <ellipse cx="76" cy="100" rx="3.5" ry="14" fill="#FFFFFF" opacity="0.3"/>
+                    </g>
+                    <g>
+                        <path id="str-pawn" d="M128,108 Q139,110 137,116 C136,124 129,126 130,132 Q130,142 142,146 L142,150 L128,150 Z" fill="url(#str-dark)"/>
+                        <use href="#str-pawn" transform="translate(256,0) scale(-1,1)"/>
+                        <path d="M128,108 Q139,110 137,116 C136,124 129,126 130,132 Q130,142 142,146 L142,150 L128,150 Z" fill="url(#str-darkshade)"/>
+                        <ellipse cx="128" cy="108" rx="11" ry="3" fill="url(#str-dark)"/>
+                        <circle cx="128" cy="98" r="10" fill="url(#str-dark)"/>
+                        <circle cx="124" cy="94" r="3" fill="#FFFFFF" opacity="0.22"/>
+                    </g>
+                </svg>
                 <div class="ch-stat-pill"></div>
                 <div class="ch-head">
                     <span class="ch-eyebrow">Ten tables, infinite rematches</span>
@@ -211,12 +323,39 @@
             <!-- Casino -->
             <button class="ch-card cat-casino dark" data-cat="casino" type="button">
                 <div class="ch-art ch-art-casino"></div>
-                <div class="ch-chips">
-                    <div class="ch-cchip cc1"><div class="v">$5</div></div>
-                    <div class="ch-cchip cc2"><div class="v">$25</div></div>
-                    <div class="ch-cchip cc3"><div class="v">$100</div></div>
-                    <div class="ch-cchip cc4"><div class="v">$500</div></div>
-                </div>
+                <svg class="ch-scene ch-scene-casino" viewBox="0 0 200 200" fill="none" aria-hidden="true">
+                    <defs>
+                        <filter id="cas-shadow" x="-30%" y="-30%" width="160%" height="160%"><feGaussianBlur stdDeviation="4"/></filter>
+                    </defs>
+                    <g transform="rotate(-4 112 84)">
+                        <rect x="90" y="53" width="44" height="62" rx="6" fill="#FBF7EE" stroke="#D8CDB5" stroke-width="1"/>
+                        <text x="96" y="71" font-family="'Bricolage Grotesque',sans-serif" font-size="14" font-weight="700" fill="#C0392B">K</text>
+                        <text x="97" y="83" font-family="Georgia,serif" font-size="11" fill="#C0392B">♥</text>
+                        <text x="112" y="93" text-anchor="middle" font-family="Georgia,serif" font-size="28" fill="#C0392B">♥</text>
+                    </g>
+                    <g transform="rotate(-19 90 91)">
+                        <rect x="68" y="60" width="44" height="62" rx="6" fill="#FFFFFF" stroke="#D8CDB5" stroke-width="1"/>
+                        <text x="74" y="78" font-family="'Bricolage Grotesque',sans-serif" font-size="14" font-weight="700" fill="#1A1612">A</text>
+                        <text x="75" y="90" font-family="Georgia,serif" font-size="11" fill="#1A1612">♠</text>
+                        <text x="90" y="101" text-anchor="middle" font-family="Georgia,serif" font-size="28" fill="#1A1612">♠</text>
+                    </g>
+                    <ellipse cx="124" cy="145" rx="50" ry="9" fill="#04100A" opacity="0.5" filter="url(#cas-shadow)"/>
+                    <rect x="122" y="130" width="40" height="7" rx="3" fill="#1E3557"/><ellipse cx="142" cy="130" rx="20" ry="6" fill="#2C4A7A"/>
+                    <rect x="122" y="123" width="40" height="7" rx="3" fill="#8E2A20"/><ellipse cx="142" cy="123" rx="20" ry="6" fill="#C0392B"/>
+                    <rect x="122" y="116" width="40" height="7" rx="3" fill="#9A7A33"/><ellipse cx="142" cy="116" rx="20" ry="6" fill="#C8A14A"/>
+                    <rect x="122" y="109" width="40" height="7" rx="3" fill="#1E3557"/><ellipse cx="142" cy="109" rx="20" ry="6" fill="#2C4A7A"/>
+                    <ellipse cx="142" cy="109" rx="15" ry="4.4" fill="none" stroke="#FFFFFF" stroke-width="1.4" stroke-dasharray="3 3" opacity="0.65"/>
+                    <ellipse cx="142" cy="109" rx="8" ry="2.4" fill="#FFFFFF" opacity="0.16"/>
+                    <ellipse cx="138" cy="107" rx="6" ry="1.6" fill="#FFFFFF" opacity="0.2"/>
+                    <g transform="rotate(-12 107 131)">
+                        <circle cx="107" cy="131" r="18.5" fill="#C0392B"/>
+                        <circle cx="107" cy="131" r="18.5" fill="none" stroke="#8E2A20" stroke-width="1.5"/>
+                        <circle cx="107" cy="131" r="15" fill="none" stroke="#FFFFFF" stroke-width="4.5" stroke-dasharray="5.5 8.5" opacity="0.9"/>
+                        <circle cx="107" cy="131" r="9.5" fill="none" stroke="#FFFFFF" stroke-width="1.4" stroke-dasharray="2.5 2.5" opacity="0.7"/>
+                        <circle cx="107" cy="131" r="6" fill="#E0533F"/>
+                        <ellipse cx="102" cy="125" rx="4.5" ry="3" fill="#FFFFFF" opacity="0.28"/>
+                    </g>
+                </svg>
                 <div class="ch-stat-pill"></div>
                 <div class="ch-head">
                     <span class="ch-eyebrow">Eight tables, open 24/7</span>
