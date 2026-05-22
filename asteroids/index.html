@@ -112,13 +112,18 @@
     let sfxMuted = false;
 
     function ensureAudioCtx() {
+        if (sfxMuted) return null;
         if (!audioCtx) audioCtx = new AudioCtx();
-        if (!sfxMuted && audioCtx.state === 'suspended') audioCtx.resume();
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        // Never hand back a non-running context: oscillators scheduled on a
+        // suspended clock never reach their stop time, so they pile up and
+        // eventually crash the tab. Skip the sound until the ctx is running.
+        if (audioCtx.state !== 'running') return null;
         return audioCtx;
     }
 
     function playShoot() {
-        const ctx = ensureAudioCtx();
+        const ctx = ensureAudioCtx(); if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -133,7 +138,7 @@
     }
 
     function playExplosion(size) {
-        const ctx = ensureAudioCtx();
+        const ctx = ensureAudioCtx(); if (!ctx) return;
         const duration = size === 'large' ? 0.4 : size === 'medium' ? 0.25 : 0.15;
         const freq = size === 'large' ? 80 : size === 'medium' ? 120 : 200;
         for (let i = 0; i < 3; i++) {
@@ -152,7 +157,7 @@
     }
 
     function playThrust() {
-        const ctx = ensureAudioCtx();
+        const ctx = ensureAudioCtx(); if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -166,7 +171,7 @@
     }
 
     function playDeath() {
-        const ctx = ensureAudioCtx();
+        const ctx = ensureAudioCtx(); if (!ctx) return;
         for (let i = 0; i < 5; i++) {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -184,7 +189,7 @@
     }
 
     function playExtraLife() {
-        const ctx = ensureAudioCtx();
+        const ctx = ensureAudioCtx(); if (!ctx) return;
         [523, 659, 784].forEach((f, i) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -201,7 +206,7 @@
     }
 
     function playNewWave() {
-        const ctx = ensureAudioCtx();
+        const ctx = ensureAudioCtx(); if (!ctx) return;
         [220, 330, 440, 550, 660].forEach((f, i) => {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -220,7 +225,7 @@
     let ufoHumOscillators = [];
     function startUFOHum() {
         stopUFOHum();
-        const ctx = ensureAudioCtx();
+        const ctx = ensureAudioCtx(); if (!ctx) return;
         const gain = ctx.createGain();
         gain.connect(ctx.destination);
         gain.gain.setValueAtTime(0.06, ctx.currentTime);
@@ -243,7 +248,7 @@
     }
 
     function playUFOShoot() {
-        const ctx = ensureAudioCtx();
+        const ctx = ensureAudioCtx(); if (!ctx) return;
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
         osc.connect(gain);
@@ -258,7 +263,7 @@
     }
 
     function playHyperspace() {
-        const ctx = ensureAudioCtx();
+        const ctx = ensureAudioCtx(); if (!ctx) return;
         for (let i = 0; i < 5; i++) {
             const osc = ctx.createOscillator();
             const gain = ctx.createGain();
@@ -1290,7 +1295,7 @@
             const scene = game.scene.getScene('GameScene');
             if (scene && scene.restartGame) scene.restartGame();
         },
-        mute: () => { sfxMuted = !sfxMuted; if (audioCtx) { sfxMuted ? audioCtx.suspend() : audioCtx.resume(); } game.sound.mute = sfxMuted; }
+        mute: () => { sfxMuted = !sfxMuted; game.sound.mute = sfxMuted; }
     };
 
     // Restart button

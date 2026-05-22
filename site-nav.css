@@ -22,7 +22,7 @@
 /* Category overrides — set data-category on <body> */
 [data-category="arcade"]   { --cat-accent:#C77A2A; --cat-tint:#FBEFD8; --cat-glow:rgba(199,122,42,0.35); }
 [data-category="kids"]     { --cat-accent:#2F9E73; --cat-tint:#E2F4EC; --cat-glow:rgba(47,158,115,0.35); }
-[data-category="strategy"] { --cat-accent:#3A4D6B; --cat-tint:#E5EAF3; --cat-glow:rgba(58,77,107,0.30); }
+[data-category="strategy"] { --cat-accent:#1F6B43; --cat-tint:#DCEFE2; --cat-glow:rgba(31,107,67,0.30); }
 [data-category="casino"]   { --cat-accent:#B83A4A; --cat-tint:#F7DEE0; --cat-glow:rgba(184,58,74,0.35); }
 [data-category="profile"]  { --cat-accent:#B83A4A; --cat-tint:#F7DEE0; --cat-glow:rgba(184,58,74,0.35); }
 
