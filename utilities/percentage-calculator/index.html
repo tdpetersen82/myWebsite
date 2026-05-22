@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>Percentage Calculator — Percent Of, Change &amp; Ratio | Limestone Games</title>
+    <meta name="description" content="Work out percentages three ways: what is X% of Y, X is what percent of Y, and the percent change from one number to another. Live results, clean formatting. Free — runs entirely in your browser.">
+    <meta name="keywords" content="percentage calculator, percent of a number, percent change calculator, percentage increase, percentage decrease, what percent is x of y, percent difference, ratio to percent">
+    <meta property="og:title" content="Percentage Calculator — Percent Of, Change &amp; Ratio">
+    <meta property="og:description" content="Three live percentage calculators: percent of a number, X is what percent of Y, and percent change with increase/decrease labels.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/utilities/percentage-calculator/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Percentage Calculator — Percent Of, Change &amp; Ratio">
+    <meta name="twitter:description" content="Three live percentage calculators: percent of a number, X is what percent of Y, and percent change.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/utilities/percentage-calculator/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://limestonegames.com/utilities/"},{"@type":"ListItem","position":3,"name":"Percentage Calculator","item":"https://limestonegames.com/utilities/percentage-calculator/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Percentage Calculator","url":"https://limestonegames.com/utilities/percentage-calculator/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Calculate the percent of a number, what percent one number is of another, and the percent change between two numbers."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../category.css?v=20260521a">
+    <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../../utility.css?v=20260522a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      .pc-calc + .pc-calc { margin-top: 16px; padding-top: 20px; border-top: 1px solid var(--cat-line); }
+      .pc-calc h2 {
+        font-family: var(--u-mono);
+        font-size: 12px; font-weight: 500; letter-spacing: 0.12em; text-transform: uppercase;
+        color: var(--cat-ink-soft); margin-bottom: 14px;
+      }
+      .pc-inrow { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; align-items: end; }
+      .pc-inrow .u-field { min-width: 0; }
+      .pc-out {
+        background: var(--cat-bg); border: 1px solid var(--cat-line);
+        border-radius: 18px; padding: 18px 22px; margin-top: 16px; min-width: 0;
+      }
+      .pc-out .u-result { font-size: 34px; }
+      .pc-note {
+        font-family: var(--u-mono); font-size: 11.5px; color: var(--cat-ink-soft);
+        margin-top: 9px; line-height: 1.5; min-height: 1em;
+      }
+      .pc-note.warn { color: #A23A35; }
+      @media (max-width: 760px) {
+        .pc-inrow { grid-template-columns: 1fr; }
+        .pc-out .u-result { font-size: 28px; }
+      }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/" class="active">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/utilities/">Utilities</a><span class="sep">/</span>
+            <span class="cur">Percentage Calculator</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Math · Percentages</span>
+            <h1>Percentage <em>Calculator</em></h1>
+            <p class="u-lede">Three percentage calculators in one place: find a percent of a number, work out what percent one number is of another, and measure the percent change between two values. Every answer updates as you type.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="pc-calc">
+                <h2>What is X% of Y?</h2>
+                <div class="pc-inrow">
+                    <div class="u-field">
+                        <label class="u-label" for="a-x">Percent (X)</label>
+                        <input id="a-x" class="u-input" type="text" inputmode="decimal" autocomplete="off" placeholder="15" value="15">
+                    </div>
+                    <div class="u-field">
+                        <label class="u-label" for="a-y">Of value (Y)</label>
+                        <input id="a-y" class="u-input" type="text" inputmode="decimal" autocomplete="off" placeholder="200" value="200">
+                    </div>
+                </div>
+                <div class="pc-out">
+                    <div class="u-result"><span id="a-res">—</span></div>
+                    <div class="pc-note" id="a-note"></div>
+                </div>
+            </div>
+
+            <div class="pc-calc">
+                <h2>X is what percent of Y?</h2>
+                <div class="pc-inrow">
+                    <div class="u-field">
+                        <label class="u-label" for="b-x">Value (X)</label>
+                        <input id="b-x" class="u-input" type="text" inputmode="decimal" autocomplete="off" placeholder="30" value="30">
+                    </div>
+                    <div class="u-field">
+                        <label class="u-label" for="b-y">Of total (Y)</label>
+                        <input id="b-y" class="u-input" type="text" inputmode="decimal" autocomplete="off" placeholder="240" value="240">
+                    </div>
+                </div>
+                <div class="pc-out">
+                    <div class="u-result"><span id="b-res">—</span></div>
+                    <div class="pc-note" id="b-note"></div>
+                </div>
+            </div>
+
+            <div class="pc-calc">
+                <h2>Percent change from X to Y</h2>
+                <div class="pc-inrow">
+                    <div class="u-field">
+                        <label class="u-label" for="c-x">From (X)</label>
+                        <input id="c-x" class="u-input" type="text" inputmode="decimal" autocomplete="off" placeholder="120" value="120">
+                    </div>
+                    <div class="u-field">
+                        <label class="u-label" for="c-y">To (Y)</label>
+                        <input id="c-y" class="u-input" type="text" inputmode="decimal" autocomplete="off" placeholder="150" value="150">
+                    </div>
+                </div>
+                <div class="pc-out">
+                    <div class="u-result"><span id="c-res">—</span> <small id="c-dir"></small></div>
+                    <div class="pc-note" id="c-note"></div>
+                </div>
+            </div>
+        </section>
+
+        <section class="u-about">
+            <h2>About this percentage calculator</h2>
+            <p>One page for the three percentage questions that come up most often. Need a tip, a discount, or a slice of a total? Use <b>X% of Y</b>. Scoring a test or working out a share? Use <b>X is what percent of Y</b>. Comparing a before and after — a price rise, a weight loss, a stat that moved? Use <b>percent change</b>. Each calculator is independent, so you can keep all three filled in at once.</p>
+
+            <h3>How to use it</h3>
+            <ul>
+                <li><b>X% of Y</b> multiplies the two together: <code>X ÷ 100 × Y</code>. For 15% of 200 that is 30.</li>
+                <li><b>X is what percent of Y</b> divides and scales: <code>X ÷ Y × 100</code>. 30 out of 240 is 12.5%.</li>
+                <li><b>Percent change</b> compares against the starting value: <code>(Y − X) ÷ X × 100</code>, labelled as an increase or decrease.</li>
+                <li>Type into any field and the result recalculates instantly — there is no calculate button to press.</li>
+            </ul>
+
+            <h3>Is my input private?</h3>
+            <p>Yes. Every calculation runs in your browser with JavaScript. Nothing you type is sent to a server, saved, or shared — close the tab and it is gone.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>What happens if I divide by zero?</summary>
+                    <p>When the value you divide by is zero, the percentage is undefined, so the result shows a dash and a short note rather than a wrong number. Percent change from zero is undefined for the same reason — there is no baseline to compare against.</p>
+                </details>
+                <details>
+                    <summary>How are the results rounded?</summary>
+                    <p>Answers are shown to up to four decimal places and trimmed of trailing zeros, with thousands separators for large numbers. The full-precision value is used internally, so chaining results stays accurate.</p>
+                </details>
+                <details>
+                    <summary>What is the difference between percent change and percentage points?</summary>
+                    <p>This tool measures relative change. Going from 10% to 15% is a 50% increase here (5 is half of 10), whereas the gap of "5 percentage points" is an absolute difference. Use percent change for growth and decline; use percentage points when comparing two rates directly.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/utilities/">All utilities</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+
+        // Parse a user-entered number: trim, strip thousands commas, allow a leading + and %.
+        function num(v) {
+            if (v == null) return NaN;
+            const cleaned = String(v).trim().replace(/,/g, '').replace(/%$/, '').trim();
+            if (cleaned === '' || cleaned === '+' || cleaned === '-' || cleaned === '.') return NaN;
+            const n = Number(cleaned);
+            return isFinite(n) ? n : NaN;
+        }
+
+        // Format with up to 4 decimals, trimming trailing zeros, with thousands separators.
+        function fmt(n) {
+            if (!isFinite(n)) return '—';
+            return n.toLocaleString(undefined, { maximumFractionDigits: 4 });
+        }
+
+        function setNote(el, text, warn) {
+            el.textContent = text || '';
+            el.classList.toggle('warn', !!warn);
+        }
+
+        // A) What is X% of Y?
+        function calcA() {
+            const x = num($('a-x').value), y = num($('a-y').value);
+            const res = $('a-res'), note = $('a-note');
+            if (isNaN(x) || isNaN(y)) {
+                res.textContent = '—';
+                setNote(note, 'Enter a percent and a value.', false);
+                return;
+            }
+            res.textContent = fmt(x / 100 * y);
+            setNote(note, fmt(x) + '% of ' + fmt(y) + ' = ' + fmt(x / 100 * y), false);
+        }
+
+        // B) X is what percent of Y?
+        function calcB() {
+            const x = num($('b-x').value), y = num($('b-y').value);
+            const res = $('b-res'), note = $('b-note');
+            if (isNaN(x) || isNaN(y)) {
+                res.textContent = '—';
+                setNote(note, 'Enter both values.', false);
+                return;
+            }
+            if (y === 0) {
+                res.textContent = '—';
+                setNote(note, 'Can’t divide by zero — the total (Y) must not be 0.', true);
+                return;
+            }
+            res.textContent = fmt(x / y * 100) + '%';
+            setNote(note, fmt(x) + ' is ' + fmt(x / y * 100) + '% of ' + fmt(y), false);
+        }
+
+        // C) Percent change from X to Y
+        function calcC() {
+            const x = num($('c-x').value), y = num($('c-y').value);
+            const res = $('c-res'), dir = $('c-dir'), note = $('c-note');
+            if (isNaN(x) || isNaN(y)) {
+                res.textContent = '—'; dir.textContent = '';
+                setNote(note, 'Enter a start and an end value.', false);
+                return;
+            }
+            if (x === 0) {
+                res.textContent = '—'; dir.textContent = '';
+                setNote(note, 'Percent change from 0 is undefined — there’s no baseline.', true);
+                return;
+            }
+            const change = (y - x) / x * 100;
+            res.textContent = fmt(Math.abs(change)) + '%';
+            if (change > 0) { dir.textContent = 'increase'; }
+            else if (change < 0) { dir.textContent = 'decrease'; }
+            else { dir.textContent = 'no change'; }
+            const verb = change > 0 ? 'up' : change < 0 ? 'down' : 'unchanged';
+            setNote(note, fmt(x) + ' → ' + fmt(y) + ' (' + verb + (change === 0 ? '' : ' ' + fmt(Math.abs(y - x))) + ')', false);
+        }
+
+        function wire(ids, fn) {
+            ids.forEach((id) => $(id).addEventListener('input', fn));
+            fn();
+        }
+
+        wire(['a-x', 'a-y'], calcA);
+        wire(['b-x', 'b-y'], calcB);
+        wire(['c-x', 'c-y'], calcC);
+    })();
+    </script>
+</body>
+</html>

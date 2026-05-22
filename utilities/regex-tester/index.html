@@ -1,0 +1,362 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>Regex Tester — Test &amp; Debug Regular Expressions | Limestone Games</title>
+    <meta name="description" content="Test regular expressions live against your own text. Toggle flags, highlight every match, and inspect capture groups with instant syntax-error messages. Free, no sign-up — runs entirely in your browser.">
+    <meta name="keywords" content="regex tester, regular expression tester, regex online, test regex, regex match, javascript regex, regex debugger, capture groups">
+    <meta property="og:title" content="Regex Tester — Test &amp; Debug Regular Expressions">
+    <meta property="og:description" content="Test regular expressions live with flag toggles, match highlighting, and capture-group inspection. Runs entirely in your browser.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/utilities/regex-tester/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Regex Tester — Test &amp; Debug Regular Expressions">
+    <meta name="twitter:description" content="Test regular expressions live with flag toggles, match highlighting, and capture-group inspection. Runs entirely in your browser.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/utilities/regex-tester/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://limestonegames.com/utilities/"},{"@type":"ListItem","position":3,"name":"Regex Tester","item":"https://limestonegames.com/utilities/regex-tester/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Regex Tester","url":"https://limestonegames.com/utilities/regex-tester/","applicationCategory":"DeveloperApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Test and debug regular expressions against your own text with flag toggles, match highlighting, and capture groups, entirely in the browser."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../category.css?v=20260521a">
+    <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../../utility.css?v=20260522a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      .rx-pat { display: flex; align-items: stretch; gap: 0; }
+      .rx-pat .delim {
+        font-family: var(--u-mono); font-size: 17px; color: var(--cat-ink-soft);
+        display: flex; align-items: center; padding: 0 12px;
+        background: var(--cat-bg); border: 1px solid var(--cat-line);
+      }
+      .rx-pat .delim.l { border-radius: 12px 0 0 12px; border-right: 0; }
+      .rx-pat .delim.r { border-radius: 0 12px 12px 0; border-left: 0; }
+      .rx-pat .u-input { border-radius: 0; min-width: 0; }
+      .rx-flags { display: flex; gap: 6px; flex-wrap: wrap; margin-top: 14px; }
+      .rx-flags .u-tab { font-size: 13px; min-width: 38px; text-align: center; }
+      .rx-flags .u-tab .fl { font-weight: 600; }
+      .rx-flags .u-tab .fd { opacity: 0.7; margin-left: 6px; font-size: 11px; }
+      .rx-out {
+        background: var(--u-code-bg); color: #E7F2F0;
+        font-family: var(--u-mono); font-size: 13.5px; line-height: 1.65;
+        border-radius: 14px; padding: 18px;
+        overflow: auto; max-height: 360px; white-space: pre-wrap; word-break: break-word;
+        margin: 0; min-width: 0;
+      }
+      .rx-out:empty::before { content: 'Matches are highlighted here once the pattern matches.'; color: #5E7572; font-style: italic; }
+      .rx-out mark {
+        background: #E7C886; color: #1B1410; border-radius: 3px;
+        padding: 0 1px; box-shadow: 0 0 0 1px rgba(231, 200, 134, 0.4);
+      }
+      .rx-out mark.alt { background: #7FD8C9; }
+      .rx-groups { margin-top: 18px; }
+      .rx-mhead {
+        font-family: var(--u-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase;
+        color: var(--cat-eyebrow-color); margin: 16px 0 4px; padding-top: 14px;
+        border-top: 1px solid var(--cat-line);
+      }
+      .rx-groups .u-kv:first-of-type, .rx-groups .rx-mhead:first-child { padding-top: 0; border-top: 0; }
+      .rx-kvv-empty { color: var(--cat-ink-soft); font-style: italic; }
+      .rx-cap { color: var(--cat-ink-soft); font-size: 12px; }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/" class="active">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/utilities/">Utilities</a><span class="sep">/</span>
+            <span class="cur">Regex Tester</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Developer · Regex</span>
+            <h1>Regex <em>Tester</em></h1>
+            <p class="u-lede">Write a regular expression, flip the flags you need, and see every match highlighted in your test text in real time. Capture groups are broken out match by match, and any syntax error is reported the moment you type it.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="u-panel-head">
+                <h2>Pattern</h2>
+                <div class="u-toolbar">
+                    <button class="u-btn ghost" id="btn-sample" type="button">Sample</button>
+                    <button class="u-btn ghost" id="btn-clear" type="button">Clear</button>
+                </div>
+            </div>
+
+            <div class="rx-pat">
+                <span class="delim l">/</span>
+                <input id="pat" class="u-input code" type="text" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="e.g. \b\w+@\w+\.\w+\b">
+                <span class="delim r" id="delim-r">/</span>
+            </div>
+
+            <div class="rx-flags" id="flags" role="group" aria-label="Regex flags"></div>
+
+            <label class="u-label" for="text" style="margin-top:20px">Test string</label>
+            <textarea id="text" class="u-textarea" spellcheck="false" autocomplete="off" placeholder="Paste the text you want to search…"></textarea>
+
+            <div class="u-msg" id="msg" role="status"></div>
+
+            <div class="u-stats" style="margin-top:18px;grid-template-columns:repeat(3,1fr)">
+                <div class="u-stat"><div class="n accent" id="st-count">0</div><div class="l">Matches</div></div>
+                <div class="u-stat"><div class="n" id="st-groups">0</div><div class="l">Capture groups</div></div>
+                <div class="u-stat"><div class="n" id="st-flags">—</div><div class="l">Active flags</div></div>
+            </div>
+        </section>
+
+        <section class="u-panel">
+            <div class="u-panel-head"><h2>Highlighted result</h2></div>
+            <pre id="out" class="rx-out" aria-live="polite"></pre>
+            <div class="rx-groups" id="groups"></div>
+        </section>
+
+        <section class="u-about">
+            <h2>About this regex tester</h2>
+            <p>A live playground for JavaScript regular expressions. Type a pattern, switch on the flags you need, and watch every match light up inside your own test text. For each match it lists the full match plus any capture groups, so you can confirm a pattern grabs exactly what you intend before dropping it into code. It uses the browser's native <code>RegExp</code> engine, so behaviour is identical to JavaScript in production.</p>
+
+            <h3>How to use it</h3>
+            <ul>
+                <li>Type your pattern between the slashes — no need to escape forward slashes.</li>
+                <li>Toggle flags: <code>g</code> global, <code>i</code> ignore case, <code>m</code> multiline, <code>s</code> dotall, <code>u</code> unicode, <code>y</code> sticky.</li>
+                <li>Paste your test string below; matches highlight instantly, alternating colours so adjacent matches stay readable.</li>
+                <li>Check the match list to verify each capture group, including named groups, resolves the way you expect.</li>
+            </ul>
+
+            <h3>Is my text private?</h3>
+            <p>Yes. The pattern and test text are evaluated by your browser's own regex engine in plain JavaScript. Nothing is uploaded or stored — it all stays on your device.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>Which regex syntax does this use?</summary>
+                    <p>JavaScript's <code>RegExp</code> flavour (ECMAScript). Most patterns are portable, but features like lookbehind, named groups, and Unicode property escapes follow JavaScript's rules, which can differ slightly from PCRE, Python, or Go.</p>
+                </details>
+                <details>
+                    <summary>Why do I need the global flag to see all matches?</summary>
+                    <p>Without <code>g</code>, a regex stops at the first match — so only one is highlighted. Turn on <code>g</code> to scan the entire string and highlight every occurrence.</p>
+                </details>
+                <details>
+                    <summary>Can a pattern hang the page?</summary>
+                    <p>The tester guards against zero-length matches that would otherwise loop forever, and it caps the displayed list at 200 matches. Extremely catastrophic backtracking on a huge string is still up to the engine, so test pathological patterns on shorter text first.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/utilities/">All utilities</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+        const pat = $('pat'), text = $('text'), out = $('out'), msg = $('msg'), groupsBox = $('groups');
+        const MAX = 200;
+        const FLAG_DEFS = [
+            { f: 'g', d: 'global' }, { f: 'i', d: 'ignore case' }, { f: 'm', d: 'multiline' },
+            { f: 's', d: 'dotall' }, { f: 'u', d: 'unicode' }, { f: 'y', d: 'sticky' }
+        ];
+        const active = new Set(['g']);
+
+        const SAMPLE = {
+            pat: '\\b[\\w.+-]+@[\\w-]+\\.[\\w.-]+\\b',
+            flags: ['g', 'i'],
+            text: 'Reach the team at hello@limestonegames.com or support@limestonegames.com.\n' +
+                  'Old addresses like info@example.co.uk and a.user+tag@mail.net still parse.\n' +
+                  'Not an email: just plain text, @handles, and prices like $4.99.'
+        };
+
+        function escapeHtml(s) {
+            return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+        }
+        function setMsg(type, t) { msg.className = 'u-msg show ' + type; msg.textContent = t; }
+        function clearMsg() { msg.className = 'u-msg'; msg.textContent = ''; }
+
+        function buildFlags() {
+            const box = $('flags');
+            FLAG_DEFS.forEach((def) => {
+                const b = document.createElement('button');
+                b.type = 'button';
+                b.className = 'u-tab' + (active.has(def.f) ? ' active' : '');
+                b.innerHTML = '<span class="fl">' + def.f + '</span><span class="fd">' + def.d + '</span>';
+                b.setAttribute('aria-pressed', active.has(def.f));
+                b.title = def.f + ' — ' + def.d;
+                b.addEventListener('click', () => {
+                    if (active.has(def.f)) active.delete(def.f); else active.add(def.f);
+                    b.classList.toggle('active');
+                    b.setAttribute('aria-pressed', active.has(def.f));
+                    run();
+                });
+                box.appendChild(b);
+            });
+        }
+
+        function flagStr() { return FLAG_DEFS.map((d) => d.f).filter((f) => active.has(f)).join(''); }
+
+        function reset() {
+            out.innerHTML = '';
+            groupsBox.innerHTML = '';
+            $('st-count').textContent = '0';
+            $('st-groups').textContent = '0';
+        }
+
+        function run() {
+            const flags = flagStr();
+            $('delim-r').textContent = '/' + flags;
+            $('st-flags').textContent = flags || '—';
+
+            const source = pat.value;
+            if (!source) { reset(); clearMsg(); return; }
+
+            let re;
+            try { re = new RegExp(source, flags); }
+            catch (e) { reset(); setMsg('err', 'Invalid pattern · ' + e.message); return; }
+            clearMsg();
+
+            const subject = text.value;
+            if (!subject) { reset(); return; }
+
+            const matches = [];
+            let truncated = false;
+            if (re.global || re.sticky) {
+                let m;
+                re.lastIndex = 0;
+                while ((m = re.exec(subject)) !== null) {
+                    matches.push(m);
+                    // Guard against infinite loops on zero-length matches.
+                    if (m.index === re.lastIndex) re.lastIndex++;
+                    if (matches.length >= MAX) { truncated = true; break; }
+                }
+            } else {
+                const m = re.exec(subject);
+                if (m) matches.push(m);
+            }
+
+            // Build the highlighted output from match index ranges.
+            let html = '', cursor = 0, alt = false;
+            matches.forEach((m) => {
+                const start = m.index, end = m.index + m[0].length;
+                html += escapeHtml(subject.slice(cursor, start));
+                const label = escapeHtml(m[0]) || '∅';
+                html += '<mark' + (alt ? ' class="alt"' : '') + '>' + label + '</mark>';
+                cursor = end;
+                alt = !alt;
+            });
+            html += escapeHtml(subject.slice(cursor));
+            out.innerHTML = html;
+
+            $('st-count').textContent = matches.length.toLocaleString() + (truncated ? '+' : '');
+            const groupCount = matches.reduce((mx, m) => Math.max(mx, m.length - 1), 0);
+            $('st-groups').textContent = groupCount;
+
+            // Per-match group breakdown.
+            groupsBox.innerHTML = '';
+            if (!matches.length) { setMsg('ok', 'No matches in the test string.'); return; }
+            if (truncated) setMsg('ok', 'Showing the first ' + MAX + ' matches.');
+
+            matches.forEach((m, i) => {
+                const head = document.createElement('div');
+                head.className = 'rx-mhead';
+                head.textContent = 'Match ' + (i + 1) + ' · index ' + m.index;
+                groupsBox.appendChild(head);
+
+                groupsBox.appendChild(kv('Full match', m[0]));
+                for (let g = 1; g < m.length; g++) {
+                    groupsBox.appendChild(kv('Group ' + g, m[g]));
+                }
+                if (m.groups) {
+                    Object.keys(m.groups).forEach((name) => {
+                        groupsBox.appendChild(kv('?<' + name + '>', m.groups[name], true));
+                    });
+                }
+            });
+        }
+
+        function kv(key, value, named) {
+            const row = document.createElement('div');
+            row.className = 'u-kv';
+            const k = document.createElement('span');
+            k.className = 'ku' + (named ? ' rx-cap' : '');
+            k.textContent = key;
+            const v = document.createElement('span');
+            v.className = 'kvv';
+            if (value === undefined) { v.classList.add('rx-kvv-empty'); v.textContent = 'undefined'; }
+            else if (value === '') { v.classList.add('rx-kvv-empty'); v.textContent = '(empty match)'; }
+            else v.textContent = value;
+            row.appendChild(k); row.appendChild(v);
+            return row;
+        }
+
+        pat.addEventListener('input', run);
+        text.addEventListener('input', run);
+        $('btn-clear').addEventListener('click', () => { pat.value = ''; text.value = ''; run(); pat.focus(); });
+        $('btn-sample').addEventListener('click', () => {
+            pat.value = SAMPLE.pat;
+            text.value = SAMPLE.text;
+            active.clear();
+            SAMPLE.flags.forEach((f) => active.add(f));
+            document.querySelectorAll('#flags .u-tab').forEach((b, i) => {
+                const on = active.has(FLAG_DEFS[i].f);
+                b.classList.toggle('active', on);
+                b.setAttribute('aria-pressed', on);
+            });
+            run();
+        });
+
+        buildFlags();
+        run();
+    })();
+    </script>
+</body>
+</html>

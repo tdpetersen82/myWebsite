@@ -1,0 +1,398 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>Color Converter — HEX, RGB &amp; HSL with Tints | Limestone Games</title>
+    <meta name="description" content="Convert colors between HEX, RGB, and HSL instantly. Edit any field or use the picker — the others update live, with copy buttons and a row of tints and shades. Free, runs entirely in your browser.">
+    <meta name="keywords" content="color converter, hex to rgb, rgb to hex, hex to hsl, hsl to rgb, color picker, hex code converter, rgb to hsl, tints and shades">
+    <meta property="og:title" content="Color Converter — HEX, RGB &amp; HSL with Tints">
+    <meta property="og:description" content="Convert colors between HEX, RGB, and HSL live, with a picker, copy buttons, and generated tints and shades.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/utilities/color-converter/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Color Converter — HEX, RGB &amp; HSL with Tints">
+    <meta name="twitter:description" content="Convert colors between HEX, RGB, and HSL live, with a picker, copy buttons, and generated tints and shades.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/utilities/color-converter/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://limestonegames.com/utilities/"},{"@type":"ListItem","position":3,"name":"Color Converter","item":"https://limestonegames.com/utilities/color-converter/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Color Converter","url":"https://limestonegames.com/utilities/color-converter/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Convert colors between HEX, RGB, and HSL with a live picker, copy buttons, and generated tints and shades."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../category.css?v=20260521a">
+    <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../../utility.css?v=20260522a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      .cc-top { display: grid; grid-template-columns: 200px 1fr; gap: 18px; align-items: stretch; }
+      .cc-top > * { min-width: 0; }
+      .cc-swatch {
+        border-radius: 18px; border: 1px solid var(--cat-line);
+        min-height: 168px; display: flex; align-items: flex-end;
+        padding: 14px 16px; transition: background-color 0.12s;
+      }
+      .cc-swatch .tag {
+        font-family: var(--u-mono); font-size: 12px; font-weight: 500;
+        padding: 4px 10px; border-radius: 999px; backdrop-filter: blur(2px);
+      }
+      .cc-pick { display: flex; align-items: center; gap: 12px; margin-bottom: 4px; }
+      .cc-pick input[type="color"] {
+        -webkit-appearance: none; appearance: none; border: none; background: none;
+        width: 52px; height: 52px; padding: 0; cursor: pointer;
+      }
+      .cc-pick input[type="color"]::-webkit-color-swatch-wrapper { padding: 0; }
+      .cc-pick input[type="color"]::-webkit-color-swatch { border: 1px solid var(--cat-line); border-radius: 12px; }
+      .cc-pick input[type="color"]::-moz-color-swatch { border: 1px solid var(--cat-line); border-radius: 12px; }
+      .cc-pick .cc-pick-l { font-family: var(--u-mono); font-size: 12px; color: var(--cat-ink-soft); line-height: 1.4; }
+      .cc-fields { display: grid; gap: 12px; }
+      .cc-row { display: grid; grid-template-columns: 64px 1fr auto; gap: 10px; align-items: center; }
+      .cc-row > * { min-width: 0; }
+      .cc-row .cc-name { font-family: var(--u-mono); font-size: 11px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--cat-ink-soft); }
+      .cc-row .u-input { font-family: var(--u-mono); font-size: 14px; }
+      .cc-row .u-input.bad { border-color: #D98A86; box-shadow: 0 0 0 3px rgba(217,138,134,0.18); }
+      .cc-copy { padding: 9px 14px; font-size: 12px; }
+      .cc-scale-wrap { margin-top: 22px; }
+      .cc-scale-wrap .cap {
+        font-family: var(--u-mono); font-size: 10.5px; letter-spacing: 0.12em;
+        text-transform: uppercase; color: var(--cat-ink-soft); margin-bottom: 10px;
+      }
+      .cc-scale { display: grid; grid-template-columns: repeat(11, 1fr); gap: 6px; }
+      .cc-sw {
+        aspect-ratio: 1 / 1; border-radius: 10px; border: 1px solid var(--cat-line);
+        cursor: pointer; position: relative; transition: transform 0.1s;
+      }
+      .cc-sw:hover { transform: translateY(-2px); }
+      .cc-sw.base { box-shadow: 0 0 0 2px var(--cat-ink); }
+      @media (max-width: 760px) {
+        .cc-top { grid-template-columns: 1fr; }
+        .cc-swatch { min-height: 120px; }
+        .cc-scale { grid-template-columns: repeat(11, 1fr); gap: 4px; }
+        .cc-row { grid-template-columns: 56px 1fr auto; }
+      }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/" class="active">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/utilities/">Utilities</a><span class="sep">/</span>
+            <span class="cur">Color Converter</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Design · Color</span>
+            <h1>Color <em>Converter</em></h1>
+            <p class="u-lede">Pick a color or type a HEX, RGB, or HSL value and the other formats update instantly. Copy any one with a click, and grab a ready-made row of tints and shades built from your color.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="cc-top">
+                <div class="cc-swatch" id="swatch">
+                    <span class="tag" id="swatch-tag">#147C7C</span>
+                </div>
+                <div>
+                    <div class="cc-pick">
+                        <input type="color" id="picker" value="#147c7c" aria-label="Color picker">
+                        <span class="cc-pick-l">Use the picker, or<br>edit any field below.</span>
+                    </div>
+                    <div class="cc-fields">
+                        <div class="cc-row">
+                            <span class="cc-name">HEX</span>
+                            <input id="hex" class="u-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="#147C7C">
+                            <button class="u-btn ghost cc-copy" type="button" data-copy="hex">Copy</button>
+                        </div>
+                        <div class="cc-row">
+                            <span class="cc-name">RGB</span>
+                            <input id="rgb" class="u-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="rgb(20, 124, 124)">
+                            <button class="u-btn ghost cc-copy" type="button" data-copy="rgb">Copy</button>
+                        </div>
+                        <div class="cc-row">
+                            <span class="cc-name">HSL</span>
+                            <input id="hsl" class="u-input" type="text" autocomplete="off" autocapitalize="off" spellcheck="false" value="hsl(180, 72%, 28%)">
+                            <button class="u-btn ghost cc-copy" type="button" data-copy="hsl">Copy</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="cc-scale-wrap">
+                <div class="cap">Tints &amp; shades — click any to load it</div>
+                <div class="cc-scale" id="scale"></div>
+            </div>
+        </section>
+
+        <section class="u-about">
+            <h2>About this color converter</h2>
+            <p>A quick bridge between the three color formats every front-end developer and designer uses: <b>HEX</b> (<code>#147C7C</code>), <b>RGB</b> (<code>rgb(20, 124, 124)</code>), and <b>HSL</b> (<code>hsl(180, 72%, 28%)</code>). Change any one and the rest follow, so you can paste a hex code from a mockup and read out the HSL you need for a CSS hover state, or nudge RGB channels and watch the swatch shift. The tint and shade strip gives you lighter and darker steps for hover, border, and background variants.</p>
+
+            <h3>How to use it</h3>
+            <ul>
+                <li>Open the native <b>picker</b> to choose visually, or type into any field.</li>
+                <li><b>HEX</b> accepts both <code>#abc</code> shorthand and full <code>#aabbcc</code>; output is always canonical 6-digit uppercase.</li>
+                <li><b>RGB</b> takes three values 0–255, with or without the <code>rgb(...)</code> wrapper.</li>
+                <li><b>HSL</b> takes hue 0–360 and saturation/lightness as percentages.</li>
+                <li>Click <b>Copy</b> on a format, or click any swatch in the tints and shades row to load it as the new base color.</li>
+            </ul>
+
+            <h3>Is my data private?</h3>
+            <p>Yes. All conversion happens in your browser with JavaScript. No colors, clipboard contents, or anything else are sent to a server or stored — the page makes no network requests at all.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>How does HEX relate to RGB?</summary>
+                    <p>They're the same thing written differently. Each pair of hex digits is one channel in base 16: <code>#147C7C</code> is red <code>0x14</code> = 20, green <code>0x7C</code> = 124, blue <code>0x7C</code> = 124. The converter just translates between base 16 and base 10.</p>
+                </details>
+                <details>
+                    <summary>Why does HSL sometimes show a different hue after a round trip?</summary>
+                    <p>RGB has 256 steps per channel, so converting to HSL and back rounds to the nearest representable color. For grays (zero saturation) the hue is arbitrary and is reported as 0. The visible color stays the same; only the stated hue may shift by a degree.</p>
+                </details>
+                <details>
+                    <summary>How are the tints and shades made?</summary>
+                    <p>Tints mix your color toward white and shades mix it toward black, in even steps, by interpolating the RGB channels. It's a simple, predictable scale that's handy for building hover states and subtle background variants from one base color.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/utilities/">All utilities</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <div class="u-toast" id="toast">Copied to clipboard</div>
+
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+        const clamp = (n, lo, hi) => Math.min(hi, Math.max(lo, n));
+
+        // ---- Conversions ----------------------------------------------------
+        // rgb: {r,g,b} 0-255 integers. hsl: {h 0-360, s 0-100, l 0-100}.
+
+        function rgbToHex(r, g, b) {
+            const h = (n) => clamp(Math.round(n), 0, 255).toString(16).padStart(2, '0');
+            return ('#' + h(r) + h(g) + h(b)).toUpperCase();
+        }
+
+        // Accept #rgb, #rrggbb (with or without #). Returns {r,g,b} or null.
+        function parseHex(str) {
+            let s = String(str).trim().replace(/^#/, '');
+            if (/^[0-9a-fA-F]{3}$/.test(s)) {
+                s = s.split('').map((c) => c + c).join('');
+            }
+            if (!/^[0-9a-fA-F]{6}$/.test(s)) return null;
+            return { r: parseInt(s.slice(0, 2), 16), g: parseInt(s.slice(2, 4), 16), b: parseInt(s.slice(4, 6), 16) };
+        }
+
+        // Accept "r,g,b" or "rgb(r, g, b)". Returns {r,g,b} or null.
+        function parseRgb(str) {
+            const m = String(str).trim().replace(/^rgba?\(/i, '').replace(/\)$/, '');
+            const parts = m.split(/[,\s]+/).filter((x) => x !== '');
+            if (parts.length < 3) return null;
+            const vals = parts.slice(0, 3).map((p) => Number(p));
+            if (vals.some((v) => !isFinite(v) || v < 0 || v > 255)) return null;
+            return { r: Math.round(vals[0]), g: Math.round(vals[1]), b: Math.round(vals[2]) };
+        }
+
+        // Accept "h,s%,l%" or "hsl(h, s%, l%)". Returns {r,g,b} or null.
+        function parseHsl(str) {
+            const m = String(str).trim().replace(/^hsla?\(/i, '').replace(/\)$/, '');
+            const parts = m.split(/[,\s]+/).filter((x) => x !== '');
+            if (parts.length < 3) return null;
+            const h = Number(parts[0].replace(/deg$/i, ''));
+            const s = Number(parts[1].replace(/%$/, ''));
+            const l = Number(parts[2].replace(/%$/, ''));
+            if (![h, s, l].every(isFinite)) return null;
+            if (h < 0 || h > 360 || s < 0 || s > 100 || l < 0 || l > 100) return null;
+            return hslToRgb(h, s, l);
+        }
+
+        function rgbToHsl(r, g, b) {
+            r /= 255; g /= 255; b /= 255;
+            const max = Math.max(r, g, b), min = Math.min(r, g, b);
+            const d = max - min;
+            let h = 0;
+            if (d !== 0) {
+                if (max === r) h = ((g - b) / d) % 6;
+                else if (max === g) h = (b - r) / d + 2;
+                else h = (r - g) / d + 4;
+                h *= 60;
+                if (h < 0) h += 360;
+            }
+            const l = (max + min) / 2;
+            const s = d === 0 ? 0 : d / (1 - Math.abs(2 * l - 1));
+            return { h: Math.round(h), s: Math.round(s * 100), l: Math.round(l * 100) };
+        }
+
+        function hslToRgb(h, s, l) {
+            h = ((h % 360) + 360) % 360; s /= 100; l /= 100;
+            const c = (1 - Math.abs(2 * l - 1)) * s;
+            const x = c * (1 - Math.abs((h / 60) % 2 - 1));
+            const m = l - c / 2;
+            let r = 0, g = 0, b = 0;
+            if (h < 60) { r = c; g = x; }
+            else if (h < 120) { r = x; g = c; }
+            else if (h < 180) { g = c; b = x; }
+            else if (h < 240) { g = x; b = c; }
+            else if (h < 300) { r = x; b = c; }
+            else { r = c; b = x; }
+            return { r: Math.round((r + m) * 255), g: Math.round((g + m) * 255), b: Math.round((b + m) * 255) };
+        }
+
+        // ---- String builders ------------------------------------------------
+        function hexStr(c) { return rgbToHex(c.r, c.g, c.b); }
+        function rgbStr(c) { return 'rgb(' + c.r + ', ' + c.g + ', ' + c.b + ')'; }
+        function hslStr(c) { const h = rgbToHsl(c.r, c.g, c.b); return 'hsl(' + h.h + ', ' + h.s + '%, ' + h.l + '%)'; }
+
+        // ---- State + render -------------------------------------------------
+        let current = { r: 20, g: 124, b: 124 };
+
+        const hexEl = $('hex'), rgbEl = $('rgb'), hslEl = $('hsl'), picker = $('picker');
+
+        function markValid(el, ok) { el.classList.toggle('bad', !ok); }
+
+        // Render all outputs except the field the user is actively editing (skip).
+        function render(skip) {
+            const c = current;
+            const hex = hexStr(c);
+            if (skip !== 'hex') { hexEl.value = hex; markValid(hexEl, true); }
+            if (skip !== 'rgb') { rgbEl.value = rgbStr(c); markValid(rgbEl, true); }
+            if (skip !== 'hsl') { hslEl.value = hslStr(c); markValid(hslEl, true); }
+            picker.value = hex.toLowerCase();
+            $('swatch').style.backgroundColor = hex;
+            const tag = $('swatch-tag');
+            tag.textContent = hex;
+            // Contrast: dark text on light colors, light text on dark.
+            const lum = (0.299 * c.r + 0.587 * c.g + 0.114 * c.b) / 255;
+            tag.style.background = lum > 0.6 ? 'rgba(16,62,60,0.10)' : 'rgba(255,255,255,0.18)';
+            tag.style.color = lum > 0.6 ? '#103E3C' : '#ffffff';
+            buildScale(c);
+        }
+
+        function setColor(c, skip) { current = c; render(skip); }
+
+        // ---- Tints & shades -------------------------------------------------
+        // 5 shades (toward black) + base + 5 tints (toward white) = 11 swatches.
+        function mix(c, target, t) {
+            return {
+                r: Math.round(c.r + (target - c.r) * t),
+                g: Math.round(c.g + (target - c.g) * t),
+                b: Math.round(c.b + (target - c.b) * t)
+            };
+        }
+
+        function buildScale(c) {
+            const steps = [];
+            // Darkest -> base: shades mix toward 0 (black).
+            for (let i = 5; i >= 1; i--) steps.push({ c: mix(c, 0, i / 6), base: false });
+            steps.push({ c: { r: c.r, g: c.g, b: c.b }, base: true });
+            // Base -> lightest: tints mix toward 255 (white).
+            for (let i = 1; i <= 5; i++) steps.push({ c: mix(c, 255, i / 6), base: false });
+
+            const wrap = $('scale');
+            wrap.innerHTML = '';
+            steps.forEach((step) => {
+                const hex = hexStr(step.c);
+                const div = document.createElement('button');
+                div.type = 'button';
+                div.className = 'cc-sw' + (step.base ? ' base' : '');
+                div.style.backgroundColor = hex;
+                div.title = hex + (step.base ? ' (base)' : '');
+                div.setAttribute('aria-label', 'Load ' + hex);
+                div.addEventListener('click', () => setColor({ r: step.c.r, g: step.c.g, b: step.c.b }, null));
+                wrap.appendChild(div);
+            });
+        }
+
+        // ---- Input wiring ---------------------------------------------------
+        function onField(el, parser, key) {
+            el.addEventListener('input', () => {
+                const c = parser(el.value);
+                if (c) { markValid(el, true); setColor(c, key); }
+                else { markValid(el, false); }
+            });
+            // On blur, normalize the field even if it was mid-edit/invalid.
+            el.addEventListener('blur', () => render(null));
+        }
+
+        onField(hexEl, parseHex, 'hex');
+        onField(rgbEl, parseRgb, 'rgb');
+        onField(hslEl, parseHsl, 'hsl');
+
+        picker.addEventListener('input', () => { const c = parseHex(picker.value); if (c) setColor(c, null); });
+
+        // ---- Copy + toast ---------------------------------------------------
+        const toast = $('toast');
+        let toastTimer;
+        function flashToast(label) {
+            toast.textContent = 'Copied ' + label;
+            toast.classList.add('show');
+            clearTimeout(toastTimer);
+            toastTimer = setTimeout(() => toast.classList.remove('show'), 1600);
+        }
+
+        document.querySelectorAll('.cc-copy').forEach((btn) => {
+            btn.addEventListener('click', () => {
+                const which = btn.getAttribute('data-copy');
+                const c = current;
+                const text = which === 'hex' ? hexStr(c) : which === 'rgb' ? rgbStr(c) : hslStr(c);
+                navigator.clipboard.writeText(text).then(() => flashToast(text));
+            });
+        });
+
+        render(null);
+    })();
+    </script>
+</body>
+</html>

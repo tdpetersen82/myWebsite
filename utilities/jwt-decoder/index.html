@@ -1,0 +1,384 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>JWT Decoder — Decode JSON Web Tokens Online | Limestone Games</title>
+    <meta name="description" content="Decode a JSON Web Token to read its header and payload, with standard claims like exp and iat shown as readable dates and an expiry check. Decode only — no verification. Runs entirely in your browser.">
+    <meta name="keywords" content="jwt decoder, decode jwt, json web token decoder, jwt parser, jwt payload, decode jwt online, jwt claims, jwt expiry">
+    <meta property="og:title" content="JWT Decoder — Decode JSON Web Tokens Online">
+    <meta property="og:description" content="Decode a JWT's header and payload with readable claim dates and an expiry check. Decode only, runs entirely in your browser.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/utilities/jwt-decoder/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="JWT Decoder — Decode JSON Web Tokens Online">
+    <meta name="twitter:description" content="Decode a JWT's header and payload with readable claim dates and an expiry check. Decode only, runs entirely in your browser.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/utilities/jwt-decoder/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://limestonegames.com/utilities/"},{"@type":"ListItem","position":3,"name":"JWT Decoder","item":"https://limestonegames.com/utilities/jwt-decoder/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"JWT Decoder","url":"https://limestonegames.com/utilities/jwt-decoder/","applicationCategory":"DeveloperApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Decode a JSON Web Token's header and payload and read standard claims as human-readable dates, entirely in the browser. Decoding only, no signature verification."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../category.css?v=20260521a">
+    <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../../utility.css?v=20260522a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      .jwt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      .jwt-grid > div { min-width: 0; }
+      .jwt-grid .u-pre { min-height: 220px; min-width: 0; }
+      .jwt-sig {
+        background: var(--cat-bg); border: 1px solid var(--cat-line);
+        border-radius: 14px; padding: 14px 16px; margin: 0;
+        font-family: var(--u-mono); font-size: 12.5px; color: var(--cat-ink);
+        word-break: break-all; white-space: pre-wrap; min-height: 44px;
+        overflow: auto; max-height: 160px;
+      }
+      .jwt-sig:empty::before { content: 'Signature appears here.'; color: var(--cat-ink-soft); font-style: italic; }
+      .jwt-note {
+        font-family: var(--u-mono); font-size: 11.5px; line-height: 1.5;
+        color: var(--cat-ink-soft); margin-top: 10px;
+        display: flex; gap: 8px; align-items: flex-start;
+      }
+      .jwt-note b { color: var(--cat-ink); font-weight: 600; }
+      .jwt-tokenline { display: flex; gap: 0; flex-wrap: wrap; font-family: var(--u-mono); font-size: 12px; margin-top: 12px; word-break: break-all; }
+      .jwt-tokenline .seg { padding: 2px 1px; border-radius: 3px; }
+      .jwt-tokenline .s-h { color: #A23A35; }
+      .jwt-tokenline .s-p { color: #147C7C; font-weight: 600; }
+      .jwt-tokenline .s-s { color: #9aa0a6; }
+      .jwt-tokenline .dot { color: var(--cat-ink-soft); }
+      .jwt-claims { margin-top: 8px; }
+      @media (max-width: 760px) { .jwt-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/" class="active">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/utilities/">Utilities</a><span class="sep">/</span>
+            <span class="cur">JWT Decoder</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Security · JWT</span>
+            <h1>JWT <em>Decoder</em></h1>
+            <p class="u-lede">Paste a JSON Web Token to read what's inside it. The header and payload are Base64URL-decoded and pretty-printed, standard claims like <code>exp</code> and <code>iat</code> become readable dates, and an expiry badge tells you at a glance whether the token is still valid.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="u-panel-head">
+                <h2>Token</h2>
+                <div class="u-toolbar">
+                    <button class="u-btn ghost" id="btn-sample" type="button">Sample</button>
+                    <button class="u-btn ghost" id="btn-clear" type="button">Clear</button>
+                </div>
+            </div>
+            <textarea id="in" class="u-textarea code" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Paste a JWT — header.payload.signature"></textarea>
+            <div class="jwt-tokenline" id="tokenline" aria-hidden="true"></div>
+            <div class="u-msg" id="msg" role="status"></div>
+        </section>
+
+        <section class="u-panel" id="result" style="display:none">
+            <div class="jwt-grid">
+                <div>
+                    <label class="u-label" for="hdr">Header</label>
+                    <pre id="hdr" class="u-pre"></pre>
+                </div>
+                <div>
+                    <label class="u-label" for="pl">Payload</label>
+                    <pre id="pl" class="u-pre"></pre>
+                </div>
+            </div>
+
+            <div class="u-msg" id="exp" role="status"></div>
+
+            <div class="u-panel-head" style="margin-top:22px;margin-bottom:6px"><h2>Registered claims</h2></div>
+            <div class="jwt-claims" id="claims"></div>
+
+            <div class="u-panel-head" style="margin-top:22px;margin-bottom:6px"><h2>Signature</h2></div>
+            <pre id="sig" class="jwt-sig"></pre>
+            <div class="jwt-note">
+                <span>🔒</span>
+                <span><b>Not verified.</b> This tool only decodes the token — it does not check the signature, because that needs the secret or public key. Never trust a decoded payload without verifying the signature server-side.</span>
+            </div>
+        </section>
+
+        <section class="u-about">
+            <h2>About this JWT decoder</h2>
+            <p>A JSON Web Token (JWT) packs three Base64URL-encoded parts separated by dots: a <b>header</b> describing the signing algorithm, a <b>payload</b> of claims (the data), and a <b>signature</b>. This decoder splits the token, decodes the header and payload, and pretty-prints them with syntax highlighting. It also reads the registered time claims — <code>exp</code>, <code>iat</code>, and <code>nbf</code> — which are stored as Unix seconds, and shows them as human-readable UTC dates alongside a clear expired / not-expired status.</p>
+
+            <h3>How to use it</h3>
+            <ul>
+                <li>Paste a token in the form <code>header.payload.signature</code> — decoding happens as you type.</li>
+                <li>Read the decoded <b>Header</b> and <b>Payload</b> side by side.</li>
+                <li>Check the <b>Registered claims</b> panel for issue, not-before, and expiry times in readable form.</li>
+                <li>The expiry badge shows green when the token is still valid and red once <code>exp</code> has passed.</li>
+            </ul>
+
+            <h3>Decoding only — no verification</h3>
+            <p><b>This tool does not verify signatures.</b> Verifying a JWT requires the signing secret (for HMAC) or the issuer's public key (for RSA/ECDSA), and that check belongs on your server, never in a public web page. Treat anything decoded here as untrusted until your backend has verified it.</p>
+
+            <h3>Is my token private?</h3>
+            <p>Yes. The token is decoded entirely in your browser with plain JavaScript. It is never sent to a server, logged, or stored — nothing leaves the page. Even so, avoid pasting real production tokens into any online tool out of habit.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>Does this verify the token is authentic?</summary>
+                    <p>No. It decodes and displays the contents only. Signature verification needs a key and must happen on a trusted server; a decoded payload alone proves nothing about authenticity.</p>
+                </details>
+                <details>
+                    <summary>Why is the payload readable without a password?</summary>
+                    <p>A JWT is signed, not encrypted. The header and payload are merely Base64URL-encoded, so anyone can read them. Never store secrets in a JWT payload — assume it is fully public.</p>
+                </details>
+                <details>
+                    <summary>What do exp, iat, and nbf mean?</summary>
+                    <p><code>iat</code> is when the token was issued, <code>nbf</code> the earliest time it's valid (not before), and <code>exp</code> when it expires. All three are Unix timestamps in seconds; this tool converts them to UTC dates for you.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/utilities/">All utilities</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <div class="u-toast" id="toast">Copied to clipboard</div>
+
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+        const input = $('in'), msg = $('msg'), result = $('result');
+
+        function setMsg(type, text) { msg.className = 'u-msg show ' + type; msg.textContent = text; }
+        function clearMsg() { msg.className = 'u-msg'; msg.textContent = ''; }
+
+        function escapeHtml(s) {
+            return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+        }
+        function highlight(json) {
+            return escapeHtml(json).replace(
+                /("(?:\\.|[^"\\])*")(\s*:)?|\b(true|false)\b|\bnull\b|(-?\d+(?:\.\d+)?(?:[eE][+\-]?\d+)?)/g,
+                (m, str, colon, bool, num) => {
+                    if (str !== undefined) {
+                        if (colon !== undefined)
+                            return '<span class="tk-key">' + str + '</span><span class="tk-punc">' + colon + '</span>';
+                        return '<span class="tk-str">' + str + '</span>';
+                    }
+                    if (bool !== undefined) return '<span class="tk-bool">' + m + '</span>';
+                    if (num !== undefined) return '<span class="tk-num">' + m + '</span>';
+                    return '<span class="tk-null">' + m + '</span>';
+                }
+            );
+        }
+
+        // Base64URL → JSON object (UTF-8 safe).
+        function b64urlToJson(seg, what) {
+            let b64 = seg.replace(/-/g, '+').replace(/_/g, '/');
+            const pad = b64.length % 4;
+            if (pad === 1) throw new Error('the ' + what + ' is not valid Base64URL');
+            if (pad) b64 += '='.repeat(4 - pad);
+            let bin;
+            try { bin = atob(b64); }
+            catch (e) { throw new Error('the ' + what + ' is not valid Base64URL'); }
+            const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+            const text = new TextDecoder('utf-8', { fatal: false }).decode(bytes);
+            try { return JSON.parse(text); }
+            catch (e) { throw new Error('the ' + what + ' is not valid JSON'); }
+        }
+
+        function fmtDate(sec) {
+            const d = new Date(sec * 1000);
+            if (isNaN(d.getTime())) return String(sec);
+            return d.toUTCString();
+        }
+
+        function relTime(deltaMs) {
+            const past = deltaMs < 0;
+            let s = Math.abs(Math.round(deltaMs / 1000));
+            const units = [['day', 86400], ['hour', 3600], ['minute', 60], ['second', 1]];
+            const parts = [];
+            for (const [name, span] of units) {
+                if (s >= span && parts.length < 2) {
+                    const n = Math.floor(s / span);
+                    s -= n * span;
+                    parts.push(n + ' ' + name + (n === 1 ? '' : 's'));
+                }
+            }
+            const phrase = parts.join(' ') || '0 seconds';
+            return past ? phrase + ' ago' : 'in ' + phrase;
+        }
+
+        function paintTokenLine(parts) {
+            const cls = ['s-h', 's-p', 's-s'];
+            const line = $('tokenline');
+            line.innerHTML = parts.map((p, i) =>
+                (i ? '<span class="dot">.</span>' : '') +
+                '<span class="seg ' + cls[i] + '">' + escapeHtml(p) + '</span>'
+            ).join('');
+        }
+
+        function kv(key, value) {
+            const row = document.createElement('div');
+            row.className = 'u-kv';
+            row.innerHTML = '<span class="ku">' + escapeHtml(key) + '</span><span class="kvv">' + escapeHtml(value) + '</span>';
+            return row;
+        }
+
+        function showClaims(payload) {
+            const box = $('claims');
+            box.innerHTML = '';
+            const names = { iss: 'Issuer (iss)', sub: 'Subject (sub)', aud: 'Audience (aud)', jti: 'JWT ID (jti)' };
+            let any = false;
+            for (const k in names) {
+                if (payload[k] !== undefined) {
+                    const v = Array.isArray(payload[k]) ? payload[k].join(', ') : String(payload[k]);
+                    box.appendChild(kv(names[k], v)); any = true;
+                }
+            }
+            const times = { iat: 'Issued at (iat)', nbf: 'Not before (nbf)', exp: 'Expires (exp)' };
+            for (const k in times) {
+                if (typeof payload[k] === 'number') {
+                    box.appendChild(kv(times[k], fmtDate(payload[k]) + ' · ' + payload[k]));
+                    any = true;
+                }
+            }
+            if (!any) box.innerHTML = '<div class="u-kv"><span class="ku">No registered claims</span><span class="kvv">—</span></div>';
+        }
+
+        function showExpiry(payload) {
+            const exp = $('exp');
+            const now = Date.now();
+            if (typeof payload.exp === 'number') {
+                const ms = payload.exp * 1000 - now;
+                if (ms <= 0) { exp.className = 'u-msg show err'; exp.textContent = 'Expired · ' + relTime(ms) + ' (' + fmtDate(payload.exp) + ')'; return; }
+                exp.className = 'u-msg show ok'; exp.textContent = 'Not expired · expires ' + relTime(ms) + ' (' + fmtDate(payload.exp) + ')';
+                return;
+            }
+            if (typeof payload.nbf === 'number' && payload.nbf * 1000 > now) {
+                exp.className = 'u-msg show err'; exp.textContent = 'Not yet valid · becomes active ' + relTime(payload.nbf * 1000 - now);
+                return;
+            }
+            exp.className = 'u-msg'; exp.textContent = '';
+        }
+
+        function reset() {
+            result.style.display = 'none';
+            $('tokenline').innerHTML = '';
+        }
+
+        function run() {
+            const raw = input.value.trim();
+            if (!raw) { reset(); clearMsg(); return; }
+
+            const parts = raw.split('.');
+            if (parts.length !== 3 || parts.some((p) => p === '')) {
+                reset();
+                setMsg('err', 'Not a valid JWT · expected three parts separated by dots (header.payload.signature).');
+                return;
+            }
+            paintTokenLine(parts);
+
+            let header, payload;
+            try {
+                header = b64urlToJson(parts[0], 'header');
+                payload = b64urlToJson(parts[1], 'payload');
+            } catch (e) {
+                reset();
+                paintTokenLine(parts);
+                setMsg('err', 'Could not decode · ' + e.message + '.');
+                return;
+            }
+
+            clearMsg();
+            result.style.display = '';
+            $('hdr').innerHTML = highlight(JSON.stringify(header, null, 2));
+            $('pl').innerHTML = highlight(JSON.stringify(payload, null, 2));
+            $('sig').textContent = parts[2];
+            showClaims(payload);
+            showExpiry(payload);
+        }
+
+        // --- Sample: build a real Base64URL token (fake/expired, not signed for real) ---
+        function toB64url(obj) {
+            const json = JSON.stringify(obj);
+            const bytes = new TextEncoder().encode(json);
+            let bin = '';
+            bytes.forEach((b) => { bin += String.fromCharCode(b); });
+            return btoa(bin).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+        }
+        function buildSample() {
+            const now = Math.floor(Date.now() / 1000);
+            const header = { alg: 'HS256', typ: 'JWT' };
+            const payload = {
+                sub: '1234567890',
+                name: 'Ada Lovelace',
+                iss: 'limestonegames.com',
+                iat: now - 600,
+                nbf: now - 600,
+                exp: now + 3600
+            };
+            const sig = 'TJVA95OrM7E2cBab30RMHrHDcEfxjoYZgeFONFh7HgQ';
+            return toB64url(header) + '.' + toB64url(payload) + '.' + sig;
+        }
+
+        input.addEventListener('input', run);
+        $('btn-clear').addEventListener('click', () => { input.value = ''; run(); input.focus(); });
+        $('btn-sample').addEventListener('click', () => { input.value = buildSample(); run(); });
+
+        run();
+    })();
+    </script>
+</body>
+</html>

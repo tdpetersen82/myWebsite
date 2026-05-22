@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>CSS Gradient Generator — Linear &amp; Radial Backgrounds | Limestone Games</title>
+    <meta name="description" content="Build CSS linear and radial gradients with a live preview, adjustable angle, and up to five color stops. Copy the ready-to-use background declaration with one click. Free and runs entirely in your browser.">
+    <meta name="keywords" content="css gradient generator, linear gradient, radial gradient, gradient maker, css background generator, color stops, gradient css code, web design tool">
+    <meta property="og:title" content="CSS Gradient Generator — Linear &amp; Radial Backgrounds">
+    <meta property="og:description" content="Build CSS linear and radial gradients with a live preview, angle control, and up to five color stops. Copy the background code instantly.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/utilities/gradient-generator/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="CSS Gradient Generator — Linear &amp; Radial Backgrounds">
+    <meta name="twitter:description" content="Build CSS linear and radial gradients with a live preview, angle control, and up to five color stops.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/utilities/gradient-generator/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://limestonegames.com/utilities/"},{"@type":"ListItem","position":3,"name":"Gradient Generator","item":"https://limestonegames.com/utilities/gradient-generator/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"CSS Gradient Generator","url":"https://limestonegames.com/utilities/gradient-generator/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Build CSS linear and radial gradients with a live preview, angle control, and up to five color stops."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../category.css?v=20260521a">
+    <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../../utility.css?v=20260522a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      .gg-preview {
+        min-height: 220px; border-radius: 18px;
+        border: 1px solid var(--cat-line);
+        box-shadow: inset 0 0 0 1px rgba(255,255,255,0.25);
+        margin-bottom: 18px;
+      }
+      .gg-angle { margin-bottom: 18px; }
+      .gg-angle.off { opacity: 0.4; pointer-events: none; }
+      .gg-angle-head { display: flex; justify-content: space-between; align-items: baseline; }
+      .gg-angle-head .val { font-family: var(--u-mono); font-size: 13px; color: var(--cat-ink); font-weight: 500; }
+      .gg-range {
+        width: 100%; margin: 10px 0 0; accent-color: var(--cat-eyebrow-color);
+        cursor: pointer;
+      }
+
+      .gg-stops { display: flex; flex-direction: column; gap: 10px; }
+      .gg-stop {
+        display: grid; grid-template-columns: 44px 1fr 92px 38px; gap: 10px; align-items: center;
+        background: var(--cat-bg); border: 1px solid var(--cat-line);
+        border-radius: 14px; padding: 10px 12px;
+      }
+      .gg-stop > * { min-width: 0; }
+      .gg-swatch {
+        width: 44px; height: 38px; padding: 0; border: 1px solid var(--cat-line);
+        border-radius: 10px; background: none; cursor: pointer;
+      }
+      .gg-swatch::-webkit-color-swatch-wrapper { padding: 3px; }
+      .gg-swatch::-webkit-color-swatch { border: none; border-radius: 7px; }
+      .gg-swatch::-moz-color-swatch { border: none; border-radius: 7px; }
+      .gg-hex {
+        font-family: var(--u-mono); text-transform: uppercase;
+      }
+      .gg-pos { text-align: center; }
+      .gg-rm {
+        width: 38px; height: 38px; padding: 0; font-size: 18px; line-height: 1;
+        border-radius: 10px; align-self: center; justify-self: center;
+      }
+      .gg-rm:disabled { visibility: hidden; }
+      .gg-add { margin-top: 12px; }
+      .gg-code-head { display: flex; justify-content: space-between; align-items: center; margin: 22px 0 8px; }
+      .gg-code-head h2 {
+        font-family: var(--u-mono); font-size: 12px; font-weight: 500;
+        letter-spacing: 0.12em; text-transform: uppercase; color: var(--cat-ink-soft);
+      }
+      .gg-pre { white-space: pre-wrap; overflow-wrap: anywhere; }
+      @media (max-width: 560px) {
+        .gg-stop { grid-template-columns: 44px 1fr 78px 34px; gap: 8px; }
+      }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/" class="active">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/utilities/">Utilities</a><span class="sep">/</span>
+            <span class="cur">Gradient Generator</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Design · CSS</span>
+            <h1>Gradient <em>Generator</em></h1>
+            <p class="u-lede">Design a CSS linear or radial gradient visually. Set the angle, pick up to five color stops, and watch the preview update live — then copy a ready-to-paste <code>background</code> declaration.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="gg-preview" id="preview" aria-label="Gradient preview"></div>
+
+            <div class="u-tabs" id="tabs" role="tablist">
+                <button class="u-tab active" type="button" data-type="linear">Linear</button>
+                <button class="u-tab" type="button" data-type="radial">Radial</button>
+            </div>
+
+            <div class="gg-angle" id="angle-wrap">
+                <div class="gg-angle-head">
+                    <label class="u-label" for="angle" style="margin:0">Angle</label>
+                    <span class="val" id="angle-val">90°</span>
+                </div>
+                <input id="angle" class="gg-range" type="range" min="0" max="360" value="90" step="1" aria-label="Gradient angle in degrees">
+            </div>
+
+            <div class="u-panel-head" style="margin-bottom:10px">
+                <h2>Color stops</h2>
+                <div class="u-toolbar">
+                    <button class="u-btn ghost gg-add" id="btn-add" type="button" style="margin:0">+ Add color</button>
+                </div>
+            </div>
+            <div class="gg-stops" id="stops"></div>
+
+            <div class="gg-code-head">
+                <h2>CSS</h2>
+                <button class="u-btn ghost" id="btn-copy" type="button" style="padding:5px 14px;font-size:12px">Copy</button>
+            </div>
+            <pre class="u-pre gg-pre" id="code" aria-live="polite"></pre>
+        </section>
+
+        <section class="u-about">
+            <h2>About this CSS gradient generator</h2>
+            <p>Create smooth color gradients for backgrounds, buttons, and hero sections without writing the syntax by hand. Choose a <b>linear</b> gradient and dial in any angle from 0 to 360 degrees, or switch to a <b>radial</b> gradient that radiates from the center. Add up to five color stops, each with its own hex color and position, and the live preview shows precisely what the browser will render. When it looks right, copy the full <code>background</code> declaration straight into your stylesheet.</p>
+
+            <h3>How to use it</h3>
+            <ul>
+                <li>Pick <b>Linear</b> or <b>Radial</b> from the tabs — the angle slider only applies to linear gradients.</li>
+                <li>Click a color swatch to choose a color, or type a hex value, and set each stop's position in percent.</li>
+                <li>Use <b>+ Add color</b> to add stops (up to five) and the <b>×</b> button to remove one.</li>
+                <li>Click <b>Copy</b> to grab the full <code>background: …;</code> line for your CSS.</li>
+            </ul>
+
+            <h3>Is anything uploaded?</h3>
+            <p>No. The gradient is built and previewed entirely in your browser with JavaScript and CSS. Nothing you create is sent to a server or saved anywhere.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>What does the angle mean in a linear gradient?</summary>
+                    <p>The angle sets the direction the colors flow. <code>0deg</code> points straight up, <code>90deg</code> points to the right, and <code>180deg</code> points down — matching the CSS specification, so the copied code looks identical to the preview.</p>
+                </details>
+                <details>
+                    <summary>Can I use this gradient as a button or text background?</summary>
+                    <p>Yes. Paste the <code>background</code> declaration onto any element. For gradient text, add <code>background-clip: text</code> and <code>color: transparent</code> to the same element.</p>
+                </details>
+                <details>
+                    <summary>Why are positions in percentages?</summary>
+                    <p>Percentages place each color stop along the gradient line from start (0%) to end (100%), which keeps the gradient responsive to any element size. You can leave gaps or overlap stops for sharper transitions.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/utilities/">All utilities</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <div class="u-toast" id="toast">Copied to clipboard</div>
+
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+        const MAX = 5, MIN = 2;
+        let type = 'linear';
+        let angle = 90;
+        // Default two stops.
+        let stops = [
+            { color: '#147C7C', pos: 0 },
+            { color: '#F08488', pos: 100 }
+        ];
+
+        const stopsEl = $('stops'), preview = $('preview'), code = $('code');
+
+        function clampPos(v) {
+            const n = parseInt(v, 10);
+            if (isNaN(n)) return 0;
+            return Math.max(0, Math.min(100, n));
+        }
+        function normHex(v) {
+            let h = v.trim();
+            if (h[0] !== '#') h = '#' + h;
+            // Expand 3-digit shorthand to 6 digits.
+            if (/^#[0-9a-fA-F]{3}$/.test(h)) {
+                h = '#' + h.slice(1).split('').map((c) => c + c).join('');
+            }
+            return /^#[0-9a-fA-F]{6}$/.test(h) ? h.toLowerCase() : null;
+        }
+
+        function gradientCss() {
+            const parts = stops.map((s) => s.color + ' ' + s.pos + '%').join(', ');
+            return type === 'linear'
+                ? 'linear-gradient(' + angle + 'deg, ' + parts + ')'
+                : 'radial-gradient(circle, ' + parts + ')';
+        }
+
+        function render() {
+            const g = gradientCss();
+            preview.style.background = g;
+            code.textContent = 'background: ' + g + ';';
+        }
+
+        function buildStops() {
+            stopsEl.innerHTML = '';
+            stops.forEach((s, i) => {
+                const row = document.createElement('div');
+                row.className = 'gg-stop';
+
+                const color = document.createElement('input');
+                color.type = 'color';
+                color.className = 'gg-swatch';
+                color.value = s.color;
+                color.setAttribute('aria-label', 'Stop ' + (i + 1) + ' color');
+
+                const hex = document.createElement('input');
+                hex.type = 'text';
+                hex.className = 'u-input gg-hex';
+                hex.value = s.color;
+                hex.spellcheck = false;
+                hex.setAttribute('aria-label', 'Stop ' + (i + 1) + ' hex value');
+                hex.maxLength = 7;
+
+                const pos = document.createElement('input');
+                pos.type = 'number';
+                pos.className = 'u-input gg-pos';
+                pos.min = 0; pos.max = 100; pos.value = s.pos;
+                pos.setAttribute('aria-label', 'Stop ' + (i + 1) + ' position percent');
+
+                const rm = document.createElement('button');
+                rm.type = 'button';
+                rm.className = 'u-btn ghost gg-rm';
+                rm.textContent = '×';
+                rm.title = 'Remove this color stop';
+                rm.setAttribute('aria-label', 'Remove stop ' + (i + 1));
+                rm.disabled = stops.length <= MIN;
+
+                // Color picker drives the hex field and the model.
+                color.addEventListener('input', () => {
+                    s.color = color.value.toLowerCase();
+                    hex.value = s.color;
+                    render();
+                });
+                // Hex field accepts typed values; only commit when valid.
+                hex.addEventListener('input', () => {
+                    const n = normHex(hex.value);
+                    if (n) { s.color = n; color.value = n; render(); }
+                });
+                hex.addEventListener('blur', () => { hex.value = s.color; });
+
+                pos.addEventListener('input', () => { s.pos = clampPos(pos.value); render(); });
+                pos.addEventListener('blur', () => { pos.value = s.pos; });
+
+                rm.addEventListener('click', () => {
+                    if (stops.length <= MIN) return;
+                    stops.splice(i, 1);
+                    buildStops();
+                    render();
+                });
+
+                row.appendChild(color);
+                row.appendChild(hex);
+                row.appendChild(pos);
+                row.appendChild(rm);
+                stopsEl.appendChild(row);
+            });
+            $('btn-add').disabled = stops.length >= MAX;
+        }
+
+        // Tabs
+        $('tabs').addEventListener('click', (e) => {
+            const btn = e.target.closest('.u-tab');
+            if (!btn) return;
+            type = btn.dataset.type;
+            document.querySelectorAll('.u-tab').forEach((t) => t.classList.remove('active'));
+            btn.classList.add('active');
+            const aw = $('angle-wrap');
+            const isLinear = type === 'linear';
+            aw.classList.toggle('off', !isLinear);
+            $('angle').disabled = !isLinear;
+            render();
+        });
+
+        $('angle').addEventListener('input', () => {
+            angle = parseInt($('angle').value, 10);
+            $('angle-val').textContent = angle + '°';
+            render();
+        });
+
+        $('btn-add').addEventListener('click', () => {
+            if (stops.length >= MAX) return;
+            // New stop midway between the last two stops, mid-color toward white.
+            const last = stops[stops.length - 1];
+            stops.push({ color: '#ffffff', pos: last.pos });
+            buildStops();
+            render();
+        });
+
+        const toast = $('toast');
+        let toastTimer;
+        $('btn-copy').addEventListener('click', () => {
+            navigator.clipboard.writeText(code.textContent).then(() => {
+                toast.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => toast.classList.remove('show'), 1600);
+            });
+        });
+
+        buildStops();
+        render();
+    })();
+    </script>
+</body>
+</html>

@@ -1,0 +1,247 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>Loan Calculator — Monthly Payment &amp; Total Interest | Limestone Games</title>
+    <meta name="description" content="Estimate your monthly loan payment, total interest, and total cost from the amount, interest rate, and term. Works for mortgages, car loans, and personal loans. Free — runs entirely in your browser.">
+    <meta name="keywords" content="loan calculator, monthly payment calculator, amortization calculator, car loan calculator, mortgage payment calculator, personal loan calculator, total interest calculator, loan repayment">
+    <meta property="og:title" content="Loan Calculator — Monthly Payment &amp; Total Interest">
+    <meta property="og:description" content="Estimate the monthly payment, total interest, and total cost of a loan from the amount, rate, and term.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/utilities/loan-calculator/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Loan Calculator — Monthly Payment &amp; Total Interest">
+    <meta name="twitter:description" content="Estimate the monthly payment, total interest, and total cost of a loan from the amount, rate, and term.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/utilities/loan-calculator/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://limestonegames.com/utilities/"},{"@type":"ListItem","position":3,"name":"Loan Calculator","item":"https://limestonegames.com/utilities/loan-calculator/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Loan Calculator","url":"https://limestonegames.com/utilities/loan-calculator/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Estimate the monthly payment, total interest, and total cost of a loan from the amount, interest rate, and term."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../category.css?v=20260521a">
+    <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../../utility.css?v=20260522a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      .ln-inrow { display: grid; grid-template-columns: 1.4fr 1fr 1fr; gap: 12px; align-items: end; }
+      .ln-inrow .u-field { min-width: 0; }
+      .ln-result-box {
+        background: var(--cat-bg); border: 1px solid var(--cat-line);
+        border-radius: 18px; padding: 22px 24px; margin-top: 20px; min-width: 0;
+      }
+      .ln-result-box .cap {
+        font-family: var(--u-mono); font-size: 10.5px; letter-spacing: 0.12em;
+        text-transform: uppercase; color: var(--cat-ink-soft); margin-bottom: 8px;
+      }
+      .ln-kv-wrap { margin-top: 18px; }
+      .ln-note {
+        font-family: var(--u-mono); font-size: 11.5px; color: var(--cat-ink-soft);
+        margin-top: 16px; line-height: 1.55;
+      }
+      @media (max-width: 760px) {
+        .ln-inrow { grid-template-columns: 1fr; }
+      }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/" class="active">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/utilities/">Utilities</a><span class="sep">/</span>
+            <span class="cur">Loan Calculator</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Finance · Loans</span>
+            <h1>Loan <em>Calculator</em></h1>
+            <p class="u-lede">Enter a loan amount, an annual interest rate, and a term in years to see the monthly payment, the total you'll repay, and how much of that is interest. The numbers update the moment you change a field.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="ln-inrow">
+                <div class="u-field">
+                    <label class="u-label" for="amount">Loan amount</label>
+                    <input id="amount" class="u-input" type="text" inputmode="decimal" autocomplete="off" placeholder="25,000" value="25000">
+                </div>
+                <div class="u-field">
+                    <label class="u-label" for="rate">Annual rate (%)</label>
+                    <input id="rate" class="u-input" type="text" inputmode="decimal" autocomplete="off" placeholder="6.5" value="6.5">
+                </div>
+                <div class="u-field">
+                    <label class="u-label" for="years">Term (years)</label>
+                    <input id="years" class="u-input" type="text" inputmode="decimal" autocomplete="off" placeholder="5" value="5">
+                </div>
+            </div>
+
+            <div class="ln-result-box">
+                <div class="cap">Monthly payment</div>
+                <div class="u-result"><span id="payment">—</span> <small id="payment-sub"></small></div>
+            </div>
+
+            <div class="ln-kv-wrap">
+                <div class="u-kv"><span class="ku">Principal (amount borrowed)</span><span class="kvv" id="kv-principal">—</span></div>
+                <div class="u-kv"><span class="ku">Total interest paid</span><span class="kvv" id="kv-interest">—</span></div>
+                <div class="u-kv"><span class="ku">Total paid over the loan</span><span class="kvv" id="kv-total">—</span></div>
+                <div class="u-kv"><span class="ku">Number of payments</span><span class="kvv" id="kv-count">—</span></div>
+            </div>
+
+            <p class="ln-note">Estimate only. Figures assume a fixed rate with equal monthly payments and exclude taxes, insurance, fees, and any extra or early payments.</p>
+        </section>
+
+        <section class="u-about">
+            <h2>About this loan calculator</h2>
+            <p>This calculator works out the fixed monthly payment for an amortizing loan — the kind used for most mortgages, car loans, and personal loans. With an amortizing loan every payment is the same size, but the split shifts over time: early on most of it is interest, and as the balance falls more goes to principal. It also totals the interest you'll pay across the whole term, which is often the most eye-opening number.</p>
+
+            <h3>How to use it</h3>
+            <ul>
+                <li>Enter the <b>loan amount</b> you plan to borrow (the principal).</li>
+                <li>Enter the <b>annual interest rate</b> as a percentage — for example <code>6.5</code> for 6.5% APR.</li>
+                <li>Enter the <b>term</b> in years; the tool converts it to monthly payments internally.</li>
+                <li>Read off the monthly payment, then check the breakdown for total interest and total cost.</li>
+            </ul>
+
+            <h3>The formula</h3>
+            <p>Payments use the standard amortization formula <code>M = P · r · (1 + r)^n ÷ ((1 + r)^n − 1)</code>, where <code>P</code> is the principal, <code>r</code> is the monthly rate (annual rate ÷ 12 ÷ 100), and <code>n</code> is the number of months. At a 0% rate it falls back to <code>P ÷ n</code>, an equal split with no interest.</p>
+
+            <h3>Is my information private?</h3>
+            <p>Completely. Nothing is sent anywhere — the math runs in your browser and your figures are never uploaded, stored, or shared. There is no account and no tracking of what you enter.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>Does this include taxes, insurance, or fees?</summary>
+                    <p>No. It's a pure principal-and-interest estimate. Real mortgage payments often add property tax, homeowners insurance, PMI, and HOA dues; loans may carry origination or processing fees. Add those separately to gauge your true monthly cost.</p>
+                </details>
+                <details>
+                    <summary>Is the rate APR or a nominal rate?</summary>
+                    <p>It treats the figure you enter as a nominal annual rate compounded monthly, which matches how most loan payments are quoted. A true APR that folds in fees would give a slightly higher effective cost.</p>
+                </details>
+                <details>
+                    <summary>Why does so much of the total go to interest?</summary>
+                    <p>Because interest is charged on the outstanding balance every month, a longer term means you carry the balance longer and pay more interest overall. Shortening the term or making extra payments toward principal both cut the total interest substantially.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/utilities/">All utilities</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+
+        // Parse a positive number from user input; strip commas, $, and spaces.
+        function num(v) {
+            if (v == null) return NaN;
+            const cleaned = String(v).replace(/[$,\s]/g, '').trim();
+            if (cleaned === '') return NaN;
+            const n = Number(cleaned);
+            return isFinite(n) ? n : NaN;
+        }
+
+        // Currency with $ and 2 decimals.
+        function money(n) {
+            return n.toLocaleString(undefined, { style: 'currency', currency: 'USD', minimumFractionDigits: 2, maximumFractionDigits: 2 });
+        }
+
+        function clear() {
+            $('payment').textContent = '—';
+            $('payment-sub').textContent = '';
+            $('kv-principal').textContent = '—';
+            $('kv-interest').textContent = '—';
+            $('kv-total').textContent = '—';
+            $('kv-count').textContent = '—';
+        }
+
+        function update() {
+            const P = num($('amount').value);
+            const ratePct = num($('rate').value);
+            const years = num($('years').value);
+
+            // Require a positive principal, a non-negative rate, and a positive term.
+            if (isNaN(P) || P <= 0 || isNaN(ratePct) || ratePct < 0 || isNaN(years) || years <= 0) {
+                clear();
+                return;
+            }
+
+            const r = ratePct / 100 / 12;        // monthly rate
+            const n = Math.round(years * 12);    // number of monthly payments
+            if (n <= 0) { clear(); return; }
+
+            const payment = r === 0
+                ? P / n
+                : P * r * Math.pow(1 + r, n) / (Math.pow(1 + r, n) - 1);
+
+            if (!isFinite(payment)) { clear(); return; }
+
+            const totalPaid = payment * n;
+            const totalInterest = totalPaid - P;
+
+            $('payment').textContent = money(payment);
+            $('payment-sub').textContent = '/ month';
+            $('kv-principal').textContent = money(P);
+            $('kv-interest').textContent = money(totalInterest);
+            $('kv-total').textContent = money(totalPaid);
+            $('kv-count').textContent = n.toLocaleString() + ' payment' + (n === 1 ? '' : 's');
+        }
+
+        ['amount', 'rate', 'years'].forEach((id) => $(id).addEventListener('input', update));
+        update();
+    })();
+    </script>
+</body>
+</html>

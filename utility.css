@@ -250,6 +250,9 @@
   display: inline-flex; align-items: center; gap: 6px;
   font-family: var(--u-mono); font-size: 11px; color: var(--cat-ink-soft);
 }
+/* Tool-card titles must clear the absolutely-positioned category tag */
+.cat-root[data-category="utilities"] .cat-card-head h3 { padding-right: 86px; line-height: 1.15; }
+
 .cat-card .u-open {
   margin-top: auto;
   display: flex; align-items: center; justify-content: space-between;

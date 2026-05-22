@@ -1,0 +1,289 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>Base64 Encode &amp; Decode — Free Online UTF-8 Tool | Limestone Games</title>
+    <meta name="description" content="Encode text to Base64 or decode Base64 back to text instantly. Full UTF-8 support for emoji and accents, a URL-safe variant, and one-click copy. Free, no sign-up — runs entirely in your browser.">
+    <meta name="keywords" content="base64 encode, base64 decode, base64 converter, url-safe base64, base64 to text, text to base64, encode decode online, utf-8 base64">
+    <meta property="og:title" content="Base64 Encode &amp; Decode — Free Online UTF-8 Tool">
+    <meta property="og:description" content="Encode and decode Base64 with full UTF-8 support and a URL-safe variant. Runs entirely in your browser.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/utilities/base64/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Base64 Encode &amp; Decode — Free Online UTF-8 Tool">
+    <meta name="twitter:description" content="Encode and decode Base64 with full UTF-8 support and a URL-safe variant. Runs entirely in your browser.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/utilities/base64/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://limestonegames.com/utilities/"},{"@type":"ListItem","position":3,"name":"Base64 Encode & Decode","item":"https://limestonegames.com/utilities/base64/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Base64 Encode & Decode","url":"https://limestonegames.com/utilities/base64/","applicationCategory":"DeveloperApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Encode text to Base64 and decode Base64 to text with full UTF-8 support and a URL-safe variant, entirely in the browser."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../category.css?v=20260521a">
+    <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../../utility.css?v=20260522a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      .b64-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      .b64-grid > div { min-width: 0; }
+      .b64-grid .u-textarea { min-height: 300px; }
+      .b64-opts { display: flex; align-items: center; gap: 18px; flex-wrap: wrap; margin-top: 16px; }
+      .b64-check { display: inline-flex; align-items: center; gap: 9px; cursor: pointer; user-select: none; }
+      .b64-check input { width: 17px; height: 17px; accent-color: var(--cat-eyebrow-color); cursor: pointer; }
+      .b64-check span { font-family: var(--u-mono); font-size: 12.5px; color: var(--cat-ink-soft); }
+      .b64-check b { color: var(--cat-ink); font-weight: 600; }
+      .b64-byte { font-family: var(--u-mono); font-size: 12px; color: var(--cat-ink-soft); margin-top: 4px; }
+      @media (max-width: 760px) { .b64-grid { grid-template-columns: 1fr; } }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/" class="active">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/utilities/">Utilities</a><span class="sep">/</span>
+            <span class="cur">Base64 Encode &amp; Decode</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Encoding · Base64</span>
+            <h1>Base64 <em>Encode &amp; Decode</em></h1>
+            <p class="u-lede">Convert text to Base64 and back as you type. Full UTF-8 support means emoji and accented characters survive the round trip, and a URL-safe switch swaps in the <code>-</code> and <code>_</code> alphabet for tokens and query strings.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="u-tabs" id="tabs" role="tablist">
+                <button class="u-tab active" id="tab-encode" type="button" role="tab" aria-selected="true">Encode</button>
+                <button class="u-tab" id="tab-decode" type="button" role="tab" aria-selected="false">Decode</button>
+            </div>
+
+            <div class="b64-grid">
+                <div>
+                    <label class="u-label" for="in"><span id="lab-in">Text to encode</span></label>
+                    <textarea id="in" class="u-textarea" spellcheck="false" autocomplete="off" autocapitalize="off" placeholder="Type or paste text to encode…"></textarea>
+                </div>
+                <div>
+                    <label class="u-label" for="out"><span id="lab-out">Base64 output</span> <button class="u-btn ghost" id="btn-copy" type="button" style="float:right;margin-top:-6px;padding:5px 12px;font-size:12px">Copy</button></label>
+                    <textarea id="out" class="u-textarea code" readonly aria-live="polite" placeholder="Output appears here."></textarea>
+                </div>
+            </div>
+
+            <div class="b64-opts">
+                <label class="b64-check">
+                    <input type="checkbox" id="urlsafe">
+                    <span><b>URL-safe</b> variant (- _ instead of + /, no padding)</span>
+                </label>
+                <div class="u-toolbar" style="margin-left:auto">
+                    <button class="u-btn ghost" id="btn-swap" type="button" title="Use the output as the new input">⇄ Swap</button>
+                    <button class="u-btn ghost" id="btn-sample" type="button">Sample</button>
+                    <button class="u-btn ghost" id="btn-clear" type="button">Clear</button>
+                </div>
+            </div>
+
+            <div class="u-msg" id="msg" role="status"></div>
+
+            <div class="u-stats" style="margin-top:18px">
+                <div class="u-stat"><div class="n accent" id="st-mode">Encode</div><div class="l">Mode</div></div>
+                <div class="u-stat"><div class="n" id="st-in">0</div><div class="l">Input chars</div></div>
+                <div class="u-stat"><div class="n" id="st-bytes">0</div><div class="l">UTF-8 bytes</div></div>
+                <div class="u-stat"><div class="n" id="st-out">0</div><div class="l">Output chars</div></div>
+            </div>
+        </section>
+
+        <section class="u-about">
+            <h2>About this Base64 encoder &amp; decoder</h2>
+            <p>Base64 turns any data into a string of 64 plain ASCII characters (A–Z, a–z, 0–9, plus <code>+</code> and <code>/</code>), so it can travel safely through systems that only expect text — email bodies, JSON fields, data URIs, and HTTP headers. This tool encodes the text you type and decodes Base64 back to readable text, both live. Every character is processed as <b>UTF-8</b>, so emoji, accents, and non-Latin scripts encode and decode without corruption.</p>
+
+            <h3>How to use it</h3>
+            <ul>
+                <li>Choose <b>Encode</b> to convert plain text to Base64, or <b>Decode</b> to convert Base64 back to text.</li>
+                <li>Type or paste into the left panel — the result updates instantly on the right.</li>
+                <li>Turn on <b>URL-safe</b> for the variant used in JWTs and query strings: <code>+</code> becomes <code>-</code>, <code>/</code> becomes <code>_</code>, and padding <code>=</code> is dropped.</li>
+                <li>Use <b>Swap</b> to feed the output back as the input, or <b>Copy</b> to grab the result.</li>
+            </ul>
+
+            <h3>Is my text private?</h3>
+            <p>Completely. Encoding and decoding use your browser's built-in functions in plain JavaScript. Nothing you paste is uploaded, logged, or stored anywhere — it never leaves the page.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>Is Base64 a form of encryption?</summary>
+                    <p>No. Base64 is an encoding, not encryption — anyone can decode it back to the original without a key. It's for safe transport of data through text-only channels, not for keeping secrets.</p>
+                </details>
+                <details>
+                    <summary>Does it handle emoji and accented characters?</summary>
+                    <p>Yes. The text is first encoded to UTF-8 bytes and then to Base64, and decoding reverses that. This avoids the classic <code>btoa</code> error on characters above code point 255, so 😀, é, and 日本語 all round-trip correctly.</p>
+                </details>
+                <details>
+                    <summary>What is the URL-safe variant for?</summary>
+                    <p>Standard Base64 uses <code>+</code> and <code>/</code>, which have special meaning in URLs. The URL-safe alphabet replaces them with <code>-</code> and <code>_</code> and omits padding, so the result can sit in a query string, filename, or JWT segment untouched.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/utilities/">All utilities</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <div class="u-toast" id="toast">Copied to clipboard</div>
+
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+        const input = $('in'), out = $('out'), msg = $('msg'), urlsafe = $('urlsafe');
+        let mode = 'encode';
+
+        const SAMPLES = {
+            encode: 'Limestone Games — play free browser games. 🎮 No installs, just fun!',
+            decode: 'TGltZXN0b25lIEdhbWVzIOKAlCBwbGF5IGZyZWUgYnJvd3NlciBnYW1lcy4g8J+OriBObyBpbnN0YWxscywganVzdCBmdW4h'
+        };
+
+        function setMsg(type, text) { msg.className = 'u-msg show ' + type; msg.textContent = text; }
+        function clearMsg() { msg.className = 'u-msg'; msg.textContent = ''; }
+
+        // --- UTF-8 safe Base64 ---
+        function encodeB64(str) {
+            const bytes = new TextEncoder().encode(str);
+            let bin = '';
+            bytes.forEach((b) => { bin += String.fromCharCode(b); });
+            let b64 = btoa(bin);
+            if (urlsafe.checked) b64 = b64.replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
+            return { out: b64, bytes: bytes.length };
+        }
+
+        function decodeB64(str) {
+            let b64 = str.trim().replace(/\s+/g, '');
+            if (urlsafe.checked || /[-_]/.test(b64)) {
+                b64 = b64.replace(/-/g, '+').replace(/_/g, '/');
+            }
+            // Restore padding to a multiple of 4.
+            const pad = b64.length % 4;
+            if (pad === 1) throw new Error('length is not a valid multiple of 4');
+            if (pad) b64 += '='.repeat(4 - pad);
+            if (!/^[A-Za-z0-9+/]*={0,2}$/.test(b64)) throw new Error('contains characters outside the Base64 alphabet');
+            const bin = atob(b64);
+            const bytes = Uint8Array.from(bin, (c) => c.charCodeAt(0));
+            const text = new TextDecoder('utf-8', { fatal: true }).decode(bytes);
+            return { out: text, bytes: bytes.length };
+        }
+
+        function run() {
+            const raw = input.value;
+            if (!raw) {
+                out.value = ''; clearMsg();
+                $('st-in').textContent = '0'; $('st-bytes').textContent = '0'; $('st-out').textContent = '0';
+                return;
+            }
+            try {
+                const r = mode === 'encode' ? encodeB64(raw) : decodeB64(raw);
+                out.value = r.out;
+                clearMsg();
+                $('st-in').textContent = raw.length.toLocaleString();
+                $('st-bytes').textContent = r.bytes.toLocaleString();
+                $('st-out').textContent = r.out.length.toLocaleString();
+            } catch (e) {
+                out.value = '';
+                $('st-out').textContent = '0';
+                $('st-in').textContent = raw.length.toLocaleString();
+                $('st-bytes').textContent = '0';
+                setMsg('err', 'Could not decode · not valid Base64 — ' + e.message);
+            }
+        }
+
+        function setMode(next) {
+            mode = next;
+            const enc = mode === 'encode';
+            $('tab-encode').classList.toggle('active', enc);
+            $('tab-decode').classList.toggle('active', !enc);
+            $('tab-encode').setAttribute('aria-selected', enc);
+            $('tab-decode').setAttribute('aria-selected', !enc);
+            $('lab-in').textContent = enc ? 'Text to encode' : 'Base64 to decode';
+            $('lab-out').textContent = enc ? 'Base64 output' : 'Decoded text';
+            input.placeholder = enc ? 'Type or paste text to encode…' : 'Paste Base64 to decode…';
+            $('st-mode').textContent = enc ? 'Encode' : 'Decode';
+            run();
+        }
+
+        $('tab-encode').addEventListener('click', () => setMode('encode'));
+        $('tab-decode').addEventListener('click', () => setMode('decode'));
+        urlsafe.addEventListener('change', run);
+        input.addEventListener('input', run);
+
+        $('btn-swap').addEventListener('click', () => {
+            if (!out.value && !msg.classList.contains('show')) return;
+            const v = out.value;
+            setMode(mode === 'encode' ? 'decode' : 'encode');
+            input.value = v;
+            run();
+        });
+        $('btn-clear').addEventListener('click', () => { input.value = ''; run(); input.focus(); });
+        $('btn-sample').addEventListener('click', () => { input.value = SAMPLES[mode]; run(); });
+
+        const toast = $('toast');
+        let toastTimer;
+        $('btn-copy').addEventListener('click', () => {
+            if (!out.value) return;
+            navigator.clipboard.writeText(out.value).then(() => {
+                toast.classList.add('show');
+                clearTimeout(toastTimer);
+                toastTimer = setTimeout(() => toast.classList.remove('show'), 1600);
+            });
+        });
+
+        run();
+    })();
+    </script>
+</body>
+</html>

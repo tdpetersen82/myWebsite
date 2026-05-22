@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>Text Diff — Compare Two Texts Line by Line | Limestone Games</title>
+    <meta name="description" content="Compare two blocks of text and see exactly what changed — added, removed, and unchanged lines highlighted in a unified diff. Live, accurate line-level comparison that runs entirely in your browser.">
+    <meta name="keywords" content="text diff, compare text online, diff checker, text comparison tool, find differences between two texts, line diff, unified diff, compare two files">
+    <meta property="og:title" content="Text Diff — Compare Two Texts Line by Line">
+    <meta property="og:description" content="Compare two blocks of text and see added, removed, and unchanged lines in a unified diff. Live and private — runs in your browser.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/utilities/text-diff/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Text Diff — Compare Two Texts Line by Line">
+    <meta name="twitter:description" content="Compare two blocks of text and see added, removed, and unchanged lines in a unified diff.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/utilities/text-diff/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://limestonegames.com/utilities/"},{"@type":"ListItem","position":3,"name":"Text Diff","item":"https://limestonegames.com/utilities/text-diff/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Text Diff","url":"https://limestonegames.com/utilities/text-diff/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Compare two blocks of text and see added, removed, and unchanged lines in a unified line-level diff."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../category.css?v=20260521a">
+    <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../../utility.css?v=20260522a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script>
+
+    <style>
+      .td-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      .td-grid > div { min-width: 0; }
+      .td-grid .u-textarea { min-height: 240px; }
+      @media (max-width: 760px) { .td-grid { grid-template-columns: 1fr; } }
+
+      /* Unified diff output */
+      .td-out {
+        background: var(--u-code-bg); border-radius: 14px; padding: 14px 0;
+        overflow: auto; max-height: 560px; margin: 0;
+        font-family: var(--u-mono); font-size: 13px; line-height: 1.6;
+      }
+      .td-out:empty::before {
+        content: 'The line-by-line difference appears here.';
+        color: #5E7572; font-style: italic; padding: 4px 18px; display: block;
+      }
+      .td-line { display: flex; padding: 0 18px; white-space: pre-wrap; overflow-wrap: anywhere; }
+      .td-line .sign { flex: 0 0 1.4em; user-select: none; opacity: 0.8; }
+      .td-line .body { flex: 1; min-width: 0; }
+      .td-same { color: #C7D6D3; }
+      .td-add  { background: rgba(120, 200, 160, 0.16); color: #9EE6BE; }
+      .td-del  { background: rgba(230, 120, 115, 0.16); color: #F0A9A4; }
+      .td-stats { margin-top: 16px; }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/" class="active">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/utilities/">Utilities</a><span class="sep">/</span>
+            <span class="cur">Text Diff</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Text · Compare</span>
+            <h1>Text <em>Diff</em></h1>
+            <p class="u-lede">Paste two versions of a text and see exactly what changed. A line-level comparison highlights added, removed, and unchanged lines in a single unified view, updating as you type.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="u-panel-head">
+                <h2>Compare</h2>
+                <div class="u-toolbar">
+                    <button class="u-btn ghost" id="btn-sample" type="button">Sample</button>
+                    <button class="u-btn ghost" id="btn-swap" type="button">Swap</button>
+                    <button class="u-btn ghost" id="btn-clear" type="button">Clear</button>
+                </div>
+            </div>
+
+            <div class="td-grid">
+                <div>
+                    <label class="u-label" for="a">Original</label>
+                    <textarea id="a" class="u-textarea code" spellcheck="false" placeholder="Paste the original text…" autocomplete="off"></textarea>
+                </div>
+                <div>
+                    <label class="u-label" for="b">Changed</label>
+                    <textarea id="b" class="u-textarea code" spellcheck="false" placeholder="Paste the changed text…" autocomplete="off"></textarea>
+                </div>
+            </div>
+        </section>
+
+        <section class="u-panel">
+            <div class="u-panel-head"><h2>Difference</h2></div>
+            <div class="u-chips td-stats" id="stats">
+                <span class="u-chip"><b>+0</b> added</span>
+                <span class="u-chip"><b>−0</b> removed</span>
+                <span class="u-chip"><b>0</b> unchanged</span>
+            </div>
+            <pre class="td-out" id="out" aria-live="polite"></pre>
+        </section>
+
+        <section class="u-about">
+            <h2>About this text diff tool</h2>
+            <p>Spot the changes between two pieces of text without reading them side by side word for word. Paste an old draft on the left and a new draft on the right, and the tool computes the smallest set of edits that turns one into the other. Lines that match are shown in grey, removed lines are marked with a red <code>−</code>, and added lines with a green <code>+</code> — the same layout you see in a code review.</p>
+
+            <h3>How to use it</h3>
+            <ul>
+                <li>Paste the original version into the left box and the new version into the right.</li>
+                <li>The unified diff and the change counts update automatically as you type.</li>
+                <li>Use <b>Swap</b> to flip which side is the original, or <b>Sample</b> to load an example.</li>
+                <li>The comparison is line-by-line, so re-wrapping a paragraph onto different lines will register as changes.</li>
+            </ul>
+
+            <h3>Is my text private?</h3>
+            <p>Completely. The diff is calculated in your browser with JavaScript. Neither block of text is uploaded, logged, or sent to any server.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>How does it decide what changed?</summary>
+                    <p>It finds the longest common subsequence of lines — the longest run of lines that appear in both texts in the same order — and treats everything outside it as removed (from the original) or added (in the new version). This produces the minimal, most readable set of edits.</p>
+                </details>
+                <details>
+                    <summary>Does it compare word by word within a line?</summary>
+                    <p>No, the comparison is at the line level. If a single word changes, the whole old line shows as removed and the whole new line as added. This keeps the output clear and predictable for documents and config files.</p>
+                </details>
+                <details>
+                    <summary>Is whitespace significant?</summary>
+                    <p>Yes. Trailing spaces, indentation, and blank lines all count, so two lines must match exactly to be treated as unchanged. That makes it reliable for code and structured text where spacing matters.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/utilities/">All utilities</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <script>
+    (function () {
+        const $ = (id) => document.getElementById(id);
+        const a = $('a'), b = $('b'), out = $('out'), stats = $('stats');
+
+        const SAMPLE_A = "Shopping list\n- apples\n- bread\n- milk\n- eggs\n- coffee\nPick up by 6pm.";
+        const SAMPLE_B = "Shopping list\n- apples\n- whole wheat bread\n- milk\n- eggs\n- tea\n- butter\nPick up by 6pm.";
+
+        function escapeHtml(s) {
+            return s.replace(/[&<>]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;' }[c]));
+        }
+
+        // Longest Common Subsequence over arrays of lines (classic DP table).
+        // dp[i][j] = LCS length of A[i..] and B[j..].
+        function diff(A, B) {
+            const n = A.length, m = B.length;
+            const dp = Array.from({ length: n + 1 }, () => new Int32Array(m + 1));
+            for (let i = n - 1; i >= 0; i--) {
+                for (let j = m - 1; j >= 0; j--) {
+                    dp[i][j] = A[i] === B[j]
+                        ? dp[i + 1][j + 1] + 1
+                        : Math.max(dp[i + 1][j], dp[i][j + 1]);
+                }
+            }
+            // Walk the table forward to emit a unified diff.
+            const ops = [];
+            let i = 0, j = 0;
+            while (i < n && j < m) {
+                if (A[i] === B[j]) { ops.push({ t: 'same', s: A[i] }); i++; j++; }
+                else if (dp[i + 1][j] >= dp[i][j + 1]) { ops.push({ t: 'del', s: A[i] }); i++; }
+                else { ops.push({ t: 'add', s: B[j] }); j++; }
+            }
+            while (i < n) { ops.push({ t: 'del', s: A[i] }); i++; }
+            while (j < m) { ops.push({ t: 'add', s: B[j] }); j++; }
+            return ops;
+        }
+
+        const SIGN = { same: ' ', add: '+', del: '−' };
+        const CLS  = { same: 'td-same', add: 'td-add', del: 'td-del' };
+
+        function setStat(added, removed, unchanged) {
+            stats.innerHTML =
+                '<span class="u-chip"><b>+' + added + '</b> added</span>' +
+                '<span class="u-chip"><b>−' + removed + '</b> removed</span>' +
+                '<span class="u-chip"><b>' + unchanged + '</b> unchanged</span>';
+        }
+
+        function render() {
+            const av = a.value, bv = b.value;
+            if (!av && !bv) {
+                out.innerHTML = '';
+                setStat(0, 0, 0);
+                return;
+            }
+            // Split into lines. An empty string is zero lines, not one blank line.
+            const A = av.length ? av.split('\n') : [];
+            const B = bv.length ? bv.split('\n') : [];
+            const ops = diff(A, B);
+
+            let added = 0, removed = 0, unchanged = 0;
+            const html = ops.map((op) => {
+                if (op.t === 'add') added++;
+                else if (op.t === 'del') removed++;
+                else unchanged++;
+                return '<div class="td-line ' + CLS[op.t] + '">' +
+                       '<span class="sign">' + SIGN[op.t] + '</span>' +
+                       '<span class="body">' + (escapeHtml(op.s) || '​') + '</span></div>';
+            }).join('');
+
+            out.innerHTML = html;
+            setStat(added, removed, unchanged);
+        }
+
+        let timer;
+        function schedule() { clearTimeout(timer); timer = setTimeout(render, 200); }
+
+        a.addEventListener('input', schedule);
+        b.addEventListener('input', schedule);
+        $('btn-clear').addEventListener('click', () => { a.value = ''; b.value = ''; render(); a.focus(); });
+        $('btn-sample').addEventListener('click', () => { a.value = SAMPLE_A; b.value = SAMPLE_B; render(); });
+        $('btn-swap').addEventListener('click', () => { const t = a.value; a.value = b.value; b.value = t; render(); });
+
+        render();
+    })();
+    </script>
+</body>
+</html>

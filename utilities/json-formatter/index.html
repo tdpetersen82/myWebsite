@@ -30,7 +30,7 @@
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="../../category.css?v=20260521a">
     <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
-    <link rel="stylesheet" href="../../utility.css?v=20260521a">
+    <link rel="stylesheet" href="../../utility.css?v=20260522a">
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
@@ -41,8 +41,9 @@
 
     <style>
       .json-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; align-items: start; }
+      .json-grid > div { min-width: 0; }
       .json-grid .u-textarea { min-height: 360px; }
-      .json-grid .u-pre { min-height: 360px; height: 100%; }
+      .json-grid .u-pre { min-height: 360px; height: 100%; min-width: 0; }
       @media (max-width: 760px) { .json-grid { grid-template-columns: 1fr; } }
       .u-stats { margin-top: 18px; }
     </style>
