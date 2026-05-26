@@ -104,6 +104,20 @@
       .strat-feat-board .sq.d { background: #A07B4F; }
       .strat-feat-board .sq.w { color: #FFFEF6; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }
       .strat-feat-board .sq.b { color: #1A1310; }
+
+      /* Game-tile thumbnails — real game screenshots in place of glyph icons */
+      .cat-card-shot {
+        width: 124px; height: 124px;
+        border-radius: 14px;
+        overflow: hidden;
+        flex-shrink: 0;
+        background: var(--cat-bg);
+        box-shadow: inset 0 0 0 1px var(--cat-line);
+      }
+      .cat-card-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      @media (max-width: 520px) {
+        .cat-card-shot { width: 96px; height: 96px; }
+      }
     </style>
 </head>
 <body class="cat-root" data-category="strategy">
@@ -234,9 +248,7 @@
             <a class="cat-card featured" href="../chess/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#9B7EDC2E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><path d="M28 8h8v6h6v6h-6l4 14h-16l4-14h-6v-6h6z" fill="#9B7EDC"/><rect x="18" y="40" width="28" height="6" rx="1" fill="#9B7EDC" opacity="0.7"/><rect x="14" y="48" width="36" height="8" rx="2" fill="#9B7EDC"/></svg>
-                    </div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/chess.webp" alt="" width="600" height="600" loading="lazy"></div>
                     <div>
                         <h3>Chess</h3>
                         <div class="desc">Full rules. Three difficulties.</div>
@@ -257,9 +269,7 @@
             <a class="cat-card" href="../checkers/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#D23B332E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><circle cx="32" cy="40" r="14" fill="#D23B33"/><circle cx="32" cy="40" r="10" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.6"/><circle cx="32" cy="22" r="14" fill="#1F1A1A"/><circle cx="32" cy="22" r="10" fill="none" stroke="#D23B33" stroke-width="1.5" opacity="0.5"/><polygon points="32,15 28,22 36,22" fill="#D23B33"/></svg>
-                    </div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/checkers.webp" alt="" width="600" height="600" loading="lazy"></div>
                     <div>
                         <h3>Checkers</h3>
                         <div class="desc">Mandatory captures. Multi-jumps.</div>
@@ -280,9 +290,7 @@
             <a class="cat-card" href="../backgammon/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#A26F3C2E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="10" width="52" height="44" rx="3" fill="#A26F3C" opacity="0.25"/><polygon points="10,12 16,12 13,30" fill="#A26F3C"/><polygon points="20,12 26,12 23,30" fill="#A26F3C" opacity="0.5"/><polygon points="30,12 36,12 33,30" fill="#A26F3C"/><polygon points="40,12 46,12 43,30" fill="#A26F3C" opacity="0.5"/><polygon points="50,12 56,12 53,30" fill="#A26F3C"/><polygon points="13,52 16,34 10,34" fill="#A26F3C" opacity="0.5"/><polygon points="23,52 26,34 20,34" fill="#A26F3C"/><circle cx="13" cy="48" r="4" fill="#1A1310"/><circle cx="23" cy="46" r="4" fill="#FFFEF6" stroke="#A26F3C" stroke-width="1"/></svg>
-                    </div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/backgammon.webp" alt="" width="600" height="600" loading="lazy"></div>
                     <div>
                         <h3>Backgammon</h3>
                         <div class="desc">Roll, race, bear off.</div>
@@ -303,9 +311,7 @@
             <a class="cat-card" href="../connect-4/">
                 <span class="cat-card-tag">Strategy</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#8FA8E62E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="10" width="48" height="44" rx="4" fill="#8FA8E6" opacity="0.25"/><circle cx="18" cy="22" r="4" fill="#8FA8E6"/><circle cx="32" cy="22" r="4" fill="#8FA8E6" opacity="0.5"/><circle cx="46" cy="22" r="4" fill="#8FA8E6"/><circle cx="18" cy="36" r="4" fill="#8FA8E6" opacity="0.5"/><circle cx="32" cy="36" r="4" fill="#8FA8E6"/><circle cx="46" cy="36" r="4" fill="#8FA8E6" opacity="0.5"/></svg>
-                    </div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/connect-4.webp" alt="" width="600" height="600" loading="lazy"></div>
                     <div>
                         <h3>Connect 4</h3>
                         <div class="desc">Four in a row beats the AI.</div>
@@ -326,9 +332,7 @@
             <a class="cat-card" href="../connect-dots/">
                 <span class="cat-card-tag">Strategy</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#F084882E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><circle cx="14" cy="14" r="3" fill="#F08488"/><circle cx="32" cy="14" r="3" fill="#F08488"/><circle cx="50" cy="14" r="3" fill="#F08488"/><circle cx="14" cy="32" r="3" fill="#F08488"/><circle cx="32" cy="32" r="3" fill="#F08488"/><circle cx="50" cy="32" r="3" fill="#F08488"/><circle cx="14" cy="50" r="3" fill="#F08488"/><circle cx="32" cy="50" r="3" fill="#F08488"/><circle cx="50" cy="50" r="3" fill="#F08488"/><line x1="14" y1="14" x2="32" y2="14" stroke="#F08488" stroke-width="2.5"/><line x1="14" y1="14" x2="14" y2="32" stroke="#F08488" stroke-width="2.5"/><line x1="14" y1="32" x2="32" y2="32" stroke="#F08488" stroke-width="2.5"/><line x1="32" y1="14" x2="32" y2="32" stroke="#F08488" stroke-width="2.5"/></svg>
-                    </div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/connect-dots.webp" alt="" width="600" height="600" loading="lazy"></div>
                     <div>
                         <h3>Dots &amp; Boxes</h3>
                         <div class="desc">Lines, boxes, strategy.</div>
@@ -349,9 +353,7 @@
             <a class="cat-card" href="../2048/">
                 <span class="cat-card-tag">Puzzle</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#F2A65A2E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="8" y="8"  width="11" height="11" rx="2" fill="#F2A65A" opacity="0.3"/><rect x="20" y="8"  width="11" height="11" rx="2" fill="#F2A65A" opacity="0.45"/><rect x="33" y="8"  width="11" height="11" rx="2" fill="#F2A65A" opacity="0.6"/><rect x="45" y="8"  width="11" height="11" rx="2" fill="#F2A65A" opacity="0.4"/><rect x="8"  y="20" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.5"/><rect x="20" y="20" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.7"/><rect x="33" y="20" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.55"/><rect x="45" y="20" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.35"/><rect x="8"  y="33" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.45"/><rect x="20" y="33" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.6"/><rect x="33" y="33" width="23" height="23" rx="3" fill="#F2A65A"/><rect x="8"  y="45" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.5"/><rect x="20" y="45" width="11" height="11" rx="2" fill="#F2A65A" opacity="0.4"/><text x="44.5" y="48.5" font-size="9" font-weight="800" fill="#fff" text-anchor="middle">2048</text></svg>
-                    </div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/2048.webp" alt="" width="600" height="600" loading="lazy"></div>
                     <div>
                         <h3>2048</h3>
                         <div class="desc">Merge tiles. Reach 2048.</div>
@@ -372,9 +374,7 @@
             <a class="cat-card" href="../othello/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#1A7B3F2E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="4" fill="#1A7B3F"/><circle cx="22" cy="22" r="7" fill="#FFFEF5"/><circle cx="42" cy="22" r="7" fill="#14130E"/><circle cx="22" cy="42" r="7" fill="#14130E"/><circle cx="42" cy="42" r="7" fill="#FFFEF5"/></svg>
-                    </div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/othello.webp" alt="" width="600" height="600" loading="lazy"></div>
                     <div>
                         <h3>Othello</h3>
                         <div class="desc">Flip flanked discs. Hold the corners.</div>
@@ -395,9 +395,7 @@
             <a class="cat-card" href="../chinese-checkers/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#2DA1A62E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><polygon points="32,4 38,22 58,22 42,33 48,52 32,40 16,52 22,33 6,22 26,22" fill="#2DA1A6" opacity="0.18"/><circle cx="32" cy="14" r="4" fill="#3D5A80"/><circle cx="32" cy="50" r="4" fill="#D23B33"/><circle cx="13" cy="22" r="4" fill="#E29F4D"/><circle cx="51" cy="22" r="4" fill="#9B5BD0"/><circle cx="13" cy="42" r="4" fill="#3FA866"/><circle cx="51" cy="42" r="4" fill="#D9B447"/></svg>
-                    </div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/chinese-checkers.webp" alt="" width="600" height="600" loading="lazy"></div>
                     <div>
                         <h3>Chinese Checkers</h3>
                         <div class="desc">Hop chains across the star. 2, 3, or 6 players.</div>
@@ -418,9 +416,7 @@
             <a class="cat-card" href="../ultimate-tic-tac-toe/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#E8A3302E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="6" width="52" height="52" rx="4" fill="#E8A330" opacity="0.14"/><line x1="24" y1="8" x2="24" y2="56" stroke="#E8A330" stroke-width="2"/><line x1="40" y1="8" x2="40" y2="56" stroke="#E8A330" stroke-width="2"/><line x1="8" y1="24" x2="56" y2="24" stroke="#E8A330" stroke-width="2"/><line x1="8" y1="40" x2="56" y2="40" stroke="#E8A330" stroke-width="2"/><line x1="11" y1="11" x2="21" y2="21" stroke="#C53B33" stroke-width="2" stroke-linecap="round"/><line x1="21" y1="11" x2="11" y2="21" stroke="#C53B33" stroke-width="2" stroke-linecap="round"/><circle cx="48" cy="16" r="5" fill="none" stroke="#2E6CB4" stroke-width="2"/><line x1="27" y1="27" x2="37" y2="37" stroke="#C53B33" stroke-width="2" stroke-linecap="round"/><line x1="37" y1="27" x2="27" y2="37" stroke="#C53B33" stroke-width="2" stroke-linecap="round"/><circle cx="16" cy="48" r="5" fill="none" stroke="#2E6CB4" stroke-width="2"/><circle cx="48" cy="48" r="5" fill="none" stroke="#2E6CB4" stroke-width="2"/></svg>
-                    </div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/ultimate-tic-tac-toe.webp" alt="" width="600" height="600" loading="lazy"></div>
                     <div>
                         <h3>Ultimate Tic-Tac-Toe</h3>
                         <div class="desc">Nine boards in one. Your move picks the next.</div>
@@ -441,9 +437,7 @@
             <a class="cat-card" href="../mancala/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-glyph" style="background:#B85C382E">
-                        <svg width="42" height="42" viewBox="0 0 64 64" aria-hidden="true"><rect x="6" y="20" width="52" height="24" rx="10" fill="#B85C38" opacity="0.18"/><ellipse cx="13" cy="32" rx="6" ry="10" fill="#B85C38" opacity="0.55"/><ellipse cx="51" cy="32" rx="6" ry="10" fill="#B85C38" opacity="0.55"/><circle cx="24" cy="26" r="3.5" fill="#B85C38"/><circle cx="32" cy="26" r="3.5" fill="#B85C38"/><circle cx="40" cy="26" r="3.5" fill="#B85C38"/><circle cx="24" cy="38" r="3.5" fill="#B85C38" opacity="0.7"/><circle cx="32" cy="38" r="3.5" fill="#B85C38" opacity="0.7"/><circle cx="40" cy="38" r="3.5" fill="#B85C38" opacity="0.7"/><circle cx="12" cy="30" r="2" fill="#FFF6E2"/><circle cx="14" cy="34" r="2" fill="#FFF6E2"/><circle cx="50" cy="30" r="2" fill="#FFF6E2"/><circle cx="52" cy="34" r="2" fill="#FFF6E2"/></svg>
-                    </div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/mancala.webp" alt="" width="600" height="600" loading="lazy"></div>
                     <div>
                         <h3>Mancala</h3>
                         <div class="desc">Sow seeds. Capture across. Claim the store.</div>
