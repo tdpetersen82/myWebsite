@@ -998,6 +998,8 @@ body.hub-root {
   opacity: 0.6;
   font-size: 10px;
 }
+/* AdSense disabled until approved — to re-enable: delete this rule + uncomment the loader <script> in each <head> */
+.ad-top, .ad-slot, .ad-tag { display: none !important; }
 
 /* ───────────── Footer ───────────── */
 .hub-foot {
