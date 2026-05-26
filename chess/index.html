@@ -34,12 +34,12 @@
         --wood-light: #E8D2A1;
         --wood-dark: #A07B4F;
         --frame: #5C3A1F;
-        --accent: #9B7EDC;
+        --accent: #C77A2A;
       }
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body {
         font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
-        background: linear-gradient(160deg, #F4ECD8 0%, #E8D2A1 100%);
+        background: #F5F0E6;
         color: var(--ink);
         min-height: 100vh;
         display: flex; flex-direction: column; align-items: center;
@@ -49,11 +49,10 @@
       .top-bar {
         width: 100%; display: flex; align-items: center; gap: 16px;
         padding: 11px 16px 12px;
-        background: rgba(255, 255, 255, 0.72);
-        backdrop-filter: blur(8px);
-        border: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+        background: #fff;
+        border: 1px solid rgba(31, 27, 22, 0.09);
         border-radius: 16px;
-        box-shadow: 0 10px 28px -16px color-mix(in oklab, var(--frame) 55%, transparent);
+        box-shadow: 0 1px 0 rgba(31, 27, 22, 0.09), 0 14px 30px -18px rgba(0, 0, 0, 0.45);
         position: relative; overflow: hidden;
         flex-wrap: wrap;
       }
@@ -80,7 +79,6 @@
       }
       .tb-dot {
         width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
-        box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
       }
       h1 {
         font-family: 'Bricolage Grotesque', serif;
@@ -178,17 +176,18 @@
       .cap-adv { font-weight: 800; font-size: 13px; color: var(--frame); font-variant-numeric: tabular-nums; margin-left: 8px; }
       .panel {
         width: 300px; flex-shrink: 0; display: flex; flex-direction: column; gap: 12px;
-        background: rgba(255, 255, 255, 0.72); backdrop-filter: blur(8px);
-        border: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+        background: #fff;
+        border: 1px solid rgba(31, 27, 22, 0.09);
         border-radius: 16px; padding: 14px;
-        box-shadow: 0 10px 28px -16px color-mix(in oklab, var(--frame) 55%, transparent);
+        box-shadow: 0 10px 26px -20px rgba(0, 0, 0, 0.35);
       }
       .panel-status {
         font-family: 'Bricolage Grotesque', serif; font-size: 17px; font-weight: 700;
         color: var(--frame); padding: 4px 2px 8px; border-bottom: 1px solid color-mix(in oklab, var(--ink) 10%, transparent);
       }
-      .panel .controls { display: flex; gap: 8px; }
-      .panel .controls button { flex: 1; padding: 9px 10px; font-size: 13px; }
+      .panel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+      .panel-actions button { width: 100%; padding: 9px 8px; font-size: 13px; border-radius: 10px; white-space: nowrap; }
+      .panel-actions .full { grid-column: 1 / -1; }
       .panel-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .seg { flex: 1; display: flex; flex-direction: column; gap: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: color-mix(in oklab, var(--ink) 55%, transparent); }
       .seg select {
@@ -231,16 +230,13 @@
         .layout { flex-direction: column; align-items: center; }
         .panel { width: min(94vw, 600px); }
       }
-      .controls {
-        display: flex; gap: 10px; flex-wrap: wrap; justify-content: center;
-      }
       button {
         font: inherit; font-weight: 700;
         padding: 10px 18px; border-radius: 999px;
         border: 2px solid transparent;
         background: var(--accent); color: #fff;
         cursor: pointer; transition: transform 0.1s;
-        box-shadow: 0 4px 12px rgba(155, 126, 220, 0.3);
+        box-shadow: 0 4px 12px rgba(199, 122, 42, 0.3);
       }
       button:hover { transform: translateY(-1px); }
       button:active { transform: translateY(1px); }
@@ -267,7 +263,11 @@
       .promo-btn img { width: clamp(38px, 9vw, 52px); height: clamp(38px, 9vw, 52px); display: block; }
       .promo-btn:hover { background: var(--wood-light); transform: translateY(-2px); }
       .hint { font-size: 13px; color: rgba(26, 19, 16, 0.6); text-align: center; max-width: 600px; }
-      #how { padding: 20px 16px; max-width: 640px; width: 100%; }
+      #how {
+        padding: 24px 28px; max-width: 640px; width: 100%;
+        background: #fff; border: 1px solid rgba(31, 27, 22, 0.09);
+        border-radius: 18px;
+      }
       #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin: 0 0 10px; }
       #how h3 { font-family: 'Bricolage Grotesque', serif; font-size: 16px; color: var(--frame); margin: 18px 0 6px; }
       #how p { font-size: 14px; color: rgba(26, 19, 16, 0.8); line-height: 1.55; margin: 0 0 10px; }
@@ -338,20 +338,16 @@
                     <span>Viewing an earlier position</span>
                     <button id="toLive">Return to game</button>
                 </div>
-                <div class="controls">
-                    <button id="newGame">New game</button>
+                <div class="panel-actions">
+                    <button id="newGame" class="full">New game</button>
                     <button id="undo" class="ghost">Undo</button>
                     <button id="hint" class="ghost">Hint</button>
-                </div>
-                <div class="controls">
-                    <button id="resign" class="ghost">Resign</button>
                     <button id="flip" class="ghost">Switch sides</button>
                     <button id="flipBoard" class="ghost">Flip</button>
-                </div>
-                <div class="controls">
+                    <button id="resign" class="ghost">Resign</button>
+                    <button id="review" class="ghost">Review</button>
                     <button id="copyPgn" class="ghost">Copy PGN</button>
                     <button id="copyFen" class="ghost">Copy FEN</button>
-                    <button id="review" class="ghost">Review</button>
                 </div>
                 <div class="analysis-out" id="analysisOut" hidden></div>
                 <div class="panel-settings">
