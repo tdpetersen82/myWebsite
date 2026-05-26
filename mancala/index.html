@@ -6,14 +6,14 @@
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
-    <title>Mancala — Free Browser Kalah vs. AI | Limestone Games</title>
-    <meta name="description" content="Play Mancala (Kalah rules) free in your browser against an AI. Sow seeds, capture across, and claim your store. Three difficulty tiers, no downloads.">
-    <meta name="keywords" content="mancala, kalah, online mancala, free mancala, browser mancala, mancala vs AI, sowing game">
+    <title>Mancala — Free Browser Kalah vs. Computer | Limestone Games</title>
+    <meta name="description" content="Play Mancala (Kalah rules) free in your browser against the computer. Sow seeds, capture across, and claim your store. Three difficulty tiers, no downloads.">
+    <meta name="keywords" content="mancala, kalah, online mancala, free mancala, browser mancala, mancala vs Computer, sowing game">
     <link rel="canonical" href="https://limestonegames.com/mancala/">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Mancala","description":"Play Mancala (Kalah rules) in your browser against an AI. Three difficulty tiers, capture rule, free-turn on store, sweep at game end.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Mancala","description":"Play Mancala (Kalah rules) in your browser against the computer. Three difficulty tiers, capture rule, free-turn on store, sweep at game end.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Mancala"}]}</script>
     <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Mancala?", "acceptedAnswer": {"@type": "Answer", "text": "Click one of your pits to scoop up its stones and sow them counter-clockwise, one per pit. Land your last stone in your store to take another turn. The game ends when one side has no stones in play."}}, {"@type": "Question", "name": "Is Mancala free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "What's the \"capture\" rule?", "acceptedAnswer": {"@type": "Answer", "text": "If your last sown stone lands in an empty pit on your side, you capture that stone plus all stones in the directly opposite pit. Both go into your store."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
-    <meta property="og:title" content="Mancala — Free Browser Kalah vs. AI">
+    <meta property="og:title" content="Mancala — Free Browser Kalah vs. Computer">
     <meta property="og:description" content="Sow seeds, capture across, claim your store. Three difficulties, no downloads.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://limestonegames.com/mancala/">
@@ -186,12 +186,12 @@
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
-                <span class="tb-eyebrow"><span class="tb-dot"></span>Mancala · vs AI</span>
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Mancala · vs Computer</span>
                 <h1>Mancala</h1>
             </div>
             <div class="stats">
             <div><span class="l">Turn</span><span class="v" id="turn">Your move</span></div>
-            <div><span class="l">Score</span><span class="v score" id="score">You 0 – AI 0</span></div>
+            <div><span class="l">Score</span><span class="v score" id="score">You 0 – Computer 0</span></div>
             <div><span class="l">Record</span><span class="v" id="wins">0–0</span></div>
             <div><span class="l">Streak</span><span class="v" id="streak">0</span></div>
             <div><span class="l">Level</span>
@@ -230,13 +230,13 @@
 
         <section id="how" aria-label="How to play">
             <h2>How to play</h2>
-            <p>The board has 12 small pits — six per side — and one large store on each end. You play the bottom row; the AI plays the top. Your store is on the right, the AI's on the left. The game starts with 4 seeds in every small pit.</p>
-            <p>On your turn, pick one of your six pits. Take all its seeds and drop one into each pit going counter-clockwise (rightward on your row, then up to the AI's row going left), skipping the AI's store. Land the last seed in your own store → take another turn. Land the last seed in one of your own previously-empty pits → capture all seeds in the opposite pit (plus your seed) into your store.</p>
+            <p>The board has 12 small pits — six per side — and one large store on each end. You play the bottom row; the computer plays the top. Your store is on the right, the computer's on the left. The game starts with 4 seeds in every small pit.</p>
+            <p>On your turn, pick one of your six pits. Take all its seeds and drop one into each pit going counter-clockwise (rightward on your row, then up to the computer's row going left), skipping the computer's store. Land the last seed in your own store → take another turn. Land the last seed in one of your own previously-empty pits → capture all seeds in the opposite pit (plus your seed) into your store.</p>
             <p>The game ends as soon as one side has no seeds in any of its six pits. The other player sweeps any remaining seeds on their side into their store. Most seeds in store wins.</p>
             <ul>
                 <li><b>Preview before you commit</b> — hover a pit on a mouse, or tap once to preview and again to play it on touch.</li>
                 <li><b>Hint</b> — stuck? The Hint button highlights a strong move for you.</li>
-                <li><b>Undo</b> — take back your last move (and the AI's reply) while a game is in progress.</li>
+                <li><b>Undo</b> — take back your last move (and the computer's reply) while a game is in progress.</li>
                 <li><b>Two looks</b> — switch between the warm <i>Heirloom Hardwood</i> board and the dark <i>Twilight Slate</i> board any time; your choice is remembered.</li>
                 <li><b>Easy</b> — depth 2 with randomness; misses most captures. <b>Medium</b> — depth 6, capture-aware. <b>Hard</b> — depth 10 with mobility and chain-turn heuristics.</li>
             </ul>
@@ -715,7 +715,7 @@
       // Side labels
       ctx.save(); ctx.globalAlpha = 0.6; ctx.fillStyle = T.label; ctx.font = '600 11px Inter, sans-serif';
       ctx.fillText('YOUR STORE', W - PAD - STORE_W / 2, H - PAD - 6);
-      ctx.fillText('AI STORE', PAD + STORE_W / 2, H - PAD - 6);
+      ctx.fillText('COMPUTER STORE', PAD + STORE_W / 2, H - PAD - 6);
       ctx.restore();
 
       // Move preview (on top of seeds so it reads clearly)
@@ -942,7 +942,7 @@
     function refreshStats() {
       winsEl.textContent = readNum(KEY_WINS) + '–' + readNum(KEY_LOSS);
       streakEl.textContent = readNum(KEY_STREAK);
-      scoreEl.textContent = 'You ' + state.pits[PLAYER_STORE] + ' – AI ' + state.pits[AI_STORE];
+      scoreEl.textContent = 'You ' + state.pits[PLAYER_STORE] + ' – Computer ' + state.pits[AI_STORE];
     }
 
     function setStatus(s) { statusEl.textContent = s; }
@@ -974,7 +974,7 @@
     function checkEnd() {
       if (state.winner === 0) return false;
       const ps = state.pits[PLAYER_STORE], as = state.pits[AI_STORE];
-      const summary = `Final: You ${ps} — AI ${as}.`;
+      const summary = `Final: You ${ps} — Computer ${as}.`;
       if (state.winner === PLAYER) { recordWin(); spawnBurst(PLAYER_STORE); sWin(); haptic([50, 40, 90]); showOver('You win!', summary + ' Streak preserved.'); }
       else if (state.winner === AI) { recordLoss(); sLose(); haptic(70); showOver('You lost', summary + ' Streak reset.'); }
       else { recordDraw(); sDraw(); showOver('Draw', summary + ' Streak reset.'); }
@@ -1010,15 +1010,15 @@
       if (state.turn !== AI) { aiThinking = false; return; }
       aiThinking = true;
       preview = null; selectedPit = null;
-      setTurnLabel('AI thinking…');
-      setStatus('AI is calculating its response.');
+      setTurnLabel('Computer thinking…');
+      setStatus('Computer is calculating its response.');
       updateUndoBtn(); updateHintBtn();
       const cfg = DIFF_CFG[difficulty] || DIFF_CFG.Medium;
       searchBestMoveAsync(state, cfg, (m) => {
         if (m == null) { aiThinking = false; nextTurn(); return; }
         performMove(m, (info) => {
-          if (info.freeTurn && state.winner === 0) { showToast('AI lands in its store — goes again'); sFree(); setTimeout(aiTurn, 320); return; }
-          if (info.capture && state.winner === 0) showToast('AI captures ' + info.capture.count);
+          if (info.freeTurn && state.winner === 0) { showToast('Computer lands in its store — goes again'); sFree(); setTimeout(aiTurn, 320); return; }
+          if (info.capture && state.winner === 0) showToast('Computer captures ' + info.capture.count);
           aiThinking = false;
           nextTurn();
         });

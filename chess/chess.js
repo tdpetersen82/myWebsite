@@ -450,7 +450,7 @@
     sound(move.castle ? 'castle' : move.promo ? 'promote' : (move.capture || move.ep) ? 'capture' : 'move');
     if (endGameIfTerminal()) return;
     if (E.isInCheck(state, state.turn)) sound('check');
-    setStatus(state.turn === playerColor ? 'Your move.' : 'AI is thinking…');
+    setStatus(state.turn === playerColor ? 'Your move.' : 'Computer is thinking…');
     if (state.turn !== playerColor) scheduleAI();
   }
 
@@ -610,7 +610,7 @@
     renderCaptured();
     updateMoveList();
     updateEval();
-    setStatus(state.turn === playerColor ? 'Your move.' : 'AI is thinking…');
+    setStatus(state.turn === playerColor ? 'Your move.' : 'Computer is thinking…');
     if (state.turn !== playerColor) scheduleAI();
   }
 
@@ -632,7 +632,7 @@
     renderCaptured();
     updateMoveList();
     updateEval();
-    setStatus(state.turn === playerColor ? 'Your move.' : 'AI is thinking…');
+    setStatus(state.turn === playerColor ? 'Your move.' : 'Computer is thinking…');
     if (state.turn !== playerColor) scheduleAI();
   }
 

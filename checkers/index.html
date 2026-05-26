@@ -6,25 +6,25 @@
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
-    <title>Checkers — Free Browser Checkers vs. AI | Limestone Games</title>
-    <meta name="description" content="Play American checkers free in your browser against an AI. Mandatory captures, multi-jumps, kings — all standard rules. Three difficulty tiers, no downloads.">
-    <meta name="keywords" content="checkers, draughts, online checkers, free checkers, browser checkers, checkers vs AI">
+    <title>Checkers — Free Browser Checkers vs. Computer | Limestone Games</title>
+    <meta name="description" content="Play American checkers free in your browser against the computer. Mandatory captures, multi-jumps, kings — all standard rules. Three difficulty tiers, no downloads.">
+    <meta name="keywords" content="checkers, draughts, online checkers, free checkers, browser checkers, checkers vs Computer">
     <link rel="canonical" href="https://limestonegames.com/checkers/">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.json">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Checkers","description":"Play American checkers in your browser against an AI. Mandatory captures, multi-jumps, king promotion. Three difficulty tiers.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Checkers","description":"Play American checkers in your browser against the computer. Mandatory captures, multi-jumps, king promotion. Three difficulty tiers.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Checkers"}]}</script>
     <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Checkers?", "acceptedAnswer": {"@type": "Answer", "text": "Click a piece, then click a diagonal destination square. Capture an opponent's piece by jumping over it into an empty square. Reach the far row to make a King."}}, {"@type": "Question", "name": "Is Checkers free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Why did the game force a capture?", "acceptedAnswer": {"@type": "Answer", "text": "Optional captures are off by default — when a capture is available, you must take it. Toggle the rule in the difficulty menu if you prefer the optional-capture variant."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
-    <meta property="og:title" content="Checkers — Free Browser Checkers vs. AI">
+    <meta property="og:title" content="Checkers — Free Browser Checkers vs. Computer">
     <meta property="og:description" content="American checkers with mandatory captures and multi-jumps. Three difficulties. No downloads.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://limestonegames.com/checkers/">
     <meta property="og:image" content="https://limestonegames.com/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Checkers — Free Browser Checkers vs. AI">
+    <meta name="twitter:title" content="Checkers — Free Browser Checkers vs. Computer">
     <meta name="twitter:description" content="American checkers with mandatory captures and multi-jumps. Three difficulties.">
 
     <style>
@@ -153,7 +153,7 @@
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
-                <span class="tb-eyebrow"><span class="tb-dot"></span>Checkers · vs AI</span>
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Checkers · vs Computer</span>
                 <h1>Checkers</h1>
             </div>
             <div class="stats">
@@ -192,7 +192,7 @@
 
         <section id="how" aria-label="How to play">
             <h2>How to play</h2>
-            <p>You play red, the AI plays black. Click a piece to see legal moves; click a destination to move. The <b>Captures</b> selector switches between mandatory jumps (tournament rule) and optional jumps (casual play).</p>
+            <p>You play red, the computer plays black. Click a piece to see legal moves; click a destination to move. The <b>Captures</b> selector switches between mandatory jumps (tournament rule) and optional jumps (casual play).</p>
             <p>Reach the opposite back row to crown a man into a <b>king</b>; kings move both forward and backward diagonally. Win by capturing all enemy pieces or leaving them with no legal moves.</p>
             <ul>
                 <li><b>Easy</b> — depth 2 with extra randomness; will miss tactics.</li>
@@ -692,7 +692,7 @@
     function checkEnd() {
       const s = gameStatus(state);
       if (s === 'playing') return false;
-      if (s === 'red-wins') { recordWin(); showOver('You win!', 'AI has no legal moves. Streak preserved.'); }
+      if (s === 'red-wins') { recordWin(); showOver('You win!', 'Computer has no legal moves. Streak preserved.'); }
       else if (s === 'black-wins') { recordLoss(); showOver('You lost', 'No legal moves left. Streak reset.'); }
       else { recordDraw(); showOver('Draw', 'No progress in 40 moves. Streak reset.'); }
       return true;
@@ -750,8 +750,8 @@
       availableMoves = [];
       startAnimation(before, m, isCapture, () => {
         if (checkEnd()) return;
-        setTurnLabel('AI thinking');
-        setStatus('AI is calculating its response.');
+        setTurnLabel('Computer thinking');
+        setStatus('Computer is calculating its response.');
         setTimeout(aiTurn, 60);
       });
     }

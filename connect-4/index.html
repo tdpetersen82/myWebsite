@@ -6,21 +6,21 @@
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
-    <title>Connect 4 — Play Free Online vs. the AI | Limestone Games</title>
-    <meta name="description" content="Play Connect 4 free in your browser against an AI. Three difficulty tiers, drop-to-play, no downloads. Get four in a row to beat the computer.">
-    <meta name="keywords" content="connect 4, connect four, online connect 4, free connect 4, browser connect 4, connect 4 vs AI, four in a row">
+    <title>Connect 4 — Play Free Online vs. Computer | Limestone Games</title>
+    <meta name="description" content="Play Connect 4 free in your browser against the computer. Three difficulty tiers, drop-to-play, no downloads. Get four in a row to beat the computer.">
+    <meta name="keywords" content="connect 4, connect four, online connect 4, free connect 4, browser connect 4, connect 4 vs Computer, four in a row">
     <link rel="canonical" href="https://limestonegames.com/connect-4/">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Connect 4","description":"Play Connect 4 free in your browser against an AI. Three difficulty tiers, four-in-a-row.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Connect 4","description":"Play Connect 4 free in your browser against the computer. Three difficulty tiers, four-in-a-row.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Connect 4"}]}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Connect 4?","acceptedAnswer":{"@type":"Answer","text":"Click or tap a column to drop your disc. The first player to line up four of their discs in a row — horizontally, vertically, or diagonally — wins."}},{"@type":"Question","name":"Is Connect 4 free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs."}},{"@type":"Question","name":"What's the best opening?","acceptedAnswer":{"@type":"Answer","text":"The center column. It belongs to more winning lines than any other column, so taking it first gives the most flexibility."}},{"@type":"Question","name":"Does my record save?","acceptedAnswer":{"@type":"Answer","text":"Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
-    <meta property="og:title" content="Connect 4 — Play Free Online vs. the AI | Limestone Games">
-    <meta property="og:description" content="Play Connect 4 free in your browser against an AI. Three difficulty tiers.">
+    <meta property="og:title" content="Connect 4 — Play Free Online vs. Computer | Limestone Games">
+    <meta property="og:description" content="Play Connect 4 free in your browser against the computer. Three difficulty tiers.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://limestonegames.com/connect-4/">
     <meta property="og:image" content="https://limestonegames.com/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Connect 4 — Play Free Online vs. the AI | Limestone Games">
-    <meta name="twitter:description" content="Play Connect 4 free in your browser against an AI. Three difficulty tiers.">
+    <meta name="twitter:title" content="Connect 4 — Play Free Online vs. Computer | Limestone Games">
+    <meta name="twitter:description" content="Play Connect 4 free in your browser against the computer. Three difficulty tiers.">
     <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -162,7 +162,7 @@
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
-                <span class="tb-eyebrow"><span class="tb-dot"></span>Connect Four · vs AI</span>
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Connect Four · vs Computer</span>
                 <h1>Connect 4</h1>
             </div>
             <div class="stats">
@@ -191,7 +191,7 @@
             <button id="newGame">New game</button>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <p class="hint">You are red and move first. Drop a disc into any column — get four of your discs in a row (across, down, or diagonally) before the AI does.</p>
+        <p class="hint">You are red and move first. Drop a disc into any column — get four of your discs in a row (across, down, or diagonally) before the computer does.</p>
 
         <section id="how" aria-label="About Connect 4">
             <h2>How to play Connect 4</h2>
@@ -215,7 +215,7 @@
                 <li><b>Own the center column.</b> It runs through more winning lines than any other column — take it early.</li>
                 <li><b>Make double threats.</b> Set up two ways to win at once so a single block can't stop both.</li>
                 <li><b>Watch the odd rows.</b> As the first player, threats that complete on odd rows (1, 3, 5 from the bottom) are especially strong.</li>
-                <li><b>Block before you build.</b> If the AI has three in a row with an open end, stop it before chasing your own line.</li>
+                <li><b>Block before you build.</b> If the computer has three in a row with an open end, stop it before chasing your own line.</li>
             </ul>
 
             <h3>About Connect 4</h3>
@@ -451,7 +451,7 @@
         function endIfDone() {
             const w = winnerOf(board);
             if (w === PLAYER) { recordWin(); refreshStats(); showOver('', 'You win!', 'Four in a row — streak preserved.'); gameOver = true; return true; }
-            if (w === AI) { recordLoss(); refreshStats(); showOver('lose', 'You lost', 'The AI connected four. Streak reset.'); gameOver = true; return true; }
+            if (w === AI) { recordLoss(); refreshStats(); showOver('lose', 'You lost', 'The computer connected four. Streak reset.'); gameOver = true; return true; }
             if (isFull(board)) { recordDraw(); refreshStats(); showOver('tie', "It's a draw", 'The grid filled with no four-in-a-row.'); gameOver = true; return true; }
             return false;
         }
@@ -476,8 +476,8 @@
             if (endIfDone()) { draw(); return; }
             turn = AI;
             aiThinking = true;
-            setStatus('AI is thinking…');
-            turnEl.textContent = 'AI thinking';
+            setStatus('Computer is thinking…');
+            turnEl.textContent = 'Computer thinking';
             draw();
             setTimeout(aiMove, 420);
         }

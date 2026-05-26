@@ -6,20 +6,20 @@
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
-    <title>Othello — Free Browser Reversi vs. AI | Limestone Games</title>
-    <meta name="description" content="Play Othello (Reversi) free in your browser against an AI. Standard rules, three difficulty tiers, perfect endgame solver on Hard. No downloads.">
-    <meta name="keywords" content="othello, reversi, online othello, free reversi, browser othello, othello vs AI">
+    <title>Othello — Free Browser Reversi vs. Computer | Limestone Games</title>
+    <meta name="description" content="Play Othello (Reversi) free in your browser against the computer. Standard rules, three difficulty tiers, perfect endgame solver on Hard. No downloads.">
+    <meta name="keywords" content="othello, reversi, online othello, free reversi, browser othello, othello vs Computer">
     <link rel="canonical" href="https://limestonegames.com/othello/">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Othello","description":"Play Othello (Reversi) in your browser against an AI. Three difficulty tiers, perfect endgame solver on Hard.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Othello","description":"Play Othello (Reversi) in your browser against the computer. Three difficulty tiers, perfect endgame solver on Hard.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Othello"}]}</script>
     <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Othello?", "acceptedAnswer": {"@type": "Answer", "text": "Place a disc so that you flank one or more of your opponent's discs in a straight line between yours. All flanked discs flip to your color. Most discs on the board at the end wins."}}, {"@type": "Question", "name": "Is Othello free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Why can't I move there?", "acceptedAnswer": {"@type": "Answer", "text": "Every move must flank at least one of your opponent's discs. If a square doesn't flank anything, you can't play there. If no move flanks, your turn is skipped."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
-    <meta property="og:title" content="Othello — Free Browser Reversi vs. AI">
-    <meta property="og:description" content="Play Othello (Reversi) in your browser against an AI. Three difficulty tiers. No downloads.">
+    <meta property="og:title" content="Othello — Free Browser Reversi vs. Computer">
+    <meta property="og:description" content="Play Othello (Reversi) in your browser against the computer. Three difficulty tiers. No downloads.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://limestonegames.com/othello/">
     <meta property="og:image" content="https://limestonegames.com/og-image.png">
     <meta name="twitter:card" content="summary_large_image">
-    <meta name="twitter:title" content="Othello — Free Browser Reversi vs. AI">
+    <meta name="twitter:title" content="Othello — Free Browser Reversi vs. Computer">
     <meta name="twitter:description" content="Othello with corners, edges, and a perfect endgame solver on Hard. Three difficulties.">
 
     <style>
@@ -157,7 +157,7 @@
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
-                <span class="tb-eyebrow"><span class="tb-dot"></span>Reversi · vs AI</span>
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Reversi · vs Computer</span>
                 <h1>Othello</h1>
             </div>
             <div class="stats">
@@ -192,7 +192,7 @@
 
         <section id="how" aria-label="How to play">
             <h2>How to play</h2>
-            <p>You play Black, the AI plays White. Each move must place a disc so it sandwiches one or more of your opponent's discs in a straight line — horizontal, vertical, or diagonal. Every sandwiched disc flips to your color.</p>
+            <p>You play Black, the computer plays White. Each move must place a disc so it sandwiches one or more of your opponent's discs in a straight line — horizontal, vertical, or diagonal. Every sandwiched disc flips to your color.</p>
             <p>If you have no legal move, your turn passes automatically. When neither side can move (or the board fills up), the side with more discs wins.</p>
             <ul>
                 <li><b>Easy</b> — depth 2 with extra randomness; will overlook tactics.</li>
@@ -690,7 +690,7 @@
       // Side with no moves passes
       const passingSide = state.turn;
       applyPass(state);
-      const sideName = passingSide === PLAYER ? 'You' : 'AI (White)';
+      const sideName = passingSide === PLAYER ? 'You' : 'Computer (White)';
       showToast(sideName + ' has no move — pass');
       onPass(); // caller decides what to do next
       return true;
@@ -704,7 +704,7 @@
       if (moves.length === 0) {
         applyPass(state);
         const passSide = -state.turn; // who just passed (we already swapped)
-        showToast((passSide === PLAYER ? 'You have' : 'AI has') + ' no move — pass');
+        showToast((passSide === PLAYER ? 'You have' : 'Computer has') + ' no move — pass');
         if (checkEnd()) return;
         // Recurse to handle the new side
         setTimeout(nextTurn, 600);
@@ -716,8 +716,8 @@
         refreshStats();
         draw();
       } else {
-        setTurnLabel('AI thinking');
-        setStatus('AI is calculating its response.');
+        setTurnLabel('Computer thinking');
+        setStatus('Computer is calculating its response.');
         refreshStats();
         draw();
         aiThinking = true;

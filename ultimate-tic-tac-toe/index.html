@@ -6,14 +6,14 @@
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
-    <title>Ultimate Tic-Tac-Toe — Free Browser Game vs. AI | Limestone Games</title>
-    <meta name="description" content="Play Ultimate Tic-Tac-Toe free in your browser against an AI. Nine boards inside one, your move sends the opponent to a specific board. Three difficulties, no downloads.">
-    <meta name="keywords" content="ultimate tic-tac-toe, ultimate tic tac toe, super tic tac toe, browser tic tac toe, tic tac toe vs AI, free tic tac toe">
+    <title>Ultimate Tic-Tac-Toe — Free Browser Game vs. Computer | Limestone Games</title>
+    <meta name="description" content="Play Ultimate Tic-Tac-Toe free in your browser against the computer. Nine boards inside one, your move sends the opponent to a specific board. Three difficulties, no downloads.">
+    <meta name="keywords" content="ultimate tic-tac-toe, ultimate tic tac toe, super tic tac toe, browser tic tac toe, tic tac toe vs Computer, free tic tac toe">
     <link rel="canonical" href="https://limestonegames.com/ultimate-tic-tac-toe/">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Ultimate Tic-Tac-Toe","description":"Play Ultimate Tic-Tac-Toe in your browser against an AI. Nine boards in one — your move sends your opponent to a specific board. Three difficulty tiers.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Ultimate Tic-Tac-Toe","description":"Play Ultimate Tic-Tac-Toe in your browser against the computer. Nine boards in one — your move sends your opponent to a specific board. Three difficulty tiers.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Ultimate Tic-Tac-Toe"}]}</script>
     <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Ultimate Tic-Tac-Toe?", "acceptedAnswer": {"@type": "Answer", "text": "You're playing nine simultaneous tic-tac-toe boards arranged in a 3×3 meta-grid. Your move in a small cell forces your opponent to play in the corresponding board. Win three small boards in a row to win the game."}}, {"@type": "Question", "name": "Is Ultimate Tic-Tac-Toe free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Why is my next move constrained?", "acceptedAnswer": {"@type": "Answer", "text": "Each move sends your opponent to the small board matching the cell you just played. If that board is already won or full, they can play anywhere — until then they can't."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
-    <meta property="og:title" content="Ultimate Tic-Tac-Toe — Free Browser Game vs. AI">
+    <meta property="og:title" content="Ultimate Tic-Tac-Toe — Free Browser Game vs. Computer">
     <meta property="og:description" content="Nine boards in one, three difficulties. The strategic twist on the classic.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://limestonegames.com/ultimate-tic-tac-toe/">
@@ -159,7 +159,7 @@
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
-                <span class="tb-eyebrow"><span class="tb-dot"></span>Tic-Tac-Toe · vs AI</span>
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Tic-Tac-Toe · vs Computer</span>
                 <h1>Ultimate Tic-Tac-Toe</h1>
             </div>
             <div class="stats">
@@ -193,7 +193,7 @@
 
         <section id="how" aria-label="How to play">
             <h2>How to play</h2>
-            <p>The board is a 3×3 grid of nine smaller tic-tac-toe boards. You play X, the AI plays O. X moves first and can pick any cell on the board.</p>
+            <p>The board is a 3×3 grid of nine smaller tic-tac-toe boards. You play X, the computer plays O. X moves first and can pick any cell on the board.</p>
             <p>After your move, the position you played (top-left, center, bottom-right, etc.) tells your opponent which mini-board they must play in next. If that mini-board is already won or full, the opponent gets a free choice anywhere on the board.</p>
             <p>Win a mini-board by getting three in a row inside it — that claims the matching cell on the meta board. Win three mini-boards in a row on the meta board to win the game.</p>
             <ul>
@@ -703,8 +703,8 @@
         refreshStats();
         draw();
       } else {
-        setTurnLabel('AI thinking');
-        setStatus('AI is calculating its response.');
+        setTurnLabel('Computer thinking');
+        setStatus('Computer is calculating its response.');
         refreshStats();
         draw();
         aiThinking = true;
