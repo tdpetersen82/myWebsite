@@ -26,6 +26,7 @@
   const overBtn = document.getElementById('overBtn');
   const promoEl = document.getElementById('promo');
   const promoChoices = document.getElementById('promoChoices');
+  const boardToastEl = document.getElementById('boardToast');
   const capTopEl = document.getElementById('capTop');
   const capBottomEl = document.getElementById('capBottom');
   const flipBoardBtn = document.getElementById('flipBoard');
@@ -95,6 +96,8 @@
   const squarePieces = new Array(64).fill(null); // board idx -> piece element
   let drag = null;
   let hintSquares = null;  // { from, to } currently highlighted by the Hint button
+  let pseudoTargets = new Set();  // squares the selected piece could reach ignoring king safety
+  let toastTimer = null;
 
   // ---- small helpers ----
   function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
@@ -433,7 +436,7 @@
     viewPly = playedMoves.length;
     reviewing = false; reviewBarEl.hidden = true;
     animateMove(move);
-    selected = null; legalForSelected = [];
+    selected = null; legalForSelected = []; pseudoTargets = new Set();
     updateHighlights();
     renderCaptured();
     if (bestBeforeMover != null) {
@@ -471,8 +474,34 @@
     return idxOf(vr, vc);
   }
 
-  function select(sqi) { clearHint(); selected = sqi; legalForSelected = E.legalMovesFrom(state, sqi); updateHighlights(); }
-  function deselect() { clearHint(); selected = null; legalForSelected = []; updateHighlights(); }
+  function select(sqi) {
+    clearHint();
+    selected = sqi;
+    legalForSelected = E.legalMovesFrom(state, sqi);
+    pseudoTargets = new Set(E.generatePseudoMoves(state).filter(m => m.from === sqi).map(m => m.to));
+    updateHighlights();
+  }
+  function deselect() { clearHint(); selected = null; legalForSelected = []; pseudoTargets = new Set(); updateHighlights(); }
+
+  // A square the selected piece could reach by its movement rules, but which the engine
+  // rejected for king safety (an absolute pin, or failing to address an existing check).
+  function illegalKingSafety(toSq) {
+    return pseudoTargets.has(toSq) && !legalForSelected.some(m => m.to === toSq);
+  }
+  function toast(msg) {
+    boardToastEl.textContent = msg;
+    boardToastEl.hidden = false;
+    void boardToastEl.offsetWidth;
+    boardToastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(() => boardToastEl.classList.remove('show'), 1700);
+  }
+  function flashIllegal() {
+    const kingSq = E.findKing(state.board, playerColor);
+    const c = kingSq >= 0 ? squareCells[kingSq] : null;
+    if (c) { c.classList.remove('sq-illegal'); void c.offsetWidth; c.classList.add('sq-illegal'); setTimeout(() => c.classList.remove('sq-illegal'), 900); }
+    toast(E.isInCheck(state, playerColor) ? 'Your king is in check — defend it first.' : 'That piece is pinned — moving it would expose your king.');
+  }
 
   function chooseMoveTo(toSq) {
     const m = legalForSelected.find(mv => mv.to === toSq);
@@ -492,7 +521,10 @@
     if (gameOver || aiThinking || pendingPromo || reviewing) return;
     if (state.turn !== playerColor) return;
     const sqi = squareAt(e);
-    if (selected != null && chooseMoveTo(sqi)) return;
+    if (selected != null) {
+      if (chooseMoveTo(sqi)) return;
+      if (illegalKingSafety(sqi)) { flashIllegal(); return; }
+    }
     const p = state.board[sqi];
     if (p !== '.' && E.colorOf(p) === playerColor) {
       select(sqi);
@@ -529,7 +561,10 @@
     drag = null;
     if (moved) {
       const handled = (selected != null) && chooseMoveTo(sqi);
-      if (!handled && el) setTransform(el, fromSq); // snap back
+      if (!handled) {
+        if (selected != null && illegalKingSafety(sqi)) flashIllegal();
+        if (el) setTransform(el, fromSq); // snap back
+      }
     } else if (el) {
       setTransform(el, fromSq); // a tap: selection already set, keep piece on its square
     }
@@ -560,12 +595,13 @@
   // ---- new game / controls ----
   function newGame() {
     state = E.newGame();
-    selected = null; legalForSelected = []; pendingPromo = null; aiThinking = false; gameOver = false;
+    selected = null; legalForSelected = []; pseudoTargets = new Set(); pendingPromo = null; aiThinking = false; gameOver = false;
     captured = { w: [], b: [] };
     playedMoves = []; viewPly = 0; reviewing = false; gameResultStr = '*';
     overEl.classList.remove('show');
     promoEl.classList.remove('show');
     reviewBarEl.hidden = true;
+    boardToastEl.classList.remove('show'); boardToastEl.hidden = true;
     analysisOutEl.hidden = true;
     hintSquares = null;
     buildSquares();

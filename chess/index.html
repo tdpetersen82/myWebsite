@@ -129,6 +129,16 @@
       .sq.sq-check { box-shadow: inset 0 0 0 9999px rgba(220, 60, 50, 0.46); }
       .sq.sq-sel { box-shadow: inset 0 0 0 9999px rgba(90, 160, 220, 0.42); }
       .sq.sq-hint { box-shadow: inset 0 0 0 9999px color-mix(in oklab, var(--accent) 42%, transparent); }
+      .sq.sq-illegal { animation: kingDanger 0.45s ease 2; }
+      @keyframes kingDanger { 0%, 100% { box-shadow: inset 0 0 0 9999px rgba(220, 60, 50, 0); } 50% { box-shadow: inset 0 0 0 9999px rgba(220, 60, 50, 0.6); } }
+      .board-toast {
+        position: absolute; left: 50%; bottom: 7%; transform: translateX(-50%); z-index: 35;
+        background: rgba(26, 19, 16, 0.88); color: #fff; padding: 8px 15px; border-radius: 999px;
+        font-size: 13px; font-weight: 600; max-width: 88%; text-align: center; pointer-events: none;
+        opacity: 0; transition: opacity 0.2s; box-shadow: 0 6px 18px rgba(0,0,0,0.3);
+      }
+      .board-toast.show { opacity: 1; }
+      .board-toast[hidden] { display: none; }
       .sq.sq-move::after {
         content: ''; position: absolute; left: 50%; top: 50%; width: 30%; height: 30%;
         transform: translate(-50%, -50%); border-radius: 50%; background: rgba(40, 150, 75, 0.5);
@@ -314,6 +324,7 @@
                                     <h3>Promote pawn to:</h3>
                                     <div class="promo-choices" id="promoChoices"></div>
                                 </div>
+                                <div class="board-toast" id="boardToast" hidden></div>
                             </div>
                         </div>
                         <div class="cap-strip" id="capBottom" aria-label="Pieces captured by the bottom player"></div>
@@ -436,9 +447,9 @@
 
     <script src="engine.js"></script>
     <script src="ai.js"></script>
-    <script src="notation.js?v=20260522i"></script>
-    <script src="sound.js?v=20260522i"></script>
-    <script src="analysis.js?v=20260522i"></script>
-    <script src="chess.js?v=20260522i"></script>
+    <script src="notation.js?v=20260522j"></script>
+    <script src="sound.js?v=20260522j"></script>
+    <script src="analysis.js?v=20260522j"></script>
+    <script src="chess.js?v=20260522j"></script>
 </body>
 </html>
