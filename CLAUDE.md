@@ -27,5 +27,5 @@ Static game hub website with browser-based arcade games. Each game is a self-con
 
 ## Git
 
-- **Default branch**: `master`
-- **Feature branches**: use the `claude/` prefix (e.g., `claude/feature-description`)
+- **Branch**: `main` — commit and push directly to it.
+- **No pull requests, no feature branches.** Push straight to `main`.
