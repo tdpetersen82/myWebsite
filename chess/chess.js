@@ -19,7 +19,6 @@
   const diffEl = document.getElementById('difficulty');
   const newGameBtn = document.getElementById('newGame');
   const resignBtn = document.getElementById('resign');
-  const flipBtn = document.getElementById('flip');
   const overEl = document.getElementById('over');
   const overTitleEl = document.getElementById('overTitle');
   const overTextEl = document.getElementById('overText');
@@ -58,7 +57,6 @@
   const KEY_WINS = 'chessGamesWon';
   const KEY_LOSS = 'chessGamesLost';
   const KEY_DIFF = 'chessDifficulty';
-  const KEY_PLAYER = 'chessPlayerColor';
   const KEY_PIECES = 'chessPieceSet';
   const KEY_BOARD = 'chessBoardTheme';
   const KEY_SOUND = 'chessSound';
@@ -88,7 +86,7 @@
   let viewPly = 0;        // half-moves currently shown (live === playedMoves.length)
   let reviewing = false;
   let gameResultStr = '*';
-  let playerColor = (localStorage.getItem(KEY_PLAYER) === 'b') ? 'b' : 'w';
+  const playerColor = 'w';         // you play White vs the computer
   let orientation = playerColor;   // board view; can be flipped without changing sides
   let difficulty = localStorage.getItem(KEY_DIFF) || 'Medium';
   let pieceSet = localStorage.getItem(KEY_PIECES) || 'cburnett';
@@ -410,7 +408,11 @@
   function recordLoss() { writeNum(KEY_LOSS, readNum(KEY_LOSS) + 1); writeNum(KEY_STREAK, 0); refreshStats(); }
   function recordDraw() { writeNum(KEY_STREAK, 0); refreshStats(); }
 
-  function showOver(title, text) { overTitleEl.textContent = title; overTextEl.textContent = text; overEl.classList.add('show'); gameOver = true; }
+  function showOver(title, text) {
+    overTitleEl.textContent = title; overTextEl.textContent = text; overEl.classList.add('show'); gameOver = true;
+    // Surface accuracy + blunder/mistake counts automatically once the game is decided.
+    if (analysisOn && playedMoves.length && window.ChessAnalysis) reviewGame();
+  }
 
   function endGameIfTerminal() {
     const s = E.getStatus(state);
@@ -445,6 +447,7 @@
     playedMoves.push({ move, san });
     viewPly = playedMoves.length;
     reviewing = false; reviewBarEl.hidden = true;
+    analysisOutEl.hidden = true;   // a prior review snapshot is now stale
     animateMove(move);
     selected = null; legalForSelected = []; pseudoTargets = new Set();
     updateHighlights();
@@ -717,16 +720,6 @@
       recordLoss(); sound('lose');
       showOver('Resigned', 'You resigned. Streak reset.');
     });
-  });
-  flipBtn.addEventListener('click', () => {
-    const doSwitch = () => {
-      playerColor = playerColor === 'w' ? 'b' : 'w';
-      orientation = playerColor;
-      localStorage.setItem(KEY_PLAYER, playerColor);
-      newGame();
-    };
-    if (isGameInProgress()) confirmAction('Switch sides?', 'This abandons the current game and starts a new one as the other color.', doSwitch);
-    else doSwitch();
   });
   flipBoardBtn.addEventListener('click', () => {
     clearHint();

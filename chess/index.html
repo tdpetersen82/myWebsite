@@ -17,7 +17,7 @@
     <link rel="manifest" href="/manifest.json">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Chess","description":"Play chess in your browser against the computer with three difficulty tiers. Full rules: castling, en passant, pawn promotion, check, checkmate, stalemate, 50-move and threefold-repetition draws.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Chess"}]}</script>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play chess against the computer?","acceptedAnswer":{"@type":"Answer","text":"Click a piece, then click a legal destination square. The computer plays the other color and replies automatically after your move."}},{"@type":"Question","name":"Is this chess free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs. All games on Limestone Games are free."}},{"@type":"Question","name":"What difficulty should I pick?","acceptedAnswer":{"@type":"Answer","text":"Beginners start on Easy. Once you can win consistently on Easy, move to Medium. Hard targets roughly 1200–1500 club strength with depth 4 and quiescence search on captures."}},{"@type":"Question","name":"Can I switch sides mid-game?","acceptedAnswer":{"@type":"Answer","text":"Yes — hit Switch sides any time and the computer continues the game from your position with the other color."}}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play chess against the computer?","acceptedAnswer":{"@type":"Answer","text":"Click a piece, then click a legal destination square. The computer plays the other color and replies automatically after your move."}},{"@type":"Question","name":"Is this chess free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs. All games on Limestone Games are free."}},{"@type":"Question","name":"What difficulty should I pick?","acceptedAnswer":{"@type":"Answer","text":"Beginners start on Easy. Once you can win consistently on Easy, move to Medium. Hard targets roughly 1200–1500 club strength with depth 4 and quiescence search on captures."}}]}</script>
     <meta property="og:title" content="Chess — Free Browser Chess vs. Computer">
     <meta property="og:description" content="Full rules. Three difficulties. No downloads, no installs.">
     <meta property="og:type" content="website">
@@ -161,11 +161,11 @@
       .board-col { --board-size: min(90vw, 64vh, 560px); display: flex; flex-direction: column; align-items: center; min-width: 0; }
       .board-row { display: flex; gap: 8px; align-items: stretch; }
       .board-stack { display: flex; flex-direction: column; gap: 7px; align-items: center; min-width: 0; }
-      .eval-bar { position: relative; width: 16px; flex-shrink: 0; align-self: stretch; background: #2b2b2b; border-radius: 6px; overflow: hidden; }
-      .eval-fill { position: absolute; left: 0; right: 0; bottom: 0; height: 50%; background: #f4f4ee; transition: height 0.35s ease; }
+      .eval-bar { position: relative; width: 14px; flex-shrink: 0; align-self: center; height: var(--board-size); background: var(--ink); border-radius: 8px; overflow: hidden; box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.2), 0 6px 16px -10px rgba(26, 19, 16, 0.45); }
+      .eval-fill { position: absolute; left: 0; right: 0; bottom: 0; height: 50%; background: var(--wood-light); transition: height 0.35s ease; }
       .eval-bar.flip .eval-fill { bottom: auto; top: 0; }
-      .eval-num { position: absolute; left: 0; right: 0; bottom: 2px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 800; color: #2b2b2b; pointer-events: none; }
-      .eval-bar.flip .eval-num { color: #f4f4ee; }
+      .eval-num { position: absolute; left: 0; right: 0; bottom: 3px; text-align: center; font-family: 'JetBrains Mono', monospace; font-size: 8px; font-weight: 800; color: var(--frame); pointer-events: none; }
+      .eval-bar.flip .eval-num { color: var(--wood-light); }
       .eval-bar[hidden] { display: none; }
       .cap-strip {
         display: flex; align-items: center; gap: 4px;
@@ -271,6 +271,17 @@
         border-radius: 18px;
       }
       #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin: 0 0 10px; }
+      #how > summary { list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
+      #how > summary::-webkit-details-marker { display: none; }
+      #how > summary h2 { margin: 0; }
+      #how > summary::after {
+        content: ''; flex-shrink: 0; width: 9px; height: 9px; margin-right: 4px;
+        border-right: 2.5px solid var(--accent); border-bottom: 2.5px solid var(--accent);
+        transform: rotate(45deg); transition: transform 0.2s;
+      }
+      #how[open] > summary::after { transform: rotate(225deg); }
+      #how > summary:hover h2 { color: var(--accent); }
+      #how[open] > summary { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid color-mix(in oklab, var(--ink) 10%, transparent); }
       #how h3 { font-family: 'Bricolage Grotesque', serif; font-size: 16px; color: var(--frame); margin: 18px 0 6px; }
       #how p { font-size: 14px; color: rgba(26, 19, 16, 0.8); line-height: 1.55; margin: 0 0 10px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(26, 19, 16, 0.8); line-height: 1.55; margin: 0 0 10px; }
@@ -352,10 +363,9 @@
                     <button id="newGame" class="full">New game</button>
                     <button id="undo" class="ghost">Undo</button>
                     <button id="hint" class="ghost">Hint</button>
-                    <button id="flip" class="ghost">Switch sides</button>
                     <button id="flipBoard" class="ghost">Flip</button>
                     <button id="resign" class="ghost">Resign</button>
-                    <button id="review" class="ghost">Review</button>
+                    <button id="review" class="ghost full">Review</button>
                     <button id="copyPgn" class="ghost">Copy PGN</button>
                     <button id="copyFen" class="ghost">Copy FEN</button>
                 </div>
@@ -392,10 +402,10 @@
                 <a class="panel-link" href="../strategy/">More strategy games →</a>
             </aside>
         </div>
-        <p class="hint">Drag a piece to move it — or click it, then click a highlighted square. Dots show legal moves; rings show captures. The computer plays the other color — switch sides any time.</p>
+        <p class="hint">Drag a piece to move it — or click it, then click a highlighted square. Dots show legal moves; rings show captures. The computer plays the other color.</p>
 
-        <section id="how" aria-label="How to play Chess">
-            <h2>How to play Chess</h2>
+        <details id="how">
+            <summary><h2>How to play Chess</h2></summary>
             <p>Chess is the two-player strategy game where you maneuver six piece types around an 8&times;8 board with one goal: trap your opponent's king in <b>checkmate</b>. Each piece moves in its own pattern &mdash; pawns advance, knights jump in an L-shape, bishops slide diagonally, rooks slide in straight lines, the queen does both, and the king moves one square in any direction. Capture by moving onto a square the other side occupies.</p>
 
             <h3>Controls</h3>
@@ -403,7 +413,7 @@
                 <li><b>Drag a piece</b> to move it, or <b>click it then click a destination</b> &mdash; dots show legal squares, rings show captures</li>
                 <li>The computer plays the opposite color and replies automatically after your move</li>
                 <li>Use the <b>Difficulty</b> dropdown anytime &mdash; the computer adopts the new tier on its next move</li>
-                <li><b>Undo</b> takes back your last move; <b>Switch sides</b> swaps colors; <b>Flip</b> rotates the board</li>
+                <li><b>Undo</b> takes back your last move; <b>Flip</b> rotates the board</li>
                 <li>The <b>move list</b> records every move in algebraic notation &mdash; click any move to replay the position</li>
             </ul>
 
@@ -439,7 +449,6 @@
             <p><b>How do I play chess against the computer?</b> Click a piece, then click a legal destination &mdash; the computer replies automatically.</p>
             <p><b>Is this chess free?</b> Yes. No signup, no downloads, no installs.</p>
             <p><b>What difficulty should I pick?</b> Beginners start on Easy. Once you can beat Easy consistently, move to Medium; Hard targets roughly 1200&ndash;1500 club strength.</p>
-            <p><b>Can I switch sides mid-game?</b> Yes &mdash; hit "Switch sides" any time and the computer continues from your position.</p>
 
             <h3>More strategy games</h3>
             <ul class="related-games-list">
@@ -448,7 +457,7 @@
                 <li><a href="../connect-4/">Connect 4</a></li>
                 <li><a href="../strategy/">All strategy games &rarr;</a></li>
             </ul>
-        </section>
+        </details>
     </div>
 
     <script src="engine.js"></script>
@@ -456,6 +465,6 @@
     <script src="notation.js?v=20260522k"></script>
     <script src="sound.js?v=20260522k"></script>
     <script src="analysis.js?v=20260522k"></script>
-    <script src="chess.js?v=20260522k"></script>
+    <script src="chess.js?v=20260527a"></script>
 </body>
 </html>
