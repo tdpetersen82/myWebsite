@@ -39,28 +39,45 @@
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body {
         font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
-        background: #F5F0E6;
+        background-color: #E5D8BE;
+        background-image: radial-gradient(140% 100% at 50% -8%, #F4ECDA 0%, #E7DBC0 55%, #D6C5A1 100%);
+        background-attachment: fixed;
         color: var(--ink);
         min-height: 100vh;
         display: flex; flex-direction: column; align-items: center;
         padding: 16px 16px 32px;
       }
-      .game-shell { width: fit-content; max-width: 100%; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .game-shell { width: fit-content; max-width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
+      /* The console is the "table" the whole game sits on — one bounded, lifted object. */
+      .console {
+        width: fit-content; max-width: 100%;
+        display: flex; flex-direction: column; gap: 13px;
+        padding: 16px 18px 20px;
+        border-radius: 22px;
+        /* Layered wood: a sheen, an organic fractal-noise grain, then the stained-oak base. */
+        background:
+          radial-gradient(135% 105% at 22% -12%, rgba(255, 235, 199, 0.22), rgba(255, 235, 199, 0) 50%),
+          url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='680'%20height='460'%3E%3Cfilter%20id='wg'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.0038%200.5'%20numOctaves='5'%20seed='11'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200.55%200%200%200%20-0.26'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23wg)'/%3E%3C/svg%3E"),
+          linear-gradient(166deg, #9c6c3b 0%, #835830 50%, #6b4624 100%) #7c5329;
+        border: 1px solid #3c2814;
+        box-shadow:
+          inset 0 2px 1px rgba(255, 234, 199, 0.30),
+          inset 0 -10px 18px rgba(45, 27, 11, 0.4),
+          inset 0 0 0 1px rgba(0, 0, 0, 0.16),
+          0 2px 6px rgba(40, 25, 12, 0.26),
+          0 44px 78px -36px rgba(40, 25, 12, 0.74);
+      }
       .top-bar {
         width: 100%; display: flex; align-items: center; gap: 16px;
-        padding: 11px 16px 12px;
-        background: #fff;
-        border: 1px solid rgba(31, 27, 22, 0.09);
-        border-radius: 16px;
-        box-shadow: 0 1px 0 rgba(31, 27, 22, 0.09), 0 14px 30px -18px rgba(0, 0, 0, 0.45);
+        padding: 10px 15px 11px;
+        background: linear-gradient(180deg, #FFFDF8 0%, #FBF4E6 100%);
+        border: 1px solid color-mix(in oklab, var(--frame) 15%, transparent);
+        border-radius: 13px;
+        box-shadow: 0 1px 2px rgba(40, 25, 12, 0.12), 0 10px 22px -16px rgba(40, 25, 12, 0.5);
         position: relative; overflow: hidden;
         flex-wrap: wrap;
       }
-      .top-bar::after {
-        content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
-        background: linear-gradient(90deg, transparent, var(--accent), transparent);
-        opacity: 0.65; pointer-events: none;
-      }
+      .top-bar::after { display: none; }
       .tb-back {
         display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
         padding: 8px 14px; border-radius: 999px;
@@ -105,7 +122,7 @@
         aspect-ratio: 1;
         border-radius: 10px;
         overflow: hidden;
-        box-shadow: 0 18px 44px -14px rgba(26, 19, 16, 0.5), 0 0 0 6px var(--frame);
+        box-shadow: 0 10px 26px -16px rgba(26, 19, 16, 0.42), 0 0 0 6px var(--frame);
         --b-light: var(--wood-light);
         --b-dark: var(--wood-dark);
         touch-action: none;
@@ -173,13 +190,13 @@
       }
       .cap-strip .pieces-mini { display: flex; flex-wrap: wrap; align-items: center; }
       .cap-strip img { width: 22px; height: 22px; margin-right: -5px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25)); }
-      .cap-adv { font-weight: 800; font-size: 13px; color: var(--frame); font-variant-numeric: tabular-nums; margin-left: 8px; }
+      .cap-adv { font-weight: 800; font-size: 13px; color: #F3E8CE; font-variant-numeric: tabular-nums; margin-left: 8px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
       .panel {
         width: 300px; flex-shrink: 0; align-self: stretch; display: flex; flex-direction: column; gap: 12px;
-        background: #fff;
-        border: 1px solid rgba(31, 27, 22, 0.09);
-        border-radius: 16px; padding: 14px;
-        box-shadow: 0 10px 26px -20px rgba(0, 0, 0, 0.35);
+        background: linear-gradient(180deg, #FFFDF8 0%, #FBF4E6 100%);
+        border: 1px solid color-mix(in oklab, var(--frame) 15%, transparent);
+        border-radius: 13px; padding: 14px;
+        box-shadow: 0 1px 2px rgba(40, 25, 12, 0.12), 0 10px 22px -16px rgba(40, 25, 12, 0.5);
       }
       .panel-status {
         font-family: 'Bricolage Grotesque', serif; font-size: 17px; font-weight: 700;
@@ -235,8 +252,12 @@
       .analysis-out .acc-row { font-weight: 800; font-size: 13px; margin-top: 2px; }
       .analysis-out .dim { color: color-mix(in oklab, var(--ink) 55%, transparent); font-weight: 600; }
       @media (max-width: 880px) {
+        /* Stacked: the console spans the width and the board shrinks to fit inside its padding. */
+        .game-shell { width: 100%; }
+        .console { width: 100%; padding: 12px 12px 16px; border-radius: 18px; }
         .layout { flex-direction: column; align-items: center; }
-        .panel { width: min(94vw, 600px); }
+        .board-col { --board-size: min(78vw, 60vh, 560px); }
+        .panel { width: min(100%, 600px); }
       }
       @media (max-width: 540px) {
         /* On phones the 4-column stat strip gets squeezed, so reflow to label-value rows. */
@@ -313,6 +334,7 @@
 </head>
 <body>
     <div class="game-shell">
+        <div class="console">
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
@@ -420,6 +442,7 @@
                 </div>
                 <a class="panel-link" href="../strategy/">More strategy games →</a>
             </aside>
+        </div>
         </div>
         <p class="hint">Drag a piece to move it — or click it, then click a highlighted square. Dots show legal moves; rings show captures. The computer plays the other color.</p>
 
