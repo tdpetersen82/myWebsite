@@ -27,6 +27,11 @@
   const promoEl = document.getElementById('promo');
   const promoChoices = document.getElementById('promoChoices');
   const boardToastEl = document.getElementById('boardToast');
+  const confirmOverlayEl = document.getElementById('confirmOverlay');
+  const confirmTitleEl = document.getElementById('confirmTitle');
+  const confirmTextEl = document.getElementById('confirmText');
+  const confirmYesBtn = document.getElementById('confirmYes');
+  const confirmNoBtn = document.getElementById('confirmNo');
   const capTopEl = document.getElementById('capTop');
   const capBottomEl = document.getElementById('capBottom');
   const flipBoardBtn = document.getElementById('flipBoard');
@@ -98,6 +103,11 @@
   let hintSquares = null;  // { from, to } currently highlighted by the Hint button
   let pseudoTargets = new Set();  // squares the selected piece could reach ignoring king safety
   let toastTimer = null;
+  let aiTimer = null;             // pending scheduled AI move, so we can cancel it on reset
+  let gameGen = 0;                // bumped on every reset; a stale scheduled AI move is ignored
+
+  function cancelAI() { if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; } aiThinking = false; }
+  function isGameInProgress() { return playedMoves.length > 0 && !gameOver; }
 
   // ---- small helpers ----
   function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
@@ -457,8 +467,11 @@
   function scheduleAI() {
     if (aiThinking || gameOver) return;
     aiThinking = true;
-    setTimeout(() => {
-      try { const m = AI.chooseMove(state, difficulty); if (m) applyMove(m); }
+    const myGen = gameGen;
+    aiTimer = setTimeout(() => {
+      aiTimer = null;
+      if (myGen !== gameGen || gameOver) { aiThinking = false; return; } // game was reset/ended while waiting
+      try { const m = AI.chooseMove(state, difficulty); if (m && myGen === gameGen) applyMove(m); }
       finally { aiThinking = false; if (!gameOver && state.turn === playerColor) setStatus('Your move.'); }
     }, 140);
   }
@@ -594,6 +607,7 @@
 
   // ---- new game / controls ----
   function newGame() {
+    gameGen++; cancelAI();
     state = E.newGame();
     selected = null; legalForSelected = []; pseudoTargets = new Set(); pendingPromo = null; aiThinking = false; gameOver = false;
     captured = { w: [], b: [] };
@@ -602,6 +616,7 @@
     promoEl.classList.remove('show');
     reviewBarEl.hidden = true;
     boardToastEl.classList.remove('show'); boardToastEl.hidden = true;
+    confirmOverlayEl.classList.remove('show');
     analysisOutEl.hidden = true;
     hintSquares = null;
     buildSquares();
@@ -616,6 +631,7 @@
 
   // Rebuild the live game from the first n recorded moves (used by undo).
   function rebuildLiveTo(n) {
+    gameGen++; cancelAI();
     state = E.newGame();
     captured = { w: [], b: [] };
     for (let i = 0; i < n; i++) {
@@ -663,7 +679,19 @@
     }
   }
 
-  newGameBtn.addEventListener('click', newGame);
+  function confirmAction(title, text, onYes) {
+    confirmTitleEl.textContent = title;
+    confirmTextEl.textContent = text;
+    confirmOverlayEl.classList.add('show');
+    const clear = () => { confirmOverlayEl.classList.remove('show'); confirmYesBtn.onclick = null; confirmNoBtn.onclick = null; };
+    confirmYesBtn.onclick = () => { clear(); onYes(); };
+    confirmNoBtn.onclick = () => { clear(); };
+  }
+
+  newGameBtn.addEventListener('click', () => {
+    if (isGameInProgress()) confirmAction('Start a new game?', 'This abandons the game in progress.', newGame);
+    else newGame();
+  });
   overBtn.addEventListener('click', newGame);
   undoBtn.addEventListener('click', undo);
   toLiveBtn.addEventListener('click', () => reviewTo(playedMoves.length));
@@ -682,12 +710,23 @@
     const s = reviewing ? stateAfter(viewPly) : state;
     copyText(ChessNotation.toFEN(s), copyFenBtn, 'Copied!');
   });
-  resignBtn.addEventListener('click', () => { if (gameOver) return; gameResultStr = playerColor === 'w' ? '0-1' : '1-0'; recordLoss(); sound('lose'); showOver('Resigned', 'You resigned. Streak reset.'); });
+  resignBtn.addEventListener('click', () => {
+    if (gameOver) return;
+    confirmAction('Resign this game?', 'It counts as a loss and resets your streak.', () => {
+      gameResultStr = playerColor === 'w' ? '0-1' : '1-0';
+      recordLoss(); sound('lose');
+      showOver('Resigned', 'You resigned. Streak reset.');
+    });
+  });
   flipBtn.addEventListener('click', () => {
-    playerColor = playerColor === 'w' ? 'b' : 'w';
-    orientation = playerColor;
-    localStorage.setItem(KEY_PLAYER, playerColor);
-    newGame();
+    const doSwitch = () => {
+      playerColor = playerColor === 'w' ? 'b' : 'w';
+      orientation = playerColor;
+      localStorage.setItem(KEY_PLAYER, playerColor);
+      newGame();
+    };
+    if (isGameInProgress()) confirmAction('Switch sides?', 'This abandons the current game and starts a new one as the other color.', doSwitch);
+    else doSwitch();
   });
   flipBoardBtn.addEventListener('click', () => {
     clearHint();

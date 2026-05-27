@@ -262,6 +262,8 @@
       }
       .promo-btn img { width: clamp(38px, 9vw, 52px); height: clamp(38px, 9vw, 52px); display: block; }
       .promo-btn:hover { background: var(--wood-light); transform: translateY(-2px); }
+      .confirm-btns { display: flex; gap: 10px; margin-top: 6px; }
+      .confirm p { margin-bottom: 4px; }
       .hint { font-size: 13px; color: rgba(26, 19, 16, 0.6); text-align: center; max-width: 600px; }
       #how {
         padding: 24px 28px; max-width: 640px; width: 100%;
@@ -323,6 +325,14 @@
                                 <div class="promo" id="promo">
                                     <h3>Promote pawn to:</h3>
                                     <div class="promo-choices" id="promoChoices"></div>
+                                </div>
+                                <div class="game-over confirm" id="confirmOverlay">
+                                    <h2 id="confirmTitle">Are you sure?</h2>
+                                    <p id="confirmText"></p>
+                                    <div class="confirm-btns">
+                                        <button id="confirmYes">Yes</button>
+                                        <button id="confirmNo" class="ghost">Cancel</button>
+                                    </div>
                                 </div>
                                 <div class="board-toast" id="boardToast" hidden></div>
                             </div>
@@ -443,9 +453,9 @@
 
     <script src="engine.js"></script>
     <script src="ai.js"></script>
-    <script src="notation.js?v=20260522j"></script>
-    <script src="sound.js?v=20260522j"></script>
-    <script src="analysis.js?v=20260522j"></script>
-    <script src="chess.js?v=20260522j"></script>
+    <script src="notation.js?v=20260522k"></script>
+    <script src="sound.js?v=20260522k"></script>
+    <script src="analysis.js?v=20260522k"></script>
+    <script src="chess.js?v=20260522k"></script>
 </body>
 </html>
