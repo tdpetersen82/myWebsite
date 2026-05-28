@@ -34,11 +34,12 @@ body {
 
 /* Stat labels line up across stats regardless of whether one cell holds a taller
    dropdown (e.g., Level) — keep this lightweight so we don't need to reshape each
-   game's stats markup. */
-.stats { align-items: flex-start !important; }
+   game's stats markup. Games whose .stats is a CSS grid can override with their
+   own align-items if they want a different alignment. */
+.stats { align-items: flex-start; }
 
 /* Dialog overlays: keep the board visible behind, present the message as a card. */
-.game-over, .promo, .modal-overlay, .toast-overlay { background: transparent !important; backdrop-filter: none !important; }
+.game-over, .promo, .modal-overlay, .toast-overlay { background: transparent; backdrop-filter: none; }
 .over-card {
   display: flex; flex-direction: column; align-items: center; gap: 12px;
   max-width: 92%;
@@ -51,7 +52,7 @@ body {
 }
 
 /* Make the captured-piece advantage / similar dark-text-on-wood elements readable. */
-.cap-adv { color: #F3E8CE !important; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
+.cap-adv { color: #F3E8CE; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
 
 /* Text that sits directly on the wood (hints, status lines, captions) needs a
    light color and shadow so it stays legible against the stained surface. */
@@ -87,13 +88,22 @@ body {
   .stats > div { flex-direction: row !important; align-items: center !important; gap: 10px !important; }
 }
 
-/* Collapsible "How to play" section — keep the supplementary content out of the
-   primary view so the table reads as the object. */
-#how { padding: 0; }
+/* Collapsible "How to play" — supplementary content sits in a white "paper" card
+   below the table, collapsed by default so the table is the object. */
+#how {
+  padding: 0;
+  max-width: 640px;
+  width: 100%;
+  margin: 0 auto;
+  background: #FFFDF8;
+  border: 1px solid rgba(60, 40, 20, 0.16);
+  border-radius: 14px;
+  box-shadow: 0 10px 26px -22px rgba(40, 25, 12, 0.55);
+}
 #how > summary {
   list-style: none; cursor: pointer; user-select: none;
   display: flex; align-items: center; justify-content: space-between; gap: 12px;
-  padding: 18px 22px;
+  padding: 16px 22px;
 }
 #how > summary::-webkit-details-marker { display: none; }
 #how > summary h2 { margin: 0; }
@@ -106,4 +116,5 @@ body {
 #how > summary:hover h2 { color: #C77A2A; }
 #how[open] > summary { border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
 #how[open] > *:not(summary) { padding-left: 22px; padding-right: 22px; }
-#how[open] > *:last-child { padding-bottom: 22px; }
+#how[open] > *:first-of-type:not(summary) { padding-top: 14px; }
+#how[open] > *:last-child { padding-bottom: 20px; }

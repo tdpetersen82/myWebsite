@@ -27,6 +27,7 @@
     <meta name="twitter:title" content="Chess — Free Browser Chess vs. Computer">
     <meta name="twitter:description" content="Full rules. Three difficulties. No downloads, no installs.">
 
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260528b">
     <style>
       :root {
         --ink: #1A1310;
@@ -39,34 +40,14 @@
       * { box-sizing: border-box; margin: 0; padding: 0; }
       body {
         font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
-        background-color: #E5D8BE;
-        background-image: radial-gradient(140% 100% at 50% -8%, #F4ECDA 0%, #E7DBC0 55%, #D6C5A1 100%);
-        background-attachment: fixed;
+        /* page background comes from ../strategy/strategy-chrome.css */
         color: var(--ink);
         min-height: 100vh;
         display: flex; flex-direction: column; align-items: center;
         padding: 16px 16px 32px;
       }
       .game-shell { width: fit-content; max-width: 100%; display: flex; flex-direction: column; align-items: center; gap: 14px; }
-      /* The console is the "table" the whole game sits on — one bounded, lifted object. */
-      .console {
-        width: fit-content; max-width: 100%;
-        display: flex; flex-direction: column; gap: 13px;
-        padding: 16px 18px 20px;
-        border-radius: 22px;
-        /* Layered wood: a sheen, an organic fractal-noise grain, then the stained-oak base. */
-        background:
-          radial-gradient(135% 105% at 22% -12%, rgba(255, 235, 199, 0.22), rgba(255, 235, 199, 0) 50%),
-          url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='680'%20height='460'%3E%3Cfilter%20id='wg'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.0038%200.5'%20numOctaves='5'%20seed='11'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200.55%200%200%200%20-0.26'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23wg)'/%3E%3C/svg%3E"),
-          linear-gradient(166deg, #9c6c3b 0%, #835830 50%, #6b4624 100%) #7c5329;
-        border: 1px solid #3c2814;
-        box-shadow:
-          inset 0 2px 1px rgba(255, 234, 199, 0.30),
-          inset 0 -10px 18px rgba(45, 27, 11, 0.4),
-          inset 0 0 0 1px rgba(0, 0, 0, 0.16),
-          0 2px 6px rgba(40, 25, 12, 0.26),
-          0 44px 78px -36px rgba(40, 25, 12, 0.74);
-      }
+      /* .console (wooden tabletop) comes from ../strategy/strategy-chrome.css */
       .top-bar {
         width: 100%; display: flex; align-items: center; gap: 16px;
         padding: 10px 15px 11px;
@@ -190,7 +171,8 @@
       }
       .cap-strip .pieces-mini { display: flex; flex-wrap: wrap; align-items: center; }
       .cap-strip img { width: 22px; height: 22px; margin-right: -5px; filter: drop-shadow(0 1px 1px rgba(0,0,0,0.25)); }
-      .cap-adv { font-weight: 800; font-size: 13px; color: #F3E8CE; font-variant-numeric: tabular-nums; margin-left: 8px; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
+      /* .cap-adv color comes from ../strategy/strategy-chrome.css */
+      .cap-adv { font-weight: 800; font-size: 13px; font-variant-numeric: tabular-nums; margin-left: 8px; }
       .panel {
         width: 300px; flex-shrink: 0; align-self: stretch; display: flex; flex-direction: column; gap: 12px;
         background: linear-gradient(180deg, #FFFDF8 0%, #FBF4E6 100%);
@@ -252,9 +234,7 @@
       .analysis-out .acc-row { font-weight: 800; font-size: 13px; margin-top: 2px; }
       .analysis-out .dim { color: color-mix(in oklab, var(--ink) 55%, transparent); font-weight: 600; }
       @media (max-width: 880px) {
-        /* Stacked: the console spans the width and the board shrinks to fit inside its padding. */
-        .game-shell { width: 100%; }
-        .console { width: 100%; padding: 12px 12px 16px; border-radius: 18px; }
+        /* .game-shell and .console mobile width come from ../strategy/strategy-chrome.css */
         .layout { flex-direction: column; align-items: center; }
         .board-col { --board-size: min(78vw, 60vh, 560px); }
         .panel { width: min(100%, 600px); }
@@ -282,23 +262,12 @@
       .turn { font-size: 13px; color: rgba(26, 19, 16, 0.75); }
       .game-over, .promo {
         position: absolute; inset: 0; z-index: 40;
-        background: transparent;
+        /* transparent background + .over-card come from ../strategy/strategy-chrome.css */
         display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 12px;
         opacity: 0; pointer-events: none; transition: opacity 0.25s;
         text-align: center; padding: 20px;
       }
       .game-over.show, .promo.show { opacity: 1; pointer-events: auto; }
-      /* Centered card that holds the dialog content — keeps the board visible around it. */
-      .over-card {
-        display: flex; flex-direction: column; align-items: center; gap: 12px;
-        max-width: 92%;
-        padding: 20px 26px;
-        background: rgba(255, 253, 248, 0.95);
-        border: 1px solid color-mix(in oklab, var(--frame) 22%, transparent);
-        border-radius: 16px;
-        box-shadow: 0 22px 44px -18px rgba(40, 25, 12, 0.6), 0 2px 6px rgba(40, 25, 12, 0.2);
-        backdrop-filter: blur(2px);
-      }
       .game-over h2 { font-family: 'Bricolage Grotesque', serif; font-size: clamp(22px, 5vw, 30px); color: var(--frame); }
       .game-over p { font-size: 15px; color: rgba(26, 19, 16, 0.7); max-width: 380px; }
       .promo h3 { font-size: 18px; color: var(--frame); }
@@ -313,23 +282,9 @@
       .confirm-btns { display: flex; gap: 10px; margin-top: 6px; }
       .confirm p { margin-bottom: 4px; }
       .hint { font-size: 13px; color: rgba(26, 19, 16, 0.6); text-align: center; max-width: 600px; }
-      #how {
-        padding: 24px 28px; max-width: 640px; width: 100%;
-        background: #fff; border: 1px solid rgba(31, 27, 22, 0.09);
-        border-radius: 18px;
-      }
+      /* #how card + summary/chevron come from ../strategy/strategy-chrome.css */
       #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin: 0 0 10px; }
-      #how > summary { list-style: none; cursor: pointer; user-select: none; display: flex; align-items: center; justify-content: space-between; gap: 12px; }
-      #how > summary::-webkit-details-marker { display: none; }
       #how > summary h2 { margin: 0; }
-      #how > summary::after {
-        content: ''; flex-shrink: 0; width: 9px; height: 9px; margin-right: 4px;
-        border-right: 2.5px solid var(--accent); border-bottom: 2.5px solid var(--accent);
-        transform: rotate(45deg); transition: transform 0.2s;
-      }
-      #how[open] > summary::after { transform: rotate(225deg); }
-      #how > summary:hover h2 { color: var(--accent); }
-      #how[open] > summary { margin-bottom: 14px; padding-bottom: 12px; border-bottom: 1px solid color-mix(in oklab, var(--ink) 10%, transparent); }
       #how h3 { font-family: 'Bricolage Grotesque', serif; font-size: 16px; color: var(--frame); margin: 18px 0 6px; }
       #how p { font-size: 14px; color: rgba(26, 19, 16, 0.8); line-height: 1.55; margin: 0 0 10px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(26, 19, 16, 0.8); line-height: 1.55; margin: 0 0 10px; }
