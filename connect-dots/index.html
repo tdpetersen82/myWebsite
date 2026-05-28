@@ -161,9 +161,11 @@
       }
       .related-games-list a:hover { background: rgba(46, 108, 180, 0.2); }
     </style>
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260528a">
 </head>
 <body>
     <div class="game-shell">
+        <div class="console">
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
@@ -187,9 +189,11 @@
         <div class="stage-wrap">
             <canvas id="gameCanvas" width="540" height="540"></canvas>
             <div class="game-over" id="over">
-                <h2 id="overTitle">You win!</h2>
-                <p id="overText"></p>
-                <button id="overBtn">New game</button>
+                <div class="over-card">
+                    <h2 id="overTitle">You win!</h2>
+                    <p id="overText"></p>
+                    <button id="overBtn">New game</button>
+                </div>
             </div>
         </div>
         <div class="turn" id="status">Click between two adjacent dots to draw a line.</div>
@@ -197,10 +201,11 @@
             <button id="newGame">New game</button>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <p class="hint">Complete the fourth side of a box to claim it — and take another turn. Most boxes when every line is drawn wins. Bigger boards on higher difficulty.</p>
+        <p class="hint">Complete the fourth side of a box to claim it — and take another turn. Most boxes when every line is drawn wins. Bigger boards on higher difficulty.</p>        </div>
+        
 
-        <section id="how" aria-label="About Dots and Boxes">
-            <h2>How to play Dots &amp; Boxes</h2>
+        <details id="how">
+            <summary><h2>How to play Dots &amp; Boxes</h2></summary>
             <p>Dots &amp; Boxes is the classic pencil-and-paper game on a grid of dots. You and the computer take turns drawing one line between two adjacent dots. Complete the fourth side of a box and you claim it &mdash; and you get another turn. Whoever claims the most boxes when all lines are drawn wins.</p>
 
             <h3>Controls</h3>
@@ -240,7 +245,7 @@
                 <li><a href="../checkers/">Checkers</a></li>
                 <li><a href="../strategy/">All strategy games &rarr;</a></li>
             </ul>
-        </section>
+        </details>
     </div>
 
     <script>

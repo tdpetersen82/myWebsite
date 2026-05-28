@@ -149,9 +149,11 @@
       #how p { font-size: 14px; color: rgba(26, 19, 16, 0.75); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(26, 19, 16, 0.8); }
     </style>
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260528a">
 </head>
 <body>
     <div class="game-shell">
+        <div class="console">
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
@@ -174,9 +176,11 @@
         <div class="stage-wrap">
             <canvas id="board" width="880" height="560"></canvas>
             <div class="game-over" id="over">
-                <h2 id="overTitle">You win!</h2>
-                <p id="overText"></p>
-                <button id="overBtn">New game</button>
+                <div class="over-card">
+                    <h2 id="overTitle">You win!</h2>
+                    <p id="overText"></p>
+                    <button id="overBtn">New game</button>
+                </div>
             </div>
         </div>
         <div class="turn" id="status">Click "Roll" to start.</div>
@@ -187,10 +191,11 @@
             <button id="newGameBtn" class="ghost">New game</button>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <p class="hint">Click "Roll dice", then click your checker (or the bar) and tap a destination point. Use both dice when possible — if only one can be used, the larger one is mandatory.</p>
+        <p class="hint">Click "Roll dice", then click your checker (or the bar) and tap a destination point. Use both dice when possible — if only one can be used, the larger one is mandatory.</p>        </div>
+        
 
-        <section id="how" aria-label="How to play">
-            <h2>How to play</h2>
+        <details id="how">
+            <summary><h2>How to play</h2></summary>
             <p>You play <b>white</b> (light checkers, moving counter-clockwise around the board). The computer plays <b>black</b>. Click <b>Roll dice</b> to start your turn, then make moves equal to each die.</p>
             <p>You can move to a point if it's empty, holds your own checkers, or holds <b>exactly one enemy</b> checker (which gets sent to the bar). You cannot move to a point held by 2+ enemies.</p>
             <p>If you have checkers on the <b>bar</b>, you must re-enter them all (in the opponent's home board) before making any other moves. <b>Bear off</b> when all 15 of your checkers are in your home board (points 1–6 from your perspective). Win by bearing off all 15.</p>
@@ -201,7 +206,7 @@
                 <li><b>Hard</b> — higher-quality scoring; punishes blots near its home board.</li>
             </ul>
             <p>v1 has no doubling cube — single-game play only. Wins, losses, and best streak save locally.</p>
-        </section>
+        </details>
     </div>
 
     <script>

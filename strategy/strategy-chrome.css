@@ -1,0 +1,109 @@
+/* strategy-chrome.css — shared "wooden table" enclosure for strategy games.
+   Linked AFTER each game's inline <style>, so these rules win for same-specificity
+   overrides without needing !important. */
+
+/* Page backdrop: a warm lit ground so the wood table reads as a lifted object. */
+body {
+  background-color: #E5D8BE;
+  background-image: radial-gradient(140% 100% at 50% -8%, #F4ECDA 0%, #E7DBC0 55%, #D6C5A1 100%);
+  background-attachment: fixed;
+}
+
+/* Shell sizes to its content so the console matches the game's column. */
+.game-shell { width: fit-content; max-width: 100%; }
+
+/* The console is the wooden tabletop the game sits on — one bounded, lifted object.
+   Layered background: top-light sheen, fractal-noise wood grain, stained-oak base. */
+.console {
+  width: fit-content; max-width: 100%;
+  display: flex; flex-direction: column; gap: 13px;
+  padding: 16px 18px 20px;
+  border-radius: 22px;
+  background:
+    radial-gradient(135% 105% at 22% -12%, rgba(255, 235, 199, 0.22), rgba(255, 235, 199, 0) 50%),
+    url("data:image/svg+xml,%3Csvg%20xmlns='http://www.w3.org/2000/svg'%20width='680'%20height='460'%3E%3Cfilter%20id='wg'%3E%3CfeTurbulence%20type='fractalNoise'%20baseFrequency='0.0038%200.5'%20numOctaves='5'%20seed='11'%20stitchTiles='stitch'/%3E%3CfeColorMatrix%20type='matrix'%20values='0%200%200%200%200%200%200%200%200%200%200%200%200%200%200%200.55%200%200%200%20-0.26'/%3E%3C/filter%3E%3Crect%20width='100%25'%20height='100%25'%20filter='url(%23wg)'/%3E%3C/svg%3E"),
+    linear-gradient(166deg, #9c6c3b 0%, #835830 50%, #6b4624 100%) #7c5329;
+  border: 1px solid #3c2814;
+  box-shadow:
+    inset 0 2px 1px rgba(255, 234, 199, 0.30),
+    inset 0 -10px 18px rgba(45, 27, 11, 0.4),
+    inset 0 0 0 1px rgba(0, 0, 0, 0.16),
+    0 2px 6px rgba(40, 25, 12, 0.26),
+    0 44px 78px -36px rgba(40, 25, 12, 0.74);
+}
+
+/* Stat labels line up across stats regardless of whether one cell holds a taller
+   dropdown (e.g., Level) — keep this lightweight so we don't need to reshape each
+   game's stats markup. */
+.stats { align-items: flex-start !important; }
+
+/* Dialog overlays: keep the board visible behind, present the message as a card. */
+.game-over, .promo, .modal-overlay, .toast-overlay { background: transparent !important; backdrop-filter: none !important; }
+.over-card {
+  display: flex; flex-direction: column; align-items: center; gap: 12px;
+  max-width: 92%;
+  padding: 20px 26px;
+  background: rgba(255, 253, 248, 0.95);
+  border: 1px solid rgba(60, 40, 20, 0.22);
+  border-radius: 16px;
+  box-shadow: 0 22px 44px -18px rgba(40, 25, 12, 0.6), 0 2px 6px rgba(40, 25, 12, 0.2);
+  backdrop-filter: blur(2px);
+}
+
+/* Make the captured-piece advantage / similar dark-text-on-wood elements readable. */
+.cap-adv { color: #F3E8CE !important; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35); }
+
+/* Text that sits directly on the wood (hints, status lines, captions) needs a
+   light color and shadow so it stays legible against the stained surface. */
+.console > .turn,
+.console > .hint,
+.console > p,
+.console > .status,
+.console > .note {
+  color: #F3E8CE !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+}
+
+/* Ghost buttons that end up sitting directly on the wood: lighten so they read. */
+.console > .controls button.ghost,
+.console > .controls a > button.ghost {
+  color: #F3E8CE;
+  border-color: rgba(243, 232, 206, 0.4);
+}
+.console > .controls button.ghost:hover,
+.console > .controls a > button.ghost:hover {
+  color: #fff;
+  border-color: rgba(243, 232, 206, 0.7);
+  background: rgba(243, 232, 206, 0.08);
+}
+
+/* Mobile: console spans the width, content fits inside. */
+@media (max-width: 880px) {
+  .game-shell { width: 100%; }
+  .console { width: 100%; padding: 12px 12px 16px; border-radius: 18px; }
+}
+@media (max-width: 540px) {
+  /* Reflow the stat strip to a label–value list so values don't squeeze and wrap. */
+  .stats > div { flex-direction: row !important; align-items: center !important; gap: 10px !important; }
+}
+
+/* Collapsible "How to play" section — keep the supplementary content out of the
+   primary view so the table reads as the object. */
+#how { padding: 0; }
+#how > summary {
+  list-style: none; cursor: pointer; user-select: none;
+  display: flex; align-items: center; justify-content: space-between; gap: 12px;
+  padding: 18px 22px;
+}
+#how > summary::-webkit-details-marker { display: none; }
+#how > summary h2 { margin: 0; }
+#how > summary::after {
+  content: ''; flex-shrink: 0; width: 9px; height: 9px; margin-right: 4px;
+  border-right: 2.5px solid #C77A2A; border-bottom: 2.5px solid #C77A2A;
+  transform: rotate(45deg); transition: transform 0.2s;
+}
+#how[open] > summary::after { transform: rotate(225deg); }
+#how > summary:hover h2 { color: #C77A2A; }
+#how[open] > summary { border-bottom: 1px solid rgba(0, 0, 0, 0.1); }
+#how[open] > *:not(summary) { padding-left: 22px; padding-right: 22px; }
+#how[open] > *:last-child { padding-bottom: 22px; }

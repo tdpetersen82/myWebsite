@@ -165,9 +165,11 @@
       #how p { font-size: 14px; color: rgba(21, 23, 31, 0.78); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(21, 23, 31, 0.82); }
     </style>
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260528a">
 </head>
 <body>
     <div class="game-shell">
+        <div class="console">
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
@@ -199,9 +201,11 @@
             <canvas id="board" width="640" height="720"></canvas>
             <div class="toast" id="toast"></div>
             <div class="game-over" id="over">
-                <h2 id="overTitle">You won!</h2>
-                <p id="overText"></p>
-                <button id="overBtn">New game</button>
+                <div class="over-card">
+                    <h2 id="overTitle">You won!</h2>
+                    <p id="overText"></p>
+                    <button id="overBtn">New game</button>
+                </div>
             </div>
         </div>
         <div class="roster" id="roster"></div>
@@ -211,10 +215,11 @@
             <button id="doneJump" class="done hidden">Done jumping</button>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <p class="hint">Step into an adjacent empty hole, or hop over any marble (yours or theirs) into the empty hole on the far side. Hops can chain. First to fill the opposite triangle wins.</p>
+        <p class="hint">Step into an adjacent empty hole, or hop over any marble (yours or theirs) into the empty hole on the far side. Hops can chain. First to fill the opposite triangle wins.</p>        </div>
+        
 
-        <section id="how" aria-label="How to play">
-            <h2>How to play</h2>
+        <details id="how">
+            <summary><h2>How to play</h2></summary>
             <p>You play the bottom-pointing triangle. Each turn either step a marble into an adjacent empty hole, or jump it over a neighbor (yours or any opponent's) to the empty hole on the far side. After a jump you may chain another jump from the new position. Click <b>Done jumping</b> to end your turn voluntarily; if no further jumps are possible the chain ends automatically.</p>
             <p>The first player to land all 10 of their marbles in the opposite triangle wins. Once a marble enters its goal triangle it cannot leave — no shuffling pegs back and forth to stall.</p>
             <ul>
@@ -227,7 +232,7 @@
                 <li><b>Medium</b> — depth 3.</li>
                 <li><b>Hard</b> — depth 4 with longest-chain ordering.</li>
             </ul>
-        </section>
+        </details>
     </div>
 
     <script>

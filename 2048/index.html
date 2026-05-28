@@ -159,9 +159,11 @@
       }
       .related-games-list a:hover { background: rgba(201, 111, 42, 0.2); }
     </style>
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260528a">
 </head>
 <body>
     <div class="game-shell">
+        <div class="console">
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
@@ -177,11 +179,13 @@
         <div class="stage-wrap">
             <canvas id="gameCanvas" width="520" height="520"></canvas>
             <div class="game-over" id="over">
-                <h2 id="overTitle">You win!</h2>
-                <p id="overText"></p>
-                <div class="actions">
-                    <button id="overKeep" type="button">Keep going</button>
-                    <button id="overNew" type="button" class="ghost">New game</button>
+                <div class="over-card">
+                    <h2 id="overTitle">You win!</h2>
+                    <p id="overText"></p>
+                    <div class="actions">
+                        <button id="overKeep" type="button">Keep going</button>
+                        <button id="overNew" type="button" class="ghost">New game</button>
+                </div>
                 </div>
             </div>
         </div>
@@ -190,10 +194,11 @@
             <button id="newGame">New game</button>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <p class="hint">Slide all tiles with the arrow keys, WASD, or a swipe. Matching tiles merge into their sum. Reach 2048 to win — then keep going for a higher tile.</p>
+        <p class="hint">Slide all tiles with the arrow keys, WASD, or a swipe. Matching tiles merge into their sum. Reach 2048 to win — then keep going for a higher tile.</p>        </div>
+        
 
-        <section id="how" aria-label="How to play 2048">
-            <h2>How to play 2048</h2>
+        <details id="how">
+            <summary><h2>How to play 2048</h2></summary>
             <p>2048 is the puzzle phenomenon where you slide numbered tiles around a 4×4 grid, merging matching pairs into bigger numbers. Two 2s become a 4, two 4s become an 8, and so on &mdash; until you build the 2048 tile and win. (Or keep going past it.)</p>
 
             <h3>Controls</h3>
@@ -227,7 +232,7 @@
                 <li><a href="../connect-4/">Connect 4</a></li>
                 <li><a href="../strategy/">All strategy games &rarr;</a></li>
             </ul>
-        </section>
+        </details>
     </div>
 
     <script>

@@ -180,9 +180,11 @@
       #how p { font-size: 14px; color: color-mix(in oklab, var(--ink) 80%, transparent); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: color-mix(in oklab, var(--ink) 84%, transparent); }
     </style>
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260528a">
 </head>
 <body>
     <div class="game-shell">
+        <div class="console">
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
@@ -213,9 +215,11 @@
             <canvas id="board" width="820" height="340"></canvas>
             <div class="toast" id="toast"></div>
             <div class="game-over" id="over">
-                <h2 id="overTitle">You win!</h2>
-                <p id="overText"></p>
-                <button id="overBtn">New game</button>
+                <div class="over-card">
+                    <h2 id="overTitle">You win!</h2>
+                    <p id="overText"></p>
+                    <button id="overBtn">New game</button>
+                </div>
             </div>
         </div>
         <div class="turn" id="status">Click one of your pits (bottom row) to sow seeds.</div>
@@ -226,10 +230,11 @@
             <button id="muteBtn" class="ghost">Sound on</button>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <p class="hint">Hover (or tap) one of your pits to preview the sow — the highlighted pit is where your last seed lands, with a badge if it captures or earns a free turn. Click to play it.</p>
+        <p class="hint">Hover (or tap) one of your pits to preview the sow — the highlighted pit is where your last seed lands, with a badge if it captures or earns a free turn. Click to play it.</p>        </div>
+        
 
-        <section id="how" aria-label="How to play">
-            <h2>How to play</h2>
+        <details id="how">
+            <summary><h2>How to play</h2></summary>
             <p>The board has 12 small pits — six per side — and one large store on each end. You play the bottom row; the computer plays the top. Your store is on the right, the computer's on the left. The game starts with 4 seeds in every small pit.</p>
             <p>On your turn, pick one of your six pits. Take all its seeds and drop one into each pit going counter-clockwise (rightward on your row, then up to the computer's row going left), skipping the computer's store. Land the last seed in your own store → take another turn. Land the last seed in one of your own previously-empty pits → capture all seeds in the opposite pit (plus your seed) into your store.</p>
             <p>The game ends as soon as one side has no seeds in any of its six pits. The other player sweeps any remaining seeds on their side into their store. Most seeds in store wins.</p>
@@ -240,7 +245,7 @@
                 <li><b>Two looks</b> — switch between the warm <i>Heirloom Hardwood</i> board and the dark <i>Twilight Slate</i> board any time; your choice is remembered.</li>
                 <li><b>Easy</b> — depth 2 with randomness; misses most captures. <b>Medium</b> — depth 6, capture-aware. <b>Hard</b> — depth 10 with mobility and chain-turn heuristics.</li>
             </ul>
-        </section>
+        </details>
     </div>
 
     <script>

@@ -153,9 +153,11 @@
       #how p { font-size: 14px; color: rgba(42, 31, 14, 0.78); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(42, 31, 14, 0.82); }
     </style>
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260528a">
 </head>
 <body>
     <div class="game-shell">
+        <div class="console">
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
@@ -179,9 +181,11 @@
             <canvas id="board" width="600" height="600"></canvas>
             <div class="toast" id="toast"></div>
             <div class="game-over" id="over">
-                <h2 id="overTitle">You win!</h2>
-                <p id="overText"></p>
-                <button id="overBtn">New game</button>
+                <div class="over-card">
+                    <h2 id="overTitle">You win!</h2>
+                    <p id="overText"></p>
+                    <button id="overBtn">New game</button>
+                </div>
             </div>
         </div>
         <div class="turn" id="status">Click any cell to begin. You play X; X moves first.</div>
@@ -189,10 +193,11 @@
             <button id="newGame">New game</button>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <p class="hint">Your move's <i>position</i> within a mini-board determines which mini-board your opponent must play in. Sent to a finished board? Play anywhere. Three mini-board wins in a row on the meta board wins the game.</p>
+        <p class="hint">Your move's <i>position</i> within a mini-board determines which mini-board your opponent must play in. Sent to a finished board? Play anywhere. Three mini-board wins in a row on the meta board wins the game.</p>        </div>
+        
 
-        <section id="how" aria-label="How to play">
-            <h2>How to play</h2>
+        <details id="how">
+            <summary><h2>How to play</h2></summary>
             <p>The board is a 3×3 grid of nine smaller tic-tac-toe boards. You play X, the computer plays O. X moves first and can pick any cell on the board.</p>
             <p>After your move, the position you played (top-left, center, bottom-right, etc.) tells your opponent which mini-board they must play in next. If that mini-board is already won or full, the opponent gets a free choice anywhere on the board.</p>
             <p>Win a mini-board by getting three in a row inside it — that claims the matching cell on the meta board. Win three mini-boards in a row on the meta board to win the game.</p>
@@ -201,7 +206,7 @@
                 <li><b>Medium</b> — depth 4 with positional weighting and threat detection.</li>
                 <li><b>Hard</b> — depth 6 with meta-aware scoring; plays for long-term board control.</li>
             </ul>
-        </section>
+        </details>
     </div>
 
     <script>

@@ -156,9 +156,11 @@
       }
       .related-games-list a:hover { background: rgba(43, 95, 168, 0.2); }
     </style>
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260528a">
 </head>
 <body>
     <div class="game-shell">
+        <div class="console">
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
@@ -181,9 +183,11 @@
         <div class="stage-wrap">
             <canvas id="board" width="560" height="480"></canvas>
             <div class="game-over" id="over">
-                <h2 id="overTitle">You win!</h2>
-                <p id="overText"></p>
-                <button id="overBtn">New game</button>
+                <div class="over-card">
+                    <h2 id="overTitle">You win!</h2>
+                    <p id="overText"></p>
+                    <button id="overBtn">New game</button>
+                </div>
             </div>
         </div>
         <div class="turn" id="status">Click or tap a column to drop your disc.</div>
@@ -191,10 +195,11 @@
             <button id="newGame">New game</button>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <p class="hint">You are red and move first. Drop a disc into any column — get four of your discs in a row (across, down, or diagonally) before the computer does.</p>
+        <p class="hint">You are red and move first. Drop a disc into any column — get four of your discs in a row (across, down, or diagonally) before the computer does.</p>        </div>
+        
 
-        <section id="how" aria-label="About Connect 4">
-            <h2>How to play Connect 4</h2>
+        <details id="how">
+            <summary><h2>How to play Connect 4</h2></summary>
             <p>Connect 4 is the two-player classic where you take turns dropping discs into a 7-column, 6-row grid. Discs fall to the lowest open slot in the column you pick. The first player to line up four of their own discs in a row — horizontally, vertically, or diagonally — wins. If the grid fills with no four-in-a-row, it's a draw.</p>
 
             <h3>Controls</h3>
@@ -234,7 +239,7 @@
                 <li><a href="../checkers/">Checkers</a></li>
                 <li><a href="../strategy/">All strategy games &rarr;</a></li>
             </ul>
-        </section>
+        </details>
     </div>
 
     <script>

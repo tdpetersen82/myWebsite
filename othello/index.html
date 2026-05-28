@@ -151,9 +151,11 @@
       #how p { font-size: 14px; color: rgba(14, 42, 26, 0.78); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(14, 42, 26, 0.82); }
     </style>
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260528a">
 </head>
 <body>
     <div class="game-shell">
+        <div class="console">
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
@@ -178,9 +180,11 @@
             <canvas id="board" width="640" height="640"></canvas>
             <div class="toast" id="toast"></div>
             <div class="game-over" id="over">
-                <h2 id="overTitle">You win!</h2>
-                <p id="overText"></p>
-                <button id="overBtn">New game</button>
+                <div class="over-card">
+                    <h2 id="overTitle">You win!</h2>
+                    <p id="overText"></p>
+                    <button id="overBtn">New game</button>
+                </div>
             </div>
         </div>
         <div class="turn" id="status">Click a green-dot square to place your disc.</div>
@@ -188,10 +192,11 @@
             <button id="newGame">New game</button>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <p class="hint">You play Black; Black moves first. A move must flank at least one opponent disc — all flanked discs flip. If you have no legal move, your turn passes automatically.</p>
+        <p class="hint">You play Black; Black moves first. A move must flank at least one opponent disc — all flanked discs flip. If you have no legal move, your turn passes automatically.</p>        </div>
+        
 
-        <section id="how" aria-label="How to play">
-            <h2>How to play</h2>
+        <details id="how">
+            <summary><h2>How to play</h2></summary>
             <p>You play Black, the computer plays White. Each move must place a disc so it sandwiches one or more of your opponent's discs in a straight line — horizontal, vertical, or diagonal. Every sandwiched disc flips to your color.</p>
             <p>If you have no legal move, your turn passes automatically. When neither side can move (or the board fills up), the side with more discs wins.</p>
             <ul>
@@ -199,7 +204,7 @@
                 <li><b>Medium</b> — depth 4 with positional weighting.</li>
                 <li><b>Hard</b> — depth 6 with mobility + corner play. Switches to a perfect endgame solver in the final 12 empty squares.</li>
             </ul>
-        </section>
+        </details>
     </div>
 
     <script>
