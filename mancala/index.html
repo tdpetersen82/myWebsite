@@ -139,6 +139,16 @@
         touch-action: manipulation;
       }
       .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+      /* On narrow screens, flex-wrap leaves Sound alone on its own row because
+         New+Hint+Undo all happen to fit row 1. Pin the in-game buttons to a
+         2-column grid so they pair up cleanly ([New,Hint],[Undo,Sound]), and
+         let the "More strategy games" link span both columns. */
+      @media (max-width: 540px) {
+        .controls { display: grid; grid-template-columns: 1fr 1fr; }
+        .controls > button { width: 100%; }
+        .controls > a { grid-column: 1 / -1; }
+        .controls > a > button { width: 100%; }
+      }
       button {
         font: inherit; font-weight: 700;
         padding: 10px 18px; border-radius: 999px;
