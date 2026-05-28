@@ -109,7 +109,7 @@
         touch-action: none;
         user-select: none; -webkit-user-select: none;
       }
-      .board > div { position: absolute; inset: 0; }
+      .board > div:not(.board-toast) { position: absolute; inset: 0; }
       .sq { position: absolute; width: 12.5%; height: 12.5%; top: 0; left: 0; }
       .sq.light { background: var(--b-light); }
       .sq.dark { background: var(--b-dark); }
