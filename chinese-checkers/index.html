@@ -716,21 +716,25 @@
         if (inUseHomes.has(r)) {
           // home of whoever has this region as home
           const owner = state.players.find(p => p.home === r);
-          tint = PLAYER_COLORS[owner.slot].fill + '14';
+          tint = PLAYER_COLORS[owner.slot].fill + '24';
         }
         if (inUseGoals.has(r)) {
           // goal: tint with the player whose goal this is, slightly stronger
           const racer = state.players.find(p => p.goal === r);
-          tint = PLAYER_COLORS[racer.slot].fill + '28';
+          tint = PLAYER_COLORS[racer.slot].fill + '40';
         }
         if (!tint) continue;
         ctx.fillStyle = tint;
+        // Per-cell halos. The 10 cells per region are already arranged in a
+        // triangle, so overlapping disks form an organic triangular cloud
+        // that hugs the marbles instead of a square box around them.
         ctx.beginPath();
-        // Approximate triangle with a polygon over the cells' bounds
-        const xs = cells.map(c => c.px), ys = cells.map(c => c.py);
-        const minX = Math.min(...xs), maxX = Math.max(...xs);
-        const minY = Math.min(...ys), maxY = Math.max(...ys);
-        ctx.fillRect(minX - HOLE_R, minY - HOLE_R, (maxX - minX) + 2 * HOLE_R, (maxY - minY) + 2 * HOLE_R);
+        const haloR = HOLE_R * 1.85;
+        for (const c of cells) {
+          ctx.moveTo(c.px + haloR, c.py);
+          ctx.arc(c.px, c.py, haloR, 0, Math.PI * 2);
+        }
+        ctx.fill();
       }
 
       // 2) Draw all hole rings (every cell)
