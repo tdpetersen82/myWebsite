@@ -58,7 +58,7 @@
             <button id="restartBtn" class="action">Restart</button>
             <a href="../kids/"><button class="action ghost">More kids games</button></a>
         </div>
-        <p class="hint">Use arrow keys or WASD to move. Eat apples, avoid your tail and the walls.</p>
+        <p class="hint">Swipe, or use arrow keys or WASD, to move. Eat apples, avoid your tail and the walls.</p>
 
         <section class="game-overview" aria-label="About Snake">
             <h2>How to play Snake</h2>
@@ -524,6 +524,29 @@
             case 'ArrowRight': case 'd': case 'D': queueDir( 1,  0); break;
         }
     });
+
+    // Touch / swipe controls. This is a kids game played mostly on tablets, but
+    // it used to be keyboard-only (arrow keys / WASD) — i.e. completely
+    // unplayable on any touch device, since you couldn't even start it. Swipe
+    // to steer, tap to start. Hooks into the same queueDir()/startGame() path.
+    let touchX = 0, touchY = 0;
+    canvas.addEventListener('touchstart', e => {
+        if (audioCtx.state === 'suspended') audioCtx.resume();
+        const t = e.changedTouches[0];
+        touchX = t.clientX; touchY = t.clientY;
+        e.preventDefault();
+    }, { passive: false });
+    canvas.addEventListener('touchmove', e => { e.preventDefault(); }, { passive: false });
+    canvas.addEventListener('touchend', e => {
+        e.preventDefault();
+        const t = e.changedTouches[0];
+        const ddx = t.clientX - touchX, ddy = t.clientY - touchY;
+        const isSwipe = Math.max(Math.abs(ddx), Math.abs(ddy)) >= 16;
+        if (!gameRunning && !deathStart) { startGame(); if (!isSwipe) return; }
+        if (!isSwipe) return;            // a plain tap just starts / does nothing
+        if (Math.abs(ddx) > Math.abs(ddy)) queueDir(ddx > 0 ? 1 : -1, 0);
+        else                                queueDir(0, ddy > 0 ? 1 : -1);
+    }, { passive: false });
 
     document.getElementById('restartBtn').addEventListener('click', startGame);
 

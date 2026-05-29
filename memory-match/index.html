@@ -191,10 +191,7 @@
             const deck = shuffle([...chosen, ...chosen]);
             cards = deck.map((icon, idx) => ({ idx, icon, matched: false, flipped: false }));
 
-            const cols = size === 12 ? 4 : (size === 20 ? 5 : 10);
-            boardEl.style.setProperty('--cols', cols);
-            const cell = size === 12 ? 110 : (size === 20 ? 92 : 60);
-            boardEl.style.setProperty('--cell', cell + 'px');
+            fitBoard();
 
             cards.forEach(c => {
                 const el = document.createElement('div');
@@ -208,6 +205,23 @@
                 boardEl.appendChild(el);
             });
         }
+
+        // Size the cells to FIT the board's available width. The cell sizes used
+        // to be hard-coded px (110/92/60), which overflowed phone viewports — the
+        // outer columns got clipped off the screen edges and couldn't be tapped.
+        // Cap at the roomy-screen ideal, shrink to fit on narrow ones, and refit
+        // on resize / orientation change.
+        function fitBoard() {
+            const cols = size === 12 ? 4 : (size === 20 ? 5 : 10);
+            const idealCell = size === 12 ? 110 : (size === 20 ? 92 : 60);
+            const gap = 10;
+            const avail = boardEl.parentElement.clientWidth - 36; // .board-wrap padding 18px each side
+            const fitCell = Math.floor((avail - (cols - 1) * gap) / cols);
+            const cell = Math.max(18, Math.min(idealCell, fitCell));
+            boardEl.style.setProperty('--cols', cols);
+            boardEl.style.setProperty('--cell', cell + 'px');
+        }
+        window.addEventListener('resize', fitBoard);
 
         function onCardClick(idx, el) {
             if (lockBoard) return;
