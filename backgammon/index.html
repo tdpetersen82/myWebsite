@@ -119,6 +119,17 @@
         touch-action: manipulation;
       }
       .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+      /* On narrow screens, flex-wrap leaves the four in-game buttons at
+         their natural widths (Roll dice / Undo / End turn / New game are
+         all different sizes) and they sit visually unbalanced. Pin them
+         to a 2-col grid so each pair lines up, and let the
+         "More strategy games" link span both columns. */
+      @media (max-width: 540px) {
+        .controls { display: grid; grid-template-columns: 1fr 1fr; }
+        .controls > button { width: 100%; }
+        .controls > a { grid-column: 1 / -1; }
+        .controls > a > button { width: 100%; }
+      }
       button {
         font: inherit; font-weight: 700;
         padding: 10px 18px; border-radius: 999px;
