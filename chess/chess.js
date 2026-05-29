@@ -433,14 +433,13 @@
   }
 
   function applyMove(move) {
-    const mover = state.turn;
     const san = window.ChessNotation ? ChessNotation.toSAN(state, move) : '';
-    // Best the mover could have done (for coaching their own moves).
-    let bestBeforeMover = null;
-    if (analysisOn && mover === playerColor && window.ChessAnalysis) {
-      const rb = ChessAnalysis.analyse(state, EVAL_DEPTH);
-      bestBeforeMover = mover === 'w' ? rb.cp : -rb.cp;
-    }
+    // Move-quality annotations (?!, ?, ??) are NOT computed live. At EVAL_DEPTH=3
+    // the search noise is ~250cp — bigger than the smallest real signal (150cp
+    // for ?!) — so good developing moves like Nf3 / Bc4 / O-O get marked dubious
+    // alongside actual blunders, which makes the labels meaningless. Annotations
+    // are produced post-game by reviewGame() (manual Review button, or auto at
+    // end-of-game when analysisOn), where the user has opted into coaching.
     clearHint();
     if (move.capture) captured[E.colorOf(move.piece)].push(move.capture);
     E.makeMove(state, move);
@@ -452,12 +451,6 @@
     selected = null; legalForSelected = []; pseudoTargets = new Set();
     updateHighlights();
     renderCaptured();
-    if (bestBeforeMover != null) {
-      const after = ChessAnalysis.analyse(state, EVAL_DEPTH);
-      const afterMover = mover === 'w' ? after.cp : -after.cp;
-      const annot = ChessAnalysis.classify(bestBeforeMover, afterMover);
-      if (annot) playedMoves[playedMoves.length - 1].annot = annot;
-    }
     updateMoveList();
     updateEval();
     sound(move.castle ? 'castle' : move.promo ? 'promote' : (move.capture || move.ep) ? 'capture' : 'move');
