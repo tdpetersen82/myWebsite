@@ -83,7 +83,13 @@
       #0a0805;
   }
   #root{width:100%;height:100%}
-  #game-wrapper{width:1380px;height:860px;transform-origin:top center;margin:0 auto}
+  /* transform-origin must be top LEFT, not center: the wrapper is a fixed
+     1380px wide and margin:0 auto can't center it once the viewport is narrower
+     than 1380 (auto margins clamp to 0, so it sits at x:0). With a center origin
+     the scale() then pivots around x:690 and shoves the table off the right edge
+     — on mobile it ends up almost entirely off-screen. top left scales from x:0
+     so the board fills the viewport width. (Matches slot-machine.) */
+  #game-wrapper{width:1380px;height:860px;transform-origin:top left;margin:0 auto}
   /* card flip */
   .card-shell{perspective:900px}
   .card-flip{
