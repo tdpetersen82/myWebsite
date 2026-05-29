@@ -714,10 +714,11 @@
 
             // Draw UFO
             g.lineStyle(2, 0x00ff00);
-            // Saucer body
-            g.beginPath();
-            g.ellipse(0, 0, 22 * scale, 8 * scale, 0, 0, Math.PI * 2);
-            g.strokePath();
+            // Saucer body. Phaser's Graphics has no Canvas2D-style ellipse();
+            // use strokeEllipse(x, y, width, height) where width/height are full
+            // diameters (2x the radii). Using ellipse() here threw mid-update and
+            // froze the whole game the moment the first bonus UFO tried to spawn.
+            g.strokeEllipse(0, 0, 44 * scale, 16 * scale);
             // Dome
             g.beginPath();
             g.arc(0, -4 * scale, 10 * scale, Math.PI, 0, false);

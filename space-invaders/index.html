@@ -528,23 +528,12 @@
         createAliens();
         drawGame();
 
-        // Auto-scale canvas to fit viewport
-        (function() {
-            const c = document.getElementById('gameCanvas');
-            const bw = c.width, bh = c.height;
-            function sc() {
-                const par = c.parentElement;
-                const ps = getComputedStyle(par);
-                const mw = par.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
-                const mh = window.innerHeight * 0.75;
-                const s = Math.min(mw / bw, mh / bh, 1);
-                c.style.transformOrigin = 'top center';
-                c.style.transform = 'scale(' + s + ')';
-                c.style.marginBottom = (-(bh * (1 - s))) + 'px';
-            }
-            window.addEventListener('resize', sc);
-            sc();
-        })();
+        // Canvas sizing is handled by CSS: arcade-game.css has
+        //   .ch-bezel canvas { width:100%; height:auto; max-height:70vh }
+        // which already fits this board to the bezel responsively. The old JS
+        // transform:scale() IIFE fought that rule — on desktop it computed s=1
+        // (no-op) but on mobile it computed s<1 and shrank the already-fitted
+        // canvas a second time, collapsing the board. Removed.
     </script>
     <!-- Ad Slot: Game Page Banner -->
     <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
