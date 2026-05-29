@@ -182,3 +182,40 @@ Usage:
 fetch('/tools/ui-state-probe.js').then(r => r.text()).then(eval);
 console.table(window.__uiProbe().issues);
 ```
+
+---
+
+## Canvas-rendered games need a screenshot pass
+
+The probe inspects the DOM. It does NOT see anything drawn inside a
+`<canvas>` element — that includes the entire board for checkers,
+backgammon, othello, mancala, connect-4, 2048, UTT, connect-dots, and
+chinese-checkers. A probe pass that says "0 issues" on those games only
+means the DOM around the canvas is fine. The contents of the canvas
+could be visibly broken.
+
+This was real: session 2026-05-29 audit reported "0 visual bugs" across
+all 10 strategy games. User immediately pointed out chinese-checkers
+was rendering player home/goal regions as **awkward axis-aligned
+colored boxes** inside a hex-pattern board — the code literally had a
+`// Approximate triangle with a polygon` comment then called `fillRect`.
+Bounding-box measurements were clean. The probe was clean. The eye
+was the only thing that would have caught it.
+
+Rule: **for every canvas-rendered game, take a real screenshot at desktop
+AND mobile, look at it the way the user would, and ask "does anything
+look unintentional?"** Specifically watch for:
+
+- Rectangles where a non-rectangular shape was intended (zones,
+  highlights, board regions).
+- Colors that read as "leaked from elsewhere" — blocks of color that
+  don't belong to a game element.
+- Mobile button rows that pack asymmetrically (the mancala
+  `[3, 1, 1]` flex-wrap was a getBoundingClientRect-clean / eye-broken
+  bug too).
+
+If the screenshot tool is rendering at a weird scale (the preview MCP
+sometimes returns a downscaled image), use `getBoundingClientRect` to
+confirm layout AND `getImageData` to sample canvas pixel colors at
+known positions — but those are diagnostic supports, NOT a substitute
+for looking at the picture.
