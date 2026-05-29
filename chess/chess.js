@@ -52,6 +52,10 @@
   const copyFenBtn = document.getElementById('copyFen');
 
   // ---- localStorage keys (unchanged — the Strategy page reads chessGamesWon etc.) ----
+  // KEY_STREAK uses the legacy 'chessHighScore' name from an earlier version of the
+  // chess page. It stores the CURRENT streak (resets to 0 on loss), not the high score.
+  // KEY_BEST below is the actual best-streak. Don't rename the storage key — it would
+  // wipe everyone's streak count. Constant name stays consistent with KEY_BEST for code clarity.
   const KEY_STREAK = 'chessHighScore';
   const KEY_BEST = 'chessBestStreak';
   const KEY_WINS = 'chessGamesWon';
@@ -61,7 +65,11 @@
   const KEY_BOARD = 'chessBoardTheme';
   const KEY_SOUND = 'chessSound';
   const KEY_ANALYSIS = 'chessEvalBar';
-  const EVAL_DEPTH = 3;
+  // Review search depth. 3 is fast (~50ms/move) but produces ~250cp of noise — enough
+  // to flag good developing moves as ?!. 4 is ~10x slower per call but the signal
+  // separates real errors from depth-3 wobble. Review is one-shot post-game so the
+  // wall-clock cost (~1s/move, chunked through setTimeout with a progress %) is OK.
+  const EVAL_DEPTH = 4;
   const HINT_DEPTH = 4;
 
   function sound(type) { if (soundOn && window.ChessSound) ChessSound.play(type); }

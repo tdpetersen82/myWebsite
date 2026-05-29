@@ -449,8 +449,64 @@
     return generateLegalMoves(state).filter(m => m.from === fromSq);
   }
 
+  // Load a position from FEN notation. Used for QA / testing positions (promotion,
+  // stalemate, mate, en-passant setups) that real play rarely reaches. Returns a new
+  // state; doesn't mutate any argument. Throws on malformed FEN.
+  //
+  // FEN format: <board> <turn> <castling> <ep> <halfmove> <fullmove>
+  // e.g. "rnbqkbnr/pppppppp/8/8/8/8/PPPPPPPP/RNBQKBNR w KQkq - 0 1" (starting position)
+  function loadFen(fen) {
+    const parts = fen.trim().split(/\s+/);
+    if (parts.length < 4) throw new Error('FEN missing required fields: ' + fen);
+    const [boardStr, turnStr, castlingStr, epStr, halfStr, fullStr] = parts;
+
+    const board = new Array(64).fill('.');
+    const ranks = boardStr.split('/');
+    if (ranks.length !== 8) throw new Error('FEN board must have 8 ranks: ' + boardStr);
+    for (let r = 0; r < 8; r++) {
+      let f = 0;
+      for (const ch of ranks[r]) {
+        if (/[1-8]/.test(ch)) f += parseInt(ch, 10);
+        else if (PIECES.includes(ch)) { board[r * 8 + f] = ch; f++; }
+        else throw new Error('FEN invalid piece char: ' + ch);
+      }
+      if (f !== 8) throw new Error('FEN rank ' + (8 - r) + ' has wrong width: ' + ranks[r]);
+    }
+    if (turnStr !== 'w' && turnStr !== 'b') throw new Error('FEN turn must be w or b: ' + turnStr);
+
+    const castling = { wK: false, wQ: false, bK: false, bQ: false };
+    if (castlingStr !== '-') {
+      for (const ch of castlingStr) {
+        if (ch === 'K') castling.wK = true;
+        else if (ch === 'Q') castling.wQ = true;
+        else if (ch === 'k') castling.bK = true;
+        else if (ch === 'q') castling.bQ = true;
+        else throw new Error('FEN invalid castling char: ' + ch);
+      }
+    }
+
+    let ep = null;
+    if (epStr !== '-') {
+      if (!/^[a-h][36]$/.test(epStr)) throw new Error('FEN invalid ep square: ' + epStr);
+      const f = epStr.charCodeAt(0) - 97;
+      const r = 8 - parseInt(epStr[1], 10);
+      ep = r * 8 + f;
+    }
+
+    return {
+      board,
+      turn: turnStr,
+      castling,
+      ep,
+      halfmove: halfStr != null ? parseInt(halfStr, 10) || 0 : 0,
+      fullmove: fullStr != null ? parseInt(fullStr, 10) || 1 : 1,
+      history: [],
+      lastMove: null,
+    };
+  }
+
   global.ChessEngine = {
-    newGame, clone, makeMove, unmakeMove,
+    newGame, clone, makeMove, unmakeMove, loadFen,
     generatePseudoMoves, generateLegalMoves, legalMovesFrom,
     isAttacked, isInCheck, getStatus, findKing,
     positionKey, alg, sq, rk, fl, colorOf,
