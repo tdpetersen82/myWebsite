@@ -220,7 +220,7 @@
 
         <details id="how">
             <summary><h2>How to play</h2></summary>
-            <p>You play the bottom-pointing triangle. Each turn either step a marble into an adjacent empty hole, or jump it over a neighbor (yours or any opponent's) to the empty hole on the far side. After a jump you may chain another jump from the new position. Click <b>Done jumping</b> to end your turn voluntarily; if no further jumps are possible the chain ends automatically.</p>
+            <p>You play the bottom-pointing triangle. Each turn either step a marble into an adjacent empty hole, or jump it over a neighbor (yours or any opponent's) to the empty hole on the far side. After a jump you may chain another jump from the new position. To end your turn voluntarily, tap the moving marble again, press Enter, or click <b>Done jumping</b>; if no further jumps are possible the chain ends automatically.</p>
             <p>The first player to land all 10 of their marbles in the opposite triangle wins. Once a marble enters its goal triangle it cannot leave — no shuffling pegs back and forth to stall.</p>
             <ul>
                 <li><b>2 players</b> — head-to-head across the board.</li>
@@ -791,7 +791,7 @@
       }
       if (animPeg) drawMarble(animPeg.x, animPeg.y, animPeg.slot, false);
 
-      // 5) Highlight chain origin / "Done" hint
+      // 5) Highlight chain origin + teach the "tap to finish" gesture
       if (chainOrigin != null && !anim && !aiThinking) {
         const c = CELLS[chainOrigin];
         ctx.beginPath();
@@ -801,6 +801,28 @@
         ctx.setLineDash([4, 4]);
         ctx.stroke();
         ctx.setLineDash([]);
+
+        // Floating "tap to finish" label, clamped to stay on the canvas and
+        // flipped below the marble when it sits near the top edge.
+        ctx.save();
+        ctx.font = '700 12px Inter, "Segoe UI", sans-serif';
+        ctx.textAlign = 'center';
+        ctx.textBaseline = 'middle';
+        const label = 'Tap marble to finish';
+        const padX = 9, h = 22;
+        const w = ctx.measureText(label).width + padX * 2;
+        let lx = Math.max(w / 2 + 4, Math.min(CANVAS_W - w / 2 - 4, c.px));
+        let ly = c.py - HOLE_R - 18;
+        if (ly - h / 2 < 4) ly = c.py + HOLE_R + 18;
+        const rx = lx - w / 2, ry = ly - h / 2;
+        ctx.beginPath();
+        if (ctx.roundRect) ctx.roundRect(rx, ry, w, h, 11);
+        else ctx.rect(rx, ry, w, h);
+        ctx.fillStyle = 'rgba(21, 23, 31, 0.88)';
+        ctx.fill();
+        ctx.fillStyle = '#FCE9D2';
+        ctx.fillText(label, lx, ly + 0.5);
+        ctx.restore();
       }
     }
 
@@ -999,7 +1021,7 @@
             // Allow further jumps
             availableMoves = further;
             doneBtn.classList.remove('hidden');
-            setStatus('Continue jumping or click "Done jumping" to end your turn.');
+            setStatus('Hop again, or tap your marble (or press Enter) to end your turn.');
             draw();
           }
         } else {
@@ -1009,6 +1031,15 @@
     }
 
     function finishPlayerTurn() {
+      // Guard against double-fire: the button, an Enter press, and a tap on the
+      // marble can all land in the brief window before nextTurn() resets the
+      // chain state. Only the human ends a turn here, and only once.
+      if (currentPlayer(state).slot !== 4) return;
+      chainOrigin = null;
+      chainStartFrom = null;
+      chainWasJump = false;
+      selected = null;
+      availableMoves = [];
       // Advance turn
       state.currentIdx = (state.currentIdx + 1) % state.players.length;
       state.moveCount++;
@@ -1034,8 +1065,11 @@
     });
 
     function handleClickAt(cellIdx) {
-      // If in chain mode, only landing on a valid further-jump square is allowed.
+      // In chain mode: click a further-jump ring to keep hopping, or click the
+      // marble itself to end the turn — so you never have to travel down to the
+      // "Done jumping" button to stop.
       if (chainOrigin != null) {
+        if (cellIdx === chainOrigin) { finishPlayerTurn(); return; }
         for (const m of availableMoves) {
           if (m.to === cellIdx) {
             // Apply this jump segment
@@ -1044,7 +1078,7 @@
             return;
           }
         }
-        // Click on chainOrigin = no-op; click elsewhere = ignore
+        // Click anywhere else = ignore (don't silently throw away the chain)
         return;
       }
 
@@ -1103,6 +1137,16 @@
     doneBtn.addEventListener('click', () => {
       if (chainOrigin == null) return;
       finishPlayerTurn();
+    });
+
+    // End a jump chain from the keyboard too (Enter / Space), so finishing never
+    // requires reaching for the button mid-move.
+    document.addEventListener('keydown', (e) => {
+      if (chainOrigin == null) return;
+      if (e.key === 'Enter' || e.key === ' ' || e.key === 'Spacebar') {
+        e.preventDefault();
+        finishPlayerTurn();
+      }
     });
 
     function startGame() {
