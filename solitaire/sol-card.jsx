@@ -57,7 +57,7 @@ function CardBack() {
       display:'flex',alignItems:'center',justifyContent:'center',
       overflow:'hidden'
     }}>
-      <img src="../assets/logo-96.png" alt="" style={{
+      <img src="../assets/logo-96.png" alt="" draggable={false} style={{
         width:'52%', height:'auto',
         filter:'drop-shadow(0 2px 4px rgba(0,0,0,.6))'
       }}/>
@@ -70,7 +70,7 @@ function PlayingCard({
   w = 84, h = 118,
   dealIndex = 0, fromX = 360, fromY = -240,
   glow = false, selected = false,
-  onClick, onDoubleClick, dealing = false
+  onClick, onDoubleClick, onPointerDown, hidden = false, dealing = false
 }) {
   const animate = dealing;
   return (
@@ -78,15 +78,20 @@ function PlayingCard({
       className={`card-shell ${animate ? 'deal-in' : ''}`}
       onClick={onClick}
       onDoubleClick={onDoubleClick}
+      onPointerDown={onPointerDown}
+      draggable={false}
       style={{
         width:w, height:h, position:'relative',
         animationDelay: animate ? `${dealIndex * 0.05}s` : undefined,
         '--from-x': `${fromX}px`,
         '--from-y': `${fromY}px`,
-        cursor: onClick ? 'pointer' : 'default',
+        cursor: onPointerDown ? 'grab' : (onClick ? 'pointer' : 'default'),
         filter: glow ? 'drop-shadow(0 0 18px rgba(230,197,144,.85))' : 'none',
         transform: selected ? 'translateY(-6px)' : 'none',
-        transition: 'transform .15s ease, filter .3s ease'
+        transition: 'transform .15s ease, filter .3s ease',
+        visibility: hidden ? 'hidden' : 'visible',
+        touchAction: onPointerDown ? 'none' : undefined,
+        userSelect: 'none', WebkitUserSelect: 'none'
       }}>
       <div className={`card-flip ${faceDown ? 'face-down' : ''}`} style={{
         width:'100%', height:'100%', position:'relative'

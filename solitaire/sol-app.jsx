@@ -310,9 +310,13 @@ function App() {
   const [showAbandonModal, setShowAbandonModal] = useState(false);
   const [pendingDrawMode, setPendingDrawMode] = useState(null);
   const [autoPlaying, setAutoPlaying] = useState(false);
+  const [drag, setDrag] = useState(null);        // active drag (renders the ghost)
   const autoPlayRef = useRef(null);
   const stateRef = useRef(null);
   const drawingRef = useRef(false);
+  const dragRef = useRef(null);                   // live drag bookkeeping (no re-render)
+  const ghostRef = useRef(null);                  // ghost DOM node, moved imperatively
+  const justDraggedRef = useRef(false);           // swallow the click that trails a drag
 
   // Release the stock-draw guard after every render so the next click can fire.
   useEffect(() => { drawingRef.current = false; });
@@ -580,6 +584,7 @@ function App() {
   }
 
   function onTableauClick(col, idx, card) {
+    if (justDraggedRef.current) { justDraggedRef.current = false; return; }
     if (phase !== 'playing') return;
     if (!card.faceUp) {
       // Click face-down card: only useful if it's the current top — auto-flip already handles.
@@ -618,6 +623,7 @@ function App() {
   }
 
   function onWasteClick() {
+    if (justDraggedRef.current) { justDraggedRef.current = false; return; }
     if (phase !== 'playing') return;
     if (selection && selection.source === 'waste') { setSelection(null); return; }
     if (selection) {
@@ -677,6 +683,93 @@ function App() {
     setStock(stock.slice(0, -n));
     setWaste([...waste, ...drawn]);
     if (window.SFX) SFX.card();
+  }
+
+  // ─── Drag & drop ──────────────────────────────────────────
+  // Pointer-based, so it works for mouse and touch and sits alongside the
+  // click-to-move system. A press that doesn't pass the move threshold falls
+  // through to the normal onClick (select / place); a real drag drops the card
+  // (and its substack) onto whatever column or foundation is under the pointer,
+  // reusing attemptMove() so every rule, sound and score stays identical.
+  function beginDrag(source, cards, e) {
+    if (phase !== 'playing' || !cards.length) return;
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    const rect = e.currentTarget.getBoundingClientRect();
+    dragRef.current = {
+      source, cards,
+      startX: e.clientX, startY: e.clientY,
+      grabDX: e.clientX - rect.left,
+      grabDY: e.clientY - rect.top,
+      w: rect.width, h: rect.height,
+      step: 26 * (rect.width / 84),
+      active: false,
+    };
+    justDraggedRef.current = false;
+    window.addEventListener('pointermove', onDragMove);
+    window.addEventListener('pointerup', onDragEnd);
+    window.addEventListener('pointercancel', onDragEnd);
+  }
+
+  function onDragMove(e) {
+    const d = dragRef.current;
+    if (!d) return;
+    if (!d.active) {
+      if (Math.abs(e.clientX - d.startX) < 6 && Math.abs(e.clientY - d.startY) < 6) return;
+      d.active = true;
+      setSelection(null);
+      setHint(null);
+      setDrag({
+        source: d.source, cards: d.cards, w: d.w, h: d.h, step: d.step,
+        grabDX: d.grabDX, grabDY: d.grabDY, x: e.clientX, y: e.clientY,
+      });
+    }
+    const g = ghostRef.current;
+    if (g) g.style.transform = `translate(${e.clientX - d.grabDX}px, ${e.clientY - d.grabDY}px)`;
+  }
+
+  function onDragEnd(e) {
+    window.removeEventListener('pointermove', onDragMove);
+    window.removeEventListener('pointerup', onDragEnd);
+    window.removeEventListener('pointercancel', onDragEnd);
+    const d = dragRef.current;
+    dragRef.current = null;
+    if (!d || !d.active) return;            // never crossed threshold → it's a click
+    justDraggedRef.current = true;          // suppress the trailing click on the source
+    setDrag(null);
+    if (e.type === 'pointercancel') return; // interrupted → snap back (no move)
+    const dest = hitTestDrop(e.clientX, e.clientY);
+    if (dest) attemptMove(d.source, dest);  // illegal/no-target just snaps back
+  }
+
+  // Map a screen point to a drop target via the data-drop-* zones.
+  function hitTestDrop(x, y) {
+    for (const el of document.querySelectorAll('[data-drop-foundation]')) {
+      const r = el.getBoundingClientRect();
+      if (x >= r.left && x <= r.right && y >= r.top && y <= r.bottom) {
+        return { kind: 'foundation', suit: el.getAttribute('data-drop-foundation') };
+      }
+    }
+    let best = null, bestDist = Infinity;
+    for (const el of document.querySelectorAll('[data-drop-tableau]')) {
+      const r = el.getBoundingClientRect();
+      if (y < r.top - 30) continue;                  // forgiving below, not above
+      if (x >= r.left - 10 && x <= r.right + 10) {
+        const dist = Math.abs(x - (r.left + r.right) / 2);
+        if (dist < bestDist) { bestDist = dist; best = el; }
+      }
+    }
+    if (best) return { kind: 'tableau', col: parseInt(best.getAttribute('data-drop-tableau'), 10) };
+    return null;
+  }
+
+  function onTableauPointerDown(col, i, card, e) {
+    if (phase !== 'playing' || !card.faceUp) return;
+    beginDrag({ source: 'tableau', col, idx: i }, tableau[col].slice(i), e);
+  }
+  function onWastePointerDown(e) {
+    if (phase !== 'playing') return;
+    const top = topOf(waste);
+    if (top) beginDrag({ source: 'waste' }, [top], e);
   }
 
   function doUndo() {
@@ -868,19 +961,20 @@ function App() {
           {/* Stock + Waste */}
           <div style={{ position:'absolute', left: 28, top: 90, display:'flex', gap: 18 }}>
             <StockPile stock={stock} waste={waste} onDraw={onStockClick} drawMode={drawCount} passes={passes} isHinted={hintStock} />
-            <WastePile waste={waste} drawMode={drawCount} selection={selection} onSelect={onWasteClick} onDblClick={onWasteDblClick} />
+            <WastePile waste={waste} drawMode={drawCount} selection={selection} onSelect={onWasteClick} onDblClick={onWasteDblClick} onCardPointerDown={onWastePointerDown} dragSource={drag ? drag.source : null} />
           </div>
 
           {/* Foundations */}
           <div style={{ position:'absolute', right: 28, top: 90, display:'flex', gap: 14 }}>
             {SUITS_ORDER.map(suit => (
-              <FoundationSlot
-                key={suit}
-                suit={suit}
-                cards={foundations[suit]}
-                onClick={() => onFoundationClick(suit)}
-                isHinted={hintFoundationSuit === suit}
-              />
+              <div key={suit} data-drop-foundation={suit}>
+                <FoundationSlot
+                  suit={suit}
+                  cards={foundations[suit]}
+                  onClick={() => onFoundationClick(suit)}
+                  isHinted={hintFoundationSuit === suit}
+                />
+              </div>
             ))}
           </div>
 
@@ -891,7 +985,7 @@ function App() {
             justifyContent:'flex-start'
           }}>
             {tableau.map((col, idx) => (
-              <div key={idx} style={{
+              <div key={idx} data-drop-tableau={idx} style={{
                 animation: hintTableauCol === idx ? 'glowPulse 1.6s ease-in-out infinite' : 'none',
                 borderRadius: 12,
                 padding: hintTableauCol === idx ? 2 : 0,
@@ -905,8 +999,10 @@ function App() {
                   hintIds={hintIds}
                   onCardClick={onTableauClick}
                   onCardDblClick={onTableauDblClick}
+                  onCardPointerDown={onTableauPointerDown}
                   onEmptyClick={() => onTableauEmptyClick(idx)}
                   isDealing={isDealing}
+                  dragSource={drag ? drag.source : null}
                 />
               </div>
             ))}
@@ -959,6 +1055,8 @@ function App() {
         />
       )}
 
+      {drag && <DragGhost drag={drag} ghostRef={ghostRef} />}
+
       <TweaksPanel title="Solitaire Tweaks">
         <TweakSection label="Game" />
         <TweakRadio
@@ -987,7 +1085,7 @@ function App() {
   );
 }
 
-function DealtTableauColumn({ col, cards, selection, hintIds, onCardClick, onCardDblClick, onEmptyClick, isDealing }) {
+function DealtTableauColumn({ col, cards, selection, hintIds, onCardClick, onCardDblClick, onCardPointerDown, onEmptyClick, isDealing, dragSource }) {
   if (cards.length === 0) {
     return (
       <div onClick={onEmptyClick} style={{
@@ -1014,6 +1112,7 @@ function DealtTableauColumn({ col, cards, selection, hintIds, onCardClick, onCar
       {cards.map((card, i) => {
         const isSelected = selection && selection.source === 'tableau' && selection.col === col && i >= selection.idx;
         const hinted = hintIds && hintIds.includes(card.id);
+        const dragged = dragSource && dragSource.source === 'tableau' && dragSource.col === col && i >= dragSource.idx;
         // Compute global deal index for nice cascade
         const dealIdx = i * 0.7 + col * 1.5;
         return (
@@ -1028,16 +1127,38 @@ function DealtTableauColumn({ col, cards, selection, hintIds, onCardClick, onCar
               w={84} h={118}
               selected={isSelected}
               glow={hinted}
+              hidden={dragged}
               dealing={isDealing}
               dealIndex={dealIdx}
               fromX={-380} fromY={-90}
               onClick={() => onCardClick(col, i, card)}
               onDoubleClick={() => onCardDblClick && onCardDblClick(col, i, card)}
+              onPointerDown={card.faceUp ? (e) => onCardPointerDown(col, i, card, e) : undefined}
             />
           </div>
         );
       })}
     </div>
+  );
+}
+
+// Floating stack that follows the pointer during a drag. Portaled to <body> so
+// it isn't scaled by the #game-wrapper transform — sizes/coords are screen px.
+function DragGhost({ drag, ghostRef }) {
+  const { cards, w, h, step, x, y, grabDX, grabDY } = drag;
+  return ReactDOM.createPortal(
+    <div ref={ghostRef} style={{
+      position:'fixed', left:0, top:0, zIndex:99999, pointerEvents:'none', width:w,
+      transform:`translate(${x - grabDX}px, ${y - grabDY}px)`,
+      filter:'drop-shadow(0 16px 24px rgba(0,0,0,.55))'
+    }}>
+      {cards.map((c, i) => (
+        <div key={c.id} style={{ position:'absolute', left:0, top:i*step, width:w, height:h }}>
+          <PlayingCard rank={c.rank} suit={c.suit} w={w} h={h} />
+        </div>
+      ))}
+    </div>,
+    document.body
   );
 }
 

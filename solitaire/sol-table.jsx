@@ -240,13 +240,14 @@ function StockPile({ stock, waste, onDraw, drawMode, passes, isHinted }) {
   );
 }
 
-function WastePile({ waste, drawMode, selection, onSelect, onDblClick }) {
+function WastePile({ waste, drawMode, selection, onSelect, onDblClick, onCardPointerDown, dragSource }) {
   if (!waste.length) {
     return <PileSlot label="·" />;
   }
   const visibleCount = Math.min(drawMode === 3 ? 3 : 1, waste.length);
   const startIdx = waste.length - visibleCount;
   const isSelected = selection && selection.source === 'waste';
+  const draggingTop = dragSource && dragSource.source === 'waste';
   return (
     <div style={{ position:'relative', width: 84 + (visibleCount - 1) * 22, height: 118 }}>
       {waste.slice(startIdx).map((card, i) => {
@@ -262,8 +263,10 @@ function WastePile({ waste, drawMode, selection, onSelect, onDblClick }) {
               w={84}
               h={118}
               selected={isTop && isSelected}
+              hidden={isTop && draggingTop}
               onClick={isTop ? onSelect : undefined}
               onDoubleClick={isTop ? onDblClick : undefined}
+              onPointerDown={isTop ? onCardPointerDown : undefined}
             />
           </div>
         );
