@@ -23,15 +23,16 @@
     { id: 'spacex-lander',     name: 'SpaceX Lander',     cat: 'classic', desc: 'Land the Falcon 9.',               color: '#5DC4D9'  },
     { id: 'defender',          name: 'Defender',          cat: 'classic', desc: 'Save the humanoids.',              color: '#9B7EDC'  },
     { id: 'simon',             name: 'Simon',             cat: 'classic', desc: 'Watch. Repeat. Repeat longer.',    color: '#F08488'  },
-    { id: 'connect-4',         name: 'Connect 4',         cat: 'puzzle',  desc: 'Four in a row beats the computer.',      color: '#8FA8E6' },
+    { id: 'connect-4',         name: 'Connect 4',         cat: 'puzzle',  desc: 'Four in a row. Three levels.',      color: '#8FA8E6' },
     { id: 'connect-dots',      name: 'Dots & Boxes',      cat: 'puzzle',  desc: 'Lines, boxes, strategy.',          color: '#F08488'  },
     { id: '2048',              name: '2048',              cat: 'puzzle',  desc: 'Merge tiles. Reach 2048.',          color: '#F2A65A', isNew: true },
-    { id: 'chess',             name: 'Chess',             cat: 'puzzle',  desc: 'Beat the computer. Full rules, three difficulties.', color: '#9B7EDC', isNew: true },
+    { id: 'chess',             name: 'Chess',             cat: 'puzzle',  desc: 'Full rules. Three difficulties.', color: '#9B7EDC', isNew: true },
     { id: 'checkers',          name: 'Checkers',          cat: 'puzzle',  desc: 'Mandatory captures. Multi-jumps. Crown me.',   color: '#D23B33', isNew: true },
     { id: 'backgammon',        name: 'Backgammon',        cat: 'puzzle',  desc: 'Roll, race, bear off. Pip-count strategy.',     color: '#A26F3C', isNew: true },
     { id: 'othello',           name: 'Othello',           cat: 'puzzle',  desc: 'Flip flanked discs. Hold the corners.',         color: '#1A7B3F', isNew: true },
     { id: 'chinese-checkers',  name: 'Chinese Checkers',  cat: 'puzzle',  desc: 'Hop chains. 2, 3, or 6 players.',               color: '#2DA1A6', isNew: true },
     { id: 'ultimate-tic-tac-toe', name: 'Ultimate Tic-Tac-Toe', cat: 'puzzle', desc: 'Nine boards in one. Your move picks the next.', color: '#E8A330', isNew: true },
+    { id: 'mahjong',           name: 'Mahjong Solitaire', cat: 'puzzle',  desc: 'Match free tiles. Clear the mound.', color: '#1FA88A', isNew: true },
     { id: 'mancala',           name: 'Mancala',           cat: 'puzzle',  desc: 'Sow seeds. Capture across. Claim the store.',   color: '#B85C38', isNew: true },
     { id: 'blackjack',         name: 'Blackjack',         cat: 'casino',  desc: 'Hit 21 with strategy hints.',      color: '#7BC97B' },
     { id: 'roulette',          name: 'Roulette',          cat: 'casino',  desc: 'Spin the European wheel.',         color: '#F08488'  },
@@ -116,6 +117,7 @@
     'shape-sorter': '<circle cx="14" cy="14" r="6" fill="C"/><rect x="26" y="8" width="12" height="12" rx="2" fill="C" opacity="0.7"/><polygon points="50,8 56,20 44,20" fill="C"/><rect x="6" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5"/><rect x="26" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5" opacity="0.7"/><rect x="46" y="40" width="14" height="14" rx="3" fill="none" stroke="C" stroke-width="2.5"/>',
     'counting-critters': '<circle cx="14" cy="20" r="6" fill="C"/><circle cx="32" cy="20" r="6" fill="C" opacity="0.7"/><circle cx="50" cy="20" r="6" fill="C"/><text x="32" y="50" font-size="20" font-weight="800" text-anchor="middle" fill="C">3</text>',
     'slot-machine': '<rect x="8" y="16" width="14" height="32" rx="2" fill="C" opacity="0.22"/><rect x="25" y="16" width="14" height="32" rx="2" fill="C" opacity="0.22"/><rect x="42" y="16" width="14" height="32" rx="2" fill="C" opacity="0.22"/><text x="15" y="37" font-size="13" font-weight="800" text-anchor="middle" fill="C">7</text><text x="32" y="37" font-size="13" font-weight="800" text-anchor="middle" fill="C">7</text><text x="49" y="37" font-size="13" font-weight="800" text-anchor="middle" fill="C">7</text>',
+    mahjong: '<rect x="20" y="8" width="24" height="48" rx="4" fill="C" opacity="0.18"/><rect x="20" y="8" width="24" height="48" rx="4" fill="none" stroke="C" stroke-width="2.5"/><circle cx="32" cy="22" r="4" fill="C"/><circle cx="32" cy="34" r="4" fill="C"/><circle cx="32" cy="46" r="3" fill="C" opacity="0.6"/>',
   };
 
   function glyph(game, size) {
@@ -243,12 +245,12 @@
     const cats = [
       { id: 'classic', label: 'Arcade',  href: 'arcade/',  color: '#FF4F2D',
         metric: arcadeBest != null ? arcadeBest.toLocaleString() : 'Play',
-        sub:    arcadeBest != null ? 'Top arcade score' : 'Eleven cabinets' },
+        sub:    arcadeBest != null ? 'Top arcade score' : 'Classic & 80s' },
       { id: 'kids',    label: 'Kids',    href: 'kids/',    color: '#FF4F8B',
         metric: snakeBest != null ? snakeBest.toLocaleString() : 'Play',
-        sub:    snakeBest != null ? 'Snake best' : 'Six gentle games' },
+        sub:    snakeBest != null ? 'Snake best' : 'Gentle & ad-free' },
       { id: 'puzzle',  label: 'Strategy', href: 'strategy/', color: '#1F5A3D',
-        metric: 'Play', sub: 'Beat the computer' },
+        metric: 'Play', sub: 'Chess, Othello & more' },
       { id: 'casino',  label: 'Casino',  href: 'casino/',  color: '#C8A14A',
         metric: casinoBankroll != null ? '$' + casinoBankroll.toLocaleString() : '$1,000',
         sub:    casinoBankroll != null ? 'Bankroll' : 'Free starting stake' },
@@ -300,7 +302,7 @@
     const newGames = GAMES.filter(g => g.isNew);
     const newCard = el(`
       <div class="side-card">
-        <h4>New this month <span class="more">${newGames.length}</span></h4>
+        <h4>New this month</h4>
       </div>
     `);
     newGames.slice(0, 4).forEach(g => {
@@ -336,7 +338,6 @@
 
     const isFiltering = state.query || state.filter !== 'all';
     const allMatching = GAMES.filter(matches);
-    const total = GAMES.length;
 
     // Results line (only when filtering)
     const resultsEl = document.getElementById('hub-results');
@@ -380,7 +381,6 @@
         <div class="hub-section-head">
           <h2>All games</h2>
           <div class="rule"></div>
-          <span class="count">${rest.length + featuredGames.length} / ${total}</span>
         </div>
       `);
       main.appendChild(head);
@@ -433,7 +433,7 @@
     const input = document.getElementById('hub-search-input');
     const clear = document.getElementById('hub-search-clear');
     const kbd = document.getElementById('hub-search-kbd');
-    input.placeholder = `Search ${GAMES.length} games…`;
+    input.placeholder = 'Search games…';
     function syncClear() {
       const has = input.value.length > 0;
       clear.style.display = has ? '' : 'none';
@@ -466,13 +466,8 @@
   function setupCategoryHeroes() {
     document.querySelectorAll('.ch-card').forEach(card => {
       const cat = card.dataset.cat;
-      const list = GAMES.filter(g => g.cat === cat);
-      const newCount = list.filter(g => g.isNew).length;
       const pill = card.querySelector('.ch-stat-pill');
-      if (pill) {
-        pill.innerHTML = `<b>${list.length}</b> games`
-          + (newCount > 0 ? ` · <b>${newCount}</b> new` : '');
-      }
+      if (pill) pill.remove();
       // Each category has its own landing page; the hero card routes there.
       const LANDINGS = { classic: 'arcade/', kids: 'kids/', puzzle: 'strategy/', casino: 'casino/' };
       card.addEventListener('click', (e) => {
