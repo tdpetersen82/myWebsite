@@ -23,6 +23,7 @@
     { id: 'spacex-lander',     name: 'SpaceX Lander',     cat: 'classic', desc: 'Land the Falcon 9.',               color: '#5DC4D9'  },
     { id: 'defender',          name: 'Defender',          cat: 'classic', desc: 'Save the humanoids.',              color: '#9B7EDC'  },
     { id: 'simon',             name: 'Simon',             cat: 'classic', desc: 'Watch. Repeat. Repeat longer.',    color: '#F08488'  },
+    { id: 'solar-system',      name: 'Solar System',      cat: 'classic', desc: 'Planets orbit the Sun under real gravity.', color: '#F2A65A', isNew: true },
     { id: 'connect-4',         name: 'Connect 4',         cat: 'puzzle',  desc: 'Four in a row. Three levels.',      color: '#8FA8E6' },
     { id: 'connect-dots',      name: 'Dots & Boxes',      cat: 'puzzle',  desc: 'Lines, boxes, strategy.',          color: '#F08488'  },
     { id: '2048',              name: '2048',              cat: 'puzzle',  desc: 'Merge tiles. Reach 2048.',          color: '#F2A65A', isNew: true },
@@ -118,6 +119,7 @@
     'counting-critters': '<circle cx="14" cy="20" r="6" fill="C"/><circle cx="32" cy="20" r="6" fill="C" opacity="0.7"/><circle cx="50" cy="20" r="6" fill="C"/><text x="32" y="50" font-size="20" font-weight="800" text-anchor="middle" fill="C">3</text>',
     'slot-machine': '<rect x="8" y="16" width="14" height="32" rx="2" fill="C" opacity="0.22"/><rect x="25" y="16" width="14" height="32" rx="2" fill="C" opacity="0.22"/><rect x="42" y="16" width="14" height="32" rx="2" fill="C" opacity="0.22"/><text x="15" y="37" font-size="13" font-weight="800" text-anchor="middle" fill="C">7</text><text x="32" y="37" font-size="13" font-weight="800" text-anchor="middle" fill="C">7</text><text x="49" y="37" font-size="13" font-weight="800" text-anchor="middle" fill="C">7</text>',
     mahjong: '<rect x="20" y="8" width="24" height="48" rx="4" fill="C" opacity="0.18"/><rect x="20" y="8" width="24" height="48" rx="4" fill="none" stroke="C" stroke-width="2.5"/><circle cx="32" cy="22" r="4" fill="C"/><circle cx="32" cy="34" r="4" fill="C"/><circle cx="32" cy="46" r="3" fill="C" opacity="0.6"/>',
+    'solar-system': '<circle cx="32" cy="32" r="7" fill="C"/><circle cx="32" cy="32" r="15" fill="none" stroke="C" stroke-width="2" opacity="0.45"/><circle cx="32" cy="32" r="24" fill="none" stroke="C" stroke-width="2" opacity="0.3"/><circle cx="47" cy="32" r="3.5" fill="C"/><circle cx="32" cy="8" r="3" fill="C" opacity="0.7"/>',
   };
 
   function glyph(game, size) {
