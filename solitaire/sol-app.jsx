@@ -145,7 +145,16 @@ function canAutoComplete(state) {
   for (const col of state.tableau) {
     for (const c of col) if (!c.faceUp) return false;
   }
-  return true;
+  // A fully-exposed board isn't always finishable by promotion alone (a low card
+  // can sit buried under a higher one). Only offer "Auto-finish" if the greedy
+  // promotion actually clears the deck — the button shouldn't stop halfway.
+  let sim = state;
+  for (let guard = 0; guard < 60 && !isWon(sim); guard++) {
+    const next = autoPromoteOne(sim);
+    if (!next) return false;
+    sim = next;
+  }
+  return isWon(sim);
 }
 
 // One step of auto-promote: find any card eligible to move to foundation
@@ -300,7 +309,6 @@ function App() {
   const [showNameModal, setShowNameModal] = useState(false);
   const [showAbandonModal, setShowAbandonModal] = useState(false);
   const [pendingDrawMode, setPendingDrawMode] = useState(null);
-  const [shakeOn, setShakeOn] = useState(false);
   const [autoPlaying, setAutoPlaying] = useState(false);
   const autoPlayRef = useRef(null);
   const stateRef = useRef(null);
@@ -474,8 +482,6 @@ function App() {
     const next = tryMove(stateNow, sel, dest);
     if (!next) {
       if (window.SFX) SFX.illegal();
-      setShakeOn(true);
-      setTimeout(() => setShakeOn(false), 500);
       return false;
     }
     pushHistory();
@@ -535,12 +541,15 @@ function App() {
     say('win', 'happy');
     if (window.SFX) SFX.cascade();
     nudgeMood(0.4);
-    // Bonus: + (60 - elapsedSec*0.1) capped, + 100 for win
+    // Time bonus, added on top of the fully-accumulated play score. We read the
+    // live score via a functional update — the closure `score` here is stale
+    // (it predates the winning move and, for Auto-finish, every auto-promoted
+    // card's +5), so using it would wipe out all those points.
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
     const bonus = Math.max(0, 200 - Math.floor(elapsed * 0.5));
-    const finalScore = score + bonus;
-    setScore(finalScore);
-    persistResult(finalScore, elapsed, true);
+    let finalScore = score + bonus;
+    setScore(prev => { finalScore = prev + bonus; return finalScore; });
+    setTimeout(() => persistResult(finalScore, elapsed, true), 0);
   }
 
   function persistResult(finalScore, elapsedSec, won) {
@@ -821,7 +830,7 @@ function App() {
   const isDealing = phase === 'dealing';
 
   return (
-    <div className={shakeOn ? 'shake' : ''} style={{
+    <div style={{
       width: '100%', height: '100%',
       display:'flex', gap: 18, padding: 18,
       position:'relative'
@@ -933,7 +942,7 @@ function App() {
       {showAbandonModal && (
         <ConfirmModal
           title={`Abandon this hand?`}
-          body={`You're at ${score >= 0 ? '+$' : '-$'}${Math.abs(score)} with ${moves} moves played. Starting over resets your score.`}
+          body={`You're at ${score >= 0 ? '+$' : '-$'}${Math.abs(score)} with ${moves} move${moves === 1 ? '' : 's'} played. Starting over resets your score.`}
           confirmLabel="New Deal"
           onConfirm={confirmAbandon}
           onCancel={() => setShowAbandonModal(false)}
