@@ -21,20 +21,28 @@
     position:fixed;bottom:12px;left:16px;right:16px;
     font:12px/1.45 system-ui,sans-serif;color:#697089;pointer-events:none;
   }
-  #comet-btn{
-    position:fixed;top:14px;right:16px;
-    font:600 12px/1 system-ui,sans-serif;color:#e6edf8;letter-spacing:.3px;
-    background:rgba(42,54,78,0.72);border:1px solid rgba(150,170,210,0.35);
-    border-radius:9px;padding:10px 15px;cursor:pointer;
-    -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);
-  }
-  #comet-btn:hover{background:rgba(62,78,112,0.9);border-color:rgba(185,205,245,0.6);}
-  #comet-btn:active{transform:translateY(1px);}
+  #comet-ui{position:fixed;top:14px;right:16px;font:600 12px/1.3 system-ui,sans-serif;color:#e6edf8;text-align:right;}
+  #comet-toggle,#comet-launch{font:inherit;color:#e6edf8;background:rgba(42,54,78,0.72);border:1px solid rgba(150,170,210,0.35);border-radius:9px;padding:9px 14px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+  #comet-toggle:hover,#comet-launch:hover{background:rgba(62,78,112,0.9);}
+  #comet-panel{margin-top:8px;padding:13px 14px 11px;width:214px;text-align:left;background:rgba(18,24,38,0.9);border:1px solid rgba(150,170,210,0.28);border-radius:10px;-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);}
+  #comet-panel label{display:block;margin:0 0 12px;color:#9fabc2;font-weight:500;}
+  #comet-panel label span{float:right;color:#eaf1ff;font-weight:600;font-variant-numeric:tabular-nums;}
+  #comet-panel input[type=range]{width:100%;margin:7px 0 0;accent-color:#6f9dff;cursor:pointer;}
+  #comet-launch{width:100%;margin-top:3px;text-align:center;background:rgba(74,108,190,0.55);border-color:rgba(150,180,255,0.6);}
 </style>
 </head>
 <body>
 <canvas id="c"></canvas>
-<button id="comet-btn" type="button">☄ Launch comet</button>
+<div id="comet-ui">
+  <button id="comet-toggle" type="button">☄ Comet ▾</button>
+  <div id="comet-panel" hidden>
+    <label>Mass <span id="m-val"></span><input id="m-slider" type="range" min="0" max="1000" value="90"></label>
+    <label>Speed <span id="s-val"></span><input id="s-slider" type="range" min="0" max="1000" value="320"></label>
+    <label>Direction <span id="d-val"></span><input id="d-slider" type="range" min="0" max="359" value="210"></label>
+    <label>Aim <span id="a-val"></span><input id="a-slider" type="range" min="-60" max="60" value="12"></label>
+    <button id="comet-launch" type="button">Launch ☄</button>
+  </div>
+</div>
 <div id="hud">
   <h1>Solar System</h1>
   <div class="row" id="time"></div>
@@ -42,7 +50,7 @@
   <div class="row dim" id="health"></div>
   <div class="row dim" id="view"></div>
 </div>
-<div id="hint">Full N-body gravity — every body pulls on every other (the Sun is free too).&nbsp;&nbsp;<b>Scroll</b> to zoom · <b>click a body</b> to follow · <b>[E]</b> Earth view · <b>[0]</b> reset view · <b>[C]</b> launch comet · [Space] pause · [↑&nbsp;↓] speed · [R] reset</div>
+<div id="hint">Full N-body gravity — every body pulls on every other (the Sun is free too).&nbsp;&nbsp;<b>Scroll</b> to zoom · <b>click a body</b> to follow · <b>[E]</b> Earth view · <b>[0]</b> reset view · <b>[C]</b> launch comet (tune it in the ☄ panel) · [Space] pause · [↑&nbsp;↓] speed · [R] reset</div>
 <script>
 (() => {
   const canvas = document.getElementById('c');
@@ -72,6 +80,13 @@
   const MOON_EXAG = 40;    // Moon's true 0.00257 AU is ~1px — drawn radius scaled up so its orbit is visible
   let t = 0, E0 = 0, dashFlow = 0;
   let comets = [], flashes = [];
+  let baryX = 0, baryY = 0;   // mass-weighted centre of the whole system (cached per frame); the view centres here
+  function curBary(){
+    let mx = 0, my = 0, M = 0;
+    for (const b of bodies){ mx += b.m*b.x; my += b.m*b.y; M += b.m; }
+    for (const c of comets){ if (c.m > 1e-9){ mx += c.m*c.x; my += c.m*c.y; M += c.m; } }
+    return [mx/M, my/M];
+  }
 
   function reset(){
     SUN.x = 0; SUN.y = 0; SUN.vx = 0; SUN.vy = 0;
@@ -100,6 +115,15 @@
       ax[i] += inv*bodies[j].m*dx; ay[i] += inv*bodies[j].m*dy;
       ax[j] -= inv*bodies[i].m*dx; ay[j] -= inv*bodies[i].m*dy;
     }
+    // massive comets / interlopers pull on the planets too (test-particle comets are skipped)
+    for (const c of comets){
+      if (!(c.m > 1e-9)) continue;
+      for (let i=0;i<n;i++){
+        const dx = c.x-bodies[i].x, dy = c.y-bodies[i].y, r2 = dx*dx+dy*dy+1e-6;
+        const inv = G*c.m/(r2*Math.sqrt(r2));
+        ax[i] += inv*dx; ay[i] += inv*dy;
+      }
+    }
     return [ax, ay];
   }
   function stepAll(dt){
@@ -116,11 +140,12 @@
     }
   }
   function energy(){
+    const all = bodies.concat(comets.filter(c => c.m > 1e-9));   // include massive interlopers
     let ke = 0, pe = 0;
-    for (const b of bodies) ke += 0.5*b.m*(b.vx*b.vx + b.vy*b.vy);
-    for (let i=0;i<bodies.length;i++) for (let j=i+1;j<bodies.length;j++){
-      const dx = bodies[j].x-bodies[i].x, dy = bodies[j].y-bodies[i].y;
-      pe -= G*bodies[i].m*bodies[j].m / Math.hypot(dx, dy);
+    for (const b of all) ke += 0.5*b.m*(b.vx*b.vx + b.vy*b.vy);
+    for (let i=0;i<all.length;i++) for (let j=i+1;j<all.length;j++){
+      const dx = all[j].x-all[i].x, dy = all[j].y-all[i].y;
+      pe -= G*all[i].m*all[j].m / Math.hypot(dx, dy);
     }
     return ke + pe;
   }
@@ -135,16 +160,15 @@
     }
     return [ax, ay];
   }
-  function launchComet(){
-    const th = Math.random()*2*Math.PI;
-    const R = 14 + Math.random()*6;                   // enters from the outer system (14–20 AU), random angle
-    const x = R*Math.cos(th), y = R*Math.sin(th);
-    const px = -Math.sin(th), py = Math.cos(th);       // perpendicular → random impact parameter
-    const b = (Math.random()*2 - 1) * 3.2;
-    let dx = b*px - x, dy = b*py - y; const d = Math.hypot(dx, dy); dx/=d; dy/=d;
-    const v = Math.sqrt(2*G*SUN.m/R) * (1.0 + Math.random()*0.4);     // parabolic to mildly hyperbolic, brisker infall
-    comets.push({ x, y, vx:dx*v, vy:dy*v, trail:[] });
-    if (comets.length > 30) comets.shift();   // generous cap; comets also self-remove when they escape (>75 AU) or hit something
+  function launchComet(){   // params come from the panel sliders (paramMass/Speed/Dir/Impact, defined below)
+    const dir = paramDir(), R = 22, m = paramMass();
+    const x = R*Math.cos(dir), y = R*Math.sin(dir);
+    const px = -Math.sin(dir), py = Math.cos(dir), im = paramImpact();   // impact parameter ⟂ to approach
+    let dx = im*px - x, dy = im*py - y; const d = Math.hypot(dx, dy); dx/=d; dy/=d;
+    const v = Math.sqrt(2*G*SUN.m/R) * paramSpeed();
+    comets.push({ x, y, vx:dx*v, vy:dy*v, m, trail:[] });
+    if (comets.length > 30) comets.shift();   // cap; comets self-remove on escape (>80 AU) or impact
+    E0 = energy();                            // re-baseline: a massive arrival changes the system's total energy
   }
 
   // ---- Camera + log-compressed radial scale ----
@@ -152,10 +176,10 @@
   // the ANGLE is preserved, so motion stays true — only the radial spacing is compressed.
   const RMIN = 0.2;   // AU; anything closer collapses to the centre (keeps the Sun centred)
   function disp(x, y){
-    const r = Math.hypot(x, y);
+    const rx = x - baryX, ry = y - baryY, r = Math.hypot(rx, ry);   // relative to the system barycentre
     if (r <= RMIN) return [0, 0];
     const k = Math.log(r / RMIN) / r;
-    return [x*k, y*k];
+    return [rx*k, ry*k];
   }
   const maxDispR = Math.max(...planets.map(p => Math.log(p.a*(1+p.e) / RMIN)));
 
@@ -220,6 +244,7 @@
   }
 
   function draw(){
+    [baryX, baryY] = curBary();    // recentre the view on the system's barycentre each frame
     ctx.fillStyle = '#05060a'; ctx.fillRect(0,0,W,H);
     for (const st of stars){ ctx.globalAlpha = st.a; ctx.fillStyle = '#fff'; ctx.fillRect(st.x,st.y,st.s,st.s); }
     ctx.globalAlpha = 1;
@@ -275,18 +300,27 @@
     for (const p of shown){ const [bx, by] = scr(p.x, p.y); label(p.name, p.color, bx, by, p.size+5); }
     if (Math.hypot(mX-eix, mY-eiy) > 11) label('Moon', MOON.color, mX, mY, MOON.size+5);
 
-    // comets (test particles streaking through) + impact flashes
+    // comets / interlopers — size & colour scale with mass — + impact flashes
     for (const c of comets){
-      fadedTrail(c.trail, q => scr(q.x, q.y), '#bfe0ff', 1.4, 0.6);
+      const me = c.m / 3.0035e-6;                                  // Earth masses
+      const col = me < 0.3 ? '190,224,255' : (c.m < 0.05 ? '226,182,132' : '255,214,140');  // icy → rocky → star
+      const headR = me < 0.3 ? 2.4 : (c.m < 0.05 ? 5 : 9);
+      fadedTrail(c.trail, q => scr(q.x, q.y), `rgb(${col})`, me < 0.3 ? 1.4 : 2, 0.6);
       const [hx, hy] = scr(c.x, c.y);
-      const [ssx, ssy] = scr(SUN.x, SUN.y);
-      let tx = hx-ssx, ty = hy-ssy; const td = Math.hypot(tx,ty) || 1; tx/=td; ty/=td;  // anti-solar
-      const r = Math.hypot(c.x, c.y), tl = Math.max(8, Math.min(46, 12/Math.max(r,0.2)));
-      const tg = ctx.createLinearGradient(hx, hy, hx+tx*tl, hy+ty*tl);
-      tg.addColorStop(0,'rgba(190,224,255,0.7)'); tg.addColorStop(1,'rgba(190,224,255,0)');
-      ctx.strokeStyle = tg; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
-      ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(hx+tx*tl, hy+ty*tl); ctx.stroke();
-      ctx.fillStyle = '#eaf5ff'; ctx.beginPath(); ctx.arc(hx, hy, 2.4, 0, 2*Math.PI); ctx.fill();
+      if (me < 0.3){                                               // anti-solar gas tail for small icy comets
+        const [ssx, ssy] = scr(SUN.x, SUN.y);
+        let tx = hx-ssx, ty = hy-ssy; const td = Math.hypot(tx,ty) || 1; tx/=td; ty/=td;
+        const r = Math.hypot(c.x-baryX, c.y-baryY), tl = Math.max(8, Math.min(46, 12/Math.max(r,0.2)));
+        const tg = ctx.createLinearGradient(hx, hy, hx+tx*tl, hy+ty*tl);
+        tg.addColorStop(0,`rgba(${col},0.7)`); tg.addColorStop(1,`rgba(${col},0)`);
+        ctx.strokeStyle = tg; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+        ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(hx+tx*tl, hy+ty*tl); ctx.stroke();
+      } else {                                                     // glow for a massive interloper
+        const gg = ctx.createRadialGradient(hx,hy,0,hx,hy,headR*2.4);
+        gg.addColorStop(0,`rgba(${col},0.5)`); gg.addColorStop(1,`rgba(${col},0)`);
+        ctx.fillStyle = gg; ctx.beginPath(); ctx.arc(hx,hy,headR*2.4,0,2*Math.PI); ctx.fill();
+      }
+      ctx.fillStyle = `rgb(${col})`; ctx.beginPath(); ctx.arc(hx, hy, headR, 0, 2*Math.PI); ctx.fill();
     }
     for (const f of flashes){
       const [fx, fy] = scr(f.x, f.y);
@@ -341,14 +375,18 @@
       MOON.rel.push({dx: MOON.x-EARTH.x, dy: MOON.y-EARTH.y}); if (MOON.rel.length > 90) MOON.rel.shift();
       dashFlow += substeps * 0.6;
       for (const c of comets){ c.trail.push({x:c.x, y:c.y}); if (c.trail.length > 500) c.trail.shift(); }
+      const nC = comets.length;
       comets = comets.filter(c => {
-        if (Math.hypot(c.x, c.y) > 75) return false;                        // escaped the system
+        if (Math.hypot(c.x-baryX, c.y-baryY) > 80) return false;            // escaped the system
+        const massive = c.m > 1e-6;                                          // interlopers plow through planets
         for (const b of bodies){
-          const hitR = b.sun ? 0.05 : (b.m > 1e-4 ? 0.045 : 0.018);
-          if (Math.hypot(b.x-c.x, b.y-c.y) < hitR){ flashes.push({x:b.x, y:b.y, life:1, big: b.sun || b.m > 1e-4}); return false; }
+          if (massive && !b.sun) continue;                                   // only the Sun stops a massive body
+          const hitR = b.sun ? 0.05 : 0.02;
+          if (Math.hypot(b.x-c.x, b.y-c.y) < hitR){ flashes.push({x:b.x, y:b.y, life:1, big: b.sun || massive || b.m > 1e-4}); return false; }
         }
         return true;
       });
+      if (comets.length !== nC) E0 = energy();                              // re-baseline after a removal
       for (const f of flashes) f.life -= 0.05;
       flashes = flashes.filter(f => f.life > 0);
     }
@@ -375,7 +413,28 @@
     else if (best === EARTH || best === MOON){ follow = EARTH; if (zoom < 3) zoom = 3; }
     else { follow = best; }
   });
-  document.getElementById('comet-btn').addEventListener('click', e => { e.stopPropagation(); launchComet(); });
+  // ---- Comet launch panel ----
+  const cPanel = document.getElementById('comet-panel'), cToggle = document.getElementById('comet-toggle');
+  const mEl = document.getElementById('m-slider'), sEl = document.getElementById('s-slider'),
+        dEl = document.getElementById('d-slider'), aEl = document.getElementById('a-slider');
+  const mV = document.getElementById('m-val'), sV = document.getElementById('s-val'),
+        dV = document.getElementById('d-val'), aV = document.getElementById('a-val');
+  function paramMass(){ return Math.pow(10, -13 + 13*(mEl.value/1000)); }   // solar masses: comet (1e-13) → star (1)
+  function paramSpeed(){ return 0.3 + 2.2*(sEl.value/1000); }              // × escape speed at spawn
+  function paramDir(){ return dEl.value*Math.PI/180; }                     // approach angle
+  function paramImpact(){ return aEl.value/10; }                          // AU, signed miss distance
+  function updCometLabels(){
+    const m = paramMass(), me = m/3.0035e-6, mj = m/9.5425e-4;
+    mV.textContent = m>=0.06 ? m.toFixed(2)+' M☉·star' : mj>=13 ? mj.toFixed(0)+' Mⱼ·brown dwarf'
+                   : mj>=1 ? mj.toFixed(1)+' Mⱼ·giant' : me>=0.05 ? me.toFixed(2)+' M⊕·rocky' : 'comet·tiny';
+    const sp = paramSpeed(); sV.textContent = sp.toFixed(2)+'×·'+(sp<0.97?'capture':sp<1.06?'parabolic':'flyby');
+    dV.textContent = dEl.value+'°';
+    const im = paramImpact(); aV.textContent = Math.abs(im)<0.2 ? 'at Sun' : Math.abs(im).toFixed(1)+' AU miss';
+  }
+  [mEl,sEl,dEl,aEl].forEach(el => el.addEventListener('input', updCometLabels));
+  updCometLabels();
+  cToggle.addEventListener('click', () => { cPanel.hidden = !cPanel.hidden; cToggle.textContent = '☄ Comet ' + (cPanel.hidden ? '▾' : '▴'); });
+  document.getElementById('comet-launch').addEventListener('click', launchComet);
   window.addEventListener('keydown', e=>{
     if (e.code === 'Space'){ paused = !paused; e.preventDefault(); }
     else if (e.code === 'ArrowUp')   substeps = Math.min(32, substeps + 1);
