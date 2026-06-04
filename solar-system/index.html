@@ -140,11 +140,19 @@
   // shell spreads and the Earth→Moon gap compresses, with Earth drawn big). Real altitudes/ordering; SPEEDS are still
   // illustrative — a ~92-min ISS orbit can't be resolved at a 1.75-hr step — tuned so inner = faster.
   const ER_KM = 6371, AU_KM = 1.495979e8;   // Earth radius, 1 AU
+  const EARTH_SPIN = 0.05;   // yr per rotation (illustrative). The Geo sat shares this exactly → it stays over one spot.
+  const EARTH_LAND = [       // crude polar-view "continents" that rotate with the spin, so you can see Earth turning
+    { a:0.4, r:0.50, w:0.42, h:0.30, c:'#3f8f5a' },
+    { a:1.7, r:0.42, w:0.40, h:0.40, c:'#4d9a64' },
+    { a:2.9, r:0.58, w:0.30, h:0.26, c:'#3f8f5a' },
+    { a:4.3, r:0.48, w:0.38, h:0.42, c:'#479060' },
+    { a:5.5, r:0.62, w:0.26, h:0.22, c:'#56a06e' },
+  ];
   const EV_SATS = [
     { name:'ISS',     rkm:6779,  period:0.015, phase:0.6, color:'#eef2f8', size:2.2 },
     { name:'Hubble',  rkm:6911,  period:0.020, phase:2.3, color:'#aebccf', size:2.0 },
     { name:'GPS',     rkm:26600, period:0.040, phase:4.1, color:'#bfe3b8', size:2.0 },
-    { name:'Geo sat', rkm:42164, period:0.052, phase:5.4, color:'#e8d3a0', size:2.0 },
+    { name:'Geo sat', rkm:42164, period:EARTH_SPIN, phase:0, color:'#e8d3a0', size:2.2, geo:true },
   ];
   let t = 0, E0 = 0, dashFlow = 0;
   let comets = [], flashes = [], cometSeq = 0;
@@ -407,12 +415,27 @@
     let mX = eix, mY = eiy;
     if (earthView && !EARTH.deleted){
       // ---- planet view: real orbit radii through a log-of-altitude map so LEO spreads & the Moon still fits ----
-      const er = 7*zoom;
+      const er = 7*zoom, spin = 2*Math.PI * t / EARTH_SPIN;
       const evR = rkm => { const altER = rkm/ER_KM - 1; return altER <= 0 ? er : er + 11*zoom*Math.log10(1 + altER*30); };
       const drawRing = rr => { ctx.strokeStyle='rgba(150,170,210,0.13)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(eix,eiy,rr,0,2*Math.PI); ctx.stroke(); };
+      // spinning surface — continents (clipped to the globe) rotate around the centre so the spin is visible
+      ctx.save();
+      ctx.beginPath(); ctx.arc(eix, eiy, er, 0, 2*Math.PI); ctx.clip();
+      for (const L of EARTH_LAND){
+        const a = L.a + spin, lx = eix + Math.cos(a)*L.r*er, ly = eiy - Math.sin(a)*L.r*er;
+        ctx.fillStyle = L.c; ctx.globalAlpha = 0.82;
+        ctx.beginPath(); ctx.ellipse(lx, ly, L.w*er, L.h*er, -a, 0, 2*Math.PI); ctx.fill();
+      }
+      ctx.globalAlpha = 1; ctx.restore();
+      // geostationary tether: a line from Earth through a fixed ground spot out to the Geo sat — all share the spin
+      const grr = evR(42164), gx = eix + Math.cos(spin)*grr, gy = eiy - Math.sin(spin)*grr;
+      ctx.strokeStyle = 'rgba(232,211,160,0.32)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
+      ctx.beginPath(); ctx.moveTo(eix, eiy); ctx.lineTo(gx, gy); ctx.stroke(); ctx.setLineDash([]);
+      ctx.fillStyle = '#ffe08a';                                   // ground station that the Geo sat hovers over
+      ctx.beginPath(); ctx.arc(eix + Math.cos(spin)*er*0.82, eiy - Math.sin(spin)*er*0.82, 2, 0, 2*Math.PI); ctx.fill();
       for (const s of EV_SATS){
         const rr = evR(s.rkm); drawRing(rr);
-        const ang = s.phase + 2*Math.PI*t/s.period, sX = eix+Math.cos(ang)*rr, sY = eiy-Math.sin(ang)*rr;
+        const ang = s.geo ? spin : (s.phase + 2*Math.PI*t/s.period), sX = eix+Math.cos(ang)*rr, sY = eiy-Math.sin(ang)*rr;
         ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(sX, sY, s.size, 0, 2*Math.PI); ctx.fill();
         label(s.name, s.color, sX, sY, s.size+4);
       }
