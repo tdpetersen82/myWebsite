@@ -28,7 +28,10 @@
   #comet-panel label{display:block;margin:0 0 12px;color:#9fabc2;font-weight:500;}
   #comet-panel label span{float:right;color:#eaf1ff;font-weight:600;font-variant-numeric:tabular-nums;}
   #comet-panel input[type=range]{width:100%;margin:7px 0 0;accent-color:#6f9dff;cursor:pointer;}
-  #comet-launch{width:100%;margin-top:3px;text-align:center;background:rgba(74,108,190,0.55);border-color:rgba(150,180,255,0.6);}
+  #comet-btns{display:flex;gap:6px;margin-top:3px;}
+  #comet-launch{flex:1;text-align:center;background:rgba(74,108,190,0.55);border-color:rgba(150,180,255,0.6);}
+  #comet-random{font:inherit;color:#e6edf8;background:rgba(42,54,78,0.72);border:1px solid rgba(150,170,210,0.35);border-radius:9px;padding:9px 11px;cursor:pointer;white-space:nowrap;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+  #comet-random:hover{background:rgba(62,78,112,0.9);}
   #hud .row.clickable{pointer-events:auto;cursor:pointer;border-radius:4px;padding:0 4px;margin-left:-4px;}
   #hud .row.clickable:hover{background:rgba(120,150,210,0.16);}
   #hud .row.sel{background:rgba(120,150,210,0.28);}
@@ -63,7 +66,10 @@
     <label>Speed <span id="s-val"></span><input id="s-slider" type="range" min="0" max="1000" value="320"></label>
     <label>Direction <span id="d-val"></span><input id="d-slider" type="range" min="0" max="359" value="210"></label>
     <label>Aim <span id="a-val"></span><input id="a-slider" type="range" min="-60" max="60" value="12"></label>
-    <button id="comet-launch" type="button">Launch ☄</button>
+    <div id="comet-btns">
+      <button id="comet-launch" type="button">Launch ☄</button>
+      <button id="comet-random" type="button" title="Random direction &amp; aim — click repeatedly">🎲 Random</button>
+    </div>
   </div>
 </div>
 <div id="hud">
@@ -635,6 +641,12 @@
   updCometLabels();
   cToggle.addEventListener('click', () => { cPanel.hidden = !cPanel.hidden; cToggle.textContent = '☄ Comet ' + (cPanel.hidden ? '▾' : '▴'); });
   document.getElementById('comet-launch').addEventListener('click', launchComet);
+  document.getElementById('comet-random').addEventListener('click', () => {   // random direction + aim, then fire — spam-clickable
+    dEl.value = Math.floor(Math.random()*360);
+    aEl.value = Math.round(Math.random()*120 - 60);     // full aim range (-6..6 AU miss)
+    updCometLabels();
+    launchComet();
+  });
   window.addEventListener('keydown', e=>{
     if (e.code === 'Space'){ paused = !paused; e.preventDefault(); }
     else if (e.code === 'ArrowUp')   substeps = Math.min(32, substeps + 1);
