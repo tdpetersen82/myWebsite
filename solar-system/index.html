@@ -28,10 +28,12 @@
   #comet-panel label{display:block;margin:0 0 12px;color:#9fabc2;font-weight:500;}
   #comet-panel label span{float:right;color:#eaf1ff;font-weight:600;font-variant-numeric:tabular-nums;}
   #comet-panel input[type=range]{width:100%;margin:7px 0 0;accent-color:#6f9dff;cursor:pointer;}
-  #comet-btns{display:flex;gap:6px;margin-top:3px;}
-  #comet-launch{flex:1;text-align:center;background:rgba(74,108,190,0.55);border-color:rgba(150,180,255,0.6);}
-  #comet-random{font:inherit;color:#e6edf8;background:rgba(42,54,78,0.72);border:1px solid rgba(150,170,210,0.35);border-radius:9px;padding:9px 11px;cursor:pointer;white-space:nowrap;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+  #comet-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px;}
+  #comet-launch{flex:1 1 100%;text-align:center;background:rgba(74,108,190,0.55);border-color:rgba(150,180,255,0.6);}
+  #comet-random,#comet-storm{flex:1;font:inherit;color:#e6edf8;background:rgba(42,54,78,0.72);border:1px solid rgba(150,170,210,0.35);border-radius:9px;padding:9px 8px;cursor:pointer;white-space:nowrap;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+  #comet-storm{background:rgba(96,64,134,0.6);border-color:rgba(170,140,220,0.55);}
   #comet-random:hover{background:rgba(62,78,112,0.9);}
+  #comet-storm:hover{background:rgba(120,82,166,0.85);}
   #hud .row.clickable{pointer-events:auto;cursor:pointer;border-radius:4px;padding:0 4px;margin-left:-4px;}
   #hud .row.clickable:hover{background:rgba(120,150,210,0.16);}
   #hud .row.sel{background:rgba(120,150,210,0.28);}
@@ -69,6 +71,7 @@
     <div id="comet-btns">
       <button id="comet-launch" type="button">Launch ☄</button>
       <button id="comet-random" type="button" title="Random direction &amp; aim — click repeatedly">🎲 Random</button>
+      <button id="comet-storm" type="button" title="~100 random specks (not listed in the table)">🌩 Storm</button>
     </div>
   </div>
 </div>
@@ -128,6 +131,7 @@
   const MOON_EXAG = 10;    // Moon's true 0.00257 AU is sub-pixel — orbit drawn ×this so it's visible (HUD shows the factor)
   let t = 0, E0 = 0, dashFlow = 0;
   let comets = [], flashes = [], cometSeq = 0;
+  let storm = [];   // lightweight bulk test-particles (the "Storm" button) — NOT in the table, never perturb
   let baryX = 0, baryY = 0;   // mass-weighted centre of the whole system (cached per frame); the view centres here
   function curBary(){
     let mx = 0, my = 0, M = 0;
@@ -154,7 +158,7 @@
     const vcx = px/M, vcy = py/M;
     for (const b of bodies){ b.vx -= vcx; b.vy -= vcy; }
     for (const b of bodies){ b.trail = []; b.deleted = false; b.edited = false; }
-    MOON.rel = []; comets = []; flashes = []; cometSeq = 0;
+    MOON.rel = []; comets = []; flashes = []; cometSeq = 0; storm = [];
     if (typeof deselect === 'function') deselect();
     t = 0; E0 = energy();
   }
@@ -230,6 +234,17 @@
       color: me<0.3 ? '#bfe0ff' : '#ffd98a' });
     if (comets.length > 30) comets.shift();   // cap; comets self-remove on escape (>80 AU) or impact
     E0 = energy();                            // re-baseline: a massive arrival changes the system's total energy
+  }
+  function launchStorm(){   // ~100 massless specks from random angles/speeds — chaos, untracked, never perturb
+    for (let i=0;i<100;i++){
+      const dir = Math.random()*2*Math.PI, R = 20 + Math.random()*9;
+      const x = R*Math.cos(dir), y = R*Math.sin(dir);
+      const px = -Math.sin(dir), py = Math.cos(dir), im = (Math.random()*2-1)*6;   // random aim ±6 AU
+      let dx = im*px - x, dy = im*py - y; const d = Math.hypot(dx, dy); dx/=d; dy/=d;
+      const v = Math.sqrt(2*G*SUN.m/R) * (0.5 + Math.random()*1.7);                // random speed: capture → fast flyby
+      storm.push({ x, y, vx:dx*v, vy:dy*v, trail:[] });
+    }
+    if (storm.length > 600) storm.splice(0, storm.length - 600);                    // bound it if spam-clicked
   }
 
   // ---- Camera + compressed radial scale ----
@@ -420,6 +435,17 @@
       }
       ctx.fillStyle = `rgb(${col})`; ctx.beginPath(); ctx.arc(hx, hy, headR, 0, 2*Math.PI); ctx.fill();
     }
+    // storm particles — many lightweight icy specks with short streaks (drawn cheaply)
+    if (storm.length){
+      ctx.strokeStyle = 'rgba(190,224,255,0.5)'; ctx.lineWidth = 1; ctx.fillStyle = '#cfe6ff';
+      for (const c of storm){
+        const tr = c.trail;
+        if (tr.length > 1){ const a = scr(tr[0].x, tr[0].y), b = scr(tr[tr.length-1].x, tr[tr.length-1].y);
+          ctx.beginPath(); ctx.moveTo(a[0],a[1]); ctx.lineTo(b[0],b[1]); ctx.stroke(); }
+        const [hx, hy] = scr(c.x, c.y);
+        ctx.beginPath(); ctx.arc(hx, hy, 1.5, 0, 2*Math.PI); ctx.fill();
+      }
+    }
     for (const f of flashes){
       const [fx, fy] = scr(f.x, f.y);
       ctx.globalAlpha = Math.max(0, f.life); ctx.strokeStyle = '#ffd9a0'; ctx.lineWidth = 2;
@@ -583,6 +609,18 @@
             if (ex*ex + ey*ey < hr*hr){ c.dead = true; flashes.push({x:b.x, y:b.y, life:1, big: b.sun || massive || b.m > 1e-4}); break; }
           }
         }
+        for (const c of storm){                              // storm particles: same test-particle physics, lighter
+          if (c.dead) continue;
+          let [ax, ay] = cometAccel(c.x, c.y);
+          c.x += c.vx*DT + 0.5*ax*DT*DT; c.y += c.vy*DT + 0.5*ay*DT*DT;
+          const [ax2, ay2] = cometAccel(c.x, c.y);
+          c.vx += 0.5*(ax+ax2)*DT; c.vy += 0.5*(ay+ay2)*DT;
+          for (const b of bodies){
+            if (b.deleted) continue;
+            const hr = b.sun ? 0.05 : 0.02, ex = b.x-c.x, ey = b.y-c.y;
+            if (ex*ex + ey*ey < hr*hr){ c.dead = true; flashes.push({x:b.x, y:b.y, life:1, big:b.sun}); break; }
+          }
+        }
       }
       for (const p of planets){ p.trail.push({x:p.x, y:p.y}); if (p.trail.length > 600) p.trail.shift(); }
       MOON.rel.push({dx: MOON.x-EARTH.x, dy: MOON.y-EARTH.y}); if (MOON.rel.length > 90) MOON.rel.shift();
@@ -591,6 +629,8 @@
       const nC = comets.length;
       comets = comets.filter(c => !c.dead && Math.hypot(c.x-baryX, c.y-baryY) <= 80);   // drop collided + escaped
       if (comets.length !== nC) E0 = energy();                              // re-baseline after a removal
+      for (const c of storm){ if (!c.dead){ c.trail.push({x:c.x, y:c.y}); if (c.trail.length > 14) c.trail.shift(); } }
+      storm = storm.filter(c => !c.dead && Math.hypot(c.x-baryX, c.y-baryY) <= 80);     // no energy re-baseline: massless
       for (const f of flashes) f.life -= 0.05;
       flashes = flashes.filter(f => f.life > 0);
     }
@@ -647,6 +687,7 @@
     updCometLabels();
     launchComet();
   });
+  document.getElementById('comet-storm').addEventListener('click', launchStorm);
   window.addEventListener('keydown', e=>{
     if (e.code === 'Space'){ paused = !paused; e.preventDefault(); }
     else if (e.code === 'ArrowUp')   substeps = Math.min(32, substeps + 1);
