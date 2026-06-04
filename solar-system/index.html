@@ -136,12 +136,15 @@
   const MOON  = { name:'Moon', color:'#cfd3da', size:2.0, m:3.694e-8, aM:0.00257, eM:0.0549, moon:true };
   const bodies = [SUN, ...planets, MOON];
   const MOON_EXAG = 10;    // Moon's true 0.00257 AU is sub-pixel — orbit drawn ×this so it's visible (HUD shows the factor)
-  const EV_MOON_EXAG = 100;   // in the dedicated Earth ("planet") view the Moon is drawn far bigger, leaving room for satellites
-  // Illustrative Earth-orbiters for the planet view. The real ISS/Hubble are sub-pixel and orbit far too fast to integrate
-  // at this timestep, so they're decorative: radii (display-AU) and periods (yr) are chosen to read nicely, inner = faster.
+  // Earth "planet view" orbiters at their TRUE orbit radii (km), shown through a log-of-altitude scale (so the thin LEO
+  // shell spreads and the Earth→Moon gap compresses, with Earth drawn big). Real altitudes/ordering; SPEEDS are still
+  // illustrative — a ~92-min ISS orbit can't be resolved at a 1.75-hr step — tuned so inner = faster.
+  const ER_KM = 6371, AU_KM = 1.495979e8;   // Earth radius, 1 AU
   const EV_SATS = [
-    { name:'ISS',    r:0.072, period:0.014, phase:0.6, color:'#eef2f8', size:2.1 },
-    { name:'Hubble', r:0.135, period:0.026, phase:2.4, color:'#aebccf', size:2.0 },
+    { name:'ISS',     rkm:6779,  period:0.015, phase:0.6, color:'#eef2f8', size:2.2 },
+    { name:'Hubble',  rkm:6911,  period:0.020, phase:2.3, color:'#aebccf', size:2.0 },
+    { name:'GPS',     rkm:26600, period:0.040, phase:4.1, color:'#bfe3b8', size:2.0 },
+    { name:'Geo sat', rkm:42164, period:0.052, phase:5.4, color:'#e8d3a0', size:2.0 },
   ];
   let t = 0, E0 = 0, dashFlow = 0;
   let comets = [], flashes = [], cometSeq = 0;
@@ -390,47 +393,49 @@
     for (const p of shown){
       const [bx, by] = scr(p.x, p.y);
       p._sx = bx; p._sy = by; p._drawn = true;
-      if (earthView && p === EARTH){                               // a proper blue globe — the star of the planet view
-        const g = ctx.createRadialGradient(bx-4, by-4, 1, bx, by, 14);
-        g.addColorStop(0,'#bcd9ff'); g.addColorStop(0.55,'#4a86d8'); g.addColorStop(1,'#1c3f78');
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bx, by, 14, 0, 2*Math.PI); ctx.fill();
+      if (earthView && p === EARTH){                               // a big blue globe — the star of the planet view
+        const er = 7*zoom;                                         // Earth drawn at its real-radius scale for the diorama
+        const g = ctx.createRadialGradient(bx-er*0.3, by-er*0.3, er*0.1, bx, by, er);
+        g.addColorStop(0,'#cfe2ff'); g.addColorStop(0.5,'#4a86d8'); g.addColorStop(1,'#16315f');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bx, by, er, 0, 2*Math.PI); ctx.fill();
       } else {
         ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(bx, by, p.size, 0, 2*Math.PI); ctx.fill();
       }
     }
 
-    // Moon orbiting Earth (drawn at exaggerated radius, anchored to Earth's screen position)
     const [eix, eiy] = scr(EARTH.x, EARTH.y);
     let mX = eix, mY = eiy;
-    if (!MOON.deleted && !EARTH.deleted){
-      // ×40 only magnifies the tight bound orbit; once the Moon is flung well past it (e.g. Earth got
-      // nudged) the magnification fades to ×1 so it drifts at TRUE speed instead of looking warp-fast.
-      const exag = earthView ? EV_MOON_EXAG : MOON_EXAG, knee = MOON.aM * 2;
+    if (earthView && !EARTH.deleted){
+      // ---- planet view: real orbit radii through a log-of-altitude map so LEO spreads & the Moon still fits ----
+      const er = 7*zoom;
+      const evR = rkm => { const altER = rkm/ER_KM - 1; return altER <= 0 ? er : er + 11*zoom*Math.log10(1 + altER*30); };
+      const drawRing = rr => { ctx.strokeStyle='rgba(150,170,210,0.13)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(eix,eiy,rr,0,2*Math.PI); ctx.stroke(); };
+      for (const s of EV_SATS){
+        const rr = evR(s.rkm); drawRing(rr);
+        const ang = s.phase + 2*Math.PI*t/s.period, sX = eix+Math.cos(ang)*rr, sY = eiy-Math.sin(ang)*rr;
+        ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(sX, sY, s.size, 0, 2*Math.PI); ctx.fill();
+        label(s.name, s.color, sX, sY, s.size+4);
+      }
+      if (!MOON.deleted){                                          // the Moon is the real, simulated body
+        drawRing(evR(MOON.aM*AU_KM));
+        const dxm = MOON.x-EARTH.x, dym = MOON.y-EARTH.y, rr = evR(Math.hypot(dxm,dym)*AU_KM), ma = Math.atan2(dym,dxm);
+        mX = eix + Math.cos(ma)*rr; mY = eiy - Math.sin(ma)*rr;
+        MOON._sx = mX; MOON._sy = mY; MOON._drawn = true;
+        ctx.fillStyle = MOON.color; ctx.beginPath(); ctx.arc(mX, mY, 2.8, 0, 2*Math.PI); ctx.fill();
+        label('Moon', MOON.color, mX, mY, 7);
+      }
+    } else if (!MOON.deleted && !EARTH.deleted){
+      // ---- system view: Moon drawn ×MOON_EXAG, magnification tapering once it's flung off its orbit ----
+      const knee = MOON.aM * 2;
       const moonOff = (dx, dy) => {
         const off = Math.hypot(dx, dy); if (off < 1e-12) return [0, 0];
-        const D = off <= knee ? off*exag : knee*exag + (off - knee), k = D/off;
+        const D = off <= knee ? off*MOON_EXAG : knee*MOON_EXAG + (off - knee), k = D/off;
         return [eix + dx*k*S(), eiy - dy*k*S()];
       };
-      if (earthView){                                              // faint Moon orbit guide ring
-        ctx.strokeStyle = 'rgba(150,170,210,0.16)'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(eix, eiy, MOON.aM*exag*S(), 0, 2*Math.PI); ctx.stroke();
-      }
       fadedTrail(MOON.rel, p => moonOff(p.dx, p.dy), MOON.color, 1.2, 0.5);
       [mX, mY] = moonOff(MOON.x-EARTH.x, MOON.y-EARTH.y);
       MOON._sx = mX; MOON._sy = mY; MOON._drawn = true;
-      ctx.fillStyle = MOON.color; ctx.beginPath(); ctx.arc(mX, mY, MOON.size + (earthView?0.8:0), 0, 2*Math.PI); ctx.fill();
-    }
-    // Earth-view satellites — illustrative ISS + Hubble on their own rings (decorative, driven by sim time)
-    if (earthView && !EARTH.deleted){
-      for (const sat of EV_SATS){
-        const rr = sat.r * S();
-        ctx.strokeStyle = 'rgba(150,170,210,0.14)'; ctx.lineWidth = 1;
-        ctx.beginPath(); ctx.arc(eix, eiy, rr, 0, 2*Math.PI); ctx.stroke();
-        const ang = sat.phase + 2*Math.PI * t / sat.period;
-        const sX = eix + Math.cos(ang)*rr, sY = eiy - Math.sin(ang)*rr;
-        ctx.fillStyle = sat.color; ctx.beginPath(); ctx.arc(sX, sY, sat.size, 0, 2*Math.PI); ctx.fill();
-        label(sat.name, sat.color, sX, sY, sat.size + 4);
-      }
+      ctx.fillStyle = MOON.color; ctx.beginPath(); ctx.arc(mX, mY, MOON.size, 0, 2*Math.PI); ctx.fill();
     }
 
     // selection ring + live nudge-direction arrow (shows where the thruster will push, before you fire)
@@ -443,8 +448,8 @@
 
     // labels
     if (!earthView) label('Sun', SUN.color, sxp, syp, 15);
-    for (const p of shown){ const [bx, by] = scr(p.x, p.y); label(p.name, p.color, bx, by, p.size+5); }
-    if (!MOON.deleted && !EARTH.deleted && Math.hypot(mX-eix, mY-eiy) > 11) label('Moon', MOON.color, mX, mY, MOON.size+5);
+    for (const p of shown){ const [bx, by] = scr(p.x, p.y); label(p.name, p.color, bx, by, (earthView && p===EARTH ? 7*zoom+6 : p.size+5)); }
+    if (!earthView && !MOON.deleted && !EARTH.deleted && Math.hypot(mX-eix, mY-eiy) > 11) label('Moon', MOON.color, mX, mY, MOON.size+5);   // earth view labels its own Moon
 
     // comets / interlopers — size & colour scale with mass — + impact flashes
     for (const c of comets){
@@ -622,7 +627,7 @@
     elHealth.textContent = `total energy conserved — drift ${rel.toExponential(1)} ${ok ? '✓' : ''}`;
     const z = zoom < 10 ? zoom.toFixed(1) : Math.round(zoom);
     elView.textContent = follow === EARTH
-      ? `view: Earth ×${z}   ·   Moon + ISS & Hubble (orbits illustrative, not to scale)`
+      ? `view: Earth ×${z}   ·   real orbiter altitudes (log scale) · Moon simulated · speeds illustrative`
       : `view: ${follow ? 'following ' + (follow.name||'comet') : 'whole system'}  ×${z}   ·   inner true-scale · outer compressed · Moon ×${MOON_EXAG}`;
   }
 
