@@ -216,17 +216,18 @@
     E0 = energy();                            // re-baseline: a massive arrival changes the system's total energy
   }
 
-  // ---- Camera + log-compressed radial scale ----
-  // True distance from the Sun is mapped through a logarithm so all 8 orbits read at once;
-  // the ANGLE is preserved, so motion stays true — only the radial spacing is compressed.
-  const RMIN = 0.2;   // AU; anything closer collapses to the centre (keeps the Sun centred)
+  // ---- Camera + compressed radial scale ----
+  // Distance from the barycentre is mapped through asinh: near-LINEAR for the inner planets (so their
+  // eccentric orbits read as true ellipses, not log-exaggerated eggs) and logarithmic far out (so all 8
+  // still fit). Angle is preserved, so motion stays true — only radial spacing is squeezed.
+  const RSCALE = 0.5;   // AU; orbits within ~this stay near true-scale, beyond it they compress
   function disp(x, y){
     const rx = x - baryX, ry = y - baryY, r = Math.hypot(rx, ry);   // relative to the system barycentre
-    if (r <= RMIN) return [0, 0];
-    const k = Math.log(r / RMIN) / r;
+    if (r < 1e-9) return [0, 0];
+    const k = RSCALE * Math.asinh(r / RSCALE) / r;
     return [rx*k, ry*k];
   }
-  const maxDispR = Math.max(...planets.map(p => Math.log(p.a*(1+p.e) / RMIN)));
+  const maxDispR = Math.max(...planets.map(p => RSCALE * Math.asinh(p.a*(1+p.e) / RSCALE)));
 
   let baseScale, zoom = 1, follow = null;
   const camD = () => follow ? disp(follow.x, follow.y) : [0, 0];
@@ -537,7 +538,7 @@
     elHealth.className = 'row dim' + (ok ? ' ok' : ' warn');
     elHealth.textContent = `total energy conserved — drift ${rel.toExponential(1)} ${ok ? '✓' : ''}`;
     const z = zoom < 10 ? zoom.toFixed(1) : Math.round(zoom);
-    elView.textContent = `view: ${follow ? 'following ' + (follow.name||'comet') : 'whole system'}  ×${z}   ·   log radial scale · Moon ×${MOON_EXAG}`;
+    elView.textContent = `view: ${follow ? 'following ' + (follow.name||'comet') : 'whole system'}  ×${z}   ·   inner true-scale · outer compressed · Moon ×${MOON_EXAG}`;
   }
 
   // ---- Main loop ----
