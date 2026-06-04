@@ -439,14 +439,7 @@
         ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(sX, sY, s.size, 0, 2*Math.PI); ctx.fill();
         label(s.name, s.color, sX, sY, s.size+4);
       }
-      if (!MOON.deleted){                                          // the Moon is the real, simulated body
-        drawRing(evR(MOON.aM*AU_KM));
-        const dxm = MOON.x-EARTH.x, dym = MOON.y-EARTH.y, rr = evR(Math.hypot(dxm,dym)*AU_KM), ma = Math.atan2(dym,dxm);
-        mX = eix + Math.cos(ma)*rr; mY = eiy - Math.sin(ma)*rr;
-        MOON._sx = mX; MOON._sy = mY; MOON._drawn = true;
-        ctx.fillStyle = MOON.color; ctx.beginPath(); ctx.arc(mX, mY, 2.8, 0, 2*Math.PI); ctx.fill();
-        label('Moon', MOON.color, mX, mY, 7);
-      }
+      // (Moon omitted here — it's 60× farther out; it lives in the system view)
     } else if (!MOON.deleted && !EARTH.deleted){
       // ---- system view: Moon drawn ×MOON_EXAG, magnification tapering once it's flung off its orbit ----
       const knee = MOON.aM * 2;
@@ -595,8 +588,8 @@
   });
   function pick(o){
     selectBody(o); if (!selected) return;
-    if (o === SUN) follow = null;                                           // edit the Sun in the system view
-    else if (o.moon || o === EARTH){ follow = EARTH; if (zoom < 5) zoom = 5; }
+    if (o === SUN || o.moon) follow = null;                                 // Sun + Moon: edit in the system view
+    else if (o === EARTH){ follow = EARTH; if (zoom < 5) zoom = 5; }         // Earth → planet view
     else follow = o;
   }
 
@@ -650,7 +643,7 @@
     elHealth.textContent = `total energy conserved — drift ${rel.toExponential(1)} ${ok ? '✓' : ''}`;
     const z = zoom < 10 ? zoom.toFixed(1) : Math.round(zoom);
     elView.textContent = follow === EARTH
-      ? `view: Earth ×${z}   ·   real orbiter altitudes (log scale) · Moon simulated · speeds illustrative`
+      ? `view: Earth ×${z}   ·   spinning · real orbiter altitudes (log scale) · speeds illustrative`
       : `view: ${follow ? 'following ' + (follow.name||'comet') : 'whole system'}  ×${z}   ·   inner true-scale · outer compressed · Moon ×${MOON_EXAG}`;
   }
 
