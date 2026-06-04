@@ -339,9 +339,16 @@
     const [eix, eiy] = scr(EARTH.x, EARTH.y);
     let mX = eix, mY = eiy;
     if (!MOON.deleted && !EARTH.deleted){
-      const sF = S() * MOON_EXAG;
-      fadedTrail(MOON.rel, p => [eix + p.dx*sF, eiy - p.dy*sF], MOON.color, 1.2, 0.5);
-      mX = eix + (MOON.x-EARTH.x)*sF; mY = eiy - (MOON.y-EARTH.y)*sF;
+      // ×40 only magnifies the tight bound orbit; once the Moon is flung well past it (e.g. Earth got
+      // nudged) the magnification fades to ×1 so it drifts at TRUE speed instead of looking warp-fast.
+      const knee = MOON.aM * 2;
+      const moonOff = (dx, dy) => {
+        const off = Math.hypot(dx, dy); if (off < 1e-12) return [0, 0];
+        const D = off <= knee ? off*MOON_EXAG : knee*MOON_EXAG + (off - knee), k = D/off;
+        return [eix + dx*k*S(), eiy - dy*k*S()];
+      };
+      fadedTrail(MOON.rel, p => moonOff(p.dx, p.dy), MOON.color, 1.2, 0.5);
+      [mX, mY] = moonOff(MOON.x-EARTH.x, MOON.y-EARTH.y);
       ctx.fillStyle = MOON.color; ctx.beginPath(); ctx.arc(mX, mY, MOON.size, 0, 2*Math.PI); ctx.fill();
     }
 
