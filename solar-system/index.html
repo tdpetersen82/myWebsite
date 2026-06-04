@@ -410,25 +410,33 @@
   const nudgeBox = document.getElementById('nudge-box');
   const nfEl = document.getElementById('nf-slider'), ndEl = document.getElementById('nd-slider');
   const nfV = document.getElementById('nf-val'), ndV = document.getElementById('nd-val');
-  const sliderToMass = v => Math.pow(10, -13 + 13*(v/1000));                // solar masses
-  const massToSlider = m => Math.max(0, Math.min(1000, Math.round(1000*(Math.log10(m)+13)/13)));
+  // Mass slider is log-scaled from ~10⁻¹³ M☉ up to a per-body ceiling. Planets/Moon/comets are capped
+  // SUB-STELLAR (~31 Jupiter masses): a full solar-mass body makes a second sun, which both breaks the
+  // single-centre log view (barycentre lands in empty space) and blows the fixed-step integrator up on
+  // close passes. The Sun keeps a wider range so it can still represent/edit its own stellar mass.
+  const MASS_LO = -13, MASS_HI_SUB = Math.log10(0.03), MASS_HI_SUN = Math.log10(2);
+  let massHi = MASS_HI_SUB;                                                 // upper bound for the current selection
+  const sliderToMass = v => Math.pow(10, MASS_LO + (massHi-MASS_LO)*(v/1000));   // solar masses
+  const massToSlider = m => Math.max(0, Math.min(1000, Math.round(1000*(Math.log10(m)-MASS_LO)/(massHi-MASS_LO))));
   const DVMAX = 8;                                                          // km/s of Δv at full force
   const nudgeDv = () => (nfEl.value/1000)*DVMAX;                            // km/s
-  function editLabels(){
-    const m = sliderToMass(emEl.value), me = m/3.0035e-6, mj = m/9.5425e-4;
-    emV.textContent = m>=0.06 ? m.toFixed(2)+' M☉' : mj>=1 ? mj.toFixed(1)+' Mⱼ' : me>=0.05 ? me.toFixed(2)+' M⊕' : 'tiny';
+  const fmtEditMass = m => { const me = m/3.0035e-6, mj = m/9.5425e-4;
+    return m>=0.06 ? m.toFixed(2)+' M☉' : mj>=1 ? mj.toFixed(1)+' Mⱼ' : me>=0.05 ? me.toFixed(2)+' M⊕' : 'tiny'; };
+  function editLabels(){                                                    // nudge readouts (mass label set from the real value)
     nfV.textContent = nudgeDv().toFixed(1)+' km/s';
     ndV.textContent = ndEl.value+'°';
   }
   function selectBody(o){
     if (!o || o.deleted || o.dead){ deselect(); return; }
     selected = o; eName.textContent = o.name || 'Comet';
+    massHi = (o === SUN) ? MASS_HI_SUN : MASS_HI_SUB;
     emEl.value = massToSlider(o.m);
+    emV.textContent = fmtEditMass(o.m);              // resting label = the body's true mass, not the quantised slider step
     nudgeBox.hidden = (o === SUN);                   // the Sun is the anchor; everything else can be nudged
     editLabels(); ePanel.hidden = false;
   }
   function deselect(){ selected = null; ePanel.hidden = true; }
-  function applyMass(){ if (!selected) return; selected.m = sliderToMass(emEl.value); selected.edited = true; E0 = energy(); editLabels(); }
+  function applyMass(){ if (!selected) return; selected.m = sliderToMass(emEl.value); selected.edited = true; E0 = energy(); emV.textContent = fmtEditMass(selected.m); }
   // a discrete external impulse (thruster burn): add Δv in the chosen heading — leaves the nominal orbit guide so the deviation shows
   function applyNudge(){
     if (!selected || selected === SUN) return;
