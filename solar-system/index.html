@@ -296,7 +296,7 @@
         ctx.beginPath();
         for (let k=0;k<=120;k++){
           const phi = k/120*2*Math.PI;
-          const [X, Y] = scr(-p.a*p.e + p.a*Math.cos(phi), b*Math.sin(phi));
+          const [X, Y] = scr(SUN.x - p.a*p.e + p.a*Math.cos(phi), SUN.y + b*Math.sin(phi));
           if (k===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y);
         }
         ctx.stroke();
@@ -408,8 +408,9 @@
     selected = o; eName.textContent = o.name || 'Comet';
     emEl.value = massToSlider(o.m);
     const isSun = o === SUN;                          // the Sun has no orbital speed to edit
-    esRow.style.display = isSun ? 'none' : '';
-    edRow.style.display = isSun ? 'none' : '';
+    const isComet = comets.includes(o);              // only a free-flying comet has a meaningful "heading" to re-aim
+    esRow.style.display = isSun ? 'none' : '';        // Speed: planets, Moon, comets
+    edRow.style.display = isComet ? '' : 'none';      // Direction: comets only (rotating a planet's velocity is meaningless)
     if (!isSun){
       const r = refOf(o), vrx = o.vx-r.vx, vry = o.vy-r.vy;
       esEl.value = Math.round(1000 * Math.min(2.5, Math.hypot(vrx,vry)/vCirc(o)) / 2.5);
@@ -420,7 +421,13 @@
   function deselect(){ selected = null; ePanel.hidden = true; }
   function applyMass(){ if (!selected) return; selected.m = sliderToMass(emEl.value); selected.edited = true; E0 = energy(); editLabels(); }
   function applyVel(){ if (!selected || selected === SUN) return; const b = selected, r = refOf(b);
-    const sp = (esEl.value/1000*2.5)*vCirc(b), ang = edEl.value*Math.PI/180;
+    const sp = (esEl.value/1000*2.5)*vCirc(b);
+    let ang;
+    if (comets.includes(b)) ang = edEl.value*Math.PI/180;                   // comet: aim with the Direction slider
+    else {                                                                  // planet/Moon: keep its current heading, just rescale speed
+      const vrx = b.vx-r.vx, vry = b.vy-r.vy, mag = Math.hypot(vrx,vry);
+      ang = mag>1e-9 ? Math.atan2(vry,vrx) : Math.atan2(b.x-r.x, -(b.y-r.y));   // fall back to tangential if stopped
+    }
     b.vx = r.vx + sp*Math.cos(ang); b.vy = r.vy + sp*Math.sin(ang); b.edited = true; E0 = energy(); editLabels();
   }
   emEl.addEventListener('input', applyMass);
@@ -469,7 +476,7 @@
     const spd = (o===SUN ? Math.hypot(SUN.vx,SUN.vy) : Math.hypot(o.vx-SUN.vx, o.vy-SUN.vy)) * KMS;
     const pref = o.moon ? EARTH : SUN;
     const dx=o.x-pref.x, dy=o.y-pref.y, r=Math.hypot(dx,dy);
-    const vx=o.vx-pref.vx, vy=o.vy-pref.vy, v2=vx*vx+vy*vy, mu=G*(pref.m+(o.m||0));
+    const vx=o.vx-pref.vx, vy=o.vy-pref.vy, v2=vx*vx+vy*vy, mu=G*pref.m;   // heliocentric: a body's own mass doesn't shorten its "year"
     const a = 1/(2/r - v2/mu);
     const per = o===SUN ? '—' : a>0
       ? (() => { const T=2*Math.PI*Math.sqrt(a*a*a/mu); return T<0.5 ? Math.round(T*365.25)+' d' : T.toFixed(2)+' yr'; })()
