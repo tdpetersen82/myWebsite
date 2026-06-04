@@ -109,7 +109,7 @@
   const EARTH = planets[2];
   const MOON  = { name:'Moon', color:'#cfd3da', size:2.0, m:3.694e-8, aM:0.00257, eM:0.0549, moon:true };
   const bodies = [SUN, ...planets, MOON];
-  const MOON_EXAG = 40;    // Moon's true 0.00257 AU is ~1px — drawn radius scaled up so its orbit is visible
+  const MOON_EXAG = 20;    // Moon's true 0.00257 AU is sub-pixel — orbit drawn ×this so it's visible (HUD shows the factor)
   let t = 0, E0 = 0, dashFlow = 0;
   let comets = [], flashes = [], cometSeq = 0;
   let baryX = 0, baryY = 0;   // mass-weighted centre of the whole system (cached per frame); the view centres here
@@ -301,6 +301,8 @@
 
   function draw(){
     [baryX, baryY] = curBary();    // recentre the view on the system's barycentre each frame
+    for (const b of bodies) b._drawn = false;       // click hit-testing uses the actual drawn position (set below)
+    for (const c of comets) c._drawn = false;
     ctx.fillStyle = '#05060a'; ctx.fillRect(0,0,W,H);
     for (const st of stars){ ctx.globalAlpha = st.a; ctx.fillStyle = '#fff'; ctx.fillRect(st.x,st.y,st.s,st.s); }
     ctx.globalAlpha = 1;
@@ -333,6 +335,7 @@
     let sxp, syp;
     if (!earthView){
       [sxp, syp] = scr(SUN.x, SUN.y);
+      SUN._sx = sxp; SUN._sy = syp; SUN._drawn = true;
       const g = ctx.createRadialGradient(sxp,syp,0,sxp,syp,21);
       g.addColorStop(0,'#fff7d6'); g.addColorStop(0.4,'#ffd35a'); g.addColorStop(1,'rgba(255,180,40,0)');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sxp,syp,21,0,2*Math.PI); ctx.fill();
@@ -343,6 +346,7 @@
     const shown = (earthView ? [EARTH] : planets).filter(p => !p.deleted);
     for (const p of shown){
       const [bx, by] = scr(p.x, p.y);
+      p._sx = bx; p._sy = by; p._drawn = true;
       ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(bx, by, p.size, 0, 2*Math.PI); ctx.fill();
     }
 
@@ -360,6 +364,7 @@
       };
       fadedTrail(MOON.rel, p => moonOff(p.dx, p.dy), MOON.color, 1.2, 0.5);
       [mX, mY] = moonOff(MOON.x-EARTH.x, MOON.y-EARTH.y);
+      MOON._sx = mX; MOON._sy = mY; MOON._drawn = true;
       ctx.fillStyle = MOON.color; ctx.beginPath(); ctx.arc(mX, mY, MOON.size, 0, 2*Math.PI); ctx.fill();
     }
 
@@ -388,6 +393,7 @@
       const headR = me < 0.3 ? 2.4 : (c.m < 0.05 ? 5 : 9);
       fadedTrail(c.trail, q => scr(q.x, q.y), `rgb(${col})`, me < 0.3 ? 1.4 : 2, 0.6);
       const [hx, hy] = scr(c.x, c.y);
+      c._sx = hx; c._sy = hy; c._drawn = true; c._hitR = headR;
       if (me < 0.3){                                               // anti-solar gas tail for small icy comets
         const [ssx, ssy] = scr(SUN.x, SUN.y);
         let tx = hx-ssx, ty = hy-ssy; const td = Math.hypot(tx,ty) || 1; tx/=td; ty/=td;
@@ -585,13 +591,15 @@
     const rect = canvas.getBoundingClientRect();
     const mx = e.clientX-rect.left, my = e.clientY-rect.top;
     let best = null, bd = 1e9;
-    for (const b of bodies){
-      if (b.deleted) continue;
-      const [bx, by] = scr(b.x, b.y);
-      const d = Math.hypot(bx-mx, by-my), thr = Math.max((b.sun?21:b.size)+10, 14);
+    // hit-test EVERY drawn object (Sun, planets, Moon, comets) against where it was actually drawn —
+    // not its true position (the Moon is drawn ×40 off Earth) — with a generous, finger-friendly radius
+    for (const b of [...bodies, ...comets]){
+      if (b.deleted || b.dead || !b._drawn) continue;
+      const d = Math.hypot(b._sx-mx, b._sy-my);
+      const thr = Math.max((b.sun?21:(b._hitR||b.size||3))+14, 20);
       if (d < thr && d < bd){ bd = d; best = b; }
     }
-    if (!best || best.sun){ follow = null; zoom = 1; deselect(); }
+    if (!best){ follow = null; zoom = 1; deselect(); }   // empty space → deselect + back to system view
     else pick(best);
   });
   // ---- Comet launch panel ----
