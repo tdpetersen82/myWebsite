@@ -42,6 +42,11 @@
   #edit-panel label{display:block;margin:0 0 11px;color:#9fabc2;font-weight:500;}
   #edit-panel label span{float:right;color:#eaf1ff;font-weight:600;font-variant-numeric:tabular-nums;}
   #edit-panel input[type=range]{width:100%;margin:7px 0 0;accent-color:#6f9dff;cursor:pointer;}
+  #nudge-box{margin:1px 0 11px;padding:10px 0 2px;border-top:1px solid rgba(150,170,210,0.16);}
+  #nudge-title{color:#8fa0bd;font-weight:600;font-size:11px;margin:0 0 9px;}
+  #edit-nudge{width:100%;margin-top:1px;padding:8px;text-align:center;cursor:pointer;font:inherit;font-weight:600;color:#eaf1ff;
+    background:rgba(74,110,200,0.5);border:1px solid rgba(130,160,235,0.55);border-radius:8px;}
+  #edit-nudge:hover{background:rgba(92,132,232,0.72);}
   #edit-delete{width:100%;margin-top:2px;padding:8px;text-align:center;cursor:pointer;font:inherit;color:#ffecec;
     background:rgba(150,60,60,0.5);border:1px solid rgba(220,140,140,0.5);border-radius:8px;}
   #edit-delete:hover{background:rgba(180,72,72,0.72);}
@@ -69,8 +74,12 @@
 <div id="edit-panel" hidden>
   <div id="edit-head">Editing <b id="edit-name"></b><button id="edit-close" type="button">×</button></div>
   <label>Mass <span id="em-val"></span><input id="em-slider" type="range" min="0" max="1000" value="500"></label>
-  <label id="es-row">Speed <span id="es-val"></span><input id="es-slider" type="range" min="0" max="1000" value="400"></label>
-  <label id="ed-row">Direction <span id="ed-val"></span><input id="ed-slider" type="range" min="0" max="359" value="0"></label>
+  <div id="nudge-box" hidden>
+    <div id="nudge-title">Nudge — fire an external thruster</div>
+    <label>Force <span id="nf-val"></span><input id="nf-slider" type="range" min="0" max="1000" value="250"></label>
+    <label>Direction <span id="nd-val"></span><input id="nd-slider" type="range" min="0" max="359" value="0"></label>
+    <button id="edit-nudge" type="button">Nudge ⟶</button>
+  </div>
   <button id="edit-delete" type="button">Delete this body</button>
 </div>
 <div id="hint">Full N-body gravity — every body pulls on every other (the Sun is free too).&nbsp;&nbsp;<b>Scroll</b> to zoom · <b>click a body or its list row</b> to select &amp; edit · <b>[E]</b> Earth view · <b>[0]</b> reset view · <b>[C]</b> launch comet (tune it in the ☄ panel) · [Space] pause · [↑&nbsp;↓] speed · [R] reset</div>
@@ -390,49 +399,40 @@
   // ---- Editor: select any object (table row or canvas click) → tweak mass / velocity, or delete ----
   let selected = null;
   const ePanel = document.getElementById('edit-panel'), eName = document.getElementById('edit-name');
-  const emEl = document.getElementById('em-slider'), esEl = document.getElementById('es-slider'), edEl = document.getElementById('ed-slider');
-  const emV = document.getElementById('em-val'), esV = document.getElementById('es-val'), edV = document.getElementById('ed-val');
-  const esRow = document.getElementById('es-row'), edRow = document.getElementById('ed-row');
-  const refOf = o => o.moon ? EARTH : SUN;                                  // what it orbits
-  const vCirc = o => { const r = refOf(o), d = Math.hypot(o.x-r.x, o.y-r.y); return Math.sqrt(G*r.m/Math.max(d,1e-6)); };
+  const emEl = document.getElementById('em-slider'), emV = document.getElementById('em-val');
+  const nudgeBox = document.getElementById('nudge-box');
+  const nfEl = document.getElementById('nf-slider'), ndEl = document.getElementById('nd-slider');
+  const nfV = document.getElementById('nf-val'), ndV = document.getElementById('nd-val');
   const sliderToMass = v => Math.pow(10, -13 + 13*(v/1000));                // solar masses
   const massToSlider = m => Math.max(0, Math.min(1000, Math.round(1000*(Math.log10(m)+13)/13)));
+  const DVMAX = 8;                                                          // km/s of Δv at full force
+  const nudgeDv = () => (nfEl.value/1000)*DVMAX;                            // km/s
   function editLabels(){
     const m = sliderToMass(emEl.value), me = m/3.0035e-6, mj = m/9.5425e-4;
     emV.textContent = m>=0.06 ? m.toFixed(2)+' M☉' : mj>=1 ? mj.toFixed(1)+' Mⱼ' : me>=0.05 ? me.toFixed(2)+' M⊕' : 'tiny';
-    esV.textContent = (esEl.value/1000*2.5).toFixed(2)+'× circ';
-    edV.textContent = edEl.value+'°';
+    nfV.textContent = nudgeDv().toFixed(1)+' km/s';
+    ndV.textContent = ndEl.value+'°';
   }
   function selectBody(o){
     if (!o || o.deleted || o.dead){ deselect(); return; }
     selected = o; eName.textContent = o.name || 'Comet';
     emEl.value = massToSlider(o.m);
-    const isSun = o === SUN;                          // the Sun has no orbital speed to edit
-    const isComet = comets.includes(o);              // only a free-flying comet has a meaningful "heading" to re-aim
-    esRow.style.display = isSun ? 'none' : '';        // Speed: planets, Moon, comets
-    edRow.style.display = isComet ? '' : 'none';      // Direction: comets only (rotating a planet's velocity is meaningless)
-    if (!isSun){
-      const r = refOf(o), vrx = o.vx-r.vx, vry = o.vy-r.vy;
-      esEl.value = Math.round(1000 * Math.min(2.5, Math.hypot(vrx,vry)/vCirc(o)) / 2.5);
-      edEl.value = Math.round(((Math.atan2(vry,vrx)*180/Math.PI)%360 + 360) % 360);
-    }
+    nudgeBox.hidden = (o === SUN);                   // the Sun is the anchor; everything else can be nudged
     editLabels(); ePanel.hidden = false;
   }
   function deselect(){ selected = null; ePanel.hidden = true; }
   function applyMass(){ if (!selected) return; selected.m = sliderToMass(emEl.value); selected.edited = true; E0 = energy(); editLabels(); }
-  function applyVel(){ if (!selected || selected === SUN) return; const b = selected, r = refOf(b);
-    const sp = (esEl.value/1000*2.5)*vCirc(b);
-    let ang;
-    if (comets.includes(b)) ang = edEl.value*Math.PI/180;                   // comet: aim with the Direction slider
-    else {                                                                  // planet/Moon: keep its current heading, just rescale speed
-      const vrx = b.vx-r.vx, vry = b.vy-r.vy, mag = Math.hypot(vrx,vry);
-      ang = mag>1e-9 ? Math.atan2(vry,vrx) : Math.atan2(b.x-r.x, -(b.y-r.y));   // fall back to tangential if stopped
-    }
-    b.vx = r.vx + sp*Math.cos(ang); b.vy = r.vy + sp*Math.sin(ang); b.edited = true; E0 = energy(); editLabels();
+  // a discrete external impulse (thruster burn): add Δv in the chosen heading — leaves the nominal orbit guide so the deviation shows
+  function applyNudge(){
+    if (!selected || selected === SUN) return;
+    const dv = nudgeDv()/KMS, ang = ndEl.value*Math.PI/180;                 // km/s → AU/yr; 0°=→, 90°=↑ on screen
+    selected.vx += dv*Math.cos(ang); selected.vy += dv*Math.sin(ang);
+    E0 = energy();
   }
   emEl.addEventListener('input', applyMass);
-  esEl.addEventListener('input', applyVel);
-  edEl.addEventListener('input', applyVel);
+  nfEl.addEventListener('input', editLabels);
+  ndEl.addEventListener('input', editLabels);
+  document.getElementById('edit-nudge').addEventListener('click', applyNudge);
   document.getElementById('edit-close').addEventListener('click', deselect);
   document.getElementById('edit-delete').addEventListener('click', () => {
     if (!selected) return;
