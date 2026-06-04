@@ -136,6 +136,13 @@
   const MOON  = { name:'Moon', color:'#cfd3da', size:2.0, m:3.694e-8, aM:0.00257, eM:0.0549, moon:true };
   const bodies = [SUN, ...planets, MOON];
   const MOON_EXAG = 10;    // Moon's true 0.00257 AU is sub-pixel — orbit drawn ×this so it's visible (HUD shows the factor)
+  const EV_MOON_EXAG = 100;   // in the dedicated Earth ("planet") view the Moon is drawn far bigger, leaving room for satellites
+  // Illustrative Earth-orbiters for the planet view. The real ISS/Hubble are sub-pixel and orbit far too fast to integrate
+  // at this timestep, so they're decorative: radii (display-AU) and periods (yr) are chosen to read nicely, inner = faster.
+  const EV_SATS = [
+    { name:'ISS',    r:0.072, period:0.014, phase:0.6, color:'#eef2f8', size:2.1 },
+    { name:'Hubble', r:0.135, period:0.026, phase:2.4, color:'#aebccf', size:2.0 },
+  ];
   let t = 0, E0 = 0, dashFlow = 0;
   let comets = [], flashes = [], cometSeq = 0;
   let storm = [];   // lightweight bulk test-particles (the "Storm" button) — NOT in the table, never perturb
@@ -365,8 +372,6 @@
     ctx.lineCap = 'round';
     if (!zoomedIn && !earthView){
       for (const p of planets){ if (!p.deleted) fadedTrail(p.trail, q => scr(q.x, q.y), p.color, 1.2, 0.38); }
-    } else if (earthView){
-      wake(EARTH.trail, q => scr(q.x, q.y), '90,162,255', 140);
     }
 
     // Sun (hidden in the local Earth view, so the rest of the system doesn't wheel around Earth)
@@ -385,7 +390,13 @@
     for (const p of shown){
       const [bx, by] = scr(p.x, p.y);
       p._sx = bx; p._sy = by; p._drawn = true;
-      ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(bx, by, p.size, 0, 2*Math.PI); ctx.fill();
+      if (earthView && p === EARTH){                               // a proper blue globe — the star of the planet view
+        const g = ctx.createRadialGradient(bx-4, by-4, 1, bx, by, 14);
+        g.addColorStop(0,'#bcd9ff'); g.addColorStop(0.55,'#4a86d8'); g.addColorStop(1,'#1c3f78');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bx, by, 14, 0, 2*Math.PI); ctx.fill();
+      } else {
+        ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(bx, by, p.size, 0, 2*Math.PI); ctx.fill();
+      }
     }
 
     // Moon orbiting Earth (drawn at exaggerated radius, anchored to Earth's screen position)
@@ -394,16 +405,32 @@
     if (!MOON.deleted && !EARTH.deleted){
       // ×40 only magnifies the tight bound orbit; once the Moon is flung well past it (e.g. Earth got
       // nudged) the magnification fades to ×1 so it drifts at TRUE speed instead of looking warp-fast.
-      const knee = MOON.aM * 2;
+      const exag = earthView ? EV_MOON_EXAG : MOON_EXAG, knee = MOON.aM * 2;
       const moonOff = (dx, dy) => {
         const off = Math.hypot(dx, dy); if (off < 1e-12) return [0, 0];
-        const D = off <= knee ? off*MOON_EXAG : knee*MOON_EXAG + (off - knee), k = D/off;
+        const D = off <= knee ? off*exag : knee*exag + (off - knee), k = D/off;
         return [eix + dx*k*S(), eiy - dy*k*S()];
       };
+      if (earthView){                                              // faint Moon orbit guide ring
+        ctx.strokeStyle = 'rgba(150,170,210,0.16)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(eix, eiy, MOON.aM*exag*S(), 0, 2*Math.PI); ctx.stroke();
+      }
       fadedTrail(MOON.rel, p => moonOff(p.dx, p.dy), MOON.color, 1.2, 0.5);
       [mX, mY] = moonOff(MOON.x-EARTH.x, MOON.y-EARTH.y);
       MOON._sx = mX; MOON._sy = mY; MOON._drawn = true;
-      ctx.fillStyle = MOON.color; ctx.beginPath(); ctx.arc(mX, mY, MOON.size, 0, 2*Math.PI); ctx.fill();
+      ctx.fillStyle = MOON.color; ctx.beginPath(); ctx.arc(mX, mY, MOON.size + (earthView?0.8:0), 0, 2*Math.PI); ctx.fill();
+    }
+    // Earth-view satellites — illustrative ISS + Hubble on their own rings (decorative, driven by sim time)
+    if (earthView && !EARTH.deleted){
+      for (const sat of EV_SATS){
+        const rr = sat.r * S();
+        ctx.strokeStyle = 'rgba(150,170,210,0.14)'; ctx.lineWidth = 1;
+        ctx.beginPath(); ctx.arc(eix, eiy, rr, 0, 2*Math.PI); ctx.stroke();
+        const ang = sat.phase + 2*Math.PI * t / sat.period;
+        const sX = eix + Math.cos(ang)*rr, sY = eiy - Math.sin(ang)*rr;
+        ctx.fillStyle = sat.color; ctx.beginPath(); ctx.arc(sX, sY, sat.size, 0, 2*Math.PI); ctx.fill();
+        label(sat.name, sat.color, sX, sY, sat.size + 4);
+      }
     }
 
     // selection ring + live nudge-direction arrow (shows where the thruster will push, before you fire)
@@ -541,7 +568,7 @@
   function pick(o){
     selectBody(o); if (!selected) return;
     if (o === SUN) follow = null;                                           // edit the Sun in the system view
-    else if (o.moon || o === EARTH){ follow = EARTH; if (zoom < 3) zoom = 3; }
+    else if (o.moon || o === EARTH){ follow = EARTH; if (zoom < 5) zoom = 5; }
     else follow = o;
   }
 
@@ -594,7 +621,9 @@
     elHealth.className = 'row dim' + (ok ? ' ok' : ' warn');
     elHealth.textContent = `total energy conserved — drift ${rel.toExponential(1)} ${ok ? '✓' : ''}`;
     const z = zoom < 10 ? zoom.toFixed(1) : Math.round(zoom);
-    elView.textContent = `view: ${follow ? 'following ' + (follow.name||'comet') : 'whole system'}  ×${z}   ·   inner true-scale · outer compressed · Moon ×${MOON_EXAG}`;
+    elView.textContent = follow === EARTH
+      ? `view: Earth ×${z}   ·   Moon + ISS & Hubble (orbits illustrative, not to scale)`
+      : `view: ${follow ? 'following ' + (follow.name||'comet') : 'whole system'}  ×${z}   ·   inner true-scale · outer compressed · Moon ×${MOON_EXAG}`;
   }
 
   // ---- Main loop ----
@@ -704,7 +733,7 @@
     if (e.code === 'Space'){ setRate(timeRate !== 0 ? 0 : lastRate); e.preventDefault(); }
     else if (e.code === 'ArrowUp')   setRate(timeRate + 1);
     else if (e.code === 'ArrowDown') setRate(timeRate - 1);
-    else if (e.key === 'e' || e.key === 'E'){ follow = EARTH; if (zoom < 3) zoom = 3; }
+    else if (e.key === 'e' || e.key === 'E'){ follow = EARTH; if (zoom < 5) zoom = 5; }
     else if (e.key === 'c' || e.key === 'C'){ launchComet(); }
     else if (e.key === '0'){ follow = null; zoom = 1; }
     else if (e.key === 'r' || e.key === 'R'){ reset(); }
