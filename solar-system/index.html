@@ -506,7 +506,8 @@
     const h = document.createElement('div'); h.className = 'row dim'; h.textContent = HEAD; rowsEl.appendChild(h);
     tableRows = objs.map(o => {
       const el = document.createElement('div'); el.className = 'row clickable';
-      el.addEventListener('click', () => pick(o));
+      el.addEventListener('mousedown', () => pick(o));   // mousedown, not click: the row's innerHTML is rewritten every
+                                                         // frame, which would eat a click whose up/down straddle a redraw
       rowsEl.appendChild(el); return { obj:o, el };
     });
   }
@@ -539,7 +540,9 @@
     elTime.textContent = `t = ${t.toFixed(2)} yr     speed ×${substeps}${paused?'   (paused)':''}`;
     const objs = [SUN, ...planets.filter(p=>!p.deleted), ...(MOON.deleted?[]:[MOON]), ...comets];
     if (tableRows.length !== objs.length || tableRows.some((tr,i)=> tr.obj !== objs[i])) rebuildTable(objs);
-    tableRows.forEach(({obj,el}) => { el.innerHTML = rowText(obj); el.classList.toggle('sel', obj === selected); });
+    tableRows.forEach(tr => { const html = rowText(tr.obj);     // only rewrite when the text actually changes (less DOM churn)
+      if (tr._html !== html){ tr.el.innerHTML = html; tr._html = html; }
+      tr.el.classList.toggle('sel', tr.obj === selected); });
     const rel = Math.abs((energy() - E0) / E0), ok = rel < 1e-3;
     elHealth.className = 'row dim' + (ok ? ' ok' : ' warn');
     elHealth.textContent = `total energy conserved — drift ${rel.toExponential(1)} ${ok ? '✓' : ''}`;
