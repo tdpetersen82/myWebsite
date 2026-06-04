@@ -109,7 +109,7 @@
   const EARTH = planets[2];
   const MOON  = { name:'Moon', color:'#cfd3da', size:2.0, m:3.694e-8, aM:0.00257, eM:0.0549, moon:true };
   const bodies = [SUN, ...planets, MOON];
-  const MOON_EXAG = 20;    // Moon's true 0.00257 AU is sub-pixel — orbit drawn ×this so it's visible (HUD shows the factor)
+  const MOON_EXAG = 10;    // Moon's true 0.00257 AU is sub-pixel — orbit drawn ×this so it's visible (HUD shows the factor)
   let t = 0, E0 = 0, dashFlow = 0;
   let comets = [], flashes = [], cometSeq = 0;
   let baryX = 0, baryY = 0;   // mass-weighted centre of the whole system (cached per frame); the view centres here
