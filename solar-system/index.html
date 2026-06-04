@@ -454,11 +454,13 @@
       rowsEl.appendChild(el); return { obj:o, el };
     });
   }
-  function fmtMass(mS){
-    const me = mS/3.0035e-6;
-    if (mS >= 0.04) return mS.toFixed(2)+' M☉';
-    if (me >= 0.005) return (me>=100 ? me.toFixed(0) : me>=1 ? me.toFixed(2) : me.toFixed(3))+' M⊕';
-    return (mS*1.989e30).toExponential(1)+' kg';
+  function fmtMass(mS){                       // one shared scale (Earth masses) so the column is comparable
+    const me = mS/3.0035e-6;                  // 1 M⊕; Sun ≈ 333,000 · Jupiter ≈ 318 · Moon ≈ 0.012
+    if (me >= 1e6)   return me.toExponential(1).replace('e+','e')+' M⊕';
+    if (me >= 1000)  return Math.round(me).toLocaleString('en-US')+' M⊕';
+    if (me >= 1)     return me.toFixed(me>=100 ? 0 : me>=10 ? 1 : 2)+' M⊕';
+    if (me >= 0.001) return me.toFixed(3)+' M⊕';
+    return me.toExponential(1).replace('e-','e-')+' M⊕';   // tiny comets
   }
   function rowText(o){
     const nm = `<span style="color:${o.color||'#cfd6e6'}">${pad(o.name||'Comet',14)}</span>`;
