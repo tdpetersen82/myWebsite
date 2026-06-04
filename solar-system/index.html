@@ -93,14 +93,18 @@
     for (const p of planets){
       p.x = p.a * (1 - p.e); p.y = 0;
       p.vx = 0;
-      p.vy = 2*Math.PI * Math.sqrt((1 + p.e) / (p.a * (1 - p.e)));
+      // vis-viva perihelion speed about the Sun, with the proper two-body μ = G(M_sun + m_planet)
+      p.vy = 2*Math.PI * Math.sqrt((1 + p.m) * (1 + p.e) / (p.a * (1 - p.e)));
     }
     const vM = 2*Math.PI * Math.sqrt((EARTH.m + MOON.m) * (1 + MOON.eM) / (MOON.aM * (1 - MOON.eM)));
     MOON.x = EARTH.x + MOON.aM * (1 - MOON.eM); MOON.y = EARTH.y;
     MOON.vx = EARTH.vx; MOON.vy = EARTH.vy + vM;
-    let px = 0, py = 0;
-    for (const b of bodies) if (!b.sun){ px += b.m*b.vx; py += b.m*b.vy; }
-    SUN.vx = -px / SUN.m; SUN.vy = -py / SUN.m;
+    // shift to the barycentric frame: zeros total momentum AND preserves every body's velocity
+    // relative to the Sun (so the orbits keep their stated elements)
+    let px = 0, py = 0, M = 0;
+    for (const b of bodies){ px += b.m*b.vx; py += b.m*b.vy; M += b.m; }
+    const vcx = px/M, vcy = py/M;
+    for (const b of bodies){ b.vx -= vcx; b.vy -= vcy; }
     for (const b of bodies) b.trail = [];
     MOON.rel = []; comets = []; flashes = [];
     t = 0; E0 = energy();
@@ -119,7 +123,7 @@
     for (const c of comets){
       if (!(c.m > 1e-9)) continue;
       for (let i=0;i<n;i++){
-        const dx = c.x-bodies[i].x, dy = c.y-bodies[i].y, r2 = dx*dx+dy*dy+1e-6;
+        const dx = c.x-bodies[i].x, dy = c.y-bodies[i].y, r2 = dx*dx+dy*dy+1e-4;  // same softening as cometAccel (Newton's 3rd law)
         const inv = G*c.m/(r2*Math.sqrt(r2));
         ax[i] += inv*dx; ay[i] += inv*dy;
       }
@@ -365,27 +369,26 @@
       for (let s=0;s<substeps;s++){
         stepAll(DT); t += DT;
         for (const c of comets){
+          if (c.dead) continue;
           let [ax, ay] = cometAccel(c.x, c.y);
           c.x += c.vx*DT + 0.5*ax*DT*DT; c.y += c.vy*DT + 0.5*ay*DT*DT;
           const [ax2, ay2] = cometAccel(c.x, c.y);
           c.vx += 0.5*(ax+ax2)*DT; c.vy += 0.5*(ay+ay2)*DT;
+          // collide check EVERY sub-step — a fast Sun-grazer slips past a once-per-frame check
+          const massive = c.m > 1e-6;
+          for (const b of bodies){
+            if (massive && !b.sun) continue;                 // only the Sun stops a massive interloper
+            const hr = b.sun ? 0.05 : 0.02, ex = b.x-c.x, ey = b.y-c.y;
+            if (ex*ex + ey*ey < hr*hr){ c.dead = true; flashes.push({x:b.x, y:b.y, life:1, big: b.sun || massive || b.m > 1e-4}); break; }
+          }
         }
       }
       for (const p of planets){ p.trail.push({x:p.x, y:p.y}); if (p.trail.length > 600) p.trail.shift(); }
       MOON.rel.push({dx: MOON.x-EARTH.x, dy: MOON.y-EARTH.y}); if (MOON.rel.length > 90) MOON.rel.shift();
       dashFlow += substeps * 0.6;
-      for (const c of comets){ c.trail.push({x:c.x, y:c.y}); if (c.trail.length > 500) c.trail.shift(); }
+      for (const c of comets){ if (!c.dead){ c.trail.push({x:c.x, y:c.y}); if (c.trail.length > 500) c.trail.shift(); } }
       const nC = comets.length;
-      comets = comets.filter(c => {
-        if (Math.hypot(c.x-baryX, c.y-baryY) > 80) return false;            // escaped the system
-        const massive = c.m > 1e-6;                                          // interlopers plow through planets
-        for (const b of bodies){
-          if (massive && !b.sun) continue;                                   // only the Sun stops a massive body
-          const hitR = b.sun ? 0.05 : 0.02;
-          if (Math.hypot(b.x-c.x, b.y-c.y) < hitR){ flashes.push({x:b.x, y:b.y, life:1, big: b.sun || massive || b.m > 1e-4}); return false; }
-        }
-        return true;
-      });
+      comets = comets.filter(c => !c.dead && Math.hypot(c.x-baryX, c.y-baryY) <= 80);   // drop collided + escaped
       if (comets.length !== nC) E0 = energy();                              // re-baseline after a removal
       for (const f of flashes) f.life -= 0.05;
       flashes = flashes.filter(f => f.life > 0);
