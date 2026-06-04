@@ -287,6 +287,16 @@
     ctx.font = '11px ui-monospace,Menlo,monospace'; ctx.textBaseline = 'middle';
     ctx.fillText(name, lx + off, ly); ctx.globalAlpha = 1;
   }
+  // arrow from (x,y) pointing at screen-angle ang (rad, 0=→, CW on screen), given length — for aiming nudges/comets
+  function drawArrow(x, y, ang, len, color, headLen){
+    const ex = x + Math.cos(ang)*len, ey = y + Math.sin(ang)*len, h = headLen || 8;
+    ctx.strokeStyle = color; ctx.fillStyle = color; ctx.lineWidth = 2; ctx.lineCap = 'round';
+    ctx.beginPath(); ctx.moveTo(x, y); ctx.lineTo(ex, ey); ctx.stroke();
+    ctx.beginPath(); ctx.moveTo(ex, ey);
+    ctx.lineTo(ex - Math.cos(ang-0.4)*h, ey - Math.sin(ang-0.4)*h);
+    ctx.lineTo(ex - Math.cos(ang+0.4)*h, ey - Math.sin(ang+0.4)*h);
+    ctx.closePath(); ctx.fill();
+  }
 
   function draw(){
     [baryX, baryY] = curBary();    // recentre the view on the system's barycentre each frame
@@ -352,12 +362,17 @@
       ctx.fillStyle = MOON.color; ctx.beginPath(); ctx.arc(mX, mY, MOON.size, 0, 2*Math.PI); ctx.fill();
     }
 
-    // selection ring
+    // selection ring + live nudge-direction arrow (shows where the thruster will push, before you fire)
     if (selected && !selected.deleted){
       const sp = selected === MOON ? [mX, mY] : scr(selected.x, selected.y);
       ctx.strokeStyle = '#fff'; ctx.globalAlpha = 0.7; ctx.lineWidth = 1.5;
       ctx.beginPath(); ctx.arc(sp[0], sp[1], (selected.size || 6) + 6, 0, 2*Math.PI); ctx.stroke();
       ctx.globalAlpha = 1;
+      if (!ePanel.hidden && !nudgeBox.hidden){
+        const ang = -ndEl.value*Math.PI/180;                       // physics 0°=→,90°=↑ → screen (y flipped)
+        const len = 22 + (nfEl.value/1000)*46;                     // grows with Force so the magnitude reads too
+        drawArrow(sp[0], sp[1], ang, len, '#7fd2ff');
+      }
     }
 
     // labels
@@ -391,6 +406,18 @@
       const [fx, fy] = scr(f.x, f.y);
       ctx.globalAlpha = Math.max(0, f.life); ctx.strokeStyle = '#ffd9a0'; ctx.lineWidth = 2;
       ctx.beginPath(); ctx.arc(fx, fy, (f.big?26:13)*(1-f.life), 0, 2*Math.PI); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
+    // comet aim preview — while the ☄ panel is open, trace the next comet's path: spawn (22 AU) → aim point
+    if (!cPanel.hidden){
+      const dir = paramDir(), R = 22, sx = R*Math.cos(dir), sy = R*Math.sin(dir);
+      const px = -Math.sin(dir), py = Math.cos(dir), im = paramImpact();
+      const [spx, spy] = scr(sx, sy), [apx, apy] = scr(im*px, im*py);   // spawn + closest-approach point
+      ctx.globalAlpha = 0.85; ctx.strokeStyle = '#bfe0ff'; ctx.lineWidth = 1.5;
+      ctx.setLineDash([5, 5]); ctx.beginPath(); ctx.moveTo(spx, spy); ctx.lineTo(apx, apy); ctx.stroke(); ctx.setLineDash([]);
+      ctx.beginPath(); ctx.arc(spx, spy, 4, 0, 2*Math.PI); ctx.stroke();   // spawn marker
+      const ang = Math.atan2(apy - spy, apx - spx);                       // arrowhead at the aim end, along the path
+      drawArrow(apx - Math.cos(ang)*12, apy - Math.sin(ang)*12, ang, 12, '#bfe0ff', 9);
       ctx.globalAlpha = 1;
     }
   }
