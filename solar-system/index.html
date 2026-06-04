@@ -29,6 +29,22 @@
   #comet-panel label span{float:right;color:#eaf1ff;font-weight:600;font-variant-numeric:tabular-nums;}
   #comet-panel input[type=range]{width:100%;margin:7px 0 0;accent-color:#6f9dff;cursor:pointer;}
   #comet-launch{width:100%;margin-top:3px;text-align:center;background:rgba(74,108,190,0.55);border-color:rgba(150,180,255,0.6);}
+  #hud .row.clickable{pointer-events:auto;cursor:pointer;border-radius:4px;padding:0 4px;margin-left:-4px;}
+  #hud .row.clickable:hover{background:rgba(120,150,210,0.16);}
+  #hud .row.sel{background:rgba(120,150,210,0.28);}
+  #edit-panel{position:fixed;left:16px;bottom:56px;width:216px;padding:12px 14px 11px;
+    background:rgba(18,24,38,0.92);border:1px solid rgba(150,170,210,0.3);border-radius:10px;
+    -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);font:600 12px/1.3 system-ui,sans-serif;color:#e6edf8;}
+  #edit-head{display:flex;justify-content:space-between;align-items:center;margin:0 0 11px;font-weight:700;}
+  #edit-head b{color:#fff;}
+  #edit-close{background:none;border:none;color:#9fabc2;font-size:17px;line-height:1;cursor:pointer;padding:0 2px;}
+  #edit-close:hover{color:#fff;}
+  #edit-panel label{display:block;margin:0 0 11px;color:#9fabc2;font-weight:500;}
+  #edit-panel label span{float:right;color:#eaf1ff;font-weight:600;font-variant-numeric:tabular-nums;}
+  #edit-panel input[type=range]{width:100%;margin:7px 0 0;accent-color:#6f9dff;cursor:pointer;}
+  #edit-delete{width:100%;margin-top:2px;padding:8px;text-align:center;cursor:pointer;font:inherit;color:#ffecec;
+    background:rgba(150,60,60,0.5);border:1px solid rgba(220,140,140,0.5);border-radius:8px;}
+  #edit-delete:hover{background:rgba(180,72,72,0.72);}
 </style>
 </head>
 <body>
@@ -50,7 +66,14 @@
   <div class="row dim" id="health"></div>
   <div class="row dim" id="view"></div>
 </div>
-<div id="hint">Full N-body gravity — every body pulls on every other (the Sun is free too).&nbsp;&nbsp;<b>Scroll</b> to zoom · <b>click a body</b> to follow · <b>[E]</b> Earth view · <b>[0]</b> reset view · <b>[C]</b> launch comet (tune it in the ☄ panel) · [Space] pause · [↑&nbsp;↓] speed · [R] reset</div>
+<div id="edit-panel" hidden>
+  <div id="edit-head">Editing <b id="edit-name"></b><button id="edit-close" type="button">×</button></div>
+  <label>Mass <span id="em-val"></span><input id="em-slider" type="range" min="0" max="1000" value="500"></label>
+  <label id="es-row">Speed <span id="es-val"></span><input id="es-slider" type="range" min="0" max="1000" value="400"></label>
+  <label id="ed-row">Direction <span id="ed-val"></span><input id="ed-slider" type="range" min="0" max="359" value="0"></label>
+  <button id="edit-delete" type="button">Delete this body</button>
+</div>
+<div id="hint">Full N-body gravity — every body pulls on every other (the Sun is free too).&nbsp;&nbsp;<b>Scroll</b> to zoom · <b>click a body or its list row</b> to select &amp; edit · <b>[E]</b> Earth view · <b>[0]</b> reset view · <b>[C]</b> launch comet (tune it in the ☄ panel) · [Space] pause · [↑&nbsp;↓] speed · [R] reset</div>
 <script>
 (() => {
   const canvas = document.getElementById('c');
@@ -79,11 +102,11 @@
   const bodies = [SUN, ...planets, MOON];
   const MOON_EXAG = 40;    // Moon's true 0.00257 AU is ~1px — drawn radius scaled up so its orbit is visible
   let t = 0, E0 = 0, dashFlow = 0;
-  let comets = [], flashes = [];
+  let comets = [], flashes = [], cometSeq = 0;
   let baryX = 0, baryY = 0;   // mass-weighted centre of the whole system (cached per frame); the view centres here
   function curBary(){
     let mx = 0, my = 0, M = 0;
-    for (const b of bodies){ mx += b.m*b.x; my += b.m*b.y; M += b.m; }
+    for (const b of bodies){ if (b.deleted) continue; mx += b.m*b.x; my += b.m*b.y; M += b.m; }
     for (const c of comets){ if (c.m > 1e-9){ mx += c.m*c.x; my += c.m*c.y; M += c.m; } }
     return [mx/M, my/M];
   }
@@ -105,24 +128,28 @@
     for (const b of bodies){ px += b.m*b.vx; py += b.m*b.vy; M += b.m; }
     const vcx = px/M, vcy = py/M;
     for (const b of bodies){ b.vx -= vcx; b.vy -= vcy; }
-    for (const b of bodies) b.trail = [];
-    MOON.rel = []; comets = []; flashes = [];
+    for (const b of bodies){ b.trail = []; b.deleted = false; b.edited = false; }
+    MOON.rel = []; comets = []; flashes = []; cometSeq = 0;
+    if (typeof deselect === 'function') deselect();
     t = 0; E0 = energy();
   }
 
   // ---- N-body ----
   function accels(){
     const n = bodies.length, ax = new Array(n).fill(0), ay = new Array(n).fill(0);
-    for (let i=0;i<n;i++) for (let j=i+1;j<n;j++){
+    for (let i=0;i<n;i++){ if (bodies[i].deleted) continue;
+    for (let j=i+1;j<n;j++){
+      if (bodies[j].deleted) continue;
       const dx = bodies[j].x-bodies[i].x, dy = bodies[j].y-bodies[i].y;
       const r2 = dx*dx+dy*dy, inv = G/(r2*Math.sqrt(r2));
       ax[i] += inv*bodies[j].m*dx; ay[i] += inv*bodies[j].m*dy;
       ax[j] -= inv*bodies[i].m*dx; ay[j] -= inv*bodies[i].m*dy;
-    }
+    }}
     // massive comets / interlopers pull on the planets too (test-particle comets are skipped)
     for (const c of comets){
       if (!(c.m > 1e-9)) continue;
       for (let i=0;i<n;i++){
+        if (bodies[i].deleted) continue;
         const dx = c.x-bodies[i].x, dy = c.y-bodies[i].y, r2 = dx*dx+dy*dy+1e-4;  // same softening as cometAccel (Newton's 3rd law)
         const inv = G*c.m/(r2*Math.sqrt(r2));
         ax[i] += inv*dx; ay[i] += inv*dy;
@@ -133,18 +160,18 @@
   function stepAll(dt){
     const [ax, ay] = accels();
     for (let i=0;i<bodies.length;i++){
-      const b = bodies[i];
+      const b = bodies[i]; if (b.deleted) continue;
       b.x += b.vx*dt + 0.5*ax[i]*dt*dt; b.y += b.vy*dt + 0.5*ay[i]*dt*dt;
       b._ax = ax[i]; b._ay = ay[i];
     }
     const [bx, by] = accels();
     for (let i=0;i<bodies.length;i++){
-      const b = bodies[i];
+      const b = bodies[i]; if (b.deleted) continue;
       b.vx += 0.5*(b._ax + bx[i])*dt; b.vy += 0.5*(b._ay + by[i])*dt;
     }
   }
   function energy(){
-    const all = bodies.concat(comets.filter(c => c.m > 1e-9));   // include massive interlopers
+    const all = bodies.filter(b => !b.deleted).concat(comets.filter(c => c.m > 1e-9));   // include massive interlopers
     let ke = 0, pe = 0;
     for (const b of all) ke += 0.5*b.m*(b.vx*b.vx + b.vy*b.vy);
     for (let i=0;i<all.length;i++) for (let j=i+1;j<all.length;j++){
@@ -158,6 +185,7 @@
   function cometAccel(x, y){
     let ax = 0, ay = 0;
     for (const b of bodies){
+      if (b.deleted) continue;
       const dx = b.x-x, dy = b.y-y, r2 = dx*dx + dy*dy + 1e-4;   // softened to avoid close-pass blowups
       const inv = G*b.m / (r2*Math.sqrt(r2));
       ax += inv*dx; ay += inv*dy;
@@ -170,7 +198,11 @@
     const px = -Math.sin(dir), py = Math.cos(dir), im = paramImpact();   // impact parameter ⟂ to approach
     let dx = im*px - x, dy = im*py - y; const d = Math.hypot(dx, dy); dx/=d; dy/=d;
     const v = Math.sqrt(2*G*SUN.m/R) * paramSpeed();
-    comets.push({ x, y, vx:dx*v, vy:dy*v, m, trail:[] });
+    const me = m/3.0035e-6;
+    const kind = m>=0.04?'Rogue star':me>=50?'Brown dwarf':me>=0.5?'Interloper':'Comet';
+    comets.push({ x, y, vx:dx*v, vy:dy*v, m, trail:[], id: ++cometSeq,
+      name: kind + ' ' + cometSeq,
+      color: me<0.3 ? '#bfe0ff' : '#ffd98a' });
     if (comets.length > 30) comets.shift();   // cap; comets self-remove on escape (>80 AU) or impact
     E0 = energy();                            // re-baseline: a massive arrival changes the system's total energy
   }
@@ -259,6 +291,7 @@
     if (!zoomedIn && !earthView){
       ctx.strokeStyle = 'rgba(120,140,180,0.16)'; ctx.lineWidth = 1;
       for (const p of planets){
+        if (p.deleted || p.edited) continue;     // no nominal-orbit guide for removed/edited bodies
         const b = p.a*Math.sqrt(1-p.e*p.e);
         ctx.beginPath();
         for (let k=0;k<=120;k++){
@@ -270,10 +303,11 @@
       }
     }
     ctx.lineCap = 'round';
-    if (!zoomedIn && !earthView) for (const p of planets)
-      fadedTrail(p.trail, q => scr(q.x, q.y), p.color, 1.2, 0.38);
-    else if (earthView)
+    if (!zoomedIn && !earthView){
+      for (const p of planets){ if (!p.deleted) fadedTrail(p.trail, q => scr(q.x, q.y), p.color, 1.2, 0.38); }
+    } else if (earthView){
       wake(EARTH.trail, q => scr(q.x, q.y), '90,162,255', 140);
+    }
 
     // Sun (hidden in the local Earth view, so the rest of the system doesn't wheel around Earth)
     let sxp, syp;
@@ -285,8 +319,8 @@
       ctx.fillStyle = '#ffe08a'; ctx.beginPath(); ctx.arc(sxp,syp,6.5,0,2*Math.PI); ctx.fill();
     }
 
-    // planets — Earth view shows Earth only (the others would falsely appear to orbit it)
-    const shown = earthView ? [EARTH] : planets;
+    // planets — Earth view shows Earth only; deleted bodies vanish
+    const shown = (earthView ? [EARTH] : planets).filter(p => !p.deleted);
     for (const p of shown){
       const [bx, by] = scr(p.x, p.y);
       ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(bx, by, p.size, 0, 2*Math.PI); ctx.fill();
@@ -294,15 +328,26 @@
 
     // Moon orbiting Earth (drawn at exaggerated radius, anchored to Earth's screen position)
     const [eix, eiy] = scr(EARTH.x, EARTH.y);
-    const sF = S() * MOON_EXAG;
-    fadedTrail(MOON.rel, p => [eix + p.dx*sF, eiy - p.dy*sF], MOON.color, 1.2, 0.5);
-    const mX = eix + (MOON.x-EARTH.x)*sF, mY = eiy - (MOON.y-EARTH.y)*sF;
-    ctx.fillStyle = MOON.color; ctx.beginPath(); ctx.arc(mX, mY, MOON.size, 0, 2*Math.PI); ctx.fill();
+    let mX = eix, mY = eiy;
+    if (!MOON.deleted && !EARTH.deleted){
+      const sF = S() * MOON_EXAG;
+      fadedTrail(MOON.rel, p => [eix + p.dx*sF, eiy - p.dy*sF], MOON.color, 1.2, 0.5);
+      mX = eix + (MOON.x-EARTH.x)*sF; mY = eiy - (MOON.y-EARTH.y)*sF;
+      ctx.fillStyle = MOON.color; ctx.beginPath(); ctx.arc(mX, mY, MOON.size, 0, 2*Math.PI); ctx.fill();
+    }
+
+    // selection ring
+    if (selected && !selected.deleted){
+      const sp = selected === MOON ? [mX, mY] : scr(selected.x, selected.y);
+      ctx.strokeStyle = '#fff'; ctx.globalAlpha = 0.7; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(sp[0], sp[1], (selected.size || 6) + 6, 0, 2*Math.PI); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
 
     // labels
     if (!earthView) label('Sun', SUN.color, sxp, syp, 15);
     for (const p of shown){ const [bx, by] = scr(p.x, p.y); label(p.name, p.color, bx, by, p.size+5); }
-    if (Math.hypot(mX-eix, mY-eiy) > 11) label('Moon', MOON.color, mX, mY, MOON.size+5);
+    if (!MOON.deleted && !EARTH.deleted && Math.hypot(mX-eix, mY-eiy) > 11) label('Moon', MOON.color, mX, mY, MOON.size+5);
 
     // comets / interlopers — size & colour scale with mass — + impact flashes
     for (const c of comets){
@@ -339,28 +384,109 @@
   const elHealth = document.getElementById('health');
   const elView = document.getElementById('view');
   const rowsEl = document.getElementById('rows');
-  const rowBodies = [...planets, MOON];
-  const rowEls = rowBodies.map(() => { const d = document.createElement('div'); d.className = 'row'; rowsEl.appendChild(d); return d; });
-  const pad = (s,n) => (s + '         ').slice(0,n);
-  const AU_KM = 149597871;
-  function updHud(){
-    elTime.textContent = `t = ${t.toFixed(2)} yr     speed ×${substeps}${paused?'   (paused)':''}`;
-    rowBodies.forEach((b, i) => {
-      if (b.moon){
-        const d = Math.hypot(b.x-EARTH.x, b.y-EARTH.y);
-        rowEls[i].innerHTML =
-          `<span style="color:${b.color}">${pad(b.name,8)}</span> ↺Earth ${b.aM.toFixed(5)} AU  e ${b.eM.toFixed(3)}  T 27.3 d`;
-      } else {
-        const r = Math.hypot(b.x-SUN.x, b.y-SUN.y), T = Math.pow(b.a, 1.5);
-        rowEls[i].innerHTML =
-          `<span style="color:${b.color}">${pad(b.name,8)}</span> a ${b.a.toFixed(2).padStart(5)}  e ${b.e.toFixed(3)}  T ${T.toFixed(2).padStart(6)} yr   r ${r.toFixed(2)} AU`;
-      }
+  const pad = (s,n) => (s + '            ').slice(0,n);
+  const KMS = 4.74057;   // 1 AU/yr in km/s
+
+  // ---- Editor: select any object (table row or canvas click) → tweak mass / velocity, or delete ----
+  let selected = null;
+  const ePanel = document.getElementById('edit-panel'), eName = document.getElementById('edit-name');
+  const emEl = document.getElementById('em-slider'), esEl = document.getElementById('es-slider'), edEl = document.getElementById('ed-slider');
+  const emV = document.getElementById('em-val'), esV = document.getElementById('es-val'), edV = document.getElementById('ed-val');
+  const esRow = document.getElementById('es-row'), edRow = document.getElementById('ed-row');
+  const refOf = o => o.moon ? EARTH : SUN;                                  // what it orbits
+  const vCirc = o => { const r = refOf(o), d = Math.hypot(o.x-r.x, o.y-r.y); return Math.sqrt(G*r.m/Math.max(d,1e-6)); };
+  const sliderToMass = v => Math.pow(10, -13 + 13*(v/1000));                // solar masses
+  const massToSlider = m => Math.max(0, Math.min(1000, Math.round(1000*(Math.log10(m)+13)/13)));
+  function editLabels(){
+    const m = sliderToMass(emEl.value), me = m/3.0035e-6, mj = m/9.5425e-4;
+    emV.textContent = m>=0.06 ? m.toFixed(2)+' M☉' : mj>=1 ? mj.toFixed(1)+' Mⱼ' : me>=0.05 ? me.toFixed(2)+' M⊕' : 'tiny';
+    esV.textContent = (esEl.value/1000*2.5).toFixed(2)+'× circ';
+    edV.textContent = edEl.value+'°';
+  }
+  function selectBody(o){
+    if (!o || o.deleted || o.dead){ deselect(); return; }
+    selected = o; eName.textContent = o.name || 'Comet';
+    emEl.value = massToSlider(o.m);
+    const isSun = o === SUN;                          // the Sun has no orbital speed to edit
+    esRow.style.display = isSun ? 'none' : '';
+    edRow.style.display = isSun ? 'none' : '';
+    if (!isSun){
+      const r = refOf(o), vrx = o.vx-r.vx, vry = o.vy-r.vy;
+      esEl.value = Math.round(1000 * Math.min(2.5, Math.hypot(vrx,vry)/vCirc(o)) / 2.5);
+      edEl.value = Math.round(((Math.atan2(vry,vrx)*180/Math.PI)%360 + 360) % 360);
+    }
+    editLabels(); ePanel.hidden = false;
+  }
+  function deselect(){ selected = null; ePanel.hidden = true; }
+  function applyMass(){ if (!selected) return; selected.m = sliderToMass(emEl.value); selected.edited = true; E0 = energy(); editLabels(); }
+  function applyVel(){ if (!selected || selected === SUN) return; const b = selected, r = refOf(b);
+    const sp = (esEl.value/1000*2.5)*vCirc(b), ang = edEl.value*Math.PI/180;
+    b.vx = r.vx + sp*Math.cos(ang); b.vy = r.vy + sp*Math.sin(ang); b.edited = true; E0 = energy(); editLabels();
+  }
+  emEl.addEventListener('input', applyMass);
+  esEl.addEventListener('input', applyVel);
+  edEl.addEventListener('input', applyVel);
+  document.getElementById('edit-close').addEventListener('click', deselect);
+  document.getElementById('edit-delete').addEventListener('click', () => {
+    if (!selected) return;
+    const b = selected;
+    if (comets.includes(b)) b.dead = true;                                  // a comet / interloper
+    else { b.deleted = true; if (b === EARTH) MOON.deleted = true; }         // a Moon with no Earth makes no sense
+    if (follow === b){ follow = null; zoom = 1; }                            // stop tracking a ghost
+    E0 = energy(); deselect();
+  });
+  function pick(o){
+    selectBody(o); if (!selected) return;
+    if (o === SUN) follow = null;                                           // edit the Sun in the system view
+    else if (o.moon || o === EARTH){ follow = EARTH; if (zoom < 3) zoom = 3; }
+    else follow = o;
+  }
+
+  // ---- the object table: Sun + planets + Moon + live comets ----
+  let tableRows = [];
+  const HEAD = `${pad('Body',14)} ${pad('Mass',12)} ${pad('Dist',9)} ${pad('Speed',11)} Period`;
+  function rebuildTable(objs){
+    rowsEl.innerHTML = '';
+    const h = document.createElement('div'); h.className = 'row dim'; h.textContent = HEAD; rowsEl.appendChild(h);
+    tableRows = objs.map(o => {
+      const el = document.createElement('div'); el.className = 'row clickable';
+      el.addEventListener('click', () => pick(o));
+      rowsEl.appendChild(el); return { obj:o, el };
     });
+  }
+  function fmtMass(mS){
+    const me = mS/3.0035e-6;
+    if (mS >= 0.04) return mS.toFixed(2)+' M☉';
+    if (me >= 0.005) return (me>=100 ? me.toFixed(0) : me>=1 ? me.toFixed(2) : me.toFixed(3))+' M⊕';
+    return (mS*1.989e30).toExponential(1)+' kg';
+  }
+  function rowText(o){
+    const nm = `<span style="color:${o.color||'#cfd6e6'}">${pad(o.name||'Comet',14)}</span>`;
+    const rs = Math.hypot(o.x-SUN.x, o.y-SUN.y);
+    const dist = o===SUN ? '—' : (rs>=100 ? rs.toFixed(0) : rs.toFixed(2))+' AU';
+    const spd = (o===SUN ? Math.hypot(SUN.vx,SUN.vy) : Math.hypot(o.vx-SUN.vx, o.vy-SUN.vy)) * KMS;
+    const pref = o.moon ? EARTH : SUN;
+    const dx=o.x-pref.x, dy=o.y-pref.y, r=Math.hypot(dx,dy);
+    const vx=o.vx-pref.vx, vy=o.vy-pref.vy, v2=vx*vx+vy*vy, mu=G*(pref.m+(o.m||0));
+    const a = 1/(2/r - v2/mu);
+    const per = o===SUN ? '—' : a>0
+      ? (() => { const T=2*Math.PI*Math.sqrt(a*a*a/mu); return T<0.5 ? Math.round(T*365.25)+' d' : T.toFixed(2)+' yr'; })()
+      : 'unbound';
+    return `${nm} ${pad(fmtMass(o.m||0),12)} ${pad(dist,9)} ${pad(spd.toFixed(1)+' km/s',11)} ${per}`;
+  }
+
+  function updHud(){
+    if (selected && (selected.deleted || selected.dead)) deselect();        // selected object went away
+    if (follow && (follow.deleted || follow.dead)){ follow = null; zoom = 1; }
+    elTime.textContent = `t = ${t.toFixed(2)} yr     speed ×${substeps}${paused?'   (paused)':''}`;
+    const objs = [SUN, ...planets.filter(p=>!p.deleted), ...(MOON.deleted?[]:[MOON]), ...comets];
+    if (tableRows.length !== objs.length || tableRows.some((tr,i)=> tr.obj !== objs[i])) rebuildTable(objs);
+    tableRows.forEach(({obj,el}) => { el.innerHTML = rowText(obj); el.classList.toggle('sel', obj === selected); });
     const rel = Math.abs((energy() - E0) / E0), ok = rel < 1e-3;
     elHealth.className = 'row dim' + (ok ? ' ok' : ' warn');
     elHealth.textContent = `total energy conserved — drift ${rel.toExponential(1)} ${ok ? '✓' : ''}`;
     const z = zoom < 10 ? zoom.toFixed(1) : Math.round(zoom);
-    elView.textContent = `view: ${follow ? 'following ' + follow.name : 'whole system'}  ×${z}   ·   log radial scale · Moon ×${MOON_EXAG}`;
+    elView.textContent = `view: ${follow ? 'following ' + (follow.name||'comet') : 'whole system'}  ×${z}   ·   log radial scale · Moon ×${MOON_EXAG}`;
   }
 
   // ---- Main loop ----
@@ -408,13 +534,13 @@
     const mx = e.clientX-rect.left, my = e.clientY-rect.top;
     let best = null, bd = 1e9;
     for (const b of bodies){
+      if (b.deleted) continue;
       const [bx, by] = scr(b.x, b.y);
       const d = Math.hypot(bx-mx, by-my), thr = Math.max((b.sun?21:b.size)+10, 14);
       if (d < thr && d < bd){ bd = d; best = b; }
     }
-    if (!best || best.sun){ follow = null; zoom = 1; }
-    else if (best === EARTH || best === MOON){ follow = EARTH; if (zoom < 3) zoom = 3; }
-    else { follow = best; }
+    if (!best || best.sun){ follow = null; zoom = 1; deselect(); }
+    else pick(best);
   });
   // ---- Comet launch panel ----
   const cPanel = document.getElementById('comet-panel'), cToggle = document.getElementById('comet-toggle');
