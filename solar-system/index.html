@@ -141,13 +141,14 @@
   // illustrative — a ~92-min ISS orbit can't be resolved at a 1.75-hr step — tuned so inner = faster.
   const ER_KM = 6371, AU_KM = 1.495979e8;   // Earth radius, 1 AU
   const EARTH_SPIN = 0.05;   // yr per rotation (illustrative). The Geo sat shares this exactly → it stays over one spot.
-  const EARTH_LAND = [       // crude polar-view "continents" that rotate with the spin, so you can see Earth turning
-    { a:0.4, r:0.50, w:0.42, h:0.30, c:'#3f8f5a' },
-    { a:1.7, r:0.42, w:0.40, h:0.40, c:'#4d9a64' },
-    { a:2.9, r:0.58, w:0.30, h:0.26, c:'#3f8f5a' },
-    { a:4.3, r:0.48, w:0.38, h:0.42, c:'#479060' },
-    { a:5.5, r:0.62, w:0.26, h:0.22, c:'#56a06e' },
+  // Polar-view continents [angle, radiusFrac, widthFrac, heightFrac, tilt]; the whole map rotates rigidly with the spin.
+  const EARTH_LAND = [
+    [0.45,0.38,0.30,0.22,0.4],[0.85,0.55,0.20,0.15,1.0],[0.25,0.60,0.15,0.12,-0.3],[0.62,0.18,0.17,0.15,0.2],
+    [2.45,0.46,0.26,0.30,1.2],[2.78,0.27,0.17,0.15,0.6],
+    [4.15,0.50,0.30,0.20,-0.5],[4.50,0.31,0.17,0.20,0.3],
+    [5.55,0.55,0.13,0.11,0.0],
   ];
+  const EARTH_CLOUD = [ [0.9,0.50,0.40,0.16,0.3],[2.6,0.34,0.32,0.15,1.0],[4.1,0.56,0.34,0.14,-0.4],[5.3,0.28,0.26,0.13,0.5] ];
   const EV_SATS = [
     { name:'ISS',     rkm:6779,  period:0.015, phase:0.6, color:'#eef2f8', size:2.2 },
     { name:'Hubble',  rkm:6911,  period:0.020, phase:2.3, color:'#aebccf', size:2.0 },
@@ -401,11 +402,7 @@
     for (const p of shown){
       const [bx, by] = scr(p.x, p.y);
       p._sx = bx; p._sy = by; p._drawn = true;
-      if (earthView && p === EARTH){                               // a big blue globe — the star of the planet view
-        const er = 7*zoom;                                         // Earth drawn at its real-radius scale for the diorama
-        const g = ctx.createRadialGradient(bx-er*0.3, by-er*0.3, er*0.1, bx, by, er);
-        g.addColorStop(0,'#cfe2ff'); g.addColorStop(0.5,'#4a86d8'); g.addColorStop(1,'#16315f');
-        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(bx, by, er, 0, 2*Math.PI); ctx.fill();
+      if (earthView && p === EARTH){                               // the full globe is rendered in the planet-view block below
       } else {
         ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(bx, by, p.size, 0, 2*Math.PI); ctx.fill();
       }
@@ -418,15 +415,30 @@
       const er = 7*zoom, spin = 2*Math.PI * t / EARTH_SPIN;
       const evR = rkm => { const altER = rkm/ER_KM - 1; return altER <= 0 ? er : er + 11*zoom*Math.log10(1 + altER*30); };
       const drawRing = rr => { ctx.strokeStyle='rgba(150,170,210,0.13)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(eix,eiy,rr,0,2*Math.PI); ctx.stroke(); };
-      // spinning surface — continents (clipped to the globe) rotate around the centre so the spin is visible
+      // ===== rendered Earth: atmosphere · oceans · rigidly-spinning continents + clouds · polar ice · day-night shading =====
+      const surface = (arr, rot, fill) => {   // draw a list of blobs as one rigid map rotated by rot (so the globe turns)
+        ctx.save(); ctx.translate(eix, eiy); ctx.rotate(rot); ctx.fillStyle = fill;
+        for (const L of arr){ ctx.save(); ctx.translate(Math.cos(L[0])*L[1]*er, -Math.sin(L[0])*L[1]*er); ctx.rotate(L[4]||0);
+          ctx.beginPath(); ctx.ellipse(0, 0, L[2]*er, L[3]*er, 0, 0, 2*Math.PI); ctx.fill(); ctx.restore(); }
+        ctx.restore();
+      };
+      let g = ctx.createRadialGradient(eix, eiy, er*0.92, eix, eiy, er*1.28);   // atmosphere halo
+      g.addColorStop(0,'rgba(130,185,255,0.40)'); g.addColorStop(1,'rgba(130,185,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(eix, eiy, er*1.28, 0, 2*Math.PI); ctx.fill();
       ctx.save();
       ctx.beginPath(); ctx.arc(eix, eiy, er, 0, 2*Math.PI); ctx.clip();
-      for (const L of EARTH_LAND){
-        const a = L.a + spin, lx = eix + Math.cos(a)*L.r*er, ly = eiy - Math.sin(a)*L.r*er;
-        ctx.fillStyle = L.c; ctx.globalAlpha = 0.82;
-        ctx.beginPath(); ctx.ellipse(lx, ly, L.w*er, L.h*er, -a, 0, 2*Math.PI); ctx.fill();
-      }
-      ctx.globalAlpha = 1; ctx.restore();
+      ctx.fillStyle = '#16467e'; ctx.fillRect(eix-er, eiy-er, 2*er, 2*er);      // ocean
+      surface(EARTH_LAND, -spin, '#46915a');                                    // continents (rigid rotation)
+      g = ctx.createRadialGradient(eix, eiy, 0, eix, eiy, er*0.26);            // polar ice cap (pole at centre)
+      g.addColorStop(0,'rgba(248,252,255,0.9)'); g.addColorStop(0.65,'rgba(238,247,255,0.4)'); g.addColorStop(1,'rgba(238,247,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(eix, eiy, er*0.26, 0, 2*Math.PI); ctx.fill();
+      surface(EARTH_CLOUD, -spin*1.15, 'rgba(255,255,255,0.26)');               // clouds drift a touch faster
+      g = ctx.createRadialGradient(eix-er*0.4, eiy-er*0.4, er*0.1, eix+er*0.3, eiy+er*0.3, er*1.35);   // sun-lit / night
+      g.addColorStop(0,'rgba(255,255,255,0.22)'); g.addColorStop(0.45,'rgba(255,255,255,0)');
+      g.addColorStop(0.74,'rgba(0,0,15,0.12)'); g.addColorStop(1,'rgba(0,0,12,0.66)');
+      ctx.fillStyle = g; ctx.fillRect(eix-er, eiy-er, 2*er, 2*er);
+      ctx.restore();
+      ctx.strokeStyle = 'rgba(150,200,255,0.45)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(eix, eiy, er, 0, 2*Math.PI); ctx.stroke();
       // geostationary tether: a line from Earth through a fixed ground spot out to the Geo sat — all share the spin
       const grr = evR(42164), gx = eix + Math.cos(spin)*grr, gy = eiy - Math.sin(spin)*grr;
       ctx.strokeStyle = 'rgba(232,211,160,0.32)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
