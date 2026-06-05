@@ -31,6 +31,19 @@
   #comet-panel label{display:block;margin:0 0 12px;color:#9fabc2;font-weight:500;}
   #comet-panel label span{float:right;color:#eaf1ff;font-weight:600;font-variant-numeric:tabular-nums;}
   #comet-panel input[type=range]{width:100%;margin:7px 0 0;accent-color:#6f9dff;cursor:pointer;}
+  #launch-panel{position:fixed;right:16px;bottom:16px;width:206px;padding:13px 14px 11px;text-align:left;
+    background:rgba(18,24,38,0.92);border:1px solid rgba(150,170,210,0.3);border-radius:10px;
+    -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);font:600 12px/1.3 system-ui,sans-serif;color:#e6edf8;}
+  #launch-title{font-weight:700;color:#fff;margin:0 0 11px;}
+  #launch-panel label{display:block;margin:0 0 11px;color:#9fabc2;font-weight:500;}
+  #launch-panel label span{float:right;color:#eaf1ff;font-weight:600;font-variant-numeric:tabular-nums;}
+  #launch-panel input[type=range]{width:100%;margin:7px 0 0;accent-color:#6f9dff;cursor:pointer;}
+  #launch-dir{width:100%;margin:0 0 7px;padding:7px;text-align:center;cursor:pointer;font:inherit;color:#dfe7f5;
+    background:rgba(42,54,78,0.7);border:1px solid rgba(150,170,210,0.35);border-radius:8px;}
+  #launch-dir:hover{background:rgba(62,78,112,0.9);}
+  #launch-go{width:100%;padding:8px;text-align:center;cursor:pointer;font:inherit;font-weight:600;color:#eaf1ff;
+    background:rgba(74,108,190,0.6);border:1px solid rgba(150,180,255,0.6);border-radius:8px;}
+  #launch-go:hover{background:rgba(92,130,225,0.82);}
   #comet-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px;}
   #comet-launch{flex:1 1 100%;text-align:center;background:rgba(74,108,190,0.55);border-color:rgba(150,180,255,0.6);}
   #comet-random,#comet-storm{flex:1;font:inherit;color:#e6edf8;background:rgba(42,54,78,0.72);border:1px solid rgba(150,170,210,0.35);border-radius:9px;padding:9px 8px;cursor:pointer;white-space:nowrap;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
@@ -109,6 +122,12 @@
   </div>
   <button id="edit-delete" type="button">Delete this body</button>
 </div>
+<div id="launch-panel" hidden>
+  <div id="launch-title">🛰 Launch to orbit</div>
+  <label>Altitude <span id="la-val"></span><input id="la-slider" type="range" min="200" max="35786" value="800"></label>
+  <button id="launch-dir" type="button">↻ prograde (with spin)</button>
+  <button id="launch-go" type="button">Launch 🚀</button>
+</div>
 <div id="hint">Full N-body gravity — every body pulls on every other (the Sun is free too).&nbsp;&nbsp;<b>Scroll</b> to zoom · <b>click a body or its list row</b> to select &amp; edit · <b>[E]</b> Earth view · <b>[0]</b> reset view · <b>[C]</b> launch comet (tune it in the ☄ panel) · [Space] pause · [↑&nbsp;↓] speed · [R] reset</div>
 <script>
 (() => {
@@ -161,6 +180,7 @@
   const EV_SPEED = 0.003;        // "years" of planet-clock per real second → Earth rotates ≈ every 16 s
   let comets = [], flashes = [], cometSeq = 0;
   let storm = [];   // lightweight bulk test-particles (the "Storm" button) — NOT in the table, never perturb
+  let launches = [], launchDir = 1;   // planet-view satellite launches: animated ascent → circular orbit insertion
   let baryX = 0, baryY = 0;   // mass-weighted centre of the whole system (cached per frame); the view centres here
   function curBary(){
     let mx = 0, my = 0, M = 0;
@@ -187,7 +207,7 @@
     const vcx = px/M, vcy = py/M;
     for (const b of bodies){ b.vx -= vcx; b.vy -= vcy; }
     for (const b of bodies){ b.trail = []; b.deleted = false; b.edited = false; }
-    MOON.rel = []; comets = []; flashes = []; cometSeq = 0; storm = [];
+    MOON.rel = []; comets = []; flashes = []; cometSeq = 0; storm = []; launches = [];
     if (typeof deselect === 'function') deselect();
     t = 0; E0 = energy();
   }
@@ -463,6 +483,21 @@
         ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(sX, sY, s.size, 0, 2*Math.PI); ctx.fill();
         label(s.name, s.color, sX, sY, s.size+4);
       }
+      // launched satellites: animated ascent (smooth altitude rise + gravity-turn) → circular orbit insertion
+      for (const L of launches){
+        const e = evClock - L.t0, w = 2*Math.PI/L.period, ASC = 0.02;
+        let r, ang, ascending = e < ASC;
+        if (ascending){ const p = e/ASC, s = p*p*(3-2*p); r = ER_KM + (L.targetR-ER_KM)*s; ang = L.phase0 + L.dir*w*ASC*0.5*p*p; }
+        else { r = L.targetR; ang = L.phase0 + L.dir*w*ASC*0.5 + L.dir*w*(e-ASC); }
+        L.trail.push([r, ang]); if (L.trail.length > 150) L.trail.shift();
+        ctx.strokeStyle = 'rgba(255,201,120,0.55)'; ctx.lineWidth = 1.4; ctx.beginPath();
+        for (let i=0;i<L.trail.length;i++){ const rr=evR(L.trail[i][0]), a=L.trail[i][1], x=eix+Math.cos(a)*rr, y=eiy-Math.sin(a)*rr; i?ctx.lineTo(x,y):ctx.moveTo(x,y); }
+        ctx.stroke();
+        const rr = evR(r), sx = eix+Math.cos(ang)*rr, sy = eiy-Math.sin(ang)*rr;
+        if (ascending){ ctx.fillStyle='rgba(255,150,60,0.9)'; ctx.beginPath(); ctx.arc(sx,sy,4.5,0,2*Math.PI); ctx.fill(); }  // exhaust glow
+        ctx.fillStyle = ascending ? '#ffd27a' : '#eef2f8'; ctx.beginPath(); ctx.arc(sx, sy, 2.4, 0, 2*Math.PI); ctx.fill();
+        label(ascending ? '🛰 ascending' : 'Sat', '#ffe7b0', sx, sy, 6);
+      }
       // (Moon omitted here — it's 60× farther out; it lives in the system view)
     } else if (!MOON.deleted && !EARTH.deleted){
       // ---- system view: Moon drawn ×MOON_EXAG, magnification tapering once it's flung off its orbit ----
@@ -549,6 +584,7 @@
   const elTime = document.getElementById('time');
   const elHealth = document.getElementById('health');
   const elView = document.getElementById('view');
+  const launchPanel = document.getElementById('launch-panel');
   const rowsEl = document.getElementById('rows');
   const pad = (s,n) => (s + '            ').slice(0,n);
   const KMS = 4.74057;   // 1 AU/yr in km/s
@@ -656,6 +692,7 @@
   function updHud(){
     if (selected && (selected.deleted || selected.dead)) deselect();        // selected object went away
     if (follow && (follow.deleted || follow.dead)){ follow = null; zoom = 1; }
+    launchPanel.hidden = follow !== EARTH;                                   // satellite-launch panel only in the planet view
     elTime.textContent = `t = ${t.toFixed(2)} yr     ${timeRate===0 ? '(paused)' : (timeRate<0?'◀ reverse ×'+(-timeRate):'speed ×'+timeRate)}`;
     const objs = [SUN, ...planets.filter(p=>!p.deleted), ...(MOON.deleted?[]:[MOON]), ...comets];
     if (tableRows.length !== objs.length || tableRows.some((tr,i)=> tr.obj !== objs[i])) rebuildTable(objs);
@@ -774,6 +811,18 @@
     launchComet();
   });
   document.getElementById('comet-storm').addEventListener('click', launchStorm);
+  // ---- satellite launch (planet view) ----
+  const laEl = document.getElementById('la-slider'), laV = document.getElementById('la-val'), launchDirBtn = document.getElementById('launch-dir');
+  function updLaunchLabel(){ const a = +laEl.value, band = a >= 35000 ? 'geostationary' : a >= 2000 ? 'MEO' : 'LEO';
+    laV.textContent = a.toLocaleString('en-US') + ' km · ' + band; }
+  laEl.addEventListener('input', updLaunchLabel); updLaunchLabel();
+  launchDirBtn.addEventListener('click', () => { launchDir = -launchDir;
+    launchDirBtn.textContent = launchDir > 0 ? '↻ prograde (with spin)' : '↺ retrograde (against spin)'; });
+  document.getElementById('launch-go').addEventListener('click', () => {
+    const targetR = ER_KM + (+laEl.value), period = 4.5e-5 * Math.pow(targetR, 0.659);   // decorative period (matches the preset sats)
+    launches.push({ targetR, dir: launchDir, phase0: 2*Math.PI*evClock/EARTH_SPIN, t0: evClock, period, trail: [] });
+    if (launches.length > 8) launches.shift();
+  });
   // ---- time speed (forward / pause / reverse) ----
   const speedSlider = document.getElementById('speed-slider');
   function setRate(v){ timeRate = Math.max(-32, Math.min(32, Math.round(v))); if (timeRate !== 0) lastRate = timeRate; speedSlider.value = timeRate; }
