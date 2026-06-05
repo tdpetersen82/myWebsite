@@ -1,0 +1,697 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+    <title>Minesweeper — Free Online Puzzle Game | Limestone Games</title>
+    <meta name="description" content="Play Minesweeper free in your browser. Beginner, Intermediate, and Expert boards, first-click-safe, flagging, chording, and a timer. Best times saved locally.">
+    <meta name="keywords" content="minesweeper, minesweeper online, free minesweeper, play minesweeper, mine sweeper, browser minesweeper, beginner intermediate expert minesweeper, puzzle game">
+    <link rel="canonical" href="https://limestonegames.com/minesweeper/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Minesweeper","description":"Play Minesweeper free in your browser. Beginner, Intermediate, and Expert boards, first-click-safe, flagging, chording, and a timer.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Minesweeper"}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Minesweeper?", "acceptedAnswer": {"@type": "Answer", "text": "Reveal squares to uncover the board. Each number tells you how many mines touch that square. Use those clues to deduce where the mines are, flag them, and clear every safe square without detonating one."}}, {"@type": "Question", "name": "Is Minesweeper free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs. Just open and play."}}, {"@type": "Question", "name": "Is the first click always safe?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — mines are placed after your first click, so your opening square (and the squares around it) are never a mine. You always start with an open area."}}, {"@type": "Question", "name": "Are my best times saved?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your fastest clear for each difficulty is stored locally in your browser, and a game in progress is saved so you can pick up where you left off."}}]}</script>
+    <meta property="og:title" content="Minesweeper — Free Online Puzzle Game | Limestone Games">
+    <meta property="og:description" content="Play Minesweeper free in your browser. Three board sizes, first-click-safe, flagging, chording, and a timer.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/minesweeper/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Minesweeper — Free Online Puzzle Game | Limestone Games">
+    <meta name="twitter:description" content="Play Minesweeper free in your browser. Three board sizes, first-click-safe, flagging, chording, and a timer.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <!-- AdSense loader disabled until approved: <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+
+    <style>
+      :root {
+        --ink: #2A2017;
+        --paper: #F7EFE1;
+        --frame: #2A2017;
+        --accent: #C96F2A;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, #F7EFE1 0%, #E8D9C0 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 16px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 1040px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .top-bar {
+        width: 100%; display: flex; align-items: center; gap: 16px;
+        padding: 11px 16px 12px;
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(8px);
+        border: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+        border-radius: 16px;
+        box-shadow: 0 10px 28px -16px color-mix(in oklab, var(--frame) 55%, transparent);
+        position: relative; overflow: hidden;
+        flex-wrap: wrap;
+      }
+      .top-bar::after {
+        content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        opacity: 0.65; pointer-events: none;
+      }
+      .tb-back {
+        display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+        padding: 8px 14px; border-radius: 999px;
+        border: 1px solid color-mix(in oklab, var(--ink) 16%, transparent);
+        background: rgba(255, 255, 255, 0.55);
+        color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 600;
+        transition: border-color 0.15s, color 0.15s;
+      }
+      .tb-back:hover { border-color: var(--accent); color: var(--accent); }
+      .tb-title { display: flex; flex-direction: column; gap: 3px; margin-right: auto; }
+      .tb-eyebrow {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+        color: var(--accent);
+      }
+      .tb-dot {
+        width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
+      }
+      h1 {
+        font-family: 'Bricolage Grotesque', serif;
+        font-size: 22px; font-weight: 800; letter-spacing: -0.4px; line-height: 1;
+        color: var(--frame);
+      }
+      .stats {
+        display: flex; gap: 18px; font-size: 14px; font-weight: 600;
+        flex-wrap: wrap; align-items: center;
+      }
+      .stats > div { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; line-height: 1; }
+      .stats .l { color: color-mix(in oklab, var(--ink) 50%, transparent); font-weight: 600; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.12em; }
+      .stats .v { font-size: 16px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+      .stats .v.mono { color: var(--ink); font-family: 'JetBrains Mono', ui-monospace, monospace; }
+
+      .setup { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+      select.diff {
+        font: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+        padding: 8px 12px; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--ink) 20%, transparent);
+        background: #fff; cursor: pointer;
+      }
+
+      .stage-wrap {
+        position: relative;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 12px 30px rgba(42, 32, 23, 0.12);
+        align-self: center;
+        max-width: 100%;
+      }
+      .board-fit { position: relative; }
+      .board {
+        position: absolute; top: 0; left: 0; transform-origin: top left;
+        display: grid;
+        background: var(--frame);
+        border: 3px solid var(--frame);
+        border-radius: 6px;
+        gap: 2px;
+        touch-action: manipulation;
+        user-select: none; -webkit-user-select: none;
+      }
+      .cell {
+        width: 34px; height: 34px;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Bricolage Grotesque', 'Inter', sans-serif;
+        font-size: 19px; font-weight: 800; line-height: 1;
+        cursor: pointer; position: relative;
+        background: linear-gradient(155deg, #EAD9BC, #DFC9A3);
+        border-radius: 4px;
+        box-shadow: inset 0 1px 0 rgba(255,255,255,0.55), inset 0 -2px 3px rgba(42,32,23,0.18);
+        transition: background 0.08s;
+      }
+      .cell:hover:not(.open):not(.flag) { background: linear-gradient(155deg, #F0E3CC, #E6D2AF); }
+      .cell.open {
+        background: var(--paper);
+        box-shadow: inset 0 0 0 1px rgba(42,32,23,0.08);
+        cursor: default;
+      }
+      .cell.flag { cursor: pointer; }
+      .cell.flag::after { content: '🚩'; font-size: 18px; }
+      .cell.mine { background: #B33B2E; }
+      .cell.mine::after { content: '💣'; font-size: 18px; }
+      .cell.mine.boom { background: #8E1B12; box-shadow: 0 0 0 2px #5a0f08 inset; }
+      .cell.wrong-flag { background: #E0C9A0; }
+      .cell.wrong-flag::after { content: '💣'; font-size: 17px; opacity: 0.55; }
+      .cell.wrong-flag::before {
+        content: '✕'; position: absolute; color: #B33B2E; font-size: 22px; font-weight: 900;
+        z-index: 2;
+      }
+      .cell.n1 { color: #1976D2; }
+      .cell.n2 { color: #2E7D32; }
+      .cell.n3 { color: #C62828; }
+      .cell.n4 { color: #6A1B9A; }
+      .cell.n5 { color: #AD5B00; }
+      .cell.n6 { color: #00838F; }
+      .cell.n7 { color: #37474F; }
+      .cell.n8 { color: #5D4037; }
+
+      .overlay {
+        position: absolute; inset: 14px;
+        background: rgba(247, 239, 225, 0.95);
+        border-radius: 8px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+        opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        text-align: center; padding: 24px;
+      }
+      .overlay.show { opacity: 1; pointer-events: auto; }
+      .overlay h2 { font-family: 'Bricolage Grotesque', serif; font-size: 30px; }
+      .overlay.win h2 { color: var(--accent); }
+      .overlay.lose h2 { color: #B33B2E; }
+      .overlay .big-time { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 26px; font-weight: 700; color: var(--ink); }
+      .overlay p { font-size: 15px; color: rgba(42, 32, 23, 0.78); max-width: 380px; }
+      .overlay .pb { font-weight: 800; color: var(--accent); }
+      .overlay .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+      .tools { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+      button {
+        font: inherit; font-weight: 700;
+        padding: 10px 16px; border-radius: 999px;
+        border: 2px solid transparent;
+        background: var(--accent); color: #fff;
+        cursor: pointer; transition: transform 0.1s, background 0.15s;
+        box-shadow: 0 4px 12px rgba(201, 111, 42, 0.3);
+        display: inline-flex; align-items: center; gap: 7px;
+      }
+      button:hover { transform: translateY(-1px); }
+      button:active { transform: translateY(1px); }
+      button.ghost { background: transparent; color: var(--ink); border-color: rgba(42, 32, 23, 0.2); box-shadow: none; }
+      button.ghost.on { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 12px rgba(201, 111, 42, 0.3); }
+      .face-btn { font-size: 20px; padding: 8px 14px; line-height: 1; }
+
+      .status { font-size: 13px; color: rgba(42, 32, 23, 0.75); min-height: 18px; text-align: center; }
+      .hint-line { font-size: 13px; color: rgba(42, 32, 23, 0.6); text-align: center; max-width: 600px; }
+
+      #how { padding: 20px 16px; max-width: 640px; }
+      #how summary { cursor: pointer; }
+      #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin-bottom: 8px; display: inline; }
+      #how h3 { font-family: 'Bricolage Grotesque', serif; font-size: 16px; color: var(--frame); margin: 16px 0 6px; }
+      #how p { font-size: 14px; color: rgba(42, 32, 23, 0.78); margin-bottom: 8px; }
+      #how ul { padding-left: 20px; font-size: 14px; color: rgba(42, 32, 23, 0.82); margin-bottom: 8px; }
+      #how li { margin-bottom: 4px; }
+      #how kbd {
+        display: inline-block; padding: 1px 7px; border-radius: 5px;
+        background: rgba(42, 32, 23, 0.08); border: 1px solid rgba(42, 32, 23, 0.18);
+        font-family: ui-monospace, monospace; font-size: 12px;
+      }
+      .related-games-list { list-style: none; padding-left: 0 !important; display: flex; flex-wrap: wrap; gap: 8px; }
+      .related-games-list a {
+        display: inline-block; padding: 6px 14px; border-radius: 999px;
+        background: rgba(201, 111, 42, 0.12); color: var(--accent);
+        text-decoration: none; font-weight: 700; font-size: 13px;
+      }
+      .related-games-list a:hover { background: rgba(201, 111, 42, 0.2); }
+    </style>
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260528b">
+</head>
+<body>
+    <div class="game-shell">
+        <header class="top-bar">
+            <a class="tb-back" href="../strategy/">← Strategy</a>
+            <div class="tb-title">
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Logic puzzle · solo</span>
+                <h1>Minesweeper</h1>
+            </div>
+            <div class="stats">
+                <div><span class="l">Mines</span><span class="v mono" id="mineCount">10</span></div>
+                <div><span class="l">Time</span><span class="v mono" id="time">0:00</span></div>
+                <div><span class="l">Best</span><span class="v" id="best">—</span></div>
+            </div>
+        </header>
+
+        <div class="setup">
+            <select class="diff" id="diff" aria-label="Difficulty">
+                <option value="beginner">Beginner · 9×9 · 10</option>
+                <option value="intermediate">Intermediate · 16×16 · 40</option>
+                <option value="expert">Expert · 30×16 · 99</option>
+            </select>
+            <button class="face-btn" id="faceBtn" title="New game" aria-label="New game">🙂</button>
+        </div>
+
+        <div class="stage-wrap">
+            <div class="board-fit" id="boardFit">
+                <div class="board" id="board" role="grid" aria-label="Minesweeper board"></div>
+            </div>
+            <div class="overlay" id="overlay">
+                <h2 id="overTitle">Cleared!</h2>
+                <div class="big-time" id="overTime">0:00</div>
+                <p id="overMsg"></p>
+                <div class="actions">
+                    <button id="overNew">New game</button>
+                    <a href="../strategy/"><button class="ghost">More games</button></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="tools">
+            <button class="ghost" id="flagBtn" title="Toggle flag mode (F)">🚩 Flag mode <span class="tag" id="flagState">Off</span></button>
+            <button class="ghost" id="newBtn">New game</button>
+        </div>
+
+        <div class="status" id="status">Click any square to start. The first click is always safe.</div>
+        <p class="hint-line">Tip: <b>right-click</b> (or turn on Flag mode) to mark a mine. Click a number with the right count of flags around it to clear its neighbors.</p>
+
+        <details id="how">
+            <summary><h2>How to play Minesweeper</h2></summary>
+            <p>Minesweeper is a deduction puzzle. Hidden under the grid are mines; the rest of the squares are safe. Reveal a safe square and it shows a number — how many of its eight neighbors are mines. A blank square (zero) means none of its neighbors are mines, so the board opens up automatically. Use the numbers to reason out exactly where the mines are, flag them, and clear every safe square to win.</p>
+
+            <h3>Controls</h3>
+            <ul>
+                <li><b>Left-click / tap</b> — reveal a square.</li>
+                <li><b>Right-click</b> (or turn on <b>Flag mode</b>, or long-press on touch) — plant or remove a flag.</li>
+                <li><b>Click a revealed number</b> — if you've flagged exactly that many neighbors, it clears the rest (a "chord"). A fast way to open big areas — but only when your flags are right.</li>
+                <li><kbd>F</kbd> — toggle Flag mode; <kbd>N</kbd> — new game.</li>
+            </ul>
+
+            <h3>Tips &amp; strategy</h3>
+            <ul>
+                <li><b>Start in the open.</b> Your first click is always safe and opens a blank region — work outward from its edges.</li>
+                <li><b>Read the 1s.</b> A "1" touching a single covered square means that square is the mine. Flag it, then look at what that flag unlocks elsewhere.</li>
+                <li><b>Subtract overlaps.</b> When two numbers share covered squares, compare them — the difference often pins down a mine or a guaranteed-safe square.</li>
+                <li><b>Chord to go fast.</b> Once a number's mines are all flagged, click it to sweep the safe neighbors in one move.</li>
+            </ul>
+
+            <h3>About the difficulties</h3>
+            <p>The three boards are the classics: <b>Beginner</b> (9×9, 10 mines), <b>Intermediate</b> (16×16, 40 mines), and <b>Expert</b> (30×16, 99 mines). The first click is always safe on every board, and your fastest clear for each is saved in your browser along with any game you leave unfinished.</p>
+
+            <h3>Frequently asked</h3>
+            <p><b>How do I play Minesweeper?</b> Reveal safe squares; each number counts the mines touching it. Deduce where the mines are, flag them, and clear everything else.</p>
+            <p><b>Is Minesweeper free?</b> Yes — no signup, no downloads, no installs.</p>
+            <p><b>Is the first click always safe?</b> Yes — mines are placed after your first click, so you always open into a safe area.</p>
+            <p><b>Are my best times saved?</b> Yes — your fastest clear per difficulty and your current game are stored locally in your browser.</p>
+
+            <h3>More strategy games</h3>
+            <ul class="related-games-list">
+                <li><a href="../sudoku/">Sudoku</a></li>
+                <li><a href="../2048/">2048</a></li>
+                <li><a href="../mahjong/">Mahjong Solitaire</a></li>
+                <li><a href="../strategy/">All strategy games &rarr;</a></li>
+            </ul>
+        </details>
+    </div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        // ── Difficulty presets ──────────────────────────────────────────────
+        const PRESETS = {
+            beginner:     { label: 'Beginner',     cols: 9,  rows: 9,  mines: 10 },
+            intermediate: { label: 'Intermediate', cols: 16, rows: 16, mines: 40 },
+            expert:       { label: 'Expert',       cols: 30, rows: 16, mines: 99 },
+        };
+        const CELL = 34, GAP = 2;
+        const SAVE_KEY = 'minesweeperSave';
+        const BEST_KEY = 'minesweeperBestTimes';
+        const DIFF_KEY = 'minesweeperLastDiff';
+
+        const boardEl   = document.getElementById('board');
+        const boardFit  = document.getElementById('boardFit');
+        const mineCountEl = document.getElementById('mineCount');
+        const timeEl    = document.getElementById('time');
+        const bestEl    = document.getElementById('best');
+        const statusEl  = document.getElementById('status');
+        const diffSel   = document.getElementById('diff');
+        const faceBtn   = document.getElementById('faceBtn');
+        const newBtn    = document.getElementById('newBtn');
+        const flagBtn   = document.getElementById('flagBtn');
+        const flagState = document.getElementById('flagState');
+        const overlay   = document.getElementById('overlay');
+        const overTitle = document.getElementById('overTitle');
+        const overTime  = document.getElementById('overTime');
+        const overMsg   = document.getElementById('overMsg');
+
+        // ── State ───────────────────────────────────────────────────────────
+        let cols, rows, mineTotal, difficulty;
+        let mine, open, flag, count;     // typed-ish arrays over the grid
+        let cells;                       // DOM nodes
+        let state;                       // 'ready' | 'playing' | 'won' | 'lost'
+        let placed;                      // mines placed yet (after first click)
+        let revealedCount, flagsPlaced;
+        let elapsed, timerId;
+        let flagMode = false;
+
+        const idx = (r, c) => r * cols + c;
+        const inB = (r, c) => r >= 0 && r < rows && c >= 0 && c < cols;
+        function neighbors(i) {
+            const r = (i / cols) | 0, c = i % cols, out = [];
+            for (let dr = -1; dr <= 1; dr++)
+                for (let dc = -1; dc <= 1; dc++) {
+                    if (!dr && !dc) continue;
+                    if (inB(r + dr, c + dc)) out.push(idx(r + dr, c + dc));
+                }
+            return out;
+        }
+
+        // ── Persistence ─────────────────────────────────────────────────────
+        function loadBest() {
+            try { return JSON.parse(localStorage.getItem(BEST_KEY)) || {}; }
+            catch (e) { return {}; }
+        }
+        function bestFor(d) {
+            const v = loadBest()[d];
+            return (typeof v === 'number') ? v : null;
+        }
+        function saveBest(d, secs) {
+            const all = loadBest();
+            if (all[d] == null || secs < all[d]) all[d] = secs;
+            try { localStorage.setItem(BEST_KEY, JSON.stringify(all)); } catch (e) {}
+        }
+        function persist() {
+            if (state === 'won' || state === 'lost' || !placed) {
+                try { localStorage.removeItem(SAVE_KEY); } catch (e) {}
+                return;
+            }
+            const data = {
+                difficulty,
+                mine: [...mine], open: [...open], flag: [...flag],
+                elapsed,
+            };
+            try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
+        }
+        function restore() {
+            let data;
+            try { data = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return false; }
+            if (!data || !(data.difficulty in PRESETS)) return false;
+            const p = PRESETS[data.difficulty];
+            const total = p.cols * p.rows;
+            if (!data.mine || data.mine.length !== total) return false;
+            difficulty = data.difficulty;
+            cols = p.cols; rows = p.rows; mineTotal = p.mines;
+            mine = data.mine.slice(); open = data.open.slice(); flag = data.flag.slice();
+            count = new Array(total).fill(0);
+            computeCounts();
+            placed = true;
+            state = 'playing';
+            elapsed = data.elapsed | 0;
+            revealedCount = open.reduce((s, v) => s + v, 0);
+            flagsPlaced = flag.reduce((s, v) => s + v, 0);
+            return true;
+        }
+
+        // ── Timer ───────────────────────────────────────────────────────────
+        function fmt(secs) {
+            const m = (secs / 60) | 0, s = secs % 60;
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+        function startTimer() {
+            stopTimer();
+            timerId = setInterval(() => {
+                if (state !== 'playing') return;
+                elapsed++;
+                timeEl.textContent = fmt(elapsed);
+                if (elapsed % 5 === 0) persist();
+            }, 1000);
+        }
+        function stopTimer() { if (timerId) { clearInterval(timerId); timerId = null; } }
+
+        // ── Board setup ─────────────────────────────────────────────────────
+        function newGame(d) {
+            difficulty = d;
+            diffSel.value = d;
+            try { localStorage.setItem(DIFF_KEY, d); } catch (e) {}
+            const p = PRESETS[d];
+            cols = p.cols; rows = p.rows; mineTotal = p.mines;
+            const total = cols * rows;
+            mine = new Array(total).fill(0);
+            open = new Array(total).fill(0);
+            flag = new Array(total).fill(0);
+            count = new Array(total).fill(0);
+            state = 'ready';
+            placed = false;
+            revealedCount = 0;
+            flagsPlaced = 0;
+            elapsed = 0;
+            stopTimer();
+            overlay.className = 'overlay';
+            faceBtn.textContent = '🙂';
+            statusEl.textContent = 'Click any square to start. The first click is always safe.';
+            buildBoard();
+            render();
+            persist();
+        }
+
+        function placeMines(safe) {
+            const total = cols * rows;
+            const forbidden = new Set([safe, ...neighbors(safe)]);
+            // If the board is too dense to keep a full safe ring, only protect the cell.
+            if (total - forbidden.size < mineTotal) {
+                forbidden.clear(); forbidden.add(safe);
+            }
+            const candidates = [];
+            for (let i = 0; i < total; i++) if (!forbidden.has(i)) candidates.push(i);
+            for (let k = candidates.length - 1; k > 0; k--) {
+                const j = (Math.random() * (k + 1)) | 0;
+                [candidates[k], candidates[j]] = [candidates[j], candidates[k]];
+            }
+            for (let m = 0; m < mineTotal; m++) mine[candidates[m]] = 1;
+            computeCounts();
+            placed = true;
+        }
+        function computeCounts() {
+            for (let i = 0; i < count.length; i++) {
+                if (mine[i]) { count[i] = -1; continue; }
+                count[i] = neighbors(i).reduce((s, n) => s + mine[n], 0);
+            }
+        }
+
+        function buildBoard() {
+            boardEl.style.gridTemplateColumns = `repeat(${cols}, ${CELL}px)`;
+            boardEl.style.gridTemplateRows = `repeat(${rows}, ${CELL}px)`;
+            boardEl.innerHTML = '';
+            cells = [];
+            for (let i = 0; i < cols * rows; i++) {
+                const c = document.createElement('div');
+                c.className = 'cell';
+                c.dataset.i = i;
+                c.setAttribute('role', 'gridcell');
+                boardEl.appendChild(c);
+                cells.push(c);
+            }
+            scaleBoard();
+        }
+
+        // ── Reveal / flag logic ─────────────────────────────────────────────
+        function reveal(i) {
+            if (open[i] || flag[i]) return;
+            // Flood-fill from zero cells iteratively.
+            const stack = [i];
+            while (stack.length) {
+                const k = stack.pop();
+                if (open[k] || flag[k]) continue;
+                open[k] = 1;
+                revealedCount++;
+                if (mine[k]) { lose(k); return; }
+                if (count[k] === 0) {
+                    for (const n of neighbors(k)) if (!open[n] && !flag[n]) stack.push(n);
+                }
+            }
+        }
+
+        function chord(i) {
+            if (!open[i] || count[i] <= 0) return;
+            const nbrs = neighbors(i);
+            const flags = nbrs.reduce((s, n) => s + flag[n], 0);
+            if (flags !== count[i]) return;
+            for (const n of nbrs) {
+                if (!flag[n] && !open[n]) {
+                    reveal(n);
+                    if (state === 'lost') return;
+                }
+            }
+        }
+
+        function toggleFlag(i) {
+            if (open[i] || state === 'won' || state === 'lost') return;
+            flag[i] = flag[i] ? 0 : 1;
+            flagsPlaced += flag[i] ? 1 : -1;
+        }
+
+        function handleReveal(i) {
+            if (state === 'won' || state === 'lost') return;
+            if (!placed) {                       // first click → place mines safely
+                placeMines(i);
+                state = 'playing';
+                startTimer();
+            }
+            if (flag[i]) return;
+            if (open[i]) { chord(i); }
+            else { reveal(i); }
+            if (state !== 'lost') checkWin();
+            render();
+            persist();
+        }
+
+        function handleFlag(i) {
+            if (state === 'won' || state === 'lost') return;
+            if (!placed) return;                 // nothing to flag before the board exists
+            toggleFlag(i);
+            render();
+            persist();
+        }
+
+        // ── Win / lose ──────────────────────────────────────────────────────
+        function lose(boomIdx) {
+            state = 'lost';
+            stopTimer();
+            boardEl.dataset.boom = boomIdx;
+            faceBtn.textContent = '💥';
+            persist();
+            render();
+            overTitle.textContent = 'Boom.';
+            overlay.className = 'overlay lose show';
+            overTime.textContent = fmt(elapsed);
+            overMsg.textContent = PRESETS[difficulty].label + ' · you hit a mine. Try again — the next board is fresh.';
+        }
+
+        function checkWin() {
+            if (revealedCount === cols * rows - mineTotal) {
+                state = 'won';
+                stopTimer();
+                // Auto-flag every remaining mine.
+                for (let i = 0; i < mine.length; i++) if (mine[i] && !flag[i]) { flag[i] = 1; flagsPlaced++; }
+                faceBtn.textContent = '😎';
+                const prev = bestFor(difficulty);
+                const isPB = prev == null || elapsed < prev;
+                saveBest(difficulty, elapsed);
+                persist();
+                overTitle.textContent = 'Cleared!';
+                overlay.className = 'overlay win show';
+                overTime.textContent = fmt(elapsed);
+                overMsg.innerHTML = isPB
+                    ? PRESETS[difficulty].label + ' · <span class="pb">new best time!</span>'
+                    : PRESETS[difficulty].label + ' · swept clean.';
+            }
+        }
+
+        // ── Rendering ───────────────────────────────────────────────────────
+        function render() {
+            const boom = state === 'lost' ? +boardEl.dataset.boom : -1;
+            for (let i = 0; i < cells.length; i++) {
+                const c = cells[i];
+                c.className = 'cell';
+                c.textContent = '';
+                if (state === 'lost' && mine[i] && !flag[i]) {
+                    c.classList.add('mine');
+                    if (i === boom) c.classList.add('boom');
+                } else if (state === 'lost' && flag[i] && !mine[i]) {
+                    c.classList.add('wrong-flag');
+                } else if (flag[i]) {
+                    c.classList.add('flag');
+                } else if (open[i]) {
+                    c.classList.add('open');
+                    if (count[i] > 0) { c.classList.add('n' + count[i]); c.textContent = count[i]; }
+                }
+            }
+            mineCountEl.textContent = Math.max(0, mineTotal - flagsPlaced);
+            timeEl.textContent = fmt(elapsed);
+            const b = bestFor(difficulty);
+            bestEl.textContent = b == null ? '—' : fmt(b);
+        }
+
+        function setFlagMode(on) {
+            flagMode = on;
+            flagBtn.classList.toggle('on', on);
+            flagState.textContent = on ? 'On' : 'Off';
+        }
+
+        // ── Input ───────────────────────────────────────────────────────────
+        boardEl.addEventListener('click', (e) => {
+            const cell = e.target.closest('.cell');
+            if (!cell) return;
+            const i = +cell.dataset.i;
+            if (flagMode && !open[i]) handleFlag(i);
+            else handleReveal(i);
+        });
+        boardEl.addEventListener('contextmenu', (e) => {
+            const cell = e.target.closest('.cell');
+            if (!cell) return;
+            e.preventDefault();
+            handleFlag(+cell.dataset.i);
+        });
+        boardEl.addEventListener('dblclick', (e) => {
+            const cell = e.target.closest('.cell');
+            if (!cell) return;
+            const i = +cell.dataset.i;
+            if (open[i]) { if (state !== 'won' && state !== 'lost') { chord(i); if (state !== 'lost') checkWin(); render(); persist(); } }
+        });
+
+        // Long-press to flag (touch). Suppress the click that follows.
+        let lpTimer = null, lpFired = false, lpStartIdx = -1;
+        boardEl.addEventListener('touchstart', (e) => {
+            const cell = e.target.closest('.cell');
+            if (!cell) return;
+            lpFired = false;
+            lpStartIdx = +cell.dataset.i;
+            lpTimer = setTimeout(() => {
+                lpFired = true;
+                if (!open[lpStartIdx]) { handleFlag(lpStartIdx); if (navigator.vibrate) navigator.vibrate(15); }
+            }, 450);
+        }, { passive: true });
+        boardEl.addEventListener('touchend', (e) => {
+            if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; }
+            if (lpFired) { e.preventDefault(); }   // swallow the synthetic click
+        });
+        boardEl.addEventListener('touchmove', () => { if (lpTimer) { clearTimeout(lpTimer); lpTimer = null; } }, { passive: true });
+
+        // ── Buttons & keys ──────────────────────────────────────────────────
+        faceBtn.addEventListener('click', () => newGame(diffSel.value));
+        newBtn.addEventListener('click', () => newGame(diffSel.value));
+        document.getElementById('overNew').addEventListener('click', () => newGame(diffSel.value));
+        diffSel.addEventListener('change', () => newGame(diffSel.value));
+        flagBtn.addEventListener('click', () => setFlagMode(!flagMode));
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'f' || e.key === 'F') setFlagMode(!flagMode);
+            if (e.key === 'n' || e.key === 'N') newGame(diffSel.value);
+        });
+        window.addEventListener('beforeunload', persist);
+        document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
+
+        // ── Auto-scale board to fit the viewport ────────────────────────────
+        function scaleBoard() {
+            boardEl.style.transform = 'none';
+            const natW = boardEl.offsetWidth, natH = boardEl.offsetHeight;
+            if (!natW) return;
+            const viewW = Math.min(window.innerWidth, document.documentElement.clientWidth);
+            const mw = Math.max(viewW - 44, 200);
+            const mh = window.innerHeight * 0.66;
+            const s = Math.min(mw / natW, mh / natH, 1);
+            boardEl.style.transform = 'scale(' + s + ')';
+            boardFit.style.width = (natW * s) + 'px';
+            boardFit.style.height = (natH * s) + 'px';
+        }
+        window.addEventListener('resize', scaleBoard);
+
+        // ── Boot ────────────────────────────────────────────────────────────
+        let lastDiff = 'beginner';
+        try { lastDiff = localStorage.getItem(DIFF_KEY) || 'beginner'; } catch (e) {}
+        if (!(lastDiff in PRESETS)) lastDiff = 'beginner';
+        if (restore()) {
+            diffSel.value = difficulty;
+            buildBoard();
+            render();
+            startTimer();
+            statusEl.textContent = 'Welcome back — resuming your ' + PRESETS[difficulty].label + ' game.';
+        } else {
+            newGame(lastDiff);
+        }
+        scaleBoard();
+        setTimeout(scaleBoard, 60);
+    })();
+    </script>
+</body>
+</html>
