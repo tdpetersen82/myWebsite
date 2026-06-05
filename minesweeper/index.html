@@ -540,6 +540,7 @@
             if (state === 'won' || state === 'lost') return;
             if (!placed) return;                 // nothing to flag before the board exists
             toggleFlag(i);
+            checkWin();                          // flagging the last mine can win, too
             render();
             persist();
         }
@@ -558,8 +559,17 @@
             overMsg.textContent = PRESETS[difficulty].label + ' · you hit a mine. Try again — the next board is fresh.';
         }
 
+        // Two ways to win: reveal every safe square, or correctly flag every mine
+        // (all mines flagged, no safe square flagged) — the way many players finish.
+        function won() {
+            if (revealedCount === cols * rows - mineTotal) return true;
+            if (flagsPlaced !== mineTotal) return false;
+            for (let i = 0; i < mine.length; i++) if (mine[i] !== flag[i]) return false;
+            return true;
+        }
+
         function checkWin() {
-            if (revealedCount === cols * rows - mineTotal) {
+            if (won()) {
                 state = 'won';
                 stopTimer();
                 // Auto-flag every remaining mine.
