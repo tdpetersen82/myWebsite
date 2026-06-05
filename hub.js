@@ -153,10 +153,10 @@
       <p class="desc">${game.desc} Pick up where you left off — your scores are saved locally.</p>
     ` : '';
     const heroCta = isHero ? `<span class="play-cta">Play now →</span>` : '';
-    const sizeForGlyph = isHero ? 140 : (size === 's-tall' ? 100 : 64);
+    const sizeForGlyph = isHero ? 140 : (size === 's-tall' ? 84 : 56);
 
     const a = el(`
-      <a class="tile ${size} has-preview" href="${gameUrl(game)}" style="background:${game.color}22">
+      <a class="tile ${size} has-preview" href="${gameUrl(game)}" style="background:${game.color}22;--g:${game.color}">
         ${game.isNew ? '<span class="tile-new">NEW</span>' : ''}
         ${isHero ? '<span class="tile-tag">★ Featured</span>' : ''}
         <div class="tile-decoration"></div>

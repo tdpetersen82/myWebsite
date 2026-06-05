@@ -622,6 +622,52 @@ body.hub-root {
   font-weight: 600;
 }
 
+/* Non-hero tiles: app-icon medallion + clean bottom label bar.
+   The art sits in a soft squircle chip above a full-width title strip, so the
+   simple vector glyphs read as deliberate icons and never clip the tile edge. */
+.tile:not(.s-hero) .tile-art {
+  inset: 0;
+  bottom: 46px;
+}
+.tile:not(.s-hero) .tile-art svg {
+  width: 54px;
+  height: 54px;
+  padding: 15px;
+  box-sizing: content-box;
+  border-radius: 22px;
+  background: #fff;
+  background: radial-gradient(circle at 32% 26%, #fff 0%,
+    color-mix(in srgb, var(--g, #fff) 14%, #fff) 100%);
+  box-shadow:
+    0 12px 24px -14px rgba(31, 27, 22, 0.5),
+    0 2px 6px -3px rgba(31, 27, 22, 0.18),
+    inset 0 0 0 1.5px color-mix(in srgb, var(--g, #fff) 22%, #fff);
+}
+.tile.s-tall .tile-art svg { width: 84px; height: 84px; padding: 22px; border-radius: 30px; }
+
+.tile:not(.s-hero) .tile-meta {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  max-width: none;
+  align-self: stretch;
+  padding: 26px 16px 14px;
+  border: none;
+  border-radius: 0;
+  background: linear-gradient(to top,
+    rgba(255, 255, 255, 0.96) 0%,
+    rgba(255, 255, 255, 0.88) 52%,
+    rgba(255, 255, 255, 0) 100%);
+  -webkit-backdrop-filter: none;
+  backdrop-filter: none;
+}
+
+@media (max-width: 900px) {
+  .tile:not(.s-hero) .tile-art { bottom: 42px; }
+  .tile:not(.s-hero) .tile-art svg { width: 44px; height: 44px; padding: 12px; }
+}
+
 /* Hero tile */
 .tile.s-hero .tile-meta {
   padding: 18px 22px;
