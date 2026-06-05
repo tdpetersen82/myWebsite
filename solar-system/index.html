@@ -438,7 +438,7 @@
     let mX = eix, mY = eiy;
     if (earthView && !EARTH.deleted){
       // ---- planet view: real orbit radii through a log-of-altitude map so LEO spreads & the Moon still fits ----
-      const er = 7*zoom, spin = 2*Math.PI * evClock / EARTH_SPIN;   // evClock = steady wall-clock pace (not sim playback)
+      const er = 14*zoom, spin = 2*Math.PI * evClock / EARTH_SPIN;   // evClock = steady wall-clock pace (not sim playback)
       const evR = rkm => { const altER = rkm/ER_KM - 1; return altER <= 0 ? er : er + 11*zoom*Math.log10(1 + altER*30); };
       const drawRing = rr => { ctx.strokeStyle='rgba(150,170,210,0.13)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(eix,eiy,rr,0,2*Math.PI); ctx.stroke(); };
       // ===== rendered Earth: atmosphere halo + real-texture spinning sphere (or a plain shaded globe until it loads) =====
@@ -488,7 +488,7 @@
 
     // labels
     if (!earthView) label('Sun', SUN.color, sxp, syp, 15);
-    for (const p of shown){ const [bx, by] = scr(p.x, p.y); label(p.name, p.color, bx, by, (earthView && p===EARTH ? 7*zoom+6 : p.size+5)); }
+    for (const p of shown){ const [bx, by] = scr(p.x, p.y); label(p.name, p.color, bx, by, (earthView && p===EARTH ? 14*zoom+6 : p.size+5)); }
     if (!earthView && !MOON.deleted && !EARTH.deleted && Math.hypot(mX-eix, mY-eiy) > 11) label('Moon', MOON.color, mX, mY, MOON.size+5);   // earth view labels its own Moon
 
     // comets / interlopers — size & colour scale with mass — + impact flashes
