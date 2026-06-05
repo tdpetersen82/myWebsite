@@ -157,6 +157,8 @@
     { name:'Geo sat', rkm:42164, period:EARTH_SPIN, phase:0, color:'#e8d3a0', size:2.2, geo:true },
   ];
   let t = 0, E0 = 0, dashFlow = 0;
+  let evClock = 0, lastTs = 0;   // planet-view animation clock — steady wall-clock pace, independent of sim playback speed
+  const EV_SPEED = 0.003;        // "years" of planet-clock per real second → Earth rotates ≈ every 16 s
   let comets = [], flashes = [], cometSeq = 0;
   let storm = [];   // lightweight bulk test-particles (the "Storm" button) — NOT in the table, never perturb
   let baryX = 0, baryY = 0;   // mass-weighted centre of the whole system (cached per frame); the view centres here
@@ -436,7 +438,7 @@
     let mX = eix, mY = eiy;
     if (earthView && !EARTH.deleted){
       // ---- planet view: real orbit radii through a log-of-altitude map so LEO spreads & the Moon still fits ----
-      const er = 7*zoom, spin = 2*Math.PI * t / EARTH_SPIN;
+      const er = 7*zoom, spin = 2*Math.PI * evClock / EARTH_SPIN;   // evClock = steady wall-clock pace (not sim playback)
       const evR = rkm => { const altER = rkm/ER_KM - 1; return altER <= 0 ? er : er + 11*zoom*Math.log10(1 + altER*30); };
       const drawRing = rr => { ctx.strokeStyle='rgba(150,170,210,0.13)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(eix,eiy,rr,0,2*Math.PI); ctx.stroke(); };
       // ===== rendered Earth: atmosphere halo + real-texture spinning sphere (or a plain shaded globe until it loads) =====
@@ -457,7 +459,7 @@
       ctx.beginPath(); ctx.arc(eix + Math.cos(spin)*er*0.82, eiy - Math.sin(spin)*er*0.82, 2, 0, 2*Math.PI); ctx.fill();
       for (const s of EV_SATS){
         const rr = evR(s.rkm); drawRing(rr);
-        const ang = s.geo ? spin : (s.phase + 2*Math.PI*t/s.period), sX = eix+Math.cos(ang)*rr, sY = eiy-Math.sin(ang)*rr;
+        const ang = s.geo ? spin : (s.phase + 2*Math.PI*evClock/s.period), sX = eix+Math.cos(ang)*rr, sY = eiy-Math.sin(ang)*rr;
         ctx.fillStyle = s.color; ctx.beginPath(); ctx.arc(sX, sY, s.size, 0, 2*Math.PI); ctx.fill();
         label(s.name, s.color, sX, sY, s.size+4);
       }
@@ -670,7 +672,11 @@
   }
 
   // ---- Main loop ----
-  function frame(){
+  function frame(ts){
+    if (timeRate !== 0 && lastTs && ts){                             // planet-view spin/orbits run on a steady wall clock
+      evClock += Math.sign(timeRate) * Math.min(0.05, (ts - lastTs)/1000) * EV_SPEED;
+    }
+    lastTs = ts || lastTs;
     if (timeRate !== 0){
       const sub = Math.abs(timeRate), dt = timeRate < 0 ? -DT : DT;   // negative dt runs the reversible integrator backwards
       for (let s=0;s<sub;s++){
