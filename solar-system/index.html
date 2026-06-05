@@ -115,6 +115,15 @@
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d');
 
+  // ---- Earth texture (real Blue Marble), mapped onto the spinning globe in the planet view ----
+  let earthTex = null, earthReady = false;
+  const earthImg = new Image();
+  earthImg.onload = () => { const oc = document.createElement('canvas'); oc.width = earthImg.width; oc.height = earthImg.height;
+    const octx = oc.getContext('2d'); octx.drawImage(earthImg, 0, 0); earthTex = octx.getImageData(0,0,oc.width,oc.height); earthReady = true; };
+  earthImg.src = 'earth.jpg';
+  const globeCanvas = document.createElement('canvas'), globeCtx = globeCanvas.getContext('2d');
+  let globeImg = null;
+
   // ---- Physics — units: AU, years, solar masses (so G = 4π²) ----
   const G = 4 * Math.PI * Math.PI;
   const DT = 0.0002;       // years/step (~1.75 hrs) → resolves even the Moon's 27-day orbit
@@ -141,14 +150,6 @@
   // illustrative — a ~92-min ISS orbit can't be resolved at a 1.75-hr step — tuned so inner = faster.
   const ER_KM = 6371, AU_KM = 1.495979e8;   // Earth radius, 1 AU
   const EARTH_SPIN = 0.05;   // yr per rotation (illustrative). The Geo sat shares this exactly → it stays over one spot.
-  // Polar-view continents [angle, radiusFrac, widthFrac, heightFrac, tilt]; the whole map rotates rigidly with the spin.
-  const EARTH_LAND = [
-    [0.45,0.38,0.30,0.22,0.4],[0.85,0.55,0.20,0.15,1.0],[0.25,0.60,0.15,0.12,-0.3],[0.62,0.18,0.17,0.15,0.2],
-    [2.45,0.46,0.26,0.30,1.2],[2.78,0.27,0.17,0.15,0.6],
-    [4.15,0.50,0.30,0.20,-0.5],[4.50,0.31,0.17,0.20,0.3],
-    [5.55,0.55,0.13,0.11,0.0],
-  ];
-  const EARTH_CLOUD = [ [0.9,0.50,0.40,0.16,0.3],[2.6,0.34,0.32,0.15,1.0],[4.1,0.56,0.34,0.14,-0.4],[5.3,0.28,0.26,0.13,0.5] ];
   const EV_SATS = [
     { name:'ISS',     rkm:6779,  period:0.015, phase:0.6, color:'#eef2f8', size:2.2 },
     { name:'Hubble',  rkm:6911,  period:0.020, phase:2.3, color:'#aebccf', size:2.0 },
@@ -355,6 +356,29 @@
     ctx.lineTo(ex - Math.cos(ang+0.4)*h, ey - Math.sin(ang+0.4)*h);
     ctx.closePath(); ctx.fill();
   }
+  // Render Earth as a lit, spinning sphere from the real texture (polar orthographic — looking down the rotation axis,
+  // so the orbit diorama stays top-down). Returns false until the texture has loaded (caller draws a fallback).
+  function drawEarthSphere(cx, cy, er, spin){
+    if (!earthReady) return false;
+    const Rd = Math.min(Math.round(er*dpr), 170), D = Rd*2, tex = earthTex.data, tw = earthTex.width, th = earthTex.height;
+    if (globeCanvas.width !== D){ globeCanvas.width = D; globeCanvas.height = D; globeImg = globeCtx.createImageData(D, D); }
+    const out = globeImg.data;
+    const Lx=-0.6, Ly=0.45, Lz=0.42, Ln=Math.hypot(Lx,Ly,Lz), lx=Lx/Ln, ly=Ly/Ln, lz=Lz/Ln;   // sun direction
+    for (let py=0; py<D; py++){
+      for (let px=0; px<D; px++){
+        const nx=(px-Rd+0.5)/Rd, ny=(py-Rd+0.5)/Rd, r2=nx*nx+ny*ny, i=(py*D+px)*4;
+        if (r2 > 1){ out[i+3]=0; continue; }
+        const r=Math.sqrt(r2), nz=Math.sqrt(1-r2), phi=Math.asin(r<1?r:1);   // colatitude: 0 centre(pole) → π/2 rim(equator)
+        let lon=Math.atan2(-ny, nx)-spin; lon-=Math.floor(lon/(2*Math.PI))*2*Math.PI;   // -spin → turns with the geo sat
+        const tx=(lon/(2*Math.PI)*tw)|0, ty=(phi/Math.PI*th)|0, ti=((ty<th?ty:th-1)*tw+(tx<tw?tx:tw-1))*4;
+        let d=nx*lx+(-ny)*ly+nz*lz; if (d<0) d=0; const sh=0.16+0.95*d;       // ambient + diffuse day/night
+        out[i]=tex[ti]*sh; out[i+1]=tex[ti+1]*sh; out[i+2]=tex[ti+2]*sh; out[i+3]=255;
+      }
+    }
+    globeCtx.putImageData(globeImg, 0, 0);
+    ctx.drawImage(globeCanvas, cx-er, cy-er, er*2, er*2);
+    return true;
+  }
 
   function draw(){
     [baryX, baryY] = curBary();    // recentre the view on the system's barycentre each frame
@@ -415,30 +439,16 @@
       const er = 7*zoom, spin = 2*Math.PI * t / EARTH_SPIN;
       const evR = rkm => { const altER = rkm/ER_KM - 1; return altER <= 0 ? er : er + 11*zoom*Math.log10(1 + altER*30); };
       const drawRing = rr => { ctx.strokeStyle='rgba(150,170,210,0.13)'; ctx.lineWidth=1; ctx.beginPath(); ctx.arc(eix,eiy,rr,0,2*Math.PI); ctx.stroke(); };
-      // ===== rendered Earth: atmosphere · oceans · rigidly-spinning continents + clouds · polar ice · day-night shading =====
-      const surface = (arr, rot, fill) => {   // draw a list of blobs as one rigid map rotated by rot (so the globe turns)
-        ctx.save(); ctx.translate(eix, eiy); ctx.rotate(rot); ctx.fillStyle = fill;
-        for (const L of arr){ ctx.save(); ctx.translate(Math.cos(L[0])*L[1]*er, -Math.sin(L[0])*L[1]*er); ctx.rotate(L[4]||0);
-          ctx.beginPath(); ctx.ellipse(0, 0, L[2]*er, L[3]*er, 0, 0, 2*Math.PI); ctx.fill(); ctx.restore(); }
-        ctx.restore();
-      };
-      let g = ctx.createRadialGradient(eix, eiy, er*0.92, eix, eiy, er*1.28);   // atmosphere halo
-      g.addColorStop(0,'rgba(130,185,255,0.40)'); g.addColorStop(1,'rgba(130,185,255,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(eix, eiy, er*1.28, 0, 2*Math.PI); ctx.fill();
-      ctx.save();
-      ctx.beginPath(); ctx.arc(eix, eiy, er, 0, 2*Math.PI); ctx.clip();
-      ctx.fillStyle = '#16467e'; ctx.fillRect(eix-er, eiy-er, 2*er, 2*er);      // ocean
-      surface(EARTH_LAND, -spin, '#46915a');                                    // continents (rigid rotation)
-      g = ctx.createRadialGradient(eix, eiy, 0, eix, eiy, er*0.26);            // polar ice cap (pole at centre)
-      g.addColorStop(0,'rgba(248,252,255,0.9)'); g.addColorStop(0.65,'rgba(238,247,255,0.4)'); g.addColorStop(1,'rgba(238,247,255,0)');
-      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(eix, eiy, er*0.26, 0, 2*Math.PI); ctx.fill();
-      surface(EARTH_CLOUD, -spin*1.15, 'rgba(255,255,255,0.26)');               // clouds drift a touch faster
-      g = ctx.createRadialGradient(eix-er*0.4, eiy-er*0.4, er*0.1, eix+er*0.3, eiy+er*0.3, er*1.35);   // sun-lit / night
-      g.addColorStop(0,'rgba(255,255,255,0.22)'); g.addColorStop(0.45,'rgba(255,255,255,0)');
-      g.addColorStop(0.74,'rgba(0,0,15,0.12)'); g.addColorStop(1,'rgba(0,0,12,0.66)');
-      ctx.fillStyle = g; ctx.fillRect(eix-er, eiy-er, 2*er, 2*er);
-      ctx.restore();
-      ctx.strokeStyle = 'rgba(150,200,255,0.45)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(eix, eiy, er, 0, 2*Math.PI); ctx.stroke();
+      // ===== rendered Earth: atmosphere halo + real-texture spinning sphere (or a plain shaded globe until it loads) =====
+      let g = ctx.createRadialGradient(eix, eiy, er*0.93, eix, eiy, er*1.3);    // atmosphere halo
+      g.addColorStop(0,'rgba(130,185,255,0.42)'); g.addColorStop(1,'rgba(130,185,255,0)');
+      ctx.fillStyle = g; ctx.beginPath(); ctx.arc(eix, eiy, er*1.3, 0, 2*Math.PI); ctx.fill();
+      if (!drawEarthSphere(eix, eiy, er, spin)){                                // fallback before the texture loads
+        g = ctx.createRadialGradient(eix-er*0.35, eiy-er*0.35, er*0.1, eix, eiy, er);
+        g.addColorStop(0,'#cfe2ff'); g.addColorStop(0.5,'#3f74b5'); g.addColorStop(1,'#15315c');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(eix, eiy, er, 0, 2*Math.PI); ctx.fill();
+      }
+      ctx.strokeStyle = 'rgba(150,200,255,0.4)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(eix, eiy, er, 0, 2*Math.PI); ctx.stroke();
       // geostationary tether: a line from Earth through a fixed ground spot out to the Geo sat — all share the spin
       const grr = evR(42164), gx = eix + Math.cos(spin)*grr, gy = eiy - Math.sin(spin)*grr;
       ctx.strokeStyle = 'rgba(232,211,160,0.32)'; ctx.lineWidth = 1; ctx.setLineDash([4,4]);
