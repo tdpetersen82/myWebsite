@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Limestone Strategy — Chess, Othello, Chinese Checkers &amp; More</title>
-    <meta name="description" content="Free browser strategy &amp; puzzle games — chess, checkers, Othello, Chinese Checkers, Ultimate Tic-Tac-Toe, Mancala, backgammon, Connect 4, Dots &amp; Boxes, 2048, and Mahjong Solitaire. Three difficulty tiers, full rules, no downloads.">
-    <meta name="keywords" content="chess, checkers, othello, reversi, chinese checkers, ultimate tic-tac-toe, mancala, kalah, backgammon, connect 4, dots and boxes, 2048, mahjong solitaire, strategy games, browser strategy games, puzzle games">
+    <meta name="description" content="Free browser strategy &amp; puzzle games — chess, checkers, Othello, Chinese Checkers, Ultimate Tic-Tac-Toe, Mancala, backgammon, Connect 4, Dots &amp; Boxes, Sudoku, 2048, and Mahjong Solitaire. Full rules, no downloads.">
+    <meta name="keywords" content="chess, checkers, othello, reversi, chinese checkers, ultimate tic-tac-toe, mancala, kalah, backgammon, connect 4, dots and boxes, sudoku, 2048, mahjong solitaire, strategy games, browser strategy games, puzzle games">
     <meta property="og:title" content="Limestone Strategy — Chess, Othello, Chinese Checkers &amp; More">
     <meta property="og:description" content="Strategy &amp; puzzle games — chess, Othello, Chinese Checkers, Mahjong Solitaire, and more. Three difficulty tiers, full rules, no downloads.">
     <meta property="og:type" content="website">
@@ -168,7 +168,7 @@
         <div class="cat-hero-left">
             <div class="cat-hero-eyebrow">⬡ Strategy · Chess, Othello, Chinese Checkers, Mahjong</div>
             <h1>Take a seat.<br><em>Think it through</em>.</h1>
-            <p class="lede">Chess with the full rule book — castling, en passant, promotion, mate detection. American checkers with mandatory captures. Othello with corner play and a perfect endgame solver. Chinese Checkers on the classic 121-hole star, 2- 3- or 6-player. Ultimate Tic-Tac-Toe: nine boards in one, your move picks the next. Mancala with Kalah captures and free turns. Plus backgammon, Connect 4, Dots &amp; Boxes, and 2048 — three difficulty tiers everywhere. And for solo play, Mahjong Solitaire: clear the 144-tile mound, with always-solvable deals, hints, and undo.</p>
+            <p class="lede">Chess with the full rule book — castling, en passant, promotion, mate detection. American checkers with mandatory captures. Othello with corner play and a perfect endgame solver. Chinese Checkers on the classic 121-hole star, 2- 3- or 6-player. Ultimate Tic-Tac-Toe: nine boards in one, your move picks the next. Mancala with Kalah captures and free turns. Plus backgammon, Connect 4, Dots &amp; Boxes, and 2048 — three difficulty tiers everywhere. And for solo play, Sudoku across four difficulties with pencil notes and hints, plus Mahjong Solitaire: clear the 144-tile mound, with always-solvable deals, hints, and undo.</p>
             <div class="cat-hero-stats">
                 <div>3<span>Levels</span></div>
                 <div>0<span>Ads inside</span></div>
@@ -339,6 +339,27 @@
                 </div>
                 <div class="cat-card-foot">
                     <span class="plays">Classic</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../sudoku/">
+                <span class="cat-card-tag">New</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-shot"><img src="../assets/thumbs/sudoku.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div>
+                        <h3>Sudoku</h3>
+                        <div class="desc">Fill the grid so every row, column, and box holds 1–9. Solo play.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Best time</div><div class="v accent" id="card-sudoku-best">—</div></div>
+                    <div><div class="l">Levels</div><div class="v sm">4</div></div>
+                    <div><div class="l">Grid</div><div class="v sm">9×9</div></div>
+                    <div><div class="l">Solution</div><div class="v sm">Unique</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Brand new</span>
                     <span class="play-btn">Play →</span>
                 </div>
             </a>
@@ -676,6 +697,16 @@
             if (best2048 != null) set('card-2048-best', best2048.toLocaleString());
             const tile2048 = readNum('2048HighTile');
             if (tile2048 != null) set('card-2048-tile', tile2048);
+
+            // Sudoku: fastest solve across all difficulties (stored as JSON of seconds).
+            try {
+                const times = JSON.parse(localStorage.getItem('sudokuBestTimes')) || {};
+                const secs = Object.values(times).filter(v => typeof v === 'number' && v >= 0);
+                if (secs.length) {
+                    const m = Math.min(...secs);
+                    set('card-sudoku-best', (m / 60 | 0) + ':' + String(m % 60).padStart(2, '0'));
+                }
+            } catch (e) {}
 
             // Aggregate stats
             const totalWins = Object.values(wins).reduce((s, v) => s + (v || 0), 0);

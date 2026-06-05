@@ -1,0 +1,854 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+    <title>Sudoku — Free Online Number Puzzle | Limestone Games</title>
+    <meta name="description" content="Play Sudoku free in your browser. Four difficulties, pencil notes, conflict highlighting, hints, and a timer. Every puzzle has exactly one solution. Best times saved locally.">
+    <meta name="keywords" content="sudoku, sudoku online, free sudoku, play sudoku, number puzzle, sudoku puzzle, browser sudoku, easy sudoku, hard sudoku, expert sudoku">
+    <link rel="canonical" href="https://limestonegames.com/sudoku/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Sudoku","description":"Play Sudoku free in your browser. Four difficulties, pencil notes, hints, and a timer. Every puzzle has exactly one solution.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Sudoku"}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Sudoku?", "acceptedAnswer": {"@type": "Answer", "text": "Fill every row, every column, and every 3×3 box with the digits 1 to 9, using each digit exactly once in each. Click a cell, then a number — or use your keyboard. Some cells start filled as clues; the rest are yours to solve."}}, {"@type": "Question", "name": "Is Sudoku free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs. Just open and play."}}, {"@type": "Question", "name": "Does every puzzle have one solution?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — every puzzle is generated to have exactly one valid solution, so it can always be solved with logic alone, no guessing required."}}, {"@type": "Question", "name": "Are my best times saved?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your fastest solve for each difficulty is stored locally in your browser, and an unfinished puzzle is saved so you can pick up where you left off."}}]}</script>
+    <meta property="og:title" content="Sudoku — Free Online Number Puzzle | Limestone Games">
+    <meta property="og:description" content="Play Sudoku free in your browser. Four difficulties, pencil notes, hints, and a timer. Every puzzle has exactly one solution.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/sudoku/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Sudoku — Free Online Number Puzzle | Limestone Games">
+    <meta name="twitter:description" content="Play Sudoku free in your browser. Four difficulties, pencil notes, hints, and a timer. Every puzzle has exactly one solution.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <!-- AdSense loader disabled until approved: <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+
+    <style>
+      :root {
+        --ink: #2A2017;
+        --paper: #F7EFE1;
+        --frame: #2A2017;
+        --accent: #C96F2A;
+        --cell: 54px;
+        --sky: #2E6CB4;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, #F7EFE1 0%, #E8D9C0 100%);
+        color: var(--ink);
+        min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center;
+        padding: 16px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 640px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .top-bar {
+        width: 100%; display: flex; align-items: center; gap: 16px;
+        padding: 11px 16px 12px;
+        background: rgba(255, 255, 255, 0.72);
+        backdrop-filter: blur(8px);
+        border: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+        border-radius: 16px;
+        box-shadow: 0 10px 28px -16px color-mix(in oklab, var(--frame) 55%, transparent);
+        position: relative; overflow: hidden;
+        flex-wrap: wrap;
+      }
+      .top-bar::after {
+        content: ''; position: absolute; left: 0; right: 0; bottom: 0; height: 2px;
+        background: linear-gradient(90deg, transparent, var(--accent), transparent);
+        opacity: 0.65; pointer-events: none;
+      }
+      .tb-back {
+        display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
+        padding: 8px 14px; border-radius: 999px;
+        border: 1px solid color-mix(in oklab, var(--ink) 16%, transparent);
+        background: rgba(255, 255, 255, 0.55);
+        color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 600;
+        transition: border-color 0.15s, color 0.15s;
+      }
+      .tb-back:hover { border-color: var(--accent); color: var(--accent); }
+      .tb-title { display: flex; flex-direction: column; gap: 3px; margin-right: auto; }
+      .tb-eyebrow {
+        display: inline-flex; align-items: center; gap: 7px;
+        font-family: 'JetBrains Mono', ui-monospace, monospace;
+        font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+        color: var(--accent);
+      }
+      .tb-dot {
+        width: 6px; height: 6px; border-radius: 50%; background: var(--accent);
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 18%, transparent);
+      }
+      h1 {
+        font-family: 'Bricolage Grotesque', serif;
+        font-size: 22px; font-weight: 800; letter-spacing: -0.4px; line-height: 1;
+        color: var(--frame);
+      }
+      .stats {
+        display: flex; gap: 18px; font-size: 14px; font-weight: 600;
+        flex-wrap: wrap; align-items: center;
+      }
+      .stats > div { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; line-height: 1; }
+      .stats .l { color: color-mix(in oklab, var(--ink) 50%, transparent); font-weight: 600; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.12em; }
+      .stats .v { font-size: 16px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
+      .stats .v.time { color: var(--ink); }
+      .stats .v.bad { color: #C0392B; }
+
+      .setup { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+      select.diff {
+        font: inherit; font-size: 13px; font-weight: 700; color: var(--ink);
+        padding: 8px 12px; border-radius: 999px; border: 1px solid color-mix(in oklab, var(--ink) 20%, transparent);
+        background: #fff; cursor: pointer;
+      }
+
+      .stage-wrap {
+        position: relative;
+        background: rgba(255, 255, 255, 0.65);
+        border-radius: 16px;
+        padding: 14px;
+        box-shadow: 0 12px 30px rgba(42, 32, 23, 0.12);
+        align-self: center;
+      }
+      .board-fit { position: relative; }
+      .board {
+        position: absolute; top: 0; left: 0; transform-origin: top left;
+        display: grid;
+        grid-template-columns: repeat(9, var(--cell));
+        grid-template-rows: repeat(9, var(--cell));
+        background: var(--frame);
+        border: 3px solid var(--frame);
+        border-radius: 6px;
+        touch-action: manipulation;
+      }
+      .cell {
+        background: var(--paper);
+        display: flex; align-items: center; justify-content: center;
+        position: relative;
+        font-family: 'Bricolage Grotesque', 'Inter', sans-serif;
+        font-size: 30px; font-weight: 600; line-height: 1;
+        color: var(--sky);
+        cursor: pointer; user-select: none;
+        border: 1px solid color-mix(in oklab, var(--ink) 14%, transparent);
+        transition: background-color 0.12s;
+      }
+      .cell.br { border-right: 2px solid var(--frame); }
+      .cell.bb { border-bottom: 2px solid var(--frame); }
+      .cell.given { color: var(--ink); font-weight: 800; cursor: default; }
+      .cell.peer { background: #EFE4D0; }
+      .cell.same-num { background: #E7D4B6; }
+      .cell.sel { background: #F6E2BF; box-shadow: inset 0 0 0 3px var(--accent); z-index: 2; }
+      .cell.wrong { color: #C0392B !important; }
+      .cell.wrong::after {
+        content: ''; position: absolute; inset: 0;
+        background: radial-gradient(circle at center, rgba(192,57,43,0.16), transparent 70%);
+        pointer-events: none;
+      }
+      .cell.conflict-glow { animation: shake 0.32s ease; }
+      @keyframes shake {
+        0%,100% { transform: translateX(0); }
+        25% { transform: translateX(-3px); }
+        75% { transform: translateX(3px); }
+      }
+      .cell.hinted { animation: pop 0.5s ease; }
+      @keyframes pop {
+        0% { background: #BfE6C8; }
+        100% { background: var(--paper); }
+      }
+      .cell .notes {
+        position: absolute; inset: 2px;
+        display: grid;
+        grid-template-columns: repeat(3, 1fr);
+        grid-template-rows: repeat(3, 1fr);
+        font-family: 'Inter', sans-serif;
+        font-size: 11px; font-weight: 600; line-height: 1;
+        color: color-mix(in oklab, var(--ink) 55%, transparent);
+      }
+      .cell .notes span { display: flex; align-items: center; justify-content: center; }
+      .cell .notes span.lit-peer { color: var(--accent); font-weight: 800; }
+
+      .win {
+        position: absolute; inset: 14px;
+        background: rgba(247, 239, 225, 0.97);
+        border-radius: 8px;
+        display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 10px;
+        opacity: 0; pointer-events: none; transition: opacity 0.3s;
+        text-align: center; padding: 24px;
+      }
+      .win.show { opacity: 1; pointer-events: auto; }
+      .win h2 { font-family: 'Bricolage Grotesque', serif; font-size: 30px; color: var(--accent); }
+      .win p { font-size: 15px; color: rgba(42, 32, 23, 0.78); max-width: 380px; }
+      .win .big-time { font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 26px; font-weight: 700; color: var(--ink); }
+      .win .pb { font-weight: 800; color: var(--accent); }
+      .win .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+
+      .pad {
+        display: grid; grid-template-columns: repeat(9, 1fr); gap: 6px;
+        width: 100%; max-width: 486px;
+      }
+      .np {
+        position: relative; aspect-ratio: 1 / 1.05;
+        display: flex; align-items: center; justify-content: center;
+        font-family: 'Bricolage Grotesque', 'Inter', sans-serif;
+        font-size: clamp(18px, 5vw, 26px); font-weight: 700;
+        color: var(--ink); background: #fff;
+        border: 1px solid color-mix(in oklab, var(--ink) 16%, transparent);
+        border-radius: 10px; cursor: pointer;
+        box-shadow: 0 2px 6px rgba(42,32,23,0.08);
+        transition: transform 0.08s, background 0.12s, color 0.12s;
+        padding: 0;
+      }
+      .np:hover { transform: translateY(-1px); border-color: var(--accent); }
+      .np:active { transform: translateY(1px); }
+      .np .left { position: absolute; bottom: 3px; right: 5px; font-size: 9px; font-weight: 700; color: color-mix(in oklab, var(--ink) 45%, transparent); }
+      .np.done { color: color-mix(in oklab, var(--ink) 28%, transparent); background: #F1E7D5; }
+      .np.done .left { display: none; }
+
+      .tools { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+      button {
+        font: inherit; font-weight: 700;
+        padding: 10px 16px; border-radius: 999px;
+        border: 2px solid transparent;
+        background: var(--accent); color: #fff;
+        cursor: pointer; transition: transform 0.1s, background 0.15s;
+        box-shadow: 0 4px 12px rgba(201, 111, 42, 0.3);
+        display: inline-flex; align-items: center; gap: 7px;
+      }
+      button:hover { transform: translateY(-1px); }
+      button:active { transform: translateY(1px); }
+      button.ghost { background: transparent; color: var(--ink); border-color: rgba(42, 32, 23, 0.2); box-shadow: none; }
+      button.ghost.on { background: var(--accent); color: #fff; border-color: var(--accent); box-shadow: 0 4px 12px rgba(201, 111, 42, 0.3); }
+      button .tag { font-size: 10px; font-weight: 700; opacity: 0.7; }
+      button:disabled { opacity: 0.4; cursor: default; transform: none; box-shadow: none; }
+
+      .status { font-size: 13px; color: rgba(42, 32, 23, 0.75); min-height: 18px; text-align: center; }
+      .hint-line { font-size: 13px; color: rgba(42, 32, 23, 0.6); text-align: center; max-width: 600px; }
+
+      #how { padding: 20px 16px; max-width: 640px; }
+      #how summary { cursor: pointer; }
+      #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin-bottom: 8px; display: inline; }
+      #how h3 { font-family: 'Bricolage Grotesque', serif; font-size: 16px; color: var(--frame); margin: 16px 0 6px; }
+      #how p { font-size: 14px; color: rgba(42, 32, 23, 0.78); margin-bottom: 8px; }
+      #how ul { padding-left: 20px; font-size: 14px; color: rgba(42, 32, 23, 0.82); margin-bottom: 8px; }
+      #how li { margin-bottom: 4px; }
+      #how kbd {
+        display: inline-block; padding: 1px 7px; border-radius: 5px;
+        background: rgba(42, 32, 23, 0.08); border: 1px solid rgba(42, 32, 23, 0.18);
+        font-family: ui-monospace, monospace; font-size: 12px;
+      }
+      .related-games-list { list-style: none; padding-left: 0 !important; display: flex; flex-wrap: wrap; gap: 8px; }
+      .related-games-list a {
+        display: inline-block; padding: 6px 14px; border-radius: 999px;
+        background: rgba(201, 111, 42, 0.12); color: var(--accent);
+        text-decoration: none; font-weight: 700; font-size: 13px;
+      }
+      .related-games-list a:hover { background: rgba(201, 111, 42, 0.2); }
+
+      @media (max-width: 380px) {
+        .np { font-size: 18px; border-radius: 8px; }
+      }
+    </style>
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260528b">
+</head>
+<body>
+    <div class="game-shell">
+        <header class="top-bar">
+            <a class="tb-back" href="../strategy/">← Strategy</a>
+            <div class="tb-title">
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Number puzzle · solo</span>
+                <h1>Sudoku</h1>
+            </div>
+            <div class="stats">
+                <div><span class="l">Time</span><span class="v time" id="time">0:00</span></div>
+                <div><span class="l">Best</span><span class="v" id="best">—</span></div>
+                <div><span class="l">Mistakes</span><span class="v" id="mistakes">0</span></div>
+            </div>
+        </header>
+
+        <div class="setup">
+            <select class="diff" id="diff" aria-label="Difficulty">
+                <option value="easy">Easy</option>
+                <option value="medium">Medium</option>
+                <option value="hard">Hard</option>
+                <option value="expert">Expert</option>
+            </select>
+            <button id="newGame">New puzzle</button>
+        </div>
+
+        <div class="stage-wrap">
+            <div class="board-fit" id="boardFit">
+                <div class="board" id="board" role="grid" aria-label="Sudoku board"></div>
+            </div>
+            <div class="win" id="win">
+                <h2>Solved!</h2>
+                <div class="big-time" id="winTime">0:00</div>
+                <p id="winMsg"></p>
+                <div class="actions">
+                    <button id="winNew">New puzzle</button>
+                    <a href="../strategy/"><button class="ghost">More games</button></a>
+                </div>
+            </div>
+        </div>
+
+        <div class="pad" id="pad"></div>
+
+        <div class="tools">
+            <button class="ghost" id="notesBtn" title="Toggle pencil notes (N)">✏️ Notes <span class="tag" id="notesState">Off</span></button>
+            <button class="ghost" id="eraseBtn" title="Erase (Backspace)">⌫ Erase</button>
+            <button class="ghost" id="hintBtn" title="Reveal one correct cell (H)">💡 Hint</button>
+            <button class="ghost" id="undoBtn" title="Undo (Ctrl+Z)">↶ Undo</button>
+        </div>
+
+        <div class="status" id="status">Pick a cell, then a number. Fill every row, column, and box with 1–9.</div>
+        <p class="hint-line">Tip: turn on <b>Notes</b> to pencil in candidates, and tap a filled number to highlight all of its matches.</p>
+
+        <details id="how">
+            <summary><h2>How to play Sudoku</h2></summary>
+            <p>Sudoku is a logic puzzle played on a 9×9 grid split into nine 3×3 boxes. Some cells start with clue numbers. Your job is to fill in the rest so that every <b>row</b>, every <b>column</b>, and every <b>3×3 box</b> contains the digits 1 through 9 exactly once. There is no arithmetic and no guessing — every puzzle here has a single solution reachable by logic alone.</p>
+
+            <h3>Controls</h3>
+            <ul>
+                <li>Click or tap a cell to select it, then click a number on the pad — or press <kbd>1</kbd>–<kbd>9</kbd>.</li>
+                <li><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> — move the selection around the grid.</li>
+                <li><kbd>Backspace</kbd> / <kbd>Delete</kbd> — erase the selected cell.</li>
+                <li><kbd>N</kbd> — toggle pencil-note mode; <kbd>H</kbd> — reveal one correct cell; <kbd>Ctrl</kbd>+<kbd>Z</kbd> — undo.</li>
+            </ul>
+
+            <h3>Tips &amp; strategy</h3>
+            <ul>
+                <li><b>Hunt the singles.</b> Scan for a cell where only one digit can legally fit, or a box where a digit can go in only one spot. Fill those first.</li>
+                <li><b>Use pencil notes.</b> When a cell could be two or three values, jot them down. As you place numbers elsewhere, candidates shrink until one is forced.</li>
+                <li><b>Work the dense areas.</b> Rows, columns, and boxes that are already mostly full constrain their empty cells the hardest — they crack first.</li>
+                <li><b>Tap a number to highlight it.</b> Selecting a filled cell shades every matching digit, making it easy to spot where that number still needs to go.</li>
+            </ul>
+
+            <h3>About the difficulties</h3>
+            <p>Every puzzle is generated fresh and verified to have exactly one solution. <b>Easy</b> and <b>Medium</b> fall out from straightforward scanning. <b>Hard</b> and <b>Expert</b> leave fewer clues and demand candidate tracking and chains of deduction. Your fastest clean solve for each level is saved in your browser, along with any puzzle you leave unfinished.</p>
+
+            <h3>Frequently asked</h3>
+            <p><b>How do I play Sudoku?</b> Fill every row, column, and 3×3 box with the digits 1–9, each used once. Click a cell, then a number.</p>
+            <p><b>Is Sudoku free?</b> Yes — no signup, no downloads, no installs.</p>
+            <p><b>Does every puzzle have one solution?</b> Yes — each is generated and checked to be uniquely solvable with logic, never guessing.</p>
+            <p><b>Are my best times saved?</b> Yes — your fastest time per difficulty and your current puzzle are stored locally in your browser.</p>
+
+            <h3>More strategy games</h3>
+            <ul class="related-games-list">
+                <li><a href="../2048/">2048</a></li>
+                <li><a href="../mahjong/">Mahjong Solitaire</a></li>
+                <li><a href="../chess/">Chess</a></li>
+                <li><a href="../strategy/">All strategy games &rarr;</a></li>
+            </ul>
+        </details>
+    </div>
+
+    <script>
+    (function () {
+        'use strict';
+
+        // ── Constants & DOM ─────────────────────────────────────────────────
+        const N = 9;
+        const DIFFICULTIES = {
+            easy:   { label: 'Easy',   clues: 40 },
+            medium: { label: 'Medium', clues: 33 },
+            hard:   { label: 'Hard',   clues: 28 },
+            expert: { label: 'Expert', clues: 24 },
+        };
+        const SAVE_KEY = 'sudokuSave';
+        const BEST_KEY = 'sudokuBestTimes';
+        const DIFF_KEY = 'sudokuLastDiff';
+
+        const boardEl   = document.getElementById('board');
+        const boardFit  = document.getElementById('boardFit');
+        const padEl     = document.getElementById('pad');
+        const timeEl    = document.getElementById('time');
+        const bestEl    = document.getElementById('best');
+        const mistakesEl= document.getElementById('mistakes');
+        const statusEl  = document.getElementById('status');
+        const diffSel   = document.getElementById('diff');
+        const newGameBtn= document.getElementById('newGame');
+        const notesBtn  = document.getElementById('notesBtn');
+        const notesState= document.getElementById('notesState');
+        const eraseBtn  = document.getElementById('eraseBtn');
+        const hintBtn   = document.getElementById('hintBtn');
+        const undoBtn   = document.getElementById('undoBtn');
+        const winEl     = document.getElementById('win');
+        const winTimeEl = document.getElementById('winTime');
+        const winMsgEl  = document.getElementById('winMsg');
+
+        // ── Game state ──────────────────────────────────────────────────────
+        let puzzle   = [];          // 81 ints — the givens (0 = empty)
+        let solution = [];          // 81 ints — the unique answer
+        let values   = [];          // 81 ints — current player entries
+        let notes    = [];          // 81 Sets of candidate digits
+        let given    = [];          // 81 booleans — clue cells (locked)
+        let cells    = [];          // 81 cell DOM nodes
+        let selected = -1;
+        let notesMode= false;
+        let mistakes = 0;
+        let elapsed  = 0;           // whole seconds
+        let solved   = false;
+        let difficulty = 'medium';
+        let undoStack = [];
+        let timerId  = null;
+
+        // ── Sudoku helpers ──────────────────────────────────────────────────
+        const rowOf = i => (i / N) | 0;
+        const colOf = i => i % N;
+        const boxOf = i => (((rowOf(i) / 3) | 0) * 3) + ((colOf(i) / 3) | 0);
+
+        function shuffle(a) {
+            for (let i = a.length - 1; i > 0; i--) {
+                const j = (Math.random() * (i + 1)) | 0;
+                [a[i], a[j]] = [a[j], a[i]];
+            }
+            return a;
+        }
+
+        // Can digit `n` legally go in cell `i` of grid `g`?
+        function canPlace(g, i, n) {
+            const r = rowOf(i), c = colOf(i);
+            const br = (r / 3 | 0) * 3, bc = (c / 3 | 0) * 3;
+            for (let k = 0; k < N; k++) {
+                if (g[r * N + k] === n) return false;        // row
+                if (g[k * N + c] === n) return false;        // col
+            }
+            for (let dr = 0; dr < 3; dr++)
+                for (let dc = 0; dc < 3; dc++)
+                    if (g[(br + dr) * N + (bc + dc)] === n) return false; // box
+            return true;
+        }
+
+        // Fill an empty grid with a random complete solution (backtracking).
+        function fillGrid(g) {
+            const i = g.indexOf(0);
+            if (i < 0) return true;
+            for (const n of shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9])) {
+                if (canPlace(g, i, n)) {
+                    g[i] = n;
+                    if (fillGrid(g)) return true;
+                    g[i] = 0;
+                }
+            }
+            return false;
+        }
+
+        // Count solutions up to `cap`, using minimum-remaining-value cell choice.
+        function countSolutions(g, cap) {
+            let count = 0;
+            (function rec() {
+                // Find the empty cell with the fewest candidates.
+                let best = -1, bestCands = null;
+                for (let i = 0; i < 81; i++) {
+                    if (g[i] !== 0) continue;
+                    const cands = [];
+                    for (let n = 1; n <= 9; n++) if (canPlace(g, i, n)) cands.push(n);
+                    if (cands.length === 0) return false;     // dead end
+                    if (bestCands === null || cands.length < bestCands.length) {
+                        best = i; bestCands = cands;
+                        if (cands.length === 1) break;        // can't do better
+                    }
+                }
+                if (best === -1) { count++; return count >= cap; } // full grid
+                for (const n of bestCands) {
+                    g[best] = n;
+                    if (rec()) { g[best] = 0; return true; }
+                    g[best] = 0;
+                }
+                return false;
+            })();
+            return count;
+        }
+
+        // Generate a puzzle with a unique solution near the target clue count.
+        function generate(diff) {
+            const target = DIFFICULTIES[diff].clues;
+            const sol = new Array(81).fill(0);
+            fillGrid(sol);
+            const puz = sol.slice();
+            let clues = 81;
+            // Dig holes in random order, keeping the solution unique.
+            for (const i of shuffle([...Array(81).keys()])) {
+                if (clues <= target) break;
+                const saved = puz[i];
+                puz[i] = 0;
+                const test = puz.slice();
+                if (countSolutions(test, 2) !== 1) {
+                    puz[i] = saved;                            // restore — not unique
+                } else {
+                    clues--;
+                }
+            }
+            return { puzzle: puz, solution: sol };
+        }
+
+        // ── Persistence ─────────────────────────────────────────────────────
+        function loadBest() {
+            try { return JSON.parse(localStorage.getItem(BEST_KEY)) || {}; }
+            catch (e) { return {}; }
+        }
+        function bestFor(diff) {
+            const v = loadBest()[diff];
+            return (typeof v === 'number') ? v : null;
+        }
+        function saveBest(diff, secs) {
+            const all = loadBest();
+            if (all[diff] == null || secs < all[diff]) { all[diff] = secs; }
+            try { localStorage.setItem(BEST_KEY, JSON.stringify(all)); } catch (e) {}
+        }
+        function persist() {
+            if (solved) { try { localStorage.removeItem(SAVE_KEY); } catch (e) {} return; }
+            const data = {
+                difficulty, puzzle, solution, values,
+                notes: notes.map(s => [...s]),
+                mistakes, elapsed,
+            };
+            try { localStorage.setItem(SAVE_KEY, JSON.stringify(data)); } catch (e) {}
+        }
+        function restore() {
+            let data;
+            try { data = JSON.parse(localStorage.getItem(SAVE_KEY)); } catch (e) { return false; }
+            if (!data || !data.puzzle || data.puzzle.length !== 81) return false;
+            difficulty = data.difficulty in DIFFICULTIES ? data.difficulty : 'medium';
+            puzzle   = data.puzzle.slice();
+            solution = data.solution.slice();
+            values   = data.values.slice();
+            notes    = data.notes.map(a => new Set(a));
+            given    = puzzle.map(v => v !== 0);
+            mistakes = data.mistakes | 0;
+            elapsed  = data.elapsed | 0;
+            return true;
+        }
+
+        // ── Timer ───────────────────────────────────────────────────────────
+        function fmt(secs) {
+            const m = (secs / 60) | 0, s = secs % 60;
+            return m + ':' + (s < 10 ? '0' : '') + s;
+        }
+        function startTimer() {
+            stopTimer();
+            timerId = setInterval(() => {
+                if (solved) return;
+                elapsed++;
+                timeEl.textContent = fmt(elapsed);
+                if (elapsed % 5 === 0) persist();
+            }, 1000);
+        }
+        function stopTimer() { if (timerId) { clearInterval(timerId); timerId = null; } }
+
+        // ── Board construction ──────────────────────────────────────────────
+        function buildBoard() {
+            boardEl.innerHTML = '';
+            cells = [];
+            for (let i = 0; i < 81; i++) {
+                const c = document.createElement('div');
+                c.className = 'cell';
+                c.setAttribute('role', 'gridcell');
+                if (colOf(i) === 2 || colOf(i) === 5) c.classList.add('br');
+                if (rowOf(i) === 2 || rowOf(i) === 5) c.classList.add('bb');
+                c.addEventListener('click', () => selectCell(i));
+                boardEl.appendChild(c);
+                cells.push(c);
+            }
+        }
+
+        // ── Rendering ───────────────────────────────────────────────────────
+        function render() {
+            const selVal = selected >= 0 ? values[selected] : 0;
+            for (let i = 0; i < 81; i++) {
+                const c = cells[i];
+                const v = values[i];
+                c.className = 'cell';
+                if (colOf(i) === 2 || colOf(i) === 5) c.classList.add('br');
+                if (rowOf(i) === 2 || rowOf(i) === 5) c.classList.add('bb');
+                if (given[i]) c.classList.add('given');
+
+                // Highlight peers of the selected cell.
+                if (selected >= 0 && i !== selected &&
+                    (rowOf(i) === rowOf(selected) || colOf(i) === colOf(selected) || boxOf(i) === boxOf(selected))) {
+                    c.classList.add('peer');
+                }
+                // Highlight every cell sharing the selected cell's number.
+                if (selVal && v === selVal) c.classList.add('same-num');
+                if (i === selected) c.classList.add('sel');
+
+                // Wrong entries (differ from the unique solution).
+                if (v && !given[i] && v !== solution[i]) c.classList.add('wrong');
+
+                // Contents: a value, or pencil notes.
+                if (v) {
+                    c.textContent = v;
+                } else if (notes[i].size) {
+                    c.textContent = '';
+                    const grid = document.createElement('div');
+                    grid.className = 'notes';
+                    for (let n = 1; n <= 9; n++) {
+                        const sp = document.createElement('span');
+                        if (notes[i].has(n)) {
+                            sp.textContent = n;
+                            if (selVal && n === selVal) sp.classList.add('lit-peer');
+                        }
+                        grid.appendChild(sp);
+                    }
+                    c.appendChild(grid);
+                } else {
+                    c.textContent = '';
+                }
+            }
+            renderPad();
+            timeEl.textContent = fmt(elapsed);
+            mistakesEl.textContent = mistakes;
+            mistakesEl.classList.toggle('bad', mistakes > 0);
+            const b = bestFor(difficulty);
+            bestEl.textContent = b == null ? '—' : fmt(b);
+            undoBtn.disabled = undoStack.length === 0;
+        }
+
+        // Number pad shows remaining count per digit and dims completed ones.
+        function renderPad() {
+            const placed = new Array(10).fill(0);
+            for (let i = 0; i < 81; i++) if (values[i]) placed[values[i]]++;
+            for (let n = 1; n <= 9; n++) {
+                const btn = padEl.children[n - 1];
+                const left = 9 - placed[n];
+                btn.classList.toggle('done', left <= 0);
+                btn.querySelector('.left').textContent = left > 0 ? left : '';
+            }
+        }
+
+        function buildPad() {
+            padEl.innerHTML = '';
+            for (let n = 1; n <= 9; n++) {
+                const btn = document.createElement('button');
+                btn.className = 'np';
+                btn.type = 'button';
+                btn.innerHTML = '<span class="d">' + n + '</span><span class="left"></span>';
+                btn.addEventListener('click', () => inputNumber(n));
+                padEl.appendChild(btn);
+            }
+        }
+
+        // ── Interaction ─────────────────────────────────────────────────────
+        function selectCell(i) {
+            selected = i;
+            render();
+        }
+
+        function pushUndo(i) {
+            undoStack.push({ i, value: values[i], notes: [...notes[i]] });
+            if (undoStack.length > 200) undoStack.shift();
+        }
+
+        function inputNumber(n) {
+            if (solved || selected < 0) return;
+            const i = selected;
+            if (given[i]) return;
+
+            if (notesMode && !values[i]) {
+                pushUndo(i);
+                if (notes[i].has(n)) notes[i].delete(n);
+                else notes[i].add(n);
+                afterChange(i);
+                return;
+            }
+
+            // Placing a value.
+            if (values[i] === n) return;   // tapping the same value is a no-op
+            pushUndo(i);
+            values[i] = n;
+            notes[i].clear();
+            // Clear this candidate from the notes of peer cells.
+            for (let k = 0; k < 81; k++) {
+                if (k === i || values[k]) continue;
+                if (rowOf(k) === rowOf(i) || colOf(k) === colOf(i) || boxOf(k) === boxOf(i)) {
+                    notes[k].delete(n);
+                }
+            }
+            if (n !== solution[i]) {
+                mistakes++;
+                cells[i].classList.add('conflict-glow');
+                setTimeout(() => cells[i] && cells[i].classList.remove('conflict-glow'), 350);
+            }
+            afterChange(i);
+        }
+
+        function eraseCell() {
+            if (solved || selected < 0) return;
+            const i = selected;
+            if (given[i] || (!values[i] && !notes[i].size)) return;
+            pushUndo(i);
+            values[i] = 0;
+            notes[i].clear();
+            afterChange(i);
+        }
+
+        function undo() {
+            if (!undoStack.length) return;
+            const last = undoStack.pop();
+            values[last.i] = last.value;
+            notes[last.i] = new Set(last.notes);
+            selected = last.i;
+            render();
+            persist();
+        }
+
+        function hint() {
+            if (solved) return;
+            // Prefer the selected empty cell; otherwise pick a random empty one.
+            let i = (selected >= 0 && !given[selected] && values[selected] !== solution[selected]) ? selected : -1;
+            if (i < 0) {
+                const empties = [];
+                for (let k = 0; k < 81; k++) if (!given[k] && values[k] !== solution[k]) empties.push(k);
+                if (!empties.length) return;
+                i = empties[(Math.random() * empties.length) | 0];
+            }
+            pushUndo(i);
+            values[i] = solution[i];
+            notes[i].clear();
+            given[i] = true;            // lock the revealed cell so it reads as solved
+            selected = i;
+            afterChange(i);
+            cells[i].classList.add('hinted');
+            setTimeout(() => cells[i] && cells[i].classList.remove('hinted'), 500);
+            statusEl.textContent = 'Revealed one cell. The rest is yours.';
+        }
+
+        function afterChange(i) {
+            render();
+            persist();
+            checkWin();
+        }
+
+        function checkWin() {
+            for (let k = 0; k < 81; k++) if (values[k] !== solution[k]) return;
+            solved = true;
+            stopTimer();
+            const prevBest = bestFor(difficulty);
+            const isPB = prevBest == null || elapsed < prevBest;
+            saveBest(difficulty, elapsed);
+            persist();
+            winTimeEl.textContent = fmt(elapsed);
+            const lvl = DIFFICULTIES[difficulty].label;
+            if (mistakes === 0 && isPB) {
+                winMsgEl.innerHTML = lvl + ' · clean solve · <span class="pb">new best time!</span>';
+            } else if (isPB) {
+                winMsgEl.innerHTML = lvl + ' · <span class="pb">new best time!</span> (' + mistakes + ' mistake' + (mistakes === 1 ? '' : 's') + ')';
+            } else if (mistakes === 0) {
+                winMsgEl.textContent = lvl + ' · clean solve, no mistakes.';
+            } else {
+                winMsgEl.textContent = lvl + ' · solved with ' + mistakes + ' mistake' + (mistakes === 1 ? '' : 's') + '.';
+            }
+            render();
+            winEl.classList.add('show');
+        }
+
+        function setNotesMode(on) {
+            notesMode = on;
+            notesBtn.classList.toggle('on', on);
+            notesState.textContent = on ? 'On' : 'Off';
+        }
+
+        // ── New game ────────────────────────────────────────────────────────
+        function newGame(diff) {
+            difficulty = diff;
+            diffSel.value = diff;
+            try { localStorage.setItem(DIFF_KEY, diff); } catch (e) {}
+            statusEl.textContent = 'Generating a fresh ' + DIFFICULTIES[diff].label + ' puzzle…';
+            winEl.classList.remove('show');
+            // Defer so the status paint lands before the (brief) blocking generate.
+            setTimeout(() => {
+                const g = generate(diff);
+                puzzle = g.puzzle;
+                solution = g.solution;
+                values = puzzle.slice();
+                notes = Array.from({ length: 81 }, () => new Set());
+                given = puzzle.map(v => v !== 0);
+                selected = -1;
+                mistakes = 0;
+                elapsed = 0;
+                solved = false;
+                undoStack = [];
+                setNotesMode(false);
+                render();
+                startTimer();
+                persist();
+                statusEl.textContent = 'Pick a cell, then a number. Fill every row, column, and box with 1–9.';
+            }, 20);
+        }
+
+        function resumeGame() {
+            given = puzzle.map(v => v !== 0);
+            selected = -1;
+            solved = false;
+            undoStack = [];
+            setNotesMode(false);
+            render();
+            startTimer();
+            statusEl.textContent = 'Welcome back — resuming your ' + DIFFICULTIES[difficulty].label + ' puzzle.';
+        }
+
+        // ── Keyboard ────────────────────────────────────────────────────────
+        document.addEventListener('keydown', (e) => {
+            if (e.key >= '1' && e.key <= '9') { inputNumber(+e.key); e.preventDefault(); return; }
+            if (e.key === 'Backspace' || e.key === 'Delete') { eraseCell(); e.preventDefault(); return; }
+            if (e.key === 'n' || e.key === 'N') { setNotesMode(!notesMode); return; }
+            if (e.key === 'h' || e.key === 'H') { hint(); return; }
+            if ((e.key === 'z' || e.key === 'Z') && (e.ctrlKey || e.metaKey)) { undo(); e.preventDefault(); return; }
+            // Arrow-key navigation.
+            let r = selected >= 0 ? rowOf(selected) : 0;
+            let c = selected >= 0 ? colOf(selected) : 0;
+            let moved = false;
+            if (e.key === 'ArrowLeft')  { c = (c + 8) % 9; moved = true; }
+            if (e.key === 'ArrowRight') { c = (c + 1) % 9; moved = true; }
+            if (e.key === 'ArrowUp')    { r = (r + 8) % 9; moved = true; }
+            if (e.key === 'ArrowDown')  { r = (r + 1) % 9; moved = true; }
+            if (moved) { selectCell(selected < 0 ? 0 : r * 9 + c); e.preventDefault(); }
+        });
+
+        // ── Buttons ─────────────────────────────────────────────────────────
+        newGameBtn.addEventListener('click', () => newGame(diffSel.value));
+        document.getElementById('winNew').addEventListener('click', () => newGame(diffSel.value));
+        diffSel.addEventListener('change', () => newGame(diffSel.value));
+        notesBtn.addEventListener('click', () => setNotesMode(!notesMode));
+        eraseBtn.addEventListener('click', eraseCell);
+        hintBtn.addEventListener('click', hint);
+        undoBtn.addEventListener('click', undo);
+        window.addEventListener('beforeunload', persist);
+        document.addEventListener('visibilitychange', () => { if (document.hidden) persist(); });
+
+        // ── Auto-scale board to fit the viewport ────────────────────────────
+        function scaleBoard() {
+            boardEl.style.transform = 'none';
+            const nat = boardEl.offsetWidth || 492;
+            const viewW = Math.min(window.innerWidth, document.documentElement.clientWidth);
+            const mw = Math.max(viewW - 44, 200);
+            const mh = window.innerHeight * 0.58;
+            const s = Math.min(mw / nat, mh / nat, 1);
+            boardEl.style.transform = 'scale(' + s + ')';
+            boardFit.style.width = (nat * s) + 'px';
+            boardFit.style.height = (nat * s) + 'px';
+        }
+        window.addEventListener('resize', scaleBoard);
+
+        // ── Boot ────────────────────────────────────────────────────────────
+        buildBoard();
+        buildPad();
+        let lastDiff = 'medium';
+        try { lastDiff = localStorage.getItem(DIFF_KEY) || 'medium'; } catch (e) {}
+        if (!(lastDiff in DIFFICULTIES)) lastDiff = 'medium';
+        if (restore()) {
+            diffSel.value = difficulty;
+            resumeGame();
+        } else {
+            newGame(lastDiff);
+        }
+        scaleBoard();
+        // Re-scale once layout/fonts settle.
+        setTimeout(scaleBoard, 60);
+    })();
+    </script>
+</body>
+</html>
