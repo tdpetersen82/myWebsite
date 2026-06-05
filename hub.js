@@ -52,6 +52,16 @@
     { id: 'puzzle',  label: 'Strategy' },
     { id: 'casino',  label: 'Casino' },
   ];
+  const CAT_LABEL = Object.fromEntries(CATEGORIES.map(c => [c.id, c.label]));
+
+  // Games with a real screenshot thumbnail in assets/thumbs/<id>.webp. Tiles for
+  // these show the captured frame; everything else falls back to the icon
+  // medallion. Add an id here when its thumbnail lands.
+  const THUMBS = new Set([
+    '2048', 'backgammon', 'checkers', 'chess', 'chinese-checkers',
+    'connect-4', 'connect-dots', 'mahjong', 'mancala', 'othello',
+    'ultimate-tic-tac-toe', 'sudoku', 'snake',
+  ]);
 
   // Map of game id → localStorage key for personal best. If a key isn't here
   // (or has no stored value), the tile renders without the ★ badge — better
@@ -149,31 +159,53 @@
   function gameUrl(game) { return `${game.id}/`; }
 
   // ── Tile rendering ─────────────────────────────────────────────────────
+  // The big hero tile keeps its showcase layout (ambient art + blurb + CTA).
+  // Every other tile uses the "Style B" frame: a screenshot up top (real game
+  // frame when we have one, otherwise an icon medallion) over a clean footer.
   function renderTile(game, size, isHero) {
-    const best = getBest(game.id);
-    const hero = isHero ? `
-      <p class="desc">${game.desc} Pick up where you left off — your scores are saved locally.</p>
-    ` : '';
-    const heroCta = isHero ? `<span class="play-cta">Play now →</span>` : '';
-    const sizeForGlyph = isHero ? 140 : (size === 's-tall' ? 84 : 56);
+    if (isHero) return renderHeroTile(game, size);
 
+    const best = getBest(game.id);
+    const cat = CAT_LABEL[game.cat] || '';
+    const hasShot = THUMBS.has(game.id);
+    const top = hasShot
+      ? `<img class="shot-img" src="assets/thumbs/${game.id}.webp" alt="${game.name} screenshot" loading="lazy" decoding="async" width="600" height="600">`
+      : `<div class="shot-ph" style="background:${game.color}22">${glyph(game, size === 's-tall' ? 84 : 56)}</div>`;
+
+    return el(`
+      <a class="tile ${size} tileB ${hasShot ? 'has-shot' : 'no-shot'}" href="${gameUrl(game)}" style="--g:${game.color}">
+        ${game.isNew ? '<span class="tile-new">NEW</span>' : ''}
+        <div class="shot">${top}</div>
+        <div class="tfoot">
+          <div class="tf-text">
+            <span class="tf-eyebrow">${cat}</span>
+            <h3>${game.name}</h3>
+          </div>
+          <span class="tf-cta">${best != null ? `★ ${best}` : 'Play'}</span>
+        </div>
+      </a>
+    `);
+  }
+
+  function renderHeroTile(game, size) {
+    const best = getBest(game.id);
     const a = el(`
       <a class="tile ${size} has-preview" href="${gameUrl(game)}" style="background:${game.color}22;--g:${game.color}">
         ${game.isNew ? '<span class="tile-new">NEW</span>' : ''}
-        ${isHero ? '<span class="tile-tag">★ Featured</span>' : ''}
+        <span class="tile-tag">★ Featured</span>
         <div class="tile-decoration"></div>
-        <div class="tile-art">${glyph(game, sizeForGlyph)}</div>
+        <div class="tile-art">${glyph(game, 140)}</div>
         <div class="tile-preview" style="background:${game.color}14">
           <div class="preview-grid" style="--cell:${game.color}"></div>
         </div>
         <div class="tile-meta">
           <h3>${game.name}</h3>
-          ${hero}
+          <p class="desc">${game.desc} Pick up where you left off — your scores are saved locally.</p>
           <div class="meta-row">
             <span>▸ Free</span>
             ${best != null ? `<span class="best">★ ${best}</span>` : ''}
           </div>
-          ${heroCta}
+          <span class="play-cta">Play now →</span>
         </div>
       </a>
     `);
