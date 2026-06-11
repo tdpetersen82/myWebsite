@@ -416,11 +416,15 @@ function App() {
     }, 1400);
   }
 
-  function deal() { startRound(bet); }
+  function deal() {
+    if (phase !== 'idle' && phase !== 'bet') return;
+    startRound(bet);
+  }
 
   const canRebet = lastBet.length > 0 && bankroll >= lastBet.reduce((a,b)=>a+b,0);
 
   function rebetAndDeal() {
+    if (phase !== 'resolved') return;
     const sum = lastBet.reduce((a,b)=>a+b,0);
     if (!sum || bankroll < sum) return;
     setBankroll(br => br - sum);
@@ -896,7 +900,7 @@ function App() {
   useEffect(() => {
     function onKey(e) {
       const t = e.target;
-      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA' || t.tagName === 'SELECT')) return;
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const K = keysRef.current;
       const k = e.key.toLowerCase();
