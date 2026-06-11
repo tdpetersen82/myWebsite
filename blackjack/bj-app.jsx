@@ -340,10 +340,17 @@ function App() {
     setPhase('bet');
     setIsIdle(false);
     if (tweaks.soundOn) SFX.chip();
-    const newTotal = totalBet + value;
-    if (newTotal >= 500) say('bet_huge', 'shocked');
-    else if (newTotal >= 100 || value >= 100) say('bet_high', 'happy');
-    else say('bet_low', 'idle');
+    // React when the bet crosses a tier, not on every chip stacked past it —
+    // otherwise building a big bet chip-by-chip gasps once per click.
+    const prevTotal = totalBet;
+    const newTotal = prevTotal + value;
+    if (newTotal >= 500) {
+      if (prevTotal < 500) say('bet_huge', 'shocked');
+    } else if (newTotal >= 100) {
+      if (prevTotal < 100) say('bet_high', 'happy');
+    } else {
+      say('bet_low', 'idle');
+    }
   }
   function clearBet() {
     setBankroll(br => br + totalBet);
@@ -580,7 +587,9 @@ function App() {
     if (!h || h.stood || h.busted || h.surrendered) return;
     if (h.cards.length !== 2 || h.isSplitAces || bankroll < h.bet) return;
     setBankroll(br => br - h.bet);
-    say('double', 'shocked');
+    // Doubling is routine basic strategy — the gasp is only earned when
+    // there's real money riding on the one card.
+    say('double', h.bet >= 100 ? 'shocked' : 'happy');
     if (tweaks.soundOn) SFX.chip();
     const c = shoeRef.current.pop();
     const newCards = [...h.cards, c];
@@ -685,7 +694,9 @@ function App() {
   function resolveAll(dCards, finalHands) {
     const dv = handValue(dCards).total;
     const dBust = dv > 21;
-    if (dBust) say('dealer_bust', 'shocked', { total: dv });
+    // Dealer busts ~28% of hands — that's routine, not shocking. The facepalm
+    // 'bust' pose is the one drawn for exactly this moment ("I broke").
+    if (dBust) say('dealer_bust', 'bust', { total: dv });
 
     let totalReturn = 0;
     const newResults = finalHands.map((h) => {
