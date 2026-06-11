@@ -1,5 +1,12 @@
 /* eslint-disable */
-// Main blackjack app — full game state machine
+// Main blackjack app — full game state machine.
+//
+// Strategy hints come from BJ_STRATEGY (bj-strategy.js), an exact EV engine
+// that only ranks actions the table will accept right now — the coach can
+// never recommend a disabled button. The shoe lives in a ref (not state) so
+// every draw — player hits, doubles, splits, dealer draws scheduled through
+// setTimeout — pulls from the one live deck; the old state-based shoe let
+// delayed dealer draws replay cards the player had already been dealt.
 
 const { useState, useEffect, useRef, useMemo } = React;
 
@@ -25,18 +32,6 @@ function cardVal(rank) {
   return parseInt(rank, 10);
 }
 
-const DEALER_BUST_PCT = { 2:35, 3:38, 4:40, 5:43, 6:42, 7:26, 8:24, 9:23, 10:21, A:12 };
-
-function playerBustRisk(total, isSoft) {
-  if (isSoft || total < 12) return 0;
-  if (total >= 21) return 100;
-  let bustRanks = 0;
-  for (let v = 2; v <= 10; v++) {
-    if (total + v > 21) bustRanks += (v === 10) ? 4 : 1;
-  }
-  return Math.round(bustRanks / 13 * 100);
-}
-
 function handValue(cards) {
   let total = 0, aces = 0;
   for (const c of cards) {
@@ -44,11 +39,7 @@ function handValue(cards) {
     else total += cardVal(c.rank);
   }
   while (total > 21 && aces > 0) { total -= 10; aces--; }
-  let t2 = 0, a2 = 0;
-  for (const c of cards) { if (c.rank==='A'){a2++;t2+=11;} else t2 += cardVal(c.rank); }
-  while (t2 > 21 && a2 > 0) { t2 -= 10; a2--; }
-  const soft = a2 > 0 && cards.some(c=>c.rank==='A');
-  return { total, soft };
+  return { total, soft: aces > 0 };
 }
 
 function isBlackjack(cards) {
@@ -56,53 +47,138 @@ function isBlackjack(cards) {
   return handValue(cards).total === 21;
 }
 
-function basicStrategy(player, dealerUp) {
-  if (!dealerUp) return null;
-  const dv = cardVal(dealerUp.rank);
-  const { total, soft } = handValue(player);
-  const pair = player.length === 2 && player[0].rank === player[1].rank;
-  const dealerKey = dealerUp.rank === 'A' ? 'A' : Math.min(cardVal(dealerUp.rank), 10);
-  const dealerBust = DEALER_BUST_PCT[dealerKey];
-  const up = dealerUp.rank === 'A' ? 'ace' : String(dealerKey);
+// ─── Coach copy layer ──────────────────────────────────
+// Turns the engine's numbers into one plain-English sentence plus readable
+// odds. No jargon: probabilities always read as "N out of 100 hands".
 
-  function out(action, explanation) {
-    const odds = { dealerBust };
-    const pb = playerBustRisk(total, soft);
-    if (pb > 0) odds.playerBust = pb;
-    return { kind:'strategy', action, explanation, odds };
+// Round [win, push, lose] to integers that sum to exactly 100, largest
+// remainder first, so the bars and the prose always quote the same numbers.
+function roundTo100(probs) {
+  const raw = probs.map(p => p * 100);
+  const floors = raw.map(Math.floor);
+  let left = 100 - floors.reduce((a, b) => a + b, 0);
+  const order = raw.map((v, i) => [v - floors[i], i]).sort((a, b) => b[0] - a[0]);
+  for (let k = 0; k < order.length && left > 0; k++, left--) floors[order[k][1]]++;
+  return floors;
+}
+
+function upName(rank) {
+  if (rank === 'A') return 'ace';
+  if (['J','Q','K'].includes(rank)) return 'ten';
+  return rank;
+}
+
+// "an ace", "an 8", "a 9"
+function aAn(word) {
+  return /^(a|e|i|o|u|8)/i.test(word) ? `an ${word}` : `a ${word}`;
+}
+
+function barFor(a, primary) {
+  const [win, push, lose] = roundTo100([a.win, a.push, a.lose]);
+  return { label: a.action, win, push, lose, primary: !!primary };
+}
+
+function buildPlayHint(d, ctx) {
+  // d: BJ_STRATEGY.decide() result · ctx: { bet, bankroll, dealerUpRank, isSplitHand, cardsCount }
+  const best = d.best;
+  // The comparison is always against the best PLAYING alternative — a
+  // surrender bar is a solid red block and reads as noise, even in the odd
+  // spots (like 12 vs 8) where surrender technically out-EVs standing.
+  const runner = d.candidates.find(c => c !== best && c.action !== 'Surrender') || null;
+  const up = upName(ctx.dealerUpRank);
+  const dealerBust = Math.round(d.dealerBust * 100);
+  const bustNext = Math.round(d.bustNext * 100);
+  const bestBar = barFor(best, true);
+  const total = d.total;
+
+  // Textbook note — when the by-the-book play isn't possible right now.
+  let textbookNote = null;
+  if (d.shortOfChips && d.ideal) {
+    const shortBy = ctx.bet - ctx.bankroll;
+    textbookNote = `Textbook says ${d.ideal.action.toLowerCase()} — needs $${shortBy} more behind it.`;
+  } else if (ctx.cardsCount === 2 && ctx.isSplitHand && !d.soft &&
+             ((total === 16 && ['9','10','J','Q','K','A'].includes(ctx.dealerUpRank)) || (total === 15 && cardVal(ctx.dealerUpRank) === 10))) {
+    textbookNote = 'Textbook says surrender — not after splitting.';
+  } else if (ctx.cardsCount > 2 && !d.soft &&
+             ((total === 16 && ['9','10','J','Q','K','A'].includes(ctx.dealerUpRank)) || (total === 15 && cardVal(ctx.dealerUpRank) === 10))) {
+    textbookNote = 'Textbook says surrender — off the table once you hit.';
   }
 
-  if (pair) {
-    const r = player[0].rank;
-    if (r === 'A') return out('Split', `Aces are the most profitable split in the game — each one starts a new hand at 11. Catch: you only get one card per ace, no further hits or doubles. Still always worth it.`);
-    if (r === '8') return out('Split', `Hard 16 is the worst total in blackjack — too high to safely hit, too weak to win standing. Two fresh starts at 8 dodge it entirely, especially against the dealer's ${up}.`);
-    if (['10','J','Q','K'].includes(r)) return out('Stand', `20 wins against everything but a dealer 21. Splitting trades a near-certain win for two ten-starts that aren't as strong. Don't break it.`);
-    if (r === '9' && [2,3,4,5,6,8,9].includes(dv)) return out('Split', `18 is decent, but vs the dealer's ${up}, two fresh nines extract more EV. (Pair of 9s vs 7, 10, or ace: stand on the 18.)`);
-    if (r === '7' && dv <= 7) return out('Split', `14 is one of the toughest totals — too low to stand, too high to hit comfortably. Vs the dealer's ${up}, two starting sevens are better than one stuck 14.`);
-    if (r === '6' && dv <= 6) return out('Split', `12 from a pair of sixes is bust-prone on a hit and a probable loser if you stand. Vs the dealer's ${up} (weak), splitting puts two hands into play while they're most likely to break.`);
-    if (r === '4' && [5,6].includes(dv)) return out('Split', `Eight is weak to hit. The dealer's ${up} is in the bust zone, so splitting fours catches their weakest spot — two starting 4s beat one 8.`);
-    if ((r === '2' || r === '3') && dv <= 7) return out('Split', `Splitting cheaply when the dealer's ${up} is weak (busts often) — two hands in play extract more than one weak hit-or-stand decision.`);
-  }
-
-  if (soft) {
-    if (total >= 19) return out('Stand', `Soft ${total} beats most dealer outcomes. Hitting risks turning a winner into a 17 or worse — stand pat.`);
-    if (total === 18) {
-      if (dv >= 9) return out('Hit', `Soft 18 loses to the dealer's likely 19-20 here. Your ace flexes to 1 if you pull a face — you can't bust on one card, so hit safely for a shot at 19+.`);
-      return out('Stand', `Soft 18 vs the dealer's ${up} (weak) wins more often than it loses. Stand and let them try to make a hand.`);
+  // Why sentence by situation class.
+  let why;
+  const a = best.action;
+  if (a === 'Stand') {
+    if (!d.soft && total <= 16 && cardVal(ctx.dealerUpRank) <= 6) {
+      why = `The dealer's ${up} is in trouble — they bust ${dealerBust} times out of 100 from there. Stay put and let them wreck their own hand.`;
+    } else if (d.isPair && total === 20) {
+      why = `Twenty wins ${bestBar.win} hands out of 100 just sitting there. Don't break up a winner for two maybes.`;
+    } else {
+      why = `${total} is a made hand. Hitting wrecks it more often than it helps — make the dealer come to you.`;
     }
-    if (total === 17 && [3,4,5,6].includes(dv)) return out('Double', `Soft 17 vs a ${up} is the rare soft-hand double. The ace cushions the bust risk, and the dealer is in their weakest range — double for max value.`);
-    return out('Hit', `Soft hands can't bust on one card — the ace flexes from 11 to 1 if needed. Take the free improvement; ${total} alone won't beat much.`);
+  } else if (a === 'Hit') {
+    if (d.soft) {
+      why = `Your ace bends — it counts as 1 if it must, so this card can't bust you. That's a free swing at a better hand.`;
+    } else if (total <= 11) {
+      why = `You can't bust from ${total} — every card helps. Take one and build something the dealer has to beat.`;
+    } else {
+      why = `Standing on ${total} only wins if the dealer busts, and ${aAn(up)} rarely does (${dealerBust} in 100). ${bustNext} of 100 hits go over — and hitting is still your better play.`;
+    }
+  } else if (a === 'Double') {
+    why = `Same one card either way — doubling just puts another $${ctx.bet} out while the odds lean your way.`;
+  } else if (a === 'Split') {
+    if (d.isPair && ctx.pairRank === 'A') {
+      why = `Two aces locked together make a clumsy ${total}. Apart, each one starts a fresh hand at eleven.`;
+    } else if (d.isPair && ctx.pairRank === '8') {
+      why = `Sixteen is the worst seat in the house. Two hands starting from 8 dodge it entirely.`;
+    } else {
+      why = `One ${ctx.pairRank}-${ctx.pairRank} hand is stuck at ${total}; two fresh starts aren't. Splitting wins more across both hands.`;
+    }
+  } else if (a === 'Surrender') {
+    const alt = runner;
+    const altLose = alt ? roundTo100([alt.win, alt.push, alt.lose])[2] : null;
+    why = `Hard truth: ${total} against ${aAn(up)} loses about ${altLose} times in 100 however you play it. Take $${Math.ceil(ctx.bet / 2)} back and live to bet again.`;
   }
 
-  if (total === 16 && dv >= 9) return out('Surrender', `Hard 16 vs the dealer's ${up} is a near-certain loss either way: hit and you bust the majority of the time, stand and the dealer's strong upcard beats you. Half back is the best math available.`);
-  if (total === 15 && dv === 10) return out('Surrender', `Hard 15 vs a 10 loses around 74% of the time. Hitting busts on more than half your draws. Surrender for half back if the table allows.`);
-  if (total >= 17) return out('Stand', `Hard ${total} stands — hitting busts on more cards than it improves you. Whatever the dealer's ${up} makes, you've already drawn the line.`);
-  if (total >= 13 && dv <= 6) return out('Stand', `The dealer's ${up} is weak — they're more likely to break than make a strong hand. Standing on ${total} forces them to play it out and bust.`);
-  if (total === 12 && [4,5,6].includes(dv)) return out('Stand', `The dealer's ${up} is the bust zone (4-6 break the most often). Don't take your own bust risk on a 12 when they're about to break for you.`);
-  if (total === 11) return out('Double', `11 is the best double in the game. Ten-value cards are 4 of 13 ranks (~31%) — your most likely landing spot is 21. Vs the dealer's ${up}, double for the extra unit.`);
-  if (total === 10 && dv <= 9) return out('Double', `10 doubles into 20 on any ten-card, and the dealer's ${up} can't make blackjack. Lock in the EV before they play.`);
-  if (total === 9 && [3,4,5,6].includes(dv)) return out('Double', `9 + a ten = 19, and the dealer's ${up} is the weakest range to face. Double down — they're most likely to break and a 19 wins big when they don't.`);
-  return out('Hit', `Hard ${total} is too low to stand against the dealer's ${up}. The dealer will likely outdraw you if you stop here — take another card.`);
+  // Bars: recommended + runner-up. Surrender shows only the best playing
+  // alternative (its own bar would be a solid red "lose" block).
+  let bars, chip = null, moneyLine = null;
+  const evGapDollars = runner ? (best.ev - runner.ev) * ctx.bet : 99;
+  const closeCall = runner && Math.abs(evGapDollars) < 1;
+
+  if (a === 'Surrender') {
+    bars = runner ? [barFor(runner, false)] : [];
+    chip = `Keeps $${Math.ceil(ctx.bet / 2)} of your $${ctx.bet}`;
+    const extra = runner ? Math.round((-runner.ev * ctx.bet) - ctx.bet / 2) : 0;
+    if (extra >= 1) moneyLine = `≈ $${extra} cheaper than playing it out.`;
+  } else {
+    bars = runner ? [bestBar, barFor(runner, false)] : [bestBar];
+    if (closeCall) {
+      chip = 'Coin flip — either works';
+      why = why + ` (Honestly, it's close — the book leans ${a.toLowerCase()}.)`;
+    } else if (a === 'Double' || a === 'Split') {
+      const delta = Math.round(evGapDollars);
+      if (delta >= 1) chip = `≈ +$${delta} per hand vs ${runner.action.toLowerCase()}`;
+      moneyLine = a === 'Double' ? `+$${ctx.bet} rides on one card.` : `Each split hand plays for $${ctx.bet}.`;
+    } else if (runner) {
+      const runnerBar = bars[1];
+      const dWin = bestBar.win - runnerBar.win;
+      if (dWin > 0) chip = `+${dWin} more wins per 100 than ${runner.action.toLowerCase()}`;
+      else {
+        const dLose = runnerBar.lose - bestBar.lose;
+        if (dLose > 0) chip = `Loses ${dLose} fewer per 100 than ${runner.action.toLowerCase()}`;
+      }
+    }
+  }
+
+  return {
+    kind: 'play',
+    action: a,
+    why, textbookNote, bars, chip, moneyLine,
+    stats: [
+      { label: 'Dealer busts', value: `${dealerBust}%` },
+      ...(bustNext > 0 ? [{ label: 'Bust if you hit', value: `${bustNext}%` }] : []),
+    ],
+  };
 }
 
 // ─── App ──────────────────────────────────────────────
@@ -132,9 +208,27 @@ function App() {
     if (window.CASINO_BANKROLL) window.CASINO_BANKROLL.write(bankroll);
   }, [bankroll]);
 
+  // Adopt the cloud bankroll when sync hydrates after mount — otherwise the
+  // next local write would clobber a balance synced from another device.
+  useEffect(() => {
+    const onHydrated = () => { if (window.CASINO_BANKROLL) setBankroll(window.CASINO_BANKROLL.read()); };
+    window.addEventListener('casino:hydrated', onHydrated);
+    return () => window.removeEventListener('casino:hydrated', onHydrated);
+  }, []);
+
+  // Portrait/landscape canvas — chosen by the resize script in index.html.
+  const [portrait, setPortrait] = useState(() => !!(window.BJ_CANVAS && window.BJ_CANVAS.portrait));
+  useEffect(() => {
+    const onCanvas = () => setPortrait(!!(window.BJ_CANVAS && window.BJ_CANVAS.portrait));
+    window.addEventListener('bj:canvas', onCanvas);
+    return () => window.removeEventListener('bj:canvas', onCanvas);
+  }, []);
+
   // Round
   const [phase, setPhase] = useState('idle');
-  const [shoe, setShoe] = useState(() => buildShoe(6));
+  const shoeRef = useRef(null);
+  if (!shoeRef.current) shoeRef.current = buildShoe(6);
+  const dealerStartedRef = useRef(false);
   const [bet, setBet] = useState([]);
   const [lastBet, setLastBet] = useState([]);
   const [dealer, setDealer] = useState([]);
@@ -144,6 +238,8 @@ function App() {
   const [results, setResults] = useState([]); // per hand
   const [insurance, setInsurance] = useState(0); // amount wagered on insurance
   const [insuranceOffered, setInsuranceOffered] = useState(false);
+  const [blockedMsg, setBlockedMsg] = useState(null); // why a dimmed button can't be used
+  const blockedTimerRef = useRef(null);
 
   // Dealer messaging + idle
   const [expression, setExpression] = useState('idle');
@@ -177,8 +273,8 @@ function App() {
     setMood(m => Math.max(-1, Math.min(1, m + delta)));
   }
 
-  function say(key, expr) {
-    setMessage(pickLine(key, ctx));
+  function say(key, expr, extra) {
+    setMessage(pickLine(key, extra ? { ...ctx, ...extra } : ctx));
     if (expr) {
       setExpression(expr);
       const moodDelta = expr === 'happy' ? 0.18
@@ -229,6 +325,13 @@ function App() {
 
   const totalBet = bet.reduce((a,b)=>a+b, 0);
 
+  function showBlocked(msg) {
+    if (!msg) return;
+    setBlockedMsg(msg);
+    if (blockedTimerRef.current) clearTimeout(blockedTimerRef.current);
+    blockedTimerRef.current = setTimeout(() => setBlockedMsg(null), 2800);
+  }
+
   function addChip(value) {
     if (phase !== 'idle' && phase !== 'bet') return;
     if (bankroll < value) return;
@@ -258,25 +361,30 @@ function App() {
     say('rebet', 'happy');
   }
 
-  function deal() {
-    if (!totalBet) return;
+  // Deal a round with an explicit chip stack — both the Deal button and
+  // Rebet&Deal route through here so there are no stale-closure paths.
+  function startRound(chips) {
+    const roundBet = chips.reduce((a,b)=>a+b, 0);
+    if (!roundBet) return;
+    if (shoeRef.current.length < 80) shoeRef.current = buildShoe(6);
+    dealerStartedRef.current = false;
     if (tweaks.soundOn) { SFX.deal(); [0,150,300,450].forEach(d=>setTimeout(()=>SFX.card(), d)); }
-    setLastBet(bet);
+    setBet(chips);
+    setLastBet(chips);
     setResults([]);
     setHoleRevealed(false);
     setInsurance(0);
     setInsuranceOffered(false);
     setActiveHandIdx(0);
+    setBlockedMsg(null);
     setPhase('dealing');
     setExpression('deal');
 
-    const next = [...shoe];
-    const p1 = next.pop(), d1 = next.pop(), p2 = next.pop(), d2 = next.pop();
-    setShoe(next);
+    const p1 = shoeRef.current.pop(), d1 = shoeRef.current.pop(), p2 = shoeRef.current.pop(), d2 = shoeRef.current.pop();
 
     const newPlayer = [p1, p2];
     const newDealer = [d1, d2];
-    setHands([{ cards: newPlayer, bet: totalBet, doubled: false, surrendered: false, stood: false, busted: false, isSplitAces: false }]);
+    setHands([{ cards: newPlayer, bet: roundBet, doubled: false, surrendered: false, stood: false, busted: false, isSplitAces: false }]);
     setDealer(newDealer);
 
     say('deal', 'deal');
@@ -296,7 +404,7 @@ function App() {
 
       if (pBJ || dBJ) {
         setHoleRevealed(true);
-        setTimeout(() => resolveImmediate(newPlayer, newDealer, totalBet), 700);
+        setTimeout(() => resolveImmediate(newPlayer, newDealer, roundBet), 700);
       } else {
         setPhase('player');
         const v = handValue(newPlayer).total;
@@ -308,42 +416,42 @@ function App() {
     }, 1400);
   }
 
+  function deal() { startRound(bet); }
+
+  const canRebet = lastBet.length > 0 && bankroll >= lastBet.reduce((a,b)=>a+b,0);
+
+  function rebetAndDeal() {
+    const sum = lastBet.reduce((a,b)=>a+b,0);
+    if (!sum || bankroll < sum) return;
+    setBankroll(br => br - sum);
+    startRound(lastBet);
+  }
+
   function takeInsurance(yes) {
+    if (phase !== 'insurance' || !insuranceOffered) return;
     setInsuranceOffered(false);
-    const insAmt = yes ? Math.floor(totalBet / 2) : 0;
-    if (yes && bankroll >= insAmt) {
+    setPhase('dealing'); // lock input during the reveal beat
+    const baseBet = hands[0].bet;
+    const insAmt = Math.floor(baseBet / 2);
+    const took = yes && bankroll >= insAmt;
+    if (took) {
       setBankroll(br => br - insAmt);
       setInsurance(insAmt);
     }
     const dBJ = isBlackjack(dealer);
-    const pBJ = isBlackjack(hands[0].cards);
     setTimeout(() => {
       if (dBJ) {
-        // dealer BJ — insurance pays 2:1 if taken
         setHoleRevealed(true);
-        if (yes) {
-          setBankroll(br => br + insAmt * 3); // win insurance: stake + 2x stake
-        }
-        if (pBJ) finishHand(0, 'push', totalBet, 0);
-        else finishHand(0, 'lose', totalBet, totalBet);
+        if (took) setBankroll(br => br + insAmt * 3); // win insurance: stake + 2x stake
+        finishHand(0, 'lose', baseBet, baseBet);
+        setStreak(0);
+        setLossStreak(ls => ls + 1);
         setPhase('resolved');
-        if (pBJ) say('push', 'idle');
-        else say('dealer_win', 'happy');
+        say('dealer_win', 'happy');
       } else {
-        // No dealer BJ — insurance lost (if taken). Hole stays hidden; dealer peeked privately.
-        if (pBJ) {
-          setHoleRevealed(true);
-          finishHand(0, 'blackjack', totalBet, Math.floor(totalBet * 1.5));
-          setPhase('resolved');
-          setBankroll(br => br + totalBet + Math.floor(totalBet * 1.5));
-          setStreak(s => s + 1);
-          setLossStreak(0);
-          say('player_bj', 'shocked');
-        } else {
-          setPhase('player');
-          setExpression('idle');
-          setMessage(pickLine('idle', ctx));
-        }
+        setPhase('player');
+        setExpression('idle');
+        setMessage(took ? `No blackjack under there — insurance is mine. Play on, ${tweaks.playerName}.` : pickLine('idle', ctx));
       }
     }, 700);
   }
@@ -358,13 +466,20 @@ function App() {
     } else if (pBJ) {
       finishHand(0, 'blackjack', betAmt, Math.floor(betAmt * 1.5));
       setPhase('resolved');
-      setBankroll(br => br + betAmt + Math.floor(betAmt * 1.5));
+      setBankroll(br => {
+        const nb = br + betAmt + Math.floor(betAmt * 1.5);
+        if (window.CASINO_STATS) window.CASINO_STATS.recordPeak(nb);
+        setStats(s => ({ ...s, best: Math.max(s.best, nb) }));
+        return nb;
+      });
       setStreak(s => {
         const ns = s + 1;
         announceStreak(ns, true);
         return ns;
       });
       setLossStreak(0);
+      if (tweaks.soundOn) SFX.bj();
+      say('player_bj', 'shocked');
     } else if (dBJ) {
       finishHand(0, 'lose', betAmt, betAmt);
       setPhase('resolved');
@@ -397,11 +512,18 @@ function App() {
     recordHandEvent({ kind, betAmt, payout });
   }
 
-  // Per-hand stats recording — used for both natural BJ paths (via finishHand)
-  // and the multi-hand resolveAll path (called in a loop).
+  // Per-hand stats recording — every resolution path (natural, insurance
+  // loss, surrender, dealer showdown) funnels through here exactly once, so
+  // the rail counters and the shared lifetime stats can't drift apart.
   function recordHandEvent(r) {
-    if (!window.CASINO_STATS) return;
     const won = r.kind === 'win' || r.kind === 'blackjack';
+    setStats(s => ({
+      ...s,
+      played: s.played + 1,
+      won: s.won + (won ? 1 : 0),
+      bj: s.bj + (r.kind === 'blackjack' ? 1 : 0),
+    }));
+    if (!window.CASINO_STATS) return;
     const payout = won ? Math.max(0, Number(r.payout) || 0) : 0;
     window.CASINO_STATS.recordEvent('blackjack', {
       won,
@@ -416,30 +538,25 @@ function App() {
   function hit() {
     if (phase !== 'player') return;
     const h = curHand();
-    if (!h || h.stood || h.busted) return;
+    if (!h || h.stood || h.busted || h.surrendered) return;
     if (tweaks.soundOn) SFX.card();
-    const next = [...shoe];
-    const c = next.pop();
-    setShoe(next);
+    const c = shoeRef.current.pop();
     const newCards = [...h.cards, c];
-    setHands(prev => prev.map((x,i) => i===activeHandIdx ? {...x, cards: newCards} : x));
-    setExpression('deal');
-    if (Math.random() < 0.4) setMessage(pickLine('hit', ctx));
     const v = handValue(newCards).total;
+    // Terminal flags set synchronously — the 700ms beat is presentation only,
+    // so no second action can sneak in and run the dealer twice.
+    setHands(prev => prev.map((x,i) => i===activeHandIdx
+      ? { ...x, cards: newCards, busted: v > 21, stood: v === 21 ? true : x.stood }
+      : x));
+    setExpression('deal');
     if (v > 21) {
-      setTimeout(() => {
-        setHands(prev => prev.map((x,i) => i===activeHandIdx ? {...x, cards: newCards, busted: true} : x));
-        say('bust', 'bust');
-        if (tweaks.soundOn) SFX.bust();
-        advanceHand();
-      }, 700);
+      say('bust', 'bust', { total: v });
+      if (tweaks.soundOn) SFX.bust();
+      setTimeout(() => advanceHand(), 700);
     } else if (v === 21) {
-      setTimeout(() => {
-        setHands(prev => prev.map((x,i) => i===activeHandIdx ? {...x, cards: newCards, stood: true} : x));
-        setExpression('idle');
-        advanceHand();
-      }, 700);
+      setTimeout(() => { setExpression('idle'); advanceHand(); }, 700);
     } else {
+      if (Math.random() < 0.4) setMessage(pickLine('hit', ctx));
       setTimeout(() => setExpression('idle'), 700);
     }
   }
@@ -447,7 +564,7 @@ function App() {
   function stand() {
     if (phase !== 'player') return;
     const h = curHand();
-    if (!h) return;
+    if (!h || h.stood || h.busted || h.surrendered) return;
     setHands(prev => prev.map((x,i) => i===activeHandIdx ? {...x, stood: true} : x));
     if (Math.random() < 0.5) say('stand', 'idle');
     advanceHand();
@@ -456,21 +573,19 @@ function App() {
   function double() {
     if (phase !== 'player') return;
     const h = curHand();
-    if (!h || h.cards.length !== 2 || bankroll < h.bet) return;
+    if (!h || h.stood || h.busted || h.surrendered) return;
+    if (h.cards.length !== 2 || h.isSplitAces || bankroll < h.bet) return;
     setBankroll(br => br - h.bet);
     say('double', 'shocked');
     if (tweaks.soundOn) SFX.chip();
-    const next = [...shoe];
-    const c = next.pop();
-    setShoe(next);
+    const c = shoeRef.current.pop();
     const newCards = [...h.cards, c];
-    setHands(prev => prev.map((x,i) => i===activeHandIdx ? {...x, cards: newCards, bet: x.bet * 2, doubled: true, stood: true} : x));
+    const v = handValue(newCards).total;
+    setHands(prev => prev.map((x,i) => i===activeHandIdx
+      ? { ...x, cards: newCards, bet: x.bet * 2, doubled: true, stood: true, busted: v > 21 }
+      : x));
     setTimeout(() => {
-      const v = handValue(newCards).total;
-      if (v > 21) {
-        setHands(prev => prev.map((x,i) => i===activeHandIdx ? {...x, busted: true} : x));
-        say('bust', 'bust');
-      }
+      if (v > 21) say('bust', 'bust', { total: v });
       advanceHand();
     }, 600);
   }
@@ -478,15 +593,15 @@ function App() {
   function split() {
     if (phase !== 'player') return;
     const h = curHand();
-    if (!h || h.cards.length !== 2 || h.cards[0].rank !== h.cards[1].rank || bankroll < h.bet) return;
+    if (!h || h.stood || h.busted || h.surrendered || h.isSplitAces) return;
+    if (h.cards.length !== 2 || h.cards[0].rank !== h.cards[1].rank) return;
+    if (hands.length >= 4 || bankroll < h.bet) return;
     setBankroll(br => br - h.bet);
     say('split', 'happy');
     if (tweaks.soundOn) SFX.chip();
     const isAces = h.cards[0].rank === 'A';
-    const next = [...shoe];
-    const c1 = next.pop();
-    const c2 = next.pop();
-    setShoe(next);
+    const c1 = shoeRef.current.pop();
+    const c2 = shoeRef.current.pop();
 
     const hand1 = { cards: [h.cards[0], c1], bet: h.bet, doubled: false, surrendered: false, stood: isAces, busted: false, isSplitAces: isAces };
     const hand2 = { cards: [h.cards[1], c2], bet: h.bet, doubled: false, surrendered: false, stood: isAces, busted: false, isSplitAces: isAces };
@@ -506,16 +621,17 @@ function App() {
   function surrender() {
     if (phase !== 'player') return;
     const h = curHand();
-    if (!h || h.cards.length !== 2 || hands.length > 1) return;
+    if (!h || h.stood || h.busted || h.surrendered) return;
+    if (h.cards.length !== 2 || hands.length > 1) return;
     say('surrender', 'sad');
-    finishHand(activeHandIdx, 'surrender', h.bet, Math.floor(h.bet / 2));
-    setBankroll(br => br + Math.floor(h.bet / 2));
+    const refund = Math.ceil(h.bet / 2); // round the player's half up
+    finishHand(activeHandIdx, 'surrender', h.bet, refund);
+    setBankroll(br => br + refund);
     setHands(prev => prev.map((x,i) => i===activeHandIdx ? {...x, surrendered: true, stood: true} : x));
     setStreak(0);
     setLossStreak(ls => ls + 1);
-    setTimeout(() => {
-      setPhase('resolved');
-    }, 700);
+    setHoleRevealed(true);
+    setPhase('resolved');
   }
 
   function advanceHand() {
@@ -525,7 +641,9 @@ function App() {
         setActiveHandIdx(nextIdx);
         return currentHands;
       }
-      // all hands resolved → dealer plays
+      // all hands resolved → dealer plays (exactly once)
+      if (dealerStartedRef.current) return currentHands;
+      dealerStartedRef.current = true;
       const allBusted = currentHands.every(h => h.busted);
       setPhase('dealer');
       setHoleRevealed(true);
@@ -537,7 +655,6 @@ function App() {
 
   function runDealer(dCards, finalHands) {
     let cards = [...dCards];
-    let local = [...shoe];
 
     const allBusted = finalHands.every(h => h.busted || h.surrendered);
     if (allBusted) {
@@ -549,10 +666,9 @@ function App() {
     function step() {
       const v = handValue(cards);
       if (v.total < 17) {
-        const c = local.pop();
+        const c = shoeRef.current.pop();
         cards = [...cards, c];
         setDealer(cards);
-        setShoe([...local]);
         if (tweaks.soundOn) SFX.card();
         setTimeout(step, 600);
       } else {
@@ -565,11 +681,11 @@ function App() {
   function resolveAll(dCards, finalHands) {
     const dv = handValue(dCards).total;
     const dBust = dv > 21;
-    if (dBust) say('dealer_bust', 'shocked');
+    if (dBust) say('dealer_bust', 'shocked', { total: dv });
 
     let totalReturn = 0;
     const newResults = finalHands.map((h) => {
-      if (h.surrendered) return { kind:'surrender', payout: Math.floor(h.bet/2), betAmt: h.bet };
+      if (h.surrendered) return { kind:'surrender', payout: Math.ceil(h.bet/2), betAmt: h.bet };
       if (h.busted) return { kind:'bust', payout: h.bet, betAmt: h.bet };
       const pv = handValue(h.cards).total;
       if (dBust) {
@@ -588,10 +704,14 @@ function App() {
     });
 
     setResults(newResults);
-    setBankroll(br => br + totalReturn);
-    // Record each non-natural hand resolution (natural BJ paths use finishHand)
+    setBankroll(br => {
+      const nb = br + totalReturn;
+      if (window.CASINO_STATS) window.CASINO_STATS.recordPeak(nb);
+      setStats(s => ({ ...s, best: Math.max(s.best, nb) }));
+      return nb;
+    });
+    // Record each hand resolution (naturals/surrenders resolved earlier never reach here)
     newResults.forEach(recordHandEvent);
-    if (window.CASINO_STATS) window.CASINO_STATS.recordPeak(bankroll + totalReturn);
 
     // streaks based on net result
     const wins = newResults.filter(r => r.kind === 'win' || r.kind === 'blackjack').length;
@@ -616,19 +736,6 @@ function App() {
       if (tweaks.soundOn) SFX.push();
     }
 
-    setStats(s => {
-      const playedDelta = newResults.length;
-      const wonDelta = wins;
-      const bjDelta = newResults.filter(r => r.kind === 'blackjack').length;
-      return {
-        ...s,
-        played: s.played + playedDelta,
-        won: s.won + wonDelta,
-        bj: s.bj + bjDelta,
-        best: Math.max(s.best, bankroll + totalReturn)
-      };
-    });
-
     setPhase('resolved');
 
     if (!dBust) {
@@ -647,10 +754,12 @@ function App() {
     setResults([]); setHoleRevealed(false);
     setInsurance(0); setInsuranceOffered(false);
     setActiveHandIdx(0);
+    setBlockedMsg(null);
+    dealerStartedRef.current = false;
     setPhase('idle');
     setExpression('idle');
     setMessage(pickLine('idle', ctx));
-    if (shoe.length < 80) setShoe(buildShoe(6));
+    if (shoeRef.current.length < 80) shoeRef.current = buildShoe(6);
   }
 
   function tipDealer() {
@@ -669,31 +778,6 @@ function App() {
     setTimeout(() => setTipped(false), 30000);
   }
 
-  // Hint
-  const hint = useMemo(() => {
-    if (!tweaks.showHints) return null;
-    if (phase === 'idle' || phase === 'bet') {
-      if (bankroll <= 0) return null;
-      const suggested = Math.max(5, Math.min(100, Math.round(bankroll * 0.025 / 5) * 5));
-      return {
-        kind: 'bet',
-        action: `$${suggested}`,
-        explanation: 'About 2.5% of your bankroll. Smaller bets stretch your session through normal variance.',
-      };
-    }
-    if (phase === 'insurance') {
-      return {
-        kind: 'insurance',
-        action: 'Decline',
-        explanation: 'Insurance pays 2:1 but dealer blackjack hits only ~31% of the time. Negative EV unless you are counting cards.',
-      };
-    }
-    if (phase !== 'player') return null;
-    const h = hands[activeHandIdx];
-    if (!h || h.cards.length === 0) return null;
-    return basicStrategy(h.cards, dealer[0]);
-  }, [tweaks.showHints, phase, hands, activeHandIdx, dealer, bankroll]);
-
   // Derived
   const activeHand = hands[activeHandIdx];
   const pCards = activeHand?.cards || [];
@@ -704,23 +788,24 @@ function App() {
 
   function doubleAvailability() {
     if (phase !== 'player' || !activeHand) return { enabled: false, reason: '' };
-    if (activeHand.cards.length !== 2) return { enabled: false, reason: 'Double is only available on your first two cards. You\'ve already taken a hit.' };
-    if (activeHand.isSplitAces) return { enabled: false, reason: 'You can\'t double after splitting aces — only one card is dealt.' };
-    if (bankroll < activeHand.bet) return { enabled: false, reason: `Need $${activeHand.bet - bankroll} more in your bankroll to match the original bet.` };
+    if (activeHand.cards.length !== 2) return { enabled: false, reason: 'Double is only allowed on your first two cards — you\'ve already hit.' };
+    if (activeHand.isSplitAces) return { enabled: false, reason: 'Split aces get exactly one card — no doubling.' };
+    if (bankroll < activeHand.bet) return { enabled: false, reason: `Doubling needs $${activeHand.bet - bankroll} more than you have.` };
     return { enabled: true, reason: '' };
   }
   function splitAvailability() {
     if (phase !== 'player' || !activeHand) return { enabled: false, reason: '' };
-    if (activeHand.cards.length !== 2) return { enabled: false, reason: 'Split is only available on your first two cards.' };
-    if (activeHand.cards[0].rank !== activeHand.cards[1].rank) return { enabled: false, reason: 'Split requires a pair — both cards must be the same rank.' };
-    if (hands.length >= 4) return { enabled: false, reason: 'You\'re already at the maximum of 4 hands.' };
-    if (bankroll < activeHand.bet) return { enabled: false, reason: `Need $${activeHand.bet - bankroll} more in your bankroll to match the original bet.` };
+    if (activeHand.isSplitAces || activeHand.stood) return { enabled: false, reason: 'Split aces get exactly one card each.' };
+    if (activeHand.cards.length !== 2) return { enabled: false, reason: 'Split is only allowed on your first two cards.' };
+    if (activeHand.cards[0].rank !== activeHand.cards[1].rank) return { enabled: false, reason: 'Split needs a pair — both cards the same rank.' };
+    if (hands.length >= 4) return { enabled: false, reason: 'Four hands is the table limit.' };
+    if (bankroll < activeHand.bet) return { enabled: false, reason: `Splitting needs $${activeHand.bet - bankroll} more than you have.` };
     return { enabled: true, reason: '' };
   }
   function surrenderAvailability() {
     if (phase !== 'player' || !activeHand) return { enabled: false, reason: '' };
-    if (activeHand.cards.length !== 2) return { enabled: false, reason: 'Surrender is only available on your first two cards.' };
-    if (hands.length !== 1) return { enabled: false, reason: 'You can\'t surrender after splitting.' };
+    if (hands.length !== 1) return { enabled: false, reason: 'No surrendering after a split.' };
+    if (activeHand.cards.length !== 2) return { enabled: false, reason: 'Surrender is only allowed before you hit.' };
     return { enabled: true, reason: '' };
   }
   const dblAvail = doubleAvailability();
@@ -730,178 +815,304 @@ function App() {
   const canSplit = splAvail.enabled;
   const canSurrender = surAvail.enabled;
 
+  // Coach hint — exact EV over the actions available right now.
+  const hint = useMemo(() => {
+    if (!tweaks.showHints) return null;
+
+    if (phase === 'idle' || phase === 'bet') {
+      const roll = bankroll + totalBet;
+      if (roll < 5) return null;
+      const suggested = Math.max(5, Math.min(100, Math.round(roll * 0.025 / 5) * 5));
+      const cur = totalBet;
+      if (cur > 0 && cur > roll * 0.1) {
+        return {
+          kind: 'bet',
+          action: `$${suggested}`,
+          why: `Big swings, short nights — $${cur} is over a tenth of your stack. Your call, high roller.`,
+          stats: [{ label: 'Cold hands of cushion', value: Math.max(0, Math.floor((roll - cur) / cur)) }],
+        };
+      }
+      return {
+        kind: 'bet',
+        action: `$${suggested}`,
+        why: `The steady play — enough behind it to ride out ${Math.floor(roll / suggested)} cold hands in a row and still be in the game.`,
+        stats: [{ label: 'Table minimum', value: '$5' }],
+      };
+    }
+
+    if (phase === 'insurance') {
+      const baseBet = hands[0] ? hands[0].bet : totalBet;
+      const insCost = Math.floor(baseBet / 2);
+      const pBJpct = Math.round(window.BJ_STRATEGY.INSURANCE.pDealerBJ * 100);
+      const lossPerTake = Math.max(1, Math.round(insCost / 13));
+      return {
+        kind: 'insurance',
+        action: 'No thanks',
+        why: `Only ${pBJpct} aces in 100 have a ten hiding underneath, but the payout breaks even at 33. On $${insCost} a take, that's about $${lossPerTake} burned each time. Wave it off.`,
+        insurance: { pBJ: pBJpct, breakEven: 33 },
+      };
+    }
+
+    if (phase !== 'player') return null;
+    const h = hands[activeHandIdx];
+    if (!h || h.cards.length < 2 || h.stood || h.busted || h.surrendered) return null;
+    const decision = window.BJ_STRATEGY.decide(h.cards, dealer[0] && dealer[0].rank, {
+      double: canDouble,
+      split: canSplit,
+      surrender: canSurrender,
+      doubleRuleBlocked: h.cards.length !== 2 || h.isSplitAces,
+      splitRuleBlocked: h.cards.length !== 2 || h.cards[0].rank !== h.cards[1].rank || hands.length >= 4,
+      surrenderRuleBlocked: h.cards.length !== 2 || hands.length !== 1,
+    });
+    if (!decision) return null;
+    return buildPlayHint(decision, {
+      bet: h.bet,
+      bankroll,
+      dealerUpRank: dealer[0].rank,
+      isSplitHand: hands.length > 1,
+      cardsCount: h.cards.length,
+      pairRank: h.cards.length === 2 && h.cards[0].rank === h.cards[1].rank ? h.cards[0].rank : null,
+    });
+  }, [tweaks.showHints, phase, hands, activeHandIdx, dealer, bankroll, totalBet, canDouble, canSplit, canSurrender]);
+
   const overallResult = useMemo(() => {
     if (phase !== 'resolved' || !results.length) return null;
     if (results.length === 1) return results[0];
     // composite for split hands
-    const totalPayout = results.reduce((a,r) => a + (r.kind==='win' || r.kind==='blackjack' ? r.payout : r.kind==='surrender' ? -r.payout : r.kind==='lose' || r.kind==='bust' ? -r.betAmt : 0), 0);
+    const totalPayout = results.reduce((a,r) =>
+      a + (r.kind==='win' || r.kind==='blackjack' ? r.payout
+        : r.kind==='surrender' ? -(r.betAmt - r.payout)
+        : r.kind==='lose' || r.kind==='bust' ? -r.betAmt : 0), 0);
     const wins = results.filter(r=>r.kind==='win'||r.kind==='blackjack').length;
     const losses = results.filter(r=>r.kind==='lose'||r.kind==='bust'||r.kind==='surrender').length;
     if (totalPayout > 0) return { kind:'win', payout: totalPayout, mixed: true, wins, losses };
-    if (totalPayout < 0) return { kind:'lose', payout: -totalPayout, mixed: true, wins, losses };
+    if (totalPayout < 0) return { kind:'lose', payout: -totalPayout, betAmt: -totalPayout, mixed: true, wins, losses };
     return { kind:'push', payout: 0, mixed: true };
   }, [phase, results]);
 
-  return (
+  // Keyboard shortcuts — desktop quality-of-life.
+  const keysRef = useRef({});
+  keysRef.current = { phase, hit, stand, double, split, surrender, deal, nextRound, rebetAndDeal, canDouble, canSplit, canSurrender, totalBet, canRebet };
+  useEffect(() => {
+    function onKey(e) {
+      const t = e.target;
+      if (t && (t.tagName === 'INPUT' || t.tagName === 'TEXTAREA')) return;
+      if (e.metaKey || e.ctrlKey || e.altKey) return;
+      const K = keysRef.current;
+      const k = e.key.toLowerCase();
+      if (K.phase === 'player') {
+        if (k === 'h') K.hit();
+        else if (k === 's') K.stand();
+        else if (k === 'd' && K.canDouble) K.double();
+        else if (k === 'p' && K.canSplit) K.split();
+        else if (k === 'r' && K.canSurrender) K.surrender();
+      } else if (K.phase === 'resolved') {
+        if (k === 'n') K.nextRound();
+        else if (k === 'b' && K.canRebet) K.rebetAndDeal();
+      } else if ((K.phase === 'idle' || K.phase === 'bet') && (k === 'enter' || k === ' ')) {
+        if (K.totalBet) { e.preventDefault(); K.deal(); }
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return () => window.removeEventListener('keydown', onKey);
+  }, []);
+
+  // ── Render ──────────────────────────────────────────
+  const bottomZone = (
     <div style={{
-      width:'100vw', height:'100vh',
-      display:'flex', alignItems:'center', justifyContent:'center',
-      padding: 24,
-      position:'relative'
+      position:'relative', zIndex: 5,
+      padding: portrait ? '10px 12px 14px' : '12px 26px 18px',
+      minHeight: portrait ? 0 : 212,
+      display:'flex', flexDirection:'column', gap: 10, justifyContent:'flex-end'
     }}>
-      <div style={{
-        width: 1380, maxWidth:'100%', height: '100%', maxHeight: 860,
-        display:'flex', gap: 20, position:'relative'
-      }}>
-        <DealerPanel
-          name={tweaks.dealerName}
-          gender={tweaks.dealerName === 'Marcus' ? 'male' : 'female'}
-          expression={expression}
-          message={message}
-          onTipDealer={tipDealer}
-          tipped={tipped}
-          playerName={tweaks.playerName}
-          isIdle={isIdle}
-          mood={mood}
-          onEditName={() => setShowNameModal(true)}
-        />
-
+      {hint && (phase === 'idle' || phase === 'bet' || phase === 'insurance' || phase === 'player') && (
+        <CoachBar hint={hint} compact={portrait} />
+      )}
+      {blockedMsg && (
         <div style={{
-          flex: 1, position:'relative', minWidth: 800
+          alignSelf:'center',
+          padding:'6px 16px',
+          background:'rgba(20,12,6,.92)',
+          border:'1px solid rgba(230,197,144,.4)',
+          borderRadius: 999,
+          fontSize: 12, color:'var(--ivory)',
+          boxShadow:'0 8px 20px rgba(0,0,0,.4)'
+        }}>{blockedMsg}</div>
+      )}
+
+      {(phase === 'idle' || phase === 'bet') && (
+        <BettingZone
+          bet={bet}
+          bankroll={bankroll}
+          onChip={addChip}
+          onClear={clearBet}
+          onRebet={rebet}
+          onDeal={deal}
+          canRebet={canRebet}
+          compact={portrait}
+        />
+      )}
+
+      {phase === 'insurance' && (
+        <InsuranceZone
+          amount={Math.floor((hands[0] ? hands[0].bet : totalBet)/2)}
+          bankroll={bankroll}
+          onYes={() => takeInsurance(true)}
+          onNo={() => takeInsurance(false)}
+        />
+      )}
+
+      {phase === 'player' && activeHand && (
+        <ActionZone
+          hint={hint}
+          canDouble={canDouble}
+          canSplit={canSplit}
+          canSurrender={canSurrender}
+          doubleReason={dblAvail.reason}
+          splitReason={splAvail.reason}
+          surrenderReason={surAvail.reason}
+          onHit={hit}
+          onStand={stand}
+          onDouble={double}
+          onSplit={split}
+          onSurrender={surrender}
+          onBlocked={showBlocked}
+          betAmount={activeHand.bet}
+          compact={portrait}
+        />
+      )}
+
+      {(phase === 'dealing' || phase === 'dealer') && (
+        <div style={{
+          display:'flex', alignItems:'center', justifyContent:'center',
+          height: portrait ? 70 : 100,
+          fontSize: 13, letterSpacing:'.3em', color:'var(--ivory-dim)', textTransform:'uppercase'
         }}>
-          <FeltBackdrop />
+          <span style={{
+            width: 10, height: 10, borderRadius:'50%',
+            background:'var(--brass)',
+            marginRight: 12,
+            animation:'glowPulse 1s ease-in-out infinite'
+          }} />
+          {phase === 'dealing' ? 'Dealing…' : 'Dealer is playing the hand'}
+        </div>
+      )}
 
-          <div style={{ position:'absolute', inset: 0, display:'flex', flexDirection:'column' }}>
+      {phase === 'resolved' && (
+        <ResolvedZone
+          result={overallResult}
+          onContinue={nextRound}
+          onRebet={rebetAndDeal}
+          canRebet={canRebet}
+        />
+      )}
+    </div>
+  );
 
-            {/* Top brass rail */}
-            <BrassRail
-              bankroll={bankroll}
-              streak={streak}
-              played={stats.played}
-              won={stats.won}
-              best={stats.best}
-              showHints={tweaks.showHints}
-              onToggleHints={() => setTweak('showHints', !tweaks.showHints)}
-            />
+  const feltArea = (
+    <div style={{ position:'absolute', inset: 0, display:'flex', flexDirection:'column' }}>
+      {!portrait && (
+        <BrassRail
+          bankroll={bankroll}
+          streak={streak}
+          played={stats.played}
+          won={stats.won}
+          best={stats.best}
+          showHints={tweaks.showHints}
+          onToggleHints={() => setTweak('showHints', !tweaks.showHints)}
+        />
+      )}
 
-            {/* Play area */}
-            <div style={{
-              flex:1,
-              position:'relative',
-              padding:'4px 32px 0',
-              display:'flex', flexDirection:'column'
-            }}>
-              <FeltLogo />
+      {/* Play area */}
+      <div style={{
+        flex:1,
+        position:'relative',
+        padding: portrait ? '4px 12px 0' : '4px 32px 0',
+        display:'flex', flexDirection:'column'
+      }}>
+        <FeltLogo />
 
-              {/* Dealer hand */}
-              <div style={{ marginTop: 8, textAlign:'center', position:'relative', zIndex: 3 }}>
-                {dealer.length > 0 && <HandValue value={dVal.total} soft={dVal.soft} isBust={dVal.total > 21} isBJ={dBJ} label="Dealer" />}
-                <div style={{ display:'flex', justifyContent:'center', gap: 8, marginTop: 12, minHeight: 110 }}>
-                  {dealer.map((c, i) => (
-                    <PlayingCard
-                      key={c.id}
-                      rank={c.rank} suit={c.suit}
-                      faceDown={i === 1 && !holeRevealed}
-                      dealIndex={i*2+1}
-                      fromX={140} fromY={-200}
-                    />
-                  ))}
-                </div>
-              </div>
-
-              {overallResult && <ResultBanner kind={overallResult.kind} payout={overallResult.payout} mixed={overallResult.mixed} />}
-
-              {/* Player hands (potentially split) */}
-              <div style={{
-                position:'absolute', left:0, right:0, bottom: 200,
-                textAlign:'center', zIndex: 3
-              }}>
-                <PlayerHandsRow
-                  hands={hands}
-                  activeIdx={activeHandIdx}
-                  results={results}
-                  pBJ={pBJ}
-                  shake={overallResult?.kind === 'bust' || (results.length===1 && results[0]?.kind === 'bust')}
-                  playerName={tweaks.playerName}
-                />
-              </div>
-
-              <HintPanel hint={hint} />
-            </div>
-
-            {/* Bottom action zone */}
-            <div style={{
-              position:'relative', zIndex: 5,
-              padding:'18px 26px 22px',
-              minHeight: 200,
-              display:'flex', flexDirection:'column', gap: 14
-            }}>
-              {(phase === 'idle' || phase === 'bet') && (
-                <BettingZone
-                  bet={bet}
-                  bankroll={bankroll}
-                  onChip={addChip}
-                  onClear={clearBet}
-                  onRebet={rebet}
-                  onDeal={deal}
-                  hasLast={lastBet.length > 0}
-                />
-              )}
-
-              {phase === 'insurance' && (
-                <InsuranceZone
-                  amount={Math.floor(totalBet/2)}
-                  onYes={() => takeInsurance(true)}
-                  onNo={() => takeInsurance(false)}
-                />
-              )}
-
-              {phase === 'player' && activeHand && (
-                <ActionZone
-                  hint={hint}
-                  canDouble={canDouble}
-                  canSplit={canSplit}
-                  canSurrender={canSurrender}
-                  doubleReason={dblAvail.reason}
-                  splitReason={splAvail.reason}
-                  surrenderReason={surAvail.reason}
-                  onHit={hit}
-                  onStand={stand}
-                  onDouble={double}
-                  onSplit={split}
-                  onSurrender={surrender}
-                  betAmount={activeHand.bet}
-                />
-              )}
-
-              {(phase === 'dealing' || phase === 'dealer') && (
-                <div style={{
-                  display:'flex', alignItems:'center', justifyContent:'center',
-                  height: 100,
-                  fontSize: 13, letterSpacing:'.3em', color:'var(--ivory-dim)', textTransform:'uppercase'
-                }}>
-                  <span style={{
-                    width: 10, height: 10, borderRadius:'50%',
-                    background:'var(--brass)',
-                    marginRight: 12,
-                    animation:'glowPulse 1s ease-in-out infinite'
-                  }} />
-                  {phase === 'dealing' ? 'Dealing…' : 'Dealer is playing the hand'}
-                </div>
-              )}
-
-              {phase === 'resolved' && (
-                <ResolvedZone
-                  result={overallResult}
-                  onContinue={nextRound}
-                  onRebet={() => { nextRound(); setTimeout(rebet, 50); setTimeout(deal, 100); }}
-                  hasLast={lastBet.length > 0}
-                />
-              )}
-            </div>
+        {/* Dealer hand */}
+        <div style={{ marginTop: portrait ? 4 : 8, textAlign:'center', position:'relative', zIndex: 3 }}>
+          {dealer.length > 0 && <HandValue value={dVal.total} soft={dVal.soft} isBust={dVal.total > 21} isBJ={dBJ} label="Dealer" />}
+          <div style={{ display:'flex', justifyContent:'center', gap: 8, marginTop: 10, minHeight: portrait ? 96 : 110 }}>
+            {dealer.map((c, i) => (
+              <PlayingCard
+                key={c.id}
+                rank={c.rank} suit={c.suit}
+                w={portrait ? 68 : 78} h={portrait ? 96 : 110}
+                faceDown={i === 1 && !holeRevealed}
+                dealIndex={i*2+1}
+                fromX={140} fromY={-200}
+              />
+            ))}
           </div>
         </div>
+
+        {overallResult && <ResultBanner kind={overallResult.kind} payout={overallResult.payout} betAmt={overallResult.betAmt} netLoss={overallResult.kind === 'surrender' ? overallResult.betAmt - overallResult.payout : null} />}
+
+        {/* Player hands (potentially split) — anchored just above the action zone */}
+        <div style={{
+          position:'absolute', left:0, right:0, bottom: portrait ? 10 : 16,
+          textAlign:'center', zIndex: 3
+        }}>
+          <PlayerHandsRow
+            hands={hands}
+            activeIdx={activeHandIdx}
+            results={results}
+            pBJ={pBJ}
+            shake={overallResult?.kind === 'bust' || (results.length===1 && results[0]?.kind === 'bust')}
+            playerName={tweaks.playerName}
+            compact={portrait}
+          />
+        </div>
       </div>
+
+      {bottomZone}
+    </div>
+  );
+
+  return (
+    <div style={{
+      width:'100%', height:'100%',
+      padding: portrait ? 12 : 20,
+      position:'relative',
+      display:'flex', flexDirection: portrait ? 'column' : 'row', gap: portrait ? 10 : 20
+    }}>
+      {portrait ? (
+        <>
+          <PortraitRail
+            bankroll={bankroll}
+            streak={streak}
+            showHints={tweaks.showHints}
+            onToggleHints={() => setTweak('showHints', !tweaks.showHints)}
+          />
+          <DealerStrip name={tweaks.dealerName} message={message} gender={tweaks.dealerName === 'Marcus' ? 'male' : 'female'} expression={expression} />
+          <div style={{ flex: 1, position:'relative', minHeight: 0 }}>
+            <FeltBackdrop />
+            {feltArea}
+          </div>
+        </>
+      ) : (
+        <>
+          <DealerPanel
+            name={tweaks.dealerName}
+            gender={tweaks.dealerName === 'Marcus' ? 'male' : 'female'}
+            expression={expression}
+            message={message}
+            onTipDealer={tipDealer}
+            tipped={tipped}
+            playerName={tweaks.playerName}
+            isIdle={isIdle}
+            mood={mood}
+            onEditName={() => setShowNameModal(true)}
+          />
+          <div style={{ flex: 1, position:'relative', minWidth: 700 }}>
+            <FeltBackdrop />
+            {feltArea}
+          </div>
+        </>
+      )}
 
       <TweaksPanel title="Tweaks">
         <TweakSection title="Players">
@@ -934,6 +1145,47 @@ function App() {
           }}
         />
       )}
+    </div>
+  );
+}
+
+// Slim top rail for the portrait layout.
+function PortraitRail({ bankroll, streak, showHints, onToggleHints }) {
+  return (
+    <div style={{
+      display:'flex', alignItems:'center', justifyContent:'space-between',
+      padding:'8px 14px',
+      background:'linear-gradient(180deg, rgba(35,22,10,.8), rgba(20,12,6,.88))',
+      border:'1px solid rgba(201,162,106,.35)',
+      borderRadius: 12,
+      boxShadow:'0 8px 22px rgba(0,0,0,.4), inset 0 1px 0 rgba(230,197,144,.15)'
+    }}>
+      <a href="../casino/" style={{
+        fontSize: 10, fontWeight: 700, letterSpacing:'.18em', textTransform:'uppercase',
+        color:'var(--brass-2)', textDecoration:'none', whiteSpace:'nowrap'
+      }}>← Lobby</a>
+      <div style={{ display:'flex', alignItems:'baseline', gap: 14 }}>
+        <span style={{
+          fontFamily:"'Playfair Display', serif", fontStyle:'italic',
+          fontSize: 20, fontWeight: 700, color:'var(--brass-2)'
+        }}>${bankroll.toLocaleString()}</span>
+        {streak > 0 && (
+          <span style={{
+            fontFamily:"'JetBrains Mono', monospace", fontSize: 12,
+            color:'var(--brass-2)',
+            textShadow: streak >= 3 ? '0 0 12px rgba(230,197,144,.7)' : 'none'
+          }}>×{streak}</span>
+        )}
+      </div>
+      <button onClick={onToggleHints} style={{
+        padding:'6px 12px',
+        background: showHints ? 'linear-gradient(180deg, #e6c590, #c9a26a)' : 'rgba(20,12,6,.6)',
+        color: showHints ? '#1a1208' : 'var(--brass-2)',
+        border:'1px solid rgba(201,162,106,.5)',
+        borderRadius: 999,
+        fontSize: 9, fontWeight: 700, letterSpacing:'.16em', textTransform:'uppercase',
+        cursor:'pointer', whiteSpace:'nowrap'
+      }}>{showHints ? '✦ Hints' : 'Hints'}</button>
     </div>
   );
 }
@@ -1100,40 +1352,19 @@ function BrassRail({ bankroll, streak, played, won, best, showHints, onToggleHin
       gap: 0,
       zIndex: 5, position:'relative'
     }}>
-      {/* Lobby pill */}
-      <a
-        href="../casino/"
-        title="Back to casino"
-        style={{
-          display:'inline-flex', alignItems:'center', gap: 6,
-          alignSelf:'center',
-          marginRight: 14,
-          padding:'8px 14px',
-          background:'rgba(20,12,6,.6)',
-          color:'var(--brass-2)',
-          border:'1px solid rgba(201,162,106,.5)',
-          borderRadius: 999,
-          fontSize: 10, fontWeight: 700, letterSpacing:'.18em',
-          textTransform:'uppercase',
-          textDecoration:'none',
-          whiteSpace:'nowrap',
-          transition:'all .2s',
-          boxShadow:'0 2px 6px rgba(0,0,0,.3)'
-        }}
-      >← Lobby</a>
-
-      {/* Brand on left (clickable) */}
+      {/* Brand (clickable, returns to lobby) */}
       <a
         href="../casino/"
         title="Back to casino"
         style={{
           display:'flex', alignItems:'center', gap: 12, paddingRight: 18,
           borderRight:'1px solid rgba(201,162,106,.2)',
-          textDecoration:'none', color:'inherit'
+          textDecoration:'none', color:'inherit',
+          whiteSpace:'nowrap', flexShrink: 0
         }}
       >
         <div style={{
-          width: 32, height: 32, borderRadius:'50%',
+          width: 32, height: 32, borderRadius:'50%', flexShrink: 0,
           background:'radial-gradient(circle at 35% 30%, #f5d896, #8c6a3f 75%)',
           display:'flex', alignItems:'center', justifyContent:'center',
           fontFamily:"'Playfair Display', serif",
@@ -1145,10 +1376,11 @@ function BrassRail({ bankroll, streak, played, won, best, showHints, onToggleHin
           <div style={{
             fontFamily:"'Playfair Display', serif",
             fontSize: 17, color:'var(--brass-2)',
-            fontStyle:'italic', fontWeight: 600, letterSpacing:'.02em', lineHeight: 1
+            fontStyle:'italic', fontWeight: 600, letterSpacing:'.02em', lineHeight: 1,
+            whiteSpace:'nowrap'
           }}>Limestone Games</div>
-          <div style={{ fontSize: 9, letterSpacing:'.32em', color:'var(--ivory-dim)', textTransform:'uppercase', marginTop: 3 }}>
-            Vegas Strip · Private Table 07
+          <div style={{ fontSize: 9, letterSpacing:'.28em', color:'var(--ivory-dim)', textTransform:'uppercase', marginTop: 3, whiteSpace:'nowrap' }}>
+            ← Lobby · Private Table 07
           </div>
         </div>
       </a>
@@ -1156,13 +1388,13 @@ function BrassRail({ bankroll, streak, played, won, best, showHints, onToggleHin
       {/* Stat slots */}
       <div style={{ flex: 1, display:'flex', alignItems:'center', justifyContent:'flex-end', gap: 0 }}>
         <RailStat label="Bankroll" value={`$${bankroll.toLocaleString()}`} accent />
-        <RailStat label="Streak" value={streak > 0 ? `🔥 ×${streak}` : '—'} highlight={streak >= 3} />
+        <RailStat label="Streak" value={streak > 0 ? `×${streak}` : '—'} highlight={streak >= 3} />
         <RailStat label="Hands" value={played || '—'} />
         <RailStat label="Win Rate" value={winRate !== null ? `${winRate}%` : '—'} />
         <RailStat label="Peak" value={`$${best.toLocaleString()}`} small />
         <button
           onClick={onToggleHints}
-          title={showHints ? 'Hide basic-strategy hints' : 'Show basic-strategy hints'}
+          title={showHints ? 'Hide coaching (keyboard: H hit · S stand · D double · P split · R surrender)' : 'Show coaching'}
           style={{
             marginLeft: 14,
             padding:'8px 14px',
@@ -1180,7 +1412,7 @@ function BrassRail({ bankroll, streak, played, won, best, showHints, onToggleHin
             boxShadow: showHints ? '0 4px 10px rgba(230,197,144,.35)' : '0 2px 6px rgba(0,0,0,.3)'
           }}
         >
-          {showHints ? '✦ Hints On' : 'Hints Off'}
+          {showHints ? '✦ Coach On' : 'Coach Off'}
         </button>
       </div>
     </div>
@@ -1195,32 +1427,34 @@ function RailStat({ label, value, accent, highlight, small }) {
       textAlign:'right',
       minWidth: small ? 80 : 100
     }}>
-      <div style={{ fontSize: 8, letterSpacing:'.28em', color:'var(--ivory-dim)', textTransform:'uppercase', fontWeight: 600 }}>{label}</div>
+      <div style={{ fontSize: 9, letterSpacing:'.22em', color:'var(--ivory-dim)', textTransform:'uppercase', fontWeight: 600 }}>{label}</div>
       <div style={{
         fontFamily: accent ? "'Playfair Display', serif" : "'JetBrains Mono', monospace",
         fontSize: accent ? 22 : (small ? 13 : 15),
-        color: highlight ? '#ffb347' : accent ? 'var(--brass-2)' : '#fff',
+        color: accent ? 'var(--brass-2)' : 'var(--ivory)',
         fontWeight: accent ? 700 : 500,
         lineHeight: 1.1, marginTop: 2,
-        fontStyle: accent ? 'italic' : 'normal'
+        fontStyle: accent ? 'italic' : 'normal',
+        textShadow: highlight ? '0 0 12px rgba(230,197,144,.7)' : 'none'
       }}>{value}</div>
     </div>
   );
 }
 
-function PlayerHandsRow({ hands, activeIdx, results, pBJ, shake, playerName }) {
+function PlayerHandsRow({ hands, activeIdx, results, pBJ, shake, playerName, compact }) {
   if (!hands.length) return null;
   if (hands.length === 1) {
     const h = hands[0];
     const v = handValue(h.cards);
-    const r = results[0];
+    const cw = compact ? 68 : 78, ch = compact ? 96 : 110;
     return (
       <div>
-        <div style={{ display:'flex', justifyContent:'center', gap: 8, marginBottom: 10, minHeight: 110 }} className={shake ? 'shake' : ''}>
+        <div style={{ display:'flex', justifyContent:'center', gap: 8, marginBottom: 10, minHeight: ch }} className={shake ? 'shake' : ''}>
           {h.cards.map((c, i) => (
             <PlayingCard
               key={c.id}
               rank={c.rank} suit={c.suit}
+              w={cw} h={ch}
               dealIndex={i*2}
               fromX={140} fromY={-360}
               glow={pBJ}
@@ -1238,9 +1472,12 @@ function PlayerHandsRow({ hands, activeIdx, results, pBJ, shake, playerName }) {
       </div>
     );
   }
-  // Split hands — show side by side
+  // Split hands — show side by side; shrink cards as the table fills up.
+  const many = hands.length >= 3;
+  const cw = compact ? 52 : (many ? 62 : 72);
+  const ch = compact ? 74 : (many ? 88 : 102);
   return (
-    <div style={{ display:'flex', justifyContent:'center', gap: 36, alignItems:'flex-end' }}>
+    <div style={{ display:'flex', justifyContent:'center', gap: compact ? 10 : (many ? 14 : 28), alignItems:'flex-end' }}>
       {hands.map((h, idx) => {
         const v = handValue(h.cards);
         const r = results[idx];
@@ -1248,7 +1485,7 @@ function PlayerHandsRow({ hands, activeIdx, results, pBJ, shake, playerName }) {
         return (
           <div key={idx} style={{
             position:'relative',
-            padding:'10px 14px 8px',
+            padding: compact ? '8px 8px 6px' : '10px 14px 8px',
             borderRadius: 12,
             border: isActive ? '1.5px solid rgba(245,216,150,.7)' : '1px solid rgba(201,162,106,.15)',
             background: isActive ? 'rgba(245,216,150,.06)' : 'transparent',
@@ -1261,20 +1498,22 @@ function PlayerHandsRow({ hands, activeIdx, results, pBJ, shake, playerName }) {
                 fontSize: 9, letterSpacing:'.3em', color:'#1a1208',
                 background:'linear-gradient(180deg, #f5d896, #c9a26a)',
                 padding:'2px 10px', borderRadius: 4,
-                fontWeight: 700, textTransform:'uppercase'
+                fontWeight: 700, textTransform:'uppercase',
+                zIndex: 4
               }}>Active</div>
             )}
-            <div style={{ display:'flex', justifyContent:'center', gap: 6, marginBottom: 10, minHeight: 100 }}>
+            <div style={{ display:'flex', justifyContent:'center', gap: 5, marginBottom: 8, minHeight: ch }}>
               {h.cards.map((c, i) => (
                 <PlayingCard
                   key={c.id}
                   rank={c.rank} suit={c.suit}
+                  w={cw} h={ch}
                   dealIndex={i}
                   fromX={140} fromY={-360}
                 />
               ))}
             </div>
-            <div style={{ display:'flex', justifyContent:'center', gap: 8, alignItems:'center' }}>
+            <div style={{ display:'flex', justifyContent:'center', gap: 8, alignItems:'center', flexWrap:'wrap' }}>
               <HandValue
                 value={v.total} soft={v.soft}
                 isBust={v.total > 21 || h.busted}
@@ -1285,7 +1524,7 @@ function PlayerHandsRow({ hands, activeIdx, results, pBJ, shake, playerName }) {
                   fontSize: 10, letterSpacing:'.2em', textTransform:'uppercase', fontWeight:700,
                   padding:'3px 8px', borderRadius: 4,
                   background: r.kind==='win'||r.kind==='blackjack' ? 'rgba(126,219,156,.2)' : r.kind==='push' ? 'rgba(230,197,144,.2)' : 'rgba(255,107,90,.2)',
-                  color: r.kind==='win'||r.kind==='blackjack' ? '#9eddb8' : r.kind==='push' ? '#e6c590' : '#ff9286',
+                  color: r.kind==='win'||r.kind==='blackjack' ? 'var(--win)' : r.kind==='push' ? '#e6c590' : 'var(--lose)',
                   border: `1px solid ${r.kind==='win'||r.kind==='blackjack' ? '#9eddb8' : r.kind==='push' ? '#c9a26a' : '#ff6b5a'}40`
                 }}>
                   {r.kind === 'win' ? `+$${r.payout}` : r.kind === 'blackjack' ? `BJ +$${r.payout}` : r.kind === 'push' ? 'Push' : r.kind === 'surrender' ? `½ back` : `-$${r.betAmt}`}
@@ -1299,8 +1538,56 @@ function PlayerHandsRow({ hands, activeIdx, results, pBJ, shake, playerName }) {
   );
 }
 
-function BettingZone({ bet, bankroll, onChip, onClear, onRebet, onDeal, hasLast }) {
+function BettingZone({ bet, bankroll, onChip, onClear, onRebet, onDeal, canRebet, compact }) {
   const totalBet = bet.reduce((a,b)=>a+b,0);
+  if (compact) {
+    return (
+      <div style={{ display:'flex', flexDirection:'column', gap: 10, alignItems:'center' }}>
+        <div style={{ display:'flex', gap: 8, alignItems:'center', justifyContent:'center', flexWrap:'wrap' }}>
+          {CHIP_DEFS.map(c => (
+            <Chip key={c.value} value={c.value} size={52} onClick={() => onChip(c.value)} disabled={bankroll < c.value} />
+          ))}
+        </div>
+        <div style={{ display:'flex', gap: 12, alignItems:'center', width:'100%', justifyContent:'center' }}>
+          <div className={totalBet > 0 ? 'glow-pulse' : 'bet-empty-pulse'} style={{
+            width: 88, height: 88, borderRadius:'50%', flexShrink: 0,
+            border:`2px dashed ${totalBet > 0 ? 'rgba(230,197,144,.7)' : 'rgba(230,197,144,.4)'}`,
+            display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
+            background:'radial-gradient(circle, rgba(0,0,0,.35), transparent)'
+          }}>
+            <div style={{ fontSize: 8, letterSpacing:'.24em', color:'var(--brass)', textTransform:'uppercase' }}>
+              {totalBet > 0 ? 'Bet' : 'Place bet'}
+            </div>
+            <div style={{
+              fontFamily:"'Playfair Display', serif", fontSize: 20, fontWeight: 700,
+              color: totalBet > 0 ? 'var(--brass-2)' : 'rgba(230,197,144,.4)'
+            }}>${totalBet}</div>
+          </div>
+          <div style={{ display:'flex', flexDirection:'column', gap: 8 }}>
+            <div style={{ display:'flex', gap: 8 }}>
+              <SmallBtn onClick={onClear} disabled={!totalBet}>Clear</SmallBtn>
+              <SmallBtn onClick={onRebet} disabled={!canRebet}>Rebet ↺</SmallBtn>
+            </div>
+            <button
+              onClick={onDeal}
+              disabled={!totalBet}
+              style={{
+                padding:'12px 26px',
+                background: totalBet ? 'linear-gradient(180deg, #f5d896, #c9a26a)' : 'rgba(40,28,18,.4)',
+                color: totalBet ? '#1a1208' : 'rgba(255,255,255,.3)',
+                border:`1px solid ${totalBet ? 'rgba(245,216,150,1)' : 'rgba(201,162,106,.2)'}`,
+                borderRadius: 12,
+                fontFamily:"'Playfair Display', serif", fontStyle:'italic',
+                fontSize: 18, fontWeight: 700,
+                cursor: totalBet ? 'pointer' : 'not-allowed',
+                boxShadow: totalBet ? '0 10px 22px rgba(230,197,144,.4)' : 'none'
+              }}
+            >Deal Cards →</button>
+          </div>
+        </div>
+      </div>
+    );
+  }
   return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'space-between', gap: 18 }}>
       <div style={{ display:'flex', gap: 14, alignItems:'center' }}>
@@ -1311,7 +1598,7 @@ function BettingZone({ bet, bankroll, onChip, onClear, onRebet, onDeal, hasLast 
 
       <div className={totalBet > 0 ? 'glow-pulse' : 'bet-empty-pulse'} style={{
         position:'relative',
-        width: 130, height: 130,
+        width: 124, height: 124,
         borderRadius:'50%',
         border:`2px dashed ${totalBet > 0 ? 'rgba(230,197,144,.7)' : 'rgba(230,197,144,.4)'}`,
         display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center',
@@ -1322,7 +1609,7 @@ function BettingZone({ bet, bankroll, onChip, onClear, onRebet, onDeal, hasLast 
         </div>
         <div style={{
           fontFamily:"'Playfair Display', serif",
-          fontSize: 28, fontWeight: 700,
+          fontSize: 26, fontWeight: 700,
           color: totalBet > 0 ? 'var(--brass-2)' : 'rgba(230,197,144,.4)'
         }}>${totalBet}</div>
         {totalBet > 0 && (
@@ -1343,20 +1630,21 @@ function BettingZone({ bet, bankroll, onChip, onClear, onRebet, onDeal, hasLast 
       <div style={{ display:'flex', flexDirection:'column', gap: 10, alignItems:'flex-end', minWidth: 200 }}>
         <div style={{ display:'flex', gap: 8 }}>
           <SmallBtn onClick={onClear} disabled={!totalBet}>Clear</SmallBtn>
-          <SmallBtn onClick={onRebet} disabled={!hasLast}>Rebet ↺</SmallBtn>
+          <SmallBtn onClick={onRebet} disabled={!canRebet}>Rebet ↺</SmallBtn>
         </div>
         <button
           onClick={onDeal}
           disabled={!totalBet}
+          title="Deal (Enter)"
           style={{
-            padding:'18px 44px',
+            padding:'16px 40px',
             background: totalBet ? 'linear-gradient(180deg, #f5d896, #c9a26a)' : 'rgba(40,28,18,.4)',
             color: totalBet ? '#1a1208' : 'rgba(255,255,255,.3)',
             border:`1px solid ${totalBet ? 'rgba(245,216,150,1)' : 'rgba(201,162,106,.2)'}`,
             borderRadius: 12,
             fontFamily:"'Playfair Display', serif",
             fontStyle:'italic',
-            fontSize: 24, fontWeight: 700,
+            fontSize: 22, fontWeight: 700,
             letterSpacing:'.04em',
             cursor: totalBet ? 'pointer' : 'not-allowed',
             boxShadow: totalBet ? '0 14px 28px rgba(230,197,144,.45), inset 0 1px 0 rgba(255,255,255,.5)' : 'none',
@@ -1384,21 +1672,22 @@ function SmallBtn({ children, onClick, disabled }) {
   );
 }
 
-function ActionZone({ hint, canDouble, canSplit, canSurrender, doubleReason, splitReason, surrenderReason, onHit, onStand, onDouble, onSplit, onSurrender, betAmount }) {
+function ActionZone({ hint, canDouble, canSplit, canSurrender, doubleReason, splitReason, surrenderReason, onHit, onStand, onDouble, onSplit, onSurrender, onBlocked, betAmount, compact }) {
   const ha = hint?.action;
   return (
-    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap: 12, paddingTop: 4, flexWrap:'wrap' }}>
-      <ActionButton label="Hit"    onClick={onHit}    hint={ha==='Hit'}    sub="Take a card" />
-      <ActionButton label="Stand"  onClick={onStand}  hint={ha==='Stand'}  sub="Lock it in" />
-      <ActionButton label="Double" onClick={onDouble} hint={ha==='Double'} disabled={!canDouble} disabledReason={doubleReason} sub={`+$${betAmount}`} />
-      <ActionButton label="Split"  onClick={onSplit}  hint={ha==='Split'}  disabled={!canSplit} disabledReason={splitReason} sub={`+$${betAmount}`} />
-      <div style={{ width: 1, height: 60, background:'rgba(201,162,106,.25)', margin:'0 4px' }}/>
-      <ActionButton label="Surrender" onClick={onSurrender} hint={ha==='Surrender'} disabled={!canSurrender} disabledReason={surrenderReason} sub="½ back" />
+    <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap: compact ? 8 : 12, paddingTop: 2, flexWrap:'wrap' }}>
+      <ActionButton label="Hit"    onClick={onHit}    hint={ha==='Hit'}    sub="Take a card" kbd="H" compact={compact} />
+      <ActionButton label="Stand"  onClick={onStand}  hint={ha==='Stand'}  sub="Lock it in" kbd="S" compact={compact} />
+      <ActionButton label="Double" onClick={onDouble} hint={ha==='Double'} disabled={!canDouble} disabledReason={doubleReason} onBlocked={onBlocked} sub={`+$${betAmount}`} kbd="D" compact={compact} />
+      <ActionButton label="Split"  onClick={onSplit}  hint={ha==='Split'}  disabled={!canSplit} disabledReason={splitReason} onBlocked={onBlocked} sub={`+$${betAmount}`} kbd="P" compact={compact} />
+      {!compact && <div style={{ width: 1, height: 56, background:'rgba(201,162,106,.25)', margin:'0 4px' }}/>}
+      <ActionButton label="Surrender" onClick={onSurrender} hint={ha==='Surrender'} disabled={!canSurrender} disabledReason={surrenderReason} onBlocked={onBlocked} sub="½ back" kbd="R" ghost compact={compact} />
     </div>
   );
 }
 
-function InsuranceZone({ amount, onYes, onNo }) {
+function InsuranceZone({ amount, bankroll, onYes, onNo }) {
+  const canAfford = bankroll >= amount;
   return (
     <div style={{
       display:'flex', alignItems:'center', justifyContent:'center', gap: 18,
@@ -1406,12 +1695,13 @@ function InsuranceZone({ amount, onYes, onNo }) {
       background:'rgba(20,12,6,.5)',
       border:'1px solid rgba(245,216,150,.35)',
       borderRadius: 10,
-      maxWidth: 600, margin:'0 auto'
+      maxWidth: 620, margin:'0 auto',
+      flexWrap:'wrap'
     }}>
       <div style={{
         fontFamily:"'Playfair Display', serif",
         fontStyle:'italic', fontSize: 18, color:'var(--brass-2)',
-        flex: 1, textAlign:'center'
+        flex: 1, textAlign:'center', minWidth: 200
       }}>
         Insurance? <span style={{fontSize: 12, letterSpacing:'.2em', textTransform:'uppercase', color:'var(--ivory-dim)', fontStyle:'normal'}}>Pays 2:1 if dealer has blackjack</span>
       </div>
@@ -1424,24 +1714,24 @@ function InsuranceZone({ amount, onYes, onNo }) {
         fontSize: 12, letterSpacing:'.16em', textTransform:'uppercase',
         fontWeight: 600, cursor:'pointer', fontFamily:'inherit'
       }}>No thanks</button>
-      <button onClick={onYes} style={{
+      <button onClick={onYes} disabled={!canAfford} title={canAfford ? undefined : 'Not enough chips left to insure'} style={{
         padding:'10px 22px',
-        background:'linear-gradient(180deg, #f5d896, #c9a26a)',
-        color:'#1a1208',
-        border:'1px solid rgba(245,216,150,1)',
+        background: canAfford ? 'linear-gradient(180deg, #f5d896, #c9a26a)' : 'rgba(40,28,18,.4)',
+        color: canAfford ? '#1a1208' : 'rgba(255,255,255,.3)',
+        border:`1px solid ${canAfford ? 'rgba(245,216,150,1)' : 'rgba(201,162,106,.2)'}`,
         borderRadius: 8,
         fontSize: 12, letterSpacing:'.16em', textTransform:'uppercase',
-        fontWeight: 700, cursor:'pointer', fontFamily:'inherit',
-        boxShadow:'0 6px 16px rgba(230,197,144,.4)'
+        fontWeight: 700, cursor: canAfford ? 'pointer' : 'not-allowed', fontFamily:'inherit',
+        boxShadow: canAfford ? '0 6px 16px rgba(230,197,144,.4)' : 'none'
       }}>Insure · ${amount}</button>
     </div>
   );
 }
 
-function ResolvedZone({ result, onContinue, onRebet, hasLast }) {
+function ResolvedZone({ result, onContinue, onRebet, canRebet }) {
   return (
     <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap: 14, paddingTop: 4 }}>
-      <button onClick={onContinue} style={{
+      <button onClick={onContinue} title="New hand (N)" style={{
         padding:'14px 32px',
         background:'linear-gradient(180deg, rgba(40,28,18,.95), rgba(20,12,6,.95))',
         color:'var(--ivory)',
@@ -1451,8 +1741,8 @@ function ResolvedZone({ result, onContinue, onRebet, hasLast }) {
         fontStyle:'italic', fontSize: 18, fontWeight: 600,
         cursor:'pointer'
       }}>New Hand</button>
-      {hasLast && (
-        <button onClick={onRebet} style={{
+      {canRebet && (
+        <button onClick={onRebet} title="Rebet & deal (B)" style={{
           padding:'14px 32px',
           background:'linear-gradient(180deg, #f5d896, #c9a26a)',
           color:'#1a1208',

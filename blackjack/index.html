@@ -4,29 +4,29 @@
 <meta charset="UTF-8" />
 <title>Blackjack — Play Free Online (Play-Money) | Limestone Games</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Play Blackjack free in your browser. Hit, stand, double, or split — beat the dealer to 21 with basic-strategy hints. Play money only, no downloads.">
-<meta name="keywords" content="blackjack, free blackjack, online blackjack, browser blackjack, casino, 21">
+<meta name="description" content="Play Blackjack free in your browser with a real strategy coach — exact odds on every hit, stand, double, and split. 3:2 payouts, S17, play money only, no downloads.">
+<meta name="keywords" content="blackjack, free blackjack, online blackjack, browser blackjack, blackjack strategy, basic strategy, casino, 21">
 <link rel="canonical" href="https://limestonegames.com/blackjack/">
 <meta property="og:title" content="Blackjack — Limestone Games">
-<meta property="og:description" content="Play Blackjack free in your browser. Hit, stand, double, or split — beat the dealer to 21 with basic-strategy hints. Play money only, no downloads.">
+<meta property="og:description" content="Play Blackjack free in your browser with a real strategy coach — exact odds on every hit, stand, double, and split. Play money only, no downloads.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://limestonegames.com/blackjack/">
 <meta property="og:image" content="https://limestonegames.com/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Blackjack — Limestone Games">
-<meta name="twitter:description" content="Play Blackjack free in your browser. Hit, stand, double, or split — beat the dealer to 21 with basic-strategy hints. Play money only, no downloads.">
+<meta name="twitter:description" content="Play Blackjack free in your browser with a real strategy coach — exact odds on every hit, stand, double, and split. Play money only, no downloads.">
 <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.json">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Blackjack","description":"Play Blackjack free in your browser. Hit, stand, double, or split — beat the dealer to 21 with basic-strategy hints.","url":"https://limestonegames.com/blackjack/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Blackjack","description":"Play Blackjack free in your browser with a built-in basic-strategy coach. Hit, stand, double, or split — beat the dealer to 21.","url":"https://limestonegames.com/blackjack/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Blackjack"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Is this blackjack game free?","acceptedAnswer":{"@type":"Answer","text":"Yes. No downloads, no installs, no real money — just play-money chips. Your bankroll and stats save in your browser."}},
   {"@type":"Question","name":"What's a soft hand in blackjack?","acceptedAnswer":{"@type":"Answer","text":"A hand with an ace counted as 11 — for example, an ace and a six is a soft 17. If hitting would bust the soft total, the ace flips to 1 and you keep playing."}},
-  {"@type":"Question","name":"Should I take insurance?","acceptedAnswer":{"@type":"Answer","text":"No. Insurance pays 2:1 but the dealer hits blackjack only about 30% of the time, so the bet loses money in the long run."}},
+  {"@type":"Question","name":"Should I take insurance?","acceptedAnswer":{"@type":"Answer","text":"No. Insurance pays 2:1 but the dealer hits blackjack only about 31% of the time, so the bet loses money in the long run."}},
   {"@type":"Question","name":"Can I count cards here?","acceptedAnswer":{"@type":"Answer","text":"Not effectively — the shoe is shuffled often enough that counting won't give you a meaningful edge. Use it to practice basic strategy instead."}},
   {"@type":"Question","name":"Does the dealer hit on soft 17?","acceptedAnswer":{"@type":"Answer","text":"No. Our table uses the player-friendly Stand on Soft 17 (S17) rule. The dealer must hit any hard total of 16 or less and stand on any 17 or higher."}}
 ]}</script>
@@ -51,45 +51,29 @@
     --ink:#0c1611;
     --ink-2:#1a2820;
     --green-chip:#2e7d4f;
+    --gold-hi:#ffd97a;
+    --win:#9eddb8;
+    --push:#d8cdb4;
+    --lose:#f29a8c;
+    --lose-deep:#ff6b5a;
     --shadow-deep: 0 30px 60px -20px rgba(0,0,0,.6), 0 12px 24px -10px rgba(0,0,0,.5);
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{min-height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
-  .game-stage{min-height:100vh;display:grid;place-items:center;overflow:hidden}
-  .game-info{background:#0a0805;color:var(--ivory-dim);padding:64px 24px;border-top:1px solid rgba(201,162,106,.18)}
-  .game-info-inner{max-width:760px;margin:0 auto;line-height:1.65}
-  .game-info h2{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:600;color:var(--brass-2);margin:40px 0 14px;letter-spacing:.01em}
-  .game-info h2:first-child{margin-top:0}
-  .game-info p{margin:0 0 16px}
-  .game-info ul{margin:0 0 16px;padding-left:22px}
-  .game-info li{margin:0 0 8px}
-  .game-info b,.game-info strong{color:var(--ivory)}
-  .game-info a{color:var(--brass-2);text-decoration:none;border-bottom:1px solid rgba(230,197,144,.3)}
-  .game-info a:hover{border-bottom-color:var(--brass-2)}
-  .game-info details{margin:0 0 10px;border-bottom:1px solid rgba(201,162,106,.12);padding-bottom:10px}
-  .game-info summary{cursor:pointer;color:var(--ivory);font-weight:500;padding:8px 0;list-style:none}
-  .game-info summary::-webkit-details-marker{display:none}
-  .game-info summary::before{content:'+';display:inline-block;width:18px;color:var(--brass)}
-  .game-info details[open] summary::before{content:'−'}
-  .game-info details p{padding:6px 0 8px 18px;margin:0}
-  .similar-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;list-style:none;padding:0}
-  .similar-games li{margin:0}
-  .similar-games a{display:block;padding:10px 14px;background:rgba(201,162,106,.06);border:1px solid rgba(201,162,106,.18);border-bottom:1px solid rgba(201,162,106,.18);border-radius:6px;color:var(--ivory);font-weight:500}
-  .similar-games a:hover{background:rgba(201,162,106,.12);border-color:rgba(201,162,106,.35)}
+  .game-stage{min-height:100vh;display:grid;place-items:center;overflow:hidden;padding:8px 0}
   body{
     background:
       radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
       radial-gradient(900px 600px at 50% 90%, rgba(0,0,0,.7), transparent 70%),
       #0a0805;
   }
-  #root{width:100%;height:100%}
-  /* transform-origin must be top LEFT, not center: the wrapper is a fixed
-     1380px wide and margin:0 auto can't center it once the viewport is narrower
-     than 1380 (auto margins clamp to 0, so it sits at x:0). With a center origin
-     the scale() then pivots around x:690 and shoves the table off the right edge
-     — on mobile it ends up almost entirely off-screen. top left scales from x:0
-     so the board fills the viewport width. (Matches slot-machine.) */
-  #game-wrapper{width:1380px;height:860px;transform-origin:top left;margin:0 auto}
+  /* The design canvas (#root) is a fixed-size surface scaled with
+     transform; #game-wrapper is sized to the SCALED dimensions so the page
+     flow never reserves dead space around a shrunken table. The resize
+     script picks a landscape (1380x860) or portrait (460x1000) canvas and
+     announces changes on window as 'bj:canvas'. */
+  #game-wrapper{position:relative;width:1380px;height:860px;overflow:visible}
+  #root{width:1380px;height:860px;transform-origin:top left}
   /* card flip */
   .card-shell{perspective:900px}
   .card-flip{
@@ -137,9 +121,12 @@
     80%{transform:translateX(4px)}
   }
   .shake{animation:shake .5s ease-in-out}
+  /* banner is centered with translate(-50%,-50%); the entrance keyframes
+     must carry that translate or the animation's transform replaces it and
+     the banner lands off-center */
   @keyframes bannerIn{
-    0%{transform:translateY(-20px) scale(.92);opacity:0;letter-spacing:.4em}
-    100%{transform:translateY(0) scale(1);opacity:1;letter-spacing:.18em}
+    0%{transform:translate(-50%,-50%) translateY(-20px) scale(.92);opacity:0;letter-spacing:.4em}
+    100%{transform:translate(-50%,-50%) translateY(0) scale(1);opacity:1;letter-spacing:.18em}
   }
   .banner-in{animation:bannerIn .55s cubic-bezier(.2,.8,.25,1) both}
   /* scrollbar */
@@ -165,6 +152,112 @@
     100%{transform:translate(0,0) rotate(0) scale(1);opacity:1}
   }
   .chip-toss{animation:chipToss .55s cubic-bezier(.3,1.4,.3,1) backwards}
+
+  /* ───────────────────── Below the felt ───────────────────── */
+  .game-info{position:relative;background:#0a0805;color:var(--ivory-dim);padding:8px 24px 96px;border-top:1px solid rgba(201,162,106,.18)}
+  .game-info::before{
+    content:'♠ · ♥ · ♦ · ♣';
+    position:absolute;top:0;left:50%;transform:translate(-50%,-50%);
+    background:#0a0805;padding:0 20px;color:var(--brass);
+    font-size:11px;letter-spacing:.5em;white-space:nowrap
+  }
+  .gi-sec{max-width:760px;margin:0 auto;padding-top:88px;line-height:1.65}
+  .gi-sec.wide{max-width:960px}
+  .sec-head{text-align:center;margin-bottom:36px}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--brass);margin:0 0 10px}
+  .sec-head h2{font-family:'Playfair Display',serif;font-style:italic;font-weight:600;font-size:clamp(26px,4vw,34px);color:var(--ivory);margin:0 0 18px;letter-spacing:.01em}
+  .sec-rule{width:140px;height:1px;margin:0 auto;background:linear-gradient(90deg,transparent,var(--brass),transparent);position:relative}
+  .sec-rule::after{content:'◆';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:8px;color:var(--brass);background:#0a0805;padding:0 10px}
+  .gi-sec p{margin:0 0 16px;font-size:15px}
+  .gi-sec b,.gi-sec strong{color:var(--ivory)}
+  .gi-sec p a,.gi-sec details a{color:var(--brass-2);text-decoration:none;border-bottom:1px solid rgba(230,197,144,.3)}
+  .gi-sec p a:hover{border-bottom-color:var(--brass-2)}
+
+  /* table-rules emblem strip */
+  .rules-strip{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .rule-emblem{width:132px;padding:22px 10px 18px;text-align:center;position:relative;border-radius:14px;border:1px solid rgba(201,162,106,.35);background:radial-gradient(120% 90% at 50% 0%,rgba(201,162,106,.10),rgba(201,162,106,.02) 60%),linear-gradient(180deg,rgba(28,18,9,.92),rgba(10,6,3,.92));box-shadow:inset 0 1px 0 rgba(230,197,144,.18),0 12px 26px rgba(0,0,0,.45)}
+  .rule-emblem::before{content:'';position:absolute;inset:5px;border:1px solid rgba(201,162,106,.16);border-radius:10px;pointer-events:none}
+  .re-value{display:block;font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:30px;line-height:1;color:var(--brass-2);text-shadow:0 2px 10px rgba(230,197,144,.25)}
+  .re-label{display:block;margin-top:9px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ivory-dim)}
+  @media(max-width:420px){.rules-strip{gap:10px}.rule-emblem{width:104px}}
+
+  /* the moves — glossary cards */
+  .action-glossary{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-top:26px}
+  .ag-card{padding:22px 18px 20px;text-align:center;border-radius:14px;border:1px solid rgba(201,162,106,.22);background:linear-gradient(180deg,rgba(24,15,8,.85),rgba(10,6,3,.85));box-shadow:inset 0 1px 0 rgba(230,197,144,.12)}
+  .ag-card h3{font-family:'Playfair Display',serif;font-style:italic;font-weight:600;font-size:21px;color:var(--brass-2);margin:0 0 6px}
+  .ag-card p{font-size:13px;line-height:1.55;color:var(--ivory-dim);margin:0}
+  .ag-card .kbd{display:inline-block;margin-top:10px;padding:1px 8px;border:1px solid rgba(201,162,106,.35);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--brass);letter-spacing:.1em}
+  .ag-motif{height:64px;display:flex;align-items:center;justify-content:center;gap:8px;margin-bottom:12px;position:relative}
+  .mini-card{width:32px;height:46px;border-radius:5px;background:linear-gradient(165deg,#fffdf6,#e9dfc6);box-shadow:0 5px 12px rgba(0,0,0,.5),inset 0 0 0 1px rgba(12,22,17,.25);position:relative;display:inline-block}
+  .mini-card::after{content:'';position:absolute;inset:4px;border:1px solid rgba(140,106,63,.45);border-radius:3px}
+  .badge{position:absolute;width:22px;height:22px;border-radius:50%;background:linear-gradient(180deg,var(--brass-2),var(--brass));color:#1a1208;font-weight:700;font-size:12px;display:grid;place-items:center;box-shadow:0 3px 8px rgba(0,0,0,.45);font-family:'Inter',sans-serif}
+  .m-hit .badge{right:calc(50% - 34px);top:2px}
+  .m-stand .bar{position:absolute;bottom:4px;left:50%;transform:translateX(-50%);width:56px;height:5px;border-radius:3px;background:linear-gradient(180deg,var(--brass-2),var(--brass-deep))}
+  .m-double .badge{right:calc(50% - 38px);top:2px;width:26px;border-radius:7px}
+  .m-split .mini-card:first-child{transform:rotate(-10deg) translateX(3px)}
+  .m-split .mini-card:last-child{transform:rotate(10deg) translateX(-3px)}
+  .m-surrender .mini-card{transform:rotate(35deg) translateY(4px);opacity:.75}
+  .m-surrender .badge{right:calc(50% - 36px);top:2px}
+
+  /* basic strategy chart */
+  .legend{display:flex;justify-content:center;gap:10px;flex-wrap:wrap;margin-bottom:24px}
+  .lg{display:inline-flex;align-items:center;gap:8px;padding:5px 12px 5px 5px;border-radius:999px;border:1px solid rgba(201,162,106,.22);background:rgba(20,12,6,.55);font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.1em;text-transform:uppercase;color:var(--ivory-dim)}
+  .lg b{width:22px;height:22px;border-radius:5px;display:grid;place-items:center;font-size:11px;font-family:'Inter',sans-serif}
+  .lg.h b{background:#175040;color:#e8e2cf}.lg.s b{background:#c9a26a;color:#241606}.lg.d b{background:#f4ecd8;color:#0c1611}.lg.p b{background:#35577d;color:#f4ecd8}.lg.r b{background:#8e3226;color:#f4ecd8}
+  .chart-mat{padding:22px;border-radius:16px;border:1px solid rgba(201,162,106,.25);background:radial-gradient(ellipse 120% 80% at 50% 0%,rgba(26,80,64,.30),transparent 70%),linear-gradient(180deg,rgba(16,10,5,.85),rgba(8,4,2,.85));box-shadow:inset 0 1px 0 rgba(230,197,144,.1),0 16px 36px rgba(0,0,0,.5)}
+  .chart-title{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--brass);text-align:center;margin:0 0 12px}
+  .bj-chart{border-collapse:separate;border-spacing:2px;width:100%;font-family:'JetBrains Mono',monospace;font-size:11.5px}
+  .bj-chart th{font-size:9.5px;letter-spacing:.08em;color:var(--brass);font-weight:500;padding:4px 0;text-transform:uppercase}
+  .bj-chart th.corner{color:var(--ivory-dim);text-align:right;padding-right:8px;font-size:8.5px;letter-spacing:.14em}
+  .bj-chart td{text-align:center;padding:6px 0;border-radius:4px;font-weight:500;min-width:26px}
+  .bj-chart td.rl{background:transparent;color:var(--ivory);text-align:right;padding-right:8px;font-weight:500;min-width:44px}
+  .bj-chart td.c-h{background:#175040;color:#e8e2cf}
+  .bj-chart td.c-s{background:#c9a26a;color:#241606}
+  .bj-chart td.c-d{background:#f4ecd8;color:#0c1611;font-weight:700}
+  .bj-chart td.c-p{background:#35577d;color:#f4ecd8}
+  .bj-chart td.c-r{background:#8e3226;color:#f4ecd8}
+  .chart-grid{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin-top:18px}
+  @media(max-width:760px){.chart-grid{grid-template-columns:1fr}}
+  .chart-note{font-size:12.5px;color:var(--ivory-dim);text-align:center;margin-top:18px;opacity:.85}
+  .chart-note b{color:var(--ivory)}
+
+  /* dealer's notes — numbered tips */
+  .tips{list-style:none;counter-reset:tip;display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0;margin:0}
+  .tips li{counter-increment:tip;position:relative;padding:18px 20px 16px 64px;border-radius:12px;border:1px solid rgba(201,162,106,.18);background:linear-gradient(180deg,rgba(22,14,7,.75),rgba(10,6,3,.75));font-size:13.5px;line-height:1.6;color:var(--ivory-dim)}
+  .tips li::before{content:counter(tip,decimal-leading-zero);position:absolute;left:18px;top:14px;font-family:'Playfair Display',serif;font-style:italic;font-size:26px;color:var(--brass);opacity:.9}
+  .tips li b{display:block;color:var(--ivory);font-weight:600;margin-bottom:4px;font-size:14.5px}
+  .tips li:last-child:nth-child(odd){grid-column:1/-1}
+  @media(max-width:640px){.tips{grid-template-columns:1fr}}
+
+  /* the story */
+  .about p:first-of-type::first-letter{font-family:'Playfair Display',serif;font-style:italic;font-size:56px;line-height:.8;float:left;padding:6px 10px 0 0;color:var(--brass-2)}
+  .timeline{display:grid;grid-template-columns:repeat(4,1fr);margin-top:32px;border-top:1px solid rgba(201,162,106,.3)}
+  .tl-stop{position:relative;padding:18px 16px 0 14px}
+  .tl-stop::before{content:'';position:absolute;top:-4px;left:12px;width:7px;height:7px;background:var(--brass);transform:rotate(45deg);box-shadow:0 0 8px rgba(201,162,106,.5)}
+  .tl-year{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--brass-2)}
+  .tl-what{display:block;margin-top:5px;font-size:12.5px;line-height:1.45;color:var(--ivory-dim)}
+  @media(max-width:640px){.timeline{grid-template-columns:1fr 1fr;border-top:0}.tl-stop{border-top:1px solid rgba(201,162,106,.3)}}
+
+  /* FAQ */
+  .faq details{margin:0 0 10px;padding:0;border:1px solid rgba(201,162,106,.18);border-radius:12px;background:linear-gradient(180deg,rgba(20,12,6,.6),rgba(10,6,3,.6));transition:border-color .25s}
+  .faq details[open]{border-color:rgba(230,197,144,.45);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .faq summary{list-style:none;cursor:pointer;position:relative;padding:16px 60px 16px 20px;font-family:'Playfair Display',serif;font-style:italic;font-size:17px;color:var(--ivory)}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:'+';position:absolute;right:16px;top:50%;width:26px;height:26px;transform:translateY(-50%);border:1px solid rgba(201,162,106,.4);border-radius:50%;display:grid;place-items:center;color:var(--brass);font-family:'Inter',sans-serif;font-style:normal;font-size:15px;line-height:1;transition:transform .25s ease}
+  .faq details[open] summary::after{transform:translateY(-50%) rotate(45deg)}
+  .faq details p{margin:0 20px 18px;padding:14px 0 0;border-top:1px solid rgba(201,162,106,.14);font-size:14px;line-height:1.65;color:var(--ivory-dim)}
+
+  /* similar games */
+  .similar-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;list-style:none;padding:0;margin:0}
+  .similar-games li{margin:0}
+  .similar-games a{position:relative;display:block;padding:18px 18px 14px;overflow:hidden;border-radius:12px;border:1px solid rgba(201,162,106,.2);background:linear-gradient(180deg,rgba(22,14,7,.8),rgba(10,6,3,.8));font-family:'Playfair Display',serif;font-style:italic;font-size:18px;color:var(--ivory);text-decoration:none;transition:transform .2s,border-color .2s,box-shadow .2s}
+  .similar-games a::before{content:'♠';position:absolute;right:-8px;bottom:-18px;font-size:72px;font-style:normal;color:rgba(201,162,106,.08);pointer-events:none;transition:color .2s}
+  .similar-games li:nth-child(4n+2) a::before{content:'♥'}
+  .similar-games li:nth-child(4n+3) a::before{content:'♦'}
+  .similar-games li:nth-child(4n) a::before{content:'♣'}
+  .similar-games a::after{content:'Play →';display:block;margin-top:8px;font-family:'JetBrains Mono',monospace;font-style:normal;font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--brass)}
+  .similar-games a:hover{transform:translateY(-3px);border-color:rgba(230,197,144,.55);box-shadow:0 14px 28px rgba(0,0,0,.45)}
+  .similar-games a:hover::before{color:rgba(201,162,106,.16)}
 </style>
 </head>
 <body>
@@ -175,40 +268,182 @@
 </section>
 
 <article class="game-info" aria-labelledby="how-h">
-  <div class="game-info-inner">
-    <h2 id="how-h">How to play blackjack</h2>
-    <p>Blackjack is a card game between you and the dealer. Build a hand closer to 21 than the dealer's — without going over. Number cards score at face value, face cards count 10, and an ace is worth 1 or 11, whichever helps you most.</p>
-    <p>Place a bet to start the round. You and the dealer each get two cards; yours are face-up, the dealer's second card stays hidden. Then choose your action:</p>
-    <ul>
-      <li><b>Hit</b> — take another card. Keep hitting until you stand or bust.</li>
-      <li><b>Stand</b> — keep your total. The dealer plays next.</li>
-      <li><b>Double</b> — double your bet for one and only one more card. Best on 9, 10, or 11.</li>
-      <li><b>Split</b> — when dealt a pair, split it into two hands with a new second card on each. Each hand plays independently.</li>
-    </ul>
-    <p>If your total goes over 21, you bust and lose the bet immediately. Once you finish, the dealer flips their hidden card and draws until they reach 17 or more — our table uses the player-friendly Stand-on-Soft-17 rule. Beat the dealer's total and you win even money. Land a natural blackjack (ace plus a 10-value card on the first two cards) and you win 3:2.</p>
 
-    <h2>Tips &amp; strategy</h2>
-    <ul>
+  <section class="gi-sec">
+    <header class="sec-head">
+      <p class="kicker">♠ House Rules</p>
+      <h2>Read the table before you sit</h2>
+      <div class="sec-rule"></div>
+    </header>
+    <div class="rules-strip" role="list">
+      <div class="rule-emblem" role="listitem"><span class="re-value">3:2</span><span class="re-label">Blackjack pays</span></div>
+      <div class="rule-emblem" role="listitem"><span class="re-value">S17</span><span class="re-label">Dealer stands soft 17</span></div>
+      <div class="rule-emblem" role="listitem"><span class="re-value">DAS</span><span class="re-label">Double after split</span></div>
+      <div class="rule-emblem" role="listitem"><span class="re-value">LS</span><span class="re-label">Late surrender</span></div>
+      <div class="rule-emblem" role="listitem"><span class="re-value">6</span><span class="re-label">Decks in shoe</span></div>
+    </div>
+    <p style="text-align:center;max-width:620px;margin:0 auto">Every rule on this table leans the player's way: naturals pay the full <b>3:2</b> (never 6:5), the dealer stands on all 17s, you can double any first two cards — including after a split — and a bad deal can be surrendered for half the bet back. Played by the book, the house edge here is about half a percent.</p>
+  </section>
+
+  <section class="gi-sec">
+    <header class="sec-head">
+      <p class="kicker">♥ The Moves</p>
+      <h2 id="how-h">How to play blackjack</h2>
+      <div class="sec-rule"></div>
+    </header>
+    <p>Blackjack is a card game between you and the dealer. Build a hand closer to 21 than the dealer's — without going over. Number cards score at face value, face cards count 10, and an ace is worth 1 or 11, whichever helps you most.</p>
+    <p>Place a bet to start the round. You and the dealer each get two cards; yours are face-up, the dealer's second card stays hidden. If your total goes over 21, you bust and lose the bet immediately. Once you finish, the dealer flips their hidden card and draws until reaching 17 or more. Beat their total and you win even money; land a natural blackjack — ace plus a ten-value card — and you win 3:2.</p>
+    <div class="action-glossary">
+      <div class="ag-card">
+        <div class="ag-motif m-hit" aria-hidden="true"><span class="mini-card"></span><span class="badge">+</span></div>
+        <h3>Hit</h3><p>Take another card. Keep hitting until you stand — or bust.</p>
+        <span class="kbd">H</span>
+      </div>
+      <div class="ag-card">
+        <div class="ag-motif m-stand" aria-hidden="true"><span class="mini-card"></span><span class="bar"></span></div>
+        <h3>Stand</h3><p>Keep your total and lock it in. The dealer plays next.</p>
+        <span class="kbd">S</span>
+      </div>
+      <div class="ag-card">
+        <div class="ag-motif m-double" aria-hidden="true"><span class="mini-card"></span><span class="badge">×2</span></div>
+        <h3>Double</h3><p>Double your bet for exactly one more card. Best on 9, 10, or 11.</p>
+        <span class="kbd">D</span>
+      </div>
+      <div class="ag-card">
+        <div class="ag-motif m-split" aria-hidden="true"><span class="mini-card"></span><span class="mini-card"></span></div>
+        <h3>Split</h3><p>Dealt a pair? Split it into two hands, each with its own bet.</p>
+        <span class="kbd">P</span>
+      </div>
+      <div class="ag-card">
+        <div class="ag-motif m-surrender" aria-hidden="true"><span class="mini-card"></span><span class="badge">½</span></div>
+        <h3>Surrender</h3><p>Fold a hopeless first deal and take half your bet back.</p>
+        <span class="kbd">R</span>
+      </div>
+    </div>
+  </section>
+
+  <section class="gi-sec wide">
+    <header class="sec-head">
+      <p class="kicker">♦ Basic Strategy</p>
+      <h2>The chart the coach plays by</h2>
+      <div class="sec-rule"></div>
+    </header>
+    <p style="text-align:center;max-width:640px;margin:0 auto 26px">Basic strategy is the mathematically best response to every hand — computed, not guessed. The in-game coach runs these exact numbers live; this is the full map for our rules (6 decks, S17, double after split, late surrender). Find your hand on the left, the dealer's up-card on top.</p>
+    <div class="legend" aria-hidden="true">
+      <span class="lg h"><b>H</b> Hit</span>
+      <span class="lg s"><b>S</b> Stand</span>
+      <span class="lg d"><b>D</b> Double</span>
+      <span class="lg p"><b>P</b> Split</span>
+      <span class="lg r"><b>R</b> Surrender</span>
+    </div>
+    <div class="chart-mat">
+      <p class="chart-title">Hard totals</p>
+      <table class="bj-chart" aria-label="Basic strategy for hard totals">
+        <thead><tr><th class="corner">You ↓ · Dealer →</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>A</th></tr></thead>
+        <tbody>
+          <tr><td class="rl">8 or less</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+          <tr><td class="rl">9</td><td class="c-h">H</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+          <tr><td class="rl">10</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+          <tr><td class="rl">11</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-h">H</td></tr>
+          <tr><td class="rl">12</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+          <tr><td class="rl">13</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+          <tr><td class="rl">14</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+          <tr><td class="rl">15</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-r">R</td><td class="c-h">H</td></tr>
+          <tr><td class="rl">16</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-r">R</td><td class="c-r">R</td><td class="c-r">R</td></tr>
+          <tr><td class="rl">17+</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td></tr>
+        </tbody>
+      </table>
+      <div class="chart-grid">
+        <div>
+          <p class="chart-title">Soft totals</p>
+          <table class="bj-chart" aria-label="Basic strategy for soft totals">
+            <thead><tr><th class="corner">You ↓</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>A</th></tr></thead>
+            <tbody>
+              <tr><td class="rl">A,2</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+              <tr><td class="rl">A,3</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+              <tr><td class="rl">A,4</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+              <tr><td class="rl">A,5</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+              <tr><td class="rl">A,6</td><td class="c-h">H</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+              <tr><td class="rl">A,7</td><td class="c-s">S</td><td class="c-d">Ds</td><td class="c-d">Ds</td><td class="c-d">Ds</td><td class="c-d">Ds</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+              <tr><td class="rl">A,8</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td></tr>
+              <tr><td class="rl">A,9</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td></tr>
+            </tbody>
+          </table>
+        </div>
+        <div>
+          <p class="chart-title">Pairs</p>
+          <table class="bj-chart" aria-label="Basic strategy for pairs">
+            <thead><tr><th class="corner">You ↓</th><th>2</th><th>3</th><th>4</th><th>5</th><th>6</th><th>7</th><th>8</th><th>9</th><th>10</th><th>A</th></tr></thead>
+            <tbody>
+              <tr><td class="rl">A,A</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td></tr>
+              <tr><td class="rl">10,10</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td><td class="c-s">S</td></tr>
+              <tr><td class="rl">9,9</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-s">S</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-s">S</td><td class="c-s">S</td></tr>
+              <tr><td class="rl">8,8</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td></tr>
+              <tr><td class="rl">7,7</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+              <tr><td class="rl">6,6</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+              <tr><td class="rl">5,5</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-d">D</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+              <tr><td class="rl">4,4</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+              <tr><td class="rl">3,3</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+              <tr><td class="rl">2,2</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-p">P</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td><td class="c-h">H</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+      <p class="chart-note"><b>Ds</b> = double if allowed, otherwise stand. <b>R</b> = surrender if allowed, otherwise hit. Doubles and splits need your first two cards — once you've hit, play the total as a hard hand.</p>
+    </div>
+  </section>
+
+  <section class="gi-sec">
+    <header class="sec-head">
+      <p class="kicker">♣ Dealer's Notes</p>
+      <h2>Seven habits of players who last</h2>
+      <div class="sec-rule"></div>
+    </header>
+    <ol class="tips">
       <li><b>Always split aces and eights.</b> Aces give you two shots at 21; two eights make a weak 16 that's almost always better split into two hands.</li>
       <li><b>Never split fives or tens.</b> Two fives total a strong 10 — better to double. Splitting tens breaks up a 20, the second-best hand in the game.</li>
-      <li><b>Double on 11.</b> One card away from 21 with a four-in-thirteen chance of getting it. Double whenever the dealer shows 2 through 10.</li>
+      <li><b>Double on 11.</b> One card from 21 with a four-in-thirteen chance of getting it. Double whenever the dealer shows 2 through 10.</li>
       <li><b>Hit 12–16 when the dealer shows 7+.</b> A strong dealer up-card will likely make 17–21 anyway. Take the risk.</li>
       <li><b>Stand on 12–16 when the dealer shows 2–6.</b> Weak up-cards bust often. Let them.</li>
       <li><b>Skip insurance.</b> The math doesn't work — long-term it's a losing side bet.</li>
       <li><b>Never deviate from basic strategy on a hunch.</b> Every chart move is the mathematically best decision given the cards. Hunches cost money.</li>
-    </ul>
+    </ol>
+  </section>
 
-    <h2>About blackjack</h2>
+  <section class="gi-sec about">
+    <header class="sec-head">
+      <p class="kicker">♠ The Story</p>
+      <h2>From Vingt-et-Un to Vegas</h2>
+      <div class="sec-rule"></div>
+    </header>
     <p>Blackjack traces to 18th-century French casinos as Vingt-et-Un — "twenty-one." It crossed to America in the 1800s and exploded in popularity through the 20th century, becoming the most-played table game in the world. Ed Thorp's 1962 book <i>Beat the Dealer</i> proved a skilled player could beat the house by counting cards, kicking off both a cultural fascination and a long cat-and-mouse game with casinos. Today blackjack remains one of the lowest-house-edge games in the casino — basic strategy gets you down to about a 0.5% disadvantage.</p>
+    <div class="timeline">
+      <div class="tl-stop"><span class="tl-year">1760s</span><span class="tl-what">Vingt-et-Un dealt in French salons</span></div>
+      <div class="tl-stop"><span class="tl-year">1800s</span><span class="tl-what">Crosses the Atlantic, takes the name blackjack</span></div>
+      <div class="tl-stop"><span class="tl-year">1962</span><span class="tl-what">Thorp's <i>Beat the Dealer</i> proves the house can lose</span></div>
+      <div class="tl-stop"><span class="tl-year">Today</span><span class="tl-what">Basic strategy: about a 0.5% house edge</span></div>
+    </div>
+  </section>
 
-    <h2>Frequently asked questions</h2>
+  <section class="gi-sec faq">
+    <header class="sec-head">
+      <p class="kicker">♥ Questions</p>
+      <h2>Frequently asked questions</h2>
+      <div class="sec-rule"></div>
+    </header>
     <details><summary>Is this blackjack game free?</summary><p>Yes. No downloads, no installs, no real money — just play-money chips. Your bankroll and stats save in your browser.</p></details>
     <details><summary>What's a "soft" hand?</summary><p>A hand with an ace counted as 11. For example, ace + six is a soft 17. If hitting would bust the soft total, the ace flips to 1 and you keep playing.</p></details>
-    <details><summary>Should I take insurance?</summary><p>No. Insurance pays 2:1 but the dealer hits blackjack only about 30% of the time, so the bet loses money in the long run.</p></details>
+    <details><summary>Should I take insurance?</summary><p>No. Insurance pays 2:1 but the dealer hits blackjack only about 31% of the time, so the bet loses money in the long run.</p></details>
     <details><summary>Can I count cards here?</summary><p>Not effectively — the shoe is reshuffled often enough that counting won't give you a meaningful edge. Use it to practice basic strategy instead.</p></details>
     <details><summary>Does the dealer hit on soft 17?</summary><p>No. Our table uses the player-friendly Stand on Soft 17 (S17) rule. The dealer hits any hard total of 16 or less and stands on any 17 or higher.</p></details>
+  </section>
 
-    <h2>Similar games</h2>
+  <section class="gi-sec">
+    <header class="sec-head">
+      <p class="kicker">♦ More Tables</p>
+      <h2>Similar games</h2>
+      <div class="sec-rule"></div>
+    </header>
     <ul class="similar-games">
       <li><a href="../three-card-poker/">Three Card Poker</a></li>
       <li><a href="../video-poker/">Video Poker</a></li>
@@ -217,17 +452,28 @@
       <li><a href="../craps/">Craps</a></li>
       <li><a href="../roulette/">Roulette</a></li>
     </ul>
-  </div>
+  </section>
 </article>
 
 <script>
 (function() {
   var wrapper = document.getElementById('game-wrapper');
+  var root = document.getElementById('root');
   function resize() {
-    var W = 1380, H = 860;
+    var portrait = window.innerWidth < window.innerHeight && window.innerWidth < 760;
+    var W = portrait ? 460 : 1380, H = portrait ? 1000 : 860;
+    var prev = window.BJ_CANVAS;
+    window.BJ_CANVAS = { w: W, h: H, portrait: portrait };
     var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
-    wrapper.style.transform = 'scale(' + s + ')';
-    wrapper.style.marginTop = Math.max(0, (window.innerHeight - H * s) / 2) + 'px';
+    root.style.width = W + 'px';
+    root.style.height = H + 'px';
+    root.style.transformOrigin = 'top left';
+    root.style.transform = 'scale(' + s + ')';
+    // The wrapper takes the SCALED size so the page reserves exactly the
+    // visible footprint — no dead space above the info sections.
+    wrapper.style.width = (W * s) + 'px';
+    wrapper.style.height = (H * s) + 'px';
+    if (!prev || prev.portrait !== portrait) window.dispatchEvent(new Event('bj:canvas'));
   }
   window.addEventListener('resize', resize);
   resize();
@@ -239,18 +485,19 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
 <script src="../casino/casino-config.js?v=20260508a"></script>
-<script src="../casino/casino-sync.js?v=20260508a"></script>
+<script src="../casino/casino-sync.js?v=20260610b"></script>
 <script src="../casino/casino-bankroll.js?v=20260507j"></script>
 <script src="../casino/casino-player.js?v=20260507a"></script>
 <script src="../casino/casino-stats.js?v=20260508b"></script>
 <script src="../casino/casino-cards.js?v=20260508e"></script>
 <script src="bj-sfx.js?v=20260507j"></script>
+<script src="bj-strategy.js?v=20260610b"></script>
 
 <script type="text/babel" src="tweaks-panel.jsx?v=20260508a"></script>
 <script type="text/babel" src="bj-card.jsx?v=20260507k"></script>
-<script type="text/babel" src="bj-dealer.jsx?v=20260508a"></script>
-<script type="text/babel" src="bj-table.jsx?v=20260508b"></script>
-<script type="text/babel" src="bj-app.jsx?v=20260508c"></script>
+<script type="text/babel" src="bj-dealer.jsx?v=20260610b"></script>
+<script type="text/babel" src="bj-table.jsx?v=20260610b"></script>
+<script type="text/babel" src="bj-app.jsx?v=20260610b"></script>
 
 </body>
 </html>

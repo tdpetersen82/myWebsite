@@ -28,6 +28,12 @@
   let pushTimer = null;
   let inflight = null;
   let dirty = false;
+  // Push-failure circuit breaker. Without it a missing/erroring API gets a
+  // PUT for every tracked write, forever (observed: 550+ failed PUTs in one
+  // session against a static dev server). Each consecutive failure doubles
+  // the quiet period: 10s → 20s → … → 5min cap; any success resets it.
+  let pushFails = 0;
+  let backoffUntil = 0;
 
   // Capture original setItem so we can write without re-triggering sync.
   const origSetItem = Storage.prototype.setItem;
@@ -160,6 +166,8 @@
     if (!pullDone) { schedulePush(250); return; }
     if (!dirty) return; // nothing changed since last successful push
     if (inflight) return; // a flush is already running; the next setItem will reschedule
+    const now = Date.now();
+    if (now < backoffUntil) { schedulePush(backoffUntil - now); return; }
     if (pushTimer) { clearTimeout(pushTimer); pushTimer = null; }
     const id = getDeviceId();
     const blob = buildBlob();
@@ -177,9 +185,13 @@
           keepalive: true,
         });
         if (!res.ok) throw new Error(`HTTP ${res.status}`);
+        pushFails = 0;
+        backoffUntil = 0;
         emit('synced');
       } catch (e) {
         dirty = true; // retry on next trigger
+        pushFails++;
+        backoffUntil = Date.now() + Math.min(10000 * Math.pow(2, pushFails - 1), 300000);
         emit('offline', { error: String(e) });
       } finally {
         inflight = null;

@@ -1,5 +1,5 @@
 /* eslint-disable */
-// Table — felt, hands, betting circle, chip rack, action buttons, hint panel
+// Table — felt, hands, betting circle, chip rack, action buttons, coach bar
 
 const CHIP_DEFS = [
   { value: 5,    color: '#c0392b', edge: '#7a1f15', label: '$5'   },
@@ -90,7 +90,7 @@ function ChipStack({ chips, onClear }) {
 }
 
 function HandValue({ value, soft, isBust, isBJ, label }) {
-  const color = isBust ? '#ff6b5a' : isBJ ? '#ffd97a' : '#fff';
+  const color = isBust ? 'var(--lose-deep)' : isBJ ? 'var(--gold-hi)' : 'var(--ivory)';
   const showBoth = soft && !isBJ && !isBust;
   const low = showBoth ? value - 10 : null;
   return (
@@ -113,39 +113,48 @@ function HandValue({ value, soft, isBust, isBJ, label }) {
       }}>
         {isBJ ? 'BJ' : showBoth ? `${low} / ${value}` : value}
       </span>
-      {isBust && <span style={{ fontSize: 10, fontWeight: 700, color:'#ff6b5a', letterSpacing:'.2em' }}>BUST</span>}
+      {isBust && <span style={{ fontSize: 10, fontWeight: 700, color:'var(--lose-deep)', letterSpacing:'.2em' }}>BUST</span>}
     </div>
   );
 }
 
-function ActionButton({ label, onClick, hint, disabled, accent, sub, disabledReason }) {
-  const isHint = hint;
+function ActionButton({ label, onClick, hint, disabled, sub, disabledReason, onBlocked, ghost, kbd, compact }) {
+  const isHint = hint && !disabled;
+  function handleClick() {
+    if (disabled) { if (onBlocked && disabledReason) onBlocked(disabledReason); return; }
+    onClick();
+  }
+  const baseShadow = isHint
+    ? '0 8px 24px rgba(230,197,144,.4), inset 0 1px 0 rgba(255,255,255,.4)'
+    : ghost ? 'none' : '0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06)';
   return (
     <button
-      onClick={onClick}
-      disabled={disabled}
-      title={disabled && disabledReason ? disabledReason : undefined}
+      onClick={handleClick}
+      aria-disabled={disabled || undefined}
+      title={disabled && disabledReason ? disabledReason : (kbd && !compact ? `Keyboard: ${kbd}` : undefined)}
       style={{
         position:'relative',
-        padding:'14px 22px',
-        minWidth: 110,
+        padding: compact ? '10px 12px' : '13px 20px',
+        minWidth: compact ? 78 : 108,
         background: disabled
           ? 'rgba(20,12,6,.45)'
           : isHint
             ? 'linear-gradient(180deg, #f5d896, #c9a26a)'
-            : 'linear-gradient(180deg, rgba(40,28,18,.95), rgba(20,12,6,.95))',
-        color: disabled ? 'rgba(255,255,255,.3)' : isHint ? '#1a1208' : 'var(--ivory)',
-        border: `1px solid ${isHint ? 'rgba(230,197,144,.9)' : 'rgba(201,162,106,.35)'}`,
+            : ghost
+              ? 'rgba(10,6,3,.35)'
+              : 'linear-gradient(180deg, rgba(40,28,18,.95), rgba(20,12,6,.95))',
+        color: disabled ? 'rgba(255,255,255,.32)' : isHint ? '#1a1208' : ghost ? 'var(--ivory-dim)' : 'var(--ivory)',
+        border: isHint
+          ? '1px solid rgba(230,197,144,.9)'
+          : ghost
+            ? '1px dashed rgba(201,162,106,.4)'
+            : '1px solid rgba(201,162,106,.35)',
         borderRadius: 12,
-        fontSize: 13,
-        fontWeight: 600,
-        letterSpacing:'.16em',
-        textTransform:'uppercase',
         cursor: disabled ? 'not-allowed' : 'pointer',
+        opacity: disabled ? .5 : 1,
+        filter: disabled ? 'saturate(.4)' : 'none',
         transition: 'all .18s ease',
-        boxShadow: isHint
-          ? '0 8px 24px rgba(230,197,144,.4), inset 0 1px 0 rgba(255,255,255,.4)'
-          : '0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06)',
+        boxShadow: disabled ? 'none' : baseShadow,
         fontFamily:'inherit'
       }}
       onMouseEnter={e => {
@@ -157,22 +166,20 @@ function ActionButton({ label, onClick, hint, disabled, accent, sub, disabledRea
       }}
       onMouseLeave={e => {
         e.currentTarget.style.transform = 'none';
-        e.currentTarget.style.boxShadow = isHint
-          ? '0 8px 24px rgba(230,197,144,.4), inset 0 1px 0 rgba(255,255,255,.4)'
-          : '0 6px 14px rgba(0,0,0,.4), inset 0 1px 0 rgba(255,255,255,.06)';
+        e.currentTarget.style.boxShadow = disabled ? 'none' : baseShadow;
       }}
     >
       {isHint && (
         <span style={{
-          position:'absolute', top: -8, right: 10,
-          fontSize: 9, padding:'2px 6px',
+          position:'absolute', top: -9, right: 10,
+          fontSize: 10, padding:'2px 7px',
           background:'#1a1208', color:'#e6c590',
-          borderRadius: 4, letterSpacing:'.18em',
+          borderRadius: 6, letterSpacing:'.14em', fontWeight: 600,
           border:'1px solid rgba(230,197,144,.5)'
-        }}>HINT</span>
+        }}>COACH</span>
       )}
-      <div style={{ fontFamily:"'Playfair Display', serif", fontStyle:'italic', fontSize: 18, letterSpacing:'.04em', textTransform:'none', fontWeight:600 }}>{label}</div>
-      {sub && <div style={{ fontSize: 9, opacity:.7, marginTop: 2, letterSpacing:'.2em' }}>{sub}</div>}
+      <div style={{ fontFamily:"'Playfair Display', serif", fontStyle:'italic', fontSize: compact ? 15 : 18, letterSpacing:'.04em', fontWeight:600 }}>{label}</div>
+      {sub && <div style={{ fontSize: compact ? 9 : 10, opacity:.75, marginTop: 2, letterSpacing:'.14em', textTransform:'uppercase', fontVariantNumeric:'tabular-nums' }}>{sub}</div>}
     </button>
   );
 }
@@ -237,7 +244,7 @@ function FeltLogo() {
         lineHeight: 1
       }}>Limestone</div>
       <div style={{
-        fontSize: 8, letterSpacing:'.4em',
+        fontSize: 9, letterSpacing:'.32em',
         color:'var(--brass)',
         marginTop: 4
       }}>BLACKJACK · 3:2 · S17</div>
@@ -245,91 +252,196 @@ function FeltLogo() {
   );
 }
 
-function HintPanel({ hint }) {
-  if (!hint) return null;
-  const headerLabel =
-    hint.kind === 'insurance' ? 'Insurance offered' :
-    hint.kind === 'bet' ? 'Suggested bet' :
-    'Basic strategy says';
+// ─── Coach bar ──────────────────────────────────────────
+// Docked above the action buttons (never floats over cards). Reads as:
+// verdict → one-sentence why → odds bars in plain "out of 100 hands" terms.
+
+function OutcomeBar({ bar }) {
   return (
-    <div style={{
-      position:'absolute', right: 14, top: 14,
-      width: 240,
-      padding:'12px 14px',
-      background:'linear-gradient(180deg, rgba(20,12,6,.95), rgba(10,6,3,.95))',
-      borderRadius: 10,
-      border:'1px solid rgba(230,197,144,.4)',
-      boxShadow:'0 14px 28px rgba(0,0,0,.5)',
-      backdropFilter:'blur(8px)',
-      zIndex: 5
-    }}>
+    <div
+      title={`${bar.label}: wins ${bar.win}, pushes ${bar.push}, loses ${bar.lose} of 100 hands`}
+      style={{ display:'flex', alignItems:'center', gap: 8 }}
+    >
+      <span style={{
+        width: 62, flexShrink: 0, textAlign:'right',
+        fontSize: 9, letterSpacing:'.12em', textTransform:'uppercase', fontWeight: 700,
+        color: bar.primary ? 'var(--brass-2)' : 'var(--ivory-dim)'
+      }}>{bar.label}</span>
       <div style={{
-        fontSize: 9, letterSpacing:'.24em', color:'var(--brass)', textTransform:'uppercase',
-        marginBottom: 4, display:'flex', alignItems:'center', gap: 6
+        flex: 1, height: 12, borderRadius: 6, overflow:'hidden', display:'flex',
+        opacity: bar.primary ? 1 : .55,
+        boxShadow: bar.primary ? '0 0 0 1px rgba(230,197,144,.55)' : '0 0 0 1px rgba(255,255,255,.1)'
       }}>
-        <span style={{ width: 6, height: 6, borderRadius:'50%', background:'#e6c590' }} />
-        {headerLabel}
+        {bar.win > 0 && <div style={{ width:`${bar.win}%`, background:'var(--win)' }} />}
+        {bar.push > 0 && <div style={{ width:`${bar.push}%`, background:'var(--push)' }} />}
+        {bar.lose > 0 && <div style={{ width:`${bar.lose}%`, background:'var(--lose)' }} />}
       </div>
-      <div style={{
-        fontFamily:"'Playfair Display', serif",
-        fontStyle:'italic',
-        fontSize: 22, fontWeight: 600, color:'#fff',
-        marginBottom: 6
-      }}>{hint.action}</div>
-      <div style={{ fontSize: 11, color:'var(--ivory-dim)', lineHeight: 1.4 }}>
-        {hint.explanation}
-      </div>
-      {hint.odds && (hint.odds.dealerBust !== undefined || hint.odds.playerBust !== undefined) && (
-        <div style={{
-          marginTop: 10, paddingTop: 8,
-          borderTop: '1px solid rgba(230,197,144,.18)',
-          fontFamily:"'JetBrains Mono', ui-monospace, monospace",
-          fontSize: 9, letterSpacing:'.18em', color:'var(--brass)', textTransform:'uppercase',
-          display:'flex', gap: 10, justifyContent:'center', flexWrap:'wrap'
-        }}>
-          {hint.odds.dealerBust !== undefined && <span>DEALER BUSTS {hint.odds.dealerBust}%</span>}
-          {hint.odds.playerBust !== undefined && <span>· BUST IF HIT {hint.odds.playerBust}%</span>}
-        </div>
-      )}
+      <span style={{
+        width: 76, flexShrink: 0,
+        fontFamily:"'JetBrains Mono', monospace", fontSize: 10,
+        fontVariantNumeric:'tabular-nums',
+        color: bar.primary ? 'var(--ivory)' : 'var(--ivory-dim)'
+      }}>{bar.win} win · {bar.lose} lose</span>
     </div>
   );
 }
 
-function ResultBanner({ kind, payout }) {
+function InsuranceMeter({ pBJ, breakEven }) {
+  return (
+    <div style={{ display:'flex', flexDirection:'column', gap: 5, justifyContent:'center' }}>
+      <div style={{ fontSize: 8.5, letterSpacing:'.2em', color:'var(--brass)', textTransform:'uppercase', textAlign:'right' }}>
+        Aces hiding a ten · out of 100
+      </div>
+      <div style={{ position:'relative', height: 14, borderRadius: 7, overflow:'visible',
+        background:'rgba(0,0,0,.4)', boxShadow:'0 0 0 1px rgba(255,255,255,.12)' }}>
+        <div style={{ position:'absolute', left: 0, top: 0, bottom: 0, width:`${pBJ}%`, background:'var(--lose)', borderRadius:'7px 0 0 7px' }} />
+        <div style={{ position:'absolute', left:`${breakEven}%`, top: -3, bottom: -3, width: 2, background:'var(--brass-2)', boxShadow:'0 0 6px rgba(230,197,144,.8)' }} />
+      </div>
+      <div style={{ display:'flex', justifyContent:'space-between', fontFamily:"'JetBrains Mono', monospace", fontSize: 9.5, color:'var(--ivory-dim)' }}>
+        <span style={{ color:'var(--lose)' }}>{pBJ} have it</span>
+        <span style={{ color:'var(--brass-2)' }}>{breakEven} = break-even</span>
+      </div>
+    </div>
+  );
+}
+
+function CoachBar({ hint, compact }) {
+  if (!hint) return null;
+  const kicker =
+    hint.kind === 'insurance' ? 'Side bet offered' :
+    hint.kind === 'bet' ? 'Before you bet' :
+    'Coach says';
+
+  const verdictBlock = (
+    <div style={{ flexShrink: 0, minWidth: compact ? 0 : 150, alignSelf:'center' }}>
+      <div style={{
+        fontSize: 9, letterSpacing:'.24em', color:'var(--brass)', textTransform:'uppercase',
+        display:'flex', alignItems:'center', gap: 6, marginBottom: 2
+      }}>
+        <span style={{ width: 6, height: 6, borderRadius:'50%', background:'#e6c590', flexShrink: 0 }} />
+        {kicker}
+      </div>
+      <div style={{
+        fontFamily:"'Playfair Display', serif", fontStyle:'italic',
+        fontSize: compact ? 19 : 23, fontWeight: 600, color:'var(--ivory)', lineHeight: 1.1
+      }}>{hint.action}</div>
+      {hint.textbookNote && (
+        <div style={{
+          fontSize: 10.5, fontStyle:'italic', color:'var(--brass-2)', opacity:.9, marginTop: 3, maxWidth: 220, lineHeight: 1.35
+        }}>{hint.textbookNote}</div>
+      )}
+    </div>
+  );
+
+  const whyBlock = (
+    <div style={{
+      flex: 1, alignSelf:'center', minWidth: 0,
+      fontSize: compact ? 11.5 : 12.5, lineHeight: 1.45, color:'var(--ivory-dim)'
+    }}>{hint.why}</div>
+  );
+
+  let evidenceBlock = null;
+  if (hint.kind === 'insurance' && hint.insurance) {
+    evidenceBlock = (
+      <div style={{ width: compact ? '100%' : 280, flexShrink: 0, alignSelf:'center' }}>
+        <InsuranceMeter pBJ={hint.insurance.pBJ} breakEven={hint.insurance.breakEven} />
+      </div>
+    );
+  } else if (hint.bars && hint.bars.length > 0) {
+    evidenceBlock = (
+      <div style={{ width: compact ? '100%' : 330, flexShrink: 0, display:'flex', flexDirection:'column', gap: 5, justifyContent:'center' }}>
+        <div style={{ fontSize: 8.5, letterSpacing:'.2em', color:'var(--brass)', textTransform:'uppercase', textAlign:'right' }}>
+          Out of 100 hands like this
+        </div>
+        {hint.bars.map(b => <OutcomeBar key={b.label} bar={b} />)}
+        {(hint.chip || hint.moneyLine) && (
+          <div style={{ display:'flex', justifyContent:'flex-end', gap: 8, alignItems:'center', flexWrap:'wrap' }}>
+            {hint.chip && (
+              <span style={{
+                padding:'2px 10px', borderRadius: 999,
+                background:'rgba(230,197,144,.12)', border:'1px solid rgba(230,197,144,.3)',
+                fontSize: 10, color:'var(--brass-2)', fontWeight: 600, letterSpacing:'.04em'
+              }}>{hint.chip}</span>
+            )}
+            {hint.moneyLine && <span style={{ fontSize: 10.5, color:'var(--ivory-dim)' }}>{hint.moneyLine}</span>}
+          </div>
+        )}
+      </div>
+    );
+  } else if (hint.stats && hint.stats.length > 0) {
+    evidenceBlock = (
+      <div style={{ display:'flex', flexShrink: 0, alignSelf:'center' }}>
+        {hint.stats.map((s, i) => (
+          <div key={s.label} style={{
+            padding:'2px 16px', textAlign:'center',
+            borderLeft: i > 0 ? '1px solid rgba(230,197,144,.14)' : 'none'
+          }}>
+            <div style={{ fontSize: 8.5, letterSpacing:'.16em', color:'var(--brass)', textTransform:'uppercase' }}>{s.label}</div>
+            <div style={{ fontFamily:"'JetBrains Mono', monospace", fontSize: 15, color:'var(--ivory)', marginTop: 2, fontVariantNumeric:'tabular-nums' }}>{s.value}</div>
+          </div>
+        ))}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{
+      display:'flex',
+      flexDirection: compact ? 'column' : 'row',
+      gap: compact ? 8 : 18,
+      padding: compact ? '10px 14px' : '10px 18px',
+      background:'linear-gradient(180deg, rgba(20,12,6,.92), rgba(10,6,3,.92))',
+      border:'1px solid rgba(230,197,144,.35)',
+      borderRadius: 12,
+      boxShadow:'0 12px 26px rgba(0,0,0,.45), inset 0 1px 0 rgba(230,197,144,.1)',
+      minHeight: compact ? 0 : 76
+    }}>
+      {verdictBlock}
+      {!compact && <div style={{ width: 1, alignSelf:'stretch', background:'rgba(201,162,106,.2)', flexShrink: 0 }} />}
+      {whyBlock}
+      {evidenceBlock}
+    </div>
+  );
+}
+
+function ResultBanner({ kind, payout, netLoss }) {
   if (!kind) return null;
+  const fmt = n => (Number(n) || 0).toLocaleString();
   const map = {
-    blackjack: { title: 'BLACKJACK', sub: `You won $${payout}`, color:'#ffd97a', glow:'#ffd97a' },
-    win:       { title: 'YOU WIN',   sub: `+$${payout}`, color:'#9eddb8', glow:'#9eddb8' },
+    blackjack: { title: 'BLACKJACK', sub: `Paid 3:2 — you won $${fmt(payout)}`, color:'var(--gold-hi)', glow:'#ffd97a' },
+    win:       { title: 'YOU WIN',   sub: `+$${fmt(payout)}`, color:'var(--win)', glow:'#9eddb8' },
     push:      { title: 'PUSH',      sub: 'Bet returned', color:'#e6c590', glow:'#c9a26a' },
-    lose:      { title: 'DEALER WINS', sub: `-$${payout}`, color:'#f29a8c', glow:'#c0392b' },
-    bust:      { title: 'BUST',      sub: `-$${payout}`, color:'#f29a8c', glow:'#c0392b' },
-    surrender: { title: 'SURRENDER', sub: `Half back: -$${payout}`, color:'#e6c590', glow:'#c9a26a' },
+    lose:      { title: 'DEALER WINS', sub: `-$${fmt(payout)}`, color:'var(--lose)', glow:'#c0392b' },
+    bust:      { title: 'BUST',      sub: `-$${fmt(payout)}`, color:'var(--lose)', glow:'#c0392b' },
+    surrender: { title: 'SURRENDER', sub: `Half back · -$${fmt(netLoss != null ? netLoss : payout)}`, color:'#e6c590', glow:'#c9a26a' },
   };
   const m = map[kind];
   return (
     <div className="banner-in" style={{
       position:'absolute',
-      top: 110,
-      left:'50%', transform:'translateX(-50%)',
+      top:'44%',
+      left:'50%', transform:'translate(-50%,-50%)',
       padding:'16px 38px',
-      background:'linear-gradient(180deg, rgba(15,10,5,.92), rgba(8,4,2,.92))',
+      background:'linear-gradient(180deg, rgba(15,10,5,.94), rgba(8,4,2,.94))',
       border: `1px solid ${m.glow}`,
-      borderRadius: 6,
+      outline:'1px solid rgba(230,197,144,.25)',
+      outlineOffset: 3,
+      borderRadius: 10,
       textAlign:'center',
       boxShadow: `0 0 50px -10px ${m.glow}, 0 14px 30px rgba(0,0,0,.5)`,
       zIndex: 6
     }}>
       <div style={{
         fontFamily:"'Playfair Display', serif",
-        fontSize: 32, fontWeight: 700, color: m.color,
-        letterSpacing:'.18em', fontStyle:'italic'
+        fontSize: 30, fontWeight: 700, color: m.color,
+        letterSpacing:'.18em', textIndent:'.18em'
       }}>{m.title}</div>
-      <div style={{ fontSize: 11, letterSpacing:'.3em', color:'var(--ivory-dim)', marginTop: 2 }}>{m.sub}</div>
+      <div style={{ fontSize: 11, letterSpacing:'.3em', color:'var(--ivory-dim)', marginTop: 3 }}>{m.sub}</div>
     </div>
   );
 }
 
 Object.assign(window, {
   Chip, ChipStack, HandValue, ActionButton,
-  FeltBackdrop, FeltLogo, HintPanel, ResultBanner, CHIP_DEFS
+  FeltBackdrop, FeltLogo, CoachBar, OutcomeBar, InsuranceMeter, ResultBanner, CHIP_DEFS
 });

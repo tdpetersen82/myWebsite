@@ -63,8 +63,8 @@ const DEALER_VOICES = {
       "Hedging your bet. Reasonable, with my ace showing."
     ],
     bust: [
-      "Oof. Twenty-two. The cards are cruel.",
-      "Twenty-three. So close.",
+      "Oof. {t}. The cards are cruel.",
+      "{t}. So close.",
       "Bust. Shake it off, {p} — next hand resets."
     ],
     player_bj: [
@@ -103,8 +103,8 @@ const DEALER_VOICES = {
       "Tied. Honorable, that."
     ],
     dealer_bust: [
-      "And… I'm out. Twenty-two.",
-      "Twenty-three on the dealer. Pay the table.",
+      "And… {t}. I'm out.",
+      "{t} on the dealer. Pay the table.",
       "I broke. Your hand wins."
     ],
     losing_streak: [
@@ -266,8 +266,13 @@ function pickLine(key, ctx = {}) {
   const voice = DEALER_VOICES[dealer] || DEALER_VOICES.Melissa;
   const lines = voice[key] || voice.idle;
   const line = lines[Math.floor(Math.random() * lines.length)];
-  return line.replace(/\{p\}/g, ctx.player || 'friend').replace(/\{d\}/g, dealer);
+  return line
+    .replace(/\{p\}/g, ctx.player || 'friend')
+    .replace(/\{d\}/g, dealer)
+    .replace(/\{t\}/g, ctx.total != null ? String(ctx.total) : '');
 }
+
+const DEALER_EXPRESSIONS = ['idle', 'happy', 'sad', 'shocked', 'deal', 'bust'];
 
 function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idle = false, mood = 0 }) {
   const file = expression;
@@ -276,15 +281,19 @@ function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idl
   const counter = React.useRef(0);
   const lastSrc = React.useRef(src);
 
+  // Preload every pose so expression swaps never wait on the network.
+  React.useEffect(() => {
+    DEALER_EXPRESSIONS.forEach(f => { const img = new Image(); img.src = `assets/dealers/${gender}/${f}.png`; });
+  }, [gender]);
+
   React.useEffect(() => {
     if (lastSrc.current === src) return;
     lastSrc.current = src;
     counter.current += 1;
     const newKey = counter.current;
-    setLayers(prev => [
-      ...prev.map(l => ({ ...l, opacity: 0, blur: 6 })),
-      { key: newKey, src, opacity: 0, blur: 6 }
-    ]);
+    // The old pose stays fully visible underneath while the new one fades in
+    // on top — fading both at once left the panel blank mid-swap.
+    setLayers(prev => [...prev, { key: newKey, src, opacity: 0, blur: 4 }]);
     const raf = requestAnimationFrame(() => {
       setLayers(prev => prev.map(l => l.key === newKey ? { ...l, opacity: 1, blur: 0 } : l));
     });
@@ -510,4 +519,40 @@ function DealerPanel({ name, expression, message, onTipDealer, tipped, playerNam
   );
 }
 
-Object.assign(window, { DealerPanel, pickLine, DEALER_VOICES, DEALER_NAMES });
+// Slim horizontal dealer strip for the portrait/mobile layout — avatar plus
+// speech, no full portrait column.
+function DealerStrip({ name, message, gender = 'female', expression = 'idle' }) {
+  return (
+    <div style={{
+      display:'flex', alignItems:'center', gap: 12,
+      padding:'10px 14px',
+      borderRadius: 14,
+      background:'linear-gradient(180deg, rgba(26,16,8,.92), rgba(14,8,4,.92))',
+      border:'1px solid rgba(201,162,106,.3)',
+      boxShadow:'0 10px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(230,197,144,.12)',
+      minHeight: 64
+    }}>
+      <img
+        src={`assets/dealers/${gender}/avatar.png`}
+        alt=""
+        style={{
+          width: 46, height: 46, borderRadius:'50%', flexShrink: 0,
+          objectFit:'cover', objectPosition:'center top',
+          boxShadow:'0 0 0 1.5px rgba(201,162,106,.55), 0 0 10px rgba(201,162,106,.3)',
+          filter: expression === 'happy' ? 'saturate(1.2)' : 'none'
+        }}
+      />
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 9, letterSpacing:'.24em', color:'var(--brass)', textTransform:'uppercase', fontWeight: 600 }}>{name} · Dealer</div>
+        <div style={{
+          fontFamily:"'Playfair Display', serif", fontStyle:'italic',
+          fontSize: 14.5, lineHeight: 1.3, color:'var(--ivory)',
+          marginTop: 2,
+          display:'-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient:'vertical', overflow:'hidden'
+        }}>{message || ' '}</div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { DealerPanel, DealerStrip, pickLine, DEALER_VOICES, DEALER_NAMES });
