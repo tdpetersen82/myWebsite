@@ -384,29 +384,40 @@ function CoachBar({ hint, compact }) {
     );
   }
 
-  // Hi-lo shoe count — the running tally of every card seen this shoe.
+  // Hi-lo shoe count — verdict first (bets follow the true count, plays stay
+  // on the chart), then the tally with its conversion shown, then the why.
   let countBlock = null;
   if (hint.count) {
     const c = hint.count;
+    const tc = c.trueCount;
     const fmt = (n, d = 0) => (n > 0 ? '+' : '') + n.toFixed(d);
-    const read = c.trueCount >= 2 ? { word: 'RICH', color: 'var(--win)' }
-      : c.trueCount <= -1 ? { word: 'COLD', color: 'var(--lose)' }
-      : { word: 'NEUTRAL', color: 'var(--ivory-dim)' };
     const edgeTxt = c.edge >= 0 ? `you +${c.edge.toFixed(1)}%` : `house ${Math.abs(c.edge).toFixed(1)}%`;
+    const read = tc >= 2 ? {
+      word: 'PRESS YOUR BETS', color: 'var(--win)',
+      meaning: hint.kind === 'bet'
+        ? `${edgeTxt} — the big bet is the play`
+        : `${edgeTxt} — chart as usual, press the next bet`
+    } : tc <= -1 ? {
+      word: 'BET THE FLOOR', color: 'var(--lose)',
+      meaning: `${edgeTxt} — minimum bets until the shuffle`
+    } : {
+      word: 'FLAT BET', color: 'var(--ivory-dim)',
+      meaning: `${edgeTxt} — play the chart, keep bets steady`
+    };
     countBlock = (
       <div
-        title={'Hi-lo count of every card you\'ve seen this shoe (2-6 = +1, 7-9 = 0, tens & aces = -1). True count = running ÷ decks left; each +1 true is worth about +0.5% to you.'}
+        title={'Hi-lo: your running tally counts every card seen this shoe (2-6 = +1, 7-9 = 0, tens & aces = -1). Raw it means little — divide by the decks still to come to get the TRUE count, the density of what’s left. Each +1 true is worth about +0.5% to you. Bets follow the true count; playing decisions stay on the chart.'}
         style={{ flexShrink: 0, alignSelf:'center', textAlign: compact ? 'left' : 'right',
           display:'flex', flexDirection:'column', gap: 3, cursor:'help' }}
       >
         <div style={{ fontSize: 8.5, letterSpacing:'.2em', color:'var(--brass)', textTransform:'uppercase' }}>
-          Shoe count · Hi-Lo · <span style={{ color: read.color, fontWeight: 700 }}>{read.word}</span>
+          Shoe count · <span style={{ color: read.color, fontWeight: 700 }}>{read.word}</span>
         </div>
-        <div style={{ fontFamily:"'JetBrains Mono', monospace", fontSize: 12, color:'var(--ivory)', fontVariantNumeric:'tabular-nums' }}>
-          running {fmt(c.running)} · true {fmt(c.trueCount, 1)}
+        <div style={{ fontFamily:"'JetBrains Mono', monospace", fontSize: 11.5, color:'var(--ivory)', fontVariantNumeric:'tabular-nums' }}>
+          running {fmt(c.running)} ÷ {c.decksLeft.toFixed(1)} decks = true {fmt(tc, 1)}
         </div>
         <div style={{ fontFamily:"'JetBrains Mono', monospace", fontSize: 9.5, color:'var(--ivory-dim)', fontVariantNumeric:'tabular-nums' }}>
-          {c.decksLeft.toFixed(1)} decks left · edge {edgeTxt}
+          {read.meaning}
         </div>
       </div>
     );
