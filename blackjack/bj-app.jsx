@@ -808,10 +808,21 @@ function App() {
   // Derived
   const activeHand = hands[activeHandIdx];
   const pCards = activeHand?.cards || [];
-  const pVal = handValue(pCards);
-  const dVal = holeRevealed ? handValue(dealer) : handValue(dealer.slice(0,1));
   const pBJ = phase !== 'idle' && hands.length === 1 && isBlackjack(pCards);
-  const dBJ = holeRevealed && isBlackjack(dealer);
+
+  // The dealer's printed total waits for the card to actually arrive — the
+  // deal-in flight and the hole-card flip both run ~.55s, and updating the
+  // number on state change announced every draw half a beat early.
+  const [shownDVal, setShownDVal] = useState(null); // { total, soft, bj } | null
+  useEffect(() => {
+    if (dealer.length === 0) { setShownDVal(null); return; }
+    const target = {
+      ...(holeRevealed ? handValue(dealer) : handValue(dealer.slice(0, 1))),
+      bj: holeRevealed && isBlackjack(dealer)
+    };
+    const t = setTimeout(() => setShownDVal(target), 550);
+    return () => clearTimeout(t);
+  }, [dealer, holeRevealed]);
 
   function doubleAvailability() {
     if (phase !== 'player' || !activeHand) return { enabled: false, reason: '' };
@@ -1123,7 +1134,7 @@ function App() {
 
         {/* Dealer hand */}
         <div style={{ marginTop: portrait ? 4 : 8, textAlign:'center', position:'relative', zIndex: 3 }}>
-          {dealer.length > 0 && <HandValue value={dVal.total} soft={dVal.soft} isBust={dVal.total > 21} isBJ={dBJ} label="Dealer" />}
+          {dealer.length > 0 && shownDVal && <HandValue value={shownDVal.total} soft={shownDVal.soft} isBust={shownDVal.total > 21} isBJ={shownDVal.bj} label="Dealer" />}
           <div style={{ display:'flex', justifyContent:'center', gap: 8, marginTop: 10, minHeight: portrait ? 96 : 110 }}>
             {dealer.map((c, i) => (
               <PlayingCard
