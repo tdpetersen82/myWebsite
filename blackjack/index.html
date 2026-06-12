@@ -136,11 +136,33 @@
   button{font-family:inherit}
   .blink-cursor::after{content:'▍';margin-left:2px;animation:blink 1s steps(2) infinite;opacity:.6}
   @keyframes blink{50%{opacity:0}}
-  @keyframes breathe{
-    0%,100%{transform:translateX(-50%) translateY(0)}
-    50%{transform:translateX(-50%) translateY(-2px)}
+  /* Living portrait — drift (slow zoom/pan), breath, and talk-bob sit on
+     nested wrappers so their transforms compose; the pose crossfade owns the
+     img transforms one level deeper. */
+  .portrait-drift{animation:pDrift 11s ease-in-out infinite alternate;transform-origin:50% 28%}
+  @keyframes pDrift{
+    0%{transform:scale(1.005) translate(0,0)}
+    100%{transform:scale(1.035) translate(4px,-3px)}
   }
-  .breathe{animation:breathe 4s ease-in-out infinite}
+  .portrait-breathe{animation:pBreathe 3.8s ease-in-out infinite alternate}
+  @keyframes pBreathe{
+    0%{transform:translateY(0)}
+    100%{transform:translateY(-3px)}
+  }
+  .portrait-talk{animation:pTalk .55s ease-in-out infinite}
+  @keyframes pTalk{
+    0%,100%{transform:translateY(0)}
+    50%{transform:translateY(1.8px)}
+  }
+  .portrait-sheen{
+    background:linear-gradient(115deg,transparent 40%,rgba(255,236,200,.085) 50%,transparent 60%);
+    background-size:300% 100%;
+    animation:pSheen 13s ease-in-out infinite;
+  }
+  @keyframes pSheen{
+    0%,52%{background-position:130% 0}
+    92%,100%{background-position:-70% 0}
+  }
   @keyframes betPulse{
     0%,100%{box-shadow:0 0 0 0 rgba(230,197,144,.0)}
     50%{box-shadow:0 0 24px 2px rgba(230,197,144,.3)}
@@ -495,9 +517,9 @@
 
 <script type="text/babel" src="tweaks-panel.jsx?v=20260508a"></script>
 <script type="text/babel" src="bj-card.jsx?v=20260507k"></script>
-<script type="text/babel" src="bj-dealer.jsx?v=20260612b"></script>
+<script type="text/babel" src="bj-dealer.jsx?v=20260612c"></script>
 <script type="text/babel" src="bj-table.jsx?v=20260612c"></script>
-<script type="text/babel" src="bj-app.jsx?v=20260612c"></script>
+<script type="text/babel" src="bj-app.jsx?v=20260612d"></script>
 
 </body>
 </html>
