@@ -384,6 +384,34 @@ function CoachBar({ hint, compact }) {
     );
   }
 
+  // Hi-lo shoe count — the running tally of every card seen this shoe.
+  let countBlock = null;
+  if (hint.count) {
+    const c = hint.count;
+    const fmt = (n, d = 0) => (n > 0 ? '+' : '') + n.toFixed(d);
+    const read = c.trueCount >= 2 ? { word: 'RICH', color: 'var(--win)' }
+      : c.trueCount <= -1 ? { word: 'COLD', color: 'var(--lose)' }
+      : { word: 'NEUTRAL', color: 'var(--ivory-dim)' };
+    const edgeTxt = c.edge >= 0 ? `you +${c.edge.toFixed(1)}%` : `house ${Math.abs(c.edge).toFixed(1)}%`;
+    countBlock = (
+      <div
+        title={'Hi-lo count of every card you\'ve seen this shoe (2-6 = +1, 7-9 = 0, tens & aces = -1). True count = running ÷ decks left; each +1 true is worth about +0.5% to you.'}
+        style={{ flexShrink: 0, alignSelf:'center', textAlign: compact ? 'left' : 'right',
+          display:'flex', flexDirection:'column', gap: 3, cursor:'help' }}
+      >
+        <div style={{ fontSize: 8.5, letterSpacing:'.2em', color:'var(--brass)', textTransform:'uppercase' }}>
+          Shoe count · Hi-Lo · <span style={{ color: read.color, fontWeight: 700 }}>{read.word}</span>
+        </div>
+        <div style={{ fontFamily:"'JetBrains Mono', monospace", fontSize: 12, color:'var(--ivory)', fontVariantNumeric:'tabular-nums' }}>
+          running {fmt(c.running)} · true {fmt(c.trueCount, 1)}
+        </div>
+        <div style={{ fontFamily:"'JetBrains Mono', monospace", fontSize: 9.5, color:'var(--ivory-dim)', fontVariantNumeric:'tabular-nums' }}>
+          {c.decksLeft.toFixed(1)} decks left · edge {edgeTxt}
+        </div>
+      </div>
+    );
+  }
+
   return (
     <div style={{
       display:'flex',
@@ -400,6 +428,8 @@ function CoachBar({ hint, compact }) {
       {!compact && <div style={{ width: 1, alignSelf:'stretch', background:'rgba(201,162,106,.2)', flexShrink: 0 }} />}
       {whyBlock}
       {evidenceBlock}
+      {countBlock && !compact && <div style={{ width: 1, alignSelf:'stretch', background:'rgba(201,162,106,.2)', flexShrink: 0 }} />}
+      {countBlock}
     </div>
   );
 }

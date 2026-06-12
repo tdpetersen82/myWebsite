@@ -27,7 +27,7 @@
   {"@type":"Question","name":"Is this blackjack game free?","acceptedAnswer":{"@type":"Answer","text":"Yes. No downloads, no installs, no real money — just play-money chips. Your bankroll and stats save in your browser."}},
   {"@type":"Question","name":"What's a soft hand in blackjack?","acceptedAnswer":{"@type":"Answer","text":"A hand with an ace counted as 11 — for example, an ace and a six is a soft 17. If hitting would bust the soft total, the ace flips to 1 and you keep playing."}},
   {"@type":"Question","name":"Should I take insurance?","acceptedAnswer":{"@type":"Answer","text":"No. Insurance pays 2:1 but the dealer hits blackjack only about 31% of the time, so the bet loses money in the long run."}},
-  {"@type":"Question","name":"Can I count cards here?","acceptedAnswer":{"@type":"Answer","text":"Not effectively — the shoe is shuffled often enough that counting won't give you a meaningful edge. Use it to practice basic strategy instead."}},
+  {"@type":"Question","name":"Can I count cards here?","acceptedAnswer":{"@type":"Answer","text":"Yes, really — this is a true 6-deck shoe dealt about 75% deep before reshuffling, the same penetration you'd hunt for in a live game. Cards genuinely deplete, so the count means something, and the coach shows the live hi-lo running and true count. It's play money, which makes this one of the few places to practice counting with zero risk."}},
   {"@type":"Question","name":"Does the dealer hit on soft 17?","acceptedAnswer":{"@type":"Answer","text":"No. Our table uses the player-friendly Stand on Soft 17 (S17) rule. The dealer must hit any hard total of 16 or less and stand on any 17 or higher."}}
 ]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -405,7 +405,7 @@
       <li><b>Double on 11.</b> One card from 21 with a four-in-thirteen chance of getting it. Double whenever the dealer shows 2 through 10.</li>
       <li><b>Hit 12–16 when the dealer shows 7+.</b> A strong dealer up-card will likely make 17–21 anyway. Take the risk.</li>
       <li><b>Stand on 12–16 when the dealer shows 2–6.</b> Weak up-cards bust often. Let them.</li>
-      <li><b>Skip insurance.</b> The math doesn't work — long-term it's a losing side bet.</li>
+      <li><b>Skip insurance — almost always.</b> At any normal count it's a losing side bet. The rare exception is a sky-high count, and the coach will tell you when.</li>
       <li><b>Never deviate from basic strategy on a hunch.</b> Every chart move is the mathematically best decision given the cards. Hunches cost money.</li>
     </ol>
   </section>
@@ -434,7 +434,7 @@
     <details><summary>Is this blackjack game free?</summary><p>Yes. No downloads, no installs, no real money — just play-money chips. Your bankroll and stats save in your browser.</p></details>
     <details><summary>What's a "soft" hand?</summary><p>A hand with an ace counted as 11. For example, ace + six is a soft 17. If hitting would bust the soft total, the ace flips to 1 and you keep playing.</p></details>
     <details><summary>Should I take insurance?</summary><p>No. Insurance pays 2:1 but the dealer hits blackjack only about 31% of the time, so the bet loses money in the long run.</p></details>
-    <details><summary>Can I count cards here?</summary><p>Not effectively — the shoe is reshuffled often enough that counting won't give you a meaningful edge. Use it to practice basic strategy instead.</p></details>
+    <details><summary>Can I count cards here?</summary><p>Yes, really — this is a true 6-deck shoe dealt about 75% deep before reshuffling, the same penetration you'd hunt for in a live game. Cards genuinely deplete, so the count means something, and the coach shows the live hi-lo running and true count. It's play money, which makes this one of the few places to practice counting with zero risk.</p></details>
     <details><summary>Does the dealer hit on soft 17?</summary><p>No. Our table uses the player-friendly Stand on Soft 17 (S17) rule. The dealer hits any hard total of 16 or less and stands on any 17 or higher.</p></details>
   </section>
 
@@ -496,8 +496,8 @@
 <script type="text/babel" src="tweaks-panel.jsx?v=20260508a"></script>
 <script type="text/babel" src="bj-card.jsx?v=20260507k"></script>
 <script type="text/babel" src="bj-dealer.jsx?v=20260610b"></script>
-<script type="text/babel" src="bj-table.jsx?v=20260610b"></script>
-<script type="text/babel" src="bj-app.jsx?v=20260610b"></script>
+<script type="text/babel" src="bj-table.jsx?v=20260612a"></script>
+<script type="text/babel" src="bj-app.jsx?v=20260612a"></script>
 
 </body>
 </html>

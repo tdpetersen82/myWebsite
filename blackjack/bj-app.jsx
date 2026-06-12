@@ -32,6 +32,18 @@ function cardVal(rank) {
   return parseInt(rank, 10);
 }
 
+// ─── Hi-lo counting (coach) ────────────────────────────
+// 2-6 = +1 · 7-9 = 0 · 10/J/Q/K/A = -1. A full shoe sums to zero, so the
+// running count of everything the player has SEEN is simply the negative of
+// the remaining shoe's sum — minus the dealer's hole card while it's hidden.
+// Derived, never bookkept: there is no card-by-card tally to drift or leak.
+const TEN_VALUE = { '10': true, J: true, Q: true, K: true };
+function hiLo(rank) {
+  if (rank === 'A' || TEN_VALUE[rank]) return -1;
+  if (rank === '7' || rank === '8' || rank === '9') return 0;
+  return 1;
+}
+
 function handValue(cards) {
   let total = 0, aces = 0;
   for (const c of cards) {
@@ -830,41 +842,102 @@ function App() {
   const canSplit = splAvail.enabled;
   const canSurrender = surAvail.enabled;
 
+  // Shoe count as the player sees it — the hole card stays out of the tally
+  // until it's revealed, so the coach never knows more than an honest counter.
+  function readCount() {
+    const shoe = shoeRef.current || [];
+    let remSum = 0, tensUnseen = 0, unseen = shoe.length;
+    for (const c of shoe) { remSum += hiLo(c.rank); if (TEN_VALUE[c.rank]) tensUnseen++; }
+    let running = -remSum;
+    if (dealer.length > 1 && !holeRevealed) {
+      running -= hiLo(dealer[1].rank);
+      if (TEN_VALUE[dealer[1].rank]) tensUnseen++;
+      unseen++;
+    }
+    const decksLeft = Math.max(unseen / 52, 0.25);
+    const trueCount = running / decksLeft;
+    // 6-deck S17 DAS LS baseline ≈ -0.5%; each +1 true count ≈ +0.5% to you.
+    const edge = -0.5 + 0.5 * trueCount;
+    return { running, trueCount, decksLeft, edge, tensPct: (tensUnseen / Math.max(unseen, 1)) * 100 };
+  }
+
   // Coach hint — exact EV over the actions available right now.
   const hint = useMemo(() => {
     if (!tweaks.showHints) return null;
+    const count = readCount();
+    const fmtTc = (n) => (n > 0 ? '+' : '') + n.toFixed(1);
 
     if (phase === 'idle' || phase === 'bet') {
       const roll = bankroll + totalBet;
       if (roll < 5) return null;
-      const suggested = Math.max(5, Math.min(100, Math.round(roll * 0.025 / 5) * 5));
+      const base = Math.max(5, Math.min(100, Math.round(roll * 0.025 / 5) * 5));
+      const tc = count.trueCount;
       const cur = totalBet;
-      if (cur > 0 && cur > roll * 0.1) {
+
+      if (tc >= 2) {
+        // Ten-rich shoe: this is the moment counting exists for.
+        const spread = Math.min(6, Math.floor(tc));
+        const cap = Math.max(5, Math.round(roll * 0.1 / 5) * 5);
+        const suggested = Math.max(base, Math.min(base * spread, cap));
         return {
           kind: 'bet',
           action: `$${suggested}`,
+          why: `The shoe is running ten-rich — true count ${fmtTc(tc)}, edge ≈ ${count.edge >= 0 ? '+' : ''}${count.edge.toFixed(1)}% to you. This is the spot counters press: about ${spread}× the steady bet while it lasts.`,
+          stats: [{ label: 'Steady bet', value: `$${base}` }],
+          count,
+        };
+      }
+      if (tc <= -1) {
+        return {
+          kind: 'bet',
+          action: '$5',
+          why: `Shoe's gone cold — true count ${fmtTc(tc)}, mostly small cards left. Counters ride the table minimum here and wait for the shuffle.`,
+          stats: [{ label: 'Steady bet', value: `$${base}` }],
+          count,
+        };
+      }
+      if (cur > 0 && cur > roll * 0.1) {
+        return {
+          kind: 'bet',
+          action: `$${base}`,
           why: `Big swings, short nights — $${cur} is over a tenth of your stack. Your call, high roller.`,
           stats: [{ label: 'Cold hands of cushion', value: Math.max(0, Math.floor((roll - cur) / cur)) }],
+          count,
         };
       }
       return {
         kind: 'bet',
-        action: `$${suggested}`,
-        why: `The steady play — enough behind it to ride out ${Math.floor(roll / suggested)} cold hands in a row and still be in the game.`,
+        action: `$${base}`,
+        why: `The steady play — enough behind it to ride out ${Math.floor(roll / base)} cold hands in a row and still be in the game.`,
         stats: [{ label: 'Table minimum', value: '$5' }],
+        count,
       };
     }
 
     if (phase === 'insurance') {
       const baseBet = hands[0] ? hands[0].bet : totalBet;
       const insCost = Math.floor(baseBet / 2);
-      const pBJpct = Math.round(window.BJ_STRATEGY.INSURANCE.pDealerBJ * 100);
-      const lossPerTake = Math.max(1, Math.round(insCost / 13));
+      // Exact: share of unseen cards that are ten-value — the hole card is
+      // one draw from that pool. Break-even is 1 in 3.
+      const pBJpct = count.tensPct;
+      const pRound = Math.round(pBJpct);
+      if (pBJpct > 100 / 3) {
+        const gainPerTake = Math.max(1, Math.round(insCost * (3 * pBJpct / 100 - 1)));
+        return {
+          kind: 'insurance',
+          action: 'Take it',
+          why: `The count flips this one: the shoe is so ten-rich that ${pRound} aces in 100 are hiding a ten — past the 33 break-even. Worth about $${gainPerTake} a take. The rare time insurance is a bet, not a tax.`,
+          insurance: { pBJ: pRound, breakEven: 33 },
+          count,
+        };
+      }
+      const lossPerTake = Math.max(1, Math.round(insCost * (1 - 3 * pBJpct / 100)));
       return {
         kind: 'insurance',
         action: 'No thanks',
-        why: `Only ${pBJpct} aces in 100 have a ten hiding underneath, but the payout breaks even at 33. On $${insCost} a take, that's about $${lossPerTake} burned each time. Wave it off.`,
-        insurance: { pBJ: pBJpct, breakEven: 33 },
+        why: `Right now ${pRound} aces in 100 have a ten hiding underneath, but the payout breaks even at 33. On $${insCost} a take, that's about $${lossPerTake} burned each time. Wave it off.`,
+        insurance: { pBJ: pRound, breakEven: 33 },
+        count,
       };
     }
 
@@ -880,7 +953,7 @@ function App() {
       surrenderRuleBlocked: h.cards.length !== 2 || hands.length !== 1,
     });
     if (!decision) return null;
-    return buildPlayHint(decision, {
+    const played = buildPlayHint(decision, {
       bet: h.bet,
       bankroll,
       dealerUpRank: dealer[0].rank,
@@ -888,7 +961,8 @@ function App() {
       cardsCount: h.cards.length,
       pairRank: h.cards.length === 2 && h.cards[0].rank === h.cards[1].rank ? h.cards[0].rank : null,
     });
-  }, [tweaks.showHints, phase, hands, activeHandIdx, dealer, bankroll, totalBet, canDouble, canSplit, canSurrender]);
+    return played ? { ...played, count } : played;
+  }, [tweaks.showHints, phase, hands, activeHandIdx, dealer, holeRevealed, bankroll, totalBet, canDouble, canSplit, canSurrender]);
 
   const overallResult = useMemo(() => {
     if (phase !== 'resolved' || !results.length) return null;
