@@ -1,10 +1,6 @@
 /* eslint-disable */
-// Felt, brass rail, betting board, chip rack, hint panel, result banner, history strip.
-
-const PAYOUTS = {
-  straight: 35, split: 17, street: 11, corner: 8, sixline: 5,
-  dozen: 2, column: 2, red: 1, black: 1, odd: 1, even: 1, low: 1, high: 1
-};
+// Felt, brass rail, betting board, chip rack, coach bar, result banner,
+// history strip. Bet definitions/odds math live in rl-bets.js.
 
 const CHIP_DEFS = [
   { value: 5,    label: '$5',  bg: 'radial-gradient(circle at 35% 30%, #ff6b6b, #c0392b 70%, #7d1d12)', edge: '#ffd1d1' },
@@ -58,8 +54,39 @@ function FeltLogo() {
   );
 }
 
-function BrassRail({ bankroll, biggestWin, spinsPlayed, spinsWon, peak, showHints, onToggleHints }) {
+function BrassRail({ bankroll, biggestWin, spinsPlayed, spinsWon, peak, showHints, onToggleHints, compact }) {
   const winRate = spinsPlayed ? Math.round(spinsWon / spinsPlayed * 100) : null;
+  if (compact) {
+    return (
+      <div style={{
+        display:'flex', alignItems:'center', justifyContent:'space-between',
+        margin:'8px 10px 0', padding:'6px 10px',
+        background:'linear-gradient(180deg, rgba(35,22,10,.75), rgba(20,12,6,.85))',
+        border:'1px solid rgba(201,162,106,.35)', borderRadius: 10,
+        boxShadow:'0 8px 22px rgba(0,0,0,.4), inset 0 1px 0 rgba(230,197,144,.15)',
+        zIndex: 5, position:'relative'
+      }}>
+        <a href="../casino/" style={{
+          padding:'6px 10px', background:'rgba(20,12,6,.6)', color:'var(--brass-2)',
+          border:'1px solid rgba(201,162,106,.5)', borderRadius: 999,
+          fontSize: 9, fontWeight: 700, letterSpacing:'.14em', textTransform:'uppercase',
+          textDecoration:'none', whiteSpace:'nowrap'
+        }}>← Lobby</a>
+        <div style={{ display:'flex', alignItems:'baseline', gap: 6 }}>
+          <span style={{ fontSize: 8, letterSpacing:'.24em', color:'var(--ivory-dim)', textTransform:'uppercase' }}>Bankroll</span>
+          <span style={{ fontFamily:"'Playfair Display', serif", fontStyle:'italic', fontWeight: 700, fontSize: 19, color:'var(--brass-2)' }}>${bankroll.toLocaleString()}</span>
+        </div>
+        <button onClick={onToggleHints} style={{
+          padding:'6px 10px',
+          background: showHints ? 'linear-gradient(180deg, #e6c590, #c9a26a)' : 'rgba(20,12,6,.6)',
+          color: showHints ? '#1a1208' : 'var(--brass-2)',
+          border:'1px solid rgba(201,162,106,.5)', borderRadius: 999,
+          fontSize: 9, fontWeight: 700, letterSpacing:'.14em', textTransform:'uppercase',
+          cursor:'pointer', whiteSpace:'nowrap'
+        }}>{showHints ? '✦ Coach' : 'Coach'}</button>
+      </div>
+    );
+  }
   return (
     <div style={{
       display:'flex', alignItems:'stretch',
@@ -119,7 +146,7 @@ function BrassRail({ bankroll, biggestWin, spinsPlayed, spinsWon, peak, showHint
             fontStyle:'italic', fontWeight: 600, letterSpacing:'.02em', lineHeight: 1
           }}>Limestone Games</div>
           <div style={{ fontSize: 9, letterSpacing:'.32em', color:'var(--ivory-dim)', textTransform:'uppercase', marginTop: 3 }}>
-            Vegas Strip · Wheel of Fortune 12
+            Vegas Strip · Single Zero
           </div>
         </div>
       </a>
@@ -132,7 +159,7 @@ function BrassRail({ bankroll, biggestWin, spinsPlayed, spinsWon, peak, showHint
         <RailStat label="Peak" value={`$${peak.toLocaleString()}`} small />
         <button
           onClick={onToggleHints}
-          title={showHints ? 'Hide basic-strategy hints' : 'Show basic-strategy hints'}
+          title={showHints ? 'Hide the odds coach' : 'Show the odds coach'}
           style={{
             marginLeft: 14,
             padding:'8px 14px',
@@ -150,7 +177,7 @@ function BrassRail({ bankroll, biggestWin, spinsPlayed, spinsWon, peak, showHint
             boxShadow: showHints ? '0 4px 10px rgba(230,197,144,.35)' : '0 2px 6px rgba(0,0,0,.3)'
           }}
         >
-          {showHints ? '✦ Hints On' : 'Hints Off'}
+          {showHints ? '✦ Coach On' : 'Coach Off'}
         </button>
       </div>
     </div>
@@ -251,37 +278,73 @@ function ResultBigNumber({ result }) {
   );
 }
 
-function HintPanel({ hint }) {
-  if (!hint) return null;
+// Exact-odds coach — roulette's version of the blackjack EV coach. Every
+// figure is computed over the 37 pockets, not estimated.
+function CoachBar({ bets, visible, portrait }) {
+  if (!visible) return null;
+  const out = computeOutcomes(bets);
+
+  const shell = {
+    margin: portrait ? '0 10px' : '0 24px',
+    padding: portrait ? '8px 12px' : '10px 16px',
+    background:'linear-gradient(180deg, rgba(20,12,6,.92), rgba(10,6,3,.96))',
+    border:'1px solid rgba(201,162,106,.45)',
+    borderRadius: 10,
+    boxShadow:'0 12px 28px rgba(0,0,0,.45)',
+    display:'flex', alignItems:'center', gap: portrait ? 10 : 16,
+    position:'relative', zIndex: 6
+  };
+  const kicker = {
+    fontSize: 8.5, letterSpacing:'.26em', textTransform:'uppercase',
+    color:'var(--brass)', fontWeight: 700, whiteSpace:'nowrap'
+  };
+
+  if (!out) {
+    return (
+      <div style={shell}>
+        <span style={kicker}>✦ Coach</span>
+        <span style={{
+          fontFamily:"'Playfair Display', serif", fontStyle:'italic',
+          fontSize: portrait ? 12.5 : 14, color:'var(--ivory)', lineHeight: 1.3
+        }}>
+          {portrait
+            ? 'Pick your variance — every bet pays the house the same 2.7%.'
+            : 'Every bet on this wheel gives the house the same 2.7% — pick your variance, not your edge. Outside bets hit almost half the time; a straight number hits once in 37 but pays 35:1.'}
+        </span>
+      </div>
+    );
+  }
+
+  const w = Math.round(out.winP * 100);
+  const p = Math.round(out.pushP * 100);
+  const l = 100 - w - p;
+  const evTxt = out.ev < 0 ? `−$${Math.abs(out.ev).toFixed(2)}` : `+$${out.ev.toFixed(2)}`;
+
   return (
-    <div style={{
-      position:'absolute', top: 10, right: 10,
-      maxWidth: 280, zIndex: 6,
-      padding:'12px 14px',
-      background:'linear-gradient(180deg, rgba(20,12,6,.92), rgba(10,6,3,.96))',
-      border:'1px solid rgba(201,162,106,.5)',
-      borderRadius: 10,
-      boxShadow:'0 18px 40px rgba(0,0,0,.5)'
-    }}>
-      <div style={{ fontSize: 9, letterSpacing:'.28em', textTransform:'uppercase', color:'var(--ivory-dim)', marginBottom: 4 }}>
-        Basic Strategy Says
+    <div style={shell}>
+      <span style={kicker}>✦ Coach</span>
+      <span style={{
+        fontFamily:"'Playfair Display', serif", fontStyle:'italic',
+        fontSize: portrait ? 12.5 : 14.5, color:'var(--ivory)', whiteSpace:'nowrap'
+      }}>
+        Out of 100 spins like this: <b style={{ color:'#9eddb8' }}>win {w}</b>{p > 0 && <span>, <b style={{ color:'#ffd27a' }}>even {p}</b></span>}, <b style={{ color:'#ff9286' }}>lose {l}</b>
+      </span>
+      <div style={{ flex: 1, minWidth: 40, height: 8, borderRadius: 4, overflow:'hidden', display:'flex', boxShadow:'inset 0 1px 2px rgba(0,0,0,.5)' }}>
+        <div style={{ width: `${w}%`, background:'linear-gradient(180deg,#9eddb8,#3f8f63)' }} />
+        {p > 0 && <div style={{ width: `${p}%`, background:'linear-gradient(180deg,#ffd27a,#a87f2e)' }} />}
+        <div style={{ width: `${l}%`, background:'linear-gradient(180deg,#ff9286,#8e3226)' }} />
       </div>
-      <div style={{
-        fontFamily:"'Playfair Display', serif",
-        fontStyle:'italic',
-        fontSize: 16,
-        color:'var(--brass-2)',
-        marginBottom: 6,
-        lineHeight: 1.2
-      }}>{hint.action}</div>
-      <div style={{ fontSize: 12, color:'var(--ivory)', lineHeight: 1.4, fontStyle:'italic', fontFamily:"'Playfair Display', serif" }}>
-        {hint.explanation}
-      </div>
-      {hint.detail && (
-        <div style={{ fontSize: 10, color:'var(--ivory-dim)', marginTop: 6, letterSpacing:'.05em', fontFamily:"'JetBrains Mono', monospace" }}>
-          {hint.detail}
-        </div>
+      {!portrait && (
+        <span style={{ fontSize: 10.5, fontFamily:"'JetBrains Mono', monospace", color:'var(--ivory-dim)', whiteSpace:'nowrap' }}>
+          {out.covered}/37 covered{out.hasZero ? ' · zero in' : ''} · best +${out.bestProfit.toLocaleString()}
+        </span>
       )}
+      <span style={{
+        fontSize: portrait ? 11 : 12, fontFamily:"'JetBrains Mono', monospace",
+        color: 'var(--ivory)', whiteSpace:'nowrap',
+        padding: portrait ? '3px 8px' : '4px 10px', borderRadius: 8,
+        background:'rgba(142,50,38,.25)', border:'1px solid rgba(255,146,134,.3)'
+      }}>{portrait ? `${evTxt} avg` : `${evTxt} / spin avg`}</span>
     </div>
   );
 }
@@ -292,12 +355,12 @@ function ResultBanner({ kind, payout }) {
     win: { text: `WIN +$${payout}`, color:'#9eddb8', border:'rgba(158,221,184,.6)' },
     bigwin: { text: `BIG WIN +$${payout}`, color:'#ffe79b', border:'rgba(255,231,155,.7)' },
     straight: { text: `STRAIGHT UP +$${payout}`, color:'#ffe79b', border:'rgba(255,231,155,.85)' },
-    push: { text: 'EVEN', color:'#ffd27a', border:'rgba(255,210,122,.5)' },
-    lose: { text: 'NO WIN', color:'#ff9286', border:'rgba(255,146,134,.5)' }
+    push: { text: 'EVEN — STAKE BACK', color:'#ffd27a', border:'rgba(255,210,122,.5)' },
+    lose: { text: payout > 0 ? `NO WIN −$${payout}` : 'NO WIN', color:'#ff9286', border:'rgba(255,146,134,.5)' }
   };
   const m = map[kind] || map.lose;
   return (
-    <div className="banner-in" key={kind + payout} style={{
+    <div className="banner-in-centered" key={kind + payout} style={{
       position:'absolute', left:'50%', transform:'translateX(-50%)', top: 10,
       padding:'10px 22px',
       background:'rgba(10,6,3,.85)',
@@ -314,62 +377,59 @@ function ResultBanner({ kind, payout }) {
 }
 
 // ── Betting board ──────────────────────────────────────
+// Cell/zone descriptors come from rl-bets.js (shared with the node tests).
 
-const RED_SET = new Set(RED_NUMBERS);
-
-function buildCells() {
-  // returns array of cell descriptors with id, type, numbers, layout grid coords
-  const cells = [];
-
-  // Zero — spans 3 rows on the left side
-  cells.push({ id:'0', type:'straight', numbers:[0], label:'0', kind:'zero' });
-
-  // Numbers 1-36 in 3 rows × 12 cols.
-  // Row A (top): 3,6,...,36 ; Row B: 2,5,...,35 ; Row C: 1,4,...,34
-  for (let col = 0; col < 12; col++) {
-    for (let row = 0; row < 3; row++) {
-      const n = col * 3 + (3 - row);
-      cells.push({
-        id: 'n' + n, type:'straight', numbers:[n], label: String(n),
-        kind: 'number', isRed: RED_SET.has(n), gridCol: col + 1, gridRow: row
-      });
-    }
-  }
-
-  // Column bets at right end (3 rows beyond column 12)
-  for (let row = 0; row < 3; row++) {
-    const colNumbers = [];
-    for (let col = 0; col < 12; col++) {
-      colNumbers.push(col * 3 + (3 - row));
-    }
-    cells.push({ id: 'col' + (3 - row), type: 'column', numbers: colNumbers, label: '2:1', kind:'col' });
-  }
-
-  // Dozens row (under numbers)
-  cells.push({ id:'dz1', type:'dozen', numbers: range(1,12), label:'1st 12', kind:'dozen' });
-  cells.push({ id:'dz2', type:'dozen', numbers: range(13,24), label:'2nd 12', kind:'dozen' });
-  cells.push({ id:'dz3', type:'dozen', numbers: range(25,36), label:'3rd 12', kind:'dozen' });
-
-  // Even-money row
-  cells.push({ id:'low',   type:'low',   numbers: range(1,18),  label:'1-18',  kind:'even' });
-  cells.push({ id:'even',  type:'even',  numbers: rangeFilter(2,36, n => n%2===0), label:'EVEN', kind:'even' });
-  cells.push({ id:'red',   type:'red',   numbers: RED_NUMBERS,  label:'◆ RED', kind:'even', forceColor:'red' });
-  cells.push({ id:'black', type:'black', numbers: rangeFilter(1,36, n => !RED_SET.has(n)), label:'◆ BLK', kind:'even', forceColor:'black' });
-  cells.push({ id:'odd',   type:'odd',   numbers: rangeFilter(1,36, n => n%2===1), label:'ODD',  kind:'even' });
-  cells.push({ id:'high',  type:'high',  numbers: range(19,36), label:'19-36', kind:'even' });
-
-  return cells;
+// A small hit-spot on a cell edge/vertex for split/street/corner/six-line
+// bets. Invisible-ish dot that blooms on hover; shows a mini chip when bet.
+function ZoneSpot({ zone, pos, amount, winning, disabled, onPlace }) {
+  const P = {
+    top:    { top: -11, left: '50%', marginLeft: -9 },
+    left:   { left: -11, top: '50%', marginTop: -9 },
+    tl:     { left: -11, top: -11 },
+    bottom: { bottom: -11, left: '50%', marginLeft: -9 },
+    bl:     { left: -11, bottom: -11 }
+  }[pos];
+  return (
+    <div
+      className={'zone-spot' + (amount ? ' has-chip' : '') + (winning && amount ? ' winning-spot' : '')}
+      title={zoneTitle(zone)}
+      onClick={(e) => { e.stopPropagation(); if (!disabled) onPlace(zone); }}
+      style={{ position:'absolute', width: 18, height: 18, zIndex: 6, ...P }}
+    >
+      {amount ? <span className="zone-chip">${amount}</span> : null}
+    </div>
+  );
 }
 
-function range(a, b) { const r = []; for (let i = a; i <= b; i++) r.push(i); return r; }
-function rangeFilter(a, b, fn) { return range(a,b).filter(fn); }
-
-function BettingBoard({ bets, onPlace, winningNumber, disabled }) {
+function BettingBoard({ bets, onPlace, winningNumber, disabled, portrait }) {
   const cells = React.useMemo(buildCells, []);
+  const zones = React.useMemo(buildInsideZones, []);
+  const orient = portrait ? 'port' : 'land';
+
+  const zonesByHost = React.useMemo(() => {
+    const m = {};
+    zones.forEach(z => {
+      const a = z[orient];
+      (m[a.host] = m[a.host] || []).push(z);
+    });
+    return m;
+  }, [zones, orient]);
 
   // Build bet amount lookup
   const amounts = {};
   bets.forEach(b => { amounts[b.id] = (amounts[b.id] || 0) + b.amount; });
+
+  const cellZones = (n) => (zonesByHost[n] || []).map(z => (
+    <ZoneSpot
+      key={z.id}
+      zone={z}
+      pos={z[orient].pos}
+      amount={amounts[z.id]}
+      winning={winningNumber != null && z.numbers.includes(winningNumber)}
+      disabled={disabled}
+      onPlace={onPlace}
+    />
+  ));
 
   const cellBg = (c) => {
     if (c.kind === 'zero') return 'linear-gradient(180deg,#1f8a4d,#0e4d2a)';
@@ -384,6 +444,127 @@ function BettingBoard({ bets, onPlace, winningNumber, disabled }) {
   };
 
   const isWinning = (c) => winningNumber != null && c.numbers.includes(winningNumber);
+
+  // ── Portrait: zero on top, streets run downward, dozens rail on the right ──
+  if (portrait) {
+    const numberCells = cells.filter(c => c.kind === 'number');
+    return (
+      <div style={{
+        position:'relative',
+        padding: '12px 12px 10px 16px',
+        background: 'linear-gradient(180deg, rgba(0,0,0,.18), rgba(0,0,0,.05))',
+        border: '1px solid rgba(201,162,106,.35)',
+        borderRadius: 14,
+        boxShadow: 'inset 0 0 0 1px rgba(0,0,0,.4)'
+      }}>
+        <div style={{
+          display:'grid',
+          gridTemplateColumns: 'repeat(3, 1fr) 34px',
+          gridTemplateRows: `26px repeat(12, 25px) 28px`,
+          gap: 3,
+          alignItems:'stretch'
+        }}>
+          {/* Zero across the top */}
+          <div
+            className={'bet-cell' + (isWinning(cells[0]) ? ' winning' : '') + (disabled ? ' disabled' : '')}
+            onClick={() => !disabled && onPlace(cells[0])}
+            style={{
+              gridColumn: '1 / span 3', gridRow: 1,
+              background: cellBg(cells[0]),
+              border:'1px solid rgba(201,162,106,.45)', borderRadius: 8,
+              display:'flex', alignItems:'center', justifyContent:'center',
+              color:'var(--ivory)', fontFamily:"'Playfair Display', serif",
+              fontSize: 17, fontWeight: 700, fontStyle:'italic', position:'relative'
+            }}
+          >0
+            {amounts['0'] && <div className="table-chip">${amounts['0']}</div>}
+          </div>
+
+          {numberCells.map(c => {
+            const n = c.numbers[0];
+            return (
+              <div
+                key={c.id}
+                className={'bet-cell' + (isWinning(c) ? ' winning' : '') + (disabled ? ' disabled' : '')}
+                onClick={() => !disabled && onPlace(c)}
+                style={{
+                  gridColumn: (n - 1) % 3 + 1, gridRow: Math.ceil(n / 3) + 1,
+                  background: cellBg(c),
+                  border:'1px solid rgba(201,162,106,.45)', borderRadius: 5,
+                  display:'flex', alignItems:'center', justifyContent:'center',
+                  color:'var(--ivory)', fontFamily:"'JetBrains Mono', monospace",
+                  fontSize: 13, fontWeight: 700, position:'relative'
+                }}
+              >{c.label}
+                {amounts[c.id] && <div className="table-chip">${amounts[c.id]}</div>}
+                {cellZones(n)}
+              </div>
+            );
+          })}
+
+          {/* Dozens down the right side */}
+          {cells.filter(c => c.kind === 'dozen').map((c, i) => (
+            <div
+              key={c.id}
+              className={'bet-cell' + (isWinning(c) ? ' winning' : '') + (disabled ? ' disabled' : '')}
+              onClick={() => !disabled && onPlace(c)}
+              style={{
+                gridColumn: 4, gridRow: `${2 + i * 4} / span 4`,
+                background: cellBg(c),
+                border:'1px solid rgba(201,162,106,.45)', borderRadius: 5,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                color:'var(--ivory)', fontFamily:"'Playfair Display', serif",
+                fontSize: 12, fontStyle:'italic', fontWeight: 600,
+                writingMode:'vertical-rl', position:'relative'
+              }}
+            >{c.label}
+              {amounts[c.id] && <div className="table-chip">${amounts[c.id]}</div>}
+            </div>
+          ))}
+
+          {/* Column bets along the bottom */}
+          {cells.filter(c => c.kind === 'col').map((c, i) => (
+            <div
+              key={c.id}
+              className={'bet-cell' + (isWinning(c) ? ' winning' : '') + (disabled ? ' disabled' : '')}
+              onClick={() => !disabled && onPlace(c)}
+              style={{
+                gridColumn: 3 - i, gridRow: 14,
+                background: cellBg(c),
+                border:'1px solid rgba(201,162,106,.45)', borderRadius: 5,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                color:'var(--brass-2)', fontFamily:"'JetBrains Mono', monospace",
+                fontSize: 11, fontWeight: 700, letterSpacing:'.1em', position:'relative'
+              }}
+            >{c.label}
+              {amounts[c.id] && <div className="table-chip">${amounts[c.id]}</div>}
+            </div>
+          ))}
+        </div>
+
+        {/* Even-money: two rows of three */}
+        <div style={{ marginTop: 4, display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gridAutoRows: 28, gap: 3 }}>
+          {cells.filter(c => c.kind === 'even').map(c => (
+            <div
+              key={c.id}
+              className={'bet-cell' + (isWinning(c) ? ' winning' : '') + (disabled ? ' disabled' : '')}
+              onClick={() => !disabled && onPlace(c)}
+              style={{
+                background: cellBg(c),
+                border:'1px solid rgba(201,162,106,.45)', borderRadius: 5,
+                display:'flex', alignItems:'center', justifyContent:'center',
+                color: c.forceColor ? 'var(--ivory)' : 'var(--brass-2)',
+                fontFamily:"'JetBrains Mono', monospace",
+                fontSize: 11, fontWeight: 700, letterSpacing:'.1em', position:'relative'
+              }}
+            >{c.label}
+              {amounts[c.id] && <div className="table-chip">${amounts[c.id]}</div>}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  }
 
   return (
     <div style={{
@@ -437,6 +618,7 @@ function BettingBoard({ bets, onPlace, winningNumber, disabled }) {
             }}
           >{c.label}
             {amounts[c.id] && <div className="table-chip">${amounts[c.id]}</div>}
+            {cellZones(c.numbers[0])}
           </div>
         ))}
 
@@ -523,9 +705,9 @@ function BettingBoard({ bets, onPlace, winningNumber, disabled }) {
 
 // ── Chip rack ───────────────────────────────────────────
 
-function ChipRack({ selected, onSelect, bankroll }) {
+function ChipRack({ selected, onSelect, bankroll, size = 56 }) {
   return (
-    <div style={{ display:'flex', alignItems:'center', gap: 14 }}>
+    <div style={{ display:'flex', alignItems:'center', gap: size < 56 ? 10 : 14 }}>
       <div style={{
         fontSize: 9, letterSpacing:'.28em', textTransform:'uppercase',
         color:'var(--ivory-dim)', writingMode:'vertical-rl', transform:'rotate(180deg)'
@@ -539,13 +721,14 @@ function ChipRack({ selected, onSelect, bankroll }) {
             disabled={disabled}
             onClick={() => onSelect(c.value)}
             className="chip-3d"
+            title={`Shortcut: ${CHIP_DEFS.indexOf(c) + 1}`}
             style={{
-              width: 56, height: 56,
+              width: size, height: size,
               background: c.bg,
               border: `3px ${isSel ? 'solid' : 'dashed'} ${c.edge}`,
               color:'#1a1208',
               fontFamily:"'JetBrains Mono', monospace",
-              fontWeight: 800, fontSize: 14,
+              fontWeight: 800, fontSize: size < 56 ? 11 : 14,
               cursor: disabled ? 'not-allowed' : 'pointer',
               opacity: disabled ? 0.35 : 1,
               outline: isSel ? '2px solid var(--brass-2)' : 'none',
@@ -560,60 +743,7 @@ function ChipRack({ selected, onSelect, bankroll }) {
   );
 }
 
-// ── Hint logic (port of strategy.js) ────────────────────
-
-const BET_INFO = {
-  straight: { name:'Straight Up', payout:'35:1', probability:'2.7%' },
-  split:    { name:'Split',       payout:'17:1', probability:'5.4%' },
-  street:   { name:'Street',      payout:'11:1', probability:'8.1%' },
-  corner:   { name:'Corner',      payout:'8:1',  probability:'10.8%' },
-  sixline:  { name:'Six Line',    payout:'5:1',  probability:'16.2%' },
-  dozen:    { name:'Dozen',       payout:'2:1',  probability:'32.4%' },
-  column:   { name:'Column',      payout:'2:1',  probability:'32.4%' },
-  red:      { name:'Red',         payout:'1:1',  probability:'48.6%' },
-  black:    { name:'Black',       payout:'1:1',  probability:'48.6%' },
-  odd:      { name:'Odd',         payout:'1:1',  probability:'48.6%' },
-  even:     { name:'Even',        payout:'1:1',  probability:'48.6%' },
-  low:      { name:'Low (1-18)',  payout:'1:1',  probability:'48.6%' },
-  high:     { name:'High (19-36)',payout:'1:1',  probability:'48.6%' }
-};
-
-function makeHint(bets) {
-  if (!bets || bets.length === 0) {
-    return {
-      action: 'Place a bet',
-      explanation: 'Outside bets (Red/Black, Odd/Even) hit nearly half the time — friendliest place to start.',
-      detail: 'House edge: 2.7% (single zero)'
-    };
-  }
-  const totalBet = bets.reduce((s,b)=>s+b.amount,0);
-  const coverage = new Set();
-  bets.forEach(b => b.numbers.forEach(n => coverage.add(n)));
-  const cov = coverage.size;
-  const covPct = (cov / 37 * 100).toFixed(1);
-  const hasZero = coverage.has(0);
-
-  // primary type
-  const totals = {};
-  bets.forEach(b => { totals[b.type] = (totals[b.type] || 0) + b.amount; });
-  let primary = null, max = 0;
-  for (const k in totals) if (totals[k] > max) { max = totals[k]; primary = k; }
-  const info = BET_INFO[primary] || BET_INFO.straight;
-
-  let action;
-  if (cov >= 25) action = 'High coverage';
-  else if (cov >= 13) action = 'Moderate coverage';
-  else action = 'Low coverage';
-
-  const explanation = bets.length === 1
-    ? `${info.name} — pays ${info.payout} with ${info.probability} chance.`
-    : `${bets.length} bets covering ${cov} of 37 numbers (${covPct}%). Total wagered $${totalBet}.`;
-  const detail = `${cov}/37 covered · ${hasZero ? 'zero included' : 'no zero coverage'} · ${info.payout}`;
-  return { action, explanation, detail };
-}
-
 Object.assign(window, {
-  PAYOUTS, CHIP_DEFS, FeltBackdrop, FeltLogo, BrassRail, RailStat, HistoryStrip,
-  ResultBigNumber, HintPanel, ResultBanner, BettingBoard, ChipRack, makeHint,
-  BET_INFO
+  CHIP_DEFS, FeltBackdrop, FeltLogo, BrassRail, RailStat, HistoryStrip,
+  ResultBigNumber, CoachBar, ResultBanner, BettingBoard, ChipRack, ZoneSpot
 });

@@ -71,15 +71,20 @@ const DEALER_VOICES = {
       "Tough one. House gathers it up.",
       "Better luck next spin."
     ],
+    push: [
+      "All even. Your chips come back to you.",
+      "A wash — stake returned, {p}.",
+      "Nobody wins, nobody bleeds. Again?"
+    ],
     lose_streak: [
       "Cold streak. Bet smaller, ride it out.",
       "She's against you tonight. Don't tilt, {p}.",
       "Variance, {p}. The wheel evens out — eventually."
     ],
     bust: [
-      "Out of chips, {p}. Let me reset you.",
-      "Bankroll's gone. Fresh start on the house.",
-      "Cleared out. Don't worry — we'll spot you a re-buy."
+      "That's the last of your chips, {p}. The cage can sort you out.",
+      "Felt's empty. Cash out at your profile and come back swinging.",
+      "Cleared out. Happens to the best of them — see the cashier, {p}."
     ],
     after_tip: [
       "You remembered. You're the best, {p}. ✨",
@@ -165,15 +170,20 @@ const DEALER_VOICES = {
       "Not yours.",
       "Tough."
     ],
+    push: [
+      "Even. Stake back.",
+      "A wash.",
+      "Nobody wins."
+    ],
     lose_streak: [
       "Rough patch. Bet smaller.",
       "Variance. It turns.",
       "Don't tilt."
     ],
     bust: [
-      "Cleared. Fresh stake on the house.",
-      "Out. Re-buy on the way.",
-      "Bankroll's gone. Reset."
+      "Out of chips. See the cage.",
+      "Cleared. Cash out, regroup.",
+      "That's the felt. Cashier's that way."
     ],
     after_tip: [
       "Appreciated.",
@@ -216,10 +226,9 @@ function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idl
     lastSrc.current = src;
     counter.current += 1;
     const newKey = counter.current;
-    setLayers(prev => [
-      ...prev.map(l => ({ ...l, opacity: 0, blur: 6 })),
-      { key: newKey, src, opacity: 0, blur: 6 }
-    ]);
+    // The old pose stays fully visible underneath while the new one fades in
+    // on top — fading both at once left the panel blank mid-swap.
+    setLayers(prev => [...prev, { key: newKey, src, opacity: 0, blur: 4 }]);
     const raf = requestAnimationFrame(() => {
       setLayers(prev => prev.map(l => l.key === newKey ? { ...l, opacity: 1, blur: 0 } : l));
     });
@@ -440,4 +449,40 @@ function DealerPanel({ name, expression, message, onTipDealer, tipped, playerNam
   );
 }
 
-Object.assign(window, { DealerPanel, pickLine, DEALER_VOICES, DEALER_NAMES });
+// Slim horizontal croupier strip for the portrait/mobile layout — avatar plus
+// speech, no full portrait column.
+function DealerStrip({ name, message, gender = 'female', expression = 'idle' }) {
+  return (
+    <div style={{
+      display:'flex', alignItems:'center', gap: 12,
+      padding:'10px 14px',
+      borderRadius: 14,
+      background:'linear-gradient(180deg, rgba(26,16,8,.92), rgba(14,8,4,.92))',
+      border:'1px solid rgba(201,162,106,.3)',
+      boxShadow:'0 10px 24px rgba(0,0,0,.45), inset 0 1px 0 rgba(230,197,144,.12)',
+      minHeight: 64
+    }}>
+      <img
+        src={`assets/dealers/${gender}/avatar.png`}
+        alt=""
+        style={{
+          width: 46, height: 46, borderRadius:'50%', flexShrink: 0,
+          objectFit:'cover', objectPosition:'center top',
+          boxShadow:'0 0 0 1.5px rgba(201,162,106,.55), 0 0 10px rgba(201,162,106,.3)',
+          filter: expression === 'happy' ? 'saturate(1.2)' : 'none'
+        }}
+      />
+      <div style={{ minWidth: 0 }}>
+        <div style={{ fontSize: 9, letterSpacing:'.24em', color:'var(--brass)', textTransform:'uppercase', fontWeight: 600 }}>{name} · Croupier</div>
+        <div style={{
+          fontFamily:"'Playfair Display', serif", fontStyle:'italic',
+          fontSize: 14.5, lineHeight: 1.3, color:'var(--ivory)',
+          marginTop: 2,
+          display:'-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient:'vertical', overflow:'hidden'
+        }}>{message || ' '}</div>
+      </div>
+    </div>
+  );
+}
+
+Object.assign(window, { DealerPanel, DealerStrip, pickLine, DEALER_VOICES, DEALER_NAMES });

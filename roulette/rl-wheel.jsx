@@ -19,12 +19,15 @@ const PAD = 44; // extra canvas bleed so the brass rim and pointer triangle aren
 
 function Wheel({ size = 280, target, onLanded, spinning, onTickStart, onTickStop, onSpinStart, onBallDrop }) {
   const canvasRef = React.useRef(null);
-  const angleRef = React.useRef(0);
+  // Start at -pocketAngle/2 so pocket 0 sits centered under the pointer with
+  // the resting ball in it.
+  const angleRef = React.useRef(-Math.PI / WHEEL_ORDER.length);
   const rafRef = React.useRef(null);
   const numPockets = WHEEL_ORDER.length;
   const pocketAngle = (2 * Math.PI) / numPockets;
 
-  function draw(ctx, currentAngle, ballNumber) {
+  // ball: { angle, radius } in wheel coordinates, or null for no ball
+  function draw(ctx, currentAngle, ball) {
     const W = size + PAD * 2, H = size + PAD * 2;
     const cx = W / 2, cy = H / 2;
     const outerR = size * 0.46;
@@ -121,11 +124,12 @@ function Wheel({ size = 280, target, onLanded, spinning, onTickStart, onTickStop
     ctx.lineWidth = 1;
     ctx.stroke();
 
-    // Ball (when not spinning, sit at top)
-    if (ballNumber != null) {
-      const ballR = outerR - (outerR - innerR) * 0.5;
+    // Ball
+    if (ball != null) {
+      const bx = cx + ball.radius * Math.cos(ball.angle);
+      const by = cy + ball.radius * Math.sin(ball.angle);
       ctx.beginPath();
-      ctx.arc(cx, cy - ballR, 6, 0, Math.PI * 2);
+      ctx.arc(bx, by, 6, 0, Math.PI * 2);
       ctx.fillStyle = '#f4ecd8';
       ctx.fill();
       ctx.strokeStyle = '#8c6a3f';
@@ -133,10 +137,15 @@ function Wheel({ size = 280, target, onLanded, spinning, onTickStart, onTickStop
       ctx.stroke();
       // highlight
       ctx.beginPath();
-      ctx.arc(cx - 1.5, cy - ballR - 1.5, 2, 0, Math.PI * 2);
+      ctx.arc(bx - 1.5, by - 1.5, 2, 0, Math.PI * 2);
       ctx.fillStyle = 'rgba(255,255,255,.7)';
       ctx.fill();
     }
+  }
+
+  function restingBall() {
+    const outerR = size * 0.46, innerR = size * 0.30;
+    return { angle: -Math.PI / 2, radius: outerR - (outerR - innerR) * 0.5 };
   }
 
   // Initial draw + redraw on size change
@@ -151,22 +160,45 @@ function Wheel({ size = 280, target, onLanded, spinning, onTickStart, onTickStop
     canvas.style.height = canvasW + 'px';
     const ctx = canvas.getContext('2d');
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
-    draw(ctx, angleRef.current, /* ballNumber */ 0);
+    draw(ctx, angleRef.current, restingBall());
   }, [size]);
 
-  // Spin trigger — uses setTimeout (unthrottled in background tabs) instead of rAF.
+  // Spin trigger — a chained setTimeout stepper with wall-clock t. Hidden
+  // tabs throttle setTimeout (rAF stops entirely), but because t comes from
+  // performance.now() the spin still completes and lands correctly on the
+  // next available tick after the player returns.
   React.useEffect(() => {
     if (!spinning || target == null) return;
     const canvas = canvasRef.current;
     if (!canvas) return;
     const ctx = canvas.getContext('2d');
 
+    // Normalize the accumulated angle into (-2π, 0] before computing the end
+    // angle — computing it from absolute zero made every spin after the
+    // first travel a near-random distance, often backward.
+    let startAngle = angleRef.current % (2 * Math.PI);
+    if (startAngle > 0) startAngle -= 2 * Math.PI;
+    angleRef.current = startAngle;
+
     const targetIndex = WHEEL_ORDER.indexOf(target);
     const finalAngle = -(targetIndex * pocketAngle + pocketAngle / 2);
+    let delta = finalAngle - startAngle;            // forward (negative) remainder
+    if (delta > 0) delta -= 2 * Math.PI;
     const fullRotations = 5 + Math.floor(Math.random() * 3);
-    const totalRotation = fullRotations * 2 * Math.PI;
-    const endAngle = finalAngle - totalRotation;
-    const startAngle = angleRef.current;
+    const endAngle = startAngle + delta - fullRotations * 2 * Math.PI;
+
+    // The ball orbits the rim the opposite way, then drops and rides the
+    // winning pocket to the top.
+    const outerR = size * 0.46, innerR = size * 0.30;
+    const trackR = outerR + 9;
+    const pocketR = outerR - (outerR - innerR) * 0.5;
+    const DROP_T = 0.62;                            // when the ball leaves the rim
+    const ballStart = -Math.PI / 2;
+    const ballEnd = ballStart + (3.25 + Math.random()) * 2 * Math.PI;
+    const lockAngle = (wheelA) => wheelA + targetIndex * pocketAngle + pocketAngle / 2 - Math.PI / 2;
+    let dropOffset = null;
+    let dropFired = false;
+
     const startTime = performance.now();
     let cancelled = false;
     let landed = false;
@@ -175,20 +207,37 @@ function Wheel({ size = 280, target, onLanded, spinning, onTickStart, onTickStop
     onTickStart && onTickStart(SPIN_DURATION);
 
     function easeOutCubic(t) { return 1 - Math.pow(1 - t, 3); }
+    function easeOutQuart(t) { return 1 - Math.pow(1 - t, 4); }
 
     function step() {
       if (cancelled) return;
       const elapsed = performance.now() - startTime;
       const t = Math.min(elapsed / SPIN_DURATION, 1);
-      const eased = easeOutCubic(t);
-      angleRef.current = startAngle + (endAngle - startAngle) * eased;
-      draw(ctx, angleRef.current, t < 1 ? null : target);
+      angleRef.current = startAngle + (endAngle - startAngle) * easeOutCubic(t);
+
+      let ball;
+      if (t < DROP_T) {
+        ball = { angle: ballStart + (ballEnd - ballStart) * easeOutQuart(t), radius: trackR };
+      } else {
+        if (dropOffset == null) {
+          const freeA = ballStart + (ballEnd - ballStart) * easeOutQuart(t);
+          // forward remainder relative to the pocket, < one revolution
+          dropOffset = ((freeA - lockAngle(angleRef.current)) % (2 * Math.PI) + 2 * Math.PI) % (2 * Math.PI);
+        }
+        if (!dropFired) { dropFired = true; onBallDrop && onBallDrop(); }
+        const u = Math.min((t - DROP_T) / (1 - DROP_T), 1);
+        const angle = lockAngle(angleRef.current) + dropOffset * (1 - easeOutCubic(u));
+        const bounce = Math.abs(Math.sin(u * Math.PI * 3)) * 5 * Math.max(0, 1 - u * 1.25);
+        const radius = pocketR + (trackR - pocketR) * Math.pow(1 - u, 2) + bounce;
+        ball = { angle, radius };
+      }
+      draw(ctx, angleRef.current, ball);
+
       if (t < 1) {
         rafRef.current = setTimeout(step, 16);
       } else if (!landed) {
         landed = true;
         onTickStop && onTickStop();
-        onBallDrop && onBallDrop();
         onLanded && onLanded(target);
       }
     }

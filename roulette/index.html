@@ -4,29 +4,30 @@
 <meta charset="UTF-8" />
 <title>Roulette — Play Free Online European Roulette | Limestone Games</title>
 <meta name="viewport" content="width=device-width,initial-scale=1" />
-<meta name="description" content="Play Roulette free in your browser. Place inside or outside bets, spin the wheel, and try your luck. Play money only — no downloads, no installs.">
-<meta name="keywords" content="roulette, free roulette, online roulette, browser roulette, casino, european roulette">
+<meta name="description" content="Play European roulette free in your browser — the full table layout with splits, streets, corners and six lines, plus a live odds coach on every bet. Single zero, play money only, no downloads.">
+<meta name="keywords" content="roulette, free roulette, online roulette, browser roulette, european roulette, roulette odds, roulette payouts, casino">
 <link rel="canonical" href="https://limestonegames.com/roulette/">
 <meta property="og:title" content="Roulette — Limestone Games">
-<meta property="og:description" content="Play Roulette free in your browser. Place inside or outside bets, spin the wheel, and try your luck. Play money only — no downloads, no installs.">
+<meta property="og:description" content="Play European roulette free in your browser — full layout with splits, streets and corners, plus a live odds coach on every bet. Play money only, no downloads.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://limestonegames.com/roulette/">
 <meta property="og:image" content="https://limestonegames.com/og-image.png">
 <meta name="twitter:card" content="summary_large_image">
 <meta name="twitter:title" content="Roulette — Limestone Games">
-<meta name="twitter:description" content="Play Roulette free in your browser. Place inside or outside bets, spin the wheel, and try your luck. Play money only — no downloads, no installs.">
+<meta name="twitter:description" content="Play European roulette free in your browser — full layout with splits, streets and corners, plus a live odds coach on every bet. Play money only, no downloads.">
 <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.json">
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Roulette","description":"Play Roulette free in your browser. Place inside or outside bets, spin the wheel, and try your luck.","url":"https://limestonegames.com/roulette/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Roulette","description":"Play European roulette free in your browser — the full table layout with splits, streets, corners and six lines, plus a live odds coach on every bet.","url":"https://limestonegames.com/roulette/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Roulette"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Is this roulette game free?","acceptedAnswer":{"@type":"Answer","text":"Yes — free play, no real money. Your bankroll and stats save in your browser."}},
   {"@type":"Question","name":"Is this European or American roulette?","acceptedAnswer":{"@type":"Answer","text":"European — a single zero. The house edge is 2.7%, half of American roulette's 5.26%."}},
-  {"@type":"Question","name":"Can I bet on multiple things at once?","acceptedAnswer":{"@type":"Answer","text":"Yes. Stack any combination of inside (straight, split, street, corner) and outside (red/black, odd/even, dozens, columns) bets across the layout."}},
+  {"@type":"Question","name":"Can I bet on multiple things at once?","acceptedAnswer":{"@type":"Answer","text":"Yes. Stack any combination of inside (straight, split, street, corner, six line) and outside (red/black, odd/even, dozens, columns) bets across the layout — the spots between numbers take split and corner chips, just like a real table."}},
+  {"@type":"Question","name":"What does a straight-up number pay?","acceptedAnswer":{"@type":"Answer","text":"35:1. Every payout on a single-zero table is set so a winning bet returns exactly 36 times the stake divided by the numbers it covers — which is why every bet carries the same 2.7% house edge."}},
   {"@type":"Question","name":"Does the Martingale system actually work?","acceptedAnswer":{"@type":"Answer","text":"No. Doubling after each loss requires unlimited bankroll and no table limits — neither exists. A long losing streak will wipe you out before a win recovers it."}},
   {"@type":"Question","name":"Are the spins truly random?","acceptedAnswer":{"@type":"Answer","text":"Yes. Each spin uses an independent random outcome. Past results have zero influence on the next — there are no due numbers."}}
 ]}</script>
@@ -55,35 +56,20 @@
   }
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{min-height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
-  .game-stage{min-height:100vh;display:grid;place-items:center;overflow:hidden}
-  .game-info{background:#0a0805;color:var(--ivory-dim);padding:64px 24px;border-top:1px solid rgba(201,162,106,.18)}
-  .game-info-inner{max-width:760px;margin:0 auto;line-height:1.65}
-  .game-info h2{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:600;color:var(--brass-2);margin:40px 0 14px;letter-spacing:.01em}
-  .game-info h2:first-child{margin-top:0}
-  .game-info p{margin:0 0 16px}
-  .game-info ul{margin:0 0 16px;padding-left:22px}
-  .game-info li{margin:0 0 8px}
-  .game-info b,.game-info strong{color:var(--ivory)}
-  .game-info a{color:var(--brass-2);text-decoration:none;border-bottom:1px solid rgba(230,197,144,.3)}
-  .game-info a:hover{border-bottom-color:var(--brass-2)}
-  .game-info details{margin:0 0 10px;border-bottom:1px solid rgba(201,162,106,.12);padding-bottom:10px}
-  .game-info summary{cursor:pointer;color:var(--ivory);font-weight:500;padding:8px 0;list-style:none}
-  .game-info summary::-webkit-details-marker{display:none}
-  .game-info summary::before{content:'+';display:inline-block;width:18px;color:var(--brass)}
-  .game-info details[open] summary::before{content:'−'}
-  .game-info details p{padding:6px 0 8px 18px;margin:0}
-  .similar-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px;list-style:none;padding:0}
-  .similar-games li{margin:0}
-  .similar-games a{display:block;padding:10px 14px;background:rgba(201,162,106,.06);border:1px solid rgba(201,162,106,.18);border-radius:6px;color:var(--ivory);font-weight:500}
-  .similar-games a:hover{background:rgba(201,162,106,.12);border-color:rgba(201,162,106,.35)}
+  .game-stage{min-height:100vh;display:grid;place-items:center;overflow:hidden;padding:8px 0}
   body{
     background:
       radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
       radial-gradient(900px 600px at 50% 90%, rgba(0,0,0,.7), transparent 70%),
       #0a0805;
   }
-  #root{width:100%;height:100%}
-  #game-wrapper{width:1380px;height:860px;transform-origin:top left;margin:0 auto}
+  /* The design canvas (#root) is a fixed-size surface scaled with transform;
+     #game-wrapper is sized to the SCALED dimensions so the page flow never
+     reserves dead space around a shrunken table. The resize script picks a
+     landscape (1380x860) or portrait (460x1000) canvas and announces changes
+     on window as 'rl:canvas'. */
+  #game-wrapper{position:relative;width:1380px;height:860px;overflow:visible}
+  #root{width:1380px;height:860px;transform-origin:top left}
   /* chip */
   .chip-3d{
     position:relative;border-radius:50%;
@@ -118,6 +104,13 @@
     100%{transform:translateY(0) scale(1);opacity:1;letter-spacing:.18em}
   }
   .banner-in{animation:bannerIn .55s cubic-bezier(.2,.8,.25,1) both}
+  /* centered banners carry their translateX through the entrance animation —
+     a bare transform in the keyframes would replace it and land off-center */
+  @keyframes bannerInCentered{
+    0%{transform:translateX(-50%) translateY(-20px) scale(.92);opacity:0;letter-spacing:.4em}
+    100%{transform:translateX(-50%) translateY(0) scale(1);opacity:1;letter-spacing:.18em}
+  }
+  .banner-in-centered{animation:bannerInCentered .55s cubic-bezier(.2,.8,.25,1) both}
   /* scrollbar */
   ::-webkit-scrollbar{width:8px;height:8px}
   ::-webkit-scrollbar-thumb{background:rgba(201,162,106,.3);border-radius:4px}
@@ -172,6 +165,127 @@
     pointer-events:none;
     z-index:5;
   }
+  /* inside-bet hit spots (splits, streets, corners, six lines) */
+  .zone-spot{cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center}
+  .zone-spot::before{content:'';width:5px;height:5px;border-radius:50%;background:rgba(230,197,144,.32);transition:all .12s;flex-shrink:0}
+  .zone-spot:hover::before{width:14px;height:14px;background:rgba(230,197,144,.22);box-shadow:0 0 0 1.5px var(--brass-2), 0 0 10px rgba(230,197,144,.55)}
+  .zone-spot.has-chip::before{display:none}
+  .bet-cell.disabled .zone-spot{pointer-events:none}
+  .bet-cell.disabled .zone-spot::before{opacity:.4}
+  .zone-chip{
+    min-width:22px;height:22px;padding:0 4px;border-radius:11px;
+    background:radial-gradient(circle at 35% 30%, #f5d896, #c9a26a 70%, #8c6a3f);
+    border:1.5px solid #f5d896;color:#1a1208;
+    font-size:9px;font-weight:800;font-family:'JetBrains Mono', monospace;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 1px 0 rgba(255,255,255,.3) inset, 0 -2px 0 rgba(0,0,0,.25) inset, 0 4px 8px rgba(0,0,0,.5);
+  }
+  .zone-spot.winning-spot .zone-chip{animation:flashWin .8s ease-in-out infinite;border-radius:11px}
+
+  /* ───────────────────── Below the felt ───────────────────── */
+  .game-info{position:relative;background:#0a0805;color:var(--ivory-dim);padding:8px 24px 96px;border-top:1px solid rgba(201,162,106,.18)}
+  .game-info::before{
+    content:'0 · 32 · 15 · 19 · 4 · 21';
+    position:absolute;top:0;left:50%;transform:translate(-50%,-50%);
+    background:#0a0805;padding:0 20px;color:var(--brass);
+    font-size:11px;letter-spacing:.5em;white-space:nowrap
+  }
+  .gi-sec{max-width:760px;margin:0 auto;padding-top:88px;line-height:1.65}
+  .gi-sec.wide{max-width:960px}
+  .sec-head{text-align:center;margin-bottom:36px}
+  .kicker{font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.32em;text-transform:uppercase;color:var(--brass);margin:0 0 10px}
+  .sec-head h2{font-family:'Playfair Display',serif;font-style:italic;font-weight:600;font-size:clamp(26px,4vw,34px);color:var(--ivory);margin:0 0 18px;letter-spacing:.01em}
+  .sec-rule{width:140px;height:1px;margin:0 auto;background:linear-gradient(90deg,transparent,var(--brass),transparent);position:relative}
+  .sec-rule::after{content:'◆';position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);font-size:8px;color:var(--brass);background:#0a0805;padding:0 10px}
+  .gi-sec p{margin:0 0 16px;font-size:15px}
+  .gi-sec b,.gi-sec strong{color:var(--ivory)}
+  .gi-sec p a,.gi-sec details a{color:var(--brass-2);text-decoration:none;border-bottom:1px solid rgba(230,197,144,.3)}
+  .gi-sec p a:hover{border-bottom-color:var(--brass-2)}
+
+  /* table-rules emblem strip */
+  .rules-strip{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;margin-bottom:28px}
+  .rule-emblem{width:132px;padding:22px 10px 18px;text-align:center;position:relative;border-radius:14px;border:1px solid rgba(201,162,106,.35);background:radial-gradient(120% 90% at 50% 0%,rgba(201,162,106,.10),rgba(201,162,106,.02) 60%),linear-gradient(180deg,rgba(28,18,9,.92),rgba(10,6,3,.92));box-shadow:inset 0 1px 0 rgba(230,197,144,.18),0 12px 26px rgba(0,0,0,.45)}
+  .rule-emblem::before{content:'';position:absolute;inset:5px;border:1px solid rgba(201,162,106,.16);border-radius:10px;pointer-events:none}
+  .re-value{display:block;font-family:'Playfair Display',serif;font-style:italic;font-weight:700;font-size:30px;line-height:1;color:var(--brass-2);text-shadow:0 2px 10px rgba(230,197,144,.25)}
+  .re-label{display:block;margin-top:9px;font-family:'JetBrains Mono',monospace;font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ivory-dim)}
+  @media(max-width:420px){.rules-strip{gap:10px}.rule-emblem{width:104px}}
+
+  /* the bets — glossary cards */
+  .action-glossary{display:grid;grid-template-columns:repeat(auto-fit,minmax(190px,1fr));gap:14px;margin-top:26px}
+  .ag-card{padding:22px 18px 20px;text-align:center;border-radius:14px;border:1px solid rgba(201,162,106,.22);background:linear-gradient(180deg,rgba(24,15,8,.85),rgba(10,6,3,.85));box-shadow:inset 0 1px 0 rgba(230,197,144,.12)}
+  .ag-card h3{font-family:'Playfair Display',serif;font-style:italic;font-weight:600;font-size:21px;color:var(--brass-2);margin:0 0 6px}
+  .ag-card p{font-size:13px;line-height:1.55;color:var(--ivory-dim);margin:0}
+  .ag-card .pays{display:inline-block;margin-top:10px;padding:1px 8px;border:1px solid rgba(201,162,106,.35);border-radius:5px;font-family:'JetBrains Mono',monospace;font-size:10px;color:var(--brass);letter-spacing:.1em}
+  .ag-motif{height:64px;display:flex;align-items:center;justify-content:center;gap:4px;margin-bottom:12px;position:relative}
+  .mini-cell{width:28px;height:28px;border-radius:5px;display:inline-block;position:relative;box-shadow:0 4px 10px rgba(0,0,0,.5),inset 0 0 0 1px rgba(201,162,106,.4)}
+  .mini-cell.r{background:linear-gradient(180deg,#a52a2a,#6e1d1d)}
+  .mini-cell.k{background:linear-gradient(180deg,#1a1410,#000)}
+  .mini-cell.g{background:linear-gradient(180deg,#1f8a4d,#0e4d2a)}
+  .ag-motif .chip-badge{position:absolute;width:18px;height:18px;border-radius:50%;background:radial-gradient(circle at 35% 30%, #f5d896, #c9a26a 70%, #8c6a3f);border:1.5px solid #f5d896;box-shadow:0 3px 8px rgba(0,0,0,.55);z-index:2}
+  .m-straight .chip-badge{left:50%;top:50%;transform:translate(-50%,-50%)}
+  .m-split .chip-badge{left:50%;top:50%;transform:translate(-50%,-50%)}
+  .m-street .chip-badge{left:50%;bottom:-6px;transform:translateX(-50%)}
+  .m-corner .chip-badge{left:50%;top:50%;transform:translate(-50%,-50%)}
+  .m-sixline .chip-badge{left:50%;bottom:-6px;transform:translateX(-50%)}
+  .m-outside .chip-badge{left:50%;top:50%;transform:translate(-50%,-50%)}
+  .m-corner .grid2,.m-sixline .grid2,.m-split .grid2{display:grid;gap:3px;position:relative}
+  .m-split .grid2{grid-template-columns:repeat(2,28px)}
+  .m-corner .grid2{grid-template-columns:repeat(2,28px)}
+  .m-sixline .grid2{grid-template-columns:repeat(3,28px)}
+  .m-outside .wide-cell{width:92px;height:30px;border-radius:6px;background:linear-gradient(180deg,#a52a2a,#6e1d1d);box-shadow:0 4px 10px rgba(0,0,0,.5),inset 0 0 0 1px rgba(201,162,106,.4);position:relative}
+
+  /* payout chart */
+  .chart-mat{padding:22px;border-radius:16px;border:1px solid rgba(201,162,106,.25);background:radial-gradient(ellipse 120% 80% at 50% 0%,rgba(26,80,64,.30),transparent 70%),linear-gradient(180deg,rgba(16,10,5,.85),rgba(8,4,2,.85));box-shadow:inset 0 1px 0 rgba(230,197,144,.1),0 16px 36px rgba(0,0,0,.5)}
+  .chart-title{font-family:'JetBrains Mono',monospace;font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--brass);text-align:center;margin:0 0 12px}
+  .pay-chart{border-collapse:separate;border-spacing:2px;width:100%;font-family:'JetBrains Mono',monospace;font-size:12px}
+  .pay-chart th{font-size:9.5px;letter-spacing:.08em;color:var(--brass);font-weight:500;padding:6px 8px;text-transform:uppercase;text-align:left}
+  .pay-chart th.num,.pay-chart td.num{text-align:right}
+  .pay-chart td{padding:7px 8px;border-radius:4px;background:rgba(20,12,6,.55);color:var(--ivory-dim)}
+  .pay-chart td.bet{font-family:'Playfair Display',serif;font-style:italic;font-size:14.5px;color:var(--ivory);font-weight:600}
+  .pay-chart tr.inside td.bet{color:var(--brass-2)}
+  .pay-chart td.pays{color:var(--brass-2);font-weight:700}
+  .pay-chart tr.zero-row td{background:rgba(14,77,42,.35)}
+  .chart-note{font-size:12.5px;color:var(--ivory-dim);text-align:center;margin-top:18px;opacity:.85}
+  .chart-note b{color:var(--ivory)}
+  @media(max-width:640px){.pay-chart th.opt,.pay-chart td.opt{display:none}}
+
+  /* croupier's notes — numbered tips */
+  .tips{list-style:none;counter-reset:tip;display:grid;grid-template-columns:1fr 1fr;gap:14px;padding:0;margin:0}
+  .tips li{counter-increment:tip;position:relative;padding:18px 20px 16px 64px;border-radius:12px;border:1px solid rgba(201,162,106,.18);background:linear-gradient(180deg,rgba(22,14,7,.75),rgba(10,6,3,.75));font-size:13.5px;line-height:1.6;color:var(--ivory-dim)}
+  .tips li::before{content:counter(tip,decimal-leading-zero);position:absolute;left:18px;top:14px;font-family:'Playfair Display',serif;font-style:italic;font-size:26px;color:var(--brass);opacity:.9}
+  .tips li b{display:block;color:var(--ivory);font-weight:600;margin-bottom:4px;font-size:14.5px}
+  .tips li:last-child:nth-child(odd){grid-column:1/-1}
+  @media(max-width:640px){.tips{grid-template-columns:1fr}}
+
+  /* the story */
+  .about p:first-of-type::first-letter{font-family:'Playfair Display',serif;font-style:italic;font-size:56px;line-height:.8;float:left;padding:6px 10px 0 0;color:var(--brass-2)}
+  .timeline{display:grid;grid-template-columns:repeat(4,1fr);margin-top:32px;border-top:1px solid rgba(201,162,106,.3)}
+  .tl-stop{position:relative;padding:18px 16px 0 14px}
+  .tl-stop::before{content:'';position:absolute;top:-4px;left:12px;width:7px;height:7px;background:var(--brass);transform:rotate(45deg);box-shadow:0 0 8px rgba(201,162,106,.5)}
+  .tl-year{display:block;font-family:'JetBrains Mono',monospace;font-size:11px;letter-spacing:.2em;color:var(--brass-2)}
+  .tl-what{display:block;margin-top:5px;font-size:12.5px;line-height:1.45;color:var(--ivory-dim)}
+  @media(max-width:640px){.timeline{grid-template-columns:1fr 1fr;border-top:0}.tl-stop{border-top:1px solid rgba(201,162,106,.3)}}
+
+  /* FAQ */
+  .faq details{margin:0 0 10px;padding:0;border:1px solid rgba(201,162,106,.18);border-radius:12px;background:linear-gradient(180deg,rgba(20,12,6,.6),rgba(10,6,3,.6));transition:border-color .25s}
+  .faq details[open]{border-color:rgba(230,197,144,.45);box-shadow:0 8px 24px rgba(0,0,0,.35)}
+  .faq summary{list-style:none;cursor:pointer;position:relative;padding:16px 60px 16px 20px;font-family:'Playfair Display',serif;font-style:italic;font-size:17px;color:var(--ivory)}
+  .faq summary::-webkit-details-marker{display:none}
+  .faq summary::after{content:'+';position:absolute;right:16px;top:50%;width:26px;height:26px;transform:translateY(-50%);border:1px solid rgba(201,162,106,.4);border-radius:50%;display:grid;place-items:center;color:var(--brass);font-family:'Inter',sans-serif;font-style:normal;font-size:15px;line-height:1;transition:transform .25s ease}
+  .faq details[open] summary::after{transform:translateY(-50%) rotate(45deg)}
+  .faq details p{margin:0 20px 18px;padding:14px 0 0;border-top:1px solid rgba(201,162,106,.14);font-size:14px;line-height:1.65;color:var(--ivory-dim)}
+
+  /* similar games */
+  .similar-games{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:12px;list-style:none;padding:0;margin:0}
+  .similar-games li{margin:0}
+  .similar-games a{position:relative;display:block;padding:18px 18px 14px;overflow:hidden;border-radius:12px;border:1px solid rgba(201,162,106,.2);background:linear-gradient(180deg,rgba(22,14,7,.8),rgba(10,6,3,.8));font-family:'Playfair Display',serif;font-style:italic;font-size:18px;color:var(--ivory);text-decoration:none;transition:transform .2s,border-color .2s,box-shadow .2s}
+  .similar-games a::before{content:'♠';position:absolute;right:-8px;bottom:-18px;font-size:72px;font-style:normal;color:rgba(201,162,106,.08);pointer-events:none;transition:color .2s}
+  .similar-games li:nth-child(4n+2) a::before{content:'♥'}
+  .similar-games li:nth-child(4n+3) a::before{content:'♦'}
+  .similar-games li:nth-child(4n) a::before{content:'♣'}
+  .similar-games a::after{content:'Play →';display:block;margin-top:8px;font-family:'JetBrains Mono',monospace;font-style:normal;font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--brass)}
+  .similar-games a:hover{transform:translateY(-3px);border-color:rgba(230,197,144,.55);box-shadow:0 14px 28px rgba(0,0,0,.45)}
+  .similar-games a:hover::before{color:rgba(201,162,106,.16)}
 </style>
 </head>
 <body>
@@ -182,33 +296,145 @@
 </section>
 
 <article class="game-info" aria-labelledby="how-h">
-  <div class="game-info-inner">
-    <h2 id="how-h">How to play roulette</h2>
-    <p>European roulette is a casino classic. A wheel with 37 numbered pockets — 0 through 36 — spins one way; a small ball spins the other. Bet on where the ball lands before the croupier closes the table. When the ball settles, winning bets pay automatically.</p>
-    <p>You can wager on a single number (straight, 35:1), pairs and lines (split 17:1, street 11:1, corner 8:1), columns or dozens (2:1), or even-money outside bets like red/black, odd/even, and high/low (1:1). Stack any combination across the layout — there's no limit on how many bets per spin.</p>
-    <p>The single zero pocket is what gives the house its edge. On every bet, the math returns about 97.3 cents on the dollar long-term, leaving a 2.7% house edge — half the edge of American roulette, which adds a 00 pocket.</p>
 
-    <h2>Tips &amp; strategy</h2>
-    <ul>
-      <li><b>Stick to European, not American.</b> Half the house edge for the same game.</li>
-      <li><b>Outside bets last longer.</b> Red/black wins about 48.6% of the time. Great for slow grinding.</li>
-      <li><b>Inside bets pay big but lose often.</b> A straight number hits once every 37 spins on average.</li>
-      <li><b>No betting system fixes the house edge.</b> Martingale, Fibonacci, D'Alembert — all eventually lose to the math.</li>
-      <li><b>The wheel has no memory.</b> Red five times in a row doesn't make black "due." Every spin is independent.</li>
-      <li><b>Set a session bankroll and a stop-loss.</b> Bankroll discipline is the only real edge.</li>
-    </ul>
+  <section class="gi-sec">
+    <header class="sec-head">
+      <p class="kicker">◆ House Rules</p>
+      <h2>Read the wheel before you bet</h2>
+      <div class="sec-rule"></div>
+    </header>
+    <div class="rules-strip" role="list">
+      <div class="rule-emblem" role="listitem"><span class="re-value">0</span><span class="re-label">Single zero only</span></div>
+      <div class="rule-emblem" role="listitem"><span class="re-value">37</span><span class="re-label">Pockets on the wheel</span></div>
+      <div class="rule-emblem" role="listitem"><span class="re-value">35:1</span><span class="re-label">Straight up pays</span></div>
+      <div class="rule-emblem" role="listitem"><span class="re-value">2.70%</span><span class="re-label">House edge, every bet</span></div>
+      <div class="rule-emblem" role="listitem"><span class="re-value">97.3¢</span><span class="re-label">Long-run return per $1</span></div>
+    </div>
+    <p style="text-align:center;max-width:620px;margin:0 auto">This is a <b>European wheel</b> — one green zero, not two. That single pocket is the entire house edge: every payout is built as if the wheel had 36 pockets, the 37th is the casino's. It works out to 2.70% on every bet on the felt, half of what an American double-zero table takes.</p>
+  </section>
 
-    <h2>About roulette</h2>
-    <p>Roulette — French for "little wheel" — was invented in 17th-century France, with the modern single-zero layout established by François and Louis Blanc in the 1840s. The double-zero American version emerged later in U.S. casinos. The game's mathematical purity (every spin truly independent, every bet's expectation calculable) makes it a favorite of probability writers and statistics teachers alike.</p>
+  <section class="gi-sec">
+    <header class="sec-head">
+      <p class="kicker">◆ The Bets</p>
+      <h2 id="how-h">How to play roulette</h2>
+      <div class="sec-rule"></div>
+    </header>
+    <p>Pick a chip, place it on the layout, and spin. Anything the ball lands on that your bet covers, pays. Chips on a number's face bet that number straight up; chips on the <b>lines and corners between numbers</b> split the bet across neighbors — hover the layout and the betting spots light up, exactly like dropping a chip on the felt seam of a real table.</p>
+    <div class="action-glossary">
+      <div class="ag-card">
+        <div class="ag-motif m-straight" aria-hidden="true"><span class="mini-cell r"></span><span class="chip-badge"></span></div>
+        <h3>Straight</h3><p>One number, face of the cell. Hits once in 37 spins.</p>
+        <span class="pays">PAYS 35:1</span>
+      </div>
+      <div class="ag-card">
+        <div class="ag-motif m-split" aria-hidden="true"><span class="grid2"><span class="mini-cell k"></span><span class="mini-cell r"></span><span class="chip-badge"></span></span></div>
+        <h3>Split</h3><p>Two neighbors — chip on the line between them.</p>
+        <span class="pays">PAYS 17:1</span>
+      </div>
+      <div class="ag-card">
+        <div class="ag-motif m-street" aria-hidden="true"><span class="grid2" style="display:grid;grid-template-columns:repeat(3,28px);gap:3px;position:relative"><span class="mini-cell r"></span><span class="mini-cell k"></span><span class="mini-cell r"></span><span class="chip-badge"></span></span></div>
+        <h3>Street</h3><p>A full row of three — chip on the row's outer edge.</p>
+        <span class="pays">PAYS 11:1</span>
+      </div>
+      <div class="ag-card">
+        <div class="ag-motif m-corner" aria-hidden="true"><span class="grid2"><span class="mini-cell r"></span><span class="mini-cell k"></span><span class="mini-cell k"></span><span class="mini-cell r"></span><span class="chip-badge"></span></span></div>
+        <h3>Corner</h3><p>Four numbers meeting at a cross — chip on the intersection.</p>
+        <span class="pays">PAYS 8:1</span>
+      </div>
+      <div class="ag-card">
+        <div class="ag-motif m-sixline" aria-hidden="true"><span class="grid2"><span class="mini-cell k"></span><span class="mini-cell r"></span><span class="mini-cell k"></span><span class="mini-cell r"></span><span class="mini-cell k"></span><span class="mini-cell r"></span><span class="chip-badge"></span></span></div>
+        <h3>Six Line</h3><p>Two adjacent rows — six numbers on one chip.</p>
+        <span class="pays">PAYS 5:1</span>
+      </div>
+      <div class="ag-card">
+        <div class="ag-motif m-outside" aria-hidden="true"><span class="wide-cell"></span><span class="chip-badge"></span></div>
+        <h3>Outside</h3><p>Red/black, odd/even, high/low pay even money; dozens and columns pay 2:1.</p>
+        <span class="pays">PAYS 1:1 · 2:1</span>
+      </div>
+    </div>
+  </section>
 
-    <h2>Frequently asked questions</h2>
+  <section class="gi-sec wide">
+    <header class="sec-head">
+      <p class="kicker">◆ The Payouts</p>
+      <h2>Every bet on the table</h2>
+      <div class="sec-rule"></div>
+    </header>
+    <p style="text-align:center;max-width:640px;margin:0 auto 26px">There is no smart bet and no sucker bet on a single-zero wheel — every wager hands the house the same 2.70%. What you're choosing is <b>variance</b>: how often you win versus how big it pays. The in-game coach runs these exact numbers live on whatever you've placed.</p>
+    <div class="chart-mat">
+      <p class="chart-title">Single-zero payout table</p>
+      <table class="pay-chart" aria-label="Roulette payouts and odds">
+        <thead><tr><th>Bet</th><th>Covers</th><th class="num">Pays</th><th class="num">Hits</th><th class="num opt">Chance</th><th class="num opt">Win on $10</th></tr></thead>
+        <tbody>
+          <tr class="inside"><td class="bet">Straight up</td><td>1 number</td><td class="num pays">35:1</td><td class="num">1 in 37</td><td class="num opt">2.7%</td><td class="num opt">+$350</td></tr>
+          <tr class="inside"><td class="bet">Split</td><td>2 numbers</td><td class="num pays">17:1</td><td class="num">2 in 37</td><td class="num opt">5.4%</td><td class="num opt">+$170</td></tr>
+          <tr class="inside"><td class="bet">Street</td><td>3 numbers</td><td class="num pays">11:1</td><td class="num">3 in 37</td><td class="num opt">8.1%</td><td class="num opt">+$110</td></tr>
+          <tr class="inside"><td class="bet">Corner</td><td>4 numbers</td><td class="num pays">8:1</td><td class="num">4 in 37</td><td class="num opt">10.8%</td><td class="num opt">+$80</td></tr>
+          <tr class="inside"><td class="bet">Six line</td><td>6 numbers</td><td class="num pays">5:1</td><td class="num">6 in 37</td><td class="num opt">16.2%</td><td class="num opt">+$50</td></tr>
+          <tr><td class="bet">Dozen</td><td>12 numbers</td><td class="num pays">2:1</td><td class="num">12 in 37</td><td class="num opt">32.4%</td><td class="num opt">+$20</td></tr>
+          <tr><td class="bet">Column</td><td>12 numbers</td><td class="num pays">2:1</td><td class="num">12 in 37</td><td class="num opt">32.4%</td><td class="num opt">+$20</td></tr>
+          <tr><td class="bet">Red / Black</td><td>18 numbers</td><td class="num pays">1:1</td><td class="num">18 in 37</td><td class="num opt">48.6%</td><td class="num opt">+$10</td></tr>
+          <tr><td class="bet">Odd / Even</td><td>18 numbers</td><td class="num pays">1:1</td><td class="num">18 in 37</td><td class="num opt">48.6%</td><td class="num opt">+$10</td></tr>
+          <tr><td class="bet">1-18 / 19-36</td><td>18 numbers</td><td class="num pays">1:1</td><td class="num">18 in 37</td><td class="num opt">48.6%</td><td class="num opt">+$10</td></tr>
+          <tr class="zero-row"><td class="bet">Zero</td><td>The house's pocket</td><td class="num pays">35:1 straight</td><td class="num">1 in 37</td><td class="num opt">2.7%</td><td class="num opt">outside bets lose</td></tr>
+        </tbody>
+      </table>
+      <p class="chart-note">The pattern: <b>payout + 1 = 36 ÷ numbers covered</b>, on a wheel with 37 pockets. That missing pocket is the whole house edge — identical 2.70% on every line of this table.</p>
+    </div>
+  </section>
+
+  <section class="gi-sec">
+    <header class="sec-head">
+      <p class="kicker">◆ Croupier's Notes</p>
+      <h2>Seven habits of players who last</h2>
+      <div class="sec-rule"></div>
+    </header>
+    <ol class="tips">
+      <li><b>Play single zero, always.</b> Same game, same payouts — an American 00 wheel just doubles what the house takes.</li>
+      <li><b>Outside bets buy time.</b> Red/black hits 48.6% of the time. If you want a long session, live there.</li>
+      <li><b>Inside bets buy stories.</b> A straight number hits once in 37 spins — but it pays for the other 36.</li>
+      <li><b>No system beats the wheel.</b> Martingale, Fibonacci, D'Alembert — every progression loses to the same 2.70% eventually.</li>
+      <li><b>The wheel has no memory.</b> Five reds in a row makes black exactly as likely as it ever was. There are no due numbers.</li>
+      <li><b>Watch the coach, not your gut.</b> The odds bar above the table shows your exact win chance and average cost per spin for whatever you've placed.</li>
+      <li><b>Set a stop-loss before the first spin.</b> Bankroll discipline is the only edge a roulette player can actually have.</li>
+    </ol>
+  </section>
+
+  <section class="gi-sec about">
+    <header class="sec-head">
+      <p class="kicker">◆ The Story</p>
+      <h2>A physicist's accident, a casino's fortune</h2>
+      <div class="sec-rule"></div>
+    </header>
+    <p>Roulette — French for "little wheel" — began as a failure: Blaise Pascal's 17th-century attempt at a perpetual motion machine left behind a beautifully balanced wheel with no use. Paris gave it one. By 1796 the modern game was running in the Palais-Royal's gambling houses, double zero and all. The decisive twist came in 1843, when François and Louis Blanc dropped the second zero to undercut rival casinos — halving the house edge and creating the European wheel played here. The Blancs took their single-zero game to Monte Carlo and built the world's most famous casino on it. The game's mathematical purity — every spin independent, every bet's cost calculable to the cent — has made it the probability teacher's favorite example ever since.</p>
+    <div class="timeline">
+      <div class="tl-stop"><span class="tl-year">1655</span><span class="tl-what">Pascal's perpetual-motion experiment leaves behind the wheel</span></div>
+      <div class="tl-stop"><span class="tl-year">1796</span><span class="tl-what">The modern game documented in the Palais-Royal, Paris</span></div>
+      <div class="tl-stop"><span class="tl-year">1843</span><span class="tl-what">The Blanc brothers drop the second zero — the European wheel is born</span></div>
+      <div class="tl-stop"><span class="tl-year">1873</span><span class="tl-what">Joseph Jagger "breaks the bank" at Monte Carlo off a biased wheel</span></div>
+    </div>
+  </section>
+
+  <section class="gi-sec faq">
+    <header class="sec-head">
+      <p class="kicker">◆ Questions</p>
+      <h2>Frequently asked questions</h2>
+      <div class="sec-rule"></div>
+    </header>
     <details><summary>Is this roulette game free?</summary><p>Yes — free play, no real money. Your bankroll and stats save in your browser.</p></details>
     <details><summary>Is this European or American roulette?</summary><p>European — a single zero. The house edge is 2.7%, half of American roulette's 5.26%.</p></details>
-    <details><summary>Can I bet on multiple things at once?</summary><p>Yes. Stack any combination of inside and outside bets across the layout.</p></details>
-    <details><summary>Does Martingale actually work?</summary><p>No. Doubling after each loss requires unlimited bankroll and no table limits — neither exists.</p></details>
-    <details><summary>Are spins truly random?</summary><p>Yes. Each spin uses an independent random outcome. Past results have zero influence on the next — there are no "due" numbers.</p></details>
+    <details><summary>Can I bet on multiple things at once?</summary><p>Yes. Stack any combination of inside (straight, split, street, corner, six line) and outside (red/black, odd/even, dozens, columns) bets across the layout — the spots between numbers take split and corner chips, just like a real table.</p></details>
+    <details><summary>What does a straight-up number pay?</summary><p>35:1. Every payout on a single-zero table is set so a winning bet returns exactly 36 times the stake divided by the numbers it covers — which is why every bet carries the same 2.7% house edge.</p></details>
+    <details><summary>Does the Martingale system actually work?</summary><p>No. Doubling after each loss requires unlimited bankroll and no table limits — neither exists. A long losing streak will wipe you out before a win recovers it.</p></details>
+    <details><summary>Are the spins truly random?</summary><p>Yes. Each spin uses an independent random outcome. Past results have zero influence on the next — there are no "due" numbers.</p></details>
+  </section>
 
-    <h2>Similar games</h2>
+  <section class="gi-sec">
+    <header class="sec-head">
+      <p class="kicker">◆ More Tables</p>
+      <h2>Similar games</h2>
+      <div class="sec-rule"></div>
+    </header>
     <ul class="similar-games">
       <li><a href="../blackjack/">Blackjack</a></li>
       <li><a href="../craps/">Craps</a></li>
@@ -217,17 +443,28 @@
       <li><a href="../texas-holdem/">Texas Hold'em</a></li>
       <li><a href="../solitaire/">Solitaire</a></li>
     </ul>
-  </div>
+  </section>
 </article>
 
 <script>
 (function() {
   var wrapper = document.getElementById('game-wrapper');
+  var root = document.getElementById('root');
   function resize() {
-    var W = 1380, H = 860;
+    var portrait = window.innerWidth < window.innerHeight && window.innerWidth < 760;
+    var W = portrait ? 460 : 1380, H = portrait ? 1000 : 860;
+    var prev = window.RL_CANVAS;
+    window.RL_CANVAS = { w: W, h: H, portrait: portrait };
     var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
-    wrapper.style.transform = 'scale(' + s + ')';
-    wrapper.style.marginTop = Math.max(0, (window.innerHeight - H * s) / 2) + 'px';
+    root.style.width = W + 'px';
+    root.style.height = H + 'px';
+    root.style.transformOrigin = 'top left';
+    root.style.transform = 'scale(' + s + ')';
+    // The wrapper takes the SCALED size so the page reserves exactly the
+    // visible footprint — no dead space above the info sections.
+    wrapper.style.width = (W * s) + 'px';
+    wrapper.style.height = (H * s) + 'px';
+    if (!prev || prev.portrait !== portrait) window.dispatchEvent(new Event('rl:canvas'));
   }
   window.addEventListener('resize', resize);
   resize();
@@ -239,17 +476,18 @@
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
 
 <script src="../casino/casino-config.js?v=20260508a"></script>
-<script src="../casino/casino-sync.js?v=20260508a"></script>
-<script src="../casino/casino-bankroll.js?v=20260507h"></script>
+<script src="../casino/casino-sync.js?v=20260610b"></script>
+<script src="../casino/casino-bankroll.js?v=20260507j"></script>
 <script src="../casino/casino-player.js?v=20260507a"></script>
 <script src="../casino/casino-stats.js?v=20260508b"></script>
 <script src="rl-sfx.js?v=20260507h"></script>
+<script src="rl-bets.js?v=20260612a"></script>
 
 <script type="text/babel" src="tweaks-panel.jsx?v=20260508a"></script>
-<script type="text/babel" src="rl-dealer.jsx?v=20260507h"></script>
-<script type="text/babel" src="rl-wheel.jsx?v=20260507h"></script>
-<script type="text/babel" src="rl-table.jsx?v=20260507h"></script>
-<script type="text/babel" src="rl-app.jsx?v=20260506a"></script>
+<script type="text/babel" src="rl-dealer.jsx?v=20260612a"></script>
+<script type="text/babel" src="rl-wheel.jsx?v=20260612a"></script>
+<script type="text/babel" src="rl-table.jsx?v=20260612a"></script>
+<script type="text/babel" src="rl-app.jsx?v=20260612a"></script>
 
 </body>
 </html>
