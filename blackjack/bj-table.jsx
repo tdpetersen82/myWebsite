@@ -335,7 +335,7 @@ function CoachBar({ hint, compact }) {
 
   const whyBlock = (
     <div style={{
-      flex: 1, alignSelf:'center', minWidth: 0,
+      flex: 1, alignSelf:'center', minWidth: compact ? 0 : 170,
       fontSize: compact ? 11.5 : 12.5, lineHeight: 1.45, color:'var(--ivory-dim)'
     }}>{hint.why}</div>
   );
@@ -404,20 +404,26 @@ function CoachBar({ hint, compact }) {
       word: 'FLAT BET', color: 'var(--ivory-dim)',
       meaning: `${edgeTxt} — play the chart, keep bets steady`
     };
+    // The full formula needs ~330px — only the bet-phase bar (and stacked
+    // portrait) has that room. Next to the odds bars / insurance meter it
+    // squeezed the why-text into one-word-per-line wrapping, so the play and
+    // insurance bars get a slim version with the formula in the tooltip.
+    const full = compact || hint.kind === 'bet';
+    const lesson = `Running ${fmt(c.running)} ÷ ${c.decksLeft.toFixed(1)} decks left = true ${fmt(tc, 1)}. The running tally counts every card seen this shoe (2-6 = +1, 7-9 = 0, tens & aces = -1); dividing by the decks still to come gives the density of what's left. Each +1 true is worth about +0.5% to you. Bets follow the true count; playing decisions stay on the chart.`;
     countBlock = (
       <div
-        title={'Hi-lo: your running tally counts every card seen this shoe (2-6 = +1, 7-9 = 0, tens & aces = -1). Raw it means little — divide by the decks still to come to get the TRUE count, the density of what’s left. Each +1 true is worth about +0.5% to you. Bets follow the true count; playing decisions stay on the chart.'}
+        title={lesson}
         style={{ flexShrink: 0, alignSelf:'center', textAlign: compact ? 'left' : 'right',
           display:'flex', flexDirection:'column', gap: 3, cursor:'help' }}
       >
         <div style={{ fontSize: 8.5, letterSpacing:'.2em', color:'var(--brass)', textTransform:'uppercase' }}>
-          Shoe count · <span style={{ color: read.color, fontWeight: 700 }}>{read.word}</span>
+          {full ? 'Shoe count · ' : 'Shoe · '}<span style={{ color: read.color, fontWeight: 700 }}>{read.word}</span>
         </div>
         <div style={{ fontFamily:"'JetBrains Mono', monospace", fontSize: 11.5, color:'var(--ivory)', fontVariantNumeric:'tabular-nums' }}>
-          running {fmt(c.running)} ÷ {c.decksLeft.toFixed(1)} decks = true {fmt(tc, 1)}
+          {full ? `running ${fmt(c.running)} ÷ ${c.decksLeft.toFixed(1)} decks = true ${fmt(tc, 1)}` : `true ${fmt(tc, 1)}`}
         </div>
         <div style={{ fontFamily:"'JetBrains Mono', monospace", fontSize: 9.5, color:'var(--ivory-dim)', fontVariantNumeric:'tabular-nums' }}>
-          {read.meaning}
+          {full ? read.meaning : edgeTxt}
         </div>
       </div>
     );
