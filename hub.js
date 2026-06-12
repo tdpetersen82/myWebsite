@@ -60,7 +60,8 @@
   const THUMBS = new Set([
     '2048', 'backgammon', 'checkers', 'chess', 'chinese-checkers',
     'connect-4', 'connect-dots', 'mahjong', 'mancala', 'othello',
-    'ultimate-tic-tac-toe', 'sudoku', 'snake',
+    'ultimate-tic-tac-toe', 'sudoku',
+    'snake', 'pong', 'breakout', 'space-invaders', 'solar-system',
   ]);
 
   // Map of game id → localStorage key for personal best. If a key isn't here

@@ -466,12 +466,14 @@ body.hub-root {
   grid-auto-rows: 152px;
   grid-auto-flow: dense;
 }
-.hub-mosaic.tight { grid-auto-rows: 138px; }
+/* Taller rows so the screenshot tiles have room to breathe — a thin band would
+   crop the action out of arcade frames. Board games (square) fill it cleanly. */
+.hub-mosaic.tight { grid-auto-rows: 208px; }
 
 @media (max-width: 900px) {
   .hub-mosaic { grid-template-columns: repeat(2, 1fr); }
   .hub-mosaic .tile { grid-column: span 1 !important; grid-row: span 1 !important; }
-  .hub-mosaic.tight { grid-auto-rows: 120px; }
+  .hub-mosaic.tight { grid-auto-rows: 188px; }
 }
 
 .tile {
