@@ -289,10 +289,8 @@ function App() {
     setMessage(pickLine(key, extra ? { ...ctx, ...extra } : ctx));
     if (expr) {
       setExpression(expr);
-      const moodDelta = (expr === 'happy' || expr === 'celebrate') ? 0.18
+      const moodDelta = expr === 'happy' ? 0.18
         : expr === 'shocked' ? 0.10
-        : (expr === 'smirk' || expr === 'leanin') ? 0.08
-        : expr === 'wince' ? -0.12
         : (expr === 'sad' || expr === 'bust') ? -0.18
         : 0;
       if (moodDelta) nudgeMood(moodDelta);
@@ -337,14 +335,6 @@ function App() {
     return () => { if (idleTimerRef.current) clearTimeout(idleTimerRef.current); };
   }, [phase, message]);
 
-  // She notices you stalling — nine seconds of inaction mid-hand earns the
-  // thinking pose. Any action resets it (hands changes on every card).
-  useEffect(() => {
-    if (phase !== 'player') return;
-    const t = setTimeout(() => setExpression('thinking'), 9000);
-    return () => clearTimeout(t);
-  }, [phase, hands, activeHandIdx]);
-
   const totalBet = bet.reduce((a,b)=>a+b, 0);
 
   function showBlocked(msg) {
@@ -369,7 +359,7 @@ function App() {
     if (newTotal >= 500) {
       if (prevTotal < 500) say('bet_huge', 'shocked');
     } else if (newTotal >= 100) {
-      if (prevTotal < 100) say('bet_high', 'leanin');
+      if (prevTotal < 100) say('bet_high', 'happy');
     } else {
       say('bet_low', 'idle');
     }
@@ -427,7 +417,7 @@ function App() {
         // Offer insurance
         setInsuranceOffered(true);
         setPhase('insurance');
-        say('insurance', 'peek');
+        say('insurance', 'idle');
         return;
       }
 
@@ -480,7 +470,7 @@ function App() {
         setStreak(0);
         setLossStreak(ls => ls + 1);
         setPhase('resolved');
-        say('dealer_win', 'smirk');
+        say('dealer_win', 'happy');
       } else {
         setPhase('player');
         setExpression('idle');
@@ -495,7 +485,7 @@ function App() {
       finishHand(0, 'push', betAmt, 0);
       setPhase('resolved');
       setBankroll(br => br + betAmt);
-      say('push', 'shrug');
+      say('push', 'idle');
     } else if (pBJ) {
       finishHand(0, 'blackjack', betAmt, Math.floor(betAmt * 1.5));
       setPhase('resolved');
@@ -512,19 +502,19 @@ function App() {
       });
       setLossStreak(0);
       if (tweaks.soundOn) SFX.bj();
-      say('player_bj', 'celebrate');
+      say('player_bj', 'shocked');
     } else if (dBJ) {
       finishHand(0, 'lose', betAmt, betAmt);
       setPhase('resolved');
       setStreak(0);
       setLossStreak(ls => ls + 1);
-      say('dealer_win', 'smirk');
+      say('dealer_win', 'happy');
     }
   }
 
   function announceStreak(s, immediate = false) {
     setTimeout(() => {
-      if (s >= 5 && s % 5 === 0) say('streak5', 'celebrate');
+      if (s >= 5 && s % 5 === 0) say('streak5', 'shocked');
       else if (s === 3) say('streak3', 'happy');
       else if (s === 2) say('streak2', 'happy');
     }, immediate ? 1500 : 800);
@@ -581,9 +571,9 @@ function App() {
     setHands(prev => prev.map((x,i) => i===activeHandIdx
       ? { ...x, cards: newCards, busted: v > 21, stood: v === 21 ? true : x.stood }
       : x));
-    setExpression('glance');
+    setExpression('deal');
     if (v > 21) {
-      say('bust', 'wince', { total: v });
+      say('bust', 'bust', { total: v });
       if (tweaks.soundOn) SFX.bust();
       setTimeout(() => advanceHand(), 700);
     } else if (v === 21) {
@@ -620,7 +610,7 @@ function App() {
       ? { ...x, cards: newCards, bet: x.bet * 2, doubled: true, stood: true, busted: v > 21 }
       : x));
     setTimeout(() => {
-      if (v > 21) say('bust', 'wince', { total: v });
+      if (v > 21) say('bust', 'bust', { total: v });
       advanceHand();
     }, 600);
   }
@@ -779,8 +769,8 @@ function App() {
       // pick line based on overall outcome
       setTimeout(() => {
         if (wins > losses) say('player_win', 'sad');
-        else if (losses > wins) say('dealer_win', 'smirk');
-        else say('push', 'shrug');
+        else if (losses > wins) say('dealer_win', 'happy');
+        else say('push', 'idle');
       }, 800);
     }
   }

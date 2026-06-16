@@ -272,51 +272,18 @@ function pickLine(key, ctx = {}) {
     .replace(/\{t\}/g, ctx.total != null ? String(ctx.total) : '');
 }
 
-// Pose manifest. Full poses are the original waist-up portraits; closeup
-// poses are chest-up reaction crops (from the sprite sheet) rendered as a
-// quick punch-in. A gender without a pose's art falls back down the chain
-// until something exists — so Marcus plays the classic six until his sheet
-// is generated.
-const DEALER_POSES = {
-  idle:      { file: 'idle.png',       closeup: false, genders: ['female', 'male'] },
-  happy:     { file: 'happy.png',      closeup: false, genders: ['female', 'male'] },
-  sad:       { file: 'sad.png',        closeup: false, genders: ['female', 'male'] },
-  shocked:   { file: 'shocked.png',    closeup: false, genders: ['female', 'male'] },
-  deal:      { file: 'deal.png',       closeup: false, genders: ['female', 'male'] },
-  bust:      { file: 'bust.png',       closeup: false, genders: ['female', 'male'] },
-  glance:    { file: 'glance.webp',    closeup: true, genders: ['female'], fallback: 'idle' },
-  thinking:  { file: 'thinking.webp',  closeup: true, genders: ['female'], fallback: 'idle' },
-  leanin:    { file: 'leanin.webp',    closeup: true, genders: ['female'], fallback: 'happy' },
-  peek:      { file: 'peek.webp',      closeup: true, genders: ['female'], fallback: 'idle' },
-  wince:     { file: 'wince.webp',     closeup: true, genders: ['female'], fallback: 'sad' },
-  smirk:     { file: 'smirk.webp',     closeup: true, genders: ['female'], fallback: 'happy' },
-  shrug:     { file: 'shrug.webp',     closeup: true, genders: ['female'], fallback: 'idle' },
-  celebrate: { file: 'celebrate.webp', closeup: true, genders: ['female'], fallback: 'shocked' }
-};
-
-function resolvePose(expression, gender) {
-  let name = DEALER_POSES[expression] ? expression : 'idle';
-  let guard = 0;
-  while (!DEALER_POSES[name].genders.includes(gender) && guard++ < 5) {
-    name = DEALER_POSES[name].fallback || 'idle';
-  }
-  return { name, ...DEALER_POSES[name] };
-}
+const DEALER_EXPRESSIONS = ['idle', 'happy', 'sad', 'shocked', 'deal', 'bust'];
 
 function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idle = false, mood = 0 }) {
-  const pose = resolvePose(expression, gender);
-  const src = `assets/dealers/${gender}/${pose.file}`;
-  const [layers, setLayers] = React.useState(() => [{ key: 0, src, opacity: 1, blur: 0, scale: 1 }]);
+  const file = expression;
+  const src = `assets/dealers/${gender}/${file}.png`;
+  const [layers, setLayers] = React.useState(() => [{ key: 0, src, opacity: 1, blur: 0 }]);
   const counter = React.useRef(0);
   const lastSrc = React.useRef(src);
 
-  // Preload every pose this gender has so expression swaps never wait on
-  // the network.
+  // Preload every pose so expression swaps never wait on the network.
   React.useEffect(() => {
-    Object.keys(DEALER_POSES).forEach(name => {
-      const p = DEALER_POSES[name];
-      if (p.genders.includes(gender)) { const img = new Image(); img.src = `assets/dealers/${gender}/${p.file}`; }
-    });
+    DEALER_EXPRESSIONS.forEach(f => { const img = new Image(); img.src = `assets/dealers/${gender}/${f}.png`; });
   }, [gender]);
 
   React.useEffect(() => {
@@ -325,11 +292,10 @@ function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idl
     counter.current += 1;
     const newKey = counter.current;
     // The old pose stays fully visible underneath while the new one fades in
-    // on top — fading both at once left the panel blank mid-swap. Close-up
-    // reaction poses enter slightly oversized and settle: a punch-in beat.
-    setLayers(prev => [...prev, { key: newKey, src, opacity: 0, blur: 4, scale: pose.closeup ? 1.06 : 1, closeup: pose.closeup }]);
+    // on top — fading both at once left the panel blank mid-swap.
+    setLayers(prev => [...prev, { key: newKey, src, opacity: 0, blur: 4 }]);
     const raf = requestAnimationFrame(() => {
-      setLayers(prev => prev.map(l => l.key === newKey ? { ...l, opacity: 1, blur: 0, scale: 1 } : l));
+      setLayers(prev => prev.map(l => l.key === newKey ? { ...l, opacity: 1, blur: 0 } : l));
     });
     const t = setTimeout(() => {
       setLayers(prev => prev.filter(l => l.key === newKey));
@@ -353,19 +319,18 @@ function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idl
           key={layer.key}
           src={layer.src}
           alt="dealer"
-          onError={(e) => { e.currentTarget.src = `assets/dealers/female/idle.png`; }}
+          onError={(e) => { e.currentTarget.src = `assets/dealers/female/${file}.png`; }}
           className={animClass}
           style={{
             position:'absolute',
             left:'50%',
             top: `${shift}px`,
-            transform:`translateX(-50%) scale(${layer.scale || 1})`,
-            transformOrigin:'center 30%',
-            height: layer.closeup ? '100%' : '120%',
+            transform:'translateX(-50%)',
+            height:'120%',
             objectFit:'cover',
             objectPosition:'center top',
             opacity: layer.opacity,
-            transition: 'opacity .45s ease, filter .45s ease, transform .45s ease',
+            transition: 'opacity .45s ease, filter .45s ease',
             filter: `blur(${layer.blur}px) saturate(${sat}) contrast(1.02) brightness(${bright})`
           }}
         />
@@ -590,4 +555,4 @@ function DealerStrip({ name, message, gender = 'female', expression = 'idle' }) 
   );
 }
 
-Object.assign(window, { DealerPanel, DealerStrip, pickLine, DEALER_VOICES, DEALER_NAMES, DEALER_POSES, resolvePose });
+Object.assign(window, { DealerPanel, DealerStrip, pickLine, DEALER_VOICES, DEALER_NAMES });
