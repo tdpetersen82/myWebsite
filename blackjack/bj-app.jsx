@@ -1213,6 +1213,7 @@ function App() {
             onTipDealer={tipDealer}
             tipped={tipped}
             playerName={tweaks.playerName}
+            isIdle={isIdle}
             mood={mood}
             onEditName={() => setShowNameModal(true)}
           />

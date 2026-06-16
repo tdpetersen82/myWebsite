@@ -303,7 +303,7 @@ function resolvePose(expression, gender) {
   return { name, ...DEALER_POSES[name] };
 }
 
-function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', talking = false, mood = 0 }) {
+function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idle = false, mood = 0 }) {
   const pose = resolvePose(expression, gender);
   const src = `assets/dealers/${gender}/${pose.file}`;
   const [layers, setLayers] = React.useState(() => [{ key: 0, src, opacity: 1, blur: 0, scale: 1 }]);
@@ -327,11 +327,9 @@ function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', tal
     // The old pose stays fully visible underneath while the new one fades in
     // on top — fading both at once left the panel blank mid-swap. Close-up
     // reaction poses enter slightly oversized and settle: a punch-in beat.
-    // Close-ups land with a touch of rotation — a jolt, not just a fade.
-    const tilt = pose.closeup ? (counter.current % 2 ? -0.8 : 0.8) : 0;
-    setLayers(prev => [...prev, { key: newKey, src, opacity: 0, blur: 4, scale: pose.closeup ? 1.07 : 1, tilt, closeup: pose.closeup }]);
+    setLayers(prev => [...prev, { key: newKey, src, opacity: 0, blur: 4, scale: pose.closeup ? 1.06 : 1, closeup: pose.closeup }]);
     const raf = requestAnimationFrame(() => {
-      setLayers(prev => prev.map(l => l.key === newKey ? { ...l, opacity: 1, blur: 0, scale: 1, tilt: 0 } : l));
+      setLayers(prev => prev.map(l => l.key === newKey ? { ...l, opacity: 1, blur: 0, scale: 1 } : l));
     });
     const t = setTimeout(() => {
       setLayers(prev => prev.filter(l => l.key === newKey));
@@ -342,6 +340,7 @@ function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', tal
   const m = Math.max(-1, Math.min(1, mood));
   const sat = (1.05 + m * 0.25).toFixed(3);
   const bright = (1 + m * 0.06).toFixed(3);
+  const animClass = idle ? 'breathe' : '';
 
   return (
     <div style={{
@@ -349,39 +348,28 @@ function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', tal
       overflow:'hidden',
       borderRadius: 'inherit'
     }}>
-      {/* Nested motion wrappers — drift (slow zoom/pan) and breath/talk bob
-          animate different elements so their transforms compose instead of
-          overriding each other. The pose crossfade transforms live on the
-          imgs themselves, one level further in. */}
-      <div className="portrait-drift" style={{ position:'absolute', inset:0 }}>
-        <div className={talking ? 'portrait-talk' : 'portrait-breathe'} style={{ position:'absolute', inset:0 }}>
-          {layers.map(layer => (
-            <img
-              key={layer.key}
-              src={layer.src}
-              alt="dealer"
-              onError={(e) => { e.currentTarget.src = `assets/dealers/female/idle.png`; }}
-              style={{
-                position:'absolute',
-                left:'50%',
-                top: `${shift}px`,
-                transform:`translateX(-50%) scale(${layer.scale || 1}) rotate(${layer.tilt || 0}deg)`,
-                transformOrigin:'center 30%',
-                height: layer.closeup ? '100%' : '120%',
-                objectFit:'cover',
-                objectPosition:'center top',
-                opacity: layer.opacity,
-                transition: 'opacity .45s ease, filter .45s ease, transform .45s ease',
-                filter: `blur(${layer.blur}px) saturate(${sat}) contrast(1.02) brightness(${bright})`
-              }}
-            />
-          ))}
-        </div>
-      </div>
-      {/* ambient sheen drifting across the panel */}
-      <div className="portrait-sheen" style={{
-        position:'absolute', inset:0, pointerEvents:'none', zIndex: 2
-      }} />
+      {layers.map(layer => (
+        <img
+          key={layer.key}
+          src={layer.src}
+          alt="dealer"
+          onError={(e) => { e.currentTarget.src = `assets/dealers/female/idle.png`; }}
+          className={animClass}
+          style={{
+            position:'absolute',
+            left:'50%',
+            top: `${shift}px`,
+            transform:`translateX(-50%) scale(${layer.scale || 1})`,
+            transformOrigin:'center 30%',
+            height: layer.closeup ? '100%' : '120%',
+            objectFit:'cover',
+            objectPosition:'center top',
+            opacity: layer.opacity,
+            transition: 'opacity .45s ease, filter .45s ease, transform .45s ease',
+            filter: `blur(${layer.blur}px) saturate(${sat}) contrast(1.02) brightness(${bright})`
+          }}
+        />
+      ))}
       {/* vignette */}
       <div style={{
         position:'absolute', inset:0,
@@ -486,17 +474,7 @@ function DealerNameplate({ name, gender = 'female' }) {
   );
 }
 
-function DealerPanel({ name, expression, message, onTipDealer, tipped, playerName, gender = 'female', mood = 0, onEditName }) {
-  // She moves while she speaks — the bob runs for roughly as long as the
-  // typewriter takes on the current line.
-  const [talking, setTalking] = React.useState(false);
-  React.useEffect(() => {
-    if (!message) return;
-    setTalking(true);
-    const t = setTimeout(() => setTalking(false), Math.min(4000, message.length * 18 + 400));
-    return () => clearTimeout(t);
-  }, [message]);
-
+function DealerPanel({ name, expression, message, onTipDealer, tipped, playerName, gender = 'female', isIdle = false, mood = 0, onEditName }) {
   return (
     <div style={{
       position:'relative',
@@ -507,7 +485,7 @@ function DealerPanel({ name, expression, message, onTipDealer, tipped, playerNam
       background:'#1a1208',
       boxShadow:'var(--shadow-deep), inset 0 0 0 1px rgba(201,162,106,.18)'
     }}>
-      <DealerPortrait expression={expression} gender={gender} talking={talking} mood={mood} />
+      <DealerPortrait expression={expression} gender={gender} idle={isIdle} mood={mood} />
 
       <div style={{ position:'absolute', top: 18, left: 18, right: 18, zIndex: 3 }}>
         <DealerNameplate name={name} gender={gender} />
@@ -579,13 +557,6 @@ function DealerPanel({ name, expression, message, onTipDealer, tipped, playerNam
 // Slim horizontal dealer strip for the portrait/mobile layout — avatar plus
 // speech, no full portrait column.
 function DealerStrip({ name, message, gender = 'female', expression = 'idle' }) {
-  const [talking, setTalking] = React.useState(false);
-  React.useEffect(() => {
-    if (!message) return;
-    setTalking(true);
-    const t = setTimeout(() => setTalking(false), Math.min(4000, message.length * 18 + 400));
-    return () => clearTimeout(t);
-  }, [message]);
   return (
     <div style={{
       display:'flex', alignItems:'center', gap: 12,
@@ -599,7 +570,6 @@ function DealerStrip({ name, message, gender = 'female', expression = 'idle' }) 
       <img
         src={`assets/dealers/${gender}/avatar.png`}
         alt=""
-        className={talking ? 'portrait-talk' : 'portrait-breathe'}
         style={{
           width: 46, height: 46, borderRadius:'50%', flexShrink: 0,
           objectFit:'cover', objectPosition:'center top',
