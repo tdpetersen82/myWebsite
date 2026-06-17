@@ -817,6 +817,45 @@
     color: var(--ink);
     border: 2px solid rgba(31, 26, 46, 0.12);
   }
+
+  /* ── Mobile / portrait: reflow instead of scaling the 1380x860 design ──
+     On phones the fixed cabinet scaled to ~27%, leaving everything tiny for
+     the 4-10 audience. Here we neutralize the scale transform (!important
+     beats the inline style the JS sets) and let the layout flow fluidly:
+     the question grid stacks under Maddie, controls go full-width. */
+  @media (max-width: 760px) {
+    #game-wrapper {
+      width: 100% !important;
+      height: auto !important;
+      transform: none !important;
+      margin: 0 !important;
+    }
+    #root { height: auto; padding: 12px; gap: 12px; }
+    .top-bar { flex-wrap: wrap; gap: 8px 12px; }
+    .tb-title { font-size: 20px; }
+    .tb-back, .tb-link { font-size: 13px; }
+    .main-grid { grid-template-columns: 1fr; gap: 14px; }
+    .lily-card { padding: 14px 16px 18px; }
+    .lily-portrait { max-width: 190px; }
+    .speech-bubble { font-size: 16px; min-height: 0; padding: 14px 16px; }
+    .name-plate .name { font-size: 20px; margin-top: 8px; }
+    .right-col { gap: 12px; }
+    .tabs { flex-wrap: wrap; }
+    .qtab { flex: 1 1 42%; padding: 10px 6px; font-size: 14px; }
+    .questions { overflow-y: visible; padding: 12px; gap: 10px; }
+    .qbtn { padding: 14px; font-size: 15px; }
+    .bottom-bar { flex-wrap: wrap; gap: 12px 16px; padding: 14px 16px; }
+    .btn-guess { width: 100%; padding: 16px; }
+    .modal-card { width: 94%; max-height: 88vh; padding: 20px; }
+    .modal-card h2 { font-size: 22px; }
+    .guess-grid { grid-template-columns: repeat(4, 1fr); }
+    .guess-tile .ge { font-size: 26px; }
+  }
+
+  /* Very narrow phones: single-column questions for finger-sized targets. */
+  @media (max-width: 430px) {
+    .questions { grid-template-columns: 1fr; }
+  }
 </style>
 </head>
 <body>
