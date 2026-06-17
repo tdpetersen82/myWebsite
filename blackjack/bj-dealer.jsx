@@ -276,14 +276,14 @@ const DEALER_EXPRESSIONS = ['idle', 'happy', 'sad', 'shocked', 'deal', 'bust'];
 
 function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idle = false, mood = 0 }) {
   const file = expression;
-  const src = `assets/dealers/${gender}/${file}.png`;
+  const src = `assets/dealers/${gender}/${file}.jpg`;
   const [layers, setLayers] = React.useState(() => [{ key: 0, src, opacity: 1, blur: 0 }]);
   const counter = React.useRef(0);
   const lastSrc = React.useRef(src);
 
   // Preload every pose so expression swaps never wait on the network.
   React.useEffect(() => {
-    DEALER_EXPRESSIONS.forEach(f => { const img = new Image(); img.src = `assets/dealers/${gender}/${f}.png`; });
+    DEALER_EXPRESSIONS.forEach(f => { const img = new Image(); img.src = `assets/dealers/${gender}/${f}.jpg`; });
   }, [gender]);
 
   React.useEffect(() => {
@@ -319,7 +319,7 @@ function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idl
           key={layer.key}
           src={layer.src}
           alt="dealer"
-          onError={(e) => { e.currentTarget.src = `assets/dealers/female/${file}.png`; }}
+          onError={(e) => { e.currentTarget.src = `assets/dealers/female/${file}.jpg`; }}
           className={animClass}
           style={{
             position:'absolute',
@@ -420,7 +420,7 @@ function DealerNameplate({ name, gender = 'female' }) {
       boxShadow:'0 8px 18px rgba(0,0,0,.45)'
     }}>
       <img
-        src={`assets/dealers/${gender}/avatar.png`}
+        src={`assets/dealers/${gender}/avatar.jpg`}
         alt=""
         style={{
           width: 30, height: 30, borderRadius: '50%',
@@ -533,7 +533,7 @@ function DealerStrip({ name, message, gender = 'female', expression = 'idle' }) 
       minHeight: 64
     }}>
       <img
-        src={`assets/dealers/${gender}/avatar.png`}
+        src={`assets/dealers/${gender}/avatar.jpg`}
         alt=""
         style={{
           width: 46, height: 46, borderRadius:'50%', flexShrink: 0,

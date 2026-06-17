@@ -173,7 +173,7 @@ function pickLine(key, ctx = {}) {
 
 function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idle = false, mood = 0 }) {
   const file = expression;
-  const src = `assets/dealers/${gender}/${file}.png`;
+  const src = `assets/dealers/${gender}/${file}.jpg`;
   const [layers, setLayers] = React.useState(() => [{ key: 0, src, opacity: 1, blur: 0 }]);
   const counter = React.useRef(0);
   const lastSrc = React.useRef(src);
@@ -208,7 +208,7 @@ function DealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idl
           key={layer.key}
           src={layer.src}
           alt="dealer"
-          onError={(e) => { e.currentTarget.src = `assets/dealers/female/${file}.png`; }}
+          onError={(e) => { e.currentTarget.src = `assets/dealers/female/${file}.jpg`; }}
           className={animClass}
           style={{
             position:'absolute',
@@ -282,7 +282,7 @@ function DealerNameplate({ name, gender = 'female' }) {
       boxShadow:'0 8px 18px rgba(0,0,0,.45)'
     }}>
       <img
-        src={`assets/dealers/${gender}/avatar.png`}
+        src={`assets/dealers/${gender}/avatar.jpg`}
         alt=""
         style={{ width:30, height:30, borderRadius:'50%', objectFit:'cover', objectPosition:'center top',
           boxShadow:'0 0 0 1px rgba(201,162,106,.55), 0 0 8px rgba(201,162,106,.35)' }}
