@@ -127,6 +127,10 @@ body.hub-root {
   transition: border-color 0.15s;
 }
 .hub-search:focus-within { border-color: var(--ink); }
+/* Keyboard focus indicators — shown only for keyboard navigation (:focus-visible) */
+.ch-card:focus-visible { outline: 2px solid var(--ink); outline-offset: 4px; }
+.tile:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
+.hub-search .clear:focus-visible { outline: 2px solid var(--ink); outline-offset: 2px; }
 .hub-search .icon { font-size: 14px; }
 .hub-search input {
   background: transparent;

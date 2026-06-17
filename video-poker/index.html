@@ -57,6 +57,7 @@
   *{box-sizing:border-box;margin:0;padding:0}
   html,body{min-height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
   .game-stage{min-height:100vh;display:grid;place-items:center;overflow:hidden}
+  @media(max-width:760px) and (orientation:portrait){.game-stage{min-height:0;place-items:start center}}
   .game-info{background:#0a0805;color:var(--ivory-dim);padding:64px 24px;border-top:1px solid rgba(201,162,106,.18)}
   .game-info-inner{max-width:760px;margin:0 auto;line-height:1.65}
   .game-info h2{font-family:'Playfair Display',Georgia,serif;font-size:28px;font-weight:600;color:var(--brass-2);margin:40px 0 14px;letter-spacing:.01em}
@@ -198,19 +199,24 @@
 <script>
 (function() {
   var wrapper = document.getElementById('game-wrapper');
+  var root = document.getElementById('root');
   function resize() {
     var W = 1380, H = 860;
     var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
-    wrapper.style.transform = 'scale(' + s + ')';
-    wrapper.style.marginTop = Math.max(0, (window.innerHeight - H * s) / 2) + 'px';
+    root.style.width = W + 'px';
+    root.style.height = H + 'px';
+    root.style.transformOrigin = 'top left';
+    root.style.transform = 'scale(' + s + ')';
+    wrapper.style.width = (W * s) + 'px';
+    wrapper.style.height = (H * s) + 'px';
   }
   window.addEventListener('resize', resize);
   resize();
 })();
 </script>
 
-<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" crossorigin="anonymous"></script>
-<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react@18.3.1/umd/react.production.min.js" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js" crossorigin="anonymous"></script>
 <script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" crossorigin="anonymous"></script>
 <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.9.3/dist/confetti.browser.min.js"></script>
 
