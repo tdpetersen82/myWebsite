@@ -51,6 +51,7 @@
         <h1>🧱 Breakout</h1>
         <div class="game-info">
             <p>Score: <span id="score">0</span></p>
+            <p>Best: <span id="highScore">0</span></p>
             <p>Lives: <span id="lives">3</span></p>
             <p>Level: <span id="level">1</span></p>
         </div>
@@ -102,6 +103,9 @@
         const canvas = document.getElementById('gameCanvas');
         const ctx = canvas.getContext('2d');
         const scoreElement = document.getElementById('score');
+        const highScoreElement = document.getElementById('highScore');
+        let highScore = +localStorage.getItem('breakoutHighScore') || 0;
+        highScoreElement.textContent = highScore;
         const livesElement = document.getElementById('lives');
         const levelElement = document.getElementById('level');
         const restartBtn = document.getElementById('restartBtn');
@@ -307,6 +311,11 @@
                             b.status--;
                             score += 10;
                             scoreElement.textContent = score;
+                            if (score > highScore) {
+                                highScore = score;
+                                highScoreElement.textContent = highScore;
+                                localStorage.setItem('breakoutHighScore', highScore);
+                            }
                             playBrickBreakSound();
 
                             // Check if all bricks are destroyed
