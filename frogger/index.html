@@ -137,10 +137,22 @@
 
         // ─── Web Audio API sounds ───
         let soundMuted = false;
+        // One shared AudioContext reused for every sound. Creating a new context
+        // per effect (the old approach) hits the browser's ~6-context limit and
+        // silently kills audio mid-session. Resume it on first user gesture.
+        let _audioCtx = null;
+        function getAudioCtx() {
+            if (!_audioCtx) _audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+            if (_audioCtx.state === 'suspended') _audioCtx.resume();
+            return _audioCtx;
+        }
+        ['pointerdown', 'keydown', 'touchstart'].forEach(function (evt) {
+            window.addEventListener(evt, getAudioCtx, { passive: true });
+        });
         function playSound(freq, type, duration) {
             if (soundMuted) return;
             try {
-                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const ctx = getAudioCtx();
                 const osc = ctx.createOscillator();
                 const gain = ctx.createGain();
                 osc.connect(gain);
@@ -899,6 +911,6 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../arcade/arcade-chrome.js?v=20260521a"></script>
+    <script src="../arcade/arcade-chrome.js?v=20260617a"></script>
 </body>
 </html>

@@ -68,7 +68,11 @@
     const hint1    = body.getAttribute('data-hint-1') || '←→ move';
     const hint2    = body.getAttribute('data-hint-2') || 'Space pause';
     const hint3    = body.getAttribute('data-hint-3') || 'R restart';
-    const backHref = d.back     || '..';
+    // Back link points to the game's category hub (e.g. /arcade/), not the site
+    // root. Falls back to data-back, then the category, then the site root.
+    const cat       = d.category || 'arcade';
+    const backHref  = d.back      || ('../' + cat + '/');
+    const backLabel = d.backLabel || ('← ' + cat.charAt(0).toUpperCase() + cat.slice(1));
 
     // Read initial values from each game's existing in-page elements (the
     // chrome JS hides these via CSS but keeps them as the source of truth).
@@ -81,7 +85,7 @@
     stage.className = 'ch-stage';
     stage.innerHTML = `
       <header class="ch-topbar">
-        <a class="ch-back" href="${backHref}">← Arcade</a>
+        <a class="ch-back" href="${backHref}">${backLabel}</a>
         <div class="ch-title">
           <div class="ch-eyebrow"><span class="ch-dot"></span>${eyebrow}</div>
           <h1>${title}</h1>
@@ -229,6 +233,11 @@
         chHiEl.textContent = pageHiEl.textContent.trim();
       }).observe(pageHiEl, { childList: true, characterData: true, subtree: true });
     }
+
+    // De-dupe headings: the chrome injects the page's visible <h1> in the topbar,
+    // so remove any other <h1> (each game ships its own, hidden by CSS) to keep a
+    // single h1 in the document outline for SEO / screen-reader navigation.
+    document.querySelectorAll('h1').forEach((h) => { if (!stage.contains(h)) h.remove(); });
   }
 
   // ── Synthetic key dispatch ───────────────────────────────────────────

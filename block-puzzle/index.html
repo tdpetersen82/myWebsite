@@ -138,6 +138,13 @@
 
         // Sound effects using Web Audio API
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        // Browsers start the AudioContext suspended until a user gesture; resume
+        // it on the first interaction so sound effects actually play.
+        ['pointerdown', 'keydown', 'touchstart'].forEach(function (evt) {
+            window.addEventListener(evt, function () {
+                if (audioContext.state === 'suspended') audioContext.resume();
+            }, { passive: true });
+        });
 
         let muted = false;
         function playSound(frequency, duration, type = 'sine') {
@@ -484,6 +491,6 @@
              data-full-width-responsive="true"></ins>
         <script>(adsbygoogle = window.adsbygoogle || []).push({});</script>
     </div>
-    <script src="../arcade/arcade-chrome.js?v=20260521a"></script>
+    <script src="../arcade/arcade-chrome.js?v=20260617a"></script>
 </body>
 </html>
