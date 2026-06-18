@@ -148,6 +148,16 @@
     50%{transform:translateX(-50%) translateY(-2px)}
   }
   .breathe{animation:breathe 4s ease-in-out infinite}
+  /* Accessibility: honor prefers-reduced-motion — calm decorative CSS
+     animation for motion-sensitive users. Canvas/JS gameplay is unaffected. */
+   @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 </style>
 </head>
 <body>

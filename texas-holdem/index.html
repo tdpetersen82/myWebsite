@@ -168,6 +168,16 @@
     box-shadow:0 1px 3px rgba(0,0,0,.4);
     cursor:pointer;
   }
+  /* Accessibility: honor prefers-reduced-motion — calm decorative CSS
+     animation for motion-sensitive users. Canvas/JS gameplay is unaffected. */
+   @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 </style>
 </head>
 <body>

@@ -170,6 +170,16 @@
   button{font-family:inherit}
   .blink-cursor::after{content:'▍';margin-left:2px;animation:blink 1s steps(2) infinite;opacity:.6}
   @keyframes blink{50%{opacity:0}}
+  /* Accessibility: honor prefers-reduced-motion — calm decorative CSS
+     animation for motion-sensitive users. Canvas/JS gameplay is unaffected. */
+   @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 </style>
 </head>
 <body>

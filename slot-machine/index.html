@@ -505,6 +505,16 @@
   ::-webkit-scrollbar{width:8px;height:8px}
   ::-webkit-scrollbar-thumb{background:rgba(201,162,106,.3);border-radius:4px}
   ::-webkit-scrollbar-track{background:transparent}
+  /* Accessibility: honor prefers-reduced-motion — calm decorative CSS
+     animation for motion-sensitive users. Canvas/JS gameplay is unaffected. */
+   @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 </style>
 </head>
 <body>

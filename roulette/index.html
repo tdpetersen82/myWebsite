@@ -286,6 +286,16 @@
   .similar-games a::after{content:'Play →';display:block;margin-top:8px;font-family:'JetBrains Mono',monospace;font-style:normal;font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--brass)}
   .similar-games a:hover{transform:translateY(-3px);border-color:rgba(230,197,144,.55);box-shadow:0 14px 28px rgba(0,0,0,.45)}
   .similar-games a:hover::before{color:rgba(201,162,106,.16)}
+  /* Accessibility: honor prefers-reduced-motion — calm decorative CSS
+     animation for motion-sensitive users. Canvas/JS gameplay is unaffected. */
+   @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+      animation-duration: 0.001ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.001ms !important;
+      scroll-behavior: auto !important;
+    }
+  }
 </style>
 </head>
 <body>

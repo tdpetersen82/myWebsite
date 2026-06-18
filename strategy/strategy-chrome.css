@@ -118,3 +118,14 @@ body {
 #how[open] > *:not(summary) { padding-left: 22px; padding-right: 22px; }
 #how[open] > *:first-of-type:not(summary) { padding-top: 14px; }
 #how[open] > *:last-child { padding-bottom: 20px; }
+/* Accessibility: honor prefers-reduced-motion. Calms decorative CSS animation
+   (blinks, pulses, glows, breathing, flips) site-wide for motion-sensitive
+   users. Canvas/JS gameplay motion is JS-driven and unaffected by this. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}

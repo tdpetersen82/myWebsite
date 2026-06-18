@@ -365,3 +365,14 @@ body.ch-game .game-overview .related-games-list a:hover {
   .ch-bezel { padding: 16px; }
   .ch-coin { top: 6px; font-size: 9.5px; letter-spacing: 0.28em; }
 }
+/* Accessibility: honor prefers-reduced-motion. Calms decorative CSS animation
+   (blinks, pulses, glows, breathing, flips) site-wide for motion-sensitive
+   users. Canvas/JS gameplay motion is JS-driven and unaffected by this. */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+    scroll-behavior: auto !important;
+  }
+}
