@@ -34,8 +34,11 @@
     { id: 'chinese-checkers',  name: 'Chinese Checkers',  cat: 'puzzle',  desc: 'Hop chains. 2, 3, or 6 players.',               color: '#2DA1A6', isNew: true },
     { id: 'ultimate-tic-tac-toe', name: 'Ultimate Tic-Tac-Toe', cat: 'puzzle', desc: 'Nine boards in one. Your move picks the next.', color: '#E8A330', isNew: true },
     { id: 'sudoku',            name: 'Sudoku',            cat: 'puzzle',  desc: 'Fill the grid 1–9. Four difficulties.', color: '#2E6CB4', isNew: true },
+    { id: 'minesweeper',       name: 'Minesweeper',       cat: 'puzzle',  desc: 'Clear the board. Flag the mines.',  color: '#5B6470', isNew: true },
     { id: 'mahjong',           name: 'Mahjong Solitaire', cat: 'puzzle',  desc: 'Match free tiles. Clear the mound.', color: '#1FA88A', isNew: true },
     { id: 'mancala',           name: 'Mancala',           cat: 'puzzle',  desc: 'Sow seeds. Capture across. Claim the store.',   color: '#B85C38', isNew: true },
+    { id: 'word-search',       name: 'Word Search',       cat: 'puzzle',  desc: 'Find hidden words. Eight themed packs.', color: '#C96F2A', isNew: true },
+    { id: 'hangman',           name: 'Hangman',           cat: 'puzzle',  desc: 'Guess the word by theme. Build a streak.', color: '#2E8B57', isNew: true },
     { id: 'blackjack',         name: 'Blackjack',         cat: 'casino',  desc: 'Hit 21 with strategy hints.',      color: '#7BC97B' },
     { id: 'roulette',          name: 'Roulette',          cat: 'casino',  desc: 'Spin the European wheel.',         color: '#F08488'  },
     { id: 'video-poker',       name: 'Video Poker',       cat: 'casino',  desc: 'Jacks or Better. Hold smart.',     color: '#A78BFA' },
@@ -60,7 +63,7 @@
   const THUMBS = new Set([
     '2048', 'backgammon', 'checkers', 'chess', 'chinese-checkers',
     'connect-4', 'connect-dots', 'mahjong', 'mancala', 'othello',
-    'ultimate-tic-tac-toe', 'sudoku',
+    'ultimate-tic-tac-toe', 'sudoku', 'minesweeper',
     'snake', 'pong', 'breakout', 'space-invaders', 'solar-system',
   ]);
 
@@ -86,6 +89,7 @@
     'chinese-checkers': 'chineseCheckersHighScore',
     'ultimate-tic-tac-toe': 'ultimateTicTacToeHighScore',
     mancala: 'mancalaHighScore',
+    hangman: 'hangmanHighScore',
   };
   function getBest(gameId) {
     const key = SCORE_KEYS[gameId];
@@ -96,6 +100,8 @@
 
   // Per-game inline SVG glyph (paths only; svg wrapper added at render time).
   const GLYPH_PATHS = {
+    'word-search': '<rect x="12" y="12" width="11" height="11" rx="2" fill="C"/><rect x="27" y="12" width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="42" y="12" width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="12" y="27" width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="27" y="27" width="11" height="11" rx="2" fill="C"/><rect x="42" y="27" width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="12" y="42" width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="27" y="42" width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="42" y="42" width="11" height="11" rx="2" fill="C"/>',
+    hangman: '<line x1="14" y1="54" x2="40" y2="54" stroke="C" stroke-width="3" stroke-linecap="round"/><line x1="20" y1="54" x2="20" y2="12" stroke="C" stroke-width="3" stroke-linecap="round"/><line x1="20" y1="12" x2="42" y2="12" stroke="C" stroke-width="3" stroke-linecap="round"/><line x1="42" y1="12" x2="42" y2="19" stroke="C" stroke-width="3" stroke-linecap="round"/><circle cx="42" cy="26" r="6" fill="none" stroke="C" stroke-width="3"/><line x1="42" y1="32" x2="42" y2="44" stroke="C" stroke-width="3" stroke-linecap="round"/><line x1="42" y1="36" x2="36" y2="41" stroke="C" stroke-width="3" stroke-linecap="round"/><line x1="42" y1="36" x2="48" y2="41" stroke="C" stroke-width="3" stroke-linecap="round"/><line x1="42" y1="44" x2="37" y2="52" stroke="C" stroke-width="3" stroke-linecap="round"/><line x1="42" y1="44" x2="47" y2="52" stroke="C" stroke-width="3" stroke-linecap="round"/>',
     snake: '<rect x="14" y="14" width="10" height="10" rx="2" fill="C"/><rect x="26" y="14" width="10" height="10" rx="2" fill="C"/><rect x="38" y="14" width="10" height="10" rx="2" fill="C"/><rect x="38" y="26" width="10" height="10" rx="2" fill="C"/><rect x="38" y="38" width="10" height="10" rx="2" fill="C"/>',
     pong: '<rect x="10" y="14" width="6" height="34" rx="3" fill="C"/><rect x="48" y="20" width="6" height="34" rx="3" fill="C" opacity="0.7"/><circle cx="32" cy="32" r="4" fill="C"/>',
     breakout: '<rect x="8" y="10" width="12" height="6" rx="2" fill="C"/><rect x="22" y="10" width="12" height="6" rx="2" fill="C" opacity="0.7"/><rect x="36" y="10" width="12" height="6" rx="2" fill="C"/><rect x="8" y="18" width="12" height="6" rx="2" fill="C" opacity="0.6"/><rect x="22" y="18" width="12" height="6" rx="2" fill="C"/><rect x="20" y="50" width="24" height="5" rx="2.5" fill="C"/><circle cx="32" cy="40" r="3.5" fill="C" opacity="0.8"/>',

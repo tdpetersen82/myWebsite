@@ -238,6 +238,48 @@
         </div>
         <div class="cat-grid two-col">
 
+            <a class="cat-card" href="../word-search/">
+                <span class="cat-card-tag">New</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-shot"><img src="../assets/thumbs/word-search.svg" alt="" width="600" height="600" loading="lazy"></div>
+                    <div>
+                        <h3>Word Search</h3>
+                        <div class="desc">Find hidden words in themed letter grids. Drag to select. Solo play.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Best time</div><div class="v accent" id="card-wordsearch-best">—</div></div>
+                    <div><div class="l">Themes</div><div class="v sm">8</div></div>
+                    <div><div class="l">Sizes</div><div class="v sm">3</div></div>
+                    <div><div class="l">Words</div><div class="v sm">7–13</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Themed</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../hangman/">
+                <span class="cat-card-tag">New</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-shot"><img src="../assets/thumbs/hangman.svg" alt="" width="600" height="600" loading="lazy"></div>
+                    <div>
+                        <h3>Hangman</h3>
+                        <div class="desc">Guess the hidden word by theme before the figure is drawn. Solo play.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Best streak</div><div class="v accent" id="card-hangman-streak">0</div></div>
+                    <div><div class="l">Themes</div><div class="v sm">8</div></div>
+                    <div><div class="l">Levels</div><div class="v sm">3</div></div>
+                    <div><div class="l">Guesses</div><div class="v sm">6</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Classic</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
             <a class="cat-card featured" href="../chess/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
@@ -738,6 +780,19 @@
                     set('card-minesweeper-best', (m / 60 | 0) + ':' + String(m % 60).padStart(2, '0'));
                 }
             } catch (e) {}
+
+            // Word Search: fastest solve across all theme×size combos (JSON of seconds).
+            try {
+                const times = JSON.parse(localStorage.getItem('wordSearchBest')) || {};
+                const secs = Object.values(times).filter(v => typeof v === 'number' && v >= 0);
+                if (secs.length) {
+                    const m = Math.min(...secs);
+                    set('card-wordsearch-best', (m / 60 | 0) + ':' + String(m % 60).padStart(2, '0'));
+                }
+            } catch (e) {}
+
+            // Hangman: best win streak.
+            { const hm = readNum('hangmanHighScore'); if (hm != null) set('card-hangman-streak', hm); }
 
             // Aggregate stats
             const totalWins = Object.values(wins).reduce((s, v) => s + (v || 0), 0);

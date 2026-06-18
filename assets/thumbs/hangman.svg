@@ -1,0 +1,35 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Hangman figure and word blanks">
+  <defs>
+    <linearGradient id="hmbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FBF4E6"/>
+      <stop offset="1" stop-color="#EFE0C6"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#hmbg)"/>
+  <!-- gallows -->
+  <g stroke="#2A2017" stroke-width="16" stroke-linecap="round" fill="none">
+    <line x1="70" y1="470" x2="320" y2="470"/>
+    <line x1="130" y1="470" x2="130" y2="70"/>
+    <line x1="130" y1="70" x2="360" y2="70"/>
+    <line x1="360" y1="70" x2="360" y2="130"/>
+  </g>
+  <!-- figure (head, body, arms, one leg drawn) -->
+  <g stroke="#C0473B" stroke-width="14" stroke-linecap="round" fill="none">
+    <circle cx="360" cy="172" r="40"/>
+    <line x1="360" y1="212" x2="360" y2="330"/>
+    <line x1="360" y1="240" x2="312" y2="292"/>
+    <line x1="360" y1="240" x2="408" y2="292"/>
+    <line x1="360" y1="330" x2="318" y2="402"/>
+  </g>
+  <!-- word blanks: _ A _ E -->
+  <g stroke="#2A2017" stroke-width="12" stroke-linecap="round">
+    <line x1="90" y1="540" x2="190" y2="540"/>
+    <line x1="220" y1="540" x2="320" y2="540"/>
+    <line x1="350" y1="540" x2="450" y2="540"/>
+    <line x1="480" y1="540" x2="580" y2="540"/>
+  </g>
+  <g font-family="'Bricolage Grotesque','Inter',sans-serif" font-weight="800" font-size="78" fill="#2A2017" text-anchor="middle">
+    <text x="270" y="525">A</text>
+    <text x="530" y="525">E</text>
+  </g>
+</svg>
