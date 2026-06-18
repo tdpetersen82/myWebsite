@@ -12,7 +12,7 @@
     <link rel="canonical" href="https://limestonegames.com/chinese-checkers/">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Chinese Checkers","description":"Play Chinese Checkers in your browser against computer opponents. 2, 3, or 6 player modes on the classic star board. Three difficulty tiers.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Chinese Checkers"}]}</script>
-    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Chinese Checkers?", "acceptedAnswer": {"@type": "Answer", "text": "Move your pegs across the star-shaped board to fill the opposite corner. Pegs move one space at a time or hop over other pegs in chains. First player to fill the opposite home triangle wins."}}, {"@type": "Question", "name": "Is Chinese Checkers free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "How many players?", "acceptedAnswer": {"@type": "Answer", "text": "This version is single-player against the computer. The computer plays one corner; you play the opposite corner."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Chinese Checkers?", "acceptedAnswer": {"@type": "Answer", "text": "Move your pegs across the star-shaped board to fill the opposite corner. Pegs move one space at a time or hop over other pegs in chains. First player to fill the opposite home triangle wins."}}, {"@type": "Question", "name": "Is Chinese Checkers free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "How many players?", "acceptedAnswer": {"@type": "Answer", "text": "You play against the computer with 2, 3, or 6 players. You always control one corner; the computer plays the rest."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
     <meta property="og:title" content="Chinese Checkers — Free Browser Game vs. Computer">
     <meta property="og:description" content="2-, 3-, or 6-player Chinese Checkers in your browser. Hop chains, three difficulties, no downloads.">
     <meta property="og:type" content="website">
@@ -165,7 +165,7 @@
       #how p { font-size: 14px; color: rgba(21, 23, 31, 0.78); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(21, 23, 31, 0.82); }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618c">
 </head>
 <body>
     <div class="game-shell">
@@ -218,21 +218,45 @@
         <p class="hint">Step into an adjacent empty hole, or hop over any marble (yours or theirs) into the empty hole on the far side. Hops can chain. First to fill the opposite triangle wins.</p>        </div>
         
 
-        <details id="how">
-            <summary><h2>How to play</h2></summary>
-            <p>You play the bottom-pointing triangle. Each turn either step a marble into an adjacent empty hole, or jump it over a neighbor (yours or any opponent's) to the empty hole on the far side. After a jump you may chain another jump from the new position. To end your turn voluntarily, tap the moving marble again, press Enter, or click <b>Done jumping</b>; if no further jumps are possible the chain ends automatically.</p>
-            <p>The first player to land all 10 of their marbles in the opposite triangle wins. Once a marble enters its goal triangle it cannot leave — no shuffling pegs back and forth to stall.</p>
+        <section class="game-overview" aria-label="About Chinese Checkers">
+            <h2>How to play Chinese Checkers online</h2>
+            <p>Chinese Checkers is the classic hop-and-chain race played on a six-pointed star board. The goal: move all of your marbles out of your home triangle, across the board, and into the empty triangle directly opposite &mdash; before your opponents fill theirs. This free browser version plays against the computer with <b>2, 3, or 6 players</b> and three difficulty levels. No downloads, no signup.</p>
+
+            <h3>Chinese Checkers rules</h3>
+            <p>You play the triangle pointing toward you, with ten marbles, and aim for the matching triangle on the far side of the star. On each turn you make one kind of move:</p>
             <ul>
-                <li><b>2 players</b> — head-to-head across the board.</li>
-                <li><b>3 players</b> — you plus two AIs at every-other points (classic 3-handed layout).</li>
-                <li><b>6 players</b> — full board, you plus five AIs. Chaotic; longer games.</li>
+                <li><b>Step.</b> Slide one marble into any adjacent empty hole.</li>
+                <li><b>Hop.</b> Jump a marble over a single neighboring marble &mdash; yours or an opponent's &mdash; into the empty hole right beyond it. Jumped marbles are <i>not</i> removed.</li>
+                <li><b>Chain jumps.</b> After a hop you may immediately hop again from the new spot, stringing long chains across the board. Building good chains is the whole game.</li>
+                <li><b>Win.</b> The first player to fill the opposite triangle with all ten marbles wins. Once a marble reaches its goal triangle it can't leave &mdash; no stalling by shuffling pegs back and forth.</li>
             </ul>
+
+            <h3>Chinese Checkers strategy &mdash; how to win</h3>
             <ul>
-                <li><b>Easy</b> — depth 2 with extra randomness.</li>
-                <li><b>Medium</b> — depth 3.</li>
-                <li><b>Hard</b> — depth 4 with longest-chain ordering.</li>
+                <li><b>Build ladders.</b> Space your marbles so each can hop the next &mdash; one good chain covers what stepping would take five turns to do.</li>
+                <li><b>Use their pieces.</b> You can hop over opponents too. Their marbles are free stepping-stones; route through the crowded center.</li>
+                <li><b>Don't strand a straggler.</b> A marble left behind has to walk home alone. Move your whole group forward together.</li>
+                <li><b>Fill the back first.</b> Park early arrivals at the far corners of your goal so you don't block your own incoming marbles.</li>
+                <li><b>Own the center lane.</b> The middle of the board is the highway &mdash; whoever builds the best chain through it gets home first.</li>
             </ul>
-        </details>
+
+            <h3>2-player, 3-player, and 6-player games</h3>
+            <p>Pick your table from the <b>Players</b> menu. <b>Two players</b> is a direct race straight across the star. <b>Three players</b> uses the classic every-other-point layout. <b>Six players</b> fills all six points for a crowded, chaotic board where the center is fiercely contested &mdash; you against five computer opponents. Chinese Checkers is also known as <b>Sternhalma</b>, the star-board descendant of the older square-board game Halma.</p>
+
+            <h3>Frequently asked</h3>
+            <p><b>How do I play Chinese Checkers?</b> Move your marbles across the star board to fill the opposite triangle. Each turn, step a marble to an adjacent hole or hop it over a neighbor &mdash; and keep hopping to chain jumps. First to fill the far triangle wins.</p>
+            <p><b>How many players can play?</b> You play against the computer with 2, 3, or 6 players. You always control one corner; the computer plays the rest.</p>
+            <p><b>Is Chinese Checkers free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
+            <p><b>Does my record save?</b> Yes &mdash; your wins, losses, and best streak are stored locally in your browser.</p>
+
+            <h3>More strategy games</h3>
+            <ul class="related-games-list">
+                <li><a href="../mancala/">Mancala</a></li>
+                <li><a href="../checkers/">Checkers</a></li>
+                <li><a href="../backgammon/">Backgammon</a></li>
+                <li><a href="../strategy/">All strategy games &rarr;</a></li>
+            </ul>
+        </section>
     </div>
 
     <script>

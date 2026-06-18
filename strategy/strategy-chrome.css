@@ -118,6 +118,43 @@ body {
 #how[open] > *:not(summary) { padding-left: 22px; padding-right: 22px; }
 #how[open] > *:first-of-type:not(summary) { padding-top: 14px; }
 #how[open] > *:last-child { padding-bottom: 20px; }
+
+/* Always-visible game guide below the table — the indexable rules/strategy/FAQ
+   content. Same "paper card" look as #how, but open by default and far richer
+   so search engines (and new players) get the full how-to, not a collapsed stub. */
+.game-overview {
+  max-width: 680px;
+  width: 100%;
+  margin: 22px auto 0;
+  padding: 26px 30px 30px;
+  background: #FFFDF8;
+  border: 1px solid rgba(60, 40, 20, 0.16);
+  border-radius: 14px;
+  box-shadow: 0 10px 26px -22px rgba(40, 25, 12, 0.55);
+  color: #3A2A1C;
+  line-height: 1.62;
+  text-align: left;
+}
+.game-overview > :first-child { margin-top: 0; }
+.game-overview > :last-child { margin-bottom: 0; }
+.game-overview h2 { margin: 0 0 12px; font-size: 1.4rem; color: #2A1C10; }
+.game-overview h3 { margin: 26px 0 9px; font-size: 1.08rem; color: #7A4B16; }
+.game-overview p { margin: 0 0 12px; }
+.game-overview ul { margin: 0 0 12px; padding-left: 20px; }
+.game-overview li { margin: 0 0 7px; }
+.game-overview b { color: #2A1C10; }
+.game-overview kbd {
+  font: 600 0.82em/1 ui-monospace, "JetBrains Mono", monospace;
+  padding: 2px 6px; border: 1px solid rgba(60, 40, 20, 0.28);
+  border-bottom-width: 2px; border-radius: 5px; background: #F3E8CE; color: #3A2A1C;
+}
+.game-overview .related-games-list {
+  list-style: none; padding-left: 0;
+  display: flex; flex-wrap: wrap; gap: 8px 18px;
+}
+.game-overview .related-games-list a { color: #7A4B16; font-weight: 600; text-decoration: none; }
+.game-overview .related-games-list a:hover { text-decoration: underline; }
+
 /* Accessibility: honor prefers-reduced-motion. Calms decorative CSS animation
    (blinks, pulses, glows, breathing, flips) site-wide for motion-sensitive
    users. Canvas/JS gameplay motion is JS-driven and unaffected by this. */
