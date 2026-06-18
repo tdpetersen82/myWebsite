@@ -958,6 +958,21 @@ function App() {
             onNewDeal={requestNewDeal}
           />
 
+          {/* Draw 1 / Draw 3 toggle — was only reachable via the dev tweaks
+              panel; surface it so players can actually choose the variant. */}
+          <div style={{ position:'absolute', top:96, left:'50%', transform:'translateX(-50%)',
+            display:'flex', gap:6, alignItems:'center', zIndex:3 }}>
+            <span style={{ font:"700 10px/1 'JetBrains Mono',monospace", letterSpacing:'.14em',
+              color:'rgba(201,162,106,.8)', textTransform:'uppercase', marginRight:2 }}>Draw</span>
+            {[['one','Draw 1'],['three','Draw 3']].map(([m,lbl]) => (
+              <button key={m} type="button" onClick={() => { if (tweaks.drawMode !== m) changeDrawMode(m); }}
+                style={{ font:"600 12px/1 'Inter',sans-serif", padding:'7px 13px', borderRadius:8, cursor:'pointer',
+                  border:'1px solid rgba(201,162,106,.35)',
+                  background: tweaks.drawMode===m ? 'rgba(201,162,106,.9)' : 'rgba(0,0,0,.28)',
+                  color: tweaks.drawMode===m ? '#1a1208' : '#d9cfb8' }}>{lbl}</button>
+            ))}
+          </div>
+
           {/* Stock + Waste */}
           <div style={{ position:'absolute', left: 28, top: 90, display:'flex', gap: 18 }}>
             <StockPile stock={stock} waste={waste} onDraw={onStockClick} drawMode={drawCount} passes={passes} isHinted={hintStock} />
