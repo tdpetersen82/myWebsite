@@ -234,6 +234,35 @@
       }).observe(pageHiEl, { childList: true, characterData: true, subtree: true });
     }
 
+    // Extra HUD stats. Some games keep important readouts (lives, level, lines,
+    // next-piece preview) inside .game-info, which the chrome CSS hides. Surface
+    // them in the topbar: data-stats="id:Label,.." mirrors text; data-stat-canvas
+    // moves a live <canvas> (e.g. a next-piece preview) into a labeled chip.
+    const scoresEl = stage.querySelector('.ch-scores');
+    function addStat(id, labelText, moveCanvas) {
+      const srcEl = document.getElementById(id);
+      if (!srcEl || !scoresEl) return;
+      const block = document.createElement('div');
+      block.className = 'ch-score' + (moveCanvas ? ' ch-score-canvas' : '');
+      const lab = document.createElement('span');
+      lab.className = 'ch-l';
+      lab.textContent = labelText;
+      block.appendChild(lab);
+      if (moveCanvas) {
+        block.appendChild(srcEl);                 // same element keeps being drawn into
+      } else {
+        const b = document.createElement('b');
+        b.textContent = srcEl.textContent.trim();
+        block.appendChild(b);
+        new MutationObserver(() => { b.textContent = srcEl.textContent.trim(); })
+          .observe(srcEl, { childList: true, characterData: true, subtree: true });
+      }
+      scoresEl.appendChild(block);
+      scoresEl.style.display = '';
+    }
+    if (d.stats) d.stats.split(',').forEach((s) => { const p = s.split(':'); if (p[0]) addStat(p[0].trim(), (p[1] || p[0]).trim(), false); });
+    if (d.statCanvas) d.statCanvas.split(',').forEach((s) => { const p = s.split(':'); if (p[0]) addStat(p[0].trim(), (p[1] || p[0]).trim(), true); });
+
     // De-dupe headings: the chrome injects the page's visible <h1> in the topbar,
     // so remove any other <h1> (each game ships its own, hidden by CSS) to keep a
     // single h1 in the document outline for SEO / screen-reader navigation.

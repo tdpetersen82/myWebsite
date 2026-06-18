@@ -129,8 +129,14 @@ body.ch-game .container { background: transparent !important; box-shadow: none !
   50% { opacity: 0.4; box-shadow: 0 0 4px var(--ch-ember); }
 }
 
-.ch-scores { display: flex; gap: 28px; align-items: center; padding-right: 6px; }
+.ch-scores { display: flex; flex-wrap: wrap; gap: 20px; align-items: center; padding-right: 6px; }
 .ch-score { display: flex; flex-direction: column; align-items: flex-end; line-height: 1; }
+.ch-score-canvas { align-items: center; }
+.ch-score-canvas canvas {
+  display: block; width: 38px; height: 38px;
+  image-rendering: pixelated; border-radius: 5px;
+  border: 1px solid rgba(255, 255, 255, 0.14);
+}
 .ch-score .ch-l {
   font-family: var(--ch-mono); font-size: 10px; letter-spacing: 0.18em;
   color: var(--ch-ink3); text-transform: uppercase; margin-bottom: 6px;
