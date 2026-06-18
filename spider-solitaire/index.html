@@ -1,0 +1,508 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+    <title>Spider Solitaire — Play Free Online (1, 2 &amp; 4 Suits) | Limestone Games</title>
+    <meta name="description" content="Play Spider Solitaire free in your browser. One, two, or four suits, unlimited undo, and a move counter. Build suit runs from King down to Ace. No downloads.">
+    <meta name="keywords" content="spider solitaire, spider solitaire online, free spider solitaire, spider solitaire 2 suits, spider solitaire 4 suits, 1 suit spider solitaire, card game">
+    <link rel="canonical" href="https://limestonegames.com/spider-solitaire/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Spider Solitaire","description":"Play Spider Solitaire free in your browser with one, two, or four suits. Build descending runs from King to Ace and clear all eight to win.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Spider Solitaire"}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Spider Solitaire?", "acceptedAnswer": {"@type": "Answer", "text": "Build descending sequences in the ten columns, from King down to Ace. A complete same-suit run of 13 cards is removed automatically. Clear all eight runs to win. When you're stuck, deal a new row from the stock — but only when no column is empty."}}, {"@type": "Question", "name": "What is the easiest Spider Solitaire?", "acceptedAnswer": {"@type": "Answer", "text": "One-suit Spider is the easiest — every card is the same suit, so any descending run can be moved together. Two suits is the balanced game, and four suits is the classic, hardest version."}}, {"@type": "Question", "name": "Is Spider Solitaire free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs. Pick a difficulty and play."}}, {"@type": "Question", "name": "Why can't I deal new cards?", "acceptedAnswer": {"@type": "Answer", "text": "You can only deal a new row from the stock when every column has at least one card. Fill any empty columns first, then deal."}}]}</script>
+    <meta property="og:title" content="Spider Solitaire — Play Free Online (1, 2 &amp; 4 Suits) | Limestone Games">
+    <meta property="og:description" content="Play Spider Solitaire free in your browser. One, two, or four suits, unlimited undo. Build runs from King to Ace.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/spider-solitaire/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Spider Solitaire — Play Free Online | Limestone Games">
+    <meta name="twitter:description" content="Play Spider Solitaire free — one, two, or four suits, unlimited undo.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+      :root {
+        --ink: #EAF2E6; --felt-1: #1f7a44; --felt-2: #155f34; --gold: #E8C969;
+        --slot: rgba(255,255,255,0.10); --slot-line: rgba(255,255,255,0.28);
+        --cw: 70px;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; }
+      body {
+        font-family: 'Inter','Segoe UI',Tahoma,sans-serif;
+        background: radial-gradient(120% 120% at 50% 0%, var(--felt-1) 0%, var(--felt-2) 70%, #0e4324 100%);
+        color: var(--ink); min-height: 100vh; display:flex; flex-direction:column; align-items:center; padding:14px 12px 32px;
+        -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent;
+      }
+      .game-shell { width:100%; max-width:1000px; display:flex; flex-direction:column; align-items:center; gap:12px; }
+      .top-bar { width:100%; display:flex; align-items:center; gap:14px; padding:10px 16px 11px; background:rgba(0,0,0,0.22); border:1px solid rgba(255,255,255,0.14); border-radius:14px; flex-wrap:wrap; }
+      .tb-back { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; padding:7px 13px; border-radius:10px; border:1px solid rgba(255,255,255,0.25); color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; }
+      .tb-back:hover { border-color:var(--gold); color:var(--gold); }
+      .tb-title { display:flex; flex-direction:column; gap:2px; margin-right:auto; }
+      .tb-eyebrow { display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:rgba(234,242,230,0.7); }
+      .tb-dot { width:6px; height:6px; border-radius:50%; background:var(--gold); }
+      .tb-title h1 { font-size:21px; font-weight:800; }
+      .stats { display:flex; gap:16px; flex-wrap:wrap; }
+      .stats > div { display:flex; flex-direction:column; gap:1px; min-width:46px; }
+      .stats .l { font-size:10px; font-weight:700; letter-spacing:.08em; text-transform:uppercase; color:rgba(234,242,230,0.65); }
+      .stats .v { font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; }
+      .stats .v.gold { color:var(--gold); }
+
+      .controls { display:flex; gap:9px; flex-wrap:wrap; justify-content:center; align-items:center; }
+      .controls button, .controls select { font-family:inherit; font-size:13.5px; font-weight:700; color:var(--ink); background:rgba(255,255,255,0.10); cursor:pointer; border:1px solid rgba(255,255,255,0.22); border-radius:10px; padding:9px 13px; }
+      .controls button:hover:not(:disabled), .controls select:hover { border-color:var(--gold); }
+      .controls button:disabled { opacity:.4; cursor:default; }
+      .controls button.primary { background:var(--gold); color:#3a2e0c; border-color:var(--gold); }
+      .controls select option { color:#222; }
+
+      .board-fit { position:relative; width:100%; display:flex; justify-content:center; }
+      .board { transform-origin: top center; }
+      .zone-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px; }
+      .runs { display:flex; gap:5px; }
+      .run-slot { width:calc(var(--cw)*0.5); height:calc(var(--cw)*0.5*110/78); border-radius:5px; border:1.5px dashed var(--slot-line); background:var(--slot); }
+      .run-slot.done { background:var(--gold); border-style:solid; border-color:var(--gold); }
+      .stock { display:flex; align-items:center; gap:10px; cursor:pointer; }
+      .stock .pile { position:relative; width:var(--cw); height:calc(var(--cw)*110/78); }
+      .stock .pile .b { position:absolute; width:var(--cw); height:calc(var(--cw)*110/78); border-radius:7px; }
+      .stock-empty { width:var(--cw); height:calc(var(--cw)*110/78); border-radius:7px; border:1.5px dashed var(--slot-line); background:var(--slot); display:flex; align-items:center; justify-content:center; color:rgba(255,255,255,0.4); font-size:24px; }
+      .stock .lbl { font-size:12px; font-weight:700; color:rgba(234,242,230,0.85); }
+
+      .tableau { display:grid; grid-template-columns:repeat(10, var(--cw)); gap:9px; align-items:start; }
+      .col { position:relative; }
+      .card, .back { width:var(--cw); height:calc(var(--cw)*110/78); border-radius:7px; position:absolute; left:0; box-shadow:0 1px 2px rgba(0,0,0,0.35); }
+      .card { background-color:#fff; cursor:pointer; }
+      .back {
+        background:
+          repeating-linear-gradient(45deg, rgba(255,255,255,0.10) 0 6px, transparent 6px 12px),
+          linear-gradient(160deg, #2a4f86, #1c3a66);
+        border:2px solid #e9eef7; border-radius:7px;
+      }
+      .slot { width:var(--cw); height:calc(var(--cw)*110/78); border-radius:7px; border:1.5px dashed var(--slot-line); background:var(--slot); position:absolute; left:0; top:0; }
+      .card.sel { outline:3px solid var(--gold); outline-offset:-1px; box-shadow:0 0 14px rgba(232,201,105,0.7); z-index:6; }
+      .drag-layer { position:fixed; left:0; top:0; pointer-events:none; z-index:1000; }
+      .drag-layer .card { position:absolute; left:0; }
+
+      .win { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:2000; background:rgba(8,40,22,0.6); backdrop-filter:blur(3px); }
+      .win.show { display:flex; }
+      .win-card { background:#fffdf6; color:#23311f; border-radius:18px; padding:26px 30px; text-align:center; max-width:90%; box-shadow:0 30px 60px -20px rgba(0,0,0,0.6); }
+      .win-card h2 { font-size:28px; margin-bottom:6px; }
+      .win-card .big { font-size:32px; font-weight:800; color:#1f7a44; font-variant-numeric:tabular-nums; }
+      .win-card p { font-size:14px; color:#4a5a44; margin:6px 0 14px; }
+      .win-card button { font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; border-radius:10px; padding:10px 18px; border:none; background:#1f7a44; color:#fff; }
+
+      .status { font-size:13px; color:rgba(234,242,230,0.85); text-align:center; min-height:18px; }
+      .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+      .game-overview { max-width:720px; width:100%; margin:26px auto 0; padding:26px 30px 30px; background:#FFFDF8; border:1px solid rgba(0,0,0,0.12); border-radius:14px; color:#2A2017; line-height:1.62; text-align:left; box-shadow:0 16px 40px -26px rgba(0,0,0,0.6); }
+      .game-overview > :first-child { margin-top:0; }
+      .game-overview h2 { margin:0 0 12px; font-size:1.4rem; color:#14361f; }
+      .game-overview h3 { margin:26px 0 9px; font-size:1.08rem; color:#1f7a44; }
+      .game-overview p { margin:0 0 12px; }
+      .game-overview ul { margin:0 0 12px; padding-left:20px; }
+      .game-overview li { margin:0 0 7px; }
+      .game-overview b { color:#14361f; }
+      .game-overview .related-games-list { list-style:none; padding-left:0; display:flex; flex-wrap:wrap; gap:8px 18px; }
+      .game-overview .related-games-list a { color:#1f7a44; font-weight:600; text-decoration:none; }
+      .game-overview .related-games-list a:hover { text-decoration:underline; }
+      @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <header class="top-bar">
+            <a class="tb-back" href="../casino/">← Casino</a>
+            <div class="tb-title">
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Solitaire · solo</span>
+                <h1>Spider Solitaire</h1>
+            </div>
+            <div class="stats">
+                <div><span class="l">Time</span><span class="v" id="time">0:00</span></div>
+                <div><span class="l">Moves</span><span class="v" id="moves">0</span></div>
+                <div><span class="l">Runs</span><span class="v gold" id="runs">0/8</span></div>
+            </div>
+        </header>
+
+        <div class="controls">
+            <select id="suits" aria-label="Difficulty (suits)">
+                <option value="1">1 suit · easy</option>
+                <option value="2" selected>2 suits · medium</option>
+                <option value="4">4 suits · hard</option>
+            </select>
+            <button class="primary" id="newGame">New deal</button>
+            <button id="dealBtn">⬇ Deal row</button>
+            <button id="undoBtn" disabled>↶ Undo</button>
+        </div>
+
+        <div class="board-fit">
+            <div class="board" id="board">
+                <div class="zone-top">
+                    <div class="stock" id="stock" title="Deal a new row"></div>
+                    <div class="runs" id="runsRow"></div>
+                </div>
+                <div class="tableau" id="tableau"></div>
+            </div>
+        </div>
+
+        <div class="status" id="status">Build runs King → Ace. Same-suit runs move together. Tap a card, then its destination.</div>
+        <div class="sr-only" aria-live="polite" id="live"></div>
+
+        <section class="game-overview" aria-label="About Spider Solitaire">
+            <h2>How to play Spider Solitaire</h2>
+            <p>Spider Solitaire is the patience game played with two decks across ten columns. The goal is to build eight complete runs &mdash; each one a single suit from King all the way down to Ace &mdash; right inside the tableau. Finish a run and it's lifted off the board automatically; clear all eight to win. This free browser version offers one, two, or four suits, unlimited undo, and a move counter. No downloads, no signup.</p>
+
+            <h3>Spider Solitaire rules</h3>
+            <ul>
+                <li><b>The deal.</b> Ten columns hold the cards; only the top card of each column starts face-up. The rest of the deck waits in the stock.</li>
+                <li><b>Build down.</b> Place a card on one that's one rank higher of <i>any</i> suit &mdash; a 7 goes on any 8.</li>
+                <li><b>Move runs together.</b> A sequence of cards that's already in descending order <b>and the same suit</b> can be moved as a group.</li>
+                <li><b>Complete a suit.</b> Build a full King-to-Ace run in one suit and it's removed to the foundations automatically.</li>
+                <li><b>Deal a new row</b> from the stock when you're stuck &mdash; it deals one card to every column, but only when no column is empty.</li>
+                <li><b>Win</b> by completing all eight suit runs.</li>
+            </ul>
+
+            <h3>One suit, two suits, or four suits?</h3>
+            <p><b>One suit</b> is the easiest Spider &mdash; every card matches, so any descending run moves as a unit. <b>Two suits</b> is the balanced game most people play. <b>Four suits</b> is the classic, toughest version, where keeping suits together is the whole challenge. Start at one suit to learn the flow, then climb.</p>
+
+            <h3>Spider Solitaire strategy &mdash; how to win</h3>
+            <ul>
+                <li><b>Empty a column.</b> An empty column is the most valuable space on the board &mdash; it can hold any card and lets you untangle mixed-suit piles.</li>
+                <li><b>Keep suits together.</b> Whenever you have a choice, build in the same suit so the run can move as one and eventually complete.</li>
+                <li><b>Turn face-down cards first.</b> Prioritize moves that flip a hidden card &mdash; information is everything.</li>
+                <li><b>Don't deal too early.</b> Dealing a new row covers every column with fresh cards; make all the useful moves you can first.</li>
+                <li><b>Use undo to plan.</b> Because there's no hidden luck once cards are up, try a line and take it back if it doesn't open the board.</li>
+            </ul>
+
+            <h3>Frequently asked</h3>
+            <p><b>How do I play Spider Solitaire?</b> Build descending runs King to Ace in the ten columns. Same-suit runs move together; a finished 13-card suit run is cleared automatically. Deal a new row when stuck, and clear all eight runs to win.</p>
+            <p><b>What's the easiest version?</b> One suit &mdash; every card is the same suit, so runs always move together.</p>
+            <p><b>Why can't I deal new cards?</b> You can only deal when every column has at least one card. Fill the empty columns first.</p>
+            <p><b>Is it free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
+
+            <h3>More card &amp; casino games</h3>
+            <ul class="related-games-list">
+                <li><a href="../freecell/">FreeCell</a></li>
+                <li><a href="../solitaire/">Klondike Solitaire</a></li>
+                <li><a href="../blackjack/">Blackjack</a></li>
+                <li><a href="../casino/">All casino games &rarr;</a></li>
+            </ul>
+        </section>
+    </div>
+
+    <!-- Win overlay (declared before script so boot can bind it) -->
+    <div class="win" id="winWrap">
+        <div class="win-card">
+            <h2>You won! 🎉</h2>
+            <div class="big" id="winTime">0:00</div>
+            <p id="winMsg"></p>
+            <button id="winNew">New deal</button>
+        </div>
+    </div>
+
+    <script src="../casino/casino-cards.js?v=20260508e"></script>
+    <script>
+    'use strict';
+    (function () {
+        const CARDS = window.CASINO_CARDS;
+        const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        const RED = { h:1, d:1, s:0, c:0 };
+        const $ = (id) => document.getElementById(id);
+        const boardEl = $('board'), tableauEl = $('tableau'), stockEl = $('stock'), runsRow = $('runsRow');
+        const statusEl = $('status'), liveEl = $('live');
+        const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+
+        let tab, stock, completed, sel, history, moves, startTime, timerId, won, suits;
+
+        function lsGet(k){ try { return parseInt(localStorage.getItem(k),10)||0; } catch(e){ return 0; } }
+        function lsSet(k,v){ try { localStorage.setItem(k,String(v)); } catch(e){} }
+        function lsGetStr(k,d){ try { return localStorage.getItem(k)||d; } catch(e){ return d; } }
+
+        function makeDeck(suitCount) {
+            const su = suitCount === 1 ? ['s'] : suitCount === 2 ? ['s','h'] : ['s','h','d','c'];
+            const copies = 104 / (13 * su.length);
+            const d = []; let id = 0;
+            for (let k = 0; k < copies; k++) for (const s of su) for (let r = 1; r <= 13; r++) d.push({ r, s, id: id++, up: false });
+            for (let i = d.length - 1; i > 0; i--) { const j = Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
+            return d;
+        }
+        function deal() {
+            suits = parseInt($('suits').value, 10); lsSet('spiderSuits', suits);
+            const d = makeDeck(suits);
+            tab = [[],[],[],[],[],[],[],[],[],[]];
+            // 54 cards: cols 0-3 get 6, cols 4-9 get 5
+            let idx = 0;
+            for (let c = 0; c < 10; c++) { const n = c < 4 ? 6 : 5; for (let k = 0; k < n; k++) tab[c].push(d[idx++]); }
+            tab.forEach(col => { if (col.length) col[col.length-1].up = true; });
+            stock = d.slice(idx); // 50 remaining
+            completed = 0; sel = null; history = []; moves = 0; won = false;
+            startTimer(); render(); updateChrome();
+            statusEl.textContent = 'Build runs King → Ace. Same-suit runs move together.';
+        }
+
+        function isRed(c){ return RED[c.s] === 1; }
+        // A movable run from (col, idx): all face-up, same suit, consecutive descending to the end.
+        function validRun(col, idx) {
+            const a = tab[col]; if (idx < 0 || idx >= a.length || !a[idx].up) return false;
+            for (let i = idx; i < a.length; i++) {
+                if (!a[i].up) return false;
+                if (i > idx && !(a[i].r === a[i-1].r - 1 && a[i].s === a[i-1].s)) return false;
+            }
+            return true;
+        }
+        function describeRun(src) {
+            if (!validRun(src.col, src.idx)) return null;
+            return { cards: tab[src.col].slice(src.idx) };
+        }
+        function canDrop(run, col) {
+            const a = tab[col];
+            if (a.length === 0) return true;
+            const top = a[a.length-1];
+            return top.up && top.r === run.cards[0].r + 1;
+        }
+
+        function snapshot(){ return JSON.stringify({ tab, stock, completed, moves }); }
+        function pushHistory(){ history.push(snapshot()); if (history.length>500) history.shift(); $('undoBtn').disabled=false; }
+        function undo(){
+            if (!history.length) return;
+            const s = JSON.parse(history.pop());
+            tab = s.tab; stock = s.stock; completed = s.completed; moves = s.moves;
+            sel = null; won = false; $('undoBtn').disabled = history.length===0;
+            render(); updateChrome();
+        }
+
+        function tryMove(src, dstCol) {
+            const run = describeRun(src); if (!run) return false;
+            if (!canDrop(run, dstCol)) return false;
+            if (src.col === dstCol) return false;
+            pushHistory();
+            const moved = tab[src.col].splice(src.idx);
+            for (const c of moved) tab[dstCol].push(c);
+            // flip newly exposed source card
+            const sa = tab[src.col]; if (sa.length && !sa[sa.length-1].up) sa[sa.length-1].up = true;
+            moves++; sel = null;
+            checkCompletions();
+            $('undoBtn').disabled = history.length===0;
+            render(); updateChrome(); checkWin();
+            return true;
+        }
+
+        // Remove any completed King→Ace same-suit run from a column top.
+        function checkCompletions() {
+            for (let c = 0; c < 10; c++) {
+                const a = tab[c];
+                if (a.length < 13) continue;
+                const start = a.length - 13;
+                let ok = a[start].up && a[start].r === 13;
+                for (let i = start; ok && i < a.length; i++) {
+                    if (!a[i].up || a[i].r !== 13 - (i - start) || a[i].s !== a[start].s) ok = false;
+                }
+                if (ok) {
+                    a.splice(start, 13);
+                    completed++;
+                    if (a.length && !a[a.length-1].up) a[a.length-1].up = true;
+                    liveEl.textContent = 'Completed a suit! ' + completed + ' of 8.';
+                }
+            }
+        }
+
+        function dealRow() {
+            if (won) return;
+            if (!stock.length) { statusEl.textContent = 'The stock is empty — no more rows to deal.'; return; }
+            if (tab.some(col => col.length === 0)) { statusEl.textContent = 'Fill every empty column before dealing a new row.'; return; }
+            pushHistory();
+            for (let c = 0; c < 10; c++) { const card = stock.pop(); if (!card) break; card.up = true; tab[c].push(card); }
+            moves++; sel = null;
+            checkCompletions();
+            $('undoBtn').disabled = history.length===0;
+            render(); updateChrome(); checkWin();
+        }
+
+        function checkWin() {
+            if (completed === 8 && !won) {
+                won = true; stopTimer();
+                const secs = elapsed();
+                const key = 'spiderWon' + suits;
+                lsSet(key, lsGet(key) + 1);
+                const bk = 'spiderBest' + suits, best = lsGet(bk);
+                let msg = 'Solved in ' + fmt(secs) + ' · ' + moves + ' moves (' + suits + '-suit).';
+                if (!best || secs < best) { lsSet(bk, secs); msg = 'New best for ' + suits + '-suit: ' + fmt(secs) + '!'; }
+                $('winTime').textContent = fmt(secs); $('winMsg').textContent = msg;
+                $('winWrap').classList.add('show'); liveEl.textContent = 'You won! ' + msg;
+                setTimeout(() => { try { $('winNew').focus(); } catch(e){} }, 0);
+            }
+        }
+
+        // ── Render ──────────────────────────────────────────────────────────
+        function faceEl(card) {
+            const el = document.createElement('div'); el.className = 'card';
+            Object.assign(el.style, CARDS.faceStyle(RANKS[card.r-1], card.s));
+            el.dataset.id = card.id; return el;
+        }
+        function backEl() { const el = document.createElement('div'); el.className = 'back'; return el; }
+        function render() {
+            // stock
+            stockEl.innerHTML = '';
+            if (stock.length) {
+                const deals = Math.ceil(stock.length / 10);
+                const pile = document.createElement('div'); pile.className = 'pile';
+                for (let i = 0; i < Math.min(deals, 5); i++) { const b = backEl(); b.style.left = (i*4) + 'px'; b.style.top = (i*2) + 'px'; pile.appendChild(b); }
+                const lbl = document.createElement('div'); lbl.className = 'lbl'; lbl.textContent = deals + ' deal' + (deals>1?'s':'') + ' left';
+                stockEl.appendChild(pile); stockEl.appendChild(lbl);
+            } else {
+                const e = document.createElement('div'); e.className = 'stock-empty'; e.textContent = '∅'; stockEl.appendChild(e);
+            }
+            // runs
+            runsRow.innerHTML = '';
+            for (let i = 0; i < 8; i++) { const r = document.createElement('div'); r.className = 'run-slot' + (i < completed ? ' done' : ''); runsRow.appendChild(r); }
+            // tableau
+            tableauEl.innerHTML = '';
+            const upOv = 0.30, downOv = 0.16; // overlap fractions of card height
+            tab.forEach((col, ci) => {
+                const colEl = document.createElement('div'); colEl.className = 'col'; colEl.dataset.zone='tab'; colEl.dataset.col=ci;
+                let y = 0; let lastTop = 0;
+                if (col.length === 0) { const s = document.createElement('div'); s.className='slot'; s.dataset.zone='tab'; s.dataset.col=ci; colEl.appendChild(s); }
+                col.forEach((card, idx) => {
+                    const el = card.up ? faceEl(card) : backEl();
+                    el.dataset.zone = 'tab'; el.dataset.col = ci; el.dataset.idx = idx;
+                    el.style.top = 'calc(var(--cw)*110/78*' + y + ')';
+                    if (card.up && sel && sel.col === ci && idx >= sel.idx) el.classList.add('sel');
+                    colEl.appendChild(el);
+                    lastTop = y;
+                    y += (card.up ? upOv : downOv);
+                });
+                colEl.style.height = 'calc(var(--cw)*110/78*' + (lastTop + 1) + ')';
+                colEl.style.minHeight = 'calc(var(--cw)*110/78)';
+                tableauEl.appendChild(colEl);
+            });
+            scaleBoard();
+        }
+        function updateChrome(){ $('moves').textContent = moves; $('runs').textContent = completed + '/8'; }
+
+        // ── Hit testing ─────────────────────────────────────────────────────
+        function srcFromEl(el) {
+            if (!el || !el.classList.contains('card')) return null;
+            if (el.dataset.zone !== 'tab') return null;
+            return { col: +el.dataset.col, idx: +el.dataset.idx };
+        }
+        function dstColFromEl(el) {
+            if (!el) return null;
+            let n = el;
+            while (n && !(n.dataset && n.dataset.zone === 'tab')) n = n.parentElement;
+            return n ? +n.dataset.col : null;
+        }
+        function zoneElFromPoint(x,y){ const st = document.elementsFromPoint(x,y); for (const e of st) { if (e.dataset && e.dataset.zone === 'tab') return e; } return null; }
+
+        function handlePick(el) {
+            const src = srcFromEl(el);
+            if (sel) {
+                const dc = dstColFromEl(el);
+                if (dc != null && tryMove(sel, dc)) return;
+                if (src && validRun(src.col, src.idx)) { sel = src; render(); return; }
+                sel = null; render(); return;
+            }
+            if (src && validRun(src.col, src.idx)) { sel = src; render(); }
+        }
+        // Double-tap: auto-move the run to the best legal column (prefer same-suit landing, else any).
+        function autoSend(el) {
+            const src = srcFromEl(el); if (!src || !validRun(src.col, src.idx)) return;
+            const run = describeRun(src); if (!run) return;
+            let best = -1, bestSame = false;
+            for (let c = 0; c < 10; c++) {
+                if (c === src.col) continue;
+                if (!canDrop(run, c)) continue;
+                const a = tab[c]; const sameSuit = a.length && a[a.length-1].s === run.cards[0].s;
+                if (sameSuit && !bestSame) { best = c; bestSame = true; }
+                else if (best < 0) best = c;
+            }
+            if (best >= 0) tryMove(src, best);
+        }
+
+        // ── Pointer (click + drag) ──────────────────────────────────────────
+        let down=null, dragging=false, dragLayer=null, lastTap=0, lastTapId=null;
+        boardEl.addEventListener('pointerdown', (e) => {
+            const el = e.target.closest('.card,.slot,.back');
+            down = { x:e.clientX, y:e.clientY, el, id:e.pointerId }; dragging=false;
+        });
+        boardEl.addEventListener('pointermove', (e) => {
+            if (!down || e.pointerId !== down.id) return;
+            if (!dragging && Math.hypot(e.clientX-down.x, e.clientY-down.y) > 8) {
+                const src = srcFromEl(down.el);
+                if (src && validRun(src.col, src.idx)) startDrag(src, e);
+            }
+            if (dragging) moveDrag(e);
+        });
+        window.addEventListener('pointerup', (e) => {
+            if (!down) return;
+            if (dragging) endDrag(e);
+            else {
+                const el = down.el; const now = Date.now();
+                const id = el ? (el.classList.contains('card') ? 'c'+el.dataset.id : 's'+(el.dataset.col||'')) : null;
+                if (id && id === lastTapId && now - lastTap < 320) { autoSend(el); lastTap=0; lastTapId=null; }
+                else { handlePick(el); lastTap=now; lastTapId=id; }
+            }
+            down=null; dragging=false;
+        });
+        function cardW(){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cw')); }
+        function curScale(){ const m=/scale\(([0-9.]+)\)/.exec(boardEl.style.transform); return m?parseFloat(m[1]):1; }
+        function startDrag(src, e) {
+            sel = src; dragging = true; const run = describeRun(src); if (!run) { dragging=false; return; }
+            dragLayer = document.createElement('div'); dragLayer.className='drag-layer';
+            const sc = curScale(), cw = cardW()*sc, ch = cw*110/78;
+            run.cards.forEach((c, i) => { const el = faceEl(c); el.style.width=cw+'px'; el.style.height=ch+'px'; el.style.top=(i*ch*0.30)+'px'; dragLayer.appendChild(el); });
+            document.body.appendChild(dragLayer); dragLayer._w=cw; dragLayer._h=ch; render(); moveDrag(e);
+        }
+        function moveDrag(e){ if (dragLayer) dragLayer.style.transform = 'translate('+(e.clientX-dragLayer._w/2)+'px,'+(e.clientY-dragLayer._h/2)+'px)'; }
+        function endDrag(e){
+            if (dragLayer) { dragLayer.remove(); dragLayer=null; }
+            const dc = dstColFromEl(zoneElFromPoint(e.clientX, e.clientY));
+            let moved=false; if (dc != null && sel) moved = tryMove(sel, dc);
+            if (!moved) sel = null;
+            render();
+        }
+
+        // ── Scaling ─────────────────────────────────────────────────────────
+        function scaleBoard() {
+            const viewW = Math.min(window.innerWidth, document.documentElement.clientWidth);
+            if (!viewW || !window.innerHeight) return;
+            boardEl.style.transform = 'none';
+            const natW = boardEl.scrollWidth || boardEl.offsetWidth;
+            const natH = boardEl.scrollHeight || boardEl.offsetHeight;
+            const s = Math.min((viewW-24)/natW, (window.innerHeight*0.66)/natH, 1.2);
+            boardEl.style.transform = 'scale(' + s + ')';
+            boardEl.parentElement.style.height = (natH*s) + 'px';
+        }
+        window.addEventListener('resize', scaleBoard);
+        window.addEventListener('orientationchange', () => setTimeout(scaleBoard, 60));
+
+        function fmt(s){ const m=Math.floor(s/60); return m+':'+String(s%60).padStart(2,'0'); }
+        function elapsed(){ return Math.floor((Date.now()-startTime)/1000); }
+        function startTimer(){ stopTimer(); startTime=Date.now(); $('time').textContent='0:00'; timerId=setInterval(()=>{ $('time').textContent=fmt(elapsed()); },1000); }
+        function stopTimer(){ if (timerId){ clearInterval(timerId); timerId=null; } }
+
+        $('newGame').addEventListener('click', () => { $('winWrap').classList.remove('show'); deal(); });
+        $('winNew').addEventListener('click', () => { $('winWrap').classList.remove('show'); deal(); });
+        $('suits').addEventListener('change', () => { $('winWrap').classList.remove('show'); deal(); });
+        $('dealBtn').addEventListener('click', dealRow);
+        $('undoBtn').addEventListener('click', undo);
+        stockEl.addEventListener('click', dealRow);
+        window.addEventListener('keydown', (e) => {
+            const tag=(e.target&&e.target.tagName)||''; if (/^(INPUT|SELECT|TEXTAREA)$/.test(tag)) return;
+            if ((e.ctrlKey||e.metaKey) && e.key.toLowerCase()==='z') { e.preventDefault(); undo(); }
+            else if (e.key==='n'||e.key==='N') deal();
+            else if (e.key==='d'||e.key==='D') dealRow();
+        });
+
+        // boot
+        const sv = lsGetStr('spiderSuits','2'); if (['1','2','4'].includes(sv)) $('suits').value = sv;
+        deal();
+    })();
+    </script>
+</body>
+</html>
