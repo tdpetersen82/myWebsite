@@ -64,7 +64,7 @@
       .controls select option { color:#222; }
 
       .board-fit { position:relative; width:100%; display:flex; justify-content:center; }
-      .board { transform-origin: top center; }
+      .board { transform-origin: top center; touch-action: none; }
       .zone-top { display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; gap:10px; }
       .runs { display:flex; gap:5px; }
       .run-slot { width:calc(var(--cw)*0.5); height:calc(var(--cw)*0.5*110/78); border-radius:5px; border:1.5px dashed var(--slot-line); background:var(--slot); }
@@ -198,8 +198,8 @@
 
     <!-- Win overlay (declared before script so boot can bind it) -->
     <div class="win" id="winWrap">
-        <div class="win-card">
-            <h2>You won! 🎉</h2>
+        <div class="win-card" role="dialog" aria-modal="true" aria-labelledby="winHeading">
+            <h2 id="winHeading">You won! 🎉</h2>
             <div class="big" id="winTime">0:00</div>
             <p id="winMsg"></p>
             <button id="winNew">New deal</button>
@@ -212,12 +212,11 @@
     (function () {
         const CARDS = window.CASINO_CARDS;
         const RANKS = ['A','2','3','4','5','6','7','8','9','10','J','Q','K'];
+        const SUITNAME = { s:'spades', h:'hearts', d:'diamonds', c:'clubs' };
         const RED = { h:1, d:1, s:0, c:0 };
         const $ = (id) => document.getElementById(id);
         const boardEl = $('board'), tableauEl = $('tableau'), stockEl = $('stock'), runsRow = $('runsRow');
         const statusEl = $('status'), liveEl = $('live');
-        const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
         let tab, stock, completed, sel, history, moves, startTime, timerId, won, suits;
 
         function lsGet(k){ try { return parseInt(localStorage.getItem(k),10)||0; } catch(e){ return 0; } }
@@ -233,6 +232,7 @@
             return d;
         }
         function deal() {
+            $('winWrap').classList.remove('show'); // dismiss win overlay for every caller (button, 'n', suit change)
             suits = parseInt($('suits').value, 10); lsSet('spiderSuits', suits);
             const d = makeDeck(suits);
             tab = [[],[],[],[],[],[],[],[],[],[]];
@@ -270,6 +270,7 @@
         function snapshot(){ return JSON.stringify({ tab, stock, completed, moves }); }
         function pushHistory(){ history.push(snapshot()); if (history.length>500) history.shift(); $('undoBtn').disabled=false; }
         function undo(){
+            if (won) return; // game is solved — no undo once you've won
             if (!history.length) return;
             const s = JSON.parse(history.pop());
             tab = s.tab; stock = s.stock; completed = s.completed; moves = s.moves;
@@ -343,9 +344,12 @@
         function faceEl(card) {
             const el = document.createElement('div'); el.className = 'card';
             Object.assign(el.style, CARDS.faceStyle(RANKS[card.r-1], card.s));
-            el.dataset.id = card.id; return el;
+            el.dataset.id = card.id;
+            el.setAttribute('role', 'img');
+            el.setAttribute('aria-label', RANKS[card.r-1] + ' of ' + SUITNAME[card.s]);
+            return el;
         }
-        function backEl() { const el = document.createElement('div'); el.className = 'back'; return el; }
+        function backEl() { const el = document.createElement('div'); el.className = 'back'; el.setAttribute('aria-label', 'face-down card'); return el; }
         function render() {
             // stock
             stockEl.innerHTML = '';
@@ -449,10 +453,15 @@
             }
             down=null; dragging=false;
         });
+        function cancelDrag(){ if (dragLayer){ dragLayer.remove(); dragLayer=null; } down=null; dragging=false; sel=null; render(); }
+        window.addEventListener('pointercancel', cancelDrag);
+        window.addEventListener('lostpointercapture', () => { if (dragging) cancelDrag(); });
         function cardW(){ return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cw')); }
         function curScale(){ const m=/scale\(([0-9.]+)\)/.exec(boardEl.style.transform); return m?parseFloat(m[1]):1; }
         function startDrag(src, e) {
             sel = src; dragging = true; const run = describeRun(src); if (!run) { dragging=false; return; }
+            try { boardEl.setPointerCapture(e.pointerId); } catch (err) {} // keep tracking off-board / off-window
+            if (dragLayer) { dragLayer.remove(); dragLayer = null; } // never leak a previous ghost
             dragLayer = document.createElement('div'); dragLayer.className='drag-layer';
             const sc = curScale(), cw = cardW()*sc, ch = cw*110/78;
             run.cards.forEach((c, i) => { const el = faceEl(c); el.style.width=cw+'px'; el.style.height=ch+'px'; el.style.top=(i*ch*0.30)+'px'; dragLayer.appendChild(el); });

@@ -72,7 +72,7 @@
       .controls button.primary { background: var(--gold); color:#3a2e0c; border-color: var(--gold); }
 
       .board-fit { position: relative; width: 100%; display: flex; justify-content: center; }
-      .board { transform-origin: top center; }
+      .board { transform-origin: top center; touch-action: none; }
       .zone-top { display: grid; grid-template-columns: repeat(8, var(--cw)); gap: 10px; margin-bottom: 18px; }
       .tableau { display: grid; grid-template-columns: repeat(8, var(--cw)); gap: 10px; align-items: start; }
 
@@ -205,8 +205,8 @@
 
     <!-- Win overlay (position:fixed; declared before the script so boot can bind it) -->
     <div class="win" id="winWrap">
-        <div class="win-card">
-            <h2>You won! 🎉</h2>
+        <div class="win-card" role="dialog" aria-modal="true" aria-labelledby="winHeading">
+            <h2 id="winHeading">You won! 🎉</h2>
             <div class="big" id="winTime">0:00</div>
             <p id="winMsg"></p>
             <button id="winNew">New deal</button>
@@ -219,13 +219,12 @@
     (function () {
         const CARDS = window.CASINO_CARDS;
         const SUITS = ['s', 'h', 'd', 'c'];
+        const SUITNAME = { s: 'spades', h: 'hearts', d: 'diamonds', c: 'clubs' };
         const RED = { h: 1, d: 1, s: 0, c: 0 };
         const RANKS = ['A', '2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K'];
         const $ = (id) => document.getElementById(id);
         const boardEl = $('board'), zoneTop = $('zoneTop'), tableauEl = $('tableau');
         const statusEl = $('status'), liveEl = $('live');
-        const reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-
         // ── State ───────────────────────────────────────────────────────────
         let free, found, tab, sel, history, moves, startTime, timerId, won;
         // free: [card|null ×4]; found: {s,h,d,c} top value 0..13; tab: [ [card]... ×8 ]
@@ -242,6 +241,7 @@
         }
 
         function deal() {
+            $('winWrap').classList.remove('show'); // dismiss win overlay for every caller (button, 'n', suit change)
             const d = makeDeck();
             free = [null, null, null, null];
             found = { s: 0, h: 0, d: 0, c: 0 };
@@ -282,6 +282,7 @@
         }
         function pushHistory(){ history.push(snapshot()); if (history.length > 400) history.shift(); $('undoBtn').disabled = false; }
         function undo(){
+            if (won) return; // the deal is solved — no undo once you've won
             if (!history.length) return;
             const s = JSON.parse(history.pop());
             free = s.free; found = s.found; tab = s.tab; moves = s.moves;
@@ -412,6 +413,8 @@
             const fs = CARDS.faceStyle(RANKS[card.r - 1], card.s);
             Object.assign(el.style, fs);
             el.dataset.id = card.id;
+            el.setAttribute('role', 'img');
+            el.setAttribute('aria-label', RANKS[card.r - 1] + ' of ' + SUITNAME[card.s]);
             return el;
         }
         function render() {
@@ -548,11 +551,18 @@
             }
             down = null; dragging = false;
         });
+        function cancelDrag() {
+            if (dragLayer) { dragLayer.remove(); dragLayer = null; }
+            down = null; dragging = false; sel = null; render();
+        }
+        window.addEventListener('pointercancel', cancelDrag);
+        window.addEventListener('lostpointercapture', () => { if (dragging) cancelDrag(); });
 
         function startDrag(src, e) {
             sel = src; dragging = true;
             const run = describeRun(src); if (!run) { dragging = false; return; }
-            // for drag, the run must be movable to *something*; we still allow pickup and validate on drop
+            try { boardEl.setPointerCapture(e.pointerId); } catch (err) {} // keep tracking off-board / off-window
+            if (dragLayer) { dragLayer.remove(); dragLayer = null; } // never leak a previous ghost
             dragLayer = document.createElement('div'); dragLayer.className = 'drag-layer';
             const scale = curScale();
             const chPx = cardHeightPx() * scale, cwPx = cardWidthPx() * scale;
