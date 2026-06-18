@@ -1,0 +1,453 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+    <title>Spades — Play the Free Online Card Game vs Computer | Limestone Games</title>
+    <meta name="description" content="Play Spades free in your browser with a computer partner against two opponents. Bid your tricks, go Nil, watch your bags, and race to 500. No downloads, no signup.">
+    <meta name="keywords" content="spades, spades card game, play spades online, free spades, spades online, spades vs computer, nil bid, partnership spades">
+    <link rel="canonical" href="https://limestonegames.com/spades/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Spades","description":"Play Spades free in your browser — partner with the computer against two opponents, bid your tricks, go Nil, and race to 500.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Spades"}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Spades?", "acceptedAnswer": {"@type": "Answer", "text": "You partner with the player across from you against the other two. First everyone bids how many tricks they'll take, then you play 13 tricks. Spades are always trump. Make your team's combined bid to score 10 points per trick; race to 500."}}, {"@type": "Question", "name": "What is a Nil bid in Spades?", "acceptedAnswer": {"@type": "Answer", "text": "Bidding Nil means you predict you'll win zero tricks. Pull it off and your team gets a 100-point bonus; take even one trick and it's a 100-point penalty."}}, {"@type": "Question", "name": "What are bags in Spades?", "acceptedAnswer": {"@type": "Answer", "text": "Bags are overtricks — tricks you take beyond your bid. Each is worth 1 point, but every 10 bags your team accumulates costs you 100 points, so overbidding to dump tricks is dangerous."}}, {"@type": "Question", "name": "Is Spades free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs. Play with a computer partner against two opponents right in your browser."}}]}</script>
+    <meta property="og:title" content="Spades — Play the Free Online Card Game vs Computer | Limestone Games">
+    <meta property="og:description" content="Play Spades free in your browser with a computer partner. Bid, go Nil, watch your bags, race to 500.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/spades/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Spades — Play Free Online vs Computer | Limestone Games">
+    <meta name="twitter:description" content="Play Spades free in your browser. Bid, go Nil, race to 500.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+      :root { --ink:#EAF2E6; --felt-1:#1f7a44; --felt-2:#155f34; --gold:#E8C969; --cw:74px; }
+      * { box-sizing:border-box; margin:0; padding:0; }
+      html,body { height:100%; }
+      body { font-family:'Inter','Segoe UI',Tahoma,sans-serif; background:radial-gradient(120% 120% at 50% 0%, var(--felt-1) 0%, var(--felt-2) 70%, #0e4324 100%); color:var(--ink); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:14px 12px 32px; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
+      .game-shell { width:100%; max-width:880px; display:flex; flex-direction:column; align-items:center; gap:12px; }
+      .top-bar { width:100%; display:flex; align-items:center; gap:14px; padding:10px 16px 11px; background:rgba(0,0,0,0.22); border:1px solid rgba(255,255,255,0.14); border-radius:14px; flex-wrap:wrap; }
+      .tb-back { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; padding:7px 13px; border-radius:10px; border:1px solid rgba(255,255,255,0.25); color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; }
+      .tb-back:hover { border-color:var(--gold); color:var(--gold); }
+      .tb-title { display:flex; flex-direction:column; gap:2px; margin-right:auto; }
+      .tb-eyebrow { display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:rgba(234,242,230,0.7); }
+      .tb-dot { width:6px; height:6px; border-radius:50%; background:var(--gold); }
+      .tb-title h1 { font-size:21px; font-weight:800; }
+      .scorebar { display:flex; gap:18px; flex-wrap:wrap; }
+      .scorebar > div { display:flex; flex-direction:column; gap:1px; min-width:74px; text-align:center; }
+      .scorebar .l { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:rgba(234,242,230,0.65); }
+      .scorebar .v { font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; }
+      .scorebar .v.me { color:var(--gold); }
+      .scorebar .bags { font-size:10px; color:rgba(234,242,230,0.55); }
+
+      .controls { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center; min-height:38px; }
+      .controls button { font-family:inherit; font-size:13.5px; font-weight:700; color:var(--ink); background:rgba(255,255,255,0.10); cursor:pointer; border:1px solid rgba(255,255,255,0.22); border-radius:10px; padding:9px 14px; }
+      .controls button:hover:not(:disabled) { border-color:var(--gold); }
+      .controls .bidbtn { min-width:40px; padding:9px 11px; }
+      .controls .bidbtn.nil { color:var(--gold); }
+      .controls .lbl { font-size:13px; font-weight:700; color:rgba(234,242,230,0.85); margin-right:4px; }
+
+      .board-fit { position:relative; width:100%; display:flex; justify-content:center; overflow:hidden; }
+      .table { position:relative; width:760px; height:560px; transform-origin:top center; flex:0 0 auto; }
+      .seat { position:absolute; text-align:center; }
+      .seat .name { font-size:12px; font-weight:700; white-space:nowrap; }
+      .seat .name.active { color:var(--gold); }
+      .seat .name .tag { font-weight:600; color:rgba(234,242,230,0.7); }
+      .seat-N { top:0; left:50%; transform:translateX(-50%); }
+      .seat-W { left:0; top:46%; transform:translateY(-50%); }
+      .seat-E { right:0; top:46%; transform:translateY(-50%); }
+      .seat-S { bottom:84px; left:50%; transform:translateX(-50%); }
+      .mini { display:flex; }
+      .mini .b { width:34px; height:48px; border-radius:4px; margin-left:-22px; background:repeating-linear-gradient(45deg, rgba(255,255,255,0.10) 0 4px, transparent 4px 8px), linear-gradient(160deg,#2a4f86,#1c3a66); border:1.5px solid #e9eef7; }
+      .mini .b:first-child { margin-left:0; }
+      .seat-W .mini, .seat-E .mini { flex-direction:column; }
+      .seat-W .mini .b, .seat-E .mini .b { margin-left:0; margin-top:-38px; width:48px; height:34px; }
+      .seat-W .mini .b:first-child, .seat-E .mini .b:first-child { margin-top:0; }
+
+      .trick { position:absolute; left:50%; top:50%; width:0; height:0; }
+      .card, .pcard { width:var(--cw); height:calc(var(--cw)*110/78); border-radius:7px; box-shadow:0 2px 5px rgba(0,0,0,0.4); }
+      .pcard { position:absolute; background-color:#fff; }
+      .pcard.t-S { transform:translate(-50%, 6px); }
+      .pcard.t-N { transform:translate(-50%, calc(-100% - 6px)); }
+      .pcard.t-W { transform:translate(calc(-100% - 6px), -50%); }
+      .pcard.t-E { transform:translate(6px, -50%); }
+
+      .hand { position:absolute; bottom:0; left:50%; transform:translateX(-50%); height:calc(var(--cw)*110/78 + 22px); }
+      .hand .card { position:absolute; bottom:0; background-color:#fff; cursor:default; transition:transform .12s, box-shadow .12s; }
+      .hand .card.legal { cursor:pointer; }
+      .hand .card.legal:hover { transform:translateY(-14px); box-shadow:0 8px 18px rgba(0,0,0,0.45); }
+      .hand .card.dim { filter:brightness(0.66); }
+
+      .center-msg { position:absolute; left:50%; top:38%; transform:translate(-50%,-50%); text-align:center; font-size:15px; font-weight:700; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.6); pointer-events:none; max-width:300px; }
+
+      .overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:2000; background:rgba(8,40,22,0.62); backdrop-filter:blur(3px); }
+      .overlay.show { display:flex; }
+      .ov-card { background:#fffdf6; color:#23311f; border-radius:18px; padding:24px 28px; text-align:center; max-width:92%; box-shadow:0 30px 60px -20px rgba(0,0,0,0.6); }
+      .ov-card h2 { font-size:24px; margin-bottom:8px; }
+      .ov-card table { margin:8px auto 14px; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+      .ov-card td, .ov-card th { padding:4px 16px; font-size:14px; text-align:right; }
+      .ov-card th:first-child, .ov-card td:first-child { text-align:left; }
+      .ov-card tr.win td { color:#1f7a44; font-weight:800; }
+      .ov-card button { font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; border-radius:10px; padding:10px 18px; border:none; background:#1f7a44; color:#fff; }
+      .status { font-size:13px; color:rgba(234,242,230,0.9); text-align:center; min-height:18px; }
+      .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+      .game-overview { max-width:720px; width:100%; margin:26px auto 0; padding:26px 30px 30px; background:#FFFDF8; border:1px solid rgba(0,0,0,0.12); border-radius:14px; color:#2A2017; line-height:1.62; text-align:left; box-shadow:0 16px 40px -26px rgba(0,0,0,0.6); }
+      .game-overview > :first-child { margin-top:0; }
+      .game-overview h2 { margin:0 0 12px; font-size:1.4rem; color:#14361f; }
+      .game-overview h3 { margin:26px 0 9px; font-size:1.08rem; color:#1f7a44; }
+      .game-overview p { margin:0 0 12px; }
+      .game-overview ul { margin:0 0 12px; padding-left:20px; }
+      .game-overview li { margin:0 0 7px; }
+      .game-overview b { color:#14361f; }
+      .game-overview .related-games-list { list-style:none; padding-left:0; display:flex; flex-wrap:wrap; gap:8px 18px; }
+      .game-overview .related-games-list a { color:#1f7a44; font-weight:600; text-decoration:none; }
+      .game-overview .related-games-list a:hover { text-decoration:underline; }
+      @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <header class="top-bar">
+            <a class="tb-back" href="../casino/">← Casino</a>
+            <div class="tb-title">
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Card game · vs Computer</span>
+                <h1>Spades</h1>
+            </div>
+            <div class="scorebar" id="scorebar"></div>
+        </header>
+
+        <div class="controls" id="controls"></div>
+
+        <div class="board-fit">
+            <div class="table" id="table">
+                <div class="seat seat-N" id="seatN"></div>
+                <div class="seat seat-W" id="seatW"></div>
+                <div class="seat seat-E" id="seatE"></div>
+                <div class="seat seat-S"><div class="name" id="nameS">You</div></div>
+                <div class="trick" id="trick"></div>
+                <div class="center-msg" id="centerMsg"></div>
+                <div class="hand" id="hand"></div>
+            </div>
+        </div>
+
+        <div class="status" id="status">Place your bid to begin.</div>
+        <div class="sr-only" aria-live="polite" id="live"></div>
+
+        <section class="game-overview" aria-label="About Spades">
+            <h2>How to play Spades</h2>
+            <p>Spades is the classic partnership trick-taking card game where spades are always trump. You and the player across from you form a team against the other two; together you <b>bid</b> how many tricks you'll win, then try to make exactly that. This free browser version gives you a computer partner and two computer opponents, with Nil bids, bags, and a race to 500. No downloads, no signup.</p>
+
+            <h3>Spades rules</h3>
+            <ul>
+                <li><b>Teams.</b> You partner with North (across the table) against West and East.</li>
+                <li><b>Bidding.</b> Each player bids the number of tricks they expect to win. Your team's bids add together into one contract.</li>
+                <li><b>Trump.</b> Spades always beat the other three suits. The highest spade in a trick wins it; if no spade is played, the highest card of the led suit wins.</li>
+                <li><b>Follow suit.</b> You must follow the led suit if you can. If you can't, you may play anything &mdash; including a trump spade.</li>
+                <li><b>Breaking spades.</b> You can't <i>lead</i> a spade until spades have been "broken" (played because someone couldn't follow), unless spades are all you hold.</li>
+                <li><b>Scoring.</b> Make your team's combined bid for 10 points per bid trick. Miss it and you lose 10 per bid trick. First team to 500 wins.</li>
+            </ul>
+
+            <h3>Nil bids and bags</h3>
+            <p>A <b>Nil</b> bid is a promise to win <i>zero</i> tricks &mdash; succeed and your team scores +100, fail and it's &minus;100. It's the highest-risk, highest-reward call in Spades. <b>Bags</b> are overtricks: each one you take beyond your bid is worth a single point, but collect ten bags and your team is docked 100 points. So taking more tricks than you bid is a slow-burning liability &mdash; bid honestly.</p>
+
+            <h3>Spades strategy &mdash; how to win</h3>
+            <ul>
+                <li><b>Count your tricks.</b> Bid your sure winners: aces, the king and queen of spades, and long spade suits. Don't pad your bid.</li>
+                <li><b>Protect a partner's Nil.</b> If your partner bid Nil, take tricks aggressively and lead low so they can dump high cards safely.</li>
+                <li><b>Save your spades.</b> Spades are trump &mdash; hold them to win tricks you can't take in suit, and to grab the lead.</li>
+                <li><b>Don't bag yourself.</b> Tricks beyond your bid are nearly worthless and eventually cost 100. Sluff losers instead of overtrumping.</li>
+                <li><b>Lead through strength.</b> Force out high cards and trump by leading suits your opponents are strong in.</li>
+            </ul>
+
+            <h3>Frequently asked</h3>
+            <p><b>How do I play Spades?</b> Bid your tricks, then follow suit each trick. Spades are trump; the highest spade (or highest led card if none) wins. Make your team's combined bid and race to 500.</p>
+            <p><b>What is a Nil bid?</b> A bid of zero tricks &mdash; +100 if you take none, &minus;100 if you take any.</p>
+            <p><b>What are bags?</b> Overtricks beyond your bid; each is 1 point, but every 10 cost you 100.</p>
+            <p><b>Is Spades free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
+
+            <h3>More card &amp; casino games</h3>
+            <ul class="related-games-list">
+                <li><a href="../hearts/">Hearts</a></li>
+                <li><a href="../solitaire/">Klondike Solitaire</a></li>
+                <li><a href="../freecell/">FreeCell</a></li>
+                <li><a href="../casino/">All casino games &rarr;</a></li>
+            </ul>
+        </section>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <div class="ov-card" role="dialog" aria-modal="true" aria-labelledby="ovHeading">
+            <h2 id="ovHeading">Hand over</h2>
+            <div id="ovBody"></div>
+            <button id="ovBtn">Next hand</button>
+        </div>
+    </div>
+
+    <script src="../casino/casino-cards.js?v=20260508e"></script>
+    <script>
+    'use strict';
+    (function () {
+        const CARDS = window.CASINO_CARDS;
+        const SUITNAME = { s:'spades', h:'hearts', d:'diamonds', c:'clubs' };
+        const NAMES = ['You', 'West', 'North', 'East'];
+        const SEAT = ['S', 'W', 'N', 'E'];
+        const TEAMS = [[0,2],[1,3]]; // team0 = You+North, team1 = West+East
+        const TARGET = 500;
+        const $ = (id) => document.getElementById(id);
+        const handEl = $('hand'), trickEl = $('trick'), tableEl = $('table');
+        const statusEl = $('status'), liveEl = $('live'), centerMsg = $('centerMsg');
+
+        function rankStr(r){ return r===14?'A':r===13?'K':r===12?'Q':r===11?'J':String(r); }
+        const isSpade = (c)=> c.s==='s';
+
+        let hands, bids, tricksWon, teamScore, teamBags, trick, current, leader, spadesBroken, trickCount, phase, dealer, busy;
+        let handNo = 0;
+
+        function lsGet(k){ try { return parseInt(localStorage.getItem(k),10)||0; } catch(e){ return 0; } }
+        function lsSet(k,v){ try { localStorage.setItem(k,String(v)); } catch(e){} }
+
+        function newGame(){ teamScore=[0,0]; teamBags=[0,0]; handNo=0; $('overlay').classList.remove('show'); startHand(); }
+        function startHand(){
+            const d=[];
+            for (const s of ['s','h','d','c']) for (let r=2;r<=14;r++) d.push({ r, s, id:s+r });
+            for (let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
+            hands=[[],[],[],[]]; d.forEach((c,i)=>hands[i%4].push(c)); hands.forEach(sortHand);
+            bids=[null,null,null,null]; tricksWon=[0,0,0,0]; trick=[]; spadesBroken=false; trickCount=0; busy=false;
+            dealer = handNo % 4;
+            phase='bidding'; current=(dealer+1)%4;
+            render(); advanceBid();
+        }
+        function sortHand(h){ const ord={s:0,h:1,c:2,d:3}; h.sort((a,b)=> ord[a.s]-ord[b.s] || b.r-a.r); }
+
+        // ── Bidding ─────────────────────────────────────────────────────────
+        function advanceBid(){
+            if (bids.every(b=>b!==null)) { beginPlay(); return; }
+            if (current===0) { render(); statusEl.textContent='Your bid — how many tricks will you take?'; }
+            else { busy=true; setTimeout(()=>{ busy=false; placeBid(current, estimateBid(current)); }, 520); }
+        }
+        function estimateBid(p){
+            const h=hands[p]; let pts=0;
+            const sp=h.filter(isSpade);
+            for (const c of sp){ if (c.r===14) pts+=1; else if (c.r===13) pts+=0.9; else if (c.r===12) pts+=0.65; else if (c.r===11) pts+=0.35; }
+            if (sp.length>3) pts += (sp.length-3)*0.5;
+            for (const s of ['h','d','c']){
+                const suit=h.filter(c=>c.s===s);
+                if (suit.some(c=>c.r===14)) pts+=1;
+                if (suit.some(c=>c.r===13)) pts += (suit.length>1?0.6:0.3);
+                if (suit.length===0) pts+=1; else if (suit.length===1) pts+=0.5;
+            }
+            return Math.max(1, Math.min(13, Math.round(pts)));
+        }
+        function placeBid(p,n){ bids[p]=n; current=(current+1)%4; render(); advanceBid(); }
+
+        // ── Play ────────────────────────────────────────────────────────────
+        function beginPlay(){ phase='playing'; current=(dealer+1)%4; leader=current; trick=[]; render(); advance(); }
+        function legalMoves(p){
+            const h=hands[p];
+            if (trick.length===0){
+                const nonSp=h.filter(c=>!isSpade(c));
+                if (!spadesBroken && nonSp.length) return nonSp;
+                return h.slice();
+            }
+            const led=trick[0].card.s;
+            const follow=h.filter(c=>c.s===led);
+            return follow.length ? follow : h.slice();
+        }
+        function trickWinner(){
+            const led=trick[0].card.s;
+            const sp=trick.filter(t=>isSpade(t.card));
+            const pool = sp.length ? sp : trick.filter(t=>t.card.s===led);
+            return pool.reduce((a,b)=> b.card.r>a.card.r?b:a);
+        }
+        function advance(){
+            if (busy) return;
+            if (trick.length===4){ busy=true; setTimeout(resolveTrick, 820); return; }
+            if (current===0){ render(); statusEl.textContent='Your turn — '+(trick.length?('follow '+SUITNAME[trick[0].card.s]):'lead'); }
+            else { busy=true; setTimeout(()=>{ busy=false; aiPlay(current); }, 540); }
+        }
+        function playCard(p,card){
+            const idx=hands[p].findIndex(c=>c.id===card.id); if (idx<0) return;
+            hands[p].splice(idx,1); trick.push({p,card});
+            if (isSpade(card) && trick[0].card.s!=='s') spadesBroken=true; // trumped/sluffed a spade
+            current=(current+1)%4; render(); advance();
+        }
+        function aiPlay(p){
+            const legal=legalMoves(p);
+            const partner=(p+2)%4;
+            let card;
+            if (trick.length===0){
+                // lead: prefer an offsuit ace, else a low non-spade, else lowest
+                const offAces=legal.filter(c=>!isSpade(c)&&c.r===14);
+                if (offAces.length) card=offAces[0];
+                else { const nonSp=legal.filter(c=>!isSpade(c)); const pool=nonSp.length?nonSp:legal; card=pool.reduce((a,b)=>b.r<a.r?b:a); }
+            } else {
+                const led=trick[0].card.s;
+                const winning=trickWinner();
+                const partnerWinning = winning.p===partner;
+                const follow=legal.filter(c=>c.s===led);
+                if (follow.length){
+                    if (partnerWinning){ card=follow.reduce((a,b)=>b.r<a.r?b:a); } // let partner have it
+                    else {
+                        // can I beat current winner in led suit (only matters if no spade is winning)?
+                        const winRank = isSpade(winning.card) ? -1 : winning.card.r;
+                        const beats=follow.filter(c=>c.r>winRank);
+                        card = beats.length ? beats.reduce((a,b)=>b.r<a.r?b:a) : follow.reduce((a,b)=>b.r<a.r?b:a);
+                    }
+                } else {
+                    // void in led: trump to win if worthwhile, else sluff lowest
+                    const spades=legal.filter(isSpade);
+                    const winnerIsSpade=isSpade(winning.card);
+                    if (partnerWinning){
+                        const offs=legal.filter(c=>!isSpade(c)); card=(offs.length?offs:legal).reduce((a,b)=>b.r<a.r?b:a);
+                    } else if (spades.length){
+                        const need = winnerIsSpade ? spades.filter(c=>c.r>winning.card.r) : spades;
+                        card = need.length ? need.reduce((a,b)=>b.r<a.r?b:a) : (legal.filter(c=>!isSpade(c)).concat(spades)).reduce((a,b)=>b.r<a.r?b:a);
+                    } else { card=legal.reduce((a,b)=>b.r<a.r?b:a); }
+                }
+            }
+            playCard(p,card);
+        }
+        function resolveTrick(){
+            const win=trickWinner();
+            tricksWon[win.p]++; trickCount++;
+            trick=[]; current=win.p; leader=win.p; busy=false; render();
+            if (hands[0].length===0){ endHand(); return; }
+            advance();
+        }
+
+        function endHand(){
+            const delta=[0,0];
+            for (let t=0;t<2;t++){
+                const [a,b]=TEAMS[t];
+                const tricks=tricksWon[a]+tricksWon[b];
+                let contract=0, nil=0;
+                [a,b].forEach(pl=>{ if (bids[pl]===0) nil += (tricksWon[pl]===0?100:-100); else contract+=bids[pl]; });
+                let sc=0;
+                if (tricks>=contract){ sc += contract*10; const bags=tricks-contract; sc+=bags; teamBags[t]+=bags; if (teamBags[t]>=10){ sc-=100; teamBags[t]-=10; } }
+                else { sc -= contract*10; }
+                sc += nil;
+                delta[t]=sc; teamScore[t]+=sc;
+            }
+            handNo++;
+            const over = teamScore[0]>=TARGET || teamScore[1]>=TARGET;
+            render(); showOverlay(delta, over);
+        }
+
+        // ── Rendering ───────────────────────────────────────────────────────
+        function faceEl(card, cls){
+            const el=document.createElement('div'); el.className=cls||'card';
+            Object.assign(el.style, CARDS.faceStyle(rankStr(card.r), card.s));
+            el.dataset.id=card.id; el.setAttribute('role','img'); el.setAttribute('aria-label', rankStr(card.r)+' of '+SUITNAME[card.s]);
+            return el;
+        }
+        function miniFan(n){ const w=document.createElement('div'); w.className='mini'; for (let i=0;i<Math.min(n,13);i++){ const b=document.createElement('div'); b.className='b'; w.appendChild(b); } return w; }
+        function seatTag(pl){
+            if (phase==='bidding') return bids[pl]===null?'…':(bids[pl]===0?'Nil':'bid '+bids[pl]);
+            return (bids[pl]===0?'Nil':'bid '+bids[pl]) + ' · won '+tricksWon[pl];
+        }
+        function render(){
+            renderScorebar(); renderControls();
+            $('seatN').innerHTML=''; $('seatW').innerHTML=''; $('seatE').innerHTML='';
+            [['N',2],['W',1],['E',3]].forEach(([seat,pl])=>{
+                const box=$('seat'+seat);
+                const nm=document.createElement('div'); nm.className='name'+(current===pl&&phase!=='handover'?' active':'');
+                nm.innerHTML = NAMES[pl]+' <span class="tag">'+seatTag(pl)+'</span>';
+                if (seat==='N'){ box.appendChild(miniFan(hands[pl].length)); box.appendChild(nm); }
+                else { box.appendChild(nm); box.appendChild(miniFan(hands[pl].length)); }
+            });
+            $('nameS').className='name'+(current===0&&phase!=='handover'?' active':'');
+            $('nameS').innerHTML='You <span class="tag">'+seatTag(0)+'</span>';
+            trickEl.innerHTML='';
+            trick.forEach(t=>{ const el=faceEl(t.card,'pcard'); el.classList.add('t-'+SEAT[t.p]); trickEl.appendChild(el); });
+            centerMsg.textContent = phase==='bidding' ? (current===0?'Your bid':(NAMES[current]+' is bidding…')) : '';
+            renderHand(); scaleTable();
+        }
+        function renderHand(){
+            handEl.innerHTML='';
+            const h=hands[0]; const n=h.length;
+            const legal=(phase==='playing'&&current===0&&!busy)?legalMoves(0).map(c=>c.id):[];
+            const cw=parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cw'));
+            const span=Math.min(cw*0.62, n>1?(640-cw)/(n-1):0);
+            handEl.style.width=(cw+span*(n-1))+'px';
+            h.forEach((card,i)=>{
+                const el=faceEl(card); el.style.left=(i*span)+'px';
+                if (phase==='playing'&&current===0){ if (legal.includes(card.id)) el.classList.add('legal'); else el.classList.add('dim'); }
+                handEl.appendChild(el);
+            });
+        }
+        function renderScorebar(){
+            const bar=$('scorebar'); bar.innerHTML='';
+            [['Your team',0],['Opponents',1]].forEach(([label,t])=>{
+                const d=document.createElement('div');
+                const l=document.createElement('div'); l.className='l'; l.textContent=label;
+                const v=document.createElement('div'); v.className='v'+(t===0?' me':''); v.textContent=teamScore[t];
+                const bg=document.createElement('div'); bg.className='bags'; bg.textContent='bags '+teamBags[t];
+                d.appendChild(l); d.appendChild(v); d.appendChild(bg); bar.appendChild(d);
+            });
+        }
+        function renderControls(){
+            const c=$('controls'); c.innerHTML='';
+            const ng=document.createElement('button'); ng.textContent='New game'; ng.onclick=newGame; c.appendChild(ng);
+            if (phase==='bidding' && current===0){
+                const lbl=document.createElement('span'); lbl.className='lbl'; lbl.textContent='Your bid:'; c.appendChild(lbl);
+                for (let n=0;n<=8;n++){
+                    const b=document.createElement('button'); b.className='bidbtn'+(n===0?' nil':'');
+                    b.textContent=n===0?'Nil':String(n); b.onclick=()=>placeBid(0,n); c.appendChild(b);
+                }
+                for (let n=9;n<=13;n++){ const b=document.createElement('button'); b.className='bidbtn'; b.textContent=String(n); b.onclick=()=>placeBid(0,n); c.appendChild(b); }
+            }
+        }
+
+        handEl.addEventListener('click',(e)=>{
+            const el=e.target.closest('.card'); if (!el) return;
+            if (phase!=='playing'||current!==0||busy) return;
+            const card=hands[0].find(c=>c.id===el.dataset.id); if (!card) return;
+            if (legalMoves(0).some(c=>c.id===card.id)) playCard(0,card);
+        });
+
+        function showOverlay(delta, over){
+            const made=(t)=>{ const [a,b]=TEAMS[t]; const tricks=tricksWon[a]+tricksWon[b]; let con=0; [a,b].forEach(p=>{ if(bids[p]!==0)con+=bids[p]; }); return tricks>=con; };
+            let rows='';
+            const winScore=Math.max(teamScore[0],teamScore[1]);
+            [['Your team',0],['Opponents',1]].forEach(([label,t])=>{
+                const [a,b]=TEAMS[t]; const con=bids[a]+bids[b]; const tricks=tricksWon[a]+tricksWon[b];
+                rows += '<tr'+(over&&teamScore[t]===winScore?' class="win"':'')+'><td>'+label+'</td><td>'+con+'</td><td>'+tricks+'</td><td>'+(delta[t]>=0?'+':'')+delta[t]+'</td><td>'+teamScore[t]+'</td></tr>';
+            });
+            let head='Hand over';
+            if (over) head = teamScore[0]>teamScore[1] ? 'Your team wins! 🎉' : teamScore[0]<teamScore[1] ? 'Opponents win' : 'Tie — play on';
+            if (over && teamScore[0]===teamScore[1]){ over=false; } // tie at/over target: keep playing
+            $('ovHeading').textContent=head;
+            $('ovBody').innerHTML='<table><tr><th>Team</th><th>Bid</th><th>Tricks</th><th>Hand</th><th>Total</th></tr>'+rows+'</table>';
+            $('ovBtn').textContent= over ? 'New game' : 'Next hand';
+            $('ovBtn').onclick = over ? newGame : ()=>{ $('overlay').classList.remove('show'); startHand(); };
+            $('overlay').classList.add('show');
+            if (over && teamScore[0]>teamScore[1]) lsSet('spadesWon', lsGet('spadesWon')+1);
+            liveEl.textContent=head; setTimeout(()=>{ try{ $('ovBtn').focus(); }catch(e){} },0);
+        }
+
+        function scaleTable(){
+            const viewW=Math.min(window.innerWidth, document.documentElement.clientWidth);
+            if (!viewW || !window.innerHeight) return;
+            tableEl.style.transform='none';
+            const s=Math.min((viewW-20)/760, (window.innerHeight*0.62)/560, 1.05);
+            tableEl.style.transform='scale('+s+')';
+            tableEl.parentElement.style.height=(560*s)+'px';
+        }
+        window.addEventListener('resize', scaleTable);
+        window.addEventListener('orientationchange', ()=>setTimeout(scaleTable,60));
+        window.addEventListener('keydown',(e)=>{ const t=(e.target&&e.target.tagName)||''; if(/^(INPUT|SELECT|TEXTAREA)$/.test(t))return; if(e.key==='n'||e.key==='N') newGame(); });
+
+        newGame();
+    })();
+    </script>
+</body>
+</html>
