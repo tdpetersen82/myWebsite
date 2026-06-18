@@ -156,7 +156,7 @@
       }
       .related-games-list a:hover { background: rgba(43, 95, 168, 0.2); }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618c">
 </head>
 <body>
     <div class="game-shell">
@@ -198,48 +198,41 @@
         <p class="hint">You are red and move first. Drop a disc into any column — get four of your discs in a row (across, down, or diagonally) before the computer does.</p>        </div>
         
 
-        <details id="how">
-            <summary><h2>How to play Connect 4</h2></summary>
-            <p>Connect 4 is the two-player classic where you take turns dropping discs into a 7-column, 6-row grid. Discs fall to the lowest open slot in the column you pick. The first player to line up four of their own discs in a row — horizontally, vertically, or diagonally — wins. If the grid fills with no four-in-a-row, it's a draw.</p>
+        <section class="game-overview" aria-label="About Connect 4">
+            <h2>How to play Connect 4 online</h2>
+            <p>Connect 4 is the fast, two-player &ldquo;four in a row&rdquo; game played in a standing seven-by-six grid. You and the computer take turns dropping discs down the columns; the first to line up four of their color &mdash; in any direction &mdash; wins. This free browser version has three difficulty levels and no downloads or signup.</p>
 
-            <h3>Controls</h3>
+            <h3>Connect 4 rules</h3>
             <ul>
-                <li>Click or tap a column &mdash; drop your disc into the lowest open slot</li>
-                <li>New game &mdash; clear the grid and start over</li>
+                <li><b>Drop a disc.</b> On your turn, pick a column. Your disc falls to the lowest open slot in that column &mdash; you only choose the column, gravity does the rest.</li>
+                <li><b>Win condition.</b> Get four of your discs in a row horizontally, vertically, or diagonally.</li>
+                <li><b>The draw.</b> If the whole grid fills with no four-in-a-row, the game is a tie.</li>
             </ul>
 
-            <h3>Difficulty</h3>
+            <h3>Connect 4 strategy &mdash; how to win</h3>
             <ul>
-                <li><b>Easy</b> &mdash; shallow look-ahead and the occasional random drop; forgiving.</li>
-                <li><b>Medium</b> &mdash; 4-ply minimax; blocks your threats and builds its own.</li>
-                <li><b>Hard</b> &mdash; 6-ply minimax with alpha-beta pruning and center weighting.</li>
+                <li><b>Take the center.</b> The middle column sits in the most winning lines &mdash; claiming it early is the single strongest move.</li>
+                <li><b>Build double threats.</b> Set up two ways to make four at once; your opponent can only block one.</li>
+                <li><b>Watch the diagonals.</b> Diagonal fours are the easiest to miss &mdash; on both your side and the computer's.</li>
+                <li><b>Block on time, not late.</b> If the computer has three in a row with an open end, block it before adding to your own plan.</li>
+                <li><b>Think about the stack.</b> Every disc you drop changes which slots open next &mdash; don't hand your opponent a winning square right above your move.</li>
             </ul>
-
-            <h3>Tips &amp; strategy</h3>
-            <ul>
-                <li><b>Own the center column.</b> It runs through more winning lines than any other column — take it early.</li>
-                <li><b>Make double threats.</b> Set up two ways to win at once so a single block can't stop both.</li>
-                <li><b>Watch the odd rows.</b> As the first player, threats that complete on odd rows (1, 3, 5 from the bottom) are especially strong.</li>
-                <li><b>Block before you build.</b> If the computer has three in a row with an open end, stop it before chasing your own line.</li>
-            </ul>
-
-            <h3>About Connect 4</h3>
-            <p>Connect Four was published by Milton Bradley in 1974. It's a "solved" game: with perfect play the first player can always force a win by starting in the center column. The grid here is the standard 7×6.</p>
+            <p>Played perfectly, the first player can always force a win by starting in the center column &mdash; which is exactly why the center is so valuable.</p>
 
             <h3>Frequently asked</h3>
-            <p><b>How do I play Connect 4?</b> Click or tap a column to drop your disc. First to four in a row wins.</p>
+            <p><b>How do I play Connect 4?</b> Take turns dropping discs into the columns. Each disc falls to the lowest open slot. Be the first to line up four of your color in a row &mdash; across, up, or diagonally.</p>
+            <p><b>What's the best first move in Connect 4?</b> The center column. It belongs to the most possible four-in-a-rows, and with perfect play a center start is a forced win for the first player.</p>
             <p><b>Is Connect 4 free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
-            <p><b>What's the best opening?</b> The center column — it belongs to the most winning lines.</p>
-            <p><b>Does my record save?</b> Yes &mdash; your wins, losses, and best streak are stored locally in your browser.</p>
+            <p><b>Does my record save?</b> Yes &mdash; your results are stored locally in your browser.</p>
 
             <h3>More strategy games</h3>
             <ul class="related-games-list">
-                <li><a href="../connect-dots/">Dots &amp; Boxes</a></li>
-                <li><a href="../chess/">Chess</a></li>
+                <li><a href="../ultimate-tic-tac-toe/">Ultimate Tic-Tac-Toe</a></li>
+                <li><a href="../othello/">Othello</a></li>
                 <li><a href="../checkers/">Checkers</a></li>
                 <li><a href="../strategy/">All strategy games &rarr;</a></li>
             </ul>
-        </details>
+        </section>
     </div>
 
     <script>

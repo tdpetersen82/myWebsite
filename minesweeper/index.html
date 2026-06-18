@@ -216,7 +216,7 @@
       }
       .related-games-list a:hover { background: rgba(201, 111, 42, 0.2); }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618c">
 </head>
 <body>
     <div class="game-shell">
@@ -265,43 +265,42 @@
         <div class="status" id="status">Click any square to start. The first click is always safe.</div>
         <p class="hint-line">Tip: <b>right-click</b> (or turn on Flag mode) to mark a mine. Click a number with the right count of flags around it to clear its neighbors.</p>
 
-        <details id="how">
-            <summary><h2>How to play Minesweeper</h2></summary>
-            <p>Minesweeper is a deduction puzzle. Hidden under the grid are mines; the rest of the squares are safe. Reveal a safe square and it shows a number — how many of its eight neighbors are mines. A blank square (zero) means none of its neighbors are mines, so the board opens up automatically. Use the numbers to reason out exactly where the mines are, flag them, and clear every safe square to win.</p>
+        <section class="game-overview" aria-label="About Minesweeper">
+            <h2>How to play Minesweeper online</h2>
+            <p>Minesweeper is the timeless logic puzzle: clear a grid of hidden squares without detonating any of the mines buried in it. Every safe square you uncover tells you how many mines touch it &mdash; and from those numbers you deduce where the mines are. This free browser version has Beginner, Intermediate, and Expert boards, with no downloads or signup.</p>
 
-            <h3>Controls</h3>
+            <h3>Minesweeper rules</h3>
             <ul>
-                <li><b>Left-click / tap</b> — reveal a square.</li>
-                <li><b>Right-click</b> (or turn on <b>Flag mode</b>, or long-press on touch) — plant or remove a flag.</li>
-                <li><b>Click a revealed number</b> — if you've flagged exactly that many neighbors, it clears the rest (a "chord"). A fast way to open big areas — but only when your flags are right.</li>
-                <li><kbd>F</kbd> — toggle Flag mode; <kbd>N</kbd> — new game.</li>
+                <li><b>Reveal squares.</b> Click a square to uncover it. Hit a mine and the game's over &mdash; so reveal carefully.</li>
+                <li><b>Read the numbers.</b> A revealed number tells you how many mines sit in the eight squares around it. A blank square touches zero mines and auto-clears its neighbors.</li>
+                <li><b>Flag mines.</b> Right-click (or long-press on a phone) to plant a flag on a square you've deduced is a mine, so you don't click it by accident.</li>
+                <li><b>Win.</b> Uncover every safe square &mdash; you don't have to flag the mines, just avoid them all.</li>
             </ul>
+            <p>Boards come in three sizes: <b>Beginner</b> (9&times;9, 10 mines), <b>Intermediate</b> (16&times;16, 40 mines), and <b>Expert</b> (30&times;16, 99 mines).</p>
 
-            <h3>Tips &amp; strategy</h3>
+            <h3>Minesweeper strategy &mdash; how to win</h3>
             <ul>
-                <li><b>Start in the open.</b> Your first click is always safe and opens a blank region — work outward from its edges.</li>
-                <li><b>Read the 1s.</b> A "1" touching a single covered square means that square is the mine. Flag it, then look at what that flag unlocks elsewhere.</li>
-                <li><b>Subtract overlaps.</b> When two numbers share covered squares, compare them — the difference often pins down a mine or a guaranteed-safe square.</li>
-                <li><b>Chord to go fast.</b> Once a number's mines are all flagged, click it to sweep the safe neighbors in one move.</li>
+                <li><b>Start in the open.</b> Your first click is safe; click toward the middle to open a big blank region and give yourself numbers to work from.</li>
+                <li><b>Work the 1s.</b> A &ldquo;1&rdquo; touching exactly one unrevealed square means that square is the mine &mdash; flag it.</li>
+                <li><b>Count satisfied numbers.</b> When a number already touches its full count of flags, every other neighbor is safe to open.</li>
+                <li><b>Use the edges.</b> Walls and corners cut down the unknowns, making deductions easier.</li>
+                <li><b>Guess last, and guess smart.</b> When pure logic runs out, play the square with the lowest probability of being a mine.</li>
             </ul>
-
-            <h3>About the difficulties</h3>
-            <p>The three boards are the classics: <b>Beginner</b> (9×9, 10 mines), <b>Intermediate</b> (16×16, 40 mines), and <b>Expert</b> (30×16, 99 mines). The first click is always safe on every board, and your fastest clear for each is saved in your browser along with any game you leave unfinished.</p>
 
             <h3>Frequently asked</h3>
-            <p><b>How do I play Minesweeper?</b> Reveal safe squares; each number counts the mines touching it. Deduce where the mines are, flag them, and clear everything else.</p>
-            <p><b>Is Minesweeper free?</b> Yes — no signup, no downloads, no installs.</p>
-            <p><b>Is the first click always safe?</b> Yes — mines are placed after your first click, so you always open into a safe area.</p>
-            <p><b>Are my best times saved?</b> Yes — your fastest clear per difficulty and your current game are stored locally in your browser.</p>
+            <p><b>How do I play Minesweeper?</b> Click squares to reveal them without hitting a mine. Each number shows how many mines touch that square; use the numbers to deduce and flag the mines. Clear all the safe squares to win.</p>
+            <p><b>What do the numbers mean in Minesweeper?</b> A number is the count of mines in the eight squares immediately around it. Compare adjacent numbers to work out exactly which neighbors are mined.</p>
+            <p><b>How do I flag a mine?</b> Right-click a square on desktop, or long-press it on a touchscreen.</p>
+            <p><b>Is it free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
 
-            <h3>More strategy games</h3>
+            <h3>More puzzle &amp; strategy games</h3>
             <ul class="related-games-list">
                 <li><a href="../sudoku/">Sudoku</a></li>
                 <li><a href="../2048/">2048</a></li>
-                <li><a href="../mahjong/">Mahjong Solitaire</a></li>
+                <li><a href="../mahjong/">Mahjong</a></li>
                 <li><a href="../strategy/">All strategy games &rarr;</a></li>
             </ul>
-        </details>
+        </section>
     </div>
 
     <script>

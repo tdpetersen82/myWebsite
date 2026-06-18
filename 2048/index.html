@@ -159,7 +159,7 @@
       }
       .related-games-list a:hover { background: rgba(201, 111, 42, 0.2); }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618c">
 </head>
 <body>
     <div class="game-shell">
@@ -197,42 +197,41 @@
         <p class="hint">Slide all tiles with the arrow keys, WASD, or a swipe. Matching tiles merge into their sum. Reach 2048 to win — then keep going for a higher tile.</p>        </div>
         
 
-        <details id="how">
-            <summary><h2>How to play 2048</h2></summary>
-            <p>2048 is the puzzle phenomenon where you slide numbered tiles around a 4×4 grid, merging matching pairs into bigger numbers. Two 2s become a 4, two 4s become an 8, and so on &mdash; until you build the 2048 tile and win. (Or keep going past it.)</p>
+        <section class="game-overview" aria-label="About 2048">
+            <h2>How to play 2048 online</h2>
+            <p>2048 is the addictive single-player sliding puzzle: combine matching numbered tiles to build bigger ones, and try to reach the 2048 tile before the board jams up. Slide, merge, repeat &mdash; it's easy to start and hard to put down. This free browser version saves your best score, with no downloads or signup.</p>
 
-            <h3>Controls</h3>
+            <h3>2048 rules</h3>
             <ul>
-                <li><kbd>&larr;</kbd> <kbd>&rarr;</kbd> <kbd>&uarr;</kbd> <kbd>&darr;</kbd> &mdash; slide all tiles in a direction</li>
-                <li><kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> &mdash; same, alternate keys</li>
-                <li>Swipe &mdash; on touch devices, swipe in any direction</li>
+                <li><b>Slide.</b> Use the arrow keys (or swipe on a phone) to push every tile in one direction. All tiles slide as far as they can.</li>
+                <li><b>Merge.</b> When two tiles with the same number collide, they fuse into one tile of double the value &mdash; two 2s make a 4, two 4s make an 8, and so on.</li>
+                <li><b>New tile.</b> After every move a new 2 or 4 appears in a random empty spot.</li>
+                <li><b>Goal &amp; game over.</b> Reach the 2048 tile to win &mdash; then keep going for a higher score. The game ends when the board is full and no merges remain.</li>
             </ul>
 
-            <h3>Tips &amp; strategy</h3>
+            <h3>2048 strategy &mdash; how to win</h3>
             <ul>
-                <li><b>Pick a corner.</b> Decide on a corner (most players use bottom-right) and keep your highest tile pinned there. Never undo the pin.</li>
-                <li><b>Build a snake.</b> Order your largest tiles in descending zig-zag rows. The tile order should let you merge top-down without freeing the corner.</li>
-                <li><b>Avoid the up move.</b> If you're cornered at the bottom, never press up unless absolutely forced &mdash; one wrong up move can wreck your structure.</li>
-                <li><b>Watch the empty cells.</b> New tiles spawn in empty cells. The fewer you have, the closer you are to losing &mdash; merge to free up space.</li>
+                <li><b>Pick a corner and stay.</b> Keep your biggest tile pinned in one corner and never move it out &mdash; this is the core of every high score.</li>
+                <li><b>Build along one edge.</b> Arrange your big tiles in descending order along the row or column next to that corner.</li>
+                <li><b>Use mostly two directions.</b> Stick to two perpendicular swipes (e.g. down and left) to keep your structure; reach for the other two only when forced.</li>
+                <li><b>Never swipe toward your anchor's opposite.</b> One careless up-swipe can rip your biggest tile out of its corner and collapse the board.</li>
+                <li><b>Keep it tidy.</b> Merge small tiles often so the board stays open and you don't run out of moves.</li>
             </ul>
-
-            <h3>About 2048</h3>
-            <p>Originally written in March 2014 by Italian developer Gabriele Cirulli over a single weekend, 2048 was inspired by 1024 and Threes! It went viral within days and racked up over 4 million unique players in its first week. What made 2048 famous was the open-source, free, no-install, mobile-friendly version Cirulli released to GitHub.</p>
 
             <h3>Frequently asked</h3>
-            <p><b>How do I play 2048?</b> Use the arrow keys (or WASD, or swipe) to slide every tile in that direction. Tiles with matching numbers merge into one tile with the sum. Make the 2048 tile to win.</p>
-            <p><b>Is 2048 free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
-            <p><b>Can I keep playing past 2048?</b> Yes &mdash; reaching 2048 triggers a win banner, but the game keeps going. Some players target 4096 or higher.</p>
-            <p><b>Does my high score save?</b> Yes &mdash; your best score and highest tile are stored locally in your browser.</p>
+            <p><b>How do I play 2048?</b> Swipe or press an arrow key to slide all the tiles. Equal numbers merge into their sum. Keep merging upward &mdash; 2, 4, 8, 16&hellip; &mdash; to reach the 2048 tile.</p>
+            <p><b>What's the best 2048 strategy?</b> Keep your highest tile locked in a corner and build the rest in descending order beside it, using mainly two swipe directions. That single habit beats almost everything else.</p>
+            <p><b>Can you keep playing after 2048?</b> Yes &mdash; reaching 2048 is the milestone, but you can keep merging for a higher score and bigger tiles.</p>
+            <p><b>Is it free?</b> Yes &mdash; no signup, no downloads, no installs, and your best score is saved in your browser.</p>
 
-            <h3>More strategy games</h3>
+            <h3>More puzzle &amp; strategy games</h3>
             <ul class="related-games-list">
-                <li><a href="../chess/">Chess</a></li>
-                <li><a href="../checkers/">Checkers</a></li>
-                <li><a href="../connect-4/">Connect 4</a></li>
+                <li><a href="../sudoku/">Sudoku</a></li>
+                <li><a href="../minesweeper/">Minesweeper</a></li>
+                <li><a href="../mahjong/">Mahjong</a></li>
                 <li><a href="../strategy/">All strategy games &rarr;</a></li>
             </ul>
-        </details>
+        </section>
     </div>
 
     <script>

@@ -157,7 +157,7 @@
       #how p { font-size: 14px; color: rgba(42, 31, 14, 0.78); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(42, 31, 14, 0.82); }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618c">
 </head>
 <body>
     <div class="game-shell">
@@ -200,17 +200,42 @@
         <p class="hint">Your move's <i>position</i> within a mini-board determines which mini-board your opponent must play in. Sent to a finished board? Play anywhere. Three mini-board wins in a row on the meta board wins the game.</p>        </div>
         
 
-        <details id="how">
-            <summary><h2>How to play</h2></summary>
-            <p>The board is a 3×3 grid of nine smaller tic-tac-toe boards. You play X, the computer plays O. X moves first and can pick any cell on the board.</p>
-            <p>After your move, the position you played (top-left, center, bottom-right, etc.) tells your opponent which mini-board they must play in next. If that mini-board is already won or full, the opponent gets a free choice anywhere on the board.</p>
-            <p>Win a mini-board by getting three in a row inside it — that claims the matching cell on the meta board. Win three mini-boards in a row on the meta board to win the game.</p>
+        <section class="game-overview" aria-label="About Ultimate Tic-Tac-Toe">
+            <h2>How to play Ultimate Tic-Tac-Toe online</h2>
+            <p>Ultimate Tic-Tac-Toe is the deep, strategic upgrade to the classic game: nine tic-tac-toe boards arranged in a big 3&times;3 grid, where your move decides which board your opponent must play in next. It turns a game kids solve in an afternoon into a genuine battle of foresight. This free browser version plays against the computer at three levels, with no downloads or signup.</p>
+
+            <h3>Ultimate Tic-Tac-Toe rules</h3>
             <ul>
-                <li><b>Easy</b> — depth 2 with extra randomness; misses tactics.</li>
-                <li><b>Medium</b> — depth 4 with positional weighting and threat detection.</li>
-                <li><b>Hard</b> — depth 6 with meta-aware scoring; plays for long-term board control.</li>
+                <li><b>Nine boards.</b> The big board is made of nine small tic-tac-toe boards.</li>
+                <li><b>Your move sends them.</b> Whichever cell you play in a small board decides which small board your opponent must play in next &mdash; play the top-right cell, and they're sent to the top-right board.</li>
+                <li><b>Win a small board</b> by getting three in a row inside it &mdash; that whole board becomes yours.</li>
+                <li><b>Win the game</b> by winning three small boards in a row on the big grid.</li>
+                <li><b>Free move.</b> If you're sent to a board that's already won or full, you may play in any open board instead.</li>
             </ul>
-        </details>
+
+            <h3>Ultimate Tic-Tac-Toe strategy &mdash; how to win</h3>
+            <ul>
+                <li><b>Think about where you send them.</b> Every move is also a gift &mdash; don't hand your opponent a free win in the board you send them to.</li>
+                <li><b>Avoid feeding free moves.</b> Sending them to a finished board lets them play anywhere &mdash; usually a mistake.</li>
+                <li><b>Play for the center board.</b> It's part of four winning lines on the big grid &mdash; the most valuable square to own.</li>
+                <li><b>Look two boards ahead.</b> A move that wins a small board is worthless if it sends your opponent somewhere they win two.</li>
+                <li><b>Set up double threats</b> on the big grid, just like classic tic-tac-toe &mdash; two ways to make three boards in a row at once.</li>
+            </ul>
+
+            <h3>Frequently asked</h3>
+            <p><b>How do I play Ultimate Tic-Tac-Toe?</b> Play in one of the nine small boards. The cell you choose sends your opponent to the matching small board for their turn. Win small boards to claim them, and win three claimed boards in a row to win the game.</p>
+            <p><b>How is it different from regular Tic-Tac-Toe?</b> Your move controls where your opponent plays next, so you have to think about both winning your board <i>and</i> where you're sending them &mdash; which makes it far deeper than the original.</p>
+            <p><b>What happens if I'm sent to a finished board?</b> You get a free move &mdash; play in any open board you like.</p>
+            <p><b>Is it free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
+
+            <h3>More strategy games</h3>
+            <ul class="related-games-list">
+                <li><a href="../connect-4/">Connect 4</a></li>
+                <li><a href="../othello/">Othello</a></li>
+                <li><a href="../chess/">Chess</a></li>
+                <li><a href="../strategy/">All strategy games &rarr;</a></li>
+            </ul>
+        </section>
     </div>
 
     <script>

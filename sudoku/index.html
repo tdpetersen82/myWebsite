@@ -252,7 +252,7 @@
         .np { font-size: 18px; border-radius: 8px; }
       }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618c">
 </head>
 <body>
     <div class="game-shell">
@@ -306,43 +306,40 @@
         <div class="status" id="status">Pick a cell, then a number. Fill every row, column, and box with 1–9.</div>
         <p class="hint-line">Tip: turn on <b>Notes</b> to pencil in candidates, and tap a filled number to highlight all of its matches.</p>
 
-        <details id="how">
-            <summary><h2>How to play Sudoku</h2></summary>
-            <p>Sudoku is a logic puzzle played on a 9×9 grid split into nine 3×3 boxes. Some cells start with clue numbers. Your job is to fill in the rest so that every <b>row</b>, every <b>column</b>, and every <b>3×3 box</b> contains the digits 1 through 9 exactly once. There is no arithmetic and no guessing — every puzzle here has a single solution reachable by logic alone.</p>
+        <section class="game-overview" aria-label="About Sudoku">
+            <h2>How to play Sudoku online</h2>
+            <p>Sudoku is the classic logic number puzzle: a 9&times;9 grid you fill so that every row, every column, and every 3&times;3 box contains the digits 1 through 9 exactly once. No math required &mdash; just deduction. This free browser version has four difficulty levels from Easy to Expert, plus pencil notes, with no downloads or signup.</p>
 
-            <h3>Controls</h3>
+            <h3>Sudoku rules</h3>
             <ul>
-                <li>Click or tap a cell to select it, then click a number on the pad — or press <kbd>1</kbd>–<kbd>9</kbd>.</li>
-                <li><kbd>←</kbd> <kbd>→</kbd> <kbd>↑</kbd> <kbd>↓</kbd> — move the selection around the grid.</li>
-                <li><kbd>Backspace</kbd> / <kbd>Delete</kbd> — erase the selected cell.</li>
-                <li><kbd>N</kbd> — toggle pencil-note mode; <kbd>H</kbd> — reveal one correct cell; <kbd>Ctrl</kbd>+<kbd>Z</kbd> — undo.</li>
+                <li><b>The grid.</b> Nine rows, nine columns, and nine 3&times;3 boxes. Some cells start filled &mdash; those are your clues.</li>
+                <li><b>The one rule.</b> Each digit 1&ndash;9 appears exactly once in every row, once in every column, and once in every 3&times;3 box.</li>
+                <li><b>Solved.</b> The puzzle is done when every cell is filled without breaking that rule. A proper Sudoku has exactly one solution.</li>
             </ul>
 
-            <h3>Tips &amp; strategy</h3>
+            <h3>Sudoku tips &amp; strategy</h3>
             <ul>
-                <li><b>Hunt the singles.</b> Scan for a cell where only one digit can legally fit, or a box where a digit can go in only one spot. Fill those first.</li>
-                <li><b>Use pencil notes.</b> When a cell could be two or three values, jot them down. As you place numbers elsewhere, candidates shrink until one is forced.</li>
-                <li><b>Work the dense areas.</b> Rows, columns, and boxes that are already mostly full constrain their empty cells the hardest — they crack first.</li>
-                <li><b>Tap a number to highlight it.</b> Selecting a filled cell shades every matching digit, making it easy to spot where that number still needs to go.</li>
+                <li><b>Scan for singles.</b> Find a cell where only one digit can legally go &mdash; the most reliable way to make safe progress.</li>
+                <li><b>Hunt the hidden single.</b> Within a row, column, or box, look for a digit that fits only one cell.</li>
+                <li><b>Use pencil notes.</b> Jot the candidates for tricky cells; eliminating candidates is where harder puzzles are cracked.</li>
+                <li><b>Work the busy areas.</b> Rows, columns, and boxes that are nearly full give the most clues &mdash; start where the constraints are tightest.</li>
+                <li><b>Never guess on a proper puzzle.</b> Every Easy-to-Expert grid here is solvable by pure logic; if you're stuck, there's a deduction you haven't spotted yet.</li>
             </ul>
-
-            <h3>About the difficulties</h3>
-            <p>Every puzzle is generated fresh and verified to have exactly one solution. <b>Easy</b> and <b>Medium</b> fall out from straightforward scanning. <b>Hard</b> and <b>Expert</b> leave fewer clues and demand candidate tracking and chains of deduction. Your fastest clean solve for each level is saved in your browser, along with any puzzle you leave unfinished.</p>
 
             <h3>Frequently asked</h3>
-            <p><b>How do I play Sudoku?</b> Fill every row, column, and 3×3 box with the digits 1–9, each used once. Click a cell, then a number.</p>
-            <p><b>Is Sudoku free?</b> Yes — no signup, no downloads, no installs.</p>
-            <p><b>Does every puzzle have one solution?</b> Yes — each is generated and checked to be uniquely solvable with logic, never guessing.</p>
-            <p><b>Are my best times saved?</b> Yes — your fastest time per difficulty and your current puzzle are stored locally in your browser.</p>
+            <p><b>How do I play Sudoku?</b> Fill the empty cells with digits 1&ndash;9 so that no digit repeats in any row, column, or 3&times;3 box. Use the starting clues to deduce the rest &mdash; one cell at a time.</p>
+            <p><b>Is Sudoku math?</b> No &mdash; the numbers are just symbols. Sudoku is pure logic and pattern-spotting; you never add or multiply anything.</p>
+            <p><b>How do I get better at Sudoku?</b> Learn to spot &ldquo;naked&rdquo; and &ldquo;hidden&rdquo; singles first, use pencil notes for candidates, and work the most-filled rows, columns, and boxes.</p>
+            <p><b>Is it free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
 
-            <h3>More strategy games</h3>
+            <h3>More puzzle &amp; strategy games</h3>
             <ul class="related-games-list">
+                <li><a href="../minesweeper/">Minesweeper</a></li>
                 <li><a href="../2048/">2048</a></li>
-                <li><a href="../mahjong/">Mahjong Solitaire</a></li>
-                <li><a href="../chess/">Chess</a></li>
+                <li><a href="../mahjong/">Mahjong</a></li>
                 <li><a href="../strategy/">All strategy games &rarr;</a></li>
             </ul>
-        </details>
+        </section>
     </div>
 
     <script>
