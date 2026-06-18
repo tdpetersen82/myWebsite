@@ -147,7 +147,7 @@
       #how p { font-size: 14px; color: rgba(26, 19, 16, 0.75); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(26, 19, 16, 0.8); }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618c">
 </head>
 <body>
     <div class="game-shell">
@@ -195,16 +195,43 @@
         <p class="hint" id="ruleHint">Captures are mandatory. If you can jump, you must — and chains of jumps must be completed in one turn.</p>        </div>
         
 
-        <details id="how">
-            <summary><h2>How to play</h2></summary>
-            <p>You play red, the computer plays black. Click a piece to see legal moves; click a destination to move. The <b>Captures</b> selector switches between mandatory jumps (tournament rule) and optional jumps (casual play).</p>
-            <p>Reach the opposite back row to crown a man into a <b>king</b>; kings move both forward and backward diagonally. Win by capturing all enemy pieces or leaving them with no legal moves.</p>
+        <section class="game-overview" aria-label="About Checkers">
+            <h2>How to play Checkers online</h2>
+            <p>Checkers (also called draughts) is the classic diagonal-capture race on an 8&times;8 board. You and the computer each start with twelve pieces; the goal is to capture all of your opponent's pieces &mdash; or leave them with no legal move. This free browser version offers three difficulty levels and a choice between forced and optional captures. No downloads, no signup.</p>
+
+            <h3>Checkers rules</h3>
             <ul>
-                <li><b>Easy</b> — depth 2 with extra randomness; will miss tactics.</li>
-                <li><b>Medium</b> — depth 5.</li>
-                <li><b>Hard</b> — depth 7. Sees several moves ahead; trades fairly.</li>
+                <li><b>Move.</b> Pieces move one square diagonally forward to an empty square.</li>
+                <li><b>Capture.</b> Jump diagonally over an adjacent enemy piece into the empty square beyond it. The jumped piece is removed.</li>
+                <li><b>Multi-jumps.</b> If another capture is available from the landing square, you keep jumping in the same turn &mdash; chains of two, three, or more clear the board fast.</li>
+                <li><b>Kings.</b> Reach the far row and your piece is &ldquo;crowned&rdquo; a king, which can move and capture both forward <i>and</i> backward.</li>
+                <li><b>Winning.</b> Capture every enemy piece, or block your opponent so they have no legal move.</li>
             </ul>
-        </details>
+            <p>The <b>Mandatory / Optional</b> setting controls forced captures: with <i>Mandatory</i> on (the tournament rule), if a capture is available you must take it; with <i>Optional</i> you're free to play a quiet move instead.</p>
+
+            <h3>Checkers strategy &mdash; how to win</h3>
+            <ul>
+                <li><b>Control the center.</b> Central pieces have more squares to jump to and are harder to trap.</li>
+                <li><b>Keep your back row.</b> Holding your back rank as long as possible stops the computer from crowning kings.</li>
+                <li><b>Trade when ahead.</b> Up a piece? Swap pieces off &mdash; fewer pieces makes your advantage decisive.</li>
+                <li><b>Set up the double jump.</b> Bait a capture that lets you jump two pieces in reply.</li>
+                <li><b>Race for the first king.</b> A king's backward movement is a big edge in the endgame.</li>
+            </ul>
+
+            <h3>Frequently asked</h3>
+            <p><b>How do I play Checkers?</b> Move your pieces one square diagonally forward, and capture by jumping over an adjacent enemy piece into the empty square beyond. Chain jumps when you can, crown kings on the far row, and capture all the enemy pieces to win.</p>
+            <p><b>Can you jump backwards in Checkers?</b> Only kings can. A regular piece captures forward only &mdash; once it's crowned a king it can jump both directions.</p>
+            <p><b>Are captures forced?</b> Your choice: turn on <i>Mandatory</i> for the tournament forced-capture rule, or <i>Optional</i> to play freely.</p>
+            <p><b>Is Checkers free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
+
+            <h3>More strategy games</h3>
+            <ul class="related-games-list">
+                <li><a href="../chess/">Chess</a></li>
+                <li><a href="../othello/">Othello</a></li>
+                <li><a href="../chinese-checkers/">Chinese Checkers</a></li>
+                <li><a href="../strategy/">All strategy games &rarr;</a></li>
+            </ul>
+        </section>
     </div>
 
     <script>

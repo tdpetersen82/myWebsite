@@ -151,7 +151,7 @@
       #how p { font-size: 14px; color: rgba(14, 42, 26, 0.78); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(14, 42, 26, 0.82); }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618c">
 </head>
 <body>
     <div class="game-shell">
@@ -195,16 +195,45 @@
         <p class="hint">You play Black; Black moves first. A move must flank at least one opponent disc — all flanked discs flip. If you have no legal move, your turn passes automatically.</p>        </div>
         
 
-        <details id="how">
-            <summary><h2>How to play</h2></summary>
-            <p>You play Black, the computer plays White. Each move must place a disc so it sandwiches one or more of your opponent's discs in a straight line — horizontal, vertical, or diagonal. Every sandwiched disc flips to your color.</p>
-            <p>If you have no legal move, your turn passes automatically. When neither side can move (or the board fills up), the side with more discs wins.</p>
+        <section class="game-overview" aria-label="About Othello">
+            <h2>How to play Othello (Reversi) online</h2>
+            <p>Othello &mdash; also known as Reversi &mdash; is the &ldquo;a minute to learn, a lifetime to master&rdquo; disc-flipping game. You and the computer take turns placing discs on an 8&times;8 board, flipping the opponent's discs by trapping them. Whoever has the most discs of their color when the board fills up wins. This free browser version offers three difficulty levels, no downloads, no signup.</p>
+
+            <h3>Othello rules</h3>
             <ul>
-                <li><b>Easy</b> — depth 2 with extra randomness; will overlook tactics.</li>
-                <li><b>Medium</b> — depth 4 with positional weighting.</li>
-                <li><b>Hard</b> — depth 6 with mobility + corner play. Switches to a perfect endgame solver in the final 12 empty squares.</li>
+                <li><b>Opening.</b> The game starts with four discs in the center, two of each color, placed diagonally.</li>
+                <li><b>Legal moves.</b> You may only place a disc where it <i>outflanks</i> at least one straight line of the opponent's discs &mdash; bracketing them between your new disc and another of yours.</li>
+                <li><b>Flipping.</b> Every opponent disc you outflank in any direction (horizontal, vertical, diagonal) flips to your color.</li>
+                <li><b>Passing.</b> If you have no legal move, you pass and your opponent goes again. If neither side can move, the game ends.</li>
+                <li><b>Winning.</b> When the board is full (or no moves remain), the player with more discs of their color wins.</li>
             </ul>
-        </details>
+
+            <h3>Othello strategy &mdash; how to win</h3>
+            <ul>
+                <li><b>Grab the corners.</b> Corner discs can never be flipped &mdash; they're the anchors of the whole game.</li>
+                <li><b>Avoid the X-squares.</b> The diagonals next to a corner hand your opponent the corner. Don't play them early.</li>
+                <li><b>Think mobility, not majority.</b> Having the most discs in the midgame is often a trap; keep your options open and your opponent's few.</li>
+                <li><b>Play the edges carefully.</b> Stable edge discs are strong, but a careless edge move can open a corner.</li>
+                <li><b>Quiet beats greedy.</b> Flipping the most discs each turn usually loses &mdash; control the board's structure instead.</li>
+            </ul>
+
+            <h3>Othello vs. Reversi</h3>
+            <p>The two names describe nearly the same game. <b>Reversi</b> is the 19th-century original; <b>Othello</b> is the 1970s standardized version with a fixed starting setup and the familiar 8&times;8 board. The rules you'll play here are the modern Othello rules that everyone uses today.</p>
+
+            <h3>Frequently asked</h3>
+            <p><b>How do I play Othello?</b> Place a disc so it traps a line of the opponent's discs between yours; every trapped disc flips to your color. You can only play where you flip at least one. Most discs when the board fills wins.</p>
+            <p><b>What's the best first move in Othello?</b> All four opening moves are equivalent by symmetry &mdash; the real skill is in the midgame: take corners, keep your mobility, and avoid the squares next to corners.</p>
+            <p><b>Is Othello the same as Reversi?</b> Essentially yes &mdash; Othello is the standardized modern form of Reversi.</p>
+            <p><b>Is it free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
+
+            <h3>More strategy games</h3>
+            <ul class="related-games-list">
+                <li><a href="../chess/">Chess</a></li>
+                <li><a href="../checkers/">Checkers</a></li>
+                <li><a href="../connect-4/">Connect 4</a></li>
+                <li><a href="../strategy/">All strategy games &rarr;</a></li>
+            </ul>
+        </section>
     </div>
 
     <script>

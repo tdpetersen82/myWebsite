@@ -160,7 +160,7 @@
       #how p { font-size: 14px; color: rgba(26, 19, 16, 0.75); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(26, 19, 16, 0.8); }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618c">
 </head>
 <body>
     <div class="game-shell">
@@ -205,19 +205,42 @@
         <p class="hint">Click "Roll dice", then click your checker (or the bar) and tap a destination point. Use both dice when possible — if only one can be used, the larger one is mandatory.</p>        </div>
         
 
-        <details id="how">
-            <summary><h2>How to play</h2></summary>
-            <p>You play <b>white</b> (light checkers, moving counter-clockwise around the board). The computer plays <b>black</b>. Click <b>Roll dice</b> to start your turn, then make moves equal to each die.</p>
-            <p>You can move to a point if it's empty, holds your own checkers, or holds <b>exactly one enemy</b> checker (which gets sent to the bar). You cannot move to a point held by 2+ enemies.</p>
-            <p>If you have checkers on the <b>bar</b>, you must re-enter them all (in the opponent's home board) before making any other moves. <b>Bear off</b> when all 15 of your checkers are in your home board (points 1–6 from your perspective). Win by bearing off all 15.</p>
-            <p>Doubles give you four moves of that number. If you can't legally use a die, it's forfeited; if only one die is usable, you must use the larger if possible.</p>
+        <section class="game-overview" aria-label="About Backgammon">
+            <h2>How to play Backgammon online</h2>
+            <p>Backgammon is the classic race game of dice and strategy &mdash; one of the oldest board games still played. You and the computer each have fifteen checkers running in opposite directions around the board; the first to bring all fifteen home and bear them off wins. This free browser version offers three difficulty levels, no downloads, no signup.</p>
+
+            <h3>Backgammon rules</h3>
             <ul>
-                <li><b>Easy</b> — picks reasonable moves with some randomness.</li>
-                <li><b>Medium</b> — heuristic with stronger weighting on safety and points.</li>
-                <li><b>Hard</b> — higher-quality scoring; punishes blots near its home board.</li>
+                <li><b>The roll.</b> On your turn you roll two dice and move checkers that many points &mdash; one checker for each die, or the same checker twice. Roll doubles and you play that number four times.</li>
+                <li><b>Making points.</b> Land two or more checkers on a point and it's yours &mdash; your opponent can't land there.</li>
+                <li><b>Hitting blots.</b> A lone checker is a <i>blot</i>. Land on it and it's hit &mdash; it goes to the bar and must re-enter in your opponent's home before they do anything else.</li>
+                <li><b>Bearing off.</b> Once all fifteen of your checkers are in your home board (your last six points), you start bearing them off &mdash; removing them with your rolls.</li>
+                <li><b>Winning.</b> The first player to bear off all fifteen checkers wins the game.</li>
             </ul>
-            <p>v1 has no doubling cube — single-game play only. Wins, losses, and best streak save locally.</p>
-        </details>
+
+            <h3>Backgammon strategy &mdash; how to win</h3>
+            <ul>
+                <li><b>Make your points.</b> Building a wall of made points in front of your opponent's back checkers slows their whole race.</li>
+                <li><b>Don't leave blots in range.</b> A checker that can be hit by a likely roll sends you back to the bar &mdash; play safe when you're ahead.</li>
+                <li><b>Build a prime.</b> Six made points in a row form a prime that no checker can jump &mdash; the strongest blockade in the game.</li>
+                <li><b>Run when ahead, hold when behind.</b> Leading the race? Race. Trailing? Hold an anchor in your opponent's home and wait for a shot.</li>
+                <li><b>Bear off efficiently.</b> Fill your home points evenly so you don't waste pips on awkward rolls.</li>
+            </ul>
+
+            <h3>Frequently asked</h3>
+            <p><b>How do I play Backgammon?</b> Roll the dice and move your checkers around the board toward your home, hitting your opponent's exposed checkers and making points to block them. Once all your checkers are home, bear them off &mdash; first to clear all fifteen wins.</p>
+            <p><b>Is Backgammon luck or skill?</b> Both. The dice add chance to every turn, but over a game the stronger player consistently makes better use of each roll &mdash; which is why skill wins out in the long run.</p>
+            <p><b>Is Backgammon free here?</b> Yes &mdash; no signup, no downloads, no installs.</p>
+            <p><b>Does my record save?</b> Yes &mdash; your results are stored locally in your browser.</p>
+
+            <h3>More strategy games</h3>
+            <ul class="related-games-list">
+                <li><a href="../mancala/">Mancala</a></li>
+                <li><a href="../chess/">Chess</a></li>
+                <li><a href="../checkers/">Checkers</a></li>
+                <li><a href="../strategy/">All strategy games &rarr;</a></li>
+            </ul>
+        </section>
     </div>
 
     <script>
