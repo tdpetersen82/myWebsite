@@ -45,6 +45,7 @@
     { id: 'solitaire',         name: 'Solitaire',         cat: 'casino',  desc: 'Klondike — beat the deck.',        color: '#5DC4D9'  },
     { id: 'freecell',          name: 'FreeCell',          cat: 'casino',  desc: 'All cards up. Pure skill.',        color: '#3FA796', isNew: true },
     { id: 'spider-solitaire',  name: 'Spider Solitaire',  cat: 'casino',  desc: 'Two decks. 1, 2, or 4 suits.',     color: '#9B7EDC', isNew: true },
+    { id: 'hearts',            name: 'Hearts',            cat: 'casino',  desc: 'Dodge the Queen of Spades.',       color: '#C8423A', isNew: true },
     { id: 'craps',             name: 'Craps',             cat: 'casino',  desc: 'Roll the bones.',                  color: '#5DC4D9'  },
     { id: 'three-card-poker',  name: 'Three Card Poker',  cat: 'casino',  desc: 'Play or fold? Three cards.',       color: '#9B7EDC'  },
     { id: 'texas-holdem',      name: "Texas Hold'em",     cat: 'casino',  desc: '4-handed cash game. Equity hints.', color: '#E8B05B', isNew: true },
@@ -102,6 +103,7 @@
 
   // Per-game inline SVG glyph (paths only; svg wrapper added at render time).
   const GLYPH_PATHS = {
+    hearts: '<path d="M32 50C32 50 8 36 8 22C8 14 14 10 20 10C26 10 30 15 32 18C34 15 38 10 44 10C50 10 56 14 56 22C56 36 32 50 32 50Z" fill="C"/>',
     'spider-solitaire': '<rect x="14" y="8" width="22" height="15" rx="2.5" fill="C"/><rect x="18" y="19" width="22" height="15" rx="2.5" fill="C" opacity="0.55"/><rect x="22" y="30" width="22" height="15" rx="2.5" fill="C"/><rect x="26" y="41" width="22" height="15" rx="2.5" fill="C" opacity="0.55"/>',
     freecell: '<rect x="7" y="9" width="11" height="14" rx="2" fill="none" stroke="C" stroke-width="2"/><rect x="20" y="9" width="11" height="14" rx="2" fill="none" stroke="C" stroke-width="2"/><rect x="34" y="9" width="11" height="14" rx="2" fill="C"/><rect x="47" y="9" width="11" height="14" rx="2" fill="none" stroke="C" stroke-width="2"/><rect x="20" y="32" width="17" height="22" rx="2.5" fill="C" opacity="0.5"/><rect x="20" y="40" width="17" height="22" rx="2.5" fill="C"/>',
     'word-search': '<rect x="12" y="12" width="11" height="11" rx="2" fill="C"/><rect x="27" y="12" width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="42" y="12" width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="12" y="27" width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="27" y="27" width="11" height="11" rx="2" fill="C"/><rect x="42" y="27" width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="12" y="42" width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="27" y="42" width="11" height="11" rx="2" fill="C" opacity="0.4"/><rect x="42" y="42" width="11" height="11" rx="2" fill="C"/>',

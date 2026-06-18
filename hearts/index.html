@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+    <title>Hearts — Play the Free Online Card Game vs Computer | Limestone Games</title>
+    <meta name="description" content="Play Hearts free in your browser against three computer players. Pass cards, dodge the Queen of Spades, shoot the moon, and play to 100. No downloads, no signup.">
+    <meta name="keywords" content="hearts, hearts card game, play hearts online, free hearts, hearts online, hearts vs computer, queen of spades, shooting the moon">
+    <link rel="canonical" href="https://limestonegames.com/hearts/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Hearts","description":"Play Hearts free in your browser against three computer opponents. Avoid hearts and the Queen of Spades, or shoot the moon.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Hearts"}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Hearts?", "acceptedAnswer": {"@type": "Answer", "text": "Each hand you pass three cards, then play tricks following the led suit. Avoid taking hearts (1 point each) and the Queen of Spades (13 points). The player with the 2 of clubs leads first. Lowest score when someone hits 100 wins."}}, {"@type": "Question", "name": "What is shooting the moon?", "acceptedAnswer": {"@type": "Answer", "text": "If you take every heart and the Queen of Spades in a single hand — all 26 points — you score zero and each opponent gets 26 instead. It's a huge swing, but one stray point ruins it."}}, {"@type": "Question", "name": "Is Hearts free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs. Play against three computer opponents right in your browser."}}, {"@type": "Question", "name": "Why can't I lead hearts?", "acceptedAnswer": {"@type": "Answer", "text": "You can't lead a heart until hearts are 'broken' — that is, until a heart has been played on an earlier trick because someone couldn't follow suit (or unless your hand is all hearts)."}}]}</script>
+    <meta property="og:title" content="Hearts — Play the Free Online Card Game vs Computer | Limestone Games">
+    <meta property="og:description" content="Play Hearts free in your browser against three computer players. Dodge the Queen of Spades and shoot the moon.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/hearts/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Hearts — Play Free Online vs Computer | Limestone Games">
+    <meta name="twitter:description" content="Play Hearts free in your browser. Dodge the Queen of Spades, shoot the moon.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+      :root { --ink:#EAF2E6; --felt-1:#1f7a44; --felt-2:#155f34; --gold:#E8C969; --cw:74px; }
+      * { box-sizing:border-box; margin:0; padding:0; }
+      html,body { height:100%; }
+      body { font-family:'Inter','Segoe UI',Tahoma,sans-serif; background:radial-gradient(120% 120% at 50% 0%, var(--felt-1) 0%, var(--felt-2) 70%, #0e4324 100%); color:var(--ink); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:14px 12px 32px; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
+      .game-shell { width:100%; max-width:880px; display:flex; flex-direction:column; align-items:center; gap:12px; }
+      .top-bar { width:100%; display:flex; align-items:center; gap:14px; padding:10px 16px 11px; background:rgba(0,0,0,0.22); border:1px solid rgba(255,255,255,0.14); border-radius:14px; flex-wrap:wrap; }
+      .tb-back { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; padding:7px 13px; border-radius:10px; border:1px solid rgba(255,255,255,0.25); color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; }
+      .tb-back:hover { border-color:var(--gold); color:var(--gold); }
+      .tb-title { display:flex; flex-direction:column; gap:2px; margin-right:auto; }
+      .tb-eyebrow { display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:rgba(234,242,230,0.7); }
+      .tb-dot { width:6px; height:6px; border-radius:50%; background:var(--gold); }
+      .tb-title h1 { font-size:21px; font-weight:800; }
+      .scorebar { display:flex; gap:14px; flex-wrap:wrap; }
+      .scorebar > div { display:flex; flex-direction:column; gap:1px; min-width:46px; text-align:center; }
+      .scorebar .l { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:rgba(234,242,230,0.65); }
+      .scorebar .v { font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; }
+      .scorebar .v.me { color:var(--gold); }
+      .scorebar > div.turn .l { color:var(--gold); }
+
+      .controls { display:flex; gap:9px; flex-wrap:wrap; justify-content:center; align-items:center; min-height:38px; }
+      .controls button { font-family:inherit; font-size:13.5px; font-weight:700; color:var(--ink); background:rgba(255,255,255,0.10); cursor:pointer; border:1px solid rgba(255,255,255,0.22); border-radius:10px; padding:9px 16px; }
+      .controls button:hover:not(:disabled) { border-color:var(--gold); }
+      .controls button:disabled { opacity:.4; cursor:default; }
+      .controls button.primary { background:var(--gold); color:#3a2e0c; border-color:var(--gold); }
+
+      .board-fit { position:relative; width:100%; display:flex; justify-content:center; overflow:hidden; }
+      .table { position:relative; width:760px; height:560px; transform-origin:top center; flex:0 0 auto; }
+      .seat { position:absolute; text-align:center; }
+      .seat .name { font-size:12px; font-weight:700; }
+      .seat .name.active { color:var(--gold); }
+      .seat-N { top:0; left:50%; transform:translateX(-50%); }
+      .seat-W { left:0; top:48%; transform:translateY(-50%); }
+      .seat-E { right:0; top:48%; transform:translateY(-50%); }
+      .seat-S { bottom:84px; left:50%; transform:translateX(-50%); }
+      .mini { display:flex; }
+      .mini .b { width:34px; height:48px; border-radius:4px; margin-left:-22px; background:repeating-linear-gradient(45deg, rgba(255,255,255,0.10) 0 4px, transparent 4px 8px), linear-gradient(160deg,#2a4f86,#1c3a66); border:1.5px solid #e9eef7; }
+      .mini .b:first-child { margin-left:0; }
+      .seat-W .mini, .seat-E .mini { flex-direction:column; }
+      .seat-W .mini .b, .seat-E .mini .b { margin-left:0; margin-top:-38px; width:48px; height:34px; }
+      .seat-W .mini .b:first-child, .seat-E .mini .b:first-child { margin-top:0; }
+
+      .trick { position:absolute; left:50%; top:50%; width:0; height:0; }
+      .card, .pcard { width:var(--cw); height:calc(var(--cw)*110/78); border-radius:7px; box-shadow:0 2px 5px rgba(0,0,0,0.4); }
+      .pcard { position:absolute; background-color:#fff; }
+      .pcard.t-S { transform:translate(-50%, 6px); }
+      .pcard.t-N { transform:translate(-50%, calc(-100% - 6px)); }
+      .pcard.t-W { transform:translate(calc(-100% - 6px), -50%); }
+      .pcard.t-E { transform:translate(6px, -50%); }
+
+      .hand { position:absolute; bottom:0; left:50%; transform:translateX(-50%); height:calc(var(--cw)*110/78 + 22px); }
+      .hand .card { position:absolute; bottom:0; background-color:#fff; cursor:default; transition:transform .12s, box-shadow .12s; }
+      .hand .card.legal { cursor:pointer; }
+      .hand .card.legal:hover { transform:translateY(-14px); box-shadow:0 8px 18px rgba(0,0,0,0.45); }
+      .hand .card.sel { transform:translateY(-18px); box-shadow:0 0 0 3px var(--gold), 0 8px 18px rgba(0,0,0,0.45); }
+      .hand .card.dim { filter:brightness(0.66); }
+
+      .center-msg { position:absolute; left:50%; top:38%; transform:translate(-50%,-50%); text-align:center; font-size:15px; font-weight:700; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.6); pointer-events:none; max-width:280px; }
+
+      .overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:2000; background:rgba(8,40,22,0.62); backdrop-filter:blur(3px); }
+      .overlay.show { display:flex; }
+      .ov-card { background:#fffdf6; color:#23311f; border-radius:18px; padding:24px 28px; text-align:center; max-width:92%; box-shadow:0 30px 60px -20px rgba(0,0,0,0.6); }
+      .ov-card h2 { font-size:24px; margin-bottom:8px; }
+      .ov-card table { margin:8px auto 14px; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+      .ov-card td, .ov-card th { padding:4px 14px; font-size:14px; text-align:right; }
+      .ov-card th:first-child, .ov-card td:first-child { text-align:left; }
+      .ov-card tr.win td { color:#1f7a44; font-weight:800; }
+      .ov-card button { font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; border-radius:10px; padding:10px 18px; border:none; background:#1f7a44; color:#fff; }
+      .status { font-size:13px; color:rgba(234,242,230,0.9); text-align:center; min-height:18px; }
+      .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+      .game-overview { max-width:720px; width:100%; margin:26px auto 0; padding:26px 30px 30px; background:#FFFDF8; border:1px solid rgba(0,0,0,0.12); border-radius:14px; color:#2A2017; line-height:1.62; text-align:left; box-shadow:0 16px 40px -26px rgba(0,0,0,0.6); }
+      .game-overview > :first-child { margin-top:0; }
+      .game-overview h2 { margin:0 0 12px; font-size:1.4rem; color:#14361f; }
+      .game-overview h3 { margin:26px 0 9px; font-size:1.08rem; color:#1f7a44; }
+      .game-overview p { margin:0 0 12px; }
+      .game-overview ul { margin:0 0 12px; padding-left:20px; }
+      .game-overview li { margin:0 0 7px; }
+      .game-overview b { color:#14361f; }
+      .game-overview .related-games-list { list-style:none; padding-left:0; display:flex; flex-wrap:wrap; gap:8px 18px; }
+      .game-overview .related-games-list a { color:#1f7a44; font-weight:600; text-decoration:none; }
+      .game-overview .related-games-list a:hover { text-decoration:underline; }
+      @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <header class="top-bar">
+            <a class="tb-back" href="../casino/">← Casino</a>
+            <div class="tb-title">
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Card game · vs Computer</span>
+                <h1>Hearts</h1>
+            </div>
+            <div class="scorebar" id="scorebar"></div>
+        </header>
+
+        <div class="controls" id="controls"></div>
+
+        <div class="board-fit">
+            <div class="table" id="table">
+                <div class="seat seat-N" id="seatN"></div>
+                <div class="seat seat-W" id="seatW"></div>
+                <div class="seat seat-E" id="seatE"></div>
+                <div class="seat seat-S"><div class="name" id="nameS">You</div></div>
+                <div class="trick" id="trick"></div>
+                <div class="center-msg" id="centerMsg"></div>
+                <div class="hand" id="hand"></div>
+            </div>
+        </div>
+
+        <div class="status" id="status">Pass three cards to begin.</div>
+        <div class="sr-only" aria-live="polite" id="live"></div>
+
+        <section class="game-overview" aria-label="About Hearts">
+            <h2>How to play Hearts</h2>
+            <p>Hearts is the classic four-player trick-taking card game &mdash; and a game of <i>avoidance</i>. Unlike most card games, you want to take as <b>few</b> points as possible. Every heart is worth one point and the Queen of Spades is worth a brutal thirteen, so the whole game is about dodging tricks that contain them. This free browser version pits you against three computer opponents; lowest score when someone hits 100 wins. No downloads, no signup.</p>
+
+            <h3>Hearts rules</h3>
+            <ul>
+                <li><b>Passing.</b> At the start of each hand you pass three cards &mdash; left, right, across, then a "keep" hand with no pass, repeating.</li>
+                <li><b>The lead.</b> Whoever holds the 2&#9827; leads it to start the first trick.</li>
+                <li><b>Follow suit.</b> You must play a card of the suit that was led if you have one. If not, you may play anything (but not a heart or the Queen of Spades on the very first trick).</li>
+                <li><b>Winning a trick.</b> The highest card of the led suit takes the trick &mdash; and any points in it &mdash; and leads the next.</li>
+                <li><b>Breaking hearts.</b> You can't <i>lead</i> a heart until hearts have been "broken" (played on an earlier trick), unless hearts are all you hold.</li>
+                <li><b>Scoring.</b> Each heart = 1 point, the Q&#9824; = 13. Fewest points wins; the game ends when a player reaches 100.</li>
+            </ul>
+
+            <h3>Shooting the moon</h3>
+            <p>There's one spectacular exception: if you take <b>every</b> heart <i>and</i> the Queen of Spades in a single hand &mdash; all 26 points &mdash; you "shoot the moon" and score zero while every opponent takes 26. It's the boldest play in Hearts, but a single point slipping to someone else wrecks it, so commit only when you're sure.</p>
+
+            <h3>Hearts strategy &mdash; how to win</h3>
+            <ul>
+                <li><b>Get short in a suit.</b> Voiding a suit lets you dump dangerous cards &mdash; including the Queen &mdash; when it's led.</li>
+                <li><b>Watch the Queen of Spades.</b> If you hold high spades (K&#9824; or A&#9824;) you can be forced to take the Queen. Shed them, or flush the Queen out by leading spades.</li>
+                <li><b>Duck tricks.</b> Play the highest card that still loses &mdash; take the lead only when it's safe and points-free.</li>
+                <li><b>Pass your danger.</b> Send away the Queen, high spades, and high hearts unless you're set up to shoot.</li>
+                <li><b>Count points.</b> Track which hearts and the Queen have fallen so you know when a trick is safe to take.</li>
+            </ul>
+
+            <h3>Frequently asked</h3>
+            <p><b>How do I play Hearts?</b> Pass three cards, then follow the led suit each trick while avoiding hearts and the Queen of Spades. The 2&#9827; leads first; lowest score when someone reaches 100 wins.</p>
+            <p><b>What is shooting the moon?</b> Taking all 26 points in one hand &mdash; you score 0 and everyone else gets 26.</p>
+            <p><b>Why can't I lead hearts?</b> Hearts must be "broken" first &mdash; played on an earlier trick &mdash; before you can lead one.</p>
+            <p><b>Is Hearts free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
+
+            <h3>More card &amp; casino games</h3>
+            <ul class="related-games-list">
+                <li><a href="../solitaire/">Klondike Solitaire</a></li>
+                <li><a href="../freecell/">FreeCell</a></li>
+                <li><a href="../blackjack/">Blackjack</a></li>
+                <li><a href="../casino/">All casino games &rarr;</a></li>
+            </ul>
+        </section>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <div class="ov-card" role="dialog" aria-modal="true" aria-labelledby="ovHeading">
+            <h2 id="ovHeading">Hand over</h2>
+            <div id="ovBody"></div>
+            <button id="ovBtn">Next hand</button>
+        </div>
+    </div>
+
+    <script src="../casino/casino-cards.js?v=20260508e"></script>
+    <script>
+    'use strict';
+    (function () {
+        const CARDS = window.CASINO_CARDS;
+        const SUITNAME = { s:'spades', h:'hearts', d:'diamonds', c:'clubs' };
+        const NAMES = ['You', 'West', 'North', 'East'];
+        const SEAT = ['S', 'W', 'N', 'E'];
+        const $ = (id) => document.getElementById(id);
+        const handEl = $('hand'), trickEl = $('trick'), tableEl = $('table');
+        const statusEl = $('status'), liveEl = $('live'), centerMsg = $('centerMsg');
+
+        function rankStr(r){ return r===14?'A':r===13?'K':r===12?'Q':r===11?'J':String(r); }
+        function isHeart(c){ return c.s==='h'; }
+        function isQS(c){ return c.s==='s' && c.r===12; }
+        function pts(c){ return isHeart(c)?1 : isQS(c)?13 : 0; }
+
+        // state
+        let hands, scores, handPoints, trick, current, leader, heartsBroken, trickCount, phase, passDir, passSel, busy;
+        let handNo = 0;
+        const PASS_SEQ = ['left','right','across','none'];
+
+        function lsGet(k){ try { return parseInt(localStorage.getItem(k),10)||0; } catch(e){ return 0; } }
+        function lsSet(k,v){ try { localStorage.setItem(k,String(v)); } catch(e){} }
+
+        function newGame() {
+            scores = [0,0,0,0]; handNo = 0;
+            $('overlay').classList.remove('show');
+            startHand();
+        }
+        function startHand() {
+            // deal
+            const d = [];
+            for (const s of ['s','h','d','c']) for (let r = 2; r <= 14; r++) d.push({ r, s, id: s + r });
+            for (let i = d.length-1; i>0; i--){ const j = Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
+            hands = [[],[],[],[]];
+            d.forEach((c,i)=> hands[i%4].push(c));
+            hands.forEach(sortHand);
+            handPoints = [0,0,0,0]; trick = []; heartsBroken = false; trickCount = 0; busy = false;
+            passDir = PASS_SEQ[handNo % 4]; passSel = [];
+            if (passDir === 'none') { phase = 'playing'; beginPlay(); }
+            else { phase = 'passing'; statusEl.textContent = 'Pass three cards ' + passDir + '.'; }
+            render();
+        }
+        function sortHand(h){ const ord={s:0,h:1,c:2,d:3}; h.sort((a,b)=> ord[a.s]-ord[b.s] || a.r-b.r); }
+
+        // ── Passing ─────────────────────────────────────────────────────────
+        function toggleSel(card){
+            if (phase !== 'passing') return;
+            const i = passSel.indexOf(card.id);
+            if (i >= 0) passSel.splice(i,1);
+            else if (passSel.length < 3) passSel.push(card.id);
+            render();
+        }
+        function aiPassChoice(p){
+            const danger = (c)=> isQS(c)?1000 : (c.s==='s'&&c.r>=13)?100+c.r : isHeart(c)?40+c.r : c.r;
+            return hands[p].slice().sort((a,b)=>danger(b)-danger(a)).slice(0,3).map(c=>c.id);
+        }
+        function doPass(){
+            if (phase !== 'passing' || passSel.length !== 3) return;
+            const picks = [passSel.slice(), aiPassChoice(1), aiPassChoice(2), aiPassChoice(3)];
+            const off = passDir==='left'?1 : passDir==='right'?3 : 2;
+            const moving = picks.map((ids,p)=> ids.map(id=> hands[p].find(c=>c.id===id)));
+            for (let p=0;p<4;p++){ moving[p].forEach(c=>{ const idx=hands[p].findIndex(x=>x.id===c.id); hands[p].splice(idx,1); }); }
+            for (let p=0;p<4;p++){ const rcv=(p+off)%4; hands[rcv].push(...moving[p]); }
+            hands.forEach(sortHand);
+            passSel = []; phase = 'playing'; beginPlay();
+        }
+
+        // ── Play ────────────────────────────────────────────────────────────
+        function beginPlay(){
+            // 2 of clubs leads
+            for (let p=0;p<4;p++) if (hands[p].some(c=>c.s==='c'&&c.r===2)) { current = p; leader = p; break; }
+            trick = []; trickCount = 0;
+            render(); advance();
+        }
+        function legalMoves(p){
+            const h = hands[p];
+            if (trick.length === 0) {
+                if (trickCount === 0) return h.filter(c=>c.s==='c'&&c.r===2);
+                let nonH = h.filter(c=>!isHeart(c));
+                if (!heartsBroken && nonH.length) return nonH;
+                return h.slice();
+            }
+            const led = trick[0].card.s;
+            const follow = h.filter(c=>c.s===led);
+            if (follow.length) return follow;
+            // can't follow
+            if (trickCount === 0) { const safe = h.filter(c=>!isHeart(c)&&!isQS(c)); if (safe.length) return safe; }
+            return h.slice();
+        }
+        function advance(){
+            if (busy) return;
+            if (trick.length === 4) { busy = true; setTimeout(resolveTrick, 850); return; }
+            if (current === 0) { render(); statusEl.textContent = 'Your turn — follow ' + (trick.length?SUITNAME[trick[0].card.s]:'or lead'); }
+            else { busy = true; setTimeout(()=>{ busy=false; aiPlay(current); }, 560); }
+        }
+        function playCard(p, card){
+            const idx = hands[p].findIndex(c=>c.id===card.id);
+            if (idx < 0) return;
+            hands[p].splice(idx,1);
+            trick.push({ p, card });
+            if (isHeart(card)) heartsBroken = true;
+            current = (current+1)%4;
+            render(); advance();
+        }
+        function aiPlay(p){
+            const legal = legalMoves(p);
+            let card;
+            if (trick.length === 0) {
+                const nonH = legal.filter(c=>!isHeart(c));
+                const pool = nonH.length?nonH:legal;
+                card = pool.reduce((a,b)=> b.r<a.r?b:a);
+            } else {
+                const led = trick[0].card.s;
+                const follow = legal.filter(c=>c.s===led);
+                if (follow.length) {
+                    let winRank = -1; trick.forEach(t=>{ if (t.card.s===led && t.card.r>winRank) winRank=t.card.r; });
+                    const below = follow.filter(c=>c.r<winRank);
+                    card = below.length ? below.reduce((a,b)=>b.r>a.r?b:a) : follow.reduce((a,b)=>b.r<a.r?b:a);
+                } else {
+                    const qs = legal.find(isQS);
+                    if (qs) card = qs;
+                    else { const hs = legal.filter(isHeart); card = hs.length ? hs.reduce((a,b)=>b.r>a.r?b:a) : legal.reduce((a,b)=>b.r>a.r?b:a); }
+                }
+            }
+            playCard(p, card);
+        }
+        function resolveTrick(){
+            const led = trick[0].card.s;
+            let win = trick[0];
+            trick.forEach(t=>{ if (t.card.s===led && t.card.r>win.card.r) win = t; });
+            const p = trick.reduce((s,t)=> s + pts(t.card), 0);
+            handPoints[win.p] += p;
+            trickCount++;
+            trick = []; current = win.p; leader = win.p; busy = false;
+            render();
+            if (hands[0].length === 0) { endHand(); return; }
+            advance();
+        }
+
+        function endHand(){
+            let moon = -1; for (let i=0;i<4;i++) if (handPoints[i] === 26) moon = i;
+            const delta = [0,0,0,0];
+            if (moon >= 0) { for (let i=0;i<4;i++) delta[i] = (i===moon?0:26); }
+            else for (let i=0;i<4;i++) delta[i] = handPoints[i];
+            for (let i=0;i<4;i++) scores[i] += delta[i];
+            handNo++;
+            const over = scores.some(s=>s>=100);
+            renderScorebar();
+            showOverlay(moon, delta, over);
+        }
+
+        // ── Rendering ───────────────────────────────────────────────────────
+        function faceEl(card, cls){
+            const el = document.createElement('div'); el.className = cls || 'card';
+            Object.assign(el.style, CARDS.faceStyle(rankStr(card.r), card.s));
+            el.dataset.id = card.id;
+            el.setAttribute('role','img'); el.setAttribute('aria-label', rankStr(card.r) + ' of ' + SUITNAME[card.s]);
+            return el;
+        }
+        function miniFan(n, vert){
+            const w = document.createElement('div'); w.className = 'mini';
+            for (let i=0;i<Math.min(n,13);i++){ const b = document.createElement('div'); b.className='b'; w.appendChild(b); }
+            return w;
+        }
+        function render(){
+            renderScorebar(); renderControls();
+            // opponents
+            $('seatN').innerHTML=''; $('seatW').innerHTML=''; $('seatE').innerHTML='';
+            [['N',2],['W',1],['E',3]].forEach(([seat,pl])=>{
+                const box = $('seat'+seat);
+                const nm = document.createElement('div'); nm.className='name'+(current===pl&&phase==='playing'?' active':''); nm.textContent = NAMES[pl] + ' · ' + scores[pl];
+                if (seat==='N'){ box.appendChild(miniFan(hands[pl].length)); box.appendChild(nm); }
+                else { box.appendChild(nm); box.appendChild(miniFan(hands[pl].length,true)); }
+            });
+            $('nameS').textContent = 'You · ' + scores[0];
+            $('nameS').className = 'name' + (current===0&&phase==='playing'?' active':'');
+            // trick
+            trickEl.innerHTML='';
+            trick.forEach(t=>{ const el = faceEl(t.card,'pcard'); el.classList.add('t-'+SEAT[t.p]); trickEl.appendChild(el); });
+            // center message
+            if (phase==='passing') centerMsg.textContent = 'Select 3 cards to pass ' + passDir + ', then Pass';
+            else centerMsg.textContent = '';
+            // your hand
+            renderHand();
+            scaleTable();
+        }
+        function renderHand(){
+            handEl.innerHTML='';
+            const h = hands[0];
+            const n = h.length;
+            const legal = (phase==='playing' && current===0 && !busy) ? legalMoves(0).map(c=>c.id) : [];
+            const cw = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cw'));
+            const span = Math.min(cw*0.62, n>1 ? (640 - cw)/(n-1) : 0);
+            const totalW = cw + span*(n-1);
+            handEl.style.width = totalW + 'px';
+            h.forEach((card, i)=>{
+                const el = faceEl(card);
+                el.style.left = (i*span) + 'px';
+                if (phase==='passing') { el.classList.add('legal'); if (passSel.includes(card.id)) el.classList.add('sel'); }
+                else if (legal.includes(card.id)) el.classList.add('legal');
+                else if (phase==='playing' && current===0) el.classList.add('dim');
+                handEl.appendChild(el);
+            });
+        }
+        function renderScorebar(){
+            const bar = $('scorebar'); bar.innerHTML='';
+            for (let i=0;i<4;i++){
+                const d = document.createElement('div'); if (current===i && phase==='playing') d.className='turn';
+                const l = document.createElement('div'); l.className='l'; l.textContent = NAMES[i];
+                const v = document.createElement('div'); v.className='v'+(i===0?' me':''); v.textContent = scores[i] + (handPoints && handPoints[i] ? ' (+'+handPoints[i]+')' : '');
+                d.appendChild(l); d.appendChild(v); bar.appendChild(d);
+            }
+        }
+        function renderControls(){
+            const c = $('controls'); c.innerHTML='';
+            const ng = document.createElement('button'); ng.textContent='New game'; ng.onclick=newGame; c.appendChild(ng);
+            if (phase==='passing'){
+                const pass = document.createElement('button'); pass.className='primary'; pass.textContent='Pass '+passDir;
+                pass.disabled = passSel.length!==3; pass.onclick=doPass; c.appendChild(pass);
+            }
+        }
+
+        // hand clicks
+        handEl.addEventListener('click', (e)=>{
+            const el = e.target.closest('.card'); if (!el) return;
+            const card = hands[0].find(c=>c.id===el.dataset.id); if (!card) return;
+            if (phase==='passing') { toggleSel(card); return; }
+            if (phase==='playing' && current===0 && !busy){
+                if (legalMoves(0).some(c=>c.id===card.id)) playCard(0, card);
+            }
+        });
+
+        function showOverlay(moon, delta, over){
+            let rows = '';
+            const order = [0,1,2,3];
+            const winScore = Math.min(...scores);
+            for (const i of order){
+                rows += '<tr'+(over && scores[i]===winScore?' class="win"':'')+'><td>'+NAMES[i]+'</td><td>+'+delta[i]+'</td><td>'+scores[i]+'</td></tr>';
+            }
+            let head = moon>=0 ? (NAMES[moon]==='You'?'You shot the moon! 🌙':NAMES[moon]+' shot the moon 🌙') : 'Hand over';
+            if (over) head = (scores[0]===winScore && order.filter(i=>scores[i]===winScore).length===1) ? 'You win! 🎉' : 'Game over';
+            $('ovHeading').textContent = head;
+            $('ovBody').innerHTML = '<table><tr><th>Player</th><th>Hand</th><th>Total</th></tr>'+rows+'</table>';
+            $('ovBtn').textContent = over ? 'New game' : 'Next hand';
+            $('ovBtn').onclick = over ? newGame : ()=>{ $('overlay').classList.remove('show'); startHand(); };
+            $('overlay').classList.add('show');
+            if (over){ if (scores[0]===winScore) lsSet('heartsWon', lsGet('heartsWon')+1); }
+            liveEl.textContent = head;
+            setTimeout(()=>{ try{ $('ovBtn').focus(); }catch(e){} },0);
+        }
+
+        // ── Scaling ─────────────────────────────────────────────────────────
+        function scaleTable(){
+            const viewW = Math.min(window.innerWidth, document.documentElement.clientWidth);
+            if (!viewW || !window.innerHeight) return;
+            tableEl.style.transform = 'none';
+            const s = Math.min((viewW-20)/760, (window.innerHeight*0.62)/560, 1.05);
+            tableEl.style.transform = 'scale('+s+')';
+            tableEl.parentElement.style.height = (560*s) + 'px';
+        }
+        window.addEventListener('resize', scaleTable);
+        window.addEventListener('orientationchange', ()=>setTimeout(scaleTable,60));
+        window.addEventListener('keydown',(e)=>{ const t=(e.target&&e.target.tagName)||''; if(/^(INPUT|SELECT|TEXTAREA)$/.test(t))return; if(e.key==='n'||e.key==='N') newGame(); });
+
+        newGame();
+    })();
+    </script>
+</body>
+</html>
