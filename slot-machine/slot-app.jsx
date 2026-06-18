@@ -170,6 +170,22 @@ function SlotApp() {
     setLastResult(null);
   }
 
+  // Space spins (documented in the how-to-play). Use a ref so the listener,
+  // bound once, always calls the latest spin() and respects canSpin.
+  const spinRef = React.useRef(spin);
+  spinRef.current = spin;
+  React.useEffect(function () {
+    function onKey(e) {
+      if (e.code === 'Space' || e.key === ' ') {
+        if (e.target && /^(INPUT|TEXTAREA|SELECT|BUTTON)$/.test(e.target.tagName)) return;
+        e.preventDefault();
+        spinRef.current();
+      }
+    }
+    window.addEventListener('keydown', onKey);
+    return function () { window.removeEventListener('keydown', onKey); };
+  }, []);
+
   // Build the paytable rows for the current theme. Highest payout first.
   const paytableRows = [5, 4, 3, 2, 1, 0].map(function (i) {
     return {

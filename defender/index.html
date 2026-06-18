@@ -134,6 +134,10 @@
                 if (s) s.scene.restart();
             }
         };
+        // The how-to-play documents "R — restart"; bind it (GameScene didn't).
+        window.addEventListener('keydown', (e) => {
+            if (e.key === 'r' || e.key === 'R') window.gameAPI.restart();
+        });
     </script>
 
     <!-- Navigation drawer -->
