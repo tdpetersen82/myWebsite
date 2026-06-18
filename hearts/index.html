@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
@@ -210,7 +210,7 @@
 
         // state
         let hands, scores, handPoints, trick, current, leader, heartsBroken, trickCount, phase, passDir, passSel, busy;
-        let handNo = 0;
+        let handNo = 0, gen = 0; // gen invalidates in-flight AI/resolve timers across hands
         const PASS_SEQ = ['left','right','across','none'];
 
         function lsGet(k){ try { return parseInt(localStorage.getItem(k),10)||0; } catch(e){ return 0; } }
@@ -222,6 +222,8 @@
             startHand();
         }
         function startHand() {
+            gen++; // invalidate any in-flight AI/resolve timers from a prior hand
+            try { document.querySelector('.game-shell').inert = false; } catch (e) {}
             // deal
             const d = [];
             for (const s of ['s','h','d','c']) for (let r = 2; r <= 14; r++) d.push({ r, s, id: s + r });
@@ -284,9 +286,9 @@
         }
         function advance(){
             if (busy) return;
-            if (trick.length === 4) { busy = true; setTimeout(resolveTrick, 850); return; }
+            if (trick.length === 4) { busy = true; const g = gen; setTimeout(()=>{ if (g!==gen) return; resolveTrick(); }, 850); return; }
             if (current === 0) { render(); statusEl.textContent = 'Your turn — follow ' + (trick.length?SUITNAME[trick[0].card.s]:'or lead'); }
-            else { busy = true; setTimeout(()=>{ busy=false; aiPlay(current); }, 560); }
+            else { busy = true; const g = gen; setTimeout(()=>{ if (g!==gen) return; busy=false; aiPlay(current); }, 560); }
         }
         function playCard(p, card){
             const idx = hands[p].findIndex(c=>c.id===card.id);
@@ -320,6 +322,7 @@
             playCard(p, card);
         }
         function resolveTrick(){
+            if (trick.length < 4) return; // guard against a stale/duplicate timer
             const led = trick[0].card.s;
             let win = trick[0];
             trick.forEach(t=>{ if (t.card.s===led && t.card.r>win.card.r) win = t; });
@@ -439,7 +442,8 @@
             $('ovBtn').textContent = over ? 'New game' : 'Next hand';
             $('ovBtn').onclick = over ? newGame : ()=>{ $('overlay').classList.remove('show'); startHand(); };
             $('overlay').classList.add('show');
-            if (over){ if (scores[0]===winScore) lsSet('heartsWon', lsGet('heartsWon')+1); }
+            try { document.querySelector('.game-shell').inert = true; } catch (e) {}
+            if (over){ if (scores[0]===winScore && order.filter(i=>scores[i]===winScore).length===1) lsSet('heartsWon', lsGet('heartsWon')+1); }
             liveEl.textContent = head;
             setTimeout(()=>{ try{ $('ovBtn').focus(); }catch(e){} },0);
         }
@@ -455,7 +459,7 @@
         }
         window.addEventListener('resize', scaleTable);
         window.addEventListener('orientationchange', ()=>setTimeout(scaleTable,60));
-        window.addEventListener('keydown',(e)=>{ const t=(e.target&&e.target.tagName)||''; if(/^(INPUT|SELECT|TEXTAREA)$/.test(t))return; if(e.key==='n'||e.key==='N') newGame(); });
+        window.addEventListener('keydown',(e)=>{ const t=(e.target&&e.target.tagName)||''; if(/^(INPUT|SELECT|TEXTAREA)$/.test(t))return; if(e.key==='Escape' && $('overlay').classList.contains('show')){ $('ovBtn').click(); return; } if(e.key==='n'||e.key==='N') newGame(); });
 
         newGame();
     })();

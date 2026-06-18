@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
@@ -210,13 +210,15 @@
         const isSpade = (c)=> c.s==='s';
 
         let hands, bids, tricksWon, teamScore, teamBags, trick, current, leader, spadesBroken, trickCount, phase, dealer, busy;
-        let handNo = 0;
+        let handNo = 0, gen = 0; // gen invalidates in-flight AI/resolve timers across hands
 
         function lsGet(k){ try { return parseInt(localStorage.getItem(k),10)||0; } catch(e){ return 0; } }
         function lsSet(k,v){ try { localStorage.setItem(k,String(v)); } catch(e){} }
 
         function newGame(){ teamScore=[0,0]; teamBags=[0,0]; handNo=0; $('overlay').classList.remove('show'); startHand(); }
         function startHand(){
+            gen++; // invalidate any in-flight AI/resolve timers from a prior hand
+            try { document.querySelector('.game-shell').inert = false; } catch (e) {}
             const d=[];
             for (const s of ['s','h','d','c']) for (let r=2;r<=14;r++) d.push({ r, s, id:s+r });
             for (let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
@@ -270,9 +272,9 @@
         }
         function advance(){
             if (busy) return;
-            if (trick.length===4){ busy=true; setTimeout(resolveTrick, 820); return; }
+            if (trick.length===4){ busy=true; const g=gen; setTimeout(()=>{ if (g!==gen) return; resolveTrick(); }, 820); return; }
             if (current===0){ render(); statusEl.textContent='Your turn — '+(trick.length?('follow '+SUITNAME[trick[0].card.s]):'lead'); }
-            else { busy=true; setTimeout(()=>{ busy=false; aiPlay(current); }, 540); }
+            else { busy=true; const g=gen; setTimeout(()=>{ if (g!==gen) return; busy=false; aiPlay(current); }, 540); }
         }
         function playCard(p,card){
             const idx=hands[p].findIndex(c=>c.id===card.id); if (idx<0) return;
@@ -293,20 +295,18 @@
                 const led=trick[0].card.s;
                 const winning=trickWinner();
                 const partnerWinning = winning.p===partner;
+                const partnerNil = bids[partner]===0;
+                const wantTrick = !partnerWinning || partnerNil; // if partner went Nil, take the trick off them
                 const follow=legal.filter(c=>c.s===led);
                 if (follow.length){
-                    if (partnerWinning){ card=follow.reduce((a,b)=>b.r<a.r?b:a); } // let partner have it
-                    else {
-                        // can I beat current winner in led suit (only matters if no spade is winning)?
-                        const winRank = isSpade(winning.card) ? -1 : winning.card.r;
-                        const beats=follow.filter(c=>c.r>winRank);
-                        card = beats.length ? beats.reduce((a,b)=>b.r<a.r?b:a) : follow.reduce((a,b)=>b.r<a.r?b:a);
-                    }
+                    const winnerLed = !isSpade(winning.card); // beatable in-suit only when no spade is winning
+                    const beats = winnerLed ? follow.filter(c=>c.r>winning.card.r) : [];
+                    card = (wantTrick && beats.length) ? beats.reduce((a,b)=>b.r<a.r?b:a) : follow.reduce((a,b)=>b.r<a.r?b:a);
                 } else {
-                    // void in led: trump to win if worthwhile, else sluff lowest
+                    // void in led: trump to win if we want it, else sluff lowest
                     const spades=legal.filter(isSpade);
                     const winnerIsSpade=isSpade(winning.card);
-                    if (partnerWinning){
+                    if (!wantTrick){
                         const offs=legal.filter(c=>!isSpade(c)); card=(offs.length?offs:legal).reduce((a,b)=>b.r<a.r?b:a);
                     } else if (spades.length){
                         const need = winnerIsSpade ? spades.filter(c=>c.r>winning.card.r) : spades;
@@ -317,6 +317,7 @@
             playCard(p,card);
         }
         function resolveTrick(){
+            if (trick.length < 4) return; // guard against a stale/duplicate timer
             const win=trickWinner();
             tricksWon[win.p]++; trickCount++;
             trick=[]; current=win.p; leader=win.p; busy=false; render();
@@ -332,12 +333,13 @@
                 let contract=0, nil=0;
                 [a,b].forEach(pl=>{ if (bids[pl]===0) nil += (tricksWon[pl]===0?100:-100); else contract+=bids[pl]; });
                 let sc=0;
-                if (tricks>=contract){ sc += contract*10; const bags=tricks-contract; sc+=bags; teamBags[t]+=bags; if (teamBags[t]>=10){ sc-=100; teamBags[t]-=10; } }
+                if (tricks>=contract){ sc += contract*10; const bags=tricks-contract; sc+=bags; teamBags[t]+=bags; while (teamBags[t]>=10){ sc-=100; teamBags[t]-=10; } }
                 else { sc -= contract*10; }
                 sc += nil;
                 delta[t]=sc; teamScore[t]+=sc;
             }
             handNo++;
+            phase='handover'; // suppress the active-seat highlight while the summary is up
             const over = teamScore[0]>=TARGET || teamScore[1]>=TARGET;
             render(); showOverlay(delta, over);
         }
@@ -415,21 +417,21 @@
         });
 
         function showOverlay(delta, over){
-            const made=(t)=>{ const [a,b]=TEAMS[t]; const tricks=tricksWon[a]+tricksWon[b]; let con=0; [a,b].forEach(p=>{ if(bids[p]!==0)con+=bids[p]; }); return tricks>=con; };
             let rows='';
             const winScore=Math.max(teamScore[0],teamScore[1]);
+            const tie = over && teamScore[0]===teamScore[1];
+            if (tie) over=false; // tie at/over target → keep playing, no winner highlight
             [['Your team',0],['Opponents',1]].forEach(([label,t])=>{
-                const [a,b]=TEAMS[t]; const con=bids[a]+bids[b]; const tricks=tricksWon[a]+tricksWon[b];
-                rows += '<tr'+(over&&teamScore[t]===winScore?' class="win"':'')+'><td>'+label+'</td><td>'+con+'</td><td>'+tricks+'</td><td>'+(delta[t]>=0?'+':'')+delta[t]+'</td><td>'+teamScore[t]+'</td></tr>';
+                const [a,b]=TEAMS[t]; const con=bids[a]+bids[b]; const hasNil=(bids[a]===0||bids[b]===0); const tricks=tricksWon[a]+tricksWon[b];
+                rows += '<tr'+(over&&teamScore[t]===winScore?' class="win"':'')+'><td>'+label+'</td><td>'+con+(hasNil?' +Nil':'')+'</td><td>'+tricks+'</td><td>'+(delta[t]>=0?'+':'')+delta[t]+'</td><td>'+teamScore[t]+'</td></tr>';
             });
-            let head='Hand over';
-            if (over) head = teamScore[0]>teamScore[1] ? 'Your team wins! 🎉' : teamScore[0]<teamScore[1] ? 'Opponents win' : 'Tie — play on';
-            if (over && teamScore[0]===teamScore[1]){ over=false; } // tie at/over target: keep playing
+            const head = over ? (teamScore[0]>teamScore[1]?'Your team wins! 🎉':'Opponents win') : (tie?'Tie — play on':'Hand over');
             $('ovHeading').textContent=head;
             $('ovBody').innerHTML='<table><tr><th>Team</th><th>Bid</th><th>Tricks</th><th>Hand</th><th>Total</th></tr>'+rows+'</table>';
             $('ovBtn').textContent= over ? 'New game' : 'Next hand';
             $('ovBtn').onclick = over ? newGame : ()=>{ $('overlay').classList.remove('show'); startHand(); };
             $('overlay').classList.add('show');
+            try { document.querySelector('.game-shell').inert = true; } catch (e) {}
             if (over && teamScore[0]>teamScore[1]) lsSet('spadesWon', lsGet('spadesWon')+1);
             liveEl.textContent=head; setTimeout(()=>{ try{ $('ovBtn').focus(); }catch(e){} },0);
         }
@@ -444,7 +446,7 @@
         }
         window.addEventListener('resize', scaleTable);
         window.addEventListener('orientationchange', ()=>setTimeout(scaleTable,60));
-        window.addEventListener('keydown',(e)=>{ const t=(e.target&&e.target.tagName)||''; if(/^(INPUT|SELECT|TEXTAREA)$/.test(t))return; if(e.key==='n'||e.key==='N') newGame(); });
+        window.addEventListener('keydown',(e)=>{ const t=(e.target&&e.target.tagName)||''; if(/^(INPUT|SELECT|TEXTAREA)$/.test(t))return; if(e.key==='Escape' && $('overlay').classList.contains('show')){ $('ovBtn').click(); return; } if(e.key==='n'||e.key==='N') newGame(); });
 
         newGame();
     })();
