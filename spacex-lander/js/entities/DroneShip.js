@@ -5,10 +5,10 @@ class DroneShip {
         this.scene = scene;
         this.level = level;
 
-        // Use themed level definition if available
-        const levelDef = CONFIG.getLevelDef ? CONFIG.getLevelDef(level) : null;
+        // Difficulty for this landing index
+        const def = CONFIG.getLevelDef(level);
 
-        const shrink = levelDef ? (levelDef.shipShrink || 1.0) : Math.pow(CONFIG.LEVEL.SHIP_SHRINK_FACTOR, level - 1);
+        const shrink = def.shipShrink || 1.0;
         this.width = CONFIG.DRONE_SHIP.WIDTH * shrink;
         this.height = CONFIG.DRONE_SHIP.HEIGHT;
         this.targetZoneWidth = this.width * CONFIG.DRONE_SHIP.TARGET_ZONE_RATIO;
@@ -20,28 +20,12 @@ class DroneShip {
 
         // Rocking
         this.rockAngle = 0;
-        this.maxRockAngle = levelDef ? (levelDef.rockAngle || 0) : 0;
-        if (!levelDef && level >= CONFIG.LEVEL.ROCK_START_LEVEL) {
-            this.maxRockAngle = Math.min(
-                (level - CONFIG.LEVEL.ROCK_START_LEVEL + 1) * CONFIG.LEVEL.ROCK_ANGLE_PER_LEVEL,
-                CONFIG.LEVEL.ROCK_ANGLE_MAX
-            );
-        }
-        this.rockFreq = CONFIG.LEVEL.ROCK_FREQ_BASE;
+        this.maxRockAngle = def.rockAngle || 0;
+        this.rockFreq = CONFIG.DRONE_SHIP.ROCK_FREQ;
         this.rockTime = Math.random() * Math.PI * 2;
 
-        // Horizontal drift
-        this.driftVx = 0;
-        if (levelDef && levelDef.drift > 0) {
-            this.driftVx = levelDef.drift;
-            if (Math.random() > 0.5) this.driftVx *= -1;
-        } else if (!levelDef && level >= CONFIG.LEVEL.DRIFT_START_LEVEL) {
-            this.driftVx = Math.min(
-                (level - CONFIG.LEVEL.DRIFT_START_LEVEL + 1) * CONFIG.LEVEL.DRIFT_SPEED_PER_LEVEL,
-                CONFIG.LEVEL.DRIFT_SPEED_MAX
-            );
-            if (Math.random() > 0.5) this.driftVx *= -1;
-        }
+        // Horizontal drift (def.drift is a positive magnitude; pick a sign here)
+        this.driftVx = def.drift > 0 ? def.drift * (Math.random() > 0.5 ? 1 : -1) : 0;
 
         // Beacon pulse
         this.beaconPhase = 0;

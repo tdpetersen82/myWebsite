@@ -1,4 +1,6 @@
 // SpaceX Lander - Game Configuration Constants
+// Endless score-chase + roguelite progression. One run = a chain of back-to-back
+// landings on a single persistent fuel tank; a crash ends the run.
 
 const CONFIG = {
     // Display
@@ -6,57 +8,71 @@ const CONFIG = {
     HEIGHT: 600,
 
     // Physics
-    GRAVITY: 55,                    // Earth gravity (px/sec^2) — heavier feel, realistic TWR
-    ENTRY_THRUST_POWER: 90,         // Multi-engine entry burn (TWR 1.64x)
-    LANDING_THRUST_POWER: 100,      // Single-engine precision (TWR 1.82x)
-    GRID_FIN_ROTATION_RATE: 65,     // Degrees/sec at max effectiveness — slower, weightier rotation
-    GRID_FIN_LATERAL_FORCE: 22,     // Lateral push from fins
-    FIN_MAX_SPEED_REF: 120,         // Speed where fins are 100% effective — responsive at lower speeds
+    GRAVITY: 42,                    // px/sec^2
+    LANDING_THRUST_POWER: 125,      // Full-throttle engine authority (TWR ~3x gravity — forgiving brake)
+    GRID_FIN_ROTATION_RATE: 70,     // Degrees/sec at max effectiveness (aerodynamic, high speed)
+    GRID_FIN_LATERAL_FORCE: 24,     // Lateral push from fins
+    FIN_MAX_SPEED_REF: 120,         // Speed where fins are 100% effective
     THRUST_GIMBAL_RATE: 60,         // Rotation from thrust vectoring (deg/sec)
-    RCS_ROTATION_RATE: 35,          // Cold-gas RCS rotation (deg/sec) — fills gap at low speed w/o thrust
-    RCS_LATERAL_FORCE: 25,          // RCS lateral push (px/s^2) — stronger low-speed steering
-    DRAG_COEFFICIENT: 0.002,        // Atmospheric drag — helps naturally slow descent
+    RCS_ROTATION_RATE: 50,          // Cold-gas RCS rotation (deg/sec) — low-speed authority
+    RCS_LATERAL_FORCE: 32,          // RCS lateral push (px/s^2) — low-speed steering
+    DRAG_COEFFICIENT: 0.0018,       // Atmospheric drag — helps naturally slow descent
     MAX_VELOCITY: 400,
 
-    // Fuel (single pool) — burn rates are per-second (multiplied by dt in Rocket.update)
-    FUEL_MAX: 100,
-    ENTRY_BURN_RATE: 18,
-    LANDING_BURN_RATE: 8,
-    LOW_FUEL_THRESHOLD: 20,
+    // Control assists — keep throttle fully manual (agency) but make the tall
+    // booster's attitude flyable with on/off keys.
+    ATTITUDE_DAMP: 1.8,             // Per-sec relax-to-upright when NOT steering (RCS attitude hold)
+    LOW_SPEED_LAT_DAMP: 0.9,        // Per-sec lateral-velocity bleed at low speed (cold-gas station keeping)
+    ASSIST_SPEED_REF: 95,           // Assists ramp in below this airspeed
 
-    // Landing thresholds
+    // Fuel — ONE pool that PERSISTS across landings within a run (not refilled).
+    FUEL_MAX: 100,
+    LANDING_BURN_RATE: 9,           // Per-second full-throttle burn
+    LOW_FUEL_THRESHOLD: 22,
+
+    // Fuel top-up on a successful landing, by grade (rewards clean flight twice:
+    // score AND survival). A GOOD-or-better landing is roughly net-positive fuel.
+    FUEL_TOPUP: { perfect: 30, great: 22, good: 14, sketchy: 6 },
+
+    // Landing survival gate — below this = crash = run ends.
     LAND_MAX_VY: 50,
     LAND_MAX_VX: 30,
     LAND_MAX_ANGLE: 15,
 
-    // Phase altitude thresholds
-    PHASE_2_ALTITUDE: 3500,
-    PHASE_3_ALTITUDE: 1200,
-    LEG_DEPLOY_ALTITUDE: 800,
-
-    // Starting conditions
-    START_VY: 320,                  // Initial downward velocity — reduced for lower thrust budget
-    START_Y: -1100,                 // Compact altitude — less boring dead space
-    ALTITUDE_SCALE: 8,              // Pixel-to-altitude unit scale
-    STARTING_LIVES: 3,
-    HANDOVER_COUNTDOWN: 3,          // Seconds of auto-descent before human control
-
-    // Thrust
-    BASE_THRUST_RATIO: 0.30,        // Idle descent thrust as fraction of full thrust (0.55x gravity — heavier idle fall)
-
-    // Sound barrier
-    SOUND_BARRIER: {
-        MACH_1_SPEED: 43,           // Game units for Mach 1 (~343 m/s / ALTITUDE_SCALE)
-        COOLDOWN: 10000,            // ms cooldown between sonic boom triggers
-        MIN_ALTITUDE: 2000,         // Only trigger sonic booms above this altitude
+    // Grade tiers, evaluated by the WORST of (vy, vx, tilt) plus bullseye distance.
+    // distRatio = |x - shipCenter| / (targetZoneWidth/2)  (0 = dead center, 1 = edge of zone)
+    GRADES: {
+        perfect: { vy: 12, vx: 8,  angle: 3,  distRatio: 0.25, mult: 3.0, chainStep: 1.0, label: 'PERFECT', color: '#44ffcc' },
+        great:   { vy: 22, vx: 15, angle: 7,  distRatio: 1.0,  mult: 2.0, chainStep: 0.5, label: 'GREAT',   color: '#7cff5a' },
+        good:    { vy: 35, vx: 22, angle: 11, distRatio: 99,   mult: 1.5, chainStep: 0.2, label: 'GOOD',    color: '#ffd24a' },
+        sketchy: { vy: 50, vx: 30, angle: 15, distRatio: 99,   mult: 1.0, chainStep: 0.0, label: 'SKETCHY', color: '#ff8a3a' }
     },
+
+    // Chain multiplier
+    CHAIN_MAX: 8.0,
 
     // Scoring
     BASE_LANDING_SCORE: 200,
-    FUEL_BONUS_MULTIPLIER: 40,
-    PRECISION_BONUS_MAX: 150,
-    PHASE_TRANSITION_BONUS: 50,
-    SPEED_BONUS_MULTIPLIER: 3,
+    PRECISION_BONUS_MAX: 150,       // reuse DroneShip.getPrecisionScore
+    SOFTNESS_BONUS_MULTIPLIER: 3,   // floor((LAND_MAX_VY - vy) * this)
+    CREDITS_PER_SCORE: 90,          // credits earned = floor(landingScore / this)
+
+    // Leg auto-deploy (keeps a 3-input game)
+    LEG_DEPLOY_ALTITUDE: 800,
+
+    // Spawn / altitude
+    START_Y: -1000,                 // Spawn altitude (world Y above the ocean)
+    START_VY_BASE: 120,             // Base entry vertical speed at landing 1
+    START_VY_CREEP: 6,              // +per landing index
+    START_VY_MAX: 230,
+    ALTITUDE_SCALE: 8,              // Pixel-to-altitude unit scale
+
+    // Sound barrier (cosmetic flavor only — no scoring)
+    SOUND_BARRIER: {
+        MACH_1_SPEED: 43,
+        COOLDOWN: 8000,
+        MIN_ALTITUDE: 2200,
+    },
 
     // Rocket dimensions
     ROCKET_WIDTH: 16,
@@ -67,7 +83,7 @@ const CONFIG = {
         ZOOM_MIN: 0.45,
         ZOOM_MAX: 1.05,
         ZOOM_ALT_REF: 4000,
-        ZOOM_LERP: 0.035
+        ZOOM_LERP: 0.05
     },
 
     // Ocean
@@ -86,142 +102,51 @@ const CONFIG = {
         HEIGHT: 18,
         TARGET_ZONE_RATIO: 0.6,
         BEACON_PULSE_DURATION: 800,
-        GUIDE_LIGHT_HEIGHT: 60
+        GUIDE_LIGHT_HEIGHT: 60,
+        ROCK_FREQ: 0.8
     },
 
-    // Level scaling (legacy fallback for levels beyond LEVELS array)
-    LEVEL: {
-        // Sea state
-        WAVE_AMP_BASE: 2,
-        WAVE_AMP_PER_LEVEL: 1.5,
-        WAVE_AMP_MAX: 15,
-        // Ship rocking
-        ROCK_START_LEVEL: 3,
-        ROCK_ANGLE_PER_LEVEL: 1.0,
-        ROCK_ANGLE_MAX: 8,
-        ROCK_FREQ_BASE: 0.8,
-        // Ship drift
-        DRIFT_START_LEVEL: 6,
-        DRIFT_SPEED_PER_LEVEL: 5,
-        DRIFT_SPEED_MAX: 25,
-        // Wind
-        WIND_START_LEVEL: 3,
-        WIND_PER_LEVEL: 4,
-        WIND_MAX: 25,
-        // Fuel penalty
-        FUEL_PENALTY_START_LEVEL: 3,
-        FUEL_PENALTY_PER_LEVEL: 0.04,
-        FUEL_PENALTY_MAX: 0.35,
-        // Ship size shrink
-        SHIP_SHRINK_FACTOR: 0.97,
-        // Entry angle progression
-        ENTRY_ANGLE_START_LEVEL: 2,
-        ENTRY_ANGLE_PER_LEVEL: 3,
-        ENTRY_ANGLE_MAX: 25,
-        ENTRY_VX_PER_LEVEL: 8,
-        ENTRY_VX_MAX: 60
-    },
-
-    // 15 Themed Levels
-    LEVELS: [
+    // --- ROGUELITE UPGRADES (persistent, bought with credits) ---
+    // Each upgrade changes how the game PLAYS or SCORES — no invisible stats.
+    UPGRADES: [
         {
-            name: 'First Landing',
-            goal: 'Land safely on the drone ship',
-            wind: 0, rockAngle: 0, drift: 0, fuelPenalty: 0,
-            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 2,
-
+            key: 'throttle', name: 'Throttle Authority', max: 3, costs: [100, 250, 550],
+            blurb: 'Stronger landing engine (+8% thrust / level). Brake later and lower.',
+            stat: '+8% engine thrust',
+            glyph: 'engine'
         },
         {
-            name: 'Crosswind',
-            goal: 'Land in steady crosswind',
-            wind: 8, rockAngle: 0, drift: 0, fuelPenalty: 0,
-            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 3,
-
+            key: 'vernier', name: 'Vernier Trim', max: 3, costs: [120, 300, 650],
+            blurb: 'Crisper low-speed steering (+15% RCS, +12% gimbal / level). Settle square for bullseyes.',
+            stat: '+15% fine steering',
+            glyph: 'rcs'
         },
         {
-            name: 'Rough Seas',
-            goal: 'Land on a rocking ship',
-            wind: 0, rockAngle: 3, drift: 0, fuelPenalty: 0,
-            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 6,
-
+            key: 'tanks', name: 'Deep Tanks', max: 2, costs: [200, 500],
+            blurb: '+20 max fuel / level. Runs go several landings deeper.',
+            stat: '+20 max fuel',
+            glyph: 'fuel'
         },
         {
-            name: 'Storm Warning',
-            goal: 'Handle wind and waves together',
-            wind: 10, rockAngle: 4, drift: 0, fuelPenalty: 0,
-            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 7,
-
+            key: 'damping', name: 'Grid-Fin Damping', max: 2, costs: [150, 420],
+            blurb: 'Calmer entries (-20% incoming tilt & sideways speed / level).',
+            stat: '-20% entry chaos',
+            glyph: 'fin'
         },
         {
-            name: 'Off-Axis Entry',
-            goal: 'Correct your approach angle',
-            wind: 0, rockAngle: 0, drift: 0, fuelPenalty: 0,
-            shipShrink: 1.0, entryAngle: 9, entryVx: 20, waveAmp: 3,
-
-        },
-        {
-            name: 'Moving Target',
-            goal: 'Land on a drifting ship',
-            wind: 0, rockAngle: 0, drift: 35, fuelPenalty: 0,
-            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 4
-        },
-        {
-            name: 'Fuel Critical',
-            goal: 'Land with limited fuel — be efficient',
-            wind: 0, rockAngle: 0, drift: 0, fuelPenalty: 0.25,
-            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 3,
-
-        },
-        {
-            name: 'Gale Force',
-            goal: 'Fight strong wind at an angle',
-            wind: 14, rockAngle: 0, drift: 0, fuelPenalty: 0,
-            shipShrink: 1.0, entryAngle: 11, entryVx: 25, waveAmp: 5,
-
-        },
-        {
-            name: 'Rolling Deck',
-            goal: 'Ship rocks hard and drifts',
-            wind: 0, rockAngle: 6, drift: 40, fuelPenalty: 0,
-            shipShrink: 1.0, entryAngle: 0, entryVx: 0, waveAmp: 10,
-
-        },
-        {
-            name: 'Precision Landing',
-            goal: 'Hit a smaller deck with less fuel',
-            wind: 4, rockAngle: 2, drift: 0, fuelPenalty: 0.15,
-            shipShrink: 0.85, entryAngle: 0, entryVx: 0, waveAmp: 4,
-
-        },
-        {
-            name: 'Typhoon',
-            goal: 'Everything at once — moderate intensity',
-            wind: 11, rockAngle: 4, drift: 25, fuelPenalty: 0.10,
-            shipShrink: 0.95, entryAngle: 8, entryVx: 15, waveAmp: 8,
-
-        },
-        {
-            name: 'Emergency Descent',
-            goal: 'Fast entry, low fuel, strong wind',
-            wind: 12, rockAngle: 2, drift: 5, fuelPenalty: 0.30,
-            shipShrink: 1.0, entryAngle: 6, entryVx: 12, waveAmp: 5,
-            extraStartVY: 50
-        },
-        {
-            name: 'The Gauntlet',
-            goal: 'All challenges at high intensity',
-            wind: 16, rockAngle: 6, drift: 45, fuelPenalty: 0.20,
-            shipShrink: 0.90, entryAngle: 14, entryVx: 30, waveAmp: 12,
-
-        },
-        {
-            name: 'The Impossible',
-            goal: 'Survive maximum everything',
-            wind: 20, rockAngle: 8, drift: 55, fuelPenalty: 0.35,
-            shipShrink: 0.85, entryAngle: 20, entryVx: 45, waveAmp: 15,
-
+            key: 'recovery', name: 'Recovery Bonus', max: 2, costs: [250, 600],
+            blurb: '+8% landing fuel top-up & credits / level. Good runs self-sustain.',
+            stat: '+8% fuel & credits',
+            glyph: 'credit'
         }
     ],
+
+    // LocalStorage keys
+    HIGH_SCORE_KEY: 'spacexLanderHighScore',     // best run score (kept: chrome mirrors it)
+    CREDITS_KEY: 'spacexLanderCredits',
+    UPGRADES_KEY: 'spacexLanderUpgrades',
+    BEST_CHAIN_KEY: 'spacexLanderBestChain',
+    BEST_LANDINGS_KEY: 'spacexLanderBestLandings',
 
     // Colors
     COLORS: {
@@ -263,13 +188,14 @@ const CONFIG = {
         // HUD
         HUD_TEXT: '#44ff88',
         HUD_WARNING: '#ff4444',
-        HUD_PHASE_1: '#ff4444',
-        HUD_PHASE_2: '#ffcc44',
-        HUD_PHASE_3: '#44ff88',
         FUEL_FULL: 0x00ff00,
         FUEL_LOW: 0xff3300,
         WIND_ARROW: 0x4488ff,
-        SHOCKWAVE: 0xffffff
+        SHOCKWAVE: 0xffffff,
+
+        // Brand / UI accent
+        ACCENT: 0x0066ff,
+        CREDIT: '#ffcc44'
     },
 
     // VFX Configuration
@@ -281,7 +207,7 @@ const CONFIG = {
             { count: 25, sizeMin: 1.5, sizeMax: 2.8, speed: 0.1, alphaMin: 0.5, alphaMax: 1.0 }
         ],
 
-        // Entry burn exhaust (multi-engine, wide)
+        // Entry burn exhaust (multi-engine, wide) — used at high speed (cosmetic)
         ENTRY_CORE: { speed: [140, 240], life: 200, scale: [0.8, 0], tint: 0xffffff, rate: 40 },
         ENTRY_FLAME: { speed: [100, 200], life: 350, scale: [1.2, 0], tint: [0xff8800, 0xff6600, 0xffaa00], rate: 35 },
         ENTRY_SMOKE: { speed: [30, 80], life: 800, scale: [0.5, 2.0], alpha: [0.3, 0], tint: 0x555555, rate: 15 },
@@ -327,32 +253,90 @@ const CONFIG = {
         // Sonic boom
         SONIC_BOOM_RADIUS: 120,
         SONIC_BOOM_DURATION: 600
-    },
-
-    // Mission names for each level
-    MISSIONS: [
-        'CRS-1', 'CRS-2', 'SES-8', 'Thaicom 6', 'Orbcomm OG2',
-        'DSCOVR', 'TurkmenAlem', 'Jason-3', 'SES-9', 'CRS-8',
-        'JCSAT-14', 'Thaicom 8', 'CRS-9', 'JCSAT-16'
-    ],
-
-    // LocalStorage
-    HIGH_SCORE_KEY: 'spacexLanderHighScore'
+    }
 };
 
-// Helper to get level definition (themed or fallback to legacy scaling)
-CONFIG.getLevelDef = function(level) {
-    if (level <= CONFIG.LEVELS.length) {
-        return CONFIG.LEVELS[level - 1];
-    }
-    // Fallback for levels beyond 15: scale from last level
-    const base = CONFIG.LEVELS[CONFIG.LEVELS.length - 1];
-    const extra = level - CONFIG.LEVELS.length;
+// ----------------------------------------------------------------------------
+// Endless difficulty ramp. The landing index N within a run IS the "level".
+// Reuses the per-level scaling fields the Ocean/DroneShip entities already read,
+// so no new systems are needed — it just never plateaus. Signs randomize each
+// landing so the same N never plays identically twice.
+// ----------------------------------------------------------------------------
+CONFIG.getLevelDef = function (N) {
+    const clamp = (v, lo, hi) => Math.max(lo, Math.min(hi, v));
+
+    // Calm on-ramp: landing 1 is dead calm; each hazard enters one at a time.
+    // All magnitudes are POSITIVE here — DroneShip applies its own sign to drift,
+    // and RunScene picks the sign for wind and the entry offset.
+    const wind = N >= 2 ? clamp(Math.floor(N / 2) * 3, 0, 25) : 0;
+    const rockAngle = N >= 4 ? clamp((N - 3) * 1.0, 0, 8) : 0;
+    const drift = N >= 6 ? clamp((N - 5) * 4, 0, 25) : 0;
+    const entryAngle = N >= 3 ? clamp(Math.floor(N / 3) * 3, 0, 20) : 0;
+    const entryVx = N >= 3 ? clamp(Math.floor(N / 3) * 10, 0, 60) : 0;
+    const waveAmp = clamp(2 + N * 1.0, 2, 15);
+    const shipShrink = N >= 8 ? Math.max(0.80, Math.pow(0.97, N - 7)) : 1.0;
+
     return {
-        ...base,
-        name: `Level ${level}`,
-        goal: 'Push your limits',
-        wind: Math.min(30, base.wind + extra * 2),
-        fuelPenalty: Math.min(0.45, base.fuelPenalty + extra * 0.03),
+        index: N,
+        wind,
+        rockAngle,
+        drift,
+        entryAngle,
+        entryVx,
+        waveAmp,
+        shipShrink
+    };
+};
+
+// ----------------------------------------------------------------------------
+// Roguelite persistence + effective-stat helpers.
+// ----------------------------------------------------------------------------
+CONFIG.getCredits = function () {
+    return parseInt(localStorage.getItem(CONFIG.CREDITS_KEY) || '0', 10) || 0;
+};
+CONFIG.setCredits = function (v) {
+    localStorage.setItem(CONFIG.CREDITS_KEY, Math.max(0, Math.floor(v)).toString());
+};
+CONFIG.addCredits = function (v) {
+    CONFIG.setCredits(CONFIG.getCredits() + v);
+};
+CONFIG.getUpgrades = function () {
+    try { return JSON.parse(localStorage.getItem(CONFIG.UPGRADES_KEY) || '{}') || {}; }
+    catch (e) { return {}; }
+};
+CONFIG.getUpgradeLevel = function (key) {
+    const u = CONFIG.getUpgrades();
+    return u[key] || 0;
+};
+CONFIG.setUpgradeLevel = function (key, level) {
+    const u = CONFIG.getUpgrades();
+    u[key] = level;
+    localStorage.setItem(CONFIG.UPGRADES_KEY, JSON.stringify(u));
+};
+// Cost of the NEXT tier of an upgrade, or null if maxed.
+CONFIG.nextUpgradeCost = function (def) {
+    const lvl = CONFIG.getUpgradeLevel(def.key);
+    if (lvl >= def.max) return null;
+    return def.costs[lvl];
+};
+
+// Snapshot the effective stats for a run, given currently-owned upgrades.
+// Read once at run start so upgrades are fixed for the run.
+CONFIG.effectiveStats = function () {
+    const lvl = CONFIG.getUpgradeLevel.bind(CONFIG);
+    const throttle = lvl('throttle');
+    const vernier = lvl('vernier');
+    const tanks = lvl('tanks');
+    const damping = lvl('damping');
+    const recovery = lvl('recovery');
+    return {
+        landingThrust: CONFIG.LANDING_THRUST_POWER * (1 + 0.08 * throttle),
+        rcsLateral: CONFIG.RCS_LATERAL_FORCE * (1 + 0.15 * vernier),
+        gimbalRate: CONFIG.THRUST_GIMBAL_RATE * (1 + 0.12 * vernier),
+        rcsRotation: CONFIG.RCS_ROTATION_RATE * (1 + 0.15 * vernier),
+        fuelMax: CONFIG.FUEL_MAX + 20 * tanks,
+        entryDamping: Math.max(0, 1 - 0.20 * damping),
+        topupMult: 1 + 0.08 * recovery,
+        creditsMult: 1 + 0.08 * recovery
     };
 };

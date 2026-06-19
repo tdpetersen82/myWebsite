@@ -6,18 +6,8 @@ class Ocean {
         this.waterLevel = CONFIG.OCEAN.WATER_LEVEL;
         this.waveOffset = 0;
 
-        // Use themed level definition if available
-        const levelDef = CONFIG.getLevelDef ? CONFIG.getLevelDef(level) : null;
-
-        if (levelDef && levelDef.waveAmp !== undefined) {
-            this.waveAmplitude = levelDef.waveAmp;
-        } else {
-            const lvl = CONFIG.LEVEL;
-            this.waveAmplitude = Math.min(
-                lvl.WAVE_AMP_BASE + (level - 1) * lvl.WAVE_AMP_PER_LEVEL,
-                lvl.WAVE_AMP_MAX
-            );
-        }
+        // Sea state for this landing index
+        this.waveAmplitude = CONFIG.getLevelDef(level).waveAmp;
         this.waveFreq = CONFIG.OCEAN.WAVE_FREQ;
         this.waveSpeed = CONFIG.OCEAN.WAVE_SPEED;
         this.swellAmplitude = this.waveAmplitude * CONFIG.OCEAN.SWELL_RATIO;

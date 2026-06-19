@@ -1,4 +1,5 @@
 // SpaceX Lander - Rocket Entity (Falcon 9 First Stage)
+// Manual throttle (no auto-pilot): the player owns every braking decision.
 
 class Rocket {
     constructor(scene, x, y) {
@@ -6,7 +7,7 @@ class Rocket {
         this.x = x;
         this.y = y;
         this.vx = 0;
-        this.vy = CONFIG.START_VY;
+        this.vy = CONFIG.START_VY_BASE;
         this.angle = 0;         // degrees, 0 = upright
         this.fuel = CONFIG.FUEL_MAX;
         this.alive = true;
@@ -14,10 +15,10 @@ class Rocket {
         this.width = CONFIG.ROCKET_WIDTH;
         this.height = CONFIG.ROCKET_HEIGHT;
 
-        // Phase state
-        this.phase = 1;
-        this.engineMode = 'off'; // 'entry', 'single', 'off'
-        this.thrusting = false;
+        this.engineMode = 'single'; // 'entry' (fast/wide) or 'single' (slow/precise) — cosmetic
+        this.thrusting = false;     // full throttle this frame
+        this.thrustLevel = 0;       // 0..1
+        this.idleEmber = false;     // cosmetic idle glow
 
         // Grid fins
         this.gridFinAngle = 0;   // -1 to 1
@@ -38,94 +39,84 @@ class Rocket {
         this.steeringRight = false;
     }
 
-    update(delta, gravity, wind, phase, playerHasControl) {
+    update(delta, gravity, wind) {
         if (!this.alive || this.landed) return;
 
         const dt = delta / 1000;
-        this.phase = phase;
+        const eff = this.scene.eff || {};
+        const landingThrust = eff.landingThrust || CONFIG.LANDING_THRUST_POWER;
+        const gimbalRate = eff.gimbalRate || CONFIG.THRUST_GIMBAL_RATE;
+        const rcsLateral = eff.rcsLateral || CONFIG.RCS_LATERAL_FORCE;
+        const rcsRotation = eff.rcsRotation || CONFIG.RCS_ROTATION_RATE;
 
         const cursors = this.scene.cursors;
         const wasd = this.scene.wasd;
 
-        // Input (disabled during handover countdown)
-        const leftPressed = playerHasControl && (cursors.left.isDown || (wasd && wasd.left.isDown));
-        const rightPressed = playerHasControl && (cursors.right.isDown || (wasd && wasd.right.isDown));
-        const thrustPressed = playerHasControl && (cursors.up.isDown || (wasd && wasd.up.isDown));
+        // Input — live from frame 1 (no handover)
+        const leftPressed = cursors.left.isDown || (wasd && wasd.left.isDown);
+        const rightPressed = cursors.right.isDown || (wasd && wasd.right.isDown);
+        const thrustPressed = cursors.up.isDown || (wasd && wasd.up.isDown);
 
         this.steeringLeft = leftPressed;
         this.steeringRight = rightPressed;
 
-        // Grid fin steering
+        // Grid fin steering target
         let targetFinAngle = 0;
         if (leftPressed) targetFinAngle = -1;
         if (rightPressed) targetFinAngle = 1;
-
-        // Smooth fin movement
         this.gridFinAngle += (targetFinAngle - this.gridFinAngle) * Math.min(1, dt * 8);
         if (Math.abs(this.gridFinAngle) < 0.01) this.gridFinAngle = 0;
 
-        // Fin effectiveness based on speed
+        // Fin effectiveness scales with airspeed (aerodynamic)
         const speed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
         const finEffectiveness = Math.min(1, speed / CONFIG.FIN_MAX_SPEED_REF);
 
-        // Rotation from grid fins (aerodynamic)
-        const finRotation = this.gridFinAngle * CONFIG.GRID_FIN_ROTATION_RATE * finEffectiveness * dt;
-        this.angle += finRotation;
-
-        // Lateral force from grid fins
+        // Rotation + lateral force from grid fins
+        this.angle += this.gridFinAngle * CONFIG.GRID_FIN_ROTATION_RATE * finEffectiveness * dt;
         this.vx += this.gridFinAngle * CONFIG.GRID_FIN_LATERAL_FORCE * finEffectiveness * dt;
 
-        // RCS cold-gas thrusters — provide steering at low speed when not thrusting
+        // Thrust — engine fires only on held input (manual throttle = agency)
+        const fullThrust = thrustPressed && this.fuel > 0;
+        this.thrusting = fullThrust;
+        this.thrustLevel = fullThrust ? 1.0 : 0;
+        // Cosmetic idle ember while falling with fuel left (no force, no fuel cost)
+        this.idleEmber = !fullThrust && this.fuel > 0 && this.vy > 0;
+
+        // RCS cold-gas thrusters — steering authority at low speed when not gimballing
         this.rcsActive = false;
-        const thrustWillFire = thrustPressed && this.fuel > 0;
-        const gimbalCovers = thrustWillFire && phase >= 2;
+        const gimbalCovers = fullThrust;
         if (Math.abs(this.gridFinAngle) > 0.05 && !gimbalCovers) {
             const rcsEffectiveness = Math.max(0, 1 - finEffectiveness);
             if (rcsEffectiveness > 0.05) {
                 this.rcsActive = true;
-                this.angle += this.gridFinAngle * CONFIG.RCS_ROTATION_RATE * rcsEffectiveness * dt;
-                this.vx += this.gridFinAngle * CONFIG.RCS_LATERAL_FORCE * rcsEffectiveness * dt;
+                this.angle += this.gridFinAngle * rcsRotation * rcsEffectiveness * dt;
+                this.vx += this.gridFinAngle * rcsLateral * rcsEffectiveness * dt;
             }
         }
 
-        // Thrust — engine is always lit during descent, UP arrow boosts to full
-        const thrustPower = phase === 1 ? CONFIG.ENTRY_THRUST_POWER : CONFIG.LANDING_THRUST_POWER;
-        const burnRate = phase === 1 ? CONFIG.ENTRY_BURN_RATE : CONFIG.LANDING_BURN_RATE;
-        const baseRatio = CONFIG.BASE_THRUST_RATIO || 0.35;
-
-        const fullThrust = thrustPressed && this.fuel > 0;
-        const descending = this.vy > 0;
-        const hasBaseThrust = descending && this.fuel > 0;
-
-        this.thrusting = fullThrust || hasBaseThrust;
-        this.thrustLevel = fullThrust ? 1.0 : (hasBaseThrust ? baseRatio : 0);
-
-        if (this.thrusting) {
-            this.engineMode = phase === 1 ? 'entry' : 'single';
-            const effectivePower = thrustPower * this.thrustLevel;
-            const effectiveBurn = burnRate * (fullThrust ? 1.0 : baseRatio * 0.5);
+        if (fullThrust) {
+            // Cosmetic engine mode by airspeed: wide orange entry burn when fast,
+            // narrow blue precision burn when slow near the deck.
+            this.engineMode = speed > 150 ? 'entry' : 'single';
 
             // Gimbal offset: tilt exhaust direction when steering
-            const gimbalOffset = this.gridFinAngle * 15; // degrees of exhaust tilt
+            const gimbalOffset = this.gridFinAngle * 15;
             const thrustAngle = Phaser.Math.DegToRad(this.angle - 90 + gimbalOffset);
-            this.vx += Math.cos(thrustAngle) * effectivePower * dt;
-            this.vy += Math.sin(thrustAngle) * effectivePower * dt;
-            this.fuel = Math.max(0, this.fuel - effectiveBurn * dt);
+            this.vx += Math.cos(thrustAngle) * landingThrust * dt;
+            this.vy += Math.sin(thrustAngle) * landingThrust * dt;
+            this.fuel = Math.max(0, this.fuel - CONFIG.LANDING_BURN_RATE * dt);
 
-            // Thrust vectoring also helps with rotation at low speeds
-            if (phase >= 2) {
-                const gimbalRotation = this.gridFinAngle * CONFIG.THRUST_GIMBAL_RATE * (1 - finEffectiveness) * dt;
-                this.angle += gimbalRotation;
-            }
+            // Thrust vectoring helps rotation at low speed (fins weak)
+            const gimbalRotation = this.gridFinAngle * gimbalRate * (1 - finEffectiveness) * dt;
+            this.angle += gimbalRotation;
         } else {
-            this.engineMode = 'off';
-            this.thrustLevel = 0;
+            this.engineMode = 'single';
         }
 
         // Gravity
         this.vy += gravity * dt;
 
-        // Atmospheric drag (increases at lower altitude)
+        // Atmospheric drag (increases with speed)
         const dragForce = CONFIG.DRAG_COEFFICIENT * speed * speed;
         if (speed > 0) {
             this.vx -= (this.vx / speed) * dragForce * dt;
@@ -133,17 +124,29 @@ class Rocket {
         }
 
         // Wind
-        if (wind) {
-            this.vx += wind * dt;
+        if (wind) this.vx += wind * dt;
+
+        // --- CONTROL ASSISTS ---
+        // Attitude hold: when the player isn't steering, the booster relaxes
+        // toward upright (RCS auto-stabilize). It never fights active input.
+        if (!leftPressed && !rightPressed && Math.abs(this.angle) > 0.05) {
+            this.angle += (0 - this.angle) * Math.min(1, dt * CONFIG.ATTITUDE_DAMP);
+        }
+        // Low-speed lateral damping (cold-gas station keeping) — ramps in as the
+        // booster slows, so residual drift can be nulled near the deck.
+        const lowFactor = Phaser.Math.Clamp(1 - speed / CONFIG.ASSIST_SPEED_REF, 0, 1);
+        if (lowFactor > 0) {
+            this.vx -= this.vx * Math.min(1, dt * CONFIG.LOW_SPEED_LAT_DAMP * lowFactor);
         }
 
         // Normalize angle
         while (this.angle > 180) this.angle -= 360;
         while (this.angle < -180) this.angle += 360;
 
-        // Clamp velocity
-        if (speed > CONFIG.MAX_VELOCITY) {
-            const scale = CONFIG.MAX_VELOCITY / speed;
+        // Clamp velocity to the current (post-integration) magnitude
+        const curSpeed = Math.sqrt(this.vx * this.vx + this.vy * this.vy);
+        if (curSpeed > CONFIG.MAX_VELOCITY) {
+            const scale = CONFIG.MAX_VELOCITY / curSpeed;
             this.vx *= scale;
             this.vy *= scale;
         }
@@ -152,20 +155,20 @@ class Rocket {
         this.x += this.vx * dt;
         this.y += this.vy * dt;
 
-        // Screen bounds (wrap horizontally)
+        // Wrap horizontally
         if (this.x < -30) this.x = CONFIG.WIDTH + 30;
         if (this.x > CONFIG.WIDTH + 30) this.x = -30;
 
         // Ceiling
-        const ceiling = (CONFIG.START_Y || -4800) - 200;
+        const ceiling = CONFIG.START_Y - 200;
         if (this.y < ceiling) {
             this.y = ceiling;
             this.vy = Math.abs(this.vy) * 0.2;
         }
 
-        // Re-entry heat
+        // Re-entry heat (cosmetic)
         const heatThreshold = 150;
-        if (phase === 1 && speed > heatThreshold) {
+        if (speed > heatThreshold && this.vy > 0) {
             this.reentryHeat = Math.min(1, (speed - heatThreshold) / 150);
         } else {
             this.reentryHeat = Math.max(0, this.reentryHeat - dt * 2);
@@ -268,7 +271,7 @@ class Rocket {
             graphics.strokePath();
         }
 
-        // SpaceX-inspired chevron (red/dark V shape at mid-body)
+        // SpaceX-inspired chevron
         const chevY = bodyTop + (bodyBot - bodyTop) * 0.4;
         const cv1 = rotate(-w / 2, chevY - 3);
         const cv2 = rotate(0, chevY + 3);
@@ -287,7 +290,7 @@ class Rocket {
         graphics.lineTo(bbl.x, bbl.y);
         graphics.strokePath();
 
-        // --- ENGINE SECTION (slightly wider, darker) ---
+        // --- ENGINE SECTION ---
         const engTop = bodyBot;
         const engBot = h / 2;
         const etl = rotate(-w / 2 - 1, engTop);
@@ -304,24 +307,22 @@ class Rocket {
         graphics.closePath();
         graphics.fillPath();
 
-        // Engine bells — gimbal offset follows steering input
-        const gimbalPx = this.gridFinAngle * 3; // visual nozzle offset
+        // Engine bells + glow — full glow when thrusting, faint ember when idle
+        const gimbalPx = this.gridFinAngle * 3;
         const nozzle = rotate(gimbalPx, engBot + 2);
         const thrustAlpha = this.thrustLevel || 0;
-        if (this.engineMode === 'entry') {
-            // 3 engines with gimbal
+        const emberAlpha = this.idleEmber ? (0.12 + Math.sin(Date.now() / 80) * 0.05) : 0;
+
+        if (this.thrusting && this.engineMode === 'entry') {
             for (const ox of [-4, 0, 4]) {
                 const np = rotate(ox + gimbalPx, engBot + 2);
                 graphics.fillStyle(0x444444, 1);
                 graphics.fillCircle(np.x, np.y, 2.5);
-                if (this.thrusting) {
-                    const glow = (0.3 + thrustAlpha * 0.4) + Math.sin(Date.now() / 40) * 0.2;
-                    graphics.fillStyle(0xff8800, glow);
-                    graphics.fillCircle(np.x, np.y, 3 + thrustAlpha * 2);
-                }
+                const glow = (0.3 + thrustAlpha * 0.4) + Math.sin(Date.now() / 40) * 0.2;
+                graphics.fillStyle(0xff8800, glow);
+                graphics.fillCircle(np.x, np.y, 3 + thrustAlpha * 2);
             }
         } else {
-            // Single center engine with gimbal
             graphics.fillStyle(0x444444, 1);
             graphics.fillCircle(nozzle.x, nozzle.y, 3);
             if (this.thrusting) {
@@ -330,6 +331,11 @@ class Rocket {
                 graphics.fillCircle(nozzle.x, nozzle.y, 3 + thrustAlpha * 3);
                 graphics.fillStyle(0xaaddff, thrustAlpha * 0.2);
                 graphics.fillCircle(nozzle.x, nozzle.y, 5 + thrustAlpha * 4);
+            } else if (emberAlpha > 0) {
+                graphics.fillStyle(0x6699ff, emberAlpha);
+                graphics.fillCircle(nozzle.x, nozzle.y, 2.5);
+                graphics.fillStyle(0xaaddff, emberAlpha * 0.5);
+                graphics.fillCircle(nozzle.x, nozzle.y, 4);
             }
         }
 
@@ -356,14 +362,11 @@ class Rocket {
         const finY = -h / 2 + h * 0.18;
         const finW = 5;
         const finH = 3;
-        const finAngle = this.gridFinAngle * 25; // visual deflection in degrees
+        const finAngle = this.gridFinAngle * 25;
 
-        // Draw 2 visible grid fins (left and right)
         for (const side of [-1, 1]) {
             const fx = side * (w / 2 + finW / 2 + 1);
-            const base = rotate(fx, finY);
 
-            // Fin body — small rectangles that tilt
             const finRad = Phaser.Math.DegToRad(finAngle * side);
             const fcos = Math.cos(finRad);
             const fsin = Math.sin(finRad);
@@ -388,10 +391,7 @@ class Rocket {
             graphics.closePath();
             graphics.fillPath();
 
-            // Grid lines on fin
             graphics.lineStyle(0.5, 0x666666, 0.5);
-            const mid1 = rotate(fx, finY - finH / 4);
-            const mid2 = rotate(fx, finY + finH / 4);
             graphics.beginPath();
             graphics.moveTo(points[0].x, points[0].y);
             graphics.lineTo(points[1].x, points[1].y);
@@ -400,14 +400,12 @@ class Rocket {
     }
 
     _drawRcsPuffs(graphics, rotate, w, h) {
-        // Subtle RCS puffs — only visible at very low speed when fins are ineffective
         const side = -Math.sign(this.gridFinAngle);
         if (side === 0) return;
 
         const puffX = side * (w / 2 + 3);
         const flicker = 0.3 + Math.sin(Date.now() / 30) * 0.15;
 
-        // Single small puff
         const p = rotate(puffX, 0);
         graphics.fillStyle(0xccddff, 0.15 * flicker);
         graphics.fillCircle(p.x, p.y, 2);
@@ -417,7 +415,6 @@ class Rocket {
         const deploy = this.legDeployProgress;
         const legAttachY = h * 0.25;
 
-        // Folded angle: nearly flat against body, deployed: 40 degrees out
         const foldedAngle = 5;
         const deployedAngle = 40;
         const legAngleDeg = foldedAngle + (deployedAngle - foldedAngle) * deploy;
@@ -429,23 +426,19 @@ class Rocket {
             const attachX = side * (w / 2);
             const attach = rotate(attachX, legAttachY);
 
-            // Compute foot in body-local space, then rotate to world
             const legRad = Phaser.Math.DegToRad(legAngleDeg * side);
             const localFootX = attachX + Math.sin(legRad) * legLength;
             const localFootY = legAttachY + Math.cos(legRad) * legLength;
             const foot = rotate(localFootX, localFootY);
 
-            // Leg strut
             graphics.lineStyle(1.5, CONFIG.COLORS.LANDING_LEG, 0.9);
             graphics.beginPath();
             graphics.moveTo(attach.x, attach.y);
             graphics.lineTo(foot.x, foot.y);
             graphics.strokePath();
 
-            // Foot pad
             if (deploy > 0.5) {
                 const footAlpha = (deploy - 0.5) * 2;
-                // Perpendicular to leg direction in world space
                 const dx = foot.x - attach.x;
                 const dy = foot.y - attach.y;
                 const len = Math.sqrt(dx * dx + dy * dy) || 1;
@@ -465,7 +458,6 @@ class Rocket {
         const intensity = this.reentryHeat;
         const glowColors = CONFIG.COLORS.REENTRY_GLOW;
 
-        // Glow around the bottom of the rocket
         const bottom = rotate(0, h / 2 + 5);
 
         graphics.fillStyle(glowColors[0], intensity * 0.15);
@@ -475,7 +467,6 @@ class Rocket {
         graphics.fillStyle(glowColors[2], intensity * 0.25);
         graphics.fillCircle(bottom.x, bottom.y, 8 + intensity * 5);
 
-        // Glow along the body edges
         const leftGlow = rotate(-w / 2 - 3, 0);
         const rightGlow = rotate(w / 2 + 3, 0);
         graphics.fillStyle(glowColors[1], intensity * 0.08);
@@ -490,12 +481,8 @@ class Rocket {
         const h = this.height;
         const w = this.width;
 
-        // Check nozzle and leg feet positions
-        const points = [
-            { px: 0, py: h / 2 + 2 }  // Nozzle tip
-        ];
+        const points = [{ px: 0, py: h / 2 + 2 }];
 
-        // If legs deployed, add foot positions
         if (this.legsDeployed && this.legDeployProgress > 0.5) {
             const deploy = this.legDeployProgress;
             const legAttachY = h * 0.25;
@@ -532,13 +519,12 @@ class Rocket {
         });
 
         const points = [
-            rotate(0, -h / 2),       // Top
-            rotate(-w / 2, 0),       // Left mid
-            rotate(w / 2, 0),        // Right mid
-            rotate(0, h / 2 + 2),    // Nozzle bottom
+            rotate(0, -h / 2),
+            rotate(-w / 2, 0),
+            rotate(w / 2, 0),
+            rotate(0, h / 2 + 2),
         ];
 
-        // Add leg feet if deployed
         if (this.legsDeployed && this.legDeployProgress > 0.5) {
             const deploy = this.legDeployProgress;
             const legAttachY = h * 0.25;
@@ -595,24 +581,25 @@ class Rocket {
         return (ocean.getHeightAt(this.x) - bottomY) * CONFIG.ALTITUDE_SCALE;
     }
 
-    reset(x, y) {
+    // Re-arm the same rocket for the next landing in a run. Fuel PERSISTS (passed in).
+    respawn(x, y, vy, angle, vx, fuel) {
         this.x = x;
         this.y = y;
-        this.vx = 0;
-        this.vy = CONFIG.START_VY;
-        this.angle = 0;
-        this.fuel = CONFIG.FUEL_MAX;
+        this.vx = vx || 0;
+        this.vy = vy;
+        this.angle = angle || 0;
+        this.fuel = fuel;
         this.alive = true;
         this.landed = false;
         this.thrusting = false;
         this.thrustLevel = 0;
-        this.engineMode = 'off';
+        this.idleEmber = false;
+        this.engineMode = 'single';
         this.gridFinAngle = 0;
         this.legsDeployed = false;
         this.legDeployProgress = 0;
         this.rcsActive = false;
         this.reentryHeat = 0;
-        this.phase = 1;
         this.steeringLeft = false;
         this.steeringRight = false;
     }

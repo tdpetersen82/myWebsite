@@ -333,6 +333,7 @@ class VFXManager {
         ring.setStrokeStyle(3, 0xffffff, 0.8);
         ring.setBlendMode(Phaser.BlendModes.ADD);
         ring.setDepth(8);
+        if (this.scene._worldOnly) this.scene._worldOnly(ring);
 
         this.scene.tweens.add({
             targets: ring,
@@ -348,6 +349,7 @@ class VFXManager {
         ring2.setStrokeStyle(2, 0xff8800, 0.5);
         ring2.setBlendMode(Phaser.BlendModes.ADD);
         ring2.setDepth(8);
+        if (this.scene._worldOnly) this.scene._worldOnly(ring2);
 
         this.scene.tweens.add({
             targets: ring2,
@@ -413,6 +415,7 @@ class VFXManager {
         ring.setStrokeStyle(4, 0xffffff, 0.8);
         ring.setBlendMode(Phaser.BlendModes.ADD);
         ring.setDepth(9);
+        if (this.scene._worldOnly) this.scene._worldOnly(ring);
 
         this.scene.tweens.add({
             targets: ring,
@@ -429,6 +432,7 @@ class VFXManager {
         ring2.setStrokeStyle(2, 0x88bbff, 0.5);
         ring2.setBlendMode(Phaser.BlendModes.ADD);
         ring2.setDepth(9);
+        if (this.scene._worldOnly) this.scene._worldOnly(ring2);
 
         this.scene.tweens.add({
             targets: ring2,

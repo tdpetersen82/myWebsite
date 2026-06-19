@@ -230,25 +230,6 @@ class AudioManager {
         });
     }
 
-    // Grid fin deployment click
-    playGridFinClick() {
-        if (this.muted || !this._ensureContext()) return;
-        const ctx = this.ctx;
-        const now = ctx.currentTime;
-
-        const osc = ctx.createOscillator();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(2000, now);
-        osc.frequency.exponentialRampToValueAtTime(500, now + 0.03);
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.15, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.05);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.06);
-    }
-
     // Landing leg deployment clunk
     playLegDeploy() {
         if (this.muted || !this._ensureContext()) return;
@@ -284,89 +265,6 @@ class AudioManager {
         g2.connect(ctx.destination);
         osc2.start(now + 0.05);
         osc2.stop(now + 0.35);
-    }
-
-    // Phase transition ascending tone
-    playPhaseTransition() {
-        if (this.muted || !this._ensureContext()) return;
-        const ctx = this.ctx;
-        const now = ctx.currentTime;
-
-        const osc = ctx.createOscillator();
-        osc.type = 'sine';
-        osc.frequency.setValueAtTime(400, now);
-        osc.frequency.linearRampToValueAtTime(800, now + 0.2);
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.1, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.3);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.35);
-    }
-
-    // Countdown beep
-    playCountdownBeep(high) {
-        if (this.muted || !this._ensureContext()) return;
-        const ctx = this.ctx;
-        const osc = ctx.createOscillator();
-        const gain = ctx.createGain();
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.type = 'sine';
-        osc.frequency.value = high ? 880 : 660;
-        gain.gain.setValueAtTime(0.12, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.15);
-        osc.start();
-        osc.stop(ctx.currentTime + 0.2);
-    }
-
-    // Launch ignition roar (short burst)
-    playIgnition() {
-        if (this.muted || !this._ensureContext()) return;
-        const ctx = this.ctx;
-        const now = ctx.currentTime;
-
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.01, now);
-        gain.gain.linearRampToValueAtTime(0.15, now + 0.3);
-        gain.gain.setValueAtTime(0.15, now + 1.5);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 2.5);
-        gain.connect(ctx.destination);
-
-        const filter = ctx.createBiquadFilter();
-        filter.type = 'lowpass';
-        filter.frequency.setValueAtTime(150, now);
-        filter.frequency.linearRampToValueAtTime(300, now + 1.0);
-        filter.connect(gain);
-
-        for (const freq of [35, 42, 70, 105]) {
-            const osc = ctx.createOscillator();
-            osc.type = 'sawtooth';
-            osc.frequency.setValueAtTime(freq, now);
-            osc.connect(filter);
-            osc.start(now);
-            osc.stop(now + 2.5);
-        }
-    }
-
-    // Stage separation thunk
-    playSeparation() {
-        if (this.muted || !this._ensureContext()) return;
-        const ctx = this.ctx;
-        const now = ctx.currentTime;
-
-        const osc = ctx.createOscillator();
-        osc.type = 'square';
-        osc.frequency.setValueAtTime(300, now);
-        osc.frequency.exponentialRampToValueAtTime(40, now + 0.1);
-        const gain = ctx.createGain();
-        gain.gain.setValueAtTime(0.25, now);
-        gain.gain.exponentialRampToValueAtTime(0.001, now + 0.15);
-        osc.connect(gain);
-        gain.connect(ctx.destination);
-        osc.start(now);
-        osc.stop(now + 0.2);
     }
 
     // Low fuel warning beep (continuous)
