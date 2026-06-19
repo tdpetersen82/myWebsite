@@ -39,8 +39,6 @@ class Bike {
         this.flow = 0;              // consecutive-good-pumps + clean-landings feel hook
 
         this.compress = 0;          // -1 extended .. +1 squashed (pump visual)
-        this.preload = 0;           // 0..1 pop charge from held pump
-        this.prevPump = false;
         this._pumpedThisDown = false;
 
         // one-frame event flags the scene reads & clears (SFX / shake / stamps)
@@ -67,11 +65,8 @@ class Bike {
         if (this.airborne) this._updateAir(dt, terrain, input, false);
         else this._updateGround(dt, terrain, input);
 
-        this.prevPump = !!input.pump;
-
         // ease the squash/stretch visual toward its target every frame
-        const target = this.airborne ? -0.35
-            : (input.pump ? 0.6 : (this.preload > 0.05 ? 0.25 : 0));
+        const target = this.airborne ? -0.35 : (input.pump ? 0.6 : 0);
         this.compress += (target - this.compress) * Math.min(1, dt * 12);
     }
 
@@ -89,10 +84,6 @@ class Bike {
         const g = s.gravity;
 
         const pump = !!input.pump;
-        const released = this.prevPump && !pump;
-
-        // preload builds while holding pump
-        if (pump) this.preload = Math.min(1, this.preload + dt / s.preloadTime);
 
         // --- tangential acceleration ---
         let a = g * sinT;                                   // gravity along slope
@@ -127,50 +118,22 @@ class Bike {
         const vx0 = this.speed * cosT;
         const vy0 = this.speed * sinT;
 
-        // --- POP: releasing the pump near a lip is an ACTIVE jump. It launches
-        // the bike right then — even off a tabletop lip where the terrain alone
-        // wouldn't detach you. Timing quality (proximity to the lip) and the
-        // built-up preload scale the impulse, so a well-timed release pops big,
-        // an early one pops weakly, and never releasing pops not at all.
-        if (released) {
-            const tq = this._timingQuality(terrain, this.x);
-            if (tq > 0 && this.preload > 0.05 && this.speed > s.minAirSpeed) {
-                const impulse = s.kPop * this.preload * tq;
-                this.airborne = true;
-                this.airTime = 0;
-                // Launch along the surface OUTWARD NORMAL (sinT, -cosT): on a flat
-                // lip this is straight up; on a climbing takeoff face it throws the
-                // bike up-and-away from the hill, never driving it into the rising
-                // terrain ahead (which would clip below the surface for a frame).
-                this.vx = vx0 + impulse * sinT;
-                this.vy = vy0 - impulse * cosT;
-                // a pop off a steep climbing face must not reverse your travel —
-                // keep most of the forward momentum (up-and-away, never backward).
-                if (this.vx < vx0 * 0.25) this.vx = vx0 * 0.25;
-                this.justPop = true;
-                this.preload = 0;
-                this.y = terrain.heightAt(this.x);
-                this._updateAir(dt, terrain, input, true);    // grace frame; single integrator
-                return;
-            }
-            this.preload = 0;
-        }
-
-        // --- natural takeoff: does the one-step ballistic path clear the ground ahead? ---
+        // --- LAUNCH: ONLY off a jump lip ---
+        // A pump track flows because you stay connected to the ground — you don't
+        // randomly fly off rollers at speed. So launch fires only when the bike
+        // crosses a tagged jump takeoff lip; everywhere else the wheels stay glued.
+        // The lip delivers its designed kicker impulse (`boost`) for height; your
+        // SPEED (built by pumping the rollers) carries the distance. So pumping a
+        // section well lets you clear bigger gaps and jump farther/faster.
         const yNow = terrain.heightAt(this.x);
-        const xNext = this.x + vx0 * dt;
-        const yNext = terrain.heightAt(xNext);
-        const yBall = yNow + vy0 * dt + 0.5 * g * dt * dt;
-        const DETACH_EPS = 0.75;
-
-        if (this.speed > s.minAirSpeed && yBall < yNext - DETACH_EPS) {
-            // LAUNCH — hand off to the air integrator (single integration path).
+        const boost = terrain.lipBoostAt(this.x, vx0 * dt);
+        if (this.speed > s.minAirSpeed && boost > 0) {
             this.airborne = true;
             this.airTime = 0;
             this.vx = vx0;
-            this.vy = vy0;
+            this.vy = vy0 - boost;          // up = -y
+            this.justPop = true;
             this.y = yNow;
-            this.preload = 0;    // a pop charge can't survive a detach — re-earn it
             this._updateAir(dt, terrain, input, true);
             return;
         }
@@ -274,27 +237,11 @@ class Bike {
         this.speed = Math.max(s.speedFloor, keep);
         this.angle = slopeDeg;                               // stomp level with the landing
         this._pumpedThisDown = false;
-        this.preload = 0;                                    // pop charge must be re-earned on the ground
 
         if (grade === 'perfect' || grade === 'clean') {
             this.flow = Math.min(CONFIG.FLOW_MAX, this.flow + CONFIG.FLOW_PER_CLEAN);
         }
         this._accrueDistance();
-    }
-
-    // nearest lip/crest ahead -> pop timing quality 0..1
-    _timingQuality(terrain, x) {
-        const W = this.stats.popWindow;
-        const step = 6;
-        let prev = terrain.slopeAt(x);
-        for (let dd = step; dd <= W; dd += step) {
-            const sl = terrain.slopeAt(x + dd);
-            if (prev <= 0 && sl > 0) return Phaser.Math.Clamp(1 - dd / W, 0, 1);  // crest ahead
-            prev = sl;
-        }
-        // just crested (descending now, was climbing just behind)
-        if (terrain.slopeAt(x) > 0 && terrain.slopeAt(x - 10) <= 0) return 0.85;
-        return 0;
     }
 
     _accrueDistance() {

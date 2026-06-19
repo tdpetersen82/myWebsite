@@ -29,6 +29,7 @@ class Terrain {
     constructor(scene, seed) {
         this.scene = scene;
         this.knots = [];            // sorted ascending by x: {x, y, m}
+        this.lips = [];             // x of each jump takeoff (the ONLY natural-launch points)
         this.rng = djRng((seed >>> 0) || 1);
         this.featureCount = 0;
         this._minX = 0;
@@ -123,17 +124,20 @@ class Terrain {
 
     _rint(lo, hi) { return lo + Math.floor(this.rng() * (hi - lo + 1)); }
 
-    // PUMP ROLLERS — flowy sine hills you pump for speed. length ≈ 8-11x height
-    // (the "10:1" rule → ~17-21° faces, rounded & rollable, NOT launchy). Height
-    // AND spacing vary per roller so it reads like a real pump track, not whoops.
+    // PUMP ROLLERS — flowy sine hills you pump for speed. Gentle faces (length
+    // 12-16x height → ~10-14°) and ONE consistent base size per section (only
+    // ±15% per roller, fixed spacing) so the whole section flows as a single
+    // rhythm instead of random whoops. These never auto-launch the bike (see
+    // Bike: natural launch fires only at jump lips) — you stay glued and pump.
     genPumpRollers(count, d) {
         const P = CONFIG.TERRAIN.pump;
+        const baseH = (P.minH + this.rng() * (P.maxH - P.minH)) * (1 + d * 0.25);
+        const ratio = P.minRatio + this.rng() * (P.maxRatio - P.minRatio);
         for (let i = 0; i < count; i++) {
-            const h = (P.minH + this.rng() * (P.maxH - P.minH)) * (1 + d * 0.3);
-            const ratio = P.minRatio + this.rng() * (P.maxRatio - P.minRatio);
-            const wl = h * ratio;
-            this._rel(wl * 0.5, P.drop * 0.5 - h * 0.5);   // crest (up)
-            this._rel(wl * 0.5, P.drop * 0.5 + h * 0.5);   // trough (down)
+            const h = baseH * (0.85 + this.rng() * 0.30);   // gentle ±15% variation
+            const wl = baseH * ratio;                        // consistent spacing
+            this._rel(wl * 0.5, P.drop * 0.5 - h * 0.5);     // crest (up)
+            this._rel(wl * 0.5, P.drop * 0.5 + h * 0.5);     // trough (down)
         }
     }
 
@@ -157,9 +161,15 @@ class Terrain {
         const J = CONFIG.TERRAIN.jump;
         const kickH = J.kickH + J.kickHPerD * d;
         const kickLen = kickH * J.kickRatio;
-        // curved kicker: gentle base steepening to a ~38-42° lip
+        // curved kicker: gentle base steepening to a steep lip.
         this._rel(kickLen * 0.55, -kickH * 0.38);
-        this._rel(kickLen * 0.45, -kickH * 0.62);   // the lip (launch point)
+        this._rel(kickLen * 0.45, -kickH * 0.62);   // the lip — the launch point
+        const lipX = this._last().x;
+        this._registerLip(lipX, J.lipBoost + kickH * J.lipBoostPerH);   // bigger kicker → bigger air
+        // a short "nose" that continues UP slightly keeps the lip's PCHIP tangent
+        // steeply upward (same-sign neighbours, not clamped to flat), so launching
+        // at the lip carries real up-velocity (vy = speed·sin(lip)) → a true pop.
+        this._rel(kickLen * 0.18, -kickH * 0.05);
 
         if (kind === 'gap') {
             const gap = J.gapMin + J.gapPerD * d;
@@ -230,6 +240,22 @@ class Terrain {
             this._minX = this.knots[0].x;
             this._tangentAt(0);
         }
+        // prune lips well behind the camera too
+        if (this.lips.length) this.lips = this.lips.filter(L => L.x >= cut - 200);
+    }
+
+    // ---- Jump-lip launch points -------------------------------------------
+    _registerLip(x, boost) { this.lips.push({ x, boost }); }
+
+    // The launch boost of a jump lip in the bike's step (x .. x+step], or 0 if
+    // none. Pump rollers register no lip → the bike stays glued and flows; only a
+    // jump lip launches you, with its designed kicker impulse.
+    lipBoostAt(x, step) {
+        const lo = x - 2, hi = x + step + 4;
+        for (let i = 0; i < this.lips.length; i++) {
+            if (this.lips[i].x >= lo && this.lips[i].x <= hi) return this.lips[i].boost;
+        }
+        return 0;
     }
 
     // binary search: index i such that knots[i].x <= x < knots[i+1].x

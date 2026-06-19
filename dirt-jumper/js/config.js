@@ -20,23 +20,18 @@ const CONFIG = {
         // Rolling on terrain
         rollDragConst: 24,          // constant rolling resistance (px/s^2)
         rollDragK2: 0.00050,        // quadratic (air) drag -> terminal speed
-        topSpeed: 1050,             // soft ceiling; pump speedFactor fades to 0 here
+        topSpeed: 820,              // soft ceiling; pump speedFactor fades to 0 here
         speedFloor: 26,             // never fully stall on the descent
 
         // Pump (the signature mechanic)
         kPump: 1650,                // down-phase work scale (x downhillSteepness x speedFactor)
         kPumpBleed: 100,            // up-phase penalty while still holding pump (px/s^2)
         pumpDownThresh: 0.025,      // |sin(slope)| above this counts as a real down/up face
-        preloadTime: 0.34,         // seconds of held pump to fully charge a pop
-
-        // Pop (timed jump off a lip)
-        kPop: 360,                  // max upward vy added by a perfectly-timed pop
-        popWindow: 110,             // px ahead to look for the lip/crest when releasing
 
         // Air
-        flipRate: 514,              // deg/sec rotation from <- / ->
+        flipRate: 270,              // deg/sec rotation — gentle, just for setting landing angle
         airDrag: 0.04,              // gentle horizontal air drag (per sec)
-        minAirSpeed: 70,            // below this you don't launch off small convexities
+        minAirSpeed: 70,            // below this a jump lip won't launch you
 
         // Landing grade thresholds — |bikeAngle - landingSlope| in degrees.
         // Phase 2 wheel upgrades widen these.
@@ -62,14 +57,17 @@ const CONFIG = {
     TERRAIN: {
         startFlat: 540,             // gentle run-in before the first feature
         baseDrop: 26,               // gentle descent on connectors (keeps flow, no flat spots)
-        // Flowy pump rollers (the pumpable hills) — varied height/length.
-        pump: { minH: 16, maxH: 36, minRatio: 8, maxRatio: 11, minCount: 3, maxCount: 6, drop: 12 },
+        // Flowy pump rollers (the pumpable hills). Gentle faces (~10-14°, length
+        // 12-16x height) and a CONSISTENT base size per section (only ±15% per
+        // roller) so a section reads as one flowing rhythm, not random whoops.
+        pump: { minH: 18, maxH: 30, minRatio: 12, maxRatio: 16, minCount: 4, maxCount: 7, drop: 10 },
         // Tight jerky whoops (tech section).
         whoops: { h: 13, ratio: 2.6, minCount: 5, maxCount: 8, drop: 8 },
         // Dirt jumps: steep kicker lip (pop) + matched downslope landing.
         jump: {
             kickH: 26, kickHPerD: 26,   // kicker height (scales with difficulty d)
-            kickRatio: 1.6,             // kickLen = kickH*ratio → steeper = more pop
+            kickRatio: 1.6,             // kickLen = kickH*ratio
+            lipBoost: 110, lipBoostPerH: 3.2,  // designed launch impulse (base + per kicker-px); speed carries distance
             tableLen: 95, tableDrop: 8, // tabletop flat top
             landRatio: 0.62,            // landing downslope = landLen*ratio (≈32°)
             gapMin: 70, gapPerD: 150,   // pit width to clear (punishing scales with d)
