@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Dirt Jumper — Phase 1 (prototype)</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
+    <style>
+        html, body {
+            margin: 0; padding: 0; background: #20303c;
+            font-family: 'JetBrains Mono', monospace; color: #f3e9dd;
+            height: 100%; overflow: hidden;
+        }
+        #wrap { display: flex; align-items: center; justify-content: center; height: 100vh; }
+        #game-container {
+            width: 100%;
+            max-width: 1100px;
+            aspect-ratio: 16 / 9;        /* drives height from width for the 960x540 design */
+            margin: 0 auto;
+        }
+        #game-container canvas { display: block; margin: 0 auto; touch-action: none; }
+    </style>
+</head>
+<body>
+    <div id="wrap"><div id="game-container"></div></div>
+
+    <script src="js/config.js?v=20260619a"></script>
+    <script src="js/Terrain.js?v=20260619a"></script>
+    <script src="js/Bike.js?v=20260619a"></script>
+    <script src="js/Particle.js?v=20260619a"></script>
+    <script src="js/RideScene.js?v=20260619a"></script>
+    <script>
+        const phaserConfig = {
+            type: Phaser.AUTO,
+            width: CONFIG.WIDTH,
+            height: CONFIG.HEIGHT,
+            parent: 'game-container',
+            backgroundColor: '#3a5a72',
+            scale: {
+                mode: Phaser.Scale.FIT,
+                autoCenter: Phaser.Scale.CENTER_BOTH
+            },
+            scene: [RideScene],
+            input: {
+                keyboard: {
+                    capture: [
+                        Phaser.Input.Keyboard.KeyCodes.UP,
+                        Phaser.Input.Keyboard.KeyCodes.DOWN,
+                        Phaser.Input.Keyboard.KeyCodes.LEFT,
+                        Phaser.Input.Keyboard.KeyCodes.RIGHT,
+                        Phaser.Input.Keyboard.KeyCodes.SPACE,
+                        Phaser.Input.Keyboard.KeyCodes.ENTER,
+                        Phaser.Input.Keyboard.KeyCodes.S,
+                        Phaser.Input.Keyboard.KeyCodes.A,
+                        Phaser.Input.Keyboard.KeyCodes.D,
+                        Phaser.Input.Keyboard.KeyCodes.P,
+                        Phaser.Input.Keyboard.KeyCodes.R,
+                        Phaser.Input.Keyboard.KeyCodes.M,
+                        Phaser.Input.Keyboard.KeyCodes.ESC
+                    ]
+                }
+            }
+        };
+
+        // top-level `game` is reachable as a bare global for the verification eval.
+        const game = new Phaser.Game(phaserConfig);
+        window.game = game;
+    </script>
+</body>
+</html>
