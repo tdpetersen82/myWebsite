@@ -43,7 +43,6 @@
     'ultimate-tic-tac-toe': 'ultimateTicTacToeHighScore',
     mancala: 'mancalaHighScore',
     hangman: 'hangmanHighScore',
-    'dirt-jumper': 'dirtJumperBest',
   };
   function getBest(gameId) {
     const key = SCORE_KEYS[gameId];
@@ -97,7 +96,6 @@
     sudoku: '<rect x="8" y="8" width="48" height="48" rx="3" fill="C" opacity="0.12"/><line x1="24" y1="8" x2="24" y2="56" stroke="C" stroke-width="2"/><line x1="40" y1="8" x2="40" y2="56" stroke="C" stroke-width="2"/><line x1="8" y1="24" x2="56" y2="24" stroke="C" stroke-width="2"/><line x1="8" y1="40" x2="56" y2="40" stroke="C" stroke-width="2"/><rect x="8" y="8" width="48" height="48" rx="3" fill="none" stroke="C" stroke-width="2.5"/><text x="16" y="20" font-size="12" font-weight="800" text-anchor="middle" fill="C">5</text><text x="48" y="20" font-size="12" font-weight="800" text-anchor="middle" fill="C">3</text><text x="32" y="36" font-size="12" font-weight="800" text-anchor="middle" fill="C">8</text><text x="16" y="52" font-size="12" font-weight="800" text-anchor="middle" fill="C">7</text><text x="48" y="52" font-size="12" font-weight="800" text-anchor="middle" fill="C">2</text>',
     mahjong: '<rect x="20" y="8" width="24" height="48" rx="4" fill="C" opacity="0.18"/><rect x="20" y="8" width="24" height="48" rx="4" fill="none" stroke="C" stroke-width="2.5"/><circle cx="32" cy="22" r="4" fill="C"/><circle cx="32" cy="34" r="4" fill="C"/><circle cx="32" cy="46" r="3" fill="C" opacity="0.6"/>',
     'solar-system': '<circle cx="32" cy="32" r="7" fill="C"/><circle cx="32" cy="32" r="15" fill="none" stroke="C" stroke-width="2" opacity="0.45"/><circle cx="32" cy="32" r="24" fill="none" stroke="C" stroke-width="2" opacity="0.3"/><circle cx="47" cy="32" r="3.5" fill="C"/><circle cx="32" cy="8" r="3" fill="C" opacity="0.7"/>',
-    'dirt-jumper': '<path d="M6 50 Q22 40 34 46 T58 30" fill="none" stroke="C" stroke-width="2.5" opacity="0.4"/><circle cx="22" cy="42" r="8" fill="none" stroke="C" stroke-width="3"/><circle cx="44" cy="36" r="8" fill="none" stroke="C" stroke-width="3"/><path d="M22 42 L33 31 L44 36" fill="none" stroke="C" stroke-width="2.5" stroke-linejoin="round"/><path d="M33 31 L31 25" stroke="C" stroke-width="2.5" stroke-linecap="round"/>',
   };
 
   function glyph(game, size) {

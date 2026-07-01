@@ -23,7 +23,6 @@
     { id: 'defender',          name: 'Defender',          cat: 'classic', desc: 'Save the humanoids.',              color: '#9B7EDC'  },
     { id: 'simon',             name: 'Simon',             cat: 'classic', desc: 'Watch. Repeat. Repeat longer.',    color: '#F08488'  },
     { id: 'solar-system',      name: 'Solar System',      cat: 'classic', desc: 'Planets orbit the Sun under real gravity.', color: '#F2A65A', isNew: true },
-    { id: 'dirt-jumper',       name: 'Dirt Jumper',       cat: 'classic', desc: 'Pump the rollers, send the jumps, stick the landing.', color: '#C96F2A', isNew: true },
     { id: 'connect-4',         name: 'Connect 4',         cat: 'puzzle',  desc: 'Four in a row. Three levels.',      color: '#8FA8E6' },
     { id: 'connect-dots',      name: 'Dots & Boxes',      cat: 'puzzle',  desc: 'Lines, boxes, strategy.',          color: '#F08488'  },
     { id: '2048',              name: '2048',              cat: 'puzzle',  desc: 'Merge tiles. Reach 2048.',          color: '#F2A65A', isNew: true },
