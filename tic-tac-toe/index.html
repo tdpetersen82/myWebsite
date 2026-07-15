@@ -1,0 +1,548 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+    <title>Tic-Tac-Toe — Free Online Game vs the Computer | Limestone Games</title>
+    <meta name="description" content="Play Tic-Tac-Toe free in your browser — beat the computer on three levels or play two players on one screen. Animated board, saved wins and streaks.">
+    <meta name="keywords" content="tic tac toe, tic tac toe online, free tic tac toe, tic tac toe vs computer, tic tac toe 2 player, noughts and crosses, xs and os, kids game">
+    <link rel="canonical" href="https://limestonegames.com/tic-tac-toe/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Tic-Tac-Toe","description":"Play Tic-Tac-Toe free in your browser. Three computer levels from Easy to a perfect-play Hard, plus a two-player mode on one screen. Wins and streaks save locally.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Kids","item":"https://limestonegames.com/kids/"},{"@type":"ListItem","position":3,"name":"Tic-Tac-Toe"}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "Can you beat the Hard level?", "acceptedAnswer": {"@type": "Answer", "text": "No — Hard plays perfectly and never loses; the best you can do is a tie. Tic-tac-toe is a solved game: when both sides play their best moves, every round ends in a draw. Play Easy or Medium if you want winnable games."}}, {"@type": "Question", "name": "Is Tic-Tac-Toe free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — every game on Limestone Games is completely free. No signup, no downloads."}}, {"@type": "Question", "name": "Can two people play?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — switch to 2 players and share one screen. X and O take turns tapping squares, and the loser starts the next round."}}, {"@type": "Question", "name": "Does my score save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, ties, and best win streak against the computer are stored locally in your browser."}}, {"@type": "Question", "name": "Who goes first?", "acceptedAnswer": {"@type": "Answer", "text": "You do — X starts the first round. After that, the loser starts the next round, and after a tie the starting player swaps."}}]}</script>
+    <meta property="og:title" content="Tic-Tac-Toe — Free Online Game vs the Computer">
+    <meta property="og:description" content="Play Tic-Tac-Toe free — three computer levels or two players on one screen. Wins and streaks save.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/tic-tac-toe/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Tic-Tac-Toe — Free Online Game vs the Computer">
+    <meta name="twitter:description" content="Play Tic-Tac-Toe free — three computer levels or two players on one screen. Wins and streaks save.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+
+    <link rel="stylesheet" href="../kids/kids-game.css?v=20260618a">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      :root {
+        --accent: #2EC4B6;
+        --accent-2: #59D9EA;
+        --x-color: #2EC4B6;
+        --o-color: #FF9F5A;
+      }
+      [hidden] { display: none !important; }
+      .level-pick button { padding: 11px 18px; } /* ≥44px touch targets on phones */
+      button.action { box-shadow: 0 4px 12px rgba(46, 196, 182, 0.32); }
+      button.action.ghost { box-shadow: none; }
+      .game-overview .related-games-list a { background: rgba(46, 196, 182, 0.12); }
+
+      .board-wrap { padding: 18px; }
+      .board-pos { position: relative; }
+      .board {
+        display: grid;
+        --cell: 110px;
+        grid-template-columns: repeat(3, var(--cell));
+        grid-auto-rows: var(--cell);
+        gap: 12px;
+      }
+      .cell {
+        font: inherit; padding: 0; border: none;
+        background: rgba(255, 255, 255, 0.92);
+        border-radius: 18px; cursor: pointer;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: inset 0 -5px 8px rgba(31, 26, 46, 0.07), inset 0 4px 6px rgba(255, 255, 255, 0.6), 0 2px 6px rgba(31, 26, 46, 0.06);
+        transition: transform 0.1s, background 0.2s;
+        touch-action: manipulation;
+      }
+      .cell:hover:not(.filled) { transform: translateY(-2px); }
+      .cell:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+      .cell.filled, .cell:disabled { cursor: default; opacity: 1; }
+      .cell.win-cell { background: #FFF3D6; animation: cellPop 0.55s ease; }
+      @keyframes cellPop { 0%, 100% { transform: scale(1); } 35% { transform: scale(1.07); } 70% { transform: scale(0.97); } }
+
+      .mark { width: 60%; height: 60%; display: block; }
+      .mark line, .mark circle {
+        fill: none; stroke-width: 12; stroke-linecap: round;
+        stroke-dasharray: 1; stroke-dashoffset: 1;
+        animation: draw 0.22s ease-out forwards;
+      }
+      .mark.x line { stroke: var(--x-color); }
+      .mark.x .s2 { animation-delay: 0.14s; }
+      .mark.o circle { stroke: var(--o-color); animation-duration: 0.34s; }
+      @keyframes draw { to { stroke-dashoffset: 0; } }
+
+      .win-line { position: absolute; inset: 0; width: 100%; height: 100%; pointer-events: none; overflow: visible; }
+      .win-line line {
+        fill: none; stroke-width: 10; stroke-linecap: round; opacity: 0.85;
+        stroke-dasharray: 1; stroke-dashoffset: 1;
+        animation: draw 0.5s ease 0.12s forwards;
+      }
+      .win-line line.x { stroke: var(--x-color); }
+      .win-line line.o { stroke: var(--o-color); }
+
+      .status { min-height: 24px; font-size: 15px; font-weight: 700; color: rgba(31, 26, 46, 0.72); text-align: center; }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../kids/">All Kids games</a>
+        </div>
+        <h1>Tic-Tac-Toe</h1>
+        <div class="level-pick" id="modePick" role="group" aria-label="Game mode">
+            <button data-mode="computer" class="active" aria-pressed="true">vs the computer</button>
+            <button data-mode="two" aria-pressed="false">2 players</button>
+        </div>
+        <div class="level-pick" id="levelPick" role="group" aria-label="Computer level">
+            <button data-level="easy" aria-pressed="false">Easy</button>
+            <button data-level="medium" class="active" aria-pressed="true">Medium</button>
+            <button data-level="hard" aria-pressed="false">Hard</button>
+        </div>
+        <div class="stats">
+            <div><span class="l">Wins</span><span class="v" id="wins">0</span></div>
+            <div><span class="l">Ties</span><span class="v" id="ties">0</span></div>
+            <div><span class="l">Best streak</span><span class="v" id="best">0</span></div>
+        </div>
+        <div class="board-wrap">
+            <div class="board-pos">
+                <div id="board" class="board" role="group" aria-label="Tic-tac-toe board, 3 by 3"></div>
+                <svg id="winLine" class="win-line" aria-hidden="true"></svg>
+            </div>
+            <div class="win" id="win">
+                <h2 id="winTitle">You win!</h2>
+                <p id="winText"></p>
+                <button class="action" id="againBtn">Play again</button>
+            </div>
+        </div>
+        <div class="status" id="status" aria-live="polite">Your turn — you're X.</div>
+        <div class="controls">
+            <button class="action" id="newBtn">New game</button>
+            <button class="action ghost" id="muteBtn" aria-label="Toggle sound">🔊 Sound on</button>
+            <a href="../kids/"><button class="action ghost">More kids games</button></a>
+        </div>
+        <p class="hint">Get three in a row to win! The loser starts the next round — after a tie, players swap.</p>
+
+        <section class="game-overview" aria-label="About Tic-Tac-Toe">
+            <h2>How to play Tic-Tac-Toe</h2>
+            <p>Tic-Tac-Toe (also called noughts and crosses, or Xs and Os) is the classic three-in-a-row game on a 3×3 grid. Tap a square to place your X, and get three in a row — across, down, or diagonally — before the computer does. Play against the computer on three levels, or switch to 2 players and pass the screen to a friend.</p>
+
+            <h3>Rules</h3>
+            <ul>
+                <li><b>You are X, the computer is O.</b> X starts the very first round.</li>
+                <li><b>Take turns</b> placing a mark in any empty square.</li>
+                <li><b>Three in a row wins</b> — across, down, or diagonally.</li>
+                <li><b>All nine squares filled</b> with no three-in-a-row is a tie.</li>
+                <li><b>The loser starts the next round.</b> After a tie, the starting player swaps.</li>
+                <li><b>Stats save as you play.</b> Ties don't break your win streak — a loss does.</li>
+            </ul>
+
+            <h3>Controls</h3>
+            <ul>
+                <li>Tap or click an empty square &mdash; place your mark</li>
+                <li><kbd>1</kbd>&ndash;<kbd>9</kbd> &mdash; place a mark with the keyboard (1 is top-left, 9 is bottom-right)</li>
+                <li><kbd>Easy</kbd> <kbd>Medium</kbd> <kbd>Hard</kbd> &mdash; pick the computer's level</li>
+                <li><kbd>2 players</kbd> &mdash; pass-and-play with a friend on one screen</li>
+                <li><kbd>New game</kbd> &mdash; start the round over</li>
+            </ul>
+
+            <h3>Tips &amp; strategy</h3>
+            <ul>
+                <li><b>Take the center.</b> The middle square touches four winning lines &mdash; more than any other square. If you start, start there.</li>
+                <li><b>Corners over edges.</b> Each corner sits on three lines; each edge only two. If the center is gone, grab a corner.</li>
+                <li><b>Block first, then build.</b> Before placing your mark, check whether the other player has two in a row. Stop it now or lose next turn.</li>
+                <li><b>Set up a fork.</b> The only way to beat a careful opponent is two threats at once &mdash; two lines that each need just one more mark. They can only block one.</li>
+                <li><b>Watch the diagonals.</b> The sneakiest wins run corner to corner. If your opponent holds two opposite corners, play carefully.</li>
+            </ul>
+
+            <h3>About Tic-Tac-Toe</h3>
+            <p>Tic-tac-toe is one of the oldest games still played &mdash; the ancient Romans scratched a three-in-a-row game called terni lapilli onto stones and floors, and "noughts and crosses" has filled the margins of school notebooks for centuries. In 1952 a tic-tac-toe program called OXO became one of the first computer games ever written. The game is also famously solved: when both players make their best moves, every round ends in a tie &mdash; which is exactly how the Hard level here plays.</p>
+
+            <h3>Frequently asked</h3>
+            <p><b>Can you beat the Hard level?</b> No — Hard plays perfectly and never loses; the best you can do is a tie. Tic-tac-toe is a solved game: when both sides play their best moves, every round ends in a draw. Play Easy or Medium if you want winnable games.</p>
+            <p><b>Is Tic-Tac-Toe free?</b> Yes — every game on Limestone Games is completely free. No signup, no downloads.</p>
+            <p><b>Can two people play?</b> Yes — switch to 2 players and share one screen. X and O take turns tapping squares, and the loser starts the next round.</p>
+            <p><b>Does my score save?</b> Yes — your wins, ties, and best win streak against the computer are stored locally in your browser.</p>
+            <p><b>Who goes first?</b> You do — X starts the first round. After that, the loser starts the next round, and after a tie the starting player swaps.</p>
+
+            <h3>More kids games</h3>
+            <ul class="related-games-list">
+                <li><a href="../memory-match/">Memory Match</a></li>
+                <li><a href="../animal-detective/">Animal Detective</a></li>
+                <li><a href="../bubble-pop/">Bubble Pop</a></li>
+                <li><a href="../kids/">All kids games &rarr;</a></li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+    'use strict';
+    (function () {
+        // ==== GAME LOGIC (pure — extracted verbatim by the node test) ====
+        const LINES = [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]];
+        const CENTER = 4, CORNERS = [0, 2, 6, 8], EDGES = [1, 3, 5, 7];
+        function otherMark(m) { return m === 'X' ? 'O' : 'X'; }
+        function winnerOf(b) {
+            for (const line of LINES) {
+                const [a, c, d] = line;
+                if (b[a] && b[a] === b[c] && b[a] === b[d]) return { mark: b[a], line };
+            }
+            if (b.every(v => v)) return { mark: 'tie', line: null };
+            return null;
+        }
+        function emptyCells(b) { const out = []; for (let i = 0; i < 9; i++) if (!b[i]) out.push(i); return out; }
+        function randomFrom(arr) { return arr[Math.floor(Math.random() * arr.length)]; }
+        function findWinningCell(b, m) {
+            for (const line of LINES) {
+                const marks = line.filter(i => b[i] === m);
+                const empty = line.filter(i => !b[i]);
+                if (marks.length === 2 && empty.length === 1) return empty[0];
+            }
+            return -1;
+        }
+        // Easy: takes an immediate win if one exists, otherwise plays randomly.
+        function easyMove(b, me) {
+            const w = findWinningCell(b, me);
+            if (w !== -1) return w;
+            return randomFrom(emptyCells(b));
+        }
+        // Medium: win > block > (mostly) center > corners > edges, with some randomness.
+        function mediumMove(b, me) {
+            const w = findWinningCell(b, me);
+            if (w !== -1) return w;
+            const blk = findWinningCell(b, otherMark(me));
+            if (blk !== -1) return blk;
+            const empty = emptyCells(b);
+            if (Math.random() < 0.25) return randomFrom(empty); // stays beatable
+            if (!b[CENTER]) return CENTER;
+            const corners = CORNERS.filter(i => !b[i]);
+            if (corners.length) return randomFrom(corners);
+            return randomFrom(EDGES.filter(i => !b[i]));
+        }
+        // Hard: full minimax — never loses. Sooner wins (and later losses) score
+        // higher, so it always takes an immediate win. Ties between equally good
+        // moves are broken randomly so games vary.
+        function hardMove(b, me) {
+            const memo = new Map();
+            function score(board, toMove) {
+                const w = winnerOf(board);
+                if (w) {
+                    if (w.mark === 'tie') return 0;
+                    const mag = 1 + emptyCells(board).length; // sooner = stronger
+                    return w.mark === me ? mag : -mag;
+                }
+                const key = board.join('.') + '|' + toMove;
+                if (memo.has(key)) return memo.get(key);
+                let best = (toMove === me) ? -Infinity : Infinity;
+                for (const i of emptyCells(board)) {
+                    board[i] = toMove;
+                    const v = score(board, otherMark(toMove));
+                    board[i] = null;
+                    if (toMove === me) { if (v > best) best = v; }
+                    else if (v < best) { best = v; }
+                }
+                memo.set(key, best);
+                return best;
+            }
+            let bestVal = -Infinity, bestCells = [];
+            for (const i of emptyCells(b)) {
+                b[i] = me;
+                const v = score(b, otherMark(me));
+                b[i] = null;
+                if (v > bestVal) { bestVal = v; bestCells = [i]; }
+                else if (v === bestVal) { bestCells.push(i); }
+            }
+            return randomFrom(bestCells);
+        }
+        function computerMove(b, level, me) {
+            if (level === 'easy') return easyMove(b, me);
+            if (level === 'hard') return hardMove(b, me);
+            return mediumMove(b, me);
+        }
+        // Loser starts the next round; after a tie the starter swaps.
+        function nextStarter(starter, resultMark) {
+            if (resultMark === 'tie') return otherMark(starter);
+            return otherMark(resultMark);
+        }
+        // ==== END GAME LOGIC ====
+
+        const $ = (id) => document.getElementById(id);
+        const boardEl = $('board'), statusEl = $('status'), winEl = $('win'),
+              winTitleEl = $('winTitle'), winTextEl = $('winText'), lineSvg = $('winLine');
+        const HUMAN = 'X', COMP = 'O';
+
+        // localStorage
+        function lsGet(k, fb) { try { const v = localStorage.getItem(k); return v == null ? fb : v; } catch (e) { return fb; } }
+        function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+        function lsNum(k) { const v = parseInt(lsGet(k, '0'), 10); return isNaN(v) ? 0 : v; }
+        const K = {
+            wins: 'ticTacToeWins', ties: 'ticTacToeTies', losses: 'ticTacToeLosses',
+            streak: 'ticTacToeStreak', best: 'ticTacToeBestStreak',
+            level: 'ticTacToeLevel', mode: 'ticTacToeMode', mute: 'ticTacToeMute'
+        };
+
+        // audio — gentle, sparse tones
+        let actx = null, muted = lsGet(K.mute, '0') === '1';
+        function audio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (actx && actx.state === 'suspended') actx.resume(); return actx; }
+        function tone(freqs, dur, type) {
+            if (muted) return; const ac = audio(); if (!ac) return;
+            freqs.forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = type || 'sine'; o.frequency.value = f; const t = ac.currentTime + i * 0.09; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.09, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur); });
+        }
+        const sndX = () => tone([523], 0.09);
+        const sndO = () => tone([392], 0.09);
+        const sndWin = () => tone([523, 659, 784], 0.18);
+        const sndTie = () => tone([440, 523], 0.14);
+        const sndLoss = () => tone([330, 262], 0.2, 'triangle');
+
+        // state
+        let board = Array(9).fill(null), cellEls = [];
+        let turn = 'X', starter = 'X', over = false, locked = false, lastWin = null, thinkTimer = null;
+        let mode = lsGet(K.mode, 'computer'); if (mode !== 'computer' && mode !== 'two') mode = 'computer';
+        let level = lsGet(K.level, 'medium'); if (!['easy', 'medium', 'hard'].includes(level)) level = 'medium';
+
+        function setStatus(msg) { statusEl.textContent = msg; }
+        function turnText() { return mode === 'computer' ? 'Your turn.' : turn + "'s turn."; }
+        function describeStarter(m) {
+            if (mode === 'computer') return m === HUMAN ? 'You start' : 'The computer starts';
+            return m + ' starts';
+        }
+
+        function svgFor(m) {
+            if (m === 'X') {
+                return '<svg class="mark x" viewBox="0 0 100 100" aria-hidden="true">'
+                    + '<line class="s1" x1="26" y1="26" x2="74" y2="74" pathLength="1"></line>'
+                    + '<line class="s2" x1="74" y1="26" x2="26" y2="74" pathLength="1"></line></svg>';
+            }
+            return '<svg class="mark o" viewBox="0 0 100 100" aria-hidden="true">'
+                + '<circle cx="50" cy="50" r="26" pathLength="1" transform="rotate(-90 50 50)"></circle></svg>';
+        }
+
+        function cellLabel(i, m) {
+            const pos = 'Row ' + (Math.floor(i / 3) + 1) + ', column ' + (i % 3 + 1);
+            return pos + ': ' + (m ? m : 'empty');
+        }
+
+        function buildCells() {
+            boardEl.innerHTML = '';
+            cellEls = [];
+            for (let i = 0; i < 9; i++) {
+                const b = document.createElement('button');
+                b.className = 'cell';
+                b.setAttribute('aria-label', cellLabel(i, null));
+                b.addEventListener('click', () => onCell(i));
+                boardEl.appendChild(b);
+                cellEls.push(b);
+            }
+        }
+
+        function fitBoard() {
+            const wrap = boardEl.closest('.board-wrap');
+            const avail = wrap.clientWidth - 36; // .board-wrap padding 18px each side
+            const gap = 12;
+            const cell = Math.max(64, Math.min(110, Math.floor((avail - 2 * gap) / 3)));
+            boardEl.style.setProperty('--cell', cell + 'px');
+            if (over && lastWin && lastWin.line) drawWinLine(lastWin.line, lastWin.mark);
+        }
+        window.addEventListener('resize', fitBoard);
+        window.addEventListener('orientationchange', () => setTimeout(fitBoard, 60));
+
+        function drawWinLine(line, mark) {
+            const r = boardEl.getBoundingClientRect();
+            if (!r.width) return;
+            const pts = line.map(i => {
+                const c = cellEls[i].getBoundingClientRect();
+                return [c.left - r.left + c.width / 2, c.top - r.top + c.height / 2];
+            });
+            const x1 = pts[0][0], y1 = pts[0][1], x2 = pts[2][0], y2 = pts[2][1];
+            const dx = (x2 - x1) * 0.14, dy = (y2 - y1) * 0.14;
+            lineSvg.setAttribute('viewBox', '0 0 ' + r.width + ' ' + r.height);
+            lineSvg.innerHTML = '<line class="' + (mark === 'X' ? 'x' : 'o') + '" pathLength="1"'
+                + ' x1="' + (x1 - dx) + '" y1="' + (y1 - dy) + '" x2="' + (x2 + dx) + '" y2="' + (y2 + dy) + '"></line>';
+        }
+
+        function place(i, m) {
+            board[i] = m;
+            const el = cellEls[i];
+            el.classList.add('filled');
+            el.disabled = true;
+            el.innerHTML = svgFor(m);
+            el.setAttribute('aria-label', cellLabel(i, m));
+            if (m === 'X') sndX(); else sndO();
+        }
+
+        function onCell(i) {
+            if (over || locked || board[i]) return;
+            if (mode === 'computer' && turn !== HUMAN) return;
+            audio();
+            place(i, turn);
+            if (checkEnd()) return;
+            turn = otherMark(turn);
+            if (mode === 'computer') maybeComputerTurn(); else setStatus(turnText());
+        }
+
+        function maybeComputerTurn() {
+            if (mode !== 'computer' || over || turn !== COMP) return;
+            locked = true;
+            setStatus('The computer is thinking…');
+            thinkTimer = setTimeout(() => {
+                thinkTimer = null;
+                const i = computerMove(board.slice(), level, COMP);
+                place(i, COMP);
+                locked = false;
+                if (checkEnd()) return;
+                turn = HUMAN;
+                setStatus(turnText());
+            }, 420 + Math.random() * 420);
+        }
+
+        function checkEnd() {
+            const w = winnerOf(board);
+            if (!w) return false;
+            over = true;
+            finishRound(w);
+            return true;
+        }
+
+        function refreshStats() {
+            $('wins').textContent = lsNum(K.wins);
+            $('ties').textContent = lsNum(K.ties);
+            $('best').textContent = lsNum(K.best);
+        }
+
+        function finishRound(w) {
+            lastWin = w;
+            starter = nextStarter(starter, w.mark);
+            if (w.mark !== 'tie') {
+                drawWinLine(w.line, w.mark);
+                w.line.forEach(i => cellEls[i].classList.add('win-cell'));
+            }
+            const starterText = describeStarter(starter) + ' the next round.';
+            let title, text;
+            if (mode === 'computer') {
+                if (w.mark === HUMAN) {
+                    lsSet(K.wins, lsNum(K.wins) + 1);
+                    const st = lsNum(K.streak) + 1;
+                    lsSet(K.streak, st);
+                    if (st > lsNum(K.best)) lsSet(K.best, st);
+                    title = 'You win! 🎉'; text = 'Three in a row! ' + starterText;
+                    sndWin();
+                } else if (w.mark === COMP) {
+                    lsSet(K.losses, lsNum(K.losses) + 1);
+                    lsSet(K.streak, 0);
+                    title = 'Good try!'; text = 'The computer got three in a row. ' + starterText;
+                    sndLoss();
+                } else {
+                    lsSet(K.ties, lsNum(K.ties) + 1);
+                    title = "It's a tie!"; text = 'Nobody got three in a row. ' + starterText;
+                    sndTie();
+                }
+            } else {
+                if (w.mark === 'tie') {
+                    title = "It's a tie!"; text = 'Nobody got three in a row. ' + starterText;
+                    sndTie();
+                } else {
+                    title = w.mark + ' wins! 🎉'; text = 'Three in a row for ' + w.mark + '. ' + starterText;
+                    sndWin();
+                }
+            }
+            refreshStats();
+            setStatus(title + ' ' + text);
+            winTitleEl.textContent = title;
+            winTextEl.textContent = text;
+            setTimeout(() => {
+                if (!over) return;
+                winEl.classList.add('show');
+                $('againBtn').focus();
+            }, w.mark === 'tie' ? 500 : 950);
+        }
+
+        function startRound() {
+            if (thinkTimer) { clearTimeout(thinkTimer); thinkTimer = null; }
+            board = Array(9).fill(null);
+            over = false; locked = false; lastWin = null;
+            turn = starter;
+            winEl.classList.remove('show');
+            lineSvg.innerHTML = '';
+            buildCells();
+            if (mode === 'computer') {
+                if (turn === HUMAN) setStatus("You start this round — you're X.");
+                else maybeComputerTurn();
+            } else {
+                setStatus(turn + ' starts this round.');
+            }
+        }
+
+        // mode + level pickers
+        document.querySelectorAll('#modePick button').forEach(b => {
+            b.addEventListener('click', () => {
+                if (mode === b.dataset.mode) return;
+                mode = b.dataset.mode;
+                lsSet(K.mode, mode);
+                document.querySelectorAll('#modePick button').forEach(x => {
+                    const on = x === b;
+                    x.classList.toggle('active', on);
+                    x.setAttribute('aria-pressed', on ? 'true' : 'false');
+                });
+                $('levelPick').hidden = mode === 'two';
+                starter = 'X';
+                startRound();
+            });
+        });
+        document.querySelectorAll('#levelPick button').forEach(b => {
+            b.addEventListener('click', () => {
+                if (level === b.dataset.level) return;
+                level = b.dataset.level;
+                lsSet(K.level, level);
+                document.querySelectorAll('#levelPick button').forEach(x => {
+                    const on = x === b;
+                    x.classList.toggle('active', on);
+                    x.setAttribute('aria-pressed', on ? 'true' : 'false');
+                });
+                startRound();
+            });
+        });
+
+        function applyMute() {
+            $('muteBtn').textContent = muted ? '🔇 Sound off' : '🔊 Sound on';
+            $('muteBtn').setAttribute('aria-label', muted ? 'Turn sound on' : 'Turn sound off');
+        }
+        $('muteBtn').addEventListener('click', () => { muted = !muted; lsSet(K.mute, muted ? '1' : '0'); applyMute(); if (!muted) audio(); });
+        $('newBtn').addEventListener('click', startRound);
+        $('againBtn').addEventListener('click', startRound);
+
+        window.addEventListener('keydown', (e) => {
+            const tag = (e.target && e.target.tagName) || '';
+            if (/^(INPUT|SELECT|TEXTAREA)$/.test(tag)) return;
+            if (e.ctrlKey || e.metaKey || e.altKey) return;
+            if (e.key >= '1' && e.key <= '9') onCell(parseInt(e.key, 10) - 1);
+        });
+
+        // boot
+        document.querySelectorAll('#modePick button').forEach(x => {
+            const on = x.dataset.mode === mode;
+            x.classList.toggle('active', on);
+            x.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        document.querySelectorAll('#levelPick button').forEach(x => {
+            const on = x.dataset.level === level;
+            x.classList.toggle('active', on);
+            x.setAttribute('aria-pressed', on ? 'true' : 'false');
+        });
+        $('levelPick').hidden = mode === 'two';
+        applyMute();
+        refreshStats();
+        fitBoard();
+        startRound();
+    })();
+    </script>
+</body>
+</html>

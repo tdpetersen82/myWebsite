@@ -1,0 +1,1088 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+    <title>Yahtzee — Free Online Dice Game vs the Computer | Limestone Games</title>
+    <meta name="description" content="Play Yahtzee free in your browser — roll, hold, and fill the classic scorecard solo or vs the computer. Full rules with bonuses, jokers, and saved high scores.">
+    <meta name="keywords" content="yahtzee, yahtzee online, free yahtzee, play yahtzee, yahtzee vs computer, dice game, yahtzee scorecard, yahtzee rules, yahtzee solo">
+    <link rel="canonical" href="https://limestonegames.com/yahtzee/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Yahtzee","description":"Play Yahtzee in your browser against the computer or solo. Standard 13-box scorecard, upper-section bonus, extra-Yahtzee joker rules, and saved high scores.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Yahtzee"}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What beats what in Yahtzee — which boxes score the most?", "acceptedAnswer": {"@type": "Answer", "text": "The Yahtzee box is the biggest single score: 50 points for five of a kind, plus 100 for each extra Yahtzee after it. A large straight scores 40, a small straight 30, and a full house 25. Three of a kind, four of a kind, and Chance score the sum of all five dice."}}, {"@type": "Question", "name": "How does the 35-point bonus work?", "acceptedAnswer": {"@type": "Answer", "text": "If your six upper boxes — Ones through Sixes — add up to 63 or more, you earn a 35-point bonus. 63 is exactly three of each face, so aim for four of a face when you can to bank spare points."}}, {"@type": "Question", "name": "Can I play Yahtzee solo?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — switch the mode to Solo for a pure score chase with the same 13 boxes. The default mode is a full game against the computer."}}, {"@type": "Question", "name": "Is Yahtzee free to play here?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs. Open the page and roll."}}, {"@type": "Question", "name": "Does my high score save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your best final total, wins, and games played are stored locally in your browser, along with your mode and sound settings."}}]}</script>
+    <meta property="og:title" content="Yahtzee — Free Online Dice Game vs the Computer | Limestone Games">
+    <meta property="og:description" content="Roll, hold, and fill the classic scorecard — solo or vs the computer. Full rules, bonuses, saved high scores.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/yahtzee/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Yahtzee — Free Online Dice Game vs the Computer | Limestone Games">
+    <meta name="twitter:description" content="Roll, hold, and fill the classic scorecard — solo or vs the computer. Full rules, bonuses, saved high scores.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+
+    <style>
+      :root {
+        --ink: #2A2017;
+        --paper: #FFFDF8;
+        --frame: #2A2017;
+        --accent: #B23B4B;
+        --good: #2E8B57;
+        --bad: #C0473B;
+        --die: 50px;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, #F7EFE1 0%, #E8D9C0 100%);
+        color: var(--ink); min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center; padding: 16px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 800px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .top-bar {
+        width: 100%; display: flex; align-items: center; gap: 16px; padding: 11px 16px 12px;
+        background: rgba(255,255,255,0.78); backdrop-filter: blur(8px);
+        border: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+        border-radius: 16px; box-shadow: 0 10px 28px -16px color-mix(in oklab, var(--frame) 55%, transparent);
+        position: relative; overflow: hidden; flex-wrap: wrap;
+      }
+      .top-bar::after { content:''; position:absolute; left:0; right:0; bottom:0; height:2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity:.6; }
+      .tb-back { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; padding: 7px 13px; border-radius: 10px; border: 1px solid color-mix(in oklab, var(--ink) 18%, transparent); color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 600; transition: border-color .15s, color .15s; }
+      .tb-back:hover { border-color: var(--accent); color: var(--accent); }
+      .tb-title { display: flex; flex-direction: column; gap: 3px; margin-right: auto; }
+      .tb-eyebrow { display: inline-flex; align-items: center; gap: 7px; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 10px; letter-spacing: .16em; text-transform: uppercase; color: color-mix(in oklab, var(--ink) 62%, transparent); }
+      .tb-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+      .tb-title h1 { font-family: 'Bricolage Grotesque', 'Inter', sans-serif; font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+      .stats { display: flex; gap: 18px; flex-wrap: wrap; }
+      .stats > div { display: flex; flex-direction: column; gap: 1px; min-width: 44px; }
+      .stats .l { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in oklab, var(--ink) 55%, transparent); }
+      .stats .v { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+      .stats .v.accent { color: var(--accent); }
+      .game-shell.solo .cpu-only { display: none !important; }
+
+      .setup { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; width: 100%; }
+      select.diff, .setup button { font-family: inherit; font-size: 14px; font-weight: 600; color: var(--ink); background: rgba(255,255,255,0.88); cursor: pointer; border: 1px solid color-mix(in oklab, var(--ink) 18%, transparent); border-radius: 10px; padding: 10px 14px; min-height: 44px; transition: border-color .15s; }
+      select.diff:hover, .setup button:hover { border-color: var(--accent); }
+
+      .play { position: relative; display: flex; gap: 14px; align-items: flex-start; width: 100%; }
+
+      /* ── Dice tray ── */
+      .dice-panel {
+        flex: 0 0 316px; position: sticky; top: 10px; z-index: 4;
+        background: var(--paper); border: 1px solid rgba(60,40,20,0.18); border-radius: 14px;
+        padding: 14px 14px 12px; box-shadow: 0 14px 30px -18px rgba(40,25,12,0.55);
+        display: flex; flex-direction: column; gap: 10px; align-items: center;
+      }
+      .tray-turn { font-size: 11px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--accent); }
+      .tray-turn.cpu { color: color-mix(in oklab, var(--ink) 65%, transparent); }
+      .dice-row { display: flex; gap: 8px; justify-content: center; padding-bottom: 20px; }
+      .die {
+        width: var(--die); height: var(--die); padding: 5px; position: relative;
+        background: #fff; cursor: pointer;
+        border: 2px solid color-mix(in oklab, var(--ink) 26%, transparent);
+        border-radius: 12px; box-shadow: 0 3px 0 color-mix(in oklab, var(--ink) 18%, transparent);
+        transition: transform .12s, border-color .15s, box-shadow .15s, background .15s;
+        touch-action: manipulation;
+      }
+      .die svg { display: block; width: 100%; height: 100%; }
+      .die .pip { fill: var(--ink); }
+      .die.held {
+        border-color: var(--accent); background: #FBF0EE;
+        box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 26%, transparent);
+        transform: translateY(4px);
+      }
+      .die.held .pip { fill: var(--accent); }
+      .die.held::after {
+        content: 'Held'; position: absolute; left: 50%; bottom: -18px; transform: translateX(-50%);
+        font-size: 9.5px; font-weight: 800; letter-spacing: .09em; text-transform: uppercase; color: var(--accent);
+      }
+      .die:disabled { cursor: default; }
+      .die.dim .pip { opacity: .28; }
+      .die.rolling { animation: jiggle .45s ease infinite; }
+      @keyframes jiggle { 0%,100% { transform: rotate(0deg); } 25% { transform: rotate(-7deg); } 75% { transform: rotate(7deg); } }
+      .roll-btn {
+        width: 100%; min-height: 48px; font-family: inherit; font-size: 15px; font-weight: 800;
+        color: #fff; background: var(--accent); border: 1px solid var(--accent); border-radius: 12px;
+        cursor: pointer; display: flex; align-items: center; justify-content: center; gap: 10px;
+        transition: filter .15s, opacity .15s; touch-action: manipulation;
+      }
+      .roll-btn:hover:not(:disabled) { filter: brightness(1.07); }
+      .roll-btn:disabled { opacity: .45; cursor: default; }
+      .roll-pips { display: inline-flex; gap: 4px; }
+      .roll-pips .rp { width: 7px; height: 7px; border-radius: 50%; background: rgba(255,255,255,0.35); }
+      .roll-pips .rp.on { background: #fff; }
+      .tray-status { font-size: 13px; line-height: 1.45; text-align: center; color: color-mix(in oklab, var(--ink) 78%, transparent); min-height: 38px; }
+      .tray-status b { color: var(--accent); }
+
+      /* ── Scorecard ── */
+      .card-wrap { flex: 1 1 340px; min-width: 0; position: relative; }
+      .card-frame {
+        background: var(--paper); border: 1px solid rgba(60,40,20,0.18);
+        border-radius: 14px; overflow: hidden;
+        box-shadow: 0 14px 30px -18px rgba(40,25,12,0.55);
+      }
+      table.scard { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+      .scard th, .scard td { border-bottom: 1px solid rgba(42,32,23,0.09); }
+      .scard thead th { font-size: 11px; font-weight: 800; letter-spacing: .07em; text-transform: uppercase; padding: 10px 8px; background: rgba(42,32,23,0.05); }
+      .scard thead th.lblh { text-align: left; padding-left: 12px; color: color-mix(in oklab, var(--ink) 62%, transparent); }
+      .scard .colhead { position: relative; color: color-mix(in oklab, var(--ink) 55%, transparent); }
+      .scard .colhead.active { color: var(--accent); }
+      .scard .colhead.active::before { content: '▸ '; }
+      .scard .valcol { width: 72px; text-align: center; }
+      .scard tr.sec th { font-size: 10px; font-weight: 800; letter-spacing: .12em; text-transform: uppercase; text-align: left; padding: 7px 12px 5px; color: color-mix(in oklab, var(--ink) 50%, transparent); background: rgba(42,32,23,0.035); }
+      .scard .lbl { text-align: left; padding: 5px 10px; font-weight: 700; line-height: 1.15; }
+      .scard .lbl .sub { display: block; font-size: 10px; font-weight: 500; letter-spacing: .01em; color: color-mix(in oklab, var(--ink) 52%, transparent); margin-top: 1px; }
+      .cell {
+        width: 100%; min-height: 44px; font-family: inherit; font-size: 15px; font-weight: 800;
+        font-variant-numeric: tabular-nums; color: var(--ink);
+        background: transparent; border: 0; cursor: default; touch-action: manipulation;
+      }
+      .cell.avail { cursor: pointer; }
+      .cell.avail .val { opacity: .48; }
+      .cell.avail.zero .val { opacity: .26; }
+      .cell.avail:hover, .cell.avail:focus-visible { background: color-mix(in oklab, var(--accent) 14%, transparent); }
+      .cell.avail:hover .val, .cell.avail:focus-visible .val { opacity: 1; color: var(--accent); }
+      .cell.locked.zero .val, .cval.zero { color: color-mix(in oklab, var(--ink) 40%, transparent); }
+      .cval { display: inline-block; font-size: 15px; font-weight: 800; font-variant-numeric: tabular-nums; }
+      .scard td.cpuv { text-align: center; color: color-mix(in oklab, var(--ink) 80%, transparent); }
+      .scard tr.derived td, .scard tr.derived th { padding: 4px 10px; font-size: 12px; font-weight: 700; color: color-mix(in oklab, var(--ink) 62%, transparent); background: rgba(42,32,23,0.028); }
+      .scard tr.derived td { text-align: center; font-variant-numeric: tabular-nums; }
+      .scard tr.derived td.prog { font-size: 11px; }
+      .scard tr.derived td.earned { color: var(--good); }
+      .scard tr.total td, .scard tr.total th { padding: 9px 10px; font-size: 15px; font-weight: 800; background: rgba(42,32,23,0.06); border-bottom: 0; }
+      .scard tr.total td { text-align: center; font-variant-numeric: tabular-nums; color: var(--accent); }
+      .flash { animation: cellflash .8s ease; }
+      @keyframes cellflash { 0% { background: color-mix(in oklab, var(--accent) 45%, transparent); } 100% { background: transparent; } }
+
+      .game-over { position: absolute; inset: 0; display: none; align-items: flex-start; justify-content: center; padding-top: 60px; z-index: 6; }
+      .game-over.show { display: flex; }
+      .over-card { text-align: center; }
+      .over-card h2 { font-family: 'Bricolage Grotesque', 'Inter', sans-serif; font-size: 26px; color: var(--accent); }
+      .over-card .final { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+      .over-card p { font-size: 14px; color: color-mix(in oklab, var(--ink) 72%, transparent); max-width: 320px; }
+      .over-card p.best { color: var(--good); font-weight: 700; }
+      .over-card .actions { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+      .over-card button { font-family: inherit; font-size: 14px; font-weight: 700; cursor: pointer; border-radius: 10px; padding: 11px 16px; min-height: 44px; border: 1px solid var(--accent); background: var(--accent); color: #fff; }
+      .over-card button.ghost { background: transparent; color: var(--ink); border-color: color-mix(in oklab, var(--ink) 22%, transparent); }
+      .over-card a { text-decoration: none; }
+
+      .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
+      .controls button { font-family: inherit; font-size: 14px; font-weight: 700; color: var(--ink); background: rgba(255,255,255,0.85); cursor: pointer; border: 1px solid color-mix(in oklab, var(--ink) 18%, transparent); border-radius: 10px; padding: 10px 15px; min-height: 44px; transition: border-color .15s; }
+      .controls button:hover { border-color: var(--accent); }
+      .controls .tag { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: color-mix(in oklab, var(--ink) 10%, transparent); margin-left: 4px; }
+      .hint { font-size: 13px; text-align: center; max-width: 640px; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+      /* SEO section table */
+      .game-overview .table-scroll { overflow-x: auto; margin: 0 0 12px; }
+      .game-overview table { width: 100%; border-collapse: collapse; font-size: 13.5px; }
+      .game-overview th, .game-overview td { border: 1px solid rgba(60,40,20,0.18); padding: 7px 9px; text-align: left; vertical-align: top; }
+      .game-overview thead th { background: #F3E8CE; }
+
+      @media (max-width: 719px) {
+        :root { --die: clamp(44px, calc((100vw - 122px) / 5), 62px); }
+        .play { flex-direction: column; align-items: stretch; }
+        .dice-panel { flex: none; width: 100%; top: 8px; }
+        .scard .valcol { width: 64px; }
+      }
+    </style>
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618c">
+</head>
+<body>
+    <div class="game-shell" id="shell">
+        <div class="console">
+        <header class="top-bar">
+            <a class="tb-back" href="../strategy/">← Strategy</a>
+            <div class="tb-title">
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Dice game · vs the computer</span>
+                <h1>Yahtzee</h1>
+            </div>
+            <div class="stats">
+                <div><span class="l">Round</span><span class="v" id="stRound">1/13</span></div>
+                <div><span class="l">You</span><span class="v accent" id="stYou">0</span></div>
+                <div class="cpu-only"><span class="l">Computer</span><span class="v" id="stCpu">0</span></div>
+                <div><span class="l">Best</span><span class="v" id="stBest">0</span></div>
+            </div>
+        </header>
+
+        <div class="setup">
+            <select class="diff" id="mode" aria-label="Game mode">
+                <option value="vs">Vs the computer</option>
+                <option value="solo">Solo</option>
+            </select>
+            <button id="newGame">New game</button>
+        </div>
+
+        <div class="play">
+            <div class="dice-panel">
+                <div class="tray-turn" id="trayTurn">Your turn</div>
+                <div class="dice-row" id="diceRow" aria-label="Dice — click a die to hold it between rolls"></div>
+                <button class="roll-btn" id="rollBtn" aria-label="Roll the dice">
+                    <span id="rollLabel">Roll dice</span>
+                    <span class="roll-pips" id="rollPips" aria-hidden="true"><span class="rp on"></span><span class="rp on"></span><span class="rp on"></span></span>
+                </button>
+                <div class="tray-status" id="status">Roll the dice to start round 1.</div>
+            </div>
+
+            <div class="card-wrap">
+                <div class="card-frame">
+                <table class="scard" aria-label="Yahtzee scorecard">
+                    <thead>
+                        <tr>
+                            <th class="lblh" scope="col">Scorecard</th>
+                            <th class="valcol colhead" scope="col" id="colYou">You</th>
+                            <th class="valcol colhead cpu-only" scope="col" id="colCpu">Computer</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cardBody"></tbody>
+                </table>
+                </div>
+                <div class="game-over" id="over" role="dialog" aria-modal="true" aria-labelledby="overTitle">
+                    <div class="over-card">
+                        <h2 id="overTitle">Game over</h2>
+                        <div class="final" id="overScore"></div>
+                        <p class="best" id="overBest" hidden>New best score!</p>
+                        <p id="overNote"></p>
+                        <div class="actions">
+                            <button id="overNew">New game</button>
+                            <a href="../strategy/"><button class="ghost">More strategy games</button></a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="muteBtn" title="Toggle sound"><span id="muteIcon">🔊</span> Sound <span class="tag" id="muteState">On</span></button>
+        </div>
+        <p class="hint">Click dice to hold them between rolls — you get three rolls a turn, then pick any open box on your card. Keys: <b>R</b> rolls, <b>1–5</b> hold a die.</p>
+        <div class="sr-only" aria-live="polite" id="live"></div>
+        </div>
+
+        <section class="game-overview" aria-label="About Yahtzee">
+            <h2>How to play Yahtzee online</h2>
+            <p>Yahtzee is the classic dice game of rolling, holding, and filling a scorecard. Each turn you roll five dice up to three times, keeping the ones you like, then score the result in one of thirteen boxes &mdash; and every box can be used only once, so the real game is deciding what to chase and what to give up. Play a full 13-round game against the computer, or switch to Solo and chase your own best total. Free in your browser, no downloads, no signup.</p>
+
+            <h3>Yahtzee rules &mdash; the basics</h3>
+            <ul>
+                <li><b>Three rolls a turn.</b> Roll all five dice, then reroll any of them up to two more times. Click a die to hold it; click again to release it. You can stop and score after any roll.</li>
+                <li><b>Score exactly one box.</b> After rolling, pick one open box on your card &mdash; the dice score whatever that box's rule says, even if that's zero. Once filled, a box never changes.</li>
+                <li><b>13 rounds.</b> The game ends when all thirteen boxes are filled. Highest grand total wins.</li>
+                <li><b>The upper bonus.</b> If your Ones through Sixes boxes total 63 or more, you earn a 35-point bonus. 63 is three of each face &mdash; every roll above that average banks spare points.</li>
+            </ul>
+
+            <h3>Yahtzee scorecard reference</h3>
+            <div class="table-scroll">
+            <table>
+                <thead><tr><th>Box</th><th>What counts</th><th>Score</th></tr></thead>
+                <tbody>
+                    <tr><td><b>Ones &ndash; Sixes</b></td><td>Only dice showing that face</td><td>Sum of those dice</td></tr>
+                    <tr><td><b>Upper bonus</b></td><td>Ones&ndash;Sixes total of 63 or more</td><td>+35</td></tr>
+                    <tr><td><b>Three of a Kind</b></td><td>At least three dice the same</td><td>Sum of all five dice</td></tr>
+                    <tr><td><b>Four of a Kind</b></td><td>At least four dice the same</td><td>Sum of all five dice</td></tr>
+                    <tr><td><b>Full House</b></td><td>Three of one face and two of another</td><td>25</td></tr>
+                    <tr><td><b>Small Straight</b></td><td>Four in a row (1-2-3-4, 2-3-4-5, or 3-4-5-6)</td><td>30</td></tr>
+                    <tr><td><b>Large Straight</b></td><td>Five in a row (1-2-3-4-5 or 2-3-4-5-6)</td><td>40</td></tr>
+                    <tr><td><b>Yahtzee</b></td><td>All five dice the same</td><td>50</td></tr>
+                    <tr><td><b>Chance</b></td><td>Anything</td><td>Sum of all five dice</td></tr>
+                    <tr><td><b>Extra Yahtzees</b></td><td>Each Yahtzee rolled after scoring 50 in the Yahtzee box</td><td>+100 each</td></tr>
+                </tbody>
+            </table>
+            </div>
+            <p>Note that a Yahtzee also counts naturally as three of a kind and four of a kind (all five dice sum), but it is <b>not</b> a natural full house &mdash; a full house needs three of one face and two of a <i>different</i> face. The joker rule below is the exception.</p>
+
+            <h3>Extra Yahtzees and the joker rule</h3>
+            <p>Roll a second Yahtzee after the Yahtzee box is already filled and the joker rule kicks in, exactly as on the printed card:</p>
+            <ul>
+                <li><b>+100 bonus</b> &mdash; if your Yahtzee box holds 50, every extra Yahtzee is worth a 100-point bonus, added automatically. (If you zeroed the Yahtzee box, no bonus &mdash; but the joker rules below still apply.)</li>
+                <li><b>1. Matching upper box open?</b> You must score there &mdash; five 4s go in Fours for 20, and so on.</li>
+                <li><b>2. Matching upper box filled?</b> Score any open lower box at its full value: Full House counts 25, Small Straight 30, Large Straight 40, and the of-a-kind boxes and Chance take the sum of all five dice.</li>
+                <li><b>3. Everything relevant filled?</b> You must enter a zero in an upper box of your choice.</li>
+            </ul>
+            <p>The game enforces this for you &mdash; when a joker applies, only the legal boxes light up.</p>
+
+            <h3>Yahtzee tips and strategy</h3>
+            <ul>
+                <li><b>Play for the bonus early.</b> The 35-point upper bonus decides close games. Three of a face is par &mdash; grab four 5s or 6s whenever the dice offer them.</li>
+                <li><b>Fives and Sixes carry the card.</b> A weak Sixes box (12 or less) makes the bonus hard to reach; a 20+ box nearly locks it.</li>
+                <li><b>Keep Chance in your back pocket.</b> It's the universal escape hatch for a bust turn &mdash; spending it early on 14 points usually stings later.</li>
+                <li><b>Zero smart.</b> When a turn dies, sacrifice the cheapest box: Ones costs you almost nothing, and a long-shot Yahtzee is often worth less than it looks.</li>
+                <li><b>Straights are about timing.</b> Chase a large straight when you hold four in a row &mdash; chasing from three costs rolls that of-a-kind hands spend better.</li>
+                <li><b>Count what's left.</b> Late game, your open boxes dictate the roll &mdash; hold dice for the boxes you still need, not the hand that looks prettiest.</li>
+            </ul>
+
+            <h3>A little history</h3>
+            <p>Yahtzee descends from older &ldquo;luck with judgment&rdquo; dice games like Yacht and Generala, and has been sold under its familiar name since the mid-1950s &mdash; the story goes that a Canadian couple played it aboard their yacht and liked it enough to have copies made. The design has barely changed since: five dice, thirteen boxes, and just enough freedom to make every scoring decision feel like yours.</p>
+
+            <h3>Frequently asked</h3>
+            <p><b>What beats what in Yahtzee — which boxes score the most?</b> The Yahtzee box is the biggest single score: 50 points for five of a kind, plus 100 for each extra Yahtzee after it. A large straight scores 40, a small straight 30, and a full house 25. Three of a kind, four of a kind, and Chance score the sum of all five dice.</p>
+            <p><b>How does the 35-point bonus work?</b> If your six upper boxes — Ones through Sixes — add up to 63 or more, you earn a 35-point bonus. 63 is exactly three of each face, so aim for four of a face when you can to bank spare points.</p>
+            <p><b>Can I play Yahtzee solo?</b> Yes — switch the mode to Solo for a pure score chase with the same 13 boxes. The default mode is a full game against the computer.</p>
+            <p><b>Is Yahtzee free to play here?</b> Yes — no signup, no downloads, no installs. Open the page and roll.</p>
+            <p><b>Does my high score save?</b> Yes — your best final total, wins, and games played are stored locally in your browser, along with your mode and sound settings.</p>
+
+            <h3>More strategy games</h3>
+            <ul class="related-games-list">
+                <li><a href="../farkle/">Farkle</a></li>
+                <li><a href="../backgammon/">Backgammon</a></li>
+                <li><a href="../hangman/">Hangman</a></li>
+                <li><a href="../strategy/">All strategy games &rarr;</a></li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+    'use strict';
+    (function () {
+        // [logic-start]
+        // ── Pure rules + computer strategy (no DOM — node-testable) ─────────
+        var UPPER = ['ones', 'twos', 'threes', 'fours', 'fives', 'sixes'];
+        var LOWER = ['threeKind', 'fourKind', 'fullHouse', 'smallStraight', 'largeStraight', 'yahtzee', 'chance'];
+        var CATS = UPPER.concat(LOWER);
+        var FACE = { ones: 1, twos: 2, threes: 3, fours: 4, fives: 5, sixes: 6 };
+        var CAT_LABEL = {
+            ones: 'Ones', twos: 'Twos', threes: 'Threes', fours: 'Fours', fives: 'Fives', sixes: 'Sixes',
+            threeKind: 'Three of a Kind', fourKind: 'Four of a Kind', fullHouse: 'Full House',
+            smallStraight: 'Small Straight', largeStraight: 'Large Straight', yahtzee: 'Yahtzee', chance: 'Chance'
+        };
+
+        function newCard() {
+            var s = {};
+            CATS.forEach(function (c) { s[c] = null; });
+            return { scores: s, yahtzeeBonus: 0 };
+        }
+        function countsOf(dice) {
+            var c = [0, 0, 0, 0, 0, 0, 0];
+            for (var i = 0; i < 5; i++) c[dice[i]]++;
+            return c;
+        }
+        function sumDice(dice) { return dice[0] + dice[1] + dice[2] + dice[3] + dice[4]; }
+        function hasFaces(counts, faces) {
+            for (var i = 0; i < faces.length; i++) if (!counts[faces[i]]) return false;
+            return true;
+        }
+        function scoreCat(cat, dice) {
+            var c = countsOf(dice), sum = sumDice(dice);
+            var max = 0;
+            for (var f = 1; f <= 6; f++) if (c[f] > max) max = c[f];
+            if (FACE[cat]) return c[FACE[cat]] * FACE[cat];
+            switch (cat) {
+                case 'threeKind': return max >= 3 ? sum : 0;
+                case 'fourKind': return max >= 4 ? sum : 0;
+                case 'fullHouse': return (c.indexOf(3, 1) > 0 && c.indexOf(2, 1) > 0) ? 25 : 0;
+                case 'smallStraight': return (hasFaces(c, [1, 2, 3, 4]) || hasFaces(c, [2, 3, 4, 5]) || hasFaces(c, [3, 4, 5, 6])) ? 30 : 0;
+                case 'largeStraight': return (hasFaces(c, [1, 2, 3, 4, 5]) || hasFaces(c, [2, 3, 4, 5, 6])) ? 40 : 0;
+                case 'yahtzee': return max === 5 ? 50 : 0;
+                case 'chance': return sum;
+            }
+            return 0;
+        }
+
+        // Joker rules: rolled a Yahtzee while the Yahtzee box is already filled.
+        // +100 bonus only when the box holds 50. Fill order is forced:
+        // matching upper box → any open lower box (at full value) → zero an upper box.
+        function jokerState(dice, card) {
+            if (scoreCat('yahtzee', dice) !== 50 || card.scores.yahtzee === null) return { joker: false, bonus: false };
+            var bonus = card.scores.yahtzee === 50;
+            var upCat = UPPER[dice[0] - 1];
+            if (card.scores[upCat] === null) return { joker: true, bonus: bonus, mode: 'upper', allowed: [upCat] };
+            var lowerOpen = LOWER.filter(function (c) { return c !== 'yahtzee' && card.scores[c] === null; });
+            if (lowerOpen.length) return { joker: true, bonus: bonus, mode: 'lower', allowed: lowerOpen };
+            var upperOpen = UPPER.filter(function (c) { return card.scores[c] === null; });
+            return { joker: true, bonus: bonus, mode: 'zeroUpper', allowed: upperOpen };
+        }
+
+        // Score this box would take right now — or null if filled / blocked by joker rules.
+        function provisional(cat, dice, card) {
+            if (card.scores[cat] !== null) return null;
+            var js = jokerState(dice, card);
+            if (!js.joker) return scoreCat(cat, dice);
+            if (js.allowed.indexOf(cat) === -1) return null;
+            if (js.mode === 'zeroUpper') return 0;
+            if (cat === 'fullHouse') return 25;
+            if (cat === 'smallStraight') return 30;
+            if (cat === 'largeStraight') return 40;
+            return scoreCat(cat, dice); // matching upper, of-a-kinds, chance
+        }
+
+        function applyScore(card, cat, dice) {
+            var v = provisional(cat, dice, card);
+            if (v === null) return null;
+            var js = jokerState(dice, card);
+            var bonus = js.joker && js.bonus;
+            if (bonus) card.yahtzeeBonus += 1;
+            card.scores[cat] = v;
+            return { value: v, bonus: bonus };
+        }
+
+        function totals(card) {
+            var up = 0, lo = 0;
+            UPPER.forEach(function (c) { up += card.scores[c] || 0; });
+            LOWER.forEach(function (c) { lo += card.scores[c] || 0; });
+            var bonus = up >= 63 ? 35 : 0;
+            var yb = card.yahtzeeBonus * 100;
+            return { upper: up, bonus: bonus, lower: lo, yahtzeeBonus: yb, grand: up + bonus + lo + yb };
+        }
+
+        // ── Computer strategy: expected-value-flavored heuristics ──────────
+        // Rough worth of leaving each box open (what filling it early gives up).
+        var FUTURE_EV = {
+            ones: 2, twos: 4.5, threes: 7, fours: 9.5, fives: 12, sixes: 14.5,
+            threeKind: 23, fourKind: 13, fullHouse: 18,
+            smallStraight: 24, largeStraight: 20, yahtzee: 8, chance: 22
+        };
+
+        function bonusAlive(card) {
+            var up = 0, potential = 0;
+            UPPER.forEach(function (c) {
+                if (card.scores[c] !== null) up += card.scores[c];
+                else potential += 5 * FACE[c];
+            });
+            return up < 63 && up + potential >= 63;
+        }
+        function upperAdj(card, face, est) {
+            if (!bonusAlive(card)) return 0;
+            var pips = est - 3 * face; // above/below "three of each" par
+            return pips * (pips < 0 ? 0.6 : 1.8);
+        }
+        function scoreWeight(cat, v, card) {
+            var w = v - FUTURE_EV[cat];
+            if (FACE[cat]) w += upperAdj(card, FACE[cat], v);
+            if (cat === 'yahtzee' && v >= 50) w += 20;
+            return w;
+        }
+
+        // Best box for these final dice. Never zeroes a box while a positive
+        // option exists; if forced to zero, sacrifices the least valuable box.
+        function chooseCategory(dice, card) {
+            var open = [], positive = [];
+            CATS.forEach(function (cat) {
+                var v = provisional(cat, dice, card);
+                if (v === null) return;
+                open.push(cat);
+                if (v > 0) positive.push(cat);
+            });
+            if (!positive.length) {
+                var sac = open[0];
+                open.forEach(function (cat) { if (FUTURE_EV[cat] < FUTURE_EV[sac]) sac = cat; });
+                return sac;
+            }
+            var best = null, bestW = -Infinity;
+            positive.forEach(function (cat) {
+                var w = scoreWeight(cat, provisional(cat, dice, card), card);
+                if (w > bestW) { bestW = w; best = cat; }
+            });
+            return best;
+        }
+
+        function binom(n, k) {
+            var r = 1;
+            for (var i = 0; i < k; i++) r = r * (n - i) / (i + 1);
+            return r;
+        }
+        function pAtLeast(need, n, p) {
+            if (need <= 0) return 1;
+            if (need > n) return 0;
+            var total = 0;
+            for (var i = need; i <= n; i++) total += binom(n, i) * Math.pow(p, i) * Math.pow(1 - p, n - i);
+            return total;
+        }
+        function patValue(dice, card) {
+            var best = -Infinity;
+            CATS.forEach(function (cat) {
+                var v = provisional(cat, dice, card);
+                if (v === null) return;
+                var w = scoreWeight(cat, v, card);
+                if (w > best) best = w;
+            });
+            return best;
+        }
+        // Hold every die of face f and chase upper / of-a-kind / Yahtzee value.
+        function evalFaceChase(f, dice, r, card) {
+            var k = countsOf(dice)[f];
+            var free = 5 - k;
+            var p1 = 1 - Math.pow(5 / 6, r); // one free die shows f by the last roll
+            var eCnt = k + free * p1;
+            var eSum = f * eCnt + (5 - eCnt) * 3.5;
+            var best = -2;
+            var upCat = UPPER[f - 1];
+            if (card.scores[upCat] === null) {
+                var est = f * Math.min(5, eCnt);
+                best = Math.max(best, est - FUTURE_EV[upCat] + upperAdj(card, f, est));
+            }
+            if (card.scores.threeKind === null) best = Math.max(best, pAtLeast(3 - k, free, p1) * eSum - FUTURE_EV.threeKind);
+            if (card.scores.fourKind === null) best = Math.max(best, pAtLeast(4 - k, free, p1) * eSum - FUTURE_EV.fourKind);
+            var p5 = Math.pow(p1, free);
+            if (card.scores.yahtzee === null) best = Math.max(best, 62 * p5);
+            var val = best;
+            if (card.scores.yahtzee === 50) val += 100 * p5; // extra-Yahtzee chase
+            return val + k * 0.01 + f * 0.001;
+        }
+        function hasAnyRun(faces, len) {
+            var uniq = faces.slice().sort(function (a, b) { return a - b; });
+            var run = 1, bestRun = 1;
+            for (var i = 1; i < uniq.length; i++) {
+                if (uniq[i] === uniq[i - 1]) continue;
+                run = (uniq[i] === uniq[i - 1] + 1) ? run + 1 : 1;
+                if (run > bestRun) bestRun = run;
+            }
+            return bestRun >= len;
+        }
+        // Hold one die of each distinct face in the better 5-window; chase straights.
+        function straightHold(dice, card, r) {
+            var ssOpen = card.scores.smallStraight === null, lsOpen = card.scores.largeStraight === null;
+            if (!ssOpen && !lsOpen) return null;
+            var c = countsOf(dice);
+            var windows = [[1, 2, 3, 4, 5], [2, 3, 4, 5, 6]], win = windows[0], present = -1;
+            windows.forEach(function (w) {
+                var n = 0;
+                w.forEach(function (f) { if (c[f]) n++; });
+                if (n > present) { present = n; win = w; }
+            });
+            var used = {}, mask = [false, false, false, false, false];
+            for (var i = 0; i < 5; i++) {
+                var d = dice[i];
+                if (win.indexOf(d) !== -1 && !used[d]) { used[d] = true; mask[i] = true; }
+            }
+            var heldFaces = Object.keys(used).map(Number);
+            var missing = 5 - heldFaces.length;
+            var freeDice = missing;
+            var p1 = 1 - Math.pow(5 / 6, r);
+            var ssMade = hasAnyRun(heldFaces, 4);
+            var val = -Infinity;
+            if (lsOpen) {
+                var pLS = Math.pow(p1, missing);
+                var fallback = (ssMade && ssOpen) ? (30 - FUTURE_EV.smallStraight) : 0;
+                val = Math.max(val, pLS * (40 - FUTURE_EV.largeStraight) + (1 - pLS) * fallback);
+            }
+            if (ssOpen) {
+                if (ssMade) val = Math.max(val, 30 - FUTURE_EV.smallStraight);
+                else {
+                    var acc = 0;
+                    for (var x = 1; x <= 6; x++) {
+                        if (used[x]) continue;
+                        if (hasAnyRun(heldFaces.concat(x), 4)) acc++;
+                    }
+                    var pSS = acc ? 1 - Math.pow(1 - acc / 6, freeDice * r) : 0;
+                    if (!hasAnyRun(heldFaces, 3)) pSS *= 0.45;
+                    val = Math.max(val, pSS * (30 - FUTURE_EV.smallStraight));
+                }
+            }
+            return { mask: mask, val: val };
+        }
+        // Two pairs, Full House open: hold both pairs, reroll the odd die.
+        function twoPairHold(dice, card, r) {
+            if (card.scores.fullHouse !== null) return null;
+            var c = countsOf(dice), pairs = [], trips = false;
+            for (var f = 1; f <= 6; f++) {
+                if (c[f] >= 2) pairs.push(f);
+                if (c[f] >= 3) trips = true;
+            }
+            if (pairs.length !== 2 || trips) return null;
+            var need = {};
+            need[pairs[0]] = 2; need[pairs[1]] = 2;
+            var mask = dice.map(function (d) {
+                if (need[d] > 0) { need[d]--; return true; }
+                return false;
+            });
+            var p = 1 - Math.pow(4 / 6, r); // the lone die must match either pair
+            return { mask: mask, val: p * (25 - FUTURE_EV.fullHouse) + 0.02 };
+        }
+        // Hold the big dice for Chance (only wins when little else is open).
+        function chanceHold(dice, card, r) {
+            if (card.scores.chance !== null) return null;
+            var mask = dice.map(function (d) { return d >= 4; });
+            var heldSum = 0, freeDice = 0;
+            dice.forEach(function (d, i) { if (mask[i]) heldSum += d; else freeDice++; });
+            var perDie = r >= 2 ? 4.25 : 3.9;
+            return { mask: mask, val: heldSum + freeDice * perDie - FUTURE_EV.chance - 2 };
+        }
+        // Which dice the computer keeps, with r rerolls remaining (1 or 2).
+        // Returns 5 booleans; all-true means "stop and score now".
+        function chooseHold(dice, r, card) {
+            var cands = [];
+            for (var f = 1; f <= 6; f++) {
+                cands.push({ mask: dice.map(function (d) { return d === f; }), val: evalFaceChase(f, dice, r, card) });
+            }
+            var st = straightHold(dice, card, r);
+            if (st) cands.push(st);
+            var tp = twoPairHold(dice, card, r);
+            if (tp) cands.push(tp);
+            var ch = chanceHold(dice, card, r);
+            if (ch) cands.push(ch);
+            cands.push({ mask: [true, true, true, true, true], val: patValue(dice, card) });
+            var best = cands[0];
+            cands.forEach(function (cd) { if (cd.val > best.val) best = cd; });
+            return best.mask;
+        }
+        // [logic-end]
+
+        // ── UI ──────────────────────────────────────────────────────────────
+        var CAT_SUB = {
+            ones: 'Total of 1s', twos: 'Total of 2s', threes: 'Total of 3s',
+            fours: 'Total of 4s', fives: 'Total of 5s', sixes: 'Total of 6s',
+            threeKind: 'Sum of all dice', fourKind: 'Sum of all dice', fullHouse: '3 + 2 · 25 pts',
+            smallStraight: 'Run of 4 · 30 pts', largeStraight: 'Run of 5 · 40 pts',
+            yahtzee: '5 of a kind · 50 pts', chance: 'Sum of all dice'
+        };
+        var PIPS = {
+            1: [[50, 50]],
+            2: [[30, 30], [70, 70]],
+            3: [[28, 28], [50, 50], [72, 72]],
+            4: [[30, 30], [70, 30], [30, 70], [70, 70]],
+            5: [[29, 29], [71, 29], [50, 50], [29, 71], [71, 71]],
+            6: [[30, 27], [70, 27], [30, 50], [70, 50], [30, 73], [70, 73]]
+        };
+
+        var $ = function (id) { return document.getElementById(id); };
+        var statusEl = $('status'), liveEl = $('live'), shellEl = $('shell');
+        var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+        if (window.matchMedia) {
+            try {
+                window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', function (e) { reduceMotion = e.matches; });
+            } catch (e) {}
+        }
+
+        // localStorage
+        function lsGet(k, fb) { try { var v = localStorage.getItem(k); return v == null ? fb : v; } catch (e) { return fb; } }
+        function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+        function lsNum(k) { var v = parseInt(lsGet(k, '0'), 10); return isNaN(v) ? 0 : v; }
+        var K = { high: 'yahtzeeHighScore', wins: 'yahtzeeWins', games: 'yahtzeeGames', mode: 'yahtzeeMode', mute: 'yahtzeeMute' };
+
+        // audio
+        var actx = null, muted = lsGet(K.mute, '0') === '1';
+        function audio() {
+            if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} }
+            if (actx && actx.state === 'suspended') actx.resume();
+            return actx;
+        }
+        function tone(freqs, dur, type, gap) {
+            if (muted) return;
+            var ac = audio();
+            if (!ac) return;
+            freqs.forEach(function (f, i) {
+                var o = ac.createOscillator(), g = ac.createGain();
+                o.type = type || 'sine'; o.frequency.value = f;
+                var t = ac.currentTime + i * (gap || 0.08);
+                g.gain.setValueAtTime(0.0001, t);
+                g.gain.exponentialRampToValueAtTime(0.14, t + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+                o.connect(g); g.connect(ac.destination);
+                o.start(t); o.stop(t + dur);
+            });
+        }
+        var sndRoll = function () { tone([190, 165, 210], 0.07, 'triangle', 0.055); };
+        var sndHold = function () { tone([480], 0.08); };
+        var sndScore = function () { tone([660], 0.12); };
+        var sndBonus = function () { tone([523, 659, 784], 0.18); };
+        var sndYahtzee = function () { tone([523, 659, 784, 1047], 0.22); };
+        var sndWin = function () { tone([523, 659, 784, 1047], 0.22); };
+        var sndLoss = function () { tone([392, 311, 247], 0.28, 'triangle'); };
+
+        // state
+        var S = {
+            mode: 'vs', round: 1, turn: 'you',
+            dice: [2, 3, 4, 5, 6], held: [false, false, false, false, false],
+            rollsLeft: 3, rolled: false, over: false, busy: false,
+            cards: { you: newCard(), cpu: newCard() }
+        };
+        var seq = 0; // cancels stale timers on New game
+        function later(ms, fn) {
+            var t = seq;
+            setTimeout(function () { if (t === seq && !S.over) fn(); }, ms);
+        }
+        var rnd = function () { return 1 + Math.floor(Math.random() * 6); };
+
+        // ── build dice ──
+        var dieBtns = [];
+        (function buildDice() {
+            var row = $('diceRow');
+            for (var i = 0; i < 5; i++) {
+                var b = document.createElement('button');
+                b.className = 'die dim';
+                b.dataset.i = i;
+                b.innerHTML = '<svg viewBox="0 0 100 100" aria-hidden="true"></svg>';
+                b.addEventListener('click', (function (idx) { return function () { toggleHold(idx); }; })(i));
+                row.appendChild(b);
+                dieBtns.push(b);
+            }
+        })();
+        function dieFace(v) {
+            return PIPS[v].map(function (p) { return '<circle class="pip" cx="' + p[0] + '" cy="' + p[1] + '" r="9.5"/>'; }).join('');
+        }
+        function renderDice() {
+            var canHold = S.turn === 'you' && S.rolled && !S.over && !S.busy && S.rollsLeft > 0;
+            dieBtns.forEach(function (b, i) {
+                b.querySelector('svg').innerHTML = dieFace(S.dice[i]);
+                b.classList.toggle('held', S.held[i]);
+                b.classList.toggle('dim', !S.rolled && S.turn === 'you');
+                b.disabled = !canHold;
+                b.setAttribute('aria-pressed', S.held[i] ? 'true' : 'false');
+                b.setAttribute('aria-label', 'Die ' + (i + 1) + ' shows ' + S.dice[i] + (S.held[i] ? ', held' : ''));
+            });
+        }
+        function toggleHold(i) {
+            if (S.over || S.busy || S.turn !== 'you' || !S.rolled || S.rollsLeft <= 0) return;
+            S.held[i] = !S.held[i];
+            sndHold();
+            renderDice();
+            liveEl.textContent = 'Die ' + (i + 1) + (S.held[i] ? ' held.' : ' released.');
+        }
+
+        // ── build scorecard ──
+        var cellBtns = {}, cpuCells = {}, derived = {};
+        (function buildCard() {
+            var tb = $('cardBody');
+            function secRow(label) {
+                var tr = document.createElement('tr');
+                tr.className = 'sec';
+                tr.innerHTML = '<th colspan="3">' + label + '</th>';
+                tb.appendChild(tr);
+            }
+            function catRow(cat) {
+                var tr = document.createElement('tr');
+                tr.className = 'catrow';
+                var th = document.createElement('th');
+                th.className = 'lbl'; th.scope = 'row';
+                th.innerHTML = CAT_LABEL[cat] + '<span class="sub">' + CAT_SUB[cat] + '</span>';
+                var tdY = document.createElement('td');
+                var btn = document.createElement('button');
+                btn.className = 'cell'; btn.disabled = true;
+                btn.innerHTML = '<span class="val"></span>';
+                btn.addEventListener('click', function () { scoreAs(cat); });
+                tdY.appendChild(btn);
+                var tdC = document.createElement('td');
+                tdC.className = 'cpuv cpu-only';
+                tdC.innerHTML = '<span class="cval">–</span>';
+                tr.appendChild(th); tr.appendChild(tdY); tr.appendChild(tdC);
+                tb.appendChild(tr);
+                cellBtns[cat] = btn;
+                cpuCells[cat] = tdC.firstChild;
+            }
+            function derivedRow(key, label, cls) {
+                var tr = document.createElement('tr');
+                tr.className = cls || 'derived';
+                tr.innerHTML = '<th class="lbl" scope="row">' + label + '</th><td></td><td class="cpu-only"></td>';
+                tb.appendChild(tr);
+                derived[key] = { you: tr.children[1], cpu: tr.children[2] };
+            }
+            secRow('Upper section');
+            UPPER.forEach(catRow);
+            derivedRow('upSum', 'Upper subtotal');
+            derivedRow('upBonus', 'Bonus · reach 63 for +35');
+            secRow('Lower section');
+            LOWER.forEach(catRow);
+            derivedRow('yBonus', 'Extra Yahtzees · +100 each');
+            derivedRow('grand', 'Grand total', 'total');
+        })();
+
+        function renderCard() {
+            var tY = totals(S.cards.you), tC = totals(S.cards.cpu);
+            var myTurnLive = S.turn === 'you' && S.rolled && !S.over && !S.busy;
+            CATS.forEach(function (cat) {
+                var btn = cellBtns[cat], val = btn.querySelector('.val');
+                var yv = S.cards.you.scores[cat];
+                btn.classList.remove('avail', 'locked', 'zero');
+                if (yv !== null) {
+                    val.textContent = yv;
+                    btn.classList.add('locked');
+                    if (yv === 0) btn.classList.add('zero');
+                    btn.disabled = true;
+                    btn.setAttribute('aria-label', CAT_LABEL[cat] + ', filled with ' + yv);
+                } else {
+                    var p = myTurnLive ? provisional(cat, S.dice, S.cards.you) : null;
+                    if (p === null) {
+                        val.textContent = '';
+                        btn.disabled = true;
+                        btn.setAttribute('aria-label', CAT_LABEL[cat] + ', open');
+                    } else {
+                        val.textContent = p;
+                        btn.disabled = false;
+                        btn.classList.add('avail');
+                        if (p === 0) btn.classList.add('zero');
+                        btn.setAttribute('aria-label', 'Score ' + p + ' in ' + CAT_LABEL[cat]);
+                    }
+                }
+                var cv = cpuCells[cat], cval = S.cards.cpu.scores[cat];
+                cv.textContent = cval === null ? '–' : cval;
+                cv.classList.toggle('zero', cval === 0);
+            });
+            function bonusCell(td, t, card) {
+                var allFilled = UPPER.every(function (c) { return card.scores[c] !== null; });
+                td.classList.remove('prog', 'earned');
+                if (t.bonus) { td.textContent = '+35'; td.classList.add('earned'); }
+                else if (allFilled) td.textContent = '0';
+                else { td.textContent = t.upper + ' / 63'; td.classList.add('prog'); }
+            }
+            derived.upSum.you.textContent = tY.upper;
+            derived.upSum.cpu.textContent = tC.upper;
+            bonusCell(derived.upBonus.you, tY, S.cards.you);
+            bonusCell(derived.upBonus.cpu, tC, S.cards.cpu);
+            derived.yBonus.you.textContent = tY.yahtzeeBonus ? '+' + tY.yahtzeeBonus : '—';
+            derived.yBonus.cpu.textContent = tC.yahtzeeBonus ? '+' + tC.yahtzeeBonus : '—';
+            derived.grand.you.textContent = tY.grand;
+            derived.grand.cpu.textContent = tC.grand;
+            $('colYou').classList.toggle('active', S.turn === 'you' && !S.over);
+            $('colCpu').classList.toggle('active', S.turn === 'cpu' && !S.over);
+        }
+
+        function renderStats() {
+            var tY = totals(S.cards.you), tC = totals(S.cards.cpu);
+            $('stRound').textContent = Math.min(S.round, 13) + '/13';
+            $('stYou').textContent = tY.grand;
+            $('stCpu').textContent = tC.grand;
+            $('stBest').textContent = lsNum(K.high);
+        }
+        function renderRollBtn() {
+            var pips = $('rollPips').children;
+            for (var i = 0; i < 3; i++) pips[i].classList.toggle('on', i < S.rollsLeft);
+            $('rollLabel').textContent = S.rolled ? 'Roll again' : 'Roll dice';
+            $('rollBtn').disabled = S.over || S.busy || S.turn !== 'you' || S.rollsLeft <= 0;
+            var tt = $('trayTurn');
+            if (S.over) { tt.textContent = 'Game over'; tt.classList.add('cpu'); }
+            else if (S.turn === 'you') { tt.textContent = 'Your turn'; tt.classList.remove('cpu'); }
+            else { tt.textContent = "The computer's turn"; tt.classList.add('cpu'); }
+        }
+        function updateAll() { renderDice(); renderCard(); renderStats(); renderRollBtn(); }
+        function setStatus(html) { statusEl.innerHTML = html; }
+        function flash(el) {
+            if (reduceMotion || !el) return;
+            el.classList.remove('flash');
+            void el.offsetWidth;
+            el.classList.add('flash');
+        }
+
+        // ── rolling ──
+        function animateRoll(done) {
+            var rolling = [];
+            for (var i = 0; i < 5; i++) if (!S.held[i]) rolling.push(i);
+            sndRoll();
+            if (reduceMotion || !rolling.length) {
+                renderDice();
+                var t0 = seq;
+                setTimeout(function () { if (t0 === seq) done(); }, 160);
+                return;
+            }
+            rolling.forEach(function (i) { dieBtns[i].classList.add('rolling'); });
+            var ticks = 0, t = seq;
+            var iv = setInterval(function () {
+                if (t !== seq) { clearInterval(iv); return; }
+                ticks++;
+                rolling.forEach(function (i) {
+                    dieBtns[i].querySelector('svg').innerHTML = dieFace(rnd());
+                });
+                if (ticks >= 6) {
+                    clearInterval(iv);
+                    rolling.forEach(function (i) { dieBtns[i].classList.remove('rolling'); });
+                    renderDice();
+                    done();
+                }
+            }, 72);
+        }
+        function rollUnheld() {
+            for (var i = 0; i < 5; i++) if (!S.held[i]) S.dice[i] = rnd();
+        }
+        function diceWords() { return S.dice.join(', '); }
+
+        function playerRoll() {
+            if (S.over || S.busy || S.turn !== 'you' || S.rollsLeft <= 0) return;
+            audio();
+            S.busy = true;
+            rollUnheld();
+            renderRollBtn();
+            animateRoll(function () {
+                S.rollsLeft--; S.rolled = true; S.busy = false;
+                updateAll();
+                var js = jokerState(S.dice, S.cards.you);
+                var natural = scoreCat('yahtzee', S.dice) === 50 && !js.joker;
+                if (natural) {
+                    sndYahtzee();
+                    setStatus('<b>Yahtzee!</b> Score it while it&rsquo;s hot.');
+                } else if (js.joker) {
+                    sndBonus();
+                    var msg = js.bonus ? '<b>Extra Yahtzee — +100 bonus!</b> ' : '<b>Extra Yahtzee!</b> ';
+                    if (js.mode === 'upper') msg += 'Joker rules: fill the ' + CAT_LABEL[js.allowed[0]] + ' box.';
+                    else if (js.mode === 'lower') msg += 'Joker rules: pick any open lower box at full value.';
+                    else msg += 'Joker rules: zero an open upper box.';
+                    setStatus(msg);
+                } else if (S.rollsLeft > 0) {
+                    setStatus('Hold the dice you want, then roll again — or pick a box.');
+                } else {
+                    setStatus('Pick a box on your card.');
+                }
+                liveEl.textContent = 'You rolled ' + diceWords() + '. ' +
+                    (S.rollsLeft === 1 ? 'One roll left.' : S.rollsLeft === 0 ? 'No rolls left — pick a box.' : 'Two rolls left.');
+            });
+        }
+
+        function scoreAs(cat) {
+            if (S.over || S.busy || S.turn !== 'you' || !S.rolled) return;
+            var res = applyScore(S.cards.you, cat, S.dice);
+            if (!res) return;
+            if (res.bonus) sndBonus();
+            else if (cat === 'yahtzee' && res.value === 50) sndYahtzee();
+            else sndScore();
+            updateAll();
+            flash(cellBtns[cat]);
+            liveEl.textContent = 'You scored ' + res.value + ' in ' + CAT_LABEL[cat] + '.' + (res.bonus ? ' Plus 100 Yahtzee bonus.' : '');
+            advanceAfter('you');
+        }
+
+        function advanceAfter(who) {
+            if (S.mode === 'vs' && who === 'you') { startTurn('cpu'); return; }
+            if (S.round >= 13) { endGame(); return; }
+            S.round++;
+            startTurn('you');
+        }
+
+        function startTurn(who) {
+            S.turn = who;
+            S.held = [false, false, false, false, false];
+            S.rollsLeft = 3; S.rolled = false; S.busy = false;
+            updateAll();
+            if (who === 'cpu') cpuTurn();
+            else setStatus('Round ' + S.round + ' — roll the dice.');
+        }
+
+        // ── the computer's turn, played out visibly ──
+        function heldWords() {
+            var kept = [];
+            for (var i = 0; i < 5; i++) if (S.held[i]) kept.push(S.dice[i]);
+            kept.sort(function (a, b) { return b - a; });
+            return kept.join(', ');
+        }
+        function cpuTurn() {
+            S.busy = true;
+            renderRollBtn();
+            setStatus('The computer is thinking…');
+            later(650, cpuRoll);
+        }
+        function cpuRoll() {
+            S.busy = true;
+            rollUnheld();
+            animateRoll(function () {
+                S.rollsLeft--; S.rolled = true;
+                updateAll();
+                setStatus('The computer rolled ' + diceWords() + '.');
+                liveEl.textContent = 'The computer rolled ' + diceWords() + '.';
+                later(800, cpuDecide);
+            });
+        }
+        function cpuDecide() {
+            if (S.rollsLeft <= 0) { cpuScore(); return; }
+            var mask = chooseHold(S.dice, S.rollsLeft, S.cards.cpu);
+            var all = mask.every(function (m) { return m; });
+            if (all) { later(400, cpuScore); return; }
+            S.held = mask;
+            renderDice();
+            var kept = heldWords();
+            var msg = kept ? 'The computer holds ' + kept + ' and rolls again.' : 'The computer rolls all five dice again.';
+            setStatus(msg);
+            liveEl.textContent = msg;
+            later(900, cpuRoll);
+        }
+        function cpuScore() {
+            var cat = chooseCategory(S.dice, S.cards.cpu);
+            var res = applyScore(S.cards.cpu, cat, S.dice);
+            S.busy = false;
+            updateAll();
+            flash(cpuCells[cat] && cpuCells[cat].parentNode);
+            var msg = 'The computer scores ' + res.value + ' in ' + CAT_LABEL[cat] + '.' + (res.bonus ? ' Plus 100 Yahtzee bonus.' : '');
+            setStatus(msg);
+            liveEl.textContent = msg;
+            later(1100, function () { advanceAfter('cpu'); });
+        }
+
+        // ── game end ──
+        function endGame() {
+            S.over = true; S.busy = false;
+            var tY = totals(S.cards.you), tC = totals(S.cards.cpu);
+            lsSet(K.games, lsNum(K.games) + 1);
+            var title, note = '';
+            if (S.mode === 'vs') {
+                if (tY.grand > tC.grand) {
+                    title = 'You win!';
+                    lsSet(K.wins, lsNum(K.wins) + 1);
+                    sndWin();
+                } else if (tY.grand < tC.grand) {
+                    title = 'The computer wins';
+                    sndLoss();
+                } else {
+                    title = 'It’s a tie';
+                    sndScore();
+                }
+                $('overScore').textContent = 'You ' + tY.grand + ' — Computer ' + tC.grand;
+                note = 'Record: ' + lsNum(K.wins) + ' win' + (lsNum(K.wins) === 1 ? '' : 's') + ' in ' + lsNum(K.games) + ' game' + (lsNum(K.games) === 1 ? '' : 's') + '.';
+            } else {
+                title = 'Card complete!';
+                $('overScore').textContent = 'Final total: ' + tY.grand;
+                note = 'Games played: ' + lsNum(K.games) + '.';
+                sndWin();
+            }
+            var isBest = tY.grand > lsNum(K.high);
+            if (isBest) lsSet(K.high, tY.grand);
+            $('overBest').hidden = !isBest;
+            $('overTitle').textContent = title;
+            $('overNote').textContent = note;
+            $('over').classList.add('show');
+            updateAll();
+            setStatus('Game over.');
+            liveEl.textContent = title + '. ' + $('overScore').textContent + (isBest ? ' New best score!' : '');
+        }
+
+        function newGame() {
+            seq++;
+            S.mode = $('mode').value === 'solo' ? 'solo' : 'vs';
+            lsSet(K.mode, S.mode);
+            shellEl.classList.toggle('solo', S.mode === 'solo');
+            S.cards = { you: newCard(), cpu: newCard() };
+            S.round = 1; S.over = false; S.busy = false;
+            S.dice = [2, 3, 4, 5, 6];
+            $('over').classList.remove('show');
+            startTurn('you');
+            liveEl.textContent = 'New game. ' + (S.mode === 'solo' ? 'Solo mode.' : 'Playing against the computer.') + ' Round 1 — your roll.';
+        }
+
+        function applyMute() {
+            muted = lsGet(K.mute, '0') === '1';
+            $('muteState').textContent = muted ? 'Off' : 'On';
+            $('muteIcon').textContent = muted ? '🔇' : '🔊';
+        }
+
+        // ── wiring ──
+        $('rollBtn').addEventListener('click', playerRoll);
+        $('newGame').addEventListener('click', newGame);
+        $('overNew').addEventListener('click', newGame);
+        $('mode').addEventListener('change', newGame);
+        $('muteBtn').addEventListener('click', function () {
+            muted = !muted;
+            lsSet(K.mute, muted ? '1' : '0');
+            applyMute();
+            if (!muted) audio();
+        });
+        window.addEventListener('keydown', function (e) {
+            var tag = (e.target && e.target.tagName) || '';
+            if (/^(INPUT|SELECT|TEXTAREA)$/.test(tag)) return;
+            var k = e.key;
+            if (k === 'r' || k === 'R') { playerRoll(); return; }
+            if (k >= '1' && k <= '5') toggleHold(parseInt(k, 10) - 1);
+        });
+
+        // boot
+        $('mode').value = lsGet(K.mode, 'vs') === 'solo' ? 'solo' : 'vs';
+        applyMute();
+        newGame();
+    })();
+    </script>
+</body>
+</html>

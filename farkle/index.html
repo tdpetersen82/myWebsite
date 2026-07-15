@@ -1,0 +1,993 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+    <title>Farkle — Free Online Dice Game vs the Computer | Limestone Games</title>
+    <meta name="description" content="Play Farkle free in your browser. Roll six dice, set aside 1s, 5s and triples, and race the computer to 10,000. Full scoring table and saved stats.">
+    <meta name="keywords" content="farkle, farkle online, play farkle free, farkle scoring, farkle rules, farkle dice game, 10000 dice game, farkle vs computer">
+    <link rel="canonical" href="https://limestonegames.com/farkle/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Farkle","description":"Play Farkle free in your browser — the classic push-your-luck dice game. Roll six dice, bank your points, and race the computer to 10,000.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Farkle"}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "What is a farkle?", "acceptedAnswer": {"@type": "Answer", "text": "A farkle is a roll where none of the dice you just rolled score anything. Your turn ends immediately and you lose every point collected that turn — banked points are always safe."}}, {"@type": "Question", "name": "How much are three pairs worth in Farkle?", "acceptedAnswer": {"@type": "Answer", "text": "Three pairs in a single six-dice roll score 1,500 points. Four of a kind plus a pair also splits into three pairs, so 2-2-3-3-3-3 is worth 1,500."}}, {"@type": "Question", "name": "Do points carry over between turns in Farkle?", "acceptedAnswer": {"@type": "Answer", "text": "Only banked points carry over. Points set aside during a turn are lost if you farkle, and dice combinations must all come from a single roll — you can't build a triple across rolls."}}, {"@type": "Question", "name": "Is there a minimum score to get on the board?", "acceptedAnswer": {"@type": "Answer", "text": "No. This version has no opening minimum — you can bank your very first 50 points. Some house rules require 500 to open; here every bank counts from the start."}}, {"@type": "Question", "name": "Is Farkle free to play?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs. It runs right in your browser and your stats save locally."}}]}</script>
+    <meta property="og:title" content="Farkle — Free Online Dice Game vs the Computer | Limestone Games">
+    <meta property="og:description" content="Roll six dice, bank your points, race the computer to 10,000. Free in your browser.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/farkle/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Farkle — Free Online Dice Game vs the Computer | Limestone Games">
+    <meta name="twitter:description" content="Roll six dice, bank your points, race the computer to 10,000. Free in your browser.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+      :root {
+        --ink: #2A2017;
+        --paper: #F7EFE1;
+        --accent: #B0413E;
+        --accent-deep: #8C2F2D;
+        --good: #2E8B57;
+        --bad: #C0473B;
+        --felt-hi: #3C7259;
+        --felt-lo: #294F3E;
+        --felt-text: #EAF3E7;
+        --die-face-hi: #FFFEF8;
+        --die-face-lo: #F0E7D3;
+        --pip: #2A2017;
+        --die: 58px;
+        --dgap: 5px;
+      }
+      * { box-sizing: border-box; margin: 0; padding: 0; }
+      body {
+        font-family: 'Inter', 'Segoe UI', Tahoma, sans-serif;
+        background: linear-gradient(160deg, #F7EFE1 0%, #E8D9C0 100%);
+        color: var(--ink); min-height: 100vh;
+        display: flex; flex-direction: column; align-items: center; padding: 16px 16px 32px;
+      }
+      .game-shell { width: 100%; max-width: 640px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+      .top-bar {
+        width: 100%; display: flex; align-items: center; gap: 16px; padding: 11px 16px 12px;
+        background: rgba(255,255,255,0.72); backdrop-filter: blur(8px);
+        border: 1px solid color-mix(in oklab, var(--ink) 12%, transparent);
+        border-radius: 16px; box-shadow: 0 10px 28px -16px color-mix(in oklab, var(--ink) 55%, transparent);
+        position: relative; overflow: hidden; flex-wrap: wrap;
+      }
+      .top-bar::after { content:''; position:absolute; left:0; right:0; bottom:0; height:2px; background: linear-gradient(90deg, transparent, var(--accent), transparent); opacity:.6; }
+      .tb-back { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; padding: 7px 13px; border-radius: 10px; border: 1px solid color-mix(in oklab, var(--ink) 18%, transparent); color: var(--ink); text-decoration: none; font-size: 13px; font-weight: 600; transition: border-color .15s, color .15s; }
+      .tb-back:hover { border-color: var(--accent); color: var(--accent); }
+      .tb-title { display: flex; flex-direction: column; gap: 3px; margin-right: auto; }
+      .tb-eyebrow { display: inline-flex; align-items: center; gap: 7px; font-size: 11px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase; color: color-mix(in oklab, var(--ink) 62%, transparent); }
+      .tb-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent); }
+      .tb-title h1 { font-size: 22px; font-weight: 800; letter-spacing: -.01em; }
+      .stats { display: flex; gap: 18px; flex-wrap: wrap; }
+      .stats > div { display: flex; flex-direction: column; gap: 1px; min-width: 48px; }
+      .stats .l { font-size: 10px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: color-mix(in oklab, var(--ink) 55%, transparent); }
+      .stats .v { font-size: 17px; font-weight: 800; font-variant-numeric: tabular-nums; }
+      .stats .v.accent { color: var(--accent); }
+
+      .scoreboard { width: 100%; display: flex; align-items: stretch; gap: 10px; }
+      .sb-card {
+        flex: 1 1 0; display: flex; flex-direction: column; align-items: center; gap: 2px;
+        padding: 9px 10px 10px; border-radius: 13px;
+        background: rgba(255,253,248,0.92);
+        border: 2px solid color-mix(in oklab, var(--ink) 14%, transparent);
+        transition: border-color .2s, box-shadow .2s;
+      }
+      .sb-card.active { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in oklab, var(--accent) 22%, transparent); }
+      .sb-name { font-size: 11px; font-weight: 700; letter-spacing: .07em; text-transform: uppercase; color: color-mix(in oklab, var(--ink) 60%, transparent); }
+      .sb-score { font-size: 24px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.1; }
+      .sb-goal {
+        align-self: center; text-align: center; flex: 0 0 auto; max-width: 150px;
+        font-size: 10.5px; font-weight: 700; letter-spacing: .06em; text-transform: uppercase;
+        color: #F3E8CE; text-shadow: 0 1px 2px rgba(0,0,0,0.35); line-height: 1.45; padding: 0 2px;
+      }
+      .sb-goal b { display: block; font-size: 15px; letter-spacing: .02em; }
+      .sb-goal.final { color: #FFD9A0; }
+
+      .stage-area { width: 560px; max-width: 100%; }
+      .felt {
+        position: relative; width: 100%;
+        display: flex; flex-direction: column; gap: 8px;
+        padding: 12px 10px 10px; border-radius: 16px;
+        background: radial-gradient(120% 130% at 50% -10%, var(--felt-hi) 0%, var(--felt-lo) 78%);
+        border: 1px solid #1E3A2E;
+        box-shadow: inset 0 2px 2px rgba(255,255,255,0.14), inset 0 -8px 18px rgba(0,0,0,0.28), 0 3px 8px rgba(30,40,30,0.25);
+      }
+      .turnline { display: flex; align-items: baseline; justify-content: space-between; gap: 10px; padding: 0 4px; flex-wrap: wrap; }
+      .turnline .who { font-size: 15px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.4); }
+      .turnline .tt { font-size: 12.5px; font-weight: 600; color: var(--felt-text); text-shadow: 0 1px 2px rgba(0,0,0,0.35); font-variant-numeric: tabular-nums; }
+      .turnline .tt b { font-size: 16px; font-weight: 800; color: #FFE9B8; }
+      .turnline .tt .plus { color: #BFE3C8; font-weight: 700; }
+
+      .tray-label {
+        display: flex; align-items: center; justify-content: space-between; gap: 8px; padding: 0 4px;
+        font-size: 10.5px; font-weight: 700; letter-spacing: .09em; text-transform: uppercase;
+        color: color-mix(in srgb, var(--felt-text) 78%, transparent); text-shadow: 0 1px 2px rgba(0,0,0,0.3);
+      }
+      .tray-label .hot { color: #FFD9A0; letter-spacing: .04em; }
+      .tray {
+        display: flex; flex-wrap: wrap; justify-content: center; align-content: center; gap: var(--dgap);
+        min-height: calc(var(--die) + 14px); padding: 6px; border-radius: 12px;
+        background: rgba(0,0,0,0.20);
+        box-shadow: inset 0 2px 5px rgba(0,0,0,0.28), inset 0 -1px 1px rgba(255,255,255,0.08);
+      }
+      .tray-empty { align-self: center; font-size: 12px; font-weight: 600; color: color-mix(in srgb, var(--felt-text) 55%, transparent); }
+
+      .die {
+        width: var(--die); height: var(--die); flex: 0 0 auto;
+        display: grid; grid-template-columns: repeat(3, 1fr); grid-template-rows: repeat(3, 1fr);
+        padding: calc(var(--die) * 0.11); border-radius: 16%;
+        background: linear-gradient(145deg, var(--die-face-hi), var(--die-face-lo));
+        border: 1px solid rgba(42,32,23,0.4);
+        box-shadow: 0 3px 6px rgba(0,0,0,0.35), inset 0 2px 2px rgba(255,255,255,0.9), inset 0 -2px 3px rgba(0,0,0,0.08);
+        cursor: pointer; touch-action: manipulation;
+        transition: transform .12s, box-shadow .15s, opacity .15s;
+      }
+      .die:hover:not(:disabled) { transform: translateY(-2px); }
+      .die:active:not(:disabled) { transform: scale(.94); }
+      .die:disabled { cursor: default; }
+      .die .pip { width: 68%; height: 68%; place-self: center; border-radius: 50%; background: var(--pip); box-shadow: inset 0 1px 1px rgba(0,0,0,0.5); visibility: hidden; }
+      .die .pip.on { visibility: visible; }
+      .die.sel { border: 2px solid var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, #FFD9A0 55%, transparent), 0 4px 8px rgba(0,0,0,0.35); }
+      .die.locked { opacity: .5; transform: scale(.9); box-shadow: 0 1px 3px rgba(0,0,0,0.3); }
+      .die.rolling { animation: tumble .45s ease; }
+      @keyframes tumble {
+        20% { transform: rotate(-14deg) translateY(-7px); }
+        45% { transform: rotate(10deg) translateY(2px); }
+        70% { transform: rotate(-6deg) translateY(-3px); }
+        100% { transform: none; }
+      }
+      .die.suggest { animation: suggest .5s ease 2; }
+      @keyframes suggest { 50% { transform: translateY(-4px); } }
+
+      .readout {
+        min-height: 21px; text-align: center; font-size: 13px; font-weight: 600;
+        color: var(--felt-text); text-shadow: 0 1px 2px rgba(0,0,0,0.35); padding: 0 4px;
+      }
+      .readout.bad { color: #FFC9B8; }
+      .readout b { color: #FFE9B8; }
+
+      .farkle-flash {
+        position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+        pointer-events: none; opacity: 0; z-index: 3;
+      }
+      .farkle-flash span {
+        font-size: 54px; font-weight: 900; letter-spacing: .06em; color: #FF6B57;
+        text-shadow: 0 2px 0 rgba(0,0,0,0.45), 0 0 26px rgba(255,80,60,0.5);
+        transform: rotate(-7deg);
+      }
+      .farkle-flash.show { animation: farkleFlash 1.3s ease forwards; }
+      @keyframes farkleFlash {
+        0% { opacity: 0; transform: scale(.6); }
+        14% { opacity: 1; transform: scale(1.06); }
+        24% { transform: scale(1); }
+        78% { opacity: 1; }
+        100% { opacity: 0; }
+      }
+      .felt.shake { animation: feltShake .4s ease; }
+      @keyframes feltShake {
+        20% { transform: translateX(-5px); } 40% { transform: translateX(4px); }
+        60% { transform: translateX(-3px); } 80% { transform: translateX(2px); }
+      }
+
+      .game-over {
+        position: absolute; inset: 0; z-index: 4; border-radius: 16px;
+        display: flex; align-items: center; justify-content: center; padding: 16px;
+        opacity: 0; pointer-events: none; transition: opacity .25s;
+      }
+      .game-over.show { opacity: 1; pointer-events: auto; }
+      .over-card h2 { font-size: 26px; color: var(--accent); }
+      .over-card p { font-size: 15px; color: color-mix(in oklab, var(--ink) 78%, transparent); text-align: center; }
+
+      .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; align-items: center; }
+      .controls button, .over-card button {
+        font: inherit; font-size: 14px; font-weight: 700;
+        padding: 10px 18px; border-radius: 999px; border: 2px solid transparent;
+        background: var(--accent); color: #fff; cursor: pointer;
+        box-shadow: 0 4px 12px color-mix(in srgb, var(--accent) 32%, transparent);
+        transition: transform .1s, opacity .15s, border-color .15s;
+        touch-action: manipulation;
+      }
+      .controls button:hover:not(:disabled), .over-card button:hover { transform: translateY(-1px); }
+      .controls button:active:not(:disabled) { transform: translateY(1px); }
+      .controls button:disabled { opacity: .45; cursor: default; transform: none; }
+      .controls button.ghost { background: transparent; color: var(--ink); border-color: rgba(42,32,23,0.25); box-shadow: none; }
+      .controls .tag { font-size: 11px; padding: 1px 6px; border-radius: 6px; background: rgba(0,0,0,0.18); margin-left: 4px; }
+      @media (max-width: 540px) {
+        .controls { display: grid; grid-template-columns: 1fr 1fr; width: 100%; }
+        .controls > button { width: 100%; }
+        .controls > button#rollBtn { grid-column: 1 / -1; }
+      }
+
+      .turn { min-height: 20px; font-size: 13.5px; font-weight: 600; text-align: center; max-width: 560px; }
+      .hint { font-size: 12.5px; text-align: center; max-width: 560px; opacity: .92; }
+      .sr-only { position: absolute; width: 1px; height: 1px; padding: 0; margin: -1px; overflow: hidden; clip: rect(0,0,0,0); white-space: nowrap; border: 0; }
+
+      .game-overview .score-table { width: 100%; border-collapse: collapse; margin: 0 0 14px; }
+      .game-overview .score-table th, .game-overview .score-table td { text-align: left; padding: 7px 10px; border-bottom: 1px solid rgba(60,40,20,0.14); }
+      .game-overview .score-table th { color: #7A4B16; font-size: .82em; text-transform: uppercase; letter-spacing: .06em; }
+      .game-overview .score-table td:last-child, .game-overview .score-table th:last-child { text-align: right; font-variant-numeric: tabular-nums; }
+      .game-overview .score-table td:last-child { font-weight: 700; color: #2A1C10; }
+
+      @media (max-width: 420px) {
+        .sb-score { font-size: 20px; }
+        .sb-goal { max-width: 96px; }
+        .farkle-flash span { font-size: 40px; }
+      }
+    </style>
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618c">
+</head>
+<body>
+    <div class="game-shell">
+        <div class="console">
+        <header class="top-bar">
+            <a class="tb-back" href="../strategy/">← Strategy</a>
+            <div class="tb-title">
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Dice game · vs the computer</span>
+                <h1>Farkle</h1>
+            </div>
+            <div class="stats">
+                <div><span class="l">Record</span><span class="v" id="record">0–0</span></div>
+                <div><span class="l">Best turn</span><span class="v accent" id="bestTurn">0</span></div>
+            </div>
+        </header>
+
+        <div class="scoreboard">
+            <div class="sb-card" id="sbYou"><span class="sb-name">You</span><span class="sb-score" id="scoreYou">0</span></div>
+            <div class="sb-goal" id="goalChip">First to<b>10,000</b></div>
+            <div class="sb-card" id="sbCpu"><span class="sb-name">The computer</span><span class="sb-score" id="scoreCpu">0</span></div>
+        </div>
+
+        <div class="stage-area">
+            <div class="felt" id="felt">
+                <div class="turnline">
+                    <span class="who" id="turnWho">Your turn</span>
+                    <span class="tt">Turn total <b id="turnTotal">0</b><span class="plus" id="selNote"></span></span>
+                </div>
+                <div class="tray-label"><span>Your roll</span></div>
+                <div class="tray" id="rollTray" role="group" aria-label="Rolled dice — select scoring dice"><span class="tray-empty">Roll to start your turn</span></div>
+                <div class="tray-label"><span>Set aside this turn</span><span class="hot" id="hotChip"></span></div>
+                <div class="tray" id="asideTray" role="group" aria-label="Dice set aside this turn"><span class="tray-empty">Nothing set aside yet</span></div>
+                <div class="readout" id="readout">Roll the dice — 1s and 5s always score.</div>
+                <div class="farkle-flash" id="farkleFlash" aria-hidden="true"><span>FARKLE!</span></div>
+                <div class="game-over" id="over">
+                    <div class="over-card">
+                        <h2 id="overTitle">You win!</h2>
+                        <p id="overText"></p>
+                        <button id="overBtn">New game</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="rollBtn" aria-label="Roll the dice">Roll 6 dice</button>
+            <button id="bankBtn" aria-label="Bank your turn total">Bank</button>
+            <button id="bestBtn" class="ghost" title="Select the highest-scoring dice (P)">Best pick</button>
+            <button id="newBtn" class="ghost">New game</button>
+            <button id="muteBtn" class="ghost" title="Toggle sound"><span id="muteIcon">🔊</span> Sound <span class="tag" id="muteState">On</span></button>
+        </div>
+
+        <div class="turn" id="status">Your turn — roll all six dice.</div>
+        <p class="hint">Tap dice from your roll to set them aside, then roll the rest or bank. Keys: <b>R</b> roll · <b>B</b> bank · <b>P</b> best pick · <b>1–6</b> pick dice.</p>
+        </div>
+
+        <div class="sr-only" aria-live="polite" id="live"></div>
+
+        <section class="game-overview" aria-label="About Farkle">
+            <h2>How to play Farkle online</h2>
+            <p>Farkle is the classic push-your-luck dice game, also known as 10,000. Roll six dice, set aside the ones that score, and decide: bank your points and stay safe, or roll again and risk losing the lot to a farkle. In this free browser version you race the computer to 10,000 points &mdash; no downloads, no signup, and your stats save locally.</p>
+
+            <h3>Farkle rules</h3>
+            <ul>
+                <li><b>The race.</b> You and the computer take turns; the first player to bank 10,000 points triggers the endgame. The other side then gets exactly one final turn to beat that total &mdash; the higher score wins. You roll first.</li>
+                <li><b>Your turn.</b> Roll all six dice. After every roll you must set aside at least one scoring die or combination. Then choose: roll the remaining dice to build your turn total, or bank it.</li>
+                <li><b>Farkle.</b> If a roll contains no scoring dice at all, that's a farkle &mdash; your turn ends instantly and every unbanked point from the turn is lost.</li>
+                <li><b>Hot dice.</b> If all six dice end up set aside as scorers, they all come back and the turn keeps going with your total intact.</li>
+                <li><b>One roll at a time.</b> Combinations must come from a single roll. Two 4s kept earlier plus a 4 rolled later do not make three of a kind.</li>
+                <li><b>No minimum to open.</b> There's no minimum score to get on the board &mdash; you can bank your very first 50 points.</li>
+            </ul>
+
+            <h3>Farkle scoring table</h3>
+            <table class="score-table">
+                <thead><tr><th scope="col">Dice</th><th scope="col">Points</th></tr></thead>
+                <tbody>
+                    <tr><td>Single 1</td><td>100</td></tr>
+                    <tr><td>Single 5</td><td>50</td></tr>
+                    <tr><td>Three 1s</td><td>1,000</td></tr>
+                    <tr><td>Three of a kind (2s&ndash;6s)</td><td>face &times; 100</td></tr>
+                    <tr><td>Four of a kind</td><td>1,000</td></tr>
+                    <tr><td>Five of a kind</td><td>2,000</td></tr>
+                    <tr><td>Six of a kind</td><td>3,000</td></tr>
+                    <tr><td>Straight 1-2-3-4-5-6</td><td>1,500</td></tr>
+                    <tr><td>Three pairs</td><td>1,500</td></tr>
+                </tbody>
+            </table>
+            <p>No other combinations score: 2s, 3s, 4s and 6s are worthless outside a three-of-a-kind, straight or three pairs. So three 2s are 200 points, three 6s are 600, and a lone 2 is never a legal keep. A few rulings this game applies:</p>
+            <ul>
+                <li><b>The highest reading always counts.</b> Four 1s score 1,100 (three 1s plus a single 1) because that beats the flat 1,000 for four of a kind. The selection read-out and "Best pick" always use the top interpretation.</li>
+                <li><b>Three pairs must be pairs.</b> 2-2-3-3-3-3 splits into three matching pairs, so it scores 1,500. But 4-4-4-5-5-5 has no third matching pair &mdash; it scores as two triples, 400 + 500 = 900.</li>
+                <li><b>Straights and three pairs use all six dice</b> from one roll &mdash; there are no partial straights.</li>
+            </ul>
+
+            <h3>Farkle strategy and tips</h3>
+            <ul>
+                <li><b>Respect the odds.</b> One die farkles about 67% of the time, two dice 44%, three dice 28%. With one or two dice left and 300+ on the table, banking is usually right.</li>
+                <li><b>Don't keep every 5.</b> A lone 5 is worth 50 but costs a die. Rolling 1-5-2-2-3-4, keeping just the 1 and re-rolling five dice usually beats keeping both.</li>
+                <li><b>Press hot dice.</b> A fresh set of six farkles barely 2% of the time &mdash; when all six come back, rolling again is almost always worth it.</li>
+                <li><b>Play the scoreboard.</b> Bank early to protect a lead; press harder when you're behind or when the computer is closing in on 10,000. Steady 300s lose to one big turn.</li>
+                <li><b>The final turn is different.</b> If the computer banks 10,000 first, banking less than its total is worthless &mdash; keep rolling until you pass it or farkle trying.</li>
+            </ul>
+
+            <h3>About Farkle</h3>
+            <p>Farkle is a folk dice game with centuries of history and a dozen names &mdash; 10,000, Zilch, Hot Dice, Greed &mdash; played with nothing but six dice and nerve. Nobody knows exactly where it started; versions of the "keep scoring dice, dare another roll" idea appear in dice games across Europe going back to the middle ages. Commercial boxed versions appeared in the 1980s, but the game has always spread the old way: someone teaches you at a kitchen table, and you lose your first 500 points to greed. Its blend of simple scoring and brutal push-your-luck decisions makes it one of the best pure dice games ever devised.</p>
+
+            <h3>Frequently asked</h3>
+            <p><b>What is a farkle?</b> A farkle is a roll where none of the dice you just rolled score anything. Your turn ends immediately and you lose every point collected that turn &mdash; banked points are always safe.</p>
+            <p><b>How much are three pairs worth in Farkle?</b> Three pairs in a single six-dice roll score 1,500 points. Four of a kind plus a pair also splits into three pairs, so 2-2-3-3-3-3 is worth 1,500.</p>
+            <p><b>Do points carry over between turns in Farkle?</b> Only banked points carry over. Points set aside during a turn are lost if you farkle, and dice combinations must all come from a single roll &mdash; you can't build a triple across rolls.</p>
+            <p><b>Is there a minimum score to get on the board?</b> No. This version has no opening minimum &mdash; you can bank your very first 50 points. Some house rules require 500 to open; here every bank counts from the start.</p>
+            <p><b>Is Farkle free to play?</b> Yes &mdash; no signup, no downloads, no installs. It runs right in your browser and your stats save locally.</p>
+
+            <h3>More strategy games</h3>
+            <ul class="related-games-list">
+                <li><a href="../yahtzee/">Yahtzee</a></li>
+                <li><a href="../backgammon/">Backgammon</a></li>
+                <li><a href="../hangman/">Hangman</a></li>
+                <li><a href="../strategy/">All strategy games &rarr;</a></li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+    'use strict';
+    (function () {
+    // ===== FARKLE CORE (pure logic — no DOM; node tests extract this block verbatim) =====
+    const GOAL = 10000;
+
+    // Every knob the computer plays by lives here.
+    const CPU_TUNING = {
+        // Bank once the turn total reaches this, indexed by dice left to roll.
+        bankAt: { 1: 250, 2: 300, 3: 500, 4: 700, 5: 950, 6: 950 },
+        behindBy: 1500,  behindMult: 1.5,   // press harder when trailing by this much
+        dangerAt: 8500,  dangerMult: 2,     // press much harder when the opponent nears the goal
+        pFarkle:    [0, 0.6667, 0.4444, 0.2778, 0.1574, 0.0772, 0.0231], // farkle odds by dice rolled
+        expectGain: [0, 75, 110, 160, 210, 270, 400], // rough value of one more roll, by dice
+        maxRolls: 200 // hard safety cap per turn
+    };
+
+    const TRIPLE_SCORE = [0, 1000, 200, 300, 400, 500, 600]; // three of a kind, by face
+    const KIND_SCORE = [0, 0, 0, 0, 1000, 2000, 3000];       // four/five/six of a kind
+
+    function countsOf(dice) { const c = [0, 0, 0, 0, 0, 0, 0]; for (let i = 0; i < dice.length; i++) c[dice[i]]++; return c; }
+    function totalOf(counts) { let t = 0; for (let f = 1; f <= 6; f++) t += counts[f]; return t; }
+    function diceOf(counts) { const d = []; for (let f = 1; f <= 6; f++) for (let n = 0; n < counts[f]; n++) d.push(f); return d; }
+
+    // Max score if every die decomposes into scoring units (singles / 3+ of a kind); -1 if not.
+    function decompose(counts, memo) {
+        const key = counts.join('');
+        if (memo[key] !== undefined) return memo[key];
+        let f = 0;
+        for (let i = 1; i <= 6; i++) { if (counts[i] > 0) { f = i; break; } }
+        if (!f) { memo[key] = 0; return 0; }
+        let best = -1;
+        const c = counts[f];
+        function take(n, pts) {
+            const next = counts.slice(); next[f] -= n;
+            const sub = decompose(next, memo);
+            if (sub >= 0 && pts + sub > best) best = pts + sub;
+        }
+        if (f === 1) take(1, 100);
+        if (f === 5) take(1, 50);
+        if (c >= 3) take(3, TRIPLE_SCORE[f]);
+        if (c >= 4) take(4, KIND_SCORE[4]);
+        if (c >= 5) take(5, KIND_SCORE[5]);
+        if (c >= 6) take(6, KIND_SCORE[6]);
+        memo[key] = best;
+        return best;
+    }
+
+    function sixDiceCombos(counts) {
+        let straight = true, threePairs = true;
+        for (let f = 1; f <= 6; f++) {
+            if (counts[f] !== 1) straight = false;
+            if (counts[f] % 2 !== 0) threePairs = false;
+        }
+        return { straight: straight, threePairs: threePairs };
+    }
+
+    // Score a selection: valid only if EVERY selected die scores. Max-scoring interpretation.
+    function fullScore(counts) {
+        const total = totalOf(counts);
+        if (!total) return { score: 0, valid: false };
+        let best = decompose(counts, {});
+        if (total === 6) {
+            const six = sixDiceCombos(counts);
+            if (six.straight && best < 1500) best = 1500;
+            if (six.threePairs && best < 1500) best = 1500;
+        }
+        return best > 0 ? { score: best, valid: true } : { score: 0, valid: false };
+    }
+
+    // Farkle check: does this roll contain any scoring die or combination?
+    function hasAnyScore(counts) {
+        if (counts[1] > 0 || counts[5] > 0) return true;
+        for (let f = 2; f <= 6; f++) if (counts[f] >= 3) return true;
+        if (totalOf(counts) === 6) {
+            const six = sixDiceCombos(counts);
+            if (six.straight || six.threePairs) return true;
+        }
+        return false;
+    }
+
+    // Faces that block a selection from scoring (2/3/4/6 in groups under three).
+    function selectionProblems(counts) {
+        const out = [];
+        const bad = [2, 3, 4, 6];
+        for (let i = 0; i < bad.length; i++) {
+            const f = bad[i];
+            if (counts[f] === 1 || counts[f] === 2) out.push({ face: f, count: counts[f] });
+        }
+        return out;
+    }
+
+    // All legal (fully scoring) sub-selections of a roll.
+    function legalSelections(counts) {
+        const out = [];
+        const cur = [0, 0, 0, 0, 0, 0, 0];
+        function rec(f) {
+            if (f === 7) {
+                const s = fullScore(cur);
+                if (s.valid) out.push({ counts: cur.slice(), score: s.score, ndice: totalOf(cur) });
+                return;
+            }
+            for (let n = 0; n <= counts[f]; n++) { cur[f] = n; rec(f + 1); }
+            cur[f] = 0;
+        }
+        rec(1);
+        return out;
+    }
+
+    // Max-scoring selection (ties -> fewer dice, keeping more in hand). Null on a farkle.
+    function bestSelection(counts) {
+        const sels = legalSelections(counts);
+        let best = null;
+        for (let i = 0; i < sels.length; i++) {
+            const s = sels[i];
+            if (!best || s.score > best.score || (s.score === best.score && s.ndice < best.ndice)) best = s;
+        }
+        return best;
+    }
+
+    // Should the computer bank a turn total of t with d dice left to roll?
+    // ctx: { myScore, oppScore, isFinal, target } — target is the score to beat on a final turn.
+    function cpuAssessBank(t, d, hot, ctx) {
+        if (ctx.isFinal) return ctx.myScore + t > ctx.target; // must beat the leader or keep rolling
+        if (ctx.myScore + t >= GOAL) return true;             // crossing the line: bank it
+        if (hot) return false;                                // always press hot dice
+        let th = CPU_TUNING.bankAt[d] || 300;
+        if (ctx.oppScore - ctx.myScore >= CPU_TUNING.behindBy) th = Math.round(th * CPU_TUNING.behindMult);
+        if (ctx.oppScore >= CPU_TUNING.dangerAt) th = Math.round(th * CPU_TUNING.dangerMult);
+        return t >= th;
+    }
+
+    // Pick which dice the computer sets aside from a scoring roll.
+    function cpuChooseKeep(rollCounts, turnTotal, diceLeft, ctx) {
+        const sels = legalSelections(rollCounts);
+        let best = null, bestVal = -Infinity;
+        for (let i = 0; i < sels.length; i++) {
+            const s = sels[i];
+            const t2 = turnTotal + s.score;
+            let d2 = diceLeft - s.ndice;
+            const hot = d2 === 0;
+            if (hot) d2 = 6;
+            const banks = cpuAssessBank(t2, d2, hot, ctx);
+            const val = banks ? t2 : (1 - CPU_TUNING.pFarkle[d2]) * (t2 + CPU_TUNING.expectGain[d2]);
+            if (val > bestVal + 1e-9 ||
+                (val > bestVal - 1e-9 && best && (s.score > best.score || (s.score === best.score && s.ndice < best.ndice)))) {
+                best = s; bestVal = val;
+            }
+        }
+        return best;
+    }
+
+    // Play out one full computer turn. Returns { points, farkled, steps, rolls };
+    // steps is a replayable log: roll / keep / farkle / bank.
+    function cpuPlayTurn(ctx, rng) {
+        let turnTotal = 0, diceLeft = 6, rolls = 0;
+        const steps = [];
+        for (;;) {
+            rolls++;
+            if (rolls > CPU_TUNING.maxRolls) {
+                steps.push({ type: 'bank', points: turnTotal });
+                return { points: turnTotal, farkled: false, steps: steps, rolls: rolls };
+            }
+            const dice = [];
+            for (let i = 0; i < diceLeft; i++) dice.push(1 + Math.floor(rng() * 6));
+            steps.push({ type: 'roll', dice: dice.slice() });
+            const counts = countsOf(dice);
+            if (!hasAnyScore(counts)) {
+                steps.push({ type: 'farkle', lost: turnTotal });
+                return { points: 0, farkled: true, steps: steps, rolls: rolls };
+            }
+            const keep = cpuChooseKeep(counts, turnTotal, diceLeft, ctx);
+            turnTotal += keep.score;
+            diceLeft -= keep.ndice;
+            const hot = diceLeft === 0;
+            if (hot) diceLeft = 6;
+            steps.push({ type: 'keep', counts: keep.counts, score: keep.score, turnTotal: turnTotal, hot: hot });
+            if (cpuAssessBank(turnTotal, diceLeft, hot, ctx)) {
+                steps.push({ type: 'bank', points: turnTotal });
+                return { points: turnTotal, farkled: false, steps: steps, rolls: rolls };
+            }
+        }
+    }
+
+    // Match state. Player 0 = you, player 1 = the computer.
+    function newMatch() { return { scores: [0, 0], current: 0, final: null, over: false, winner: null, turns: 0 }; }
+
+    // Apply the end of the current player's turn (points = banked total, 0 on a farkle).
+    // Handles the final round: first bank >= GOAL gives the opponent exactly one reply
+    // turn; after that reply the higher total wins (the first to the goal wins ties).
+    function settleTurnEnd(match, points) {
+        const p = match.current;
+        match.scores[p] += points;
+        match.turns++;
+        if (match.final) {
+            if (p === match.final.challenger) {
+                match.over = true;
+                const a = match.scores[0], b = match.scores[1];
+                match.winner = a === b ? match.final.leader : (a > b ? 0 : 1);
+            } else {
+                match.current = 1 - p;
+            }
+        } else if (match.scores[p] >= GOAL) {
+            match.final = { leader: p, challenger: 1 - p };
+            match.current = 1 - p;
+        } else {
+            match.current = 1 - p;
+        }
+        return match;
+    }
+    // ===== END FARKLE CORE =====
+
+    // ===== UI =====
+    const $ = (id) => document.getElementById(id);
+    const feltEl = $('felt'), rollTrayEl = $('rollTray'), asideTrayEl = $('asideTray');
+    const readoutEl = $('readout'), statusEl = $('status'), liveEl = $('live');
+    const rollBtn = $('rollBtn'), bankBtn = $('bankBtn'), bestBtn = $('bestBtn');
+
+    let reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    if (window.matchMedia) { try { window.matchMedia('(prefers-reduced-motion: reduce)').addEventListener('change', (e) => { reduceMotion = e.matches; }); } catch (e) {} }
+
+    // localStorage
+    function lsGet(k, fb) { try { const v = localStorage.getItem(k); return v == null ? fb : v; } catch (e) { return fb; } }
+    function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+    function lsNum(k) { const v = parseInt(lsGet(k, '0'), 10); return isNaN(v) ? 0 : v; }
+    const K = { high: 'farkleHighScore', wins: 'farkleWins', games: 'farkleGames', mute: 'farkleMute' };
+
+    // audio
+    let actx = null, muted = lsGet(K.mute, '0') === '1';
+    function audio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (actx && actx.state === 'suspended') actx.resume(); return actx; }
+    function tone(freqs, dur, type) {
+        if (muted) return; const ac = audio(); if (!ac) return;
+        freqs.forEach((f, i) => { const o = ac.createOscillator(), g = ac.createGain(); o.type = type || 'sine'; o.frequency.value = f; const t = ac.currentTime + i * 0.08; g.gain.setValueAtTime(0.0001, t); g.gain.exponentialRampToValueAtTime(0.15, t + 0.02); g.gain.exponentialRampToValueAtTime(0.0001, t + dur); o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur); });
+    }
+    const sndRoll = () => tone([170, 210, 185], 0.09, 'triangle');
+    const sndPick = () => tone([620], 0.07);
+    const sndUnpick = () => tone([430], 0.07);
+    const sndBank = () => tone([523, 659, 784], 0.16);
+    const sndHot = () => tone([660, 880], 0.12);
+    const sndFarkle = () => tone([311, 247, 185], 0.24, 'triangle');
+    const sndWin = () => tone([523, 659, 784, 1047], 0.22);
+    const sndLose = () => tone([392, 311, 247], 0.28, 'triangle');
+
+    // state
+    let match = newMatch();
+    let dice = [];          // this turn's dice: { face, state: 'roll' | 'sel' | 'locked' }
+    let lockedScore = 0;    // set-aside score this turn (excludes current selection)
+    let hotCount = 0;       // hot-dice resets this turn
+    let phase = 'preroll';  // preroll | select | anim | cpu | over
+    let gen = 0;            // generation token: bumping it cancels pending timeouts
+
+    const fmt = (n) => n.toLocaleString('en-US');
+    const PIPS = { 1: [4], 2: [2, 6], 3: [2, 4, 6], 4: [0, 2, 6, 8], 5: [0, 2, 4, 6, 8], 6: [0, 2, 3, 5, 6, 8] };
+
+    function later(ms, fn) { const g = gen; setTimeout(() => { if (g === gen) fn(); }, ms); }
+
+    function selCounts() { return countsOf(dice.filter(d => d.state === 'sel').map(d => d.face)); }
+    function unlocked() { return dice.filter(d => d.state !== 'locked'); }
+
+    function makeDie(d, i, clickable) {
+        const b = document.createElement('button');
+        b.className = 'die' + (d.state === 'sel' ? ' sel' : '') + (d.state === 'locked' ? ' locked' : '') + (d.justRolled && !reduceMotion ? ' rolling' : '');
+        b.dataset.i = i;
+        for (let c = 0; c < 9; c++) {
+            const p = document.createElement('span');
+            p.className = 'pip' + (PIPS[d.face].indexOf(c) >= 0 ? ' on' : '');
+            b.appendChild(p);
+        }
+        if (d.state === 'locked') {
+            b.disabled = true;
+            b.setAttribute('aria-label', 'Die showing ' + d.face + ', locked in');
+        } else if (!clickable) {
+            b.disabled = true;
+            b.setAttribute('aria-label', 'Die showing ' + d.face);
+        } else if (d.state === 'sel') {
+            b.setAttribute('aria-label', 'Die showing ' + d.face + ', set aside — press to return it to the roll');
+            b.addEventListener('click', () => toggleDie(i));
+        } else {
+            b.setAttribute('aria-label', 'Die showing ' + d.face + ' — press to set it aside');
+            b.addEventListener('click', () => toggleDie(i));
+        }
+        return b;
+    }
+
+    function renderDice() {
+        const clickable = phase === 'select';
+        rollTrayEl.innerHTML = '';
+        asideTrayEl.innerHTML = '';
+        let rolls = 0, asides = 0;
+        dice.forEach((d, i) => {
+            if (d.state === 'roll') { rollTrayEl.appendChild(makeDie(d, i, clickable)); rolls++; }
+        });
+        dice.forEach((d, i) => {
+            if (d.state === 'locked') { asideTrayEl.appendChild(makeDie(d, i, clickable)); asides++; }
+        });
+        dice.forEach((d, i) => {
+            if (d.state === 'sel') { asideTrayEl.appendChild(makeDie(d, i, clickable)); asides++; }
+        });
+        if (!rolls) rollTrayEl.innerHTML = '<span class="tray-empty">' + (phase === 'preroll' ? 'Roll to start your turn' : 'No dice in the roll') + '</span>';
+        if (!asides) asideTrayEl.innerHTML = '<span class="tray-empty">Nothing set aside yet</span>';
+        dice.forEach(d => { d.justRolled = false; });
+        $('hotChip').textContent = hotCount > 0 ? '🔥 Hot dice ×' + hotCount : '';
+    }
+
+    function renderScores() {
+        $('scoreYou').textContent = fmt(match.scores[0]);
+        $('scoreCpu').textContent = fmt(match.scores[1]);
+        $('sbYou').classList.toggle('active', !match.over && match.current === 0);
+        $('sbCpu').classList.toggle('active', !match.over && match.current === 1);
+        const goal = $('goalChip');
+        if (match.final && !match.over) {
+            goal.classList.add('final');
+            goal.innerHTML = 'Final turn<b>beat ' + fmt(match.scores[match.final.leader]) + '</b>';
+        } else {
+            goal.classList.remove('final');
+            goal.innerHTML = 'First to<b>10,000</b>';
+        }
+    }
+
+    function refreshStats() {
+        const wins = lsNum(K.wins), games = lsNum(K.games);
+        $('record').textContent = wins + '–' + Math.max(0, games - wins);
+        $('bestTurn').textContent = fmt(lsNum(K.high));
+    }
+
+    function describeFaces(counts) {
+        return diceOf(counts).join('-');
+    }
+
+    function updateSelection() {
+        const sc = selCounts();
+        const nSel = totalOf(sc);
+        const inRoll = dice.filter(d => d.state === 'roll').length;
+        const result = fullScore(sc);
+        let bankable = 0;
+        if (nSel === 0) {
+            readoutEl.className = 'readout';
+            readoutEl.textContent = phase === 'select' ? 'Tap dice to set them aside — 1s and 5s always score.' : (phase === 'cpu' ? 'The computer is playing…' : (phase === 'anim' ? 'Rolling…' : 'Roll the dice — 1s and 5s always score.'));
+            rollBtn.disabled = phase !== 'preroll';
+            bankBtn.disabled = true;
+            rollBtn.textContent = phase === 'preroll' ? 'Roll 6 dice' : 'Roll';
+            bankBtn.textContent = 'Bank';
+            $('selNote').textContent = '';
+        } else if (result.valid) {
+            readoutEl.className = 'readout';
+            readoutEl.innerHTML = 'Set aside ' + describeFaces(sc) + ' — worth <b>' + fmt(result.score) + '</b>';
+            rollBtn.disabled = false;
+            bankBtn.disabled = false;
+            rollBtn.textContent = inRoll === 0 ? 'Hot dice — roll all 6' : 'Roll ' + inRoll + (inRoll === 1 ? ' die' : ' dice');
+            bankable = lockedScore + result.score;
+            bankBtn.textContent = 'Bank ' + fmt(bankable);
+            $('selNote').textContent = ' +' + fmt(result.score);
+        } else {
+            readoutEl.className = 'readout bad';
+            const probs = selectionProblems(sc);
+            const parts = probs.map(p => (p.count === 1 ? 'a lone ' + p.face : 'two ' + p.face + 's'));
+            readoutEl.textContent = (parts.length ? parts.join(' and ').replace(/^a/, 'A') + " won't score — 2s, 3s, 4s and 6s need three or more of a kind." : "That selection doesn't score.");
+            rollBtn.disabled = true;
+            bankBtn.disabled = true;
+            rollBtn.textContent = 'Roll';
+            bankBtn.textContent = 'Bank';
+            $('selNote').textContent = '';
+        }
+        bestBtn.disabled = phase !== 'select';
+        $('turnTotal').textContent = fmt(lockedScore);
+        bestBtn.setAttribute('aria-label', 'Select the highest-scoring dice');
+    }
+
+    function setTurnWho() {
+        const who = $('turnWho');
+        if (match.over) { who.textContent = 'Game over'; return; }
+        if (match.current === 0) who.textContent = match.final ? 'Your final turn' : 'Your turn';
+        else who.textContent = match.final ? "The computer's final turn" : "The computer's turn";
+    }
+
+    function setStatus(msg) { statusEl.textContent = msg; }
+    function announce(msg) { liveEl.textContent = msg; }
+
+    function toggleDie(i) {
+        if (phase !== 'select') return;
+        const d = dice[i];
+        if (!d || d.state === 'locked') return;
+        audio();
+        if (d.state === 'roll') { d.state = 'sel'; sndPick(); }
+        else { d.state = 'roll'; sndUnpick(); }
+        renderDice();
+        updateSelection();
+    }
+
+    function bestPick() {
+        if (phase !== 'select') return;
+        const pool = unlocked();
+        const best = bestSelection(countsOf(pool.map(d => d.face)));
+        if (!best) return;
+        const need = best.counts.slice();
+        dice.forEach(d => { if (d.state === 'sel') d.state = 'roll'; });
+        dice.forEach(d => {
+            if (d.state === 'roll' && need[d.face] > 0) { d.state = 'sel'; need[d.face]--; }
+        });
+        sndPick();
+        renderDice();
+        updateSelection();
+        if (!reduceMotion) asideTrayEl.querySelectorAll('.die.sel').forEach(el => el.classList.add('suggest'));
+        announce('Best pick selected: ' + describeFaces(selCounts()) + '.');
+    }
+
+    function startPlayerTurn() {
+        phase = 'preroll';
+        dice = []; lockedScore = 0; hotCount = 0;
+        setTurnWho(); renderScores(); renderDice(); updateSelection();
+        if (match.final) setStatus('Final turn — bank more than ' + fmt(match.scores[match.final.leader]) + ' to win!');
+        else setStatus('Your turn — roll all six dice.');
+    }
+
+    function playerRoll() {
+        if (phase === 'select') {
+            const sc = selCounts();
+            const result = fullScore(sc);
+            if (!result.valid) return;
+            lockedScore += result.score;
+            dice.forEach(d => { if (d.state === 'sel') d.state = 'locked'; });
+            if (dice.every(d => d.state === 'locked')) {
+                hotCount++;
+                dice = [];
+                sndHot();
+                setStatus('Hot dice! All six come back — turn total stays at ' + fmt(lockedScore) + '.');
+            }
+        } else if (phase !== 'preroll') return;
+        phase = 'anim';
+        audio();
+        const rollCount = dice.length ? dice.filter(d => d.state === 'roll').length : 6;
+        if (!dice.length) for (let i = 0; i < 6; i++) dice.push({ face: 1, state: 'roll' });
+        dice.forEach(d => { if (d.state === 'roll') { d.face = 1 + Math.floor(Math.random() * 6); d.justRolled = true; } });
+        sndRoll();
+        renderDice(); updateSelection();
+        later(reduceMotion ? 60 : 460, () => {
+            const rolled = dice.filter(d => d.state === 'roll').map(d => d.face);
+            const counts = countsOf(rolled);
+            announce('You rolled ' + rolled.join(', ') + '.');
+            if (!hasAnyScore(counts)) {
+                farkleMoment(true);
+            } else {
+                phase = 'select';
+                renderDice(); updateSelection();
+                setStatus(rollCount === 6 && lockedScore === 0 ? 'Set aside at least one scoring die, then roll again or bank.' : 'Keep building or bank it — a farkle loses ' + fmt(lockedScore) + '.');
+            }
+        });
+    }
+
+    function farkleMoment(isPlayer) {
+        sndFarkle();
+        const flash = $('farkleFlash');
+        flash.classList.remove('show');
+        void flash.offsetWidth;
+        flash.classList.add('show');
+        if (!reduceMotion) { feltEl.classList.remove('shake'); void feltEl.offsetWidth; feltEl.classList.add('shake'); }
+        if (isPlayer) {
+            const lost = lockedScore;
+            setStatus(lost > 0 ? 'Farkle! No scoring dice — ' + fmt(lost) + ' points slip away.' : 'Farkle! No scoring dice this time.');
+            announce('Farkle. Turn over.' + (lost > 0 ? ' You lose ' + fmt(lost) + ' unbanked points.' : ''));
+            later(1500, () => { settleTurnEnd(match, 0); afterPlayerTurn(); });
+        }
+    }
+
+    function playerBank() {
+        if (phase !== 'select') return;
+        const sc = selCounts();
+        const result = fullScore(sc);
+        if (!result.valid) return;
+        const banked = lockedScore + result.score;
+        dice.forEach(d => { if (d.state === 'sel') d.state = 'locked'; });
+        lockedScore = banked;
+        sndBank();
+        let msg = 'You bank ' + fmt(banked) + '.';
+        if (banked > lsNum(K.high)) { lsSet(K.high, banked); msg += ' New best turn!'; refreshStats(); }
+        settleTurnEnd(match, banked);
+        setStatus(msg);
+        announce(msg);
+        phase = 'anim';
+        renderDice(); renderScores(); updateSelection();
+        later(900, afterPlayerTurn);
+    }
+
+    function afterPlayerTurn() {
+        renderScores();
+        if (match.over) { gameOver(); return; }
+        if (match.final && match.final.challenger === 1) {
+            setStatus('You bank ' + fmt(match.scores[0]) + ' — the computer gets one last turn to beat you.');
+            announce(statusEl.textContent);
+            later(1600, startCpuTurn);
+            return;
+        }
+        startCpuTurn();
+    }
+
+    // Replay a computed computer turn step by step so its decisions are visible.
+    function startCpuTurn() {
+        phase = 'cpu';
+        dice = []; lockedScore = 0; hotCount = 0;
+        setTurnWho(); renderScores(); renderDice(); updateSelection();
+        const ctx = {
+            myScore: match.scores[1], oppScore: match.scores[0],
+            isFinal: !!(match.final && match.final.challenger === 1),
+            target: match.scores[0]
+        };
+        const res = cpuPlayTurn(ctx, Math.random);
+        let firstRoll = true;
+        const steps = res.steps.slice();
+        function next(delay) {
+            later(delay, () => {
+                const st = steps.shift();
+                if (!st) return;
+                if (st.type === 'roll') {
+                    dice = dice.filter(d => d.state === 'locked');
+                    st.dice.forEach(f => dice.push({ face: f, state: 'roll', justRolled: true }));
+                    sndRoll();
+                    renderDice();
+                    setStatus(firstRoll ? 'The computer rolls all six dice.' : 'The computer rolls ' + st.dice.length + (st.dice.length === 1 ? ' die.' : ' dice.'));
+                    firstRoll = false;
+                    next(reduceMotion ? 500 : 950);
+                } else if (st.type === 'keep') {
+                    const need = st.counts.slice();
+                    dice.forEach(d => {
+                        if (d.state === 'roll' && need[d.face] > 0) { d.state = 'locked'; need[d.face]--; }
+                    });
+                    lockedScore = st.turnTotal;
+                    let msg = 'The computer sets aside ' + describeFaces(st.counts) + ' for ' + fmt(st.score) + ' — turn total ' + fmt(st.turnTotal) + '.';
+                    if (st.hot) {
+                        hotCount++;
+                        dice = [];
+                        sndHot();
+                        msg += ' Hot dice — all six come back!';
+                    }
+                    renderDice();
+                    $('turnTotal').textContent = fmt(lockedScore);
+                    setStatus(msg);
+                    announce(msg);
+                    next(950);
+                } else if (st.type === 'farkle') {
+                    farkleMoment(false);
+                    const msg = st.lost > 0 ? 'Farkle! The computer loses ' + fmt(st.lost) + '.' : 'Farkle! The computer comes up empty.';
+                    setStatus(msg);
+                    announce(msg);
+                    later(1500, () => { settleTurnEnd(match, 0); afterCpuTurn(); });
+                } else if (st.type === 'bank') {
+                    sndBank();
+                    const msg = 'The computer banks ' + fmt(st.points) + '.';
+                    setStatus(msg);
+                    announce(msg);
+                    settleTurnEnd(match, st.points);
+                    renderScores();
+                    later(1100, afterCpuTurn);
+                }
+            });
+        }
+        next(reduceMotion ? 300 : 750);
+    }
+
+    function afterCpuTurn() {
+        renderScores();
+        if (match.over) { gameOver(); return; }
+        if (match.final && match.final.challenger === 0) {
+            startPlayerTurn();
+            setStatus('The computer has ' + fmt(match.scores[1]) + '. Final turn — bank more than that to win!');
+            return;
+        }
+        startPlayerTurn();
+    }
+
+    function gameOver() {
+        phase = 'over';
+        setTurnWho(); renderScores();
+        const youWin = match.winner === 0;
+        lsSet(K.games, lsNum(K.games) + 1);
+        if (youWin) lsSet(K.wins, lsNum(K.wins) + 1);
+        refreshStats();
+        $('overTitle').textContent = youWin ? 'You win! 🎉' : 'The computer wins';
+        $('overText').textContent = 'Final score ' + fmt(match.scores[0]) + ' – ' + fmt(match.scores[1]) + '.' + (youWin ? '' : ' One more roll of the dice?');
+        $('over').classList.add('show');
+        rollBtn.disabled = true; bankBtn.disabled = true; bestBtn.disabled = true;
+        if (youWin) sndWin(); else sndLose();
+        setStatus(youWin ? 'You win ' + fmt(match.scores[0]) + ' to ' + fmt(match.scores[1]) + '!' : 'The computer wins ' + fmt(match.scores[1]) + ' to ' + fmt(match.scores[0]) + '.');
+        announce(statusEl.textContent);
+        setTimeout(() => $('overBtn').focus(), 50);
+    }
+
+    function newGame() {
+        gen++;
+        match = newMatch();
+        $('over').classList.remove('show');
+        $('farkleFlash').classList.remove('show');
+        startPlayerTurn();
+        setStatus('New game — your turn. Roll all six dice.');
+    }
+
+    // dice sizing: fit six across the tray, floor 44px so touch targets stay big
+    function fitDice() {
+        const w = rollTrayEl.clientWidth - 12;
+        if (w <= 0) return;
+        let gap = 5;
+        let d = Math.floor((w - 5 * gap) / 6);
+        if (d < 46) { gap = 3; d = Math.floor((w - 5 * gap) / 6); }
+        d = Math.max(44, Math.min(58, d));
+        document.documentElement.style.setProperty('--die', d + 'px');
+        document.documentElement.style.setProperty('--dgap', gap + 'px');
+    }
+    window.addEventListener('resize', fitDice);
+    window.addEventListener('orientationchange', () => setTimeout(fitDice, 60));
+
+    function applyMute() { $('muteState').textContent = muted ? 'Off' : 'On'; $('muteIcon').textContent = muted ? '🔇' : '🔊'; }
+
+    rollBtn.addEventListener('click', playerRoll);
+    bankBtn.addEventListener('click', playerBank);
+    bestBtn.addEventListener('click', bestPick);
+    $('newBtn').addEventListener('click', newGame);
+    $('overBtn').addEventListener('click', newGame);
+    $('muteBtn').addEventListener('click', () => { muted = !muted; lsSet(K.mute, muted ? '1' : '0'); applyMute(); if (!muted) audio(); });
+
+    window.addEventListener('keydown', (e) => {
+        const tag = (e.target && e.target.tagName) || '';
+        if (/^(INPUT|SELECT|TEXTAREA)$/.test(tag)) return;
+        if (tag === 'BUTTON' && (e.key === 'Enter' || e.key === ' ')) return; // native click handles it
+        const k = e.key.toLowerCase();
+        if (phase === 'over' && (e.key === 'Enter' || e.key === ' ')) { e.preventDefault(); newGame(); return; }
+        if (k === 'r' && !rollBtn.disabled) { playerRoll(); return; }
+        if (k === 'b' && !bankBtn.disabled) { playerBank(); return; }
+        if (k === 'p') { bestPick(); return; }
+        if (phase === 'select' && /^[1-6]$/.test(k)) {
+            const rollDice = [];
+            dice.forEach((d, i) => { if (d.state === 'roll') rollDice.push(i); });
+            const n = parseInt(k, 10) - 1;
+            if (n < rollDice.length) toggleDie(rollDice[n]);
+        }
+    });
+
+    // boot
+    applyMute();
+    refreshStats();
+    fitDice();
+    startPlayerTurn();
+    })();
+    </script>
+</body>
+</html>

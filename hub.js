@@ -43,6 +43,8 @@
     'ultimate-tic-tac-toe': 'ultimateTicTacToeHighScore',
     mancala: 'mancalaHighScore',
     hangman: 'hangmanHighScore',
+    yahtzee: 'yahtzeeHighScore',
+    farkle: 'farkleHighScore',
   };
   function getBest(gameId) {
     const key = SCORE_KEYS[gameId];
@@ -96,6 +98,11 @@
     sudoku: '<rect x="8" y="8" width="48" height="48" rx="3" fill="C" opacity="0.12"/><line x1="24" y1="8" x2="24" y2="56" stroke="C" stroke-width="2"/><line x1="40" y1="8" x2="40" y2="56" stroke="C" stroke-width="2"/><line x1="8" y1="24" x2="56" y2="24" stroke="C" stroke-width="2"/><line x1="8" y1="40" x2="56" y2="40" stroke="C" stroke-width="2"/><rect x="8" y="8" width="48" height="48" rx="3" fill="none" stroke="C" stroke-width="2.5"/><text x="16" y="20" font-size="12" font-weight="800" text-anchor="middle" fill="C">5</text><text x="48" y="20" font-size="12" font-weight="800" text-anchor="middle" fill="C">3</text><text x="32" y="36" font-size="12" font-weight="800" text-anchor="middle" fill="C">8</text><text x="16" y="52" font-size="12" font-weight="800" text-anchor="middle" fill="C">7</text><text x="48" y="52" font-size="12" font-weight="800" text-anchor="middle" fill="C">2</text>',
     mahjong: '<rect x="20" y="8" width="24" height="48" rx="4" fill="C" opacity="0.18"/><rect x="20" y="8" width="24" height="48" rx="4" fill="none" stroke="C" stroke-width="2.5"/><circle cx="32" cy="22" r="4" fill="C"/><circle cx="32" cy="34" r="4" fill="C"/><circle cx="32" cy="46" r="3" fill="C" opacity="0.6"/>',
     'solar-system': '<circle cx="32" cy="32" r="7" fill="C"/><circle cx="32" cy="32" r="15" fill="none" stroke="C" stroke-width="2" opacity="0.45"/><circle cx="32" cy="32" r="24" fill="none" stroke="C" stroke-width="2" opacity="0.3"/><circle cx="47" cy="32" r="3.5" fill="C"/><circle cx="32" cy="8" r="3" fill="C" opacity="0.7"/>',
+    'tic-tac-toe': '<path d="M24 8v48M40 8v48M8 24h48M8 40h48" stroke="C" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M11 11l10 10M21 11l-10 10M43 43l10 10M53 43l-10 10" stroke="C" stroke-width="4" stroke-linecap="round" fill="none"/><circle cx="32" cy="32" r="6" stroke="C" stroke-width="4" fill="none"/>',
+    'go-fish': '<path d="M8 34 C16 22 32 18 42 24 C46 27 49 30 50 34 C49 38 46 41 42 44 C32 50 16 46 8 34 Z" fill="none" stroke="C" stroke-width="4" stroke-linejoin="round"/><path d="M50 34 L60 25 L60 43 Z" fill="none" stroke="C" stroke-width="4" stroke-linejoin="round"/><circle cx="19" cy="32" r="2.5" fill="C"/><circle cx="52" cy="13" r="3" fill="none" stroke="C" stroke-width="3"/><circle cx="45" cy="6.5" r="2" fill="none" stroke="C" stroke-width="2.5"/>',
+    'crazy-eights': '<rect x="8" y="16" width="24" height="34" rx="3.5" fill="C" opacity="0.5" transform="rotate(-14 20 33)"/><rect x="26" y="13" width="26" height="38" rx="4" fill="#fff" stroke="C" stroke-width="2.5" transform="rotate(9 39 32)"/><text x="39" y="38" font-size="19" font-weight="800" fill="C" text-anchor="middle" transform="rotate(9 39 32)">8</text>',
+    yahtzee: '<rect x="8" y="8" width="48" height="48" rx="10" fill="none" stroke="C" stroke-width="5"/><circle cx="21" cy="21" r="4.5" fill="C"/><circle cx="43" cy="21" r="4.5" fill="C"/><circle cx="32" cy="32" r="4.5" fill="C"/><circle cx="21" cy="43" r="4.5" fill="C"/><circle cx="43" cy="43" r="4.5" fill="C"/>',
+    farkle: '<rect x="6" y="24" width="28" height="28" rx="7" fill="none" stroke="C" stroke-width="3"/><circle cx="20" cy="38" r="3.4" fill="C"/><g transform="rotate(12 44 24)"><rect x="30" y="10" width="28" height="28" rx="7" fill="none" stroke="C" stroke-width="3"/><circle cx="37" cy="17" r="2.8" fill="C"/><circle cx="51" cy="17" r="2.8" fill="C"/><circle cx="44" cy="24" r="2.8" fill="C"/><circle cx="37" cy="31" r="2.8" fill="C"/><circle cx="51" cy="31" r="2.8" fill="C"/></g>',
   };
 
   function glyph(game, size) {

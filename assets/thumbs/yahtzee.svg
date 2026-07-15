@@ -1,0 +1,73 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Five red dice all showing five on a Yahtzee scorecard">
+  <defs>
+    <linearGradient id="yzbg" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#FBF4E6"/>
+      <stop offset="1" stop-color="#EFE0C6"/>
+    </linearGradient>
+    <linearGradient id="yzdie" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#C64B59"/>
+      <stop offset="1" stop-color="#A33240"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#yzbg)"/>
+
+  <!-- scorecard ruling behind the dice -->
+  <g stroke="#2A2017" stroke-width="3" opacity="0.14">
+    <line x1="0" y1="120" x2="600" y2="120"/>
+    <line x1="0" y1="210" x2="600" y2="210"/>
+    <line x1="0" y1="300" x2="600" y2="300"/>
+    <line x1="0" y1="390" x2="600" y2="390"/>
+    <line x1="0" y1="480" x2="600" y2="480"/>
+    <line x1="428" y1="0" x2="428" y2="600"/>
+    <line x1="514" y1="0" x2="514" y2="600"/>
+  </g>
+
+  <!-- soft shadows under the dice -->
+  <ellipse cx="130" cy="240" rx="80" ry="17" fill="#000" opacity="0.22"/>
+  <ellipse cx="322" cy="212" rx="80" ry="17" fill="#000" opacity="0.22"/>
+  <ellipse cx="496" cy="262" rx="78" ry="16" fill="#000" opacity="0.2"/>
+  <ellipse cx="216" cy="500" rx="80" ry="17" fill="#000" opacity="0.22"/>
+  <ellipse cx="412" cy="512" rx="80" ry="17" fill="#000" opacity="0.2"/>
+
+  <!-- five red dice, every one a 5 -->
+  <g transform="translate(58 100) rotate(-9 70 70)">
+    <rect width="140" height="140" rx="25" fill="url(#yzdie)" stroke="#7E2530" stroke-width="3"/>
+    <g fill="#FFFDF8">
+      <circle cx="38" cy="38" r="13"/><circle cx="102" cy="38" r="13"/>
+      <circle cx="70" cy="70" r="13"/>
+      <circle cx="38" cy="102" r="13"/><circle cx="102" cy="102" r="13"/>
+    </g>
+  </g>
+  <g transform="translate(252 68) rotate(6 70 70)">
+    <rect width="140" height="140" rx="25" fill="url(#yzdie)" stroke="#7E2530" stroke-width="3"/>
+    <g fill="#FFFDF8">
+      <circle cx="38" cy="38" r="13"/><circle cx="102" cy="38" r="13"/>
+      <circle cx="70" cy="70" r="13"/>
+      <circle cx="38" cy="102" r="13"/><circle cx="102" cy="102" r="13"/>
+    </g>
+  </g>
+  <g transform="translate(428 122) rotate(-4 70 70)">
+    <rect width="140" height="140" rx="25" fill="url(#yzdie)" stroke="#7E2530" stroke-width="3"/>
+    <g fill="#FFFDF8">
+      <circle cx="38" cy="38" r="13"/><circle cx="102" cy="38" r="13"/>
+      <circle cx="70" cy="70" r="13"/>
+      <circle cx="38" cy="102" r="13"/><circle cx="102" cy="102" r="13"/>
+    </g>
+  </g>
+  <g transform="translate(144 358) rotate(8 70 70)">
+    <rect width="140" height="140" rx="25" fill="url(#yzdie)" stroke="#7E2530" stroke-width="3"/>
+    <g fill="#FFFDF8">
+      <circle cx="38" cy="38" r="13"/><circle cx="102" cy="38" r="13"/>
+      <circle cx="70" cy="70" r="13"/>
+      <circle cx="38" cy="102" r="13"/><circle cx="102" cy="102" r="13"/>
+    </g>
+  </g>
+  <g transform="translate(340 370) rotate(-12 70 70)">
+    <rect width="140" height="140" rx="25" fill="url(#yzdie)" stroke="#7E2530" stroke-width="3"/>
+    <g fill="#FFFDF8">
+      <circle cx="38" cy="38" r="13"/><circle cx="102" cy="38" r="13"/>
+      <circle cx="70" cy="70" r="13"/>
+      <circle cx="38" cy="102" r="13"/><circle cx="102" cy="102" r="13"/>
+    </g>
+  </g>
+</svg>

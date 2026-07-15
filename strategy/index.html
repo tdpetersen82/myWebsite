@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Limestone Strategy — Chess, Othello, Chinese Checkers &amp; More</title>
-    <meta name="description" content="Free browser strategy &amp; puzzle games — chess, checkers, Othello, Chinese Checkers, Ultimate Tic-Tac-Toe, Mancala, backgammon, Connect 4, Dots &amp; Boxes, Sudoku, Minesweeper, 2048, and Mahjong Solitaire. Full rules, no downloads.">
-    <meta name="keywords" content="chess, checkers, othello, reversi, chinese checkers, ultimate tic-tac-toe, mancala, kalah, backgammon, connect 4, dots and boxes, sudoku, minesweeper, 2048, mahjong solitaire, strategy games, browser strategy games, puzzle games">
+    <meta name="description" content="Free browser strategy &amp; puzzle games — chess, checkers, Othello, Yahtzee, Farkle, Chinese Checkers, Ultimate Tic-Tac-Toe, Mancala, backgammon, Connect 4, Sudoku, Minesweeper, 2048, and Mahjong Solitaire. Full rules, no downloads.">
+    <meta name="keywords" content="chess, checkers, othello, reversi, yahtzee, farkle, chinese checkers, ultimate tic-tac-toe, mancala, kalah, backgammon, connect 4, dots and boxes, sudoku, minesweeper, 2048, mahjong solitaire, strategy games, browser strategy games, puzzle games">
     <meta property="og:title" content="Limestone Strategy — Chess, Othello, Chinese Checkers &amp; More">
     <meta property="og:description" content="Strategy &amp; puzzle games — chess, Othello, Chinese Checkers, Mahjong Solitaire, and more. Three difficulty tiers, full rules, no downloads.">
     <meta property="og:type" content="website">
@@ -238,6 +238,48 @@
             <div class="rule"></div>
         </div>
         <div class="cat-grid two-col">
+
+            <a class="cat-card" href="../yahtzee/">
+                <span class="cat-card-tag">New</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-shot"><img src="../assets/thumbs/yahtzee.svg" alt="" width="600" height="600" loading="lazy"></div>
+                    <div>
+                        <h3>Yahtzee</h3>
+                        <div class="desc">Roll, hold, fill the card. Play solo or against the computer.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Best total</div><div class="v accent" id="card-yahtzee-best">—</div></div>
+                    <div><div class="l">Rounds</div><div class="v sm">13</div></div>
+                    <div><div class="l">Rolls</div><div class="v sm">3/turn</div></div>
+                    <div><div class="l">Modes</div><div class="v sm">2</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Dice classic</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
+
+            <a class="cat-card" href="../farkle/">
+                <span class="cat-card-tag">New</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-shot"><img src="../assets/thumbs/farkle.svg" alt="" width="600" height="600" loading="lazy"></div>
+                    <div>
+                        <h3>Farkle</h3>
+                        <div class="desc">Push your luck to 10,000 against the computer. Bank or bust.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Best turn</div><div class="v accent" id="card-farkle-best">—</div></div>
+                    <div><div class="l">Goal</div><div class="v sm">10,000</div></div>
+                    <div><div class="l">Dice</div><div class="v sm">6</div></div>
+                    <div><div class="l">Hot dice</div><div class="v sm">Yes</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Push your luck</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
 
             <a class="cat-card" href="../word-search/">
                 <span class="cat-card-tag">New</span>
@@ -795,6 +837,10 @@
             // Hangman: best win streak.
             { const hm = readNum('hangmanHighScore'); if (hm != null) set('card-hangman-streak', hm); }
 
+            // Yahtzee: best final total. Farkle: biggest single banked turn.
+            { const yz = readNum('yahtzeeHighScore'); if (yz != null) set('card-yahtzee-best', yz.toLocaleString()); }
+            { const fk = readNum('farkleHighScore'); if (fk != null) set('card-farkle-best', fk.toLocaleString()); }
+
             // Aggregate stats
             const totalWins = Object.values(wins).reduce((s, v) => s + (v || 0), 0);
             const totalLosses = Object.values(losses).reduce((s, v) => s + (v || 0), 0);
@@ -821,7 +867,7 @@
             if (bestStreak > 0) set('strat-streak', bestStreak);
         })();
     </script>
-    <script src="../games-catalog.js?v=20260701"></script>
+    <script src="../games-catalog.js?v=20260715"></script>
     <script src="../global-search.js?v=20260619a"></script>
 </body>
 </html>

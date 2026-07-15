@@ -1,0 +1,70 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Farkle dice on a felt table">
+  <defs>
+    <radialGradient id="fkfelt" cx="0.5" cy="0.28" r="1.05">
+      <stop offset="0" stop-color="#3F7A5F"/>
+      <stop offset="0.6" stop-color="#31604A"/>
+      <stop offset="1" stop-color="#254A39"/>
+    </radialGradient>
+    <linearGradient id="fkdie" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#FFFEF8"/>
+      <stop offset="1" stop-color="#EFE5CE"/>
+    </linearGradient>
+    <radialGradient id="fkvig" cx="0.5" cy="0.45" r="0.85">
+      <stop offset="0.62" stop-color="#000000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000000" stop-opacity="0.28"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#fkfelt)"/>
+
+  <!-- soft shadows under the dice -->
+  <ellipse cx="145" cy="252" rx="92" ry="20" fill="#000" opacity="0.26"/>
+  <ellipse cx="420" cy="228" rx="92" ry="20" fill="#000" opacity="0.26"/>
+  <ellipse cx="205" cy="502" rx="92" ry="20" fill="#000" opacity="0.26"/>
+  <ellipse cx="452" cy="512" rx="92" ry="20" fill="#000" opacity="0.24"/>
+
+  <!-- die showing 1, set aside (gold ring) -->
+  <g transform="translate(70 95) rotate(-8 75 75)">
+    <rect x="-7" y="-7" width="164" height="164" rx="32" fill="none" stroke="#F2C14E" stroke-width="9" opacity="0.95"/>
+    <rect width="150" height="150" rx="26" fill="url(#fkdie)" stroke="#2A2017" stroke-opacity="0.35" stroke-width="2"/>
+    <circle cx="75" cy="75" r="15" fill="#2A2017"/>
+  </g>
+
+  <!-- die showing 5, set aside (gold ring) -->
+  <g transform="translate(345 70) rotate(10 75 75)">
+    <rect x="-7" y="-7" width="164" height="164" rx="32" fill="none" stroke="#F2C14E" stroke-width="9" opacity="0.95"/>
+    <rect width="150" height="150" rx="26" fill="url(#fkdie)" stroke="#2A2017" stroke-opacity="0.35" stroke-width="2"/>
+    <circle cx="38" cy="38" r="13" fill="#2A2017"/>
+    <circle cx="112" cy="38" r="13" fill="#2A2017"/>
+    <circle cx="75" cy="75" r="13" fill="#2A2017"/>
+    <circle cx="38" cy="112" r="13" fill="#2A2017"/>
+    <circle cx="112" cy="112" r="13" fill="#2A2017"/>
+  </g>
+
+  <!-- die showing 3, still in the roll -->
+  <g transform="translate(130 345) rotate(5 75 75)">
+    <rect width="150" height="150" rx="26" fill="url(#fkdie)" stroke="#2A2017" stroke-opacity="0.35" stroke-width="2"/>
+    <circle cx="38" cy="38" r="13" fill="#2A2017"/>
+    <circle cx="75" cy="75" r="13" fill="#2A2017"/>
+    <circle cx="112" cy="112" r="13" fill="#2A2017"/>
+  </g>
+
+  <!-- die showing 6, still in the roll -->
+  <g transform="translate(378 358) rotate(-13 75 75)">
+    <rect width="150" height="150" rx="26" fill="url(#fkdie)" stroke="#2A2017" stroke-opacity="0.35" stroke-width="2"/>
+    <circle cx="38" cy="38" r="13" fill="#2A2017"/>
+    <circle cx="38" cy="75" r="13" fill="#2A2017"/>
+    <circle cx="38" cy="112" r="13" fill="#2A2017"/>
+    <circle cx="112" cy="38" r="13" fill="#2A2017"/>
+    <circle cx="112" cy="75" r="13" fill="#2A2017"/>
+    <circle cx="112" cy="112" r="13" fill="#2A2017"/>
+  </g>
+
+  <!-- die showing 2 tumbling out of frame -->
+  <g transform="translate(510 240) rotate(24 75 75)">
+    <rect width="150" height="150" rx="26" fill="url(#fkdie)" stroke="#2A2017" stroke-opacity="0.35" stroke-width="2"/>
+    <circle cx="112" cy="38" r="13" fill="#2A2017"/>
+    <circle cx="38" cy="112" r="13" fill="#2A2017"/>
+  </g>
+
+  <rect width="600" height="600" fill="url(#fkvig)"/>
+</svg>

@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+    <title>Go Fish — Free Online Card Game for Kids | Limestone Games</title>
+    <meta name="description" content="Play Go Fish online free — a friendly animal card game for kids. Ask the computer for cards, fish from the pond, and collect books of four to win.">
+    <meta name="keywords" content="go fish, go fish online, go fish card game, go fish for kids, kids card games, how to play go fish, free online card game">
+    <link rel="canonical" href="https://limestonegames.com/go-fish/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Go Fish","description":"Play Go Fish free in your browser. A friendly animal card game for kids — ask the computer for cards and collect books of four to win.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Kids","item":"https://limestonegames.com/kids/"},{"@type":"ListItem","position":3,"name":"Go Fish"}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How many cards do you start with in Go Fish?", "acceptedAnswer": {"@type": "Answer", "text": "With two players, each side starts with seven cards. The rest of the deck goes face-down in the middle to make the pond — the pile you draw from when you go fish."}}, {"@type": "Question", "name": "What happens when the pond runs out of cards?", "acceptedAnswer": {"@type": "Answer", "text": "You keep taking turns asking for animals — you just can't draw anymore. When a hand runs out of cards too, the game ends and whoever has made more books wins."}}, {"@type": "Question", "name": "Does the computer cheat?", "acceptedAnswer": {"@type": "Answer", "text": "No — the computer never looks at your cards. It only remembers the last few animals you asked for, just like a person playing fair across the table would."}}, {"@type": "Question", "name": "How do you win Go Fish?", "acceptedAnswer": {"@type": "Answer", "text": "Collect books — all four cards of the same animal. When all thirteen books have been made, the player with more books wins."}}, {"@type": "Question", "name": "Is Go Fish free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — every game on Limestone Games is completely free. No signup, no downloads, just play."}}]}</script>
+    <meta property="og:title" content="Go Fish — Free Online Card Game for Kids">
+    <meta property="og:description" content="A friendly animal card game for kids. Ask, fish, and collect books of four.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/go-fish/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Go Fish — Free Online Card Game for Kids">
+    <meta name="twitter:description" content="A friendly animal card game for kids. Ask, fish, and collect books of four.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+
+    <link rel="stylesheet" href="../kids/kids-game.css?v=20260618a">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@600;700;800&family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+      :root { --accent: #1E9BD7; --accent-2: #45C6A5; }
+      button.action { box-shadow: 0 4px 12px rgba(30, 155, 215, 0.3); }
+
+      .board-wrap { padding: 14px; }
+      .table { width: 100%; display: flex; flex-direction: column; gap: 12px; }
+
+      .side { border-radius: 18px; padding: 10px 12px 12px; transition: box-shadow 0.25s, background 0.25s; }
+      .side.active { background: rgba(255, 255, 255, 0.55); box-shadow: 0 0 0 2px rgba(30, 155, 215, 0.35); }
+      .side-head { display: flex; justify-content: space-between; align-items: center; font-size: 13px; font-weight: 700; margin-bottom: 8px; }
+      .side-name { color: rgba(31, 26, 46, 0.75); }
+      .hand-count { font-weight: 600; font-size: 12px; color: rgba(31, 26, 46, 0.5); }
+
+      /* Computer's face-down fan */
+      .fan { display: flex; justify-content: center; min-height: 48px; }
+      .back {
+        width: 34px; height: 48px; border-radius: 7px; flex: 0 0 auto;
+        background: linear-gradient(150deg, #6DC8F0, #2E86C8);
+        border: 2px solid #fff; box-shadow: 0 2px 5px rgba(31, 26, 46, 0.18);
+        display: flex; align-items: center; justify-content: center; font-size: 15px;
+      }
+      .back::after { content: '🐟'; opacity: 0.85; }
+
+      /* Middle: pond + speech bubble */
+      .middle { display: flex; align-items: center; gap: 14px; justify-content: center; }
+      .pond { position: relative; width: 70px; height: 92px; flex: 0 0 auto; }
+      .pond .pcard {
+        position: absolute; inset: 0; border-radius: 10px;
+        background: linear-gradient(160deg, #8FD8F5, #2E86C8);
+        border: 2px solid #fff; box-shadow: 0 3px 8px rgba(31, 26, 46, 0.2);
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 2px; font-size: 22px;
+      }
+      .pond .pcard.u1 { transform: rotate(-5deg) translate(-4px, 2px); }
+      .pond .pcard.u2 { transform: rotate(4deg) translate(3px, -2px); }
+      .pond-count { font-size: 15px; font-weight: 800; color: #fff; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.25); }
+      .pond.empty .pcard.u1, .pond.empty .pcard.u2 { display: none; }
+      .pond.empty .pcard.top {
+        background: rgba(255, 255, 255, 0.4);
+        border: 2px dashed rgba(31, 26, 46, 0.25); box-shadow: none;
+      }
+      .pond.empty .pcard.top > span:first-child { opacity: 0.35; }
+      .pond.empty .pond-count { color: rgba(31, 26, 46, 0.4); text-shadow: none; }
+      .reveal {
+        position: absolute; left: 50%; top: -6px; z-index: 3; pointer-events: none;
+        transform: translate(-50%, 0) scale(0); opacity: 0;
+        width: 52px; height: 68px; border-radius: 9px;
+        background: linear-gradient(135deg, #FFF8DC, #DCEEFF);
+        border: 2px solid #fff; box-shadow: 0 6px 16px rgba(31, 26, 46, 0.25);
+        display: flex; align-items: center; justify-content: center; font-size: 30px;
+        transition: transform 0.3s, opacity 0.3s;
+      }
+      .reveal.show { transform: translate(-50%, -78px) scale(1); opacity: 1; }
+      .bubble {
+        flex: 1 1 auto; max-width: 430px; min-height: 64px;
+        background: rgba(255, 253, 246, 0.97);
+        border: 2px solid rgba(31, 26, 46, 0.08); border-radius: 18px;
+        padding: 12px 16px; font-size: 15px; font-weight: 600; line-height: 1.4;
+        display: flex; align-items: center;
+        box-shadow: 0 6px 18px rgba(31, 26, 46, 0.08);
+      }
+
+      /* Your hand — grouped cards, JS fit-to-width via --cw */
+      .hand { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; --cw: 64px; }
+      .acard {
+        width: var(--cw); aspect-ratio: 5 / 7; border-radius: 12px; position: relative;
+        border: 2px solid rgba(31, 26, 46, 0.1);
+        background: linear-gradient(150deg, #FFFDF4, #DCEEFF);
+        cursor: pointer; font: inherit; touch-action: manipulation;
+        display: flex; flex-direction: column; align-items: center; justify-content: center;
+        gap: 2px; padding: 4px 2px;
+        box-shadow: 0 3px 8px rgba(31, 26, 46, 0.1);
+        transition: transform 0.12s, box-shadow 0.15s, border-color 0.15s;
+      }
+      .acard:hover:not(:disabled) { transform: translateY(-4px); border-color: var(--accent); }
+      .acard:active:not(:disabled) { transform: scale(0.95); }
+      .acard:focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
+      .acard .em { font-size: calc(var(--cw) * 0.48); line-height: 1.1; }
+      .acard .nm { font-size: max(9px, calc(var(--cw) * 0.15)); font-weight: 700; color: rgba(31, 26, 46, 0.65); }
+      .acard .ct {
+        position: absolute; top: -7px; right: -7px; min-width: 22px; height: 22px;
+        border-radius: 999px; background: var(--accent-2); color: #fff;
+        font-size: 12px; font-weight: 800; padding: 0 4px;
+        display: flex; align-items: center; justify-content: center;
+        box-shadow: 0 2px 4px rgba(31, 26, 46, 0.2);
+      }
+      .hand.locked .acard { opacity: 0.6; cursor: default; }
+      .hand.locked .acard:hover { transform: none; border-color: rgba(31, 26, 46, 0.1); }
+
+      /* Books rows */
+      .books { display: flex; flex-wrap: wrap; gap: 6px; min-height: 40px; align-items: center; justify-content: center; }
+      .book {
+        width: 36px; height: 36px; border-radius: 10px; position: relative;
+        background: linear-gradient(150deg, #C9F2CE, #8FD8A0);
+        border: 2px solid #fff; box-shadow: 0 2px 5px rgba(31, 26, 46, 0.15);
+        display: flex; align-items: center; justify-content: center; font-size: 19px;
+      }
+      .book.pop { animation: bookpop 0.5s ease; }
+      .book.pop::before {
+        content: '✨'; position: absolute; top: -14px; right: -8px; font-size: 14px;
+        animation: fadeup 0.9s ease forwards;
+      }
+      @keyframes bookpop { 0% { transform: scale(0) rotate(-14deg); } 60% { transform: scale(1.25) rotate(6deg); } 100% { transform: scale(1); } }
+      @keyframes fadeup { from { opacity: 1; transform: translateY(0); } to { opacity: 0; transform: translateY(-10px); } }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <div class="top-bar">
+            <a href="../">← Limestone Games</a>
+            <a href="../kids/">All Kids games</a>
+        </div>
+        <h1>Go Fish</h1>
+        <div class="stats">
+            <div><span class="l">Your books</span><span class="v" id="pBooksN">0</span></div>
+            <div><span class="l">Computer</span><span class="v" id="cBooksN">0</span></div>
+            <div><span class="l">Wins</span><span class="v" id="wins">0</span></div>
+            <div><span class="l">Best books</span><span class="v" id="best">—</span></div>
+        </div>
+        <div class="board-wrap">
+            <div class="table">
+                <div class="side computer" id="cSide">
+                    <div class="side-head"><span class="side-name">The computer</span><span class="hand-count" id="cCount">7 cards</span></div>
+                    <div class="fan" id="cHand" role="img" aria-label="The computer is holding 7 cards"></div>
+                    <div class="books" id="cBooks" aria-label="The computer's books"></div>
+                </div>
+                <div class="middle">
+                    <div class="pond" id="pond" role="img" aria-label="Pond: 38 cards to draw">
+                        <div class="pcard u2"></div>
+                        <div class="pcard u1"></div>
+                        <div class="pcard top"><span aria-hidden="true">🌊</span><span class="pond-count" id="pondN">38</span></div>
+                        <div class="reveal" id="reveal" aria-hidden="true"></div>
+                    </div>
+                    <div class="bubble" id="bubble" role="status" aria-live="polite"></div>
+                </div>
+                <div class="side player" id="pSide">
+                    <div class="books" id="pBooks" aria-label="Your books"></div>
+                    <div class="side-head"><span class="side-name">You</span><span class="hand-count" id="pCount">7 cards</span></div>
+                    <div class="hand" id="pHand" aria-label="Your hand — tap an animal to ask for it"></div>
+                </div>
+            </div>
+            <div class="win" id="win">
+                <h2 id="winTitle">You win!</h2>
+                <p id="winText"></p>
+                <button class="action" id="againBtn">Play again</button>
+            </div>
+        </div>
+        <div class="controls">
+            <button class="action" id="newBtn">New game</button>
+            <button class="action ghost" id="muteBtn" aria-pressed="false">🔊 Sound on</button>
+            <a href="../kids/"><button class="action ghost">More kids games</button></a>
+        </div>
+        <p class="hint">Tap an animal card to ask the computer for it. Collect all four of a kind to make a book — most books wins!</p>
+        <section class="game-overview" aria-label="About Go Fish">
+            <h2>How to play Go Fish</h2>
+            <p>Go Fish is the classic kids' card game of asking, fishing, and collecting &mdash; and you can play it free online right here, against the computer. Tap an animal in your hand to ask for it: if the computer has any, you take them all; if not, go fish in the pond! Collect all four of an animal to make a book. When all thirteen books are made, the player with more books wins.</p>
+
+            <h3>Go Fish rules</h3>
+            <ul>
+                <li><b>The deal.</b> You and the computer each get seven cards. The rest go face-down in the middle &mdash; that's the pond.</li>
+                <li><b>Ask for an animal.</b> On your turn, tap an animal you're holding to ask the computer for it. You can only ask for animals already in your hand.</li>
+                <li><b>They have it?</b> The computer hands over every card of that animal &mdash; and you go again.</li>
+                <li><b>Go fish!</b> If the computer has none, you draw one card from the pond. If you draw the exact animal you asked for, it's shown and you go again. Otherwise it's the computer's turn.</li>
+                <li><b>Make books.</b> Collect all four of an animal and the set slides out of your hand as a book &mdash; this counts even if you're dealt four at the start.</li>
+                <li><b>Empty hand?</b> Draw a card from the pond and keep playing.</li>
+                <li><b>Winning.</b> The game ends when all thirteen books are made. Whoever has more books wins.</li>
+            </ul>
+
+            <h3>Tips &amp; strategy</h3>
+            <ul>
+                <li><b>Chase your pairs.</b> Ask for animals you have two or three of first &mdash; you're closest to finishing those books.</li>
+                <li><b>Listen to the computer's asks.</b> When it asks for Ducks, it's holding at least one Duck. If you pick up a Duck later, ask right back.</li>
+                <li><b>Your asks are clues too.</b> The computer remembers the last few animals you asked about, so expect it to come asking for them.</li>
+                <li><b>"Go fish" isn't goodbye.</b> If the computer had no Penguins a moment ago, it might fish one up later &mdash; try that ask again a few turns on.</li>
+            </ul>
+
+            <h3>About Go Fish</h3>
+            <p>Go Fish grew out of nineteenth-century collecting games like Authors and Happy Families, and it has been a first card game for generations of kids ever since. It teaches turn-taking, counting, and a little friendly memory strategy &mdash; you learn a lot from what the other player asks for. This version swaps the usual numbers for thirteen animal friends, but the rules are the classic ones you'd play at the kitchen table.</p>
+
+            <h3>Frequently asked</h3>
+            <p><b>How many cards do you start with in Go Fish?</b> With two players, each side starts with seven cards. The rest of the deck goes face-down in the middle to make the pond &mdash; the pile you draw from when you go fish.</p>
+            <p><b>What happens when the pond runs out of cards?</b> You keep taking turns asking for animals &mdash; you just can't draw anymore. When a hand runs out of cards too, the game ends and whoever has made more books wins.</p>
+            <p><b>Does the computer cheat?</b> No &mdash; the computer never looks at your cards. It only remembers the last few animals you asked for, just like a person playing fair across the table would.</p>
+            <p><b>How do you win Go Fish?</b> Collect books &mdash; all four cards of the same animal. When all thirteen books have been made, the player with more books wins.</p>
+            <p><b>Is Go Fish free?</b> Yes &mdash; every game on Limestone Games is completely free. No signup, no downloads, just play.</p>
+
+            <h3>More kids games</h3>
+            <ul class="related-games-list">
+                <li><a href="../memory-match/">Memory Match</a></li>
+                <li><a href="../animal-detective/">Animal Detective</a></li>
+                <li><a href="../bubble-pop/">Bubble Pop</a></li>
+                <li><a href="../kids/">All kids games &rarr;</a></li>
+            </ul>
+        </section>
+    </div>
+
+    <script>
+    'use strict';
+    (function () {
+        // === GO FISH CORE START ===
+        // Pure game logic — no DOM. Extracted verbatim by the node test suite.
+        var NUM_RANKS = 13;
+        var MEMORY_WINDOW = 3;
+
+        function makeRng(seed) {
+            var t = seed >>> 0;
+            return function () {
+                t += 0x6D2B79F5;
+                var r = Math.imul(t ^ (t >>> 15), 1 | t);
+                r ^= r + Math.imul(r ^ (r >>> 7), 61 | r);
+                return ((r ^ (r >>> 14)) >>> 0) / 4294967296;
+            };
+        }
+
+        function shuffle(arr, rng) {
+            for (var i = arr.length - 1; i > 0; i--) {
+                var j = Math.floor(rng() * (i + 1));
+                var t = arr[i]; arr[i] = arr[j]; arr[j] = t;
+            }
+            return arr;
+        }
+
+        function countRank(hand, r) { var n = 0; for (var i = 0; i < hand.length; i++) { if (hand[i] === r) n++; } return n; }
+        function distinctRanks(hand) { var out = []; for (var i = 0; i < hand.length; i++) { if (out.indexOf(hand[i]) < 0) out.push(hand[i]); } return out; }
+        function removeAllOfRank(hand, r) { var n = 0; for (var i = hand.length - 1; i >= 0; i--) { if (hand[i] === r) { hand.splice(i, 1); n++; } } return n; }
+
+        // Book detection: fires on 4-of-a-rank however acquired (deal, ask, fish).
+        function collectBooks(state, p, ev) {
+            var again = true;
+            while (again) {
+                again = false;
+                var ranks = distinctRanks(state.hands[p]);
+                for (var i = 0; i < ranks.length; i++) {
+                    if (countRank(state.hands[p], ranks[i]) === 4) {
+                        removeAllOfRank(state.hands[p], ranks[i]);
+                        state.books[p].push(ranks[i]);
+                        ev.push({ type: 'book', player: p, rank: ranks[i] });
+                        again = true;
+                    }
+                }
+            }
+        }
+
+        function newGame(rng) {
+            var deck = [];
+            for (var r = 0; r < NUM_RANKS; r++) { for (var c = 0; c < 4; c++) deck.push(r); }
+            shuffle(deck, rng);
+            var state = { pond: deck, hands: [[], []], books: [[], []], turn: 0, memory: [], over: false, dealEvents: [] };
+            for (var i = 0; i < 7; i++) { state.hands[0].push(state.pond.pop()); state.hands[1].push(state.pond.pop()); }
+            collectBooks(state, 0, state.dealEvents);
+            collectBooks(state, 1, state.dealEvents);
+            return state;
+        }
+
+        function pruneMemory(state) {
+            for (var i = state.memory.length - 1; i >= 0; i--) {
+                var r = state.memory[i];
+                if (state.books[0].indexOf(r) >= 0 || state.books[1].indexOf(r) >= 0) state.memory.splice(i, 1);
+            }
+        }
+
+        // Standard empty-hand rule: draw one from the pond and keep playing.
+        function refillIfEmpty(state, p, ev) {
+            if (state.hands[p].length === 0 && state.pond.length > 0) {
+                var c = state.pond.pop();
+                state.hands[p].push(c);
+                ev.push({ type: 'refill', player: p, rank: c });
+            }
+        }
+
+        function checkEnd(state, ev) {
+            var total = state.books[0].length + state.books[1].length;
+            if (total === NUM_RANKS || (state.pond.length === 0 && (state.hands[0].length === 0 || state.hands[1].length === 0))) {
+                state.over = true;
+                ev.push({ type: 'end' });
+            }
+            return state.over;
+        }
+
+        // The current player asks the opponent for rank r. Mutates state and
+        // returns the ordered event list so the UI can narrate each beat.
+        function ask(state, r) {
+            var ev = [];
+            if (state.over) return ev;
+            var p = state.turn, o = 1 - p;
+            if (countRank(state.hands[p], r) === 0) return ev; // must hold the rank you ask for
+            ev.push({ type: 'ask', player: p, rank: r });
+            if (p === 0) {
+                // Fair-play memory: the computer only remembers what YOU asked for.
+                var idx = state.memory.indexOf(r);
+                if (idx >= 0) state.memory.splice(idx, 1);
+                state.memory.unshift(r);
+                while (state.memory.length > MEMORY_WINDOW) state.memory.pop();
+            } else {
+                var mi = state.memory.indexOf(r);
+                if (mi >= 0) state.memory.splice(mi, 1); // used or stale — forget it
+            }
+            var have = countRank(state.hands[o], r);
+            var goAgain = false;
+            if (have > 0) {
+                removeAllOfRank(state.hands[o], r);
+                for (var i = 0; i < have; i++) state.hands[p].push(r);
+                ev.push({ type: 'give', from: o, to: p, rank: r, count: have });
+                goAgain = true;
+            } else {
+                ev.push({ type: 'gofish', player: p });
+                if (state.pond.length > 0) {
+                    var c = state.pond.pop();
+                    state.hands[p].push(c);
+                    ev.push({ type: 'draw', player: p, rank: c, match: c === r });
+                    goAgain = (c === r);
+                } else {
+                    ev.push({ type: 'ponddry', player: p });
+                }
+            }
+            collectBooks(state, p, ev);
+            pruneMemory(state);
+            if (checkEnd(state, ev)) return ev;
+            refillIfEmpty(state, p, ev);
+            refillIfEmpty(state, o, ev);
+            if (checkEnd(state, ev)) return ev;
+            if (goAgain && state.hands[p].length > 0) {
+                ev.push({ type: 'again', player: p });
+            } else {
+                state.turn = o;
+                ev.push({ type: 'turn', player: o });
+            }
+            return ev;
+        }
+
+        // Computer pick: a remembered rank it also holds (most recent first),
+        // else a random rank from its own hand. It never looks at your cards.
+        function chooseComputerRank(state, rng) {
+            var ranks = distinctRanks(state.hands[1]);
+            for (var i = 0; i < state.memory.length; i++) {
+                if (ranks.indexOf(state.memory[i]) >= 0) return state.memory[i];
+            }
+            return ranks[Math.floor(rng() * ranks.length)];
+        }
+        // === GO FISH CORE END ===
+
+        // ---------- UI ----------
+        var ANIMALS = [
+            { e: '🐙', n: 'Octopus', p: 'Octopuses' },
+            { e: '🦊', n: 'Fox', p: 'Foxes' },
+            { e: '🐧', n: 'Penguin', p: 'Penguins' },
+            { e: '🐸', n: 'Frog', p: 'Frogs' },
+            { e: '🦁', n: 'Lion', p: 'Lions' },
+            { e: '🐢', n: 'Turtle', p: 'Turtles' },
+            { e: '🦉', n: 'Owl', p: 'Owls' },
+            { e: '🐬', n: 'Dolphin', p: 'Dolphins' },
+            { e: '🐰', n: 'Bunny', p: 'Bunnies' },
+            { e: '🦀', n: 'Crab', p: 'Crabs' },
+            { e: '🐼', n: 'Panda', p: 'Pandas' },
+            { e: '🦆', n: 'Duck', p: 'Ducks' },
+            { e: '🐝', n: 'Bee', p: 'Bees' }
+        ];
+
+        var $ = function (id) { return document.getElementById(id); };
+        function lsGet(k, fb) { try { var v = localStorage.getItem(k); return v == null ? fb : v; } catch (e) { return fb; } }
+        function lsSet(k, v) { try { localStorage.setItem(k, v); } catch (e) {} }
+        function lsNum(k) { var v = parseInt(lsGet(k, '0'), 10); return isNaN(v) ? 0 : v; }
+        var K = { wins: 'goFishWins', games: 'goFishGames', best: 'goFishBestBooks', mute: 'goFishMute' };
+
+        // Gentle, sparse audio
+        var actx = null, muted = lsGet(K.mute, '0') === '1';
+        function audio() { if (!actx) { try { actx = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) {} } if (actx && actx.state === 'suspended') actx.resume(); return actx; }
+        function tone(freqs, dur, type) {
+            if (muted) return; var ac = audio(); if (!ac) return;
+            freqs.forEach(function (f, i) {
+                var o = ac.createOscillator(), g = ac.createGain();
+                o.type = type || 'sine'; o.frequency.value = f;
+                var t = ac.currentTime + i * 0.09;
+                g.gain.setValueAtTime(0.0001, t);
+                g.gain.exponentialRampToValueAtTime(0.08, t + 0.02);
+                g.gain.exponentialRampToValueAtTime(0.0001, t + dur);
+                o.connect(g); g.connect(ac.destination); o.start(t); o.stop(t + dur);
+            });
+        }
+        var sndGive = function () { tone([523, 659], 0.14); };
+        var sndFish = function () { tone([330, 262], 0.16, 'triangle'); };
+        var sndDraw = function () { tone([440], 0.1); };
+        var sndBook = function () { tone([523, 659, 784], 0.2); };
+        var sndWin = function () { tone([523, 659, 784, 1047], 0.24); };
+        var sndEnd = function () { tone([392, 330, 392], 0.22, 'triangle'); };
+
+        var state = null;
+        var view = null;   // display state, advanced event-by-event so visuals match narration
+        var busy = false;
+        var timers = [];
+        var rng = Math.random;
+
+        function later(fn, ms) { timers.push(setTimeout(fn, ms)); }
+        function clearTimers() { timers.forEach(clearTimeout); timers = []; }
+
+        function one(r) { return ANIMALS[r].e + ' ' + ANIMALS[r].n; }
+        function plural(r) { return ANIMALS[r].e + ' ' + ANIMALS[r].p; }
+        function cnt(e) { return e.count === 1 ? '1 ' + one(e.rank) : e.count + ' ' + plural(e.rank); }
+
+        function initView() {
+            view = { p: state.hands[0].slice(), cCount: state.hands[1].length, pondN: state.pond.length, books: [[], []] };
+            // Re-expand books made in the deal so the intro queue can celebrate them.
+            state.dealEvents.forEach(function (e) {
+                if (e.player === 0) { for (var i = 0; i < 4; i++) view.p.push(e.rank); }
+                else if (e.player === 1) { view.cCount += 4; }
+            });
+        }
+
+        function removeFromView(r, n) {
+            for (var i = view.p.length - 1; i >= 0 && n > 0; i--) {
+                if (view.p[i] === r) { view.p.splice(i, 1); n--; }
+            }
+        }
+
+        function applyEvent(e) {
+            if (e.type === 'give') {
+                if (e.from === 0) { removeFromView(e.rank, e.count); view.cCount += e.count; }
+                else { view.cCount -= e.count; for (var i = 0; i < e.count; i++) view.p.push(e.rank); }
+            } else if (e.type === 'draw' || e.type === 'refill') {
+                view.pondN--;
+                if (e.player === 0) view.p.push(e.rank); else view.cCount++;
+            } else if (e.type === 'book') {
+                if (e.player === 0) removeFromView(e.rank, 4); else view.cCount -= 4;
+                view.books[e.player].push(e.rank);
+            }
+        }
+
+        function narrate(e) {
+            switch (e.type) {
+                case 'ask': return e.player === 0 ? 'You ask for ' + plural(e.rank) + '…' : 'The computer asks for ' + plural(e.rank) + '…';
+                case 'give': return e.to === 0 ? 'The computer hands over ' + cnt(e) + '! Go again!' : 'You hand over ' + cnt(e) + '.';
+                case 'gofish': return e.player === 0 ? 'The computer says: “Go fish!” 🎣' : 'You say: “Go fish!” 🎣';
+                case 'draw':
+                    if (e.player === 0) return e.match ? 'You fished the ' + one(e.rank) + ' you asked for! Go again!' : 'You fished a ' + one(e.rank) + '.';
+                    return e.match ? 'The computer fished the ' + one(e.rank) + ' it asked for! It goes again.' : 'The computer draws a card from the pond.';
+                case 'ponddry': return 'The pond is empty — nothing to draw!';
+                case 'book': return e.player === 0 ? 'You made a book of ' + plural(e.rank) + '! 🎉' : 'The computer made a book of ' + plural(e.rank) + '.';
+                case 'refill': return e.player === 0 ? 'Your hand was empty — you draw a new card.' : 'The computer ran out of cards and draws one.';
+                case 'again': return e.player === 0 ? 'Your turn again — pick an animal!' : '';
+                case 'turn': return e.player === 0 ? 'Your turn! Tap an animal to ask for it.' : '';
+                case 'end': return 'That’s every animal book made!';
+            }
+            return '';
+        }
+
+        function delayFor(e) {
+            switch (e.type) {
+                case 'book': return 1150;
+                case 'give': case 'draw': return 950;
+                case 'again': case 'turn': return 400;
+                case 'end': return 600;
+                default: return 900;
+            }
+        }
+
+        function speak(txt) { $('bubble').textContent = txt; }
+        function setActive(p) {
+            $('cSide').classList.toggle('active', p === 1);
+            $('pSide').classList.toggle('active', p === 0);
+        }
+
+        function showReveal(r) {
+            var el = $('reveal');
+            el.textContent = ANIMALS[r].e;
+            el.classList.remove('show');
+            void el.offsetWidth;
+            el.classList.add('show');
+            later(function () { el.classList.remove('show'); }, 900);
+        }
+
+        function handleEvent(e) {
+            applyEvent(e);
+            renderAll();
+            var txt = narrate(e);
+            if (txt) speak(txt);
+            switch (e.type) {
+                case 'ask': setActive(e.player); break;
+                case 'give': sndGive(); break;
+                case 'gofish': sndFish(); break;
+                case 'draw':
+                    sndDraw();
+                    if (e.player === 0 || e.match) showReveal(e.rank);
+                    break;
+                case 'refill': sndDraw(); break;
+                case 'book':
+                    sndBook();
+                    var row = e.player === 0 ? $('pBooks') : $('cBooks');
+                    if (row.lastElementChild) row.lastElementChild.classList.add('pop');
+                    break;
+                case 'again': case 'turn': setActive(e.player); break;
+            }
+        }
+
+        function runQueue(evs, done) {
+            busy = true;
+            var i = 0;
+            (function step() {
+                if (i >= evs.length) { done(); return; }
+                var e = evs[i++];
+                handleEvent(e);
+                later(step, delayFor(e));
+            })();
+        }
+
+        function afterTurn() {
+            if (state.over) { renderAll(); finish(); return; }
+            if (state.turn === 1) { later(computerMove, 600); }
+            else { busy = false; renderAll(); }
+        }
+
+        function computerMove() {
+            if (state.over) return;
+            var r = chooseComputerRank(state, rng);
+            runQueue(ask(state, r), afterTurn);
+        }
+
+        function playerAsk(r) {
+            if (busy || !state || state.over || state.turn !== 0) return;
+            if (countRank(state.hands[0], r) === 0) return;
+            audio(); // unlock on user gesture
+            runQueue(ask(state, r), afterTurn);
+        }
+
+        // ---------- rendering ----------
+        function renderHand() {
+            var el = $('pHand');
+            var groups = {};
+            view.p.forEach(function (r) { groups[r] = (groups[r] || 0) + 1; });
+            var ranks = Object.keys(groups).map(Number).sort(function (a, b) { return a - b; });
+            var lock = busy || !state || state.over || state.turn !== 0;
+            el.innerHTML = '';
+            ranks.forEach(function (r) {
+                var a = ANIMALS[r], n = groups[r];
+                var b = document.createElement('button');
+                b.className = 'acard';
+                b.disabled = lock;
+                b.setAttribute('aria-label', 'Ask for ' + a.p + ' — you have ' + n);
+                b.innerHTML = '<span class="em" aria-hidden="true">' + a.e + '</span>'
+                    + '<span class="nm" aria-hidden="true">' + a.n + '</span>'
+                    + (n > 1 ? '<span class="ct" aria-hidden="true">×' + n + '</span>' : '');
+                b.addEventListener('click', function () { playerAsk(r); });
+                el.appendChild(b);
+            });
+            el.classList.toggle('locked', lock);
+            fitHand(ranks.length);
+            $('pCount').textContent = view.p.length + (view.p.length === 1 ? ' card' : ' cards');
+        }
+
+        // Fit the grouped hand to the available width: try one row at a comfy
+        // size, shrink down to the 48px touch-target floor, wrap past that.
+        function fitHand(n) {
+            if (!n) return;
+            var el = $('pHand');
+            var avail = el.clientWidth || 300;
+            var gap = 8;
+            var w = Math.floor((avail - (n - 1) * gap) / n);
+            w = Math.max(48, Math.min(84, w));
+            el.style.setProperty('--cw', w + 'px');
+        }
+
+        function renderFan() {
+            var el = $('cHand');
+            el.innerHTML = '';
+            var n = view.cCount;
+            var avail = el.clientWidth || 300;
+            var cw = 34;
+            var step = n > 1 ? Math.max(3, Math.min(24, Math.floor((Math.min(avail, 420) - cw) / (n - 1)))) : 0;
+            for (var i = 0; i < n; i++) {
+                var d = document.createElement('div');
+                d.className = 'back';
+                if (i > 0) d.style.marginLeft = (step - cw) + 'px';
+                el.appendChild(d);
+            }
+            el.setAttribute('aria-label', 'The computer is holding ' + n + (n === 1 ? ' card' : ' cards'));
+            $('cCount').textContent = n + (n === 1 ? ' card' : ' cards');
+        }
+
+        function renderPond() {
+            var el = $('pond');
+            el.classList.toggle('empty', view.pondN === 0);
+            $('pondN').textContent = view.pondN;
+            el.setAttribute('aria-label', view.pondN === 0 ? 'The pond is empty' : 'Pond: ' + view.pondN + ' cards to draw');
+        }
+
+        function renderBooks() {
+            [0, 1].forEach(function (p) {
+                var el = p === 0 ? $('pBooks') : $('cBooks');
+                el.innerHTML = '';
+                view.books[p].forEach(function (r) {
+                    var s = document.createElement('span');
+                    s.className = 'book';
+                    s.setAttribute('role', 'img');
+                    s.setAttribute('aria-label', 'Book of ' + ANIMALS[r].p);
+                    s.textContent = ANIMALS[r].e;
+                    el.appendChild(s);
+                });
+            });
+            $('pBooksN').textContent = view.books[0].length;
+            $('cBooksN').textContent = view.books[1].length;
+        }
+
+        function renderStats() {
+            $('wins').textContent = lsNum(K.wins);
+            var b = lsNum(K.best);
+            $('best').textContent = b > 0 ? b : '—';
+        }
+
+        function renderAll() {
+            renderHand(); renderFan(); renderPond(); renderBooks(); renderStats();
+        }
+
+        function finish() {
+            busy = true; // keep the hand locked
+            var pB = state.books[0].length, cB = state.books[1].length;
+            lsSet(K.games, lsNum(K.games) + 1);
+            if (pB > cB) lsSet(K.wins, lsNum(K.wins) + 1);
+            if (pB > lsNum(K.best)) lsSet(K.best, pB);
+            renderStats();
+            var t = $('winTitle'), x = $('winText');
+            if (pB > cB) {
+                t.textContent = 'You win! 🎉';
+                x.textContent = 'You made ' + pB + ' books and the computer made ' + cB + '. Wonderful fishing!';
+                sndWin();
+            } else if (cB > pB) {
+                t.textContent = 'Good try!';
+                x.textContent = 'The computer made ' + cB + ' books and you made ' + pB + '. Play again?';
+                sndEnd();
+            } else {
+                t.textContent = 'It’s a tie!';
+                x.textContent = 'You both made ' + pB + ' books. What a match!';
+                sndGive();
+            }
+            later(function () { $('win').classList.add('show'); }, 600);
+        }
+
+        function restart() {
+            clearTimers();
+            busy = false;
+            $('win').classList.remove('show');
+            state = newGame(rng);
+            initView();
+            setActive(0);
+            renderAll();
+            if (state.dealEvents.length) {
+                busy = true;
+                renderAll();
+                speak('What a lucky deal — a whole book right away!');
+                later(function () {
+                    runQueue(state.dealEvents.slice(), function () {
+                        busy = false;
+                        renderAll();
+                        speak('Now — tap an animal to ask the computer for it!');
+                    });
+                }, 900);
+            } else {
+                speak('You go first! Tap an animal to ask the computer for it.');
+            }
+        }
+
+        function applyMute() {
+            $('muteBtn').textContent = muted ? '🔇 Sound off' : '🔊 Sound on';
+            $('muteBtn').setAttribute('aria-pressed', muted ? 'true' : 'false');
+        }
+
+        $('newBtn').addEventListener('click', restart);
+        $('againBtn').addEventListener('click', restart);
+        $('muteBtn').addEventListener('click', function () {
+            muted = !muted;
+            lsSet(K.mute, muted ? '1' : '0');
+            applyMute();
+            if (!muted) { audio(); sndDraw(); }
+        });
+        window.addEventListener('resize', function () { if (view) renderAll(); });
+
+        applyMute();
+        restart();
+    })();
+    </script>
+</body>
+</html>
