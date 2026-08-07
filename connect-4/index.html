@@ -155,30 +155,9 @@
         text-decoration: none; font-weight: 700; font-size: 13px;
       }
       .related-games-list a:hover { background: rgba(43, 95, 168, 0.2); }
-      .tut-switch {
-        display: inline-flex; align-items: center; gap: 8px;
-        font-size: 13px; font-weight: 700;
-        color: #F3E8CE; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
-        cursor: pointer; user-select: none;
-        padding: 10px 6px;
-      }
-      .tut-switch input { position: absolute; opacity: 0; pointer-events: none; }
-      .tut-track {
-        width: 38px; height: 22px; border-radius: 999px; flex-shrink: 0;
-        background: rgba(243, 232, 206, 0.28);
-        border: 1px solid rgba(243, 232, 206, 0.45);
-        position: relative; transition: background 0.15s, border-color 0.15s;
-      }
-      .tut-knob {
-        position: absolute; top: 2px; left: 2px; width: 16px; height: 16px;
-        border-radius: 50%; background: #fff; transition: left 0.15s;
-        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-      }
-      .tut-switch input:checked + .tut-track { background: var(--accent); border-color: transparent; }
-      .tut-switch input:checked + .tut-track .tut-knob { left: 18px; }
-      .tut-switch input:focus-visible + .tut-track { outline: 2px solid #F3E8CE; outline-offset: 2px; }
+      /* .tut-switch styles come from ../strategy/strategy-chrome.css */
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260807a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260807b">
 </head>
 <body>
     <div class="game-shell">
