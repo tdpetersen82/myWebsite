@@ -460,35 +460,54 @@
         }
 
         // The most salient tactical reason the engine's pick is strong.
+        // Every claim here must be checkable on the board: threats name their
+        // direction, and "toward four" is only said when the completing cell
+        // is playable soon (at most one fill below it), never for lines that
+        // need a whole stack built first.
         function whyBest(c) {
             const r = dropRow(board, c);
             board[r][c] = PLAYER;
-            const myWinSpots = validCols(board).filter(d => winsAt(d, PLAYER)).length;
-            // Longest all-mine window through the new disc (no computer discs in it).
-            let open = 0;
+            const winCols = validCols(board).filter(d => winsAt(d, PLAYER));
+            const threatDir = winCols.length === 1 ? lineDirAt(winCols[0], PLAYER) : null;
+            // Scan 4-windows through the new disc that have no computer discs.
+            let openDir = null, linked = false;
             for (let rr = 0; rr < ROWS; rr++) for (let cc = 0; cc < COLS; cc++) {
-                for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]) {
+                for (const [dr, dc, dirName] of [[0, 1, 'across'], [1, 0, 'vertically'], [1, 1, 'diagonally'], [1, -1, 'diagonally']]) {
                     const er = rr + dr * 3, ec = cc + dc * 3;
                     if (er >= ROWS || ec < 0 || ec >= COLS) continue;
                     let mine = 0, theirs = 0, hasNew = false;
+                    const empties = [];
                     for (let k = 0; k < 4; k++) {
                         const wr = rr + dr * k, wc = cc + dc * k;
                         if (wr === r && wc === c) hasNew = true;
-                        if (board[wr][wc] === PLAYER) mine++; else if (board[wr][wc] === AI) theirs++;
+                        if (board[wr][wc] === PLAYER) mine++;
+                        else if (board[wr][wc] === AI) theirs++;
+                        else empties.push([wr, wc]);
                     }
-                    if (hasNew && !theirs && mine > open) open = mine;
+                    if (!hasNew || theirs) continue;
+                    if (mine >= 2) linked = true;
+                    if (mine >= 3 && !openDir) {
+                        // Every empty cell in the window must be nearly
+                        // playable: no more than one empty cell below it.
+                        const reachable = empties.every(function (e) {
+                            let below = 0;
+                            for (let x = e[0] + 1; x < ROWS; x++) if (!board[x][e[1]]) below++;
+                            return below <= 1;
+                        });
+                        if (reachable) openDir = dirName;
+                    }
                 }
             }
             board[r][c] = 0;
-            if (myWinSpots >= 2) return '★ — this creates two ways to win at once; the computer can’t block both.';
-            if (myWinSpots === 1) return '★ — this makes three in a row; the computer must stop you.';
+            if (winCols.length >= 2) return '★ — this sets up two winning spots at once; the computer can’t block both.';
+            if (winCols.length === 1) return '★ — this gives you three ' + threatDir + ' with a winning spot open; the computer must respond.';
             board[r][c] = AI;
             const aiWinSpots = validCols(board).filter(d => winsAt(d, AI)).length;
             board[r][c] = 0;
             if (aiWinSpots) return '★ — this takes the square the computer needs to build its own three.';
-            if (open >= 3) return '★ — this puts three of your discs in an open line toward four.';
+            if (openDir) return '★ — this builds three of your discs ' + openDir + ', still open toward four.';
             if (c === 3) return '★ — the center column joins more four-in-a-row lines than any other spot.';
-            if (open === 2) return '★ — this links your discs with open space toward four.';
+            if (linked) return '★ — this links your discs with open space toward four.';
             return '★ — the strongest spot by thinking several moves ahead.';
         }
 
