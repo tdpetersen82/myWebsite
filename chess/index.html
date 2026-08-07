@@ -7,7 +7,7 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <title>Chess — Free Browser Chess vs. Computer | Limestone Games</title>
-    <meta name="description" content="Play chess free in your browser against the computer. Full rules — castling, en passant, pawn promotion, check, checkmate, stalemate, draws. Three difficulty tiers, no downloads.">
+    <meta name="description" content="Play chess free in your browser against the computer. Full rules — castling, en passant, promotion. Three difficulty tiers and a tutorial mode. No downloads.">
     <meta name="keywords" content="chess, online chess, free chess, browser chess, chess vs Computer, chess game">
     <link rel="canonical" href="https://limestonegames.com/chess/">
     <link rel="icon" href="/favicon.ico" sizes="any">
@@ -17,7 +17,7 @@
     <link rel="manifest" href="/manifest.json">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Chess","description":"Play chess in your browser against the computer with three difficulty tiers. Full rules: castling, en passant, pawn promotion, check, checkmate, stalemate, 50-move and threefold-repetition draws.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Chess"}]}</script>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play chess against the computer?","acceptedAnswer":{"@type":"Answer","text":"Click a piece, then click a legal destination square. The computer plays the other color and replies automatically after your move."}},{"@type":"Question","name":"Is this chess free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs. All games on Limestone Games are free."}},{"@type":"Question","name":"What difficulty should I pick?","acceptedAnswer":{"@type":"Answer","text":"Beginners start on Easy. Once you can win consistently on Easy, move to Medium. Hard targets roughly 1200–1500 club strength with depth 4 and quiescence search on captures."}}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play chess against the computer?","acceptedAnswer":{"@type":"Answer","text":"Click a piece, then click a legal destination square. The computer plays the other color and replies automatically after your move."}},{"@type":"Question","name":"Is this chess free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs. All games on Limestone Games are free."}},{"@type":"Question","name":"What difficulty should I pick?","acceptedAnswer":{"@type":"Answer","text":"Beginners start on Easy. Once you can win consistently on Easy, move to Medium. Hard targets roughly 1200–1500 club strength with depth 4 and quiescence search on captures."}},{"@type":"Question","name":"Is there a tutorial?","acceptedAnswer":{"@type":"Answer","text":"Yes — switch on Tutorial in the side panel. Every time it's your move, it highlights a suggested move on the board and names it in the status line."}}]}</script>
     <meta property="og:title" content="Chess — Free Browser Chess vs. Computer">
     <meta property="og:description" content="Full rules. Three difficulties. No downloads, no installs.">
     <meta property="og:type" content="website">
@@ -187,6 +187,11 @@
       .panel-actions { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .panel-actions button { width: 100%; padding: 9px 8px; font-size: 13px; border-radius: 10px; white-space: nowrap; }
       .panel-actions .full { grid-column: 1 / -1; }
+      /* The shared .tut-switch (strategy-chrome.css) is colored cream for the wood
+         tabletop; recolor it for this parchment panel so it stays legible. */
+      .panel-actions .tut-switch { color: var(--frame); text-shadow: none; justify-content: center; }
+      .panel-actions .tut-switch .tut-track { background: color-mix(in oklab, var(--ink) 10%, transparent); border-color: color-mix(in oklab, var(--ink) 30%, transparent); }
+      .panel-actions .tut-switch input:focus-visible + .tut-track { outline-color: var(--accent); }
       .panel-settings { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
       .seg { flex: 1; display: flex; flex-direction: column; gap: 4px; font-size: 10px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.1em; color: color-mix(in oklab, var(--ink) 55%, transparent); }
       .seg select {
@@ -375,6 +380,7 @@
                     <button id="newGame" class="full">New game</button>
                     <button id="undo" class="ghost">Undo</button>
                     <button id="hint" class="ghost">Hint</button>
+                    <label class="tut-switch full"><input type="checkbox" id="tutorialToggle"><span class="tut-track"><span class="tut-knob"></span></span>Tutorial</label>
                     <button id="flipBoard" class="ghost">Flip</button>
                     <button id="resign" class="ghost">Resign</button>
                     <button id="review" class="ghost full">Review</button>
@@ -419,7 +425,7 @@
 
         <section class="game-overview" aria-label="About Chess">
             <h2>How to play Chess online</h2>
-            <p>Chess is the definitive two-player strategy game: two armies of sixteen pieces, one goal &mdash; checkmate the enemy king. This free browser version plays against the computer at three strength levels, with a choice of board and piece styles and optional coordinates. No account, no downloads, no ads in the way.</p>
+            <p>Chess is the definitive two-player strategy game: two armies of sixteen pieces, one goal &mdash; checkmate the enemy king. This free browser version plays against the computer at three strength levels, with a choice of board and piece styles and optional coordinates. A built-in tutorial mode suggests a move every turn while you learn. No account, no downloads, no ads in the way.</p>
 
             <h3>Chess rules &mdash; how the pieces move</h3>
             <p>White moves first, then players alternate. Each piece travels its own way:</p>
@@ -448,6 +454,7 @@
             <h3>Frequently asked</h3>
             <p><b>How do I play Chess?</b> Move one piece per turn according to how it travels, working to checkmate the opponent's king &mdash; trapping it so it can't avoid capture.</p>
             <p><b>How do I get better at Chess?</b> Control the center, develop your pieces, castle early, and check for threats before each move. Then play often &mdash; pattern recognition comes from games, not theory.</p>
+            <p><b>Is there a tutorial?</b> Yes &mdash; switch on Tutorial in the side panel. Every time it's your move, it highlights a suggested move on the board and names it in the status line.</p>
             <p><b>Is Chess free to play here?</b> Yes &mdash; no signup, no downloads, no installs.</p>
             <p><b>Does my record save?</b> Yes &mdash; your results are stored locally in your browser.</p>
 
@@ -466,6 +473,6 @@
     <script src="notation.js?v=20260522k"></script>
     <script src="sound.js?v=20260522k"></script>
     <script src="analysis.js?v=20260522k"></script>
-    <script src="chess.js?v=20260529a"></script>
+    <script src="chess.js?v=20260807a"></script>
 </body>
 </html>

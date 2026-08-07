@@ -7,12 +7,12 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <title>Ultimate Tic-Tac-Toe — Free Browser Game vs. Computer | Limestone Games</title>
-    <meta name="description" content="Play Ultimate Tic-Tac-Toe free in your browser against the computer. Nine boards inside one, your move sends the opponent to a specific board. Three difficulties, no downloads.">
+    <meta name="description" content="Play Ultimate Tic-Tac-Toe free in your browser against the computer. Nine boards in one, three difficulties, and a tutorial mode that marks the best move.">
     <meta name="keywords" content="ultimate tic-tac-toe, ultimate tic tac toe, super tic tac toe, browser tic tac toe, tic tac toe vs Computer, free tic tac toe">
     <link rel="canonical" href="https://limestonegames.com/ultimate-tic-tac-toe/">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Ultimate Tic-Tac-Toe","description":"Play Ultimate Tic-Tac-Toe in your browser against the computer. Nine boards in one — your move sends your opponent to a specific board. Three difficulty tiers.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Ultimate Tic-Tac-Toe"}]}</script>
-    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Ultimate Tic-Tac-Toe?", "acceptedAnswer": {"@type": "Answer", "text": "You're playing nine simultaneous tic-tac-toe boards arranged in a 3×3 meta-grid. Your move in a small cell forces your opponent to play in the corresponding board. Win three small boards in a row to win the game."}}, {"@type": "Question", "name": "Is Ultimate Tic-Tac-Toe free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Why is my next move constrained?", "acceptedAnswer": {"@type": "Answer", "text": "Each move sends your opponent to the small board matching the cell you just played. If that board is already won or full, they can play anywhere — until then they can't."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Ultimate Tic-Tac-Toe?", "acceptedAnswer": {"@type": "Answer", "text": "You're playing nine simultaneous tic-tac-toe boards arranged in a 3×3 meta-grid. Your move in a small cell forces your opponent to play in the corresponding board. Win three small boards in a row to win the game."}}, {"@type": "Question", "name": "Is Ultimate Tic-Tac-Toe free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Why is my next move constrained?", "acceptedAnswer": {"@type": "Answer", "text": "Each move sends your opponent to the small board matching the cell you just played. If that board is already won or full, they can play anywhere — until then they can't."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}, {"@type": "Question", "name": "Is there a tutorial?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — switch on Tutorial mode under the board. Each turn it stars the strongest cell and explains the move in one line."}}]}</script>
     <meta property="og:title" content="Ultimate Tic-Tac-Toe — Free Browser Game vs. Computer">
     <meta property="og:description" content="Nine boards in one, three difficulties. The strategic twist on the classic.">
     <meta property="og:type" content="website">
@@ -195,6 +195,7 @@
         <div class="turn" id="status">Click any cell to begin. You play X; X moves first.</div>
         <div class="controls">
             <button id="newGame">New game</button>
+            <label class="tut-switch"><input type="checkbox" id="tutorialToggle"><span class="tut-track"><span class="tut-knob"></span></span>Tutorial</label>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
         <p class="hint">Your move's <i>position</i> within a mini-board determines which mini-board your opponent must play in. Sent to a finished board? Play anywhere. Three mini-board wins in a row on the meta board wins the game.</p>        </div>
@@ -202,7 +203,7 @@
 
         <section class="game-overview" aria-label="About Ultimate Tic-Tac-Toe">
             <h2>How to play Ultimate Tic-Tac-Toe online</h2>
-            <p>Ultimate Tic-Tac-Toe is the deep, strategic upgrade to the classic game: nine tic-tac-toe boards arranged in a big 3&times;3 grid, where your move decides which board your opponent must play in next. It turns a game kids solve in an afternoon into a genuine battle of foresight. This free browser version plays against the computer at three levels, with no downloads or signup.</p>
+            <p>Ultimate Tic-Tac-Toe is the deep, strategic upgrade to the classic game: nine tic-tac-toe boards arranged in a big 3&times;3 grid, where your move decides which board your opponent must play in next. It turns a game kids solve in an afternoon into a genuine battle of foresight. This free browser version plays against the computer at three levels, with no downloads or signup. An optional tutorial mode stars the strongest cell each turn and explains the move in one line.</p>
 
             <h3>Ultimate Tic-Tac-Toe rules</h3>
             <ul>
@@ -226,6 +227,7 @@
             <p><b>How do I play Ultimate Tic-Tac-Toe?</b> Play in one of the nine small boards. The cell you choose sends your opponent to the matching small board for their turn. Win small boards to claim them, and win three claimed boards in a row to win the game.</p>
             <p><b>How is it different from regular Tic-Tac-Toe?</b> Your move controls where your opponent plays next, so you have to think about both winning your board <i>and</i> where you're sending them &mdash; which makes it far deeper than the original.</p>
             <p><b>What happens if I'm sent to a finished board?</b> You get a free move &mdash; play in any open board you like.</p>
+            <p><b>Is there a tutorial?</b> Yes &mdash; switch on Tutorial mode under the board. Each turn it stars the strongest cell and explains the move in one line.</p>
             <p><b>Is it free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
 
             <h3>More strategy games</h3>
@@ -474,6 +476,54 @@
       return pick.idx;
     }
 
+    // ── Tutorial hint ───────────────────────────────────────────────────────
+    // Same engine the computer uses, searched from the player's side, always
+    // at Hard depth (6) regardless of the selected level. No jitter — the
+    // single best cell, deterministically.
+    function chooseHintMove(state) {
+      const moves = legalMoves(state);
+      if (moves.length === 0) return null;
+      // Immediate game win first (mirrors chooseAIMove).
+      for (const idx of moves) {
+        const next = clone(state);
+        applyMove(next, idx);
+        if (next.winner === PLAYER) return idx;
+      }
+      moves.sort((a, b) => orderKey(state, b) - orderKey(state, a));
+      let best = moves[0];
+      let alpha = -Infinity;
+      for (const idx of moves) {
+        const next = clone(state);
+        applyMove(next, idx);
+        const v = -negamax(next, 5, -Infinity, -alpha);
+        if (v > alpha) { alpha = v; best = idx; }
+      }
+      return best;
+    }
+
+    // The most salient reason the engine's pick is strong. Every claim must be
+    // checkable on the board in front of the player — never send-destination
+    // judgments ("sends the computer somewhere bad") they can't verify.
+    function hintReason(state, idx) {
+      const m = (idx / 9) | 0;
+      const c = idx % 9;
+      state.cells[idx] = PLAYER;
+      const winsMini = miniStatus(state.cells, m).status === PLAYER;
+      state.cells[idx] = 0;
+      if (winsMini) {
+        const next = clone(state);
+        applyMove(next, idx);
+        if (next.winner === PLAYER) return '★ — this wins this small board, and this small board wins you the whole game.';
+        return '★ — this makes three in a row and wins this small board.';
+      }
+      state.cells[idx] = AI;
+      const blocksMini = miniStatus(state.cells, m).status === AI;
+      state.cells[idx] = 0;
+      if (blocksMini) return '★ — the computer has two in a row here; this blocks it from winning this small board.';
+      if (c === 4) return '★ — this takes the center of this small board, the cell in the most three-in-a-row lines.';
+      return '★ — the strongest cell by thinking several moves ahead.';
+    }
+
     // ── UI / rendering ──────────────────────────────────────────────────────
     const KEY_STREAK = 'ultimateTicTacToeHighScore';
     const KEY_BEST   = 'ultimateTicTacToeBestStreak';
@@ -481,6 +531,7 @@
     const KEY_LOSS   = 'ultimateTicTacToeGamesLost';
     const KEY_DRAW   = 'ultimateTicTacToeGamesDraw';
     const KEY_DIFF   = 'ultimateTicTacToeDifficulty';
+    const KEY_TUT    = 'ultimateTicTacToeTutorial';
 
     const PLACE_MS = 220;
 
@@ -510,6 +561,8 @@
     let anim = null;            // { idx, side, start }
     let difficulty = localStorage.getItem(KEY_DIFF) || 'Medium';
     diffEl.value = difficulty;
+    let tutorial = localStorage.getItem(KEY_TUT) === '1';
+    let hintIdx = null;         // tutorial's recommended cell, or null
 
     function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
     function writeNum(k, v) { localStorage.setItem(k, String(v)); }
@@ -568,6 +621,23 @@
       ctx.lineWidth = Math.max(2, size * 0.10);
       ctx.beginPath();
       ctx.arc(cx, cy, r, 0, Math.PI * 2);
+      ctx.stroke();
+      ctx.restore();
+    }
+    function drawStar(cx, cy, r, color) {
+      ctx.save();
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const ang = -Math.PI / 2 + i * Math.PI / 5;
+        const rad = i % 2 === 0 ? r : r * 0.45;
+        const px = cx + Math.cos(ang) * rad, py = cy + Math.sin(ang) * rad;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.2)';
+      ctx.lineWidth = 1.5;
       ctx.stroke();
       ctx.restore();
     }
@@ -646,6 +716,12 @@
         ctx.strokeRect(x + 0.5, y + 0.5, MINI_SIZE - 1, MINI_SIZE - 1);
       }
 
+      // Tutorial star on the recommended cell (player's turn only)
+      if (tutorial && hintIdx != null && !anim && !aiThinking && state.winner === 0 && state.turn === PLAYER) {
+        const { x, y } = cellXY(hintIdx);
+        drawStar(x + CELL_SIZE / 2, y + CELL_SIZE / 2, CELL_SIZE * 0.30, '#D8940B');
+      }
+
       // Game-over meta line
       if (state.winner !== 0 && state.winLine) {
         const [a, b, c] = state.winLine;
@@ -665,6 +741,13 @@
 
     function setStatus(s) { statusEl.textContent = s; }
     function setTurnLabel(s) { turnEl.textContent = s; }
+
+    function computeHint() {
+      hintIdx = null;
+      if (!tutorial || state.winner !== 0 || aiThinking || state.turn !== PLAYER) return;
+      hintIdx = chooseHintMove(state);
+      if (hintIdx != null) setStatus('Tutorial: ' + hintReason(state, hintIdx));
+    }
 
     let toastTimer = null;
     function showToast(msg, ms = 1100) {
@@ -735,6 +818,7 @@
           ? 'Free choice — play in any open mini-board.'
           : 'You must play in the highlighted mini-board.');
         refreshStats();
+        computeHint();
         draw();
       } else {
         setTurnLabel('Computer thinking');
@@ -774,6 +858,7 @@
         return;
       }
       applyMove(state, idx);
+      hintIdx = null;
       startMoveAnim(idx, () => {
         refreshStats();
         nextTurn();
@@ -788,6 +873,7 @@
       setTurnLabel('Your move');
       setStatus('Free choice — play in any cell on the board.');
       refreshStats();
+      computeHint();
       draw();
     }
 
@@ -796,6 +882,25 @@
     diffEl.addEventListener('change', () => {
       difficulty = diffEl.value;
       localStorage.setItem(KEY_DIFF, difficulty);
+    });
+
+    const tutToggle = document.getElementById('tutorialToggle');
+    tutToggle.checked = tutorial;
+    tutToggle.addEventListener('change', () => {
+      tutorial = tutToggle.checked;
+      localStorage.setItem(KEY_TUT, tutorial ? '1' : '0');
+      if (tutorial) {
+        computeHint();
+      } else {
+        hintIdx = null;
+        if (state.winner === 0 && state.turn === PLAYER && !aiThinking) {
+          const freeChoice = state.nextMini === -1 || state.meta[state.nextMini] !== 0;
+          setStatus(freeChoice
+            ? 'Free choice — play in any open mini-board.'
+            : 'You must play in the highlighted mini-board.');
+        }
+      }
+      draw();
     });
 
     startGame();

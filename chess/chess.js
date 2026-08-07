@@ -50,6 +50,7 @@
   const undoBtn = document.getElementById('undo');
   const copyPgnBtn = document.getElementById('copyPgn');
   const copyFenBtn = document.getElementById('copyFen');
+  const tutorialToggleEl = document.getElementById('tutorialToggle');
 
   // ---- localStorage keys (unchanged — the Strategy page reads chessGamesWon etc.) ----
   // KEY_STREAK uses the legacy 'chessHighScore' name from an earlier version of the
@@ -65,6 +66,7 @@
   const KEY_BOARD = 'chessBoardTheme';
   const KEY_SOUND = 'chessSound';
   const KEY_ANALYSIS = 'chessEvalBar';
+  const KEY_TUT = 'chessTutorial';
   // Review search depth. 3 is fast (~50ms/move) but produces ~250cp of noise — enough
   // to flag good developing moves as ?!. 4 is ~10x slower per call but the signal
   // separates real errors from depth-3 wobble. Review is one-shot post-game so the
@@ -101,6 +103,7 @@
   let boardTheme = localStorage.getItem(KEY_BOARD) || 'Wood';
   let soundOn = localStorage.getItem(KEY_SOUND) !== 'off';
   let analysisOn = localStorage.getItem(KEY_ANALYSIS) !== 'off';
+  let tutorial = localStorage.getItem(KEY_TUT) === '1';
   diffEl.value = difficulty;
 
   const squareCells = new Array(64);            // board idx -> cell element
@@ -110,6 +113,7 @@
   let pseudoTargets = new Set();  // squares the selected piece could reach ignoring king safety
   let toastTimer = null;
   let aiTimer = null;             // pending scheduled AI move, so we can cancel it on reset
+  let tutTimer = null;            // pending scheduled Tutorial auto-hint
   let gameGen = 0;                // bumped on every reset; a stale scheduled AI move is ignored
 
   function cancelAI() { if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; } aiThinking = false; }
@@ -249,8 +253,10 @@
       placePiecesFrom(state.board);
       updateHighlights();
       reviewBarEl.hidden = true;
+      scheduleTutorial();
     } else {
       reviewing = true;
+      clearHint();   // a live-position hint makes no sense on a past position
       const s = stateAfter(n);
       placePiecesFrom(s.board);
       setReviewHighlights(s);
@@ -285,13 +291,40 @@
     hintSquares = null;
   }
   function showHint() {
-    if (gameOver || reviewing || aiThinking || state.turn !== playerColor || !window.ChessAnalysis) return;
+    if (gameOver || reviewing || aiThinking || state.turn !== playerColor || !window.ChessAnalysis) return null;
     clearHint();
     const r = ChessAnalysis.analyse(state, HINT_DEPTH);
-    if (!r.best) return;
+    if (!r.best) return null;
     hintSquares = { from: r.best.from, to: r.best.to };
     squareCells[r.best.from].classList.add('sq-hint');
     squareCells[r.best.to].classList.add('sq-hint');
+    return r.best;
+  }
+
+  // ---- Tutorial mode: the Hint highlight, shown automatically each turn ----
+  // Reuses showHint() (same search, same square highlight) and adds a one-line
+  // note to the status panel. The suffix only claims what is trivially checkable
+  // from the move itself: a capture on the target square, a '+' in the notation,
+  // or castling. No positional claims.
+  function tutorialLine(move, san) {
+    const names = { p: 'pawn', n: 'knight', b: 'bishop', r: 'rook', q: 'queen' };
+    let s = 'Tutorial: suggests ' + san;
+    if (move.castle) s += ' — castles';
+    else if (move.capture && move.ep == null) s += ' — captures the ' + (names[move.capture.toLowerCase()] || 'piece');
+    else if (san.indexOf('+') !== -1) s += ' — gives check';
+    return s + '.';
+  }
+  function tutorialHint() {
+    if (!tutorial) return;
+    const best = showHint();   // null unless it's the player's live turn
+    if (!best || !window.ChessNotation) return;
+    setStatus('Your move. ' + tutorialLine(best, ChessNotation.toSAN(state, best)));
+  }
+  // Deferred a beat so the computer's move animation lands before the (synchronous) search runs.
+  function scheduleTutorial() {
+    clearTimeout(tutTimer);
+    if (!tutorial) return;
+    tutTimer = setTimeout(() => { tutTimer = null; tutorialHint(); }, 220);
   }
 
   function annotClass(a) { return a === '??' ? 'a-blunder' : a === '?' ? 'a-mistake' : 'a-inacc'; }
@@ -465,7 +498,7 @@
     if (endGameIfTerminal()) return;
     if (E.isInCheck(state, state.turn)) sound('check');
     setStatus(state.turn === playerColor ? 'Your move.' : 'Computer is thinking…');
-    if (state.turn !== playerColor) scheduleAI();
+    if (state.turn !== playerColor) scheduleAI(); else scheduleTutorial();
   }
 
   function scheduleAI() {
@@ -630,7 +663,7 @@
     updateMoveList();
     updateEval();
     setStatus(state.turn === playerColor ? 'Your move.' : 'Computer is thinking…');
-    if (state.turn !== playerColor) scheduleAI();
+    if (state.turn !== playerColor) scheduleAI(); else scheduleTutorial();
   }
 
   // Rebuild the live game from the first n recorded moves (used by undo).
@@ -646,14 +679,15 @@
     gameOver = false; gameResultStr = '*'; reviewing = false; viewPly = n;
     selected = null; legalForSelected = []; pendingPromo = null;
     overEl.classList.remove('show'); promoEl.classList.remove('show'); reviewBarEl.hidden = true;
-    analysisOutEl.hidden = true; hintSquares = null;
+    analysisOutEl.hidden = true;
+    clearHint();   // unlike newGame there's no buildSquares here, so drop the classes too
     placePiecesFrom(state.board);
     updateHighlights();
     renderCaptured();
     updateMoveList();
     updateEval();
     setStatus(state.turn === playerColor ? 'Your move.' : 'Computer is thinking…');
-    if (state.turn !== playerColor) scheduleAI();
+    if (state.turn !== playerColor) scheduleAI(); else scheduleTutorial();
   }
 
   // Take back to before the human's most recent move.
@@ -730,6 +764,7 @@
     else { placePiecesFrom(state.board); updateHighlights(); }
     renderCaptured();
     updateEval();
+    scheduleTutorial();   // buildSquares dropped the hint highlight; re-show it
   });
   diffEl.addEventListener('change', () => { difficulty = diffEl.value; localStorage.setItem(KEY_DIFF, difficulty); });
   boardThemeSel.addEventListener('change', () => { boardTheme = boardThemeSel.value; localStorage.setItem(KEY_BOARD, boardTheme); applyTheme(boardTheme); });
@@ -743,12 +778,24 @@
   });
   hintBtn.addEventListener('click', showHint);
   reviewBtn.addEventListener('click', reviewGame);
+  tutorialToggleEl.addEventListener('change', () => {
+    tutorial = tutorialToggleEl.checked;
+    localStorage.setItem(KEY_TUT, tutorial ? '1' : '0');
+    if (tutorial) {
+      tutorialHint();
+    } else {
+      clearTimeout(tutTimer); tutTimer = null;
+      clearHint();
+      if (!gameOver && !aiThinking && state.turn === playerColor) setStatus('Your move.');
+    }
+  });
 
   // init persisted UI choices
   boardThemeSel.value = boardTheme;
   pieceSetSel.value = pieceSet;
   soundSel.value = soundOn ? 'on' : 'off';
   analysisSel.value = analysisOn ? 'on' : 'off';
+  tutorialToggleEl.checked = tutorial;
   if (window.ChessSound) ChessSound.setEnabled(soundOn);
   applyTheme(boardTheme);
   refreshStats();

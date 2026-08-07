@@ -7,12 +7,12 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <title>Mancala — Free Browser Kalah vs. Computer | Limestone Games</title>
-    <meta name="description" content="Play Mancala (Kalah rules) free in your browser against the computer. Sow seeds, capture across, and claim your store. Three difficulty tiers, no downloads.">
+    <meta name="description" content="Play Mancala (Kalah rules) free in your browser against the computer. Three difficulty tiers plus a tutorial mode that marks your strongest sow. No downloads.">
     <meta name="keywords" content="mancala, kalah, online mancala, free mancala, browser mancala, mancala vs Computer, sowing game">
     <link rel="canonical" href="https://limestonegames.com/mancala/">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Mancala","description":"Play Mancala (Kalah rules) in your browser against the computer. Three difficulty tiers, capture rule, free-turn on store, sweep at game end.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Mancala"}]}</script>
-    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Mancala?", "acceptedAnswer": {"@type": "Answer", "text": "Click one of your pits to scoop up its stones and sow them counter-clockwise, one per pit. Land your last stone in your store to take another turn. The game ends when one side has no stones in play."}}, {"@type": "Question", "name": "Is Mancala free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "What's the \"capture\" rule?", "acceptedAnswer": {"@type": "Answer", "text": "If your last sown stone lands in an empty pit on your side, you capture that stone plus all stones in the directly opposite pit. Both go into your store."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Mancala?", "acceptedAnswer": {"@type": "Answer", "text": "Click one of your pits to scoop up its stones and sow them counter-clockwise, one per pit. Land your last stone in your store to take another turn. The game ends when one side has no stones in play."}}, {"@type": "Question", "name": "Is Mancala free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "What's the \"capture\" rule?", "acceptedAnswer": {"@type": "Answer", "text": "If your last sown stone lands in an empty pit on your side, you capture that stone plus all stones in the directly opposite pit. Both go into your store."}}, {"@type": "Question", "name": "Is there a tutorial?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — switch on Tutorial mode under the board. Each turn it highlights your strongest pit and says what the sow earns — a free turn, a capture, or seeds banked in your store."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
     <meta property="og:title" content="Mancala — Free Browser Kalah vs. Computer">
     <meta property="og:description" content="Sow seeds, capture across, claim your store. Three difficulties, no downloads.">
     <meta property="og:type" content="website">
@@ -145,11 +145,14 @@
       .controls { display: flex; gap: 10px; flex-wrap: wrap; justify-content: center; }
       /* On narrow screens, flex-wrap leaves Sound alone on its own row because
          New+Hint+Undo all happen to fit row 1. Pin the in-game buttons to a
-         2-column grid so they pair up cleanly ([New,Hint],[Undo,Sound]), and
-         let the "More strategy games" link span both columns. */
+         2-column grid so they pair up cleanly ([New,Hint],[Undo,Sound]), give
+         the Tutorial switch its own centered full row (dense flow backfills
+         Hint next to New), and let the "More strategy games" link span both
+         columns. */
       @media (max-width: 540px) {
-        .controls { display: grid; grid-template-columns: 1fr 1fr; }
+        .controls { display: grid; grid-template-columns: 1fr 1fr; grid-auto-flow: dense; }
         .controls > button { width: 100%; }
+        .controls > .tut-switch { grid-column: 1 / -1; justify-content: center; }
         .controls > a { grid-column: 1 / -1; }
         .controls > a > button { width: 100%; }
       }
@@ -239,6 +242,7 @@
         <div class="turn" id="status">Click one of your pits (bottom row) to sow seeds.</div>
         <div class="controls">
             <button id="newGame">New game</button>
+            <label class="tut-switch"><input type="checkbox" id="tutorialToggle"><span class="tut-track"><span class="tut-knob"></span></span>Tutorial</label>
             <button id="hintBtn" class="ghost">Hint</button>
             <button id="undoBtn" class="ghost" disabled>Undo</button>
             <button id="muteBtn" class="ghost">Sound on</button>
@@ -249,7 +253,7 @@
 
         <section class="game-overview" aria-label="About Mancala">
             <h2>How to play Mancala online</h2>
-            <p>Mancala is one of the oldest board games in the world &mdash; a two-player game of pure strategy where you sow seeds around the board and race to capture the most into your store. This free browser version plays the classic <b>Kalah</b> ruleset against the computer, with three difficulty levels and no downloads, signups, or installs. You take the bottom row; the computer takes the top.</p>
+            <p>Mancala is one of the oldest board games in the world &mdash; a two-player game of pure strategy where you sow seeds around the board and race to capture the most into your store. This free browser version plays the classic <b>Kalah</b> ruleset against the computer, with three difficulty levels and no downloads, signups, or installs. You take the bottom row; the computer takes the top. An optional Tutorial mode marks your strongest pit each turn and says exactly what the sow earns &mdash; a free turn, a capture, or banked seeds.</p>
 
             <h3>Mancala rules</h3>
             <p>The board has twelve small pits &mdash; six on your side, six on the computer's &mdash; plus a large <b>store</b> at each end. Your store is on the right. Every small pit starts with four seeds. The goal is simple: finish with more seeds in your store than your opponent.</p>
@@ -275,6 +279,7 @@
             <h3>Frequently asked</h3>
             <p><b>How do I play Mancala?</b> Click one of your pits to scoop up its seeds and sow them counter-clockwise, one per pit. Land your last seed in your store to take another turn; land it in an empty pit on your side to capture the seeds opposite. The game ends when one side is empty.</p>
             <p><b>Is Mancala a game of luck or skill?</b> Pure skill &mdash; there are no dice and no hidden information. Both players see the whole board, so every result comes down to how well you plan your sows, free turns, and captures.</p>
+            <p><b>Is there a tutorial?</b> Yes &mdash; switch on Tutorial mode under the board. Each turn it highlights your strongest pit and says what the sow earns &mdash; a free turn, a capture, or seeds banked in your store.</p>
             <p><b>Is Mancala free to play?</b> Yes &mdash; no signup, no downloads, no installs.</p>
             <p><b>Does my record save?</b> Yes &mdash; your wins, losses, and best streak are stored locally in your browser.</p>
 
@@ -475,6 +480,7 @@
     const KEY_DIFF   = 'mancalaDifficulty';
     const KEY_THEME  = 'mancalaTheme';
     const KEY_MUTE   = 'mancalaMuted';
+    const KEY_TUT    = 'mancalaTutorial';
 
     // ── Themes (canvas palettes) ───────────────────────────────────────────────
     const THEMES = {
@@ -975,6 +981,8 @@
     let selectedPit = null;       // touch: first tap selects, second commits
     let lastPointerType = 'mouse';
     const history = [];           // undo snapshots
+    let tutorial = localStorage.getItem(KEY_TUT) === '1';
+    let tutSeq = 0;               // invalidates in-flight tutorial searches
 
     diffEl.value = difficulty;
     themeSel.value = activeTheme;
@@ -1025,6 +1033,7 @@
       else { recordDraw(); sDraw(); showOver('Draw', summary + ' Streak reset.'); }
       history.length = 0;
       preview = null; selectedPit = null;
+      if (statusEl.textContent.startsWith('Tutorial:')) setStatus('Game over — press New game to play again.');
       refreshStats(); updateUndoBtn(); updateHintBtn();
       return true;
     }
@@ -1046,6 +1055,7 @@
         setTurnLabel('Your move');
         setStatus('Pick a pit on your side (bottom row) to sow.');
         updateUndoBtn(); updateHintBtn();
+        computeTutorial();
       } else {
         aiTurn();
       }
@@ -1091,6 +1101,7 @@
       preview = null; selectedPit = null;
       setTurnLabel('Your move'); setStatus('Took back your last move. Pick a pit to sow.');
       refreshStats(); updateUndoBtn(); updateHintBtn();
+      computeTutorial();
     }
 
     function hint() {
@@ -1108,6 +1119,31 @@
     function updateUndoBtn() { undoBtn.disabled = (history.length === 0 || !!anim || aiThinking || state.winner !== 0 || state.turn !== PLAYER); }
     function updateHintBtn() { hintBtn.disabled = (!!anim || aiThinking || state.winner !== 0 || state.turn !== PLAYER); }
 
+    // ── Tutorial coach ────────────────────────────────────────────────────────
+    // A persistent Hint: same engine search, same preview highlight, run
+    // automatically at the start of every player turn while the switch is on.
+    // Every claim comes from the move's own sow simulation (previewFor), so it
+    // is exact — landing pit, capture count, seeds banked — never vague.
+    function tutorialLine(p) {
+      if (p.freeTurn) return 'Tutorial: sow the highlighted pit — your last seed lands in your store and you get another turn.';
+      if (p.capture) return 'Tutorial: sow the highlighted pit — it captures ' + p.capture + ' seeds into your store.';
+      const banked = p.path.filter(i => i === PLAYER_STORE).length;
+      if (banked) return 'Tutorial: sow the highlighted pit — it banks ' + banked + (banked === 1 ? ' seed' : ' seeds') + ' in your store.';
+      return 'Tutorial: the highlighted pit is the strongest move, found by thinking several moves ahead.';
+    }
+
+    function computeTutorial() {
+      const seq = ++tutSeq;
+      if (!tutorial || anim || aiThinking || state.turn !== PLAYER || state.winner !== 0) return;
+      searchBestMoveAsync(state, { depth: 8, jitter: 0 }, (m) => {
+        if (seq !== tutSeq || m == null) return;
+        if (!tutorial || anim || aiThinking || state.turn !== PLAYER || state.winner !== 0) return;
+        selectedPit = m;
+        preview = previewFor(m);
+        setStatus(tutorialLine(preview));
+      });
+    }
+
     // ── Input ─────────────────────────────────────────────────────────────────
     canvas.addEventListener('pointerdown', (e) => { lastPointerType = e.pointerType || 'mouse'; initAudio(); });
 
@@ -1117,7 +1153,7 @@
       const idx = pitAt(e);
       preview = (idx >= 0 && PLAYER_PITS.includes(idx) && state.pits[idx] > 0) ? previewFor(idx) : (selectedPit != null ? preview : null);
     });
-    canvas.addEventListener('pointerleave', () => { if (selectedPit == null) preview = null; });
+    canvas.addEventListener('pointerleave', () => { preview = selectedPit != null ? previewFor(selectedPit) : null; });
 
     canvas.addEventListener('click', (e) => {
       initAudio();
@@ -1139,6 +1175,7 @@
       setTurnLabel('Your move');
       setStatus('Pick a pit on your side (bottom row) to sow.');
       refreshStats(); updateUndoBtn(); updateHintBtn();
+      computeTutorial();
     }
 
     newGameBtn.addEventListener('click', () => { initAudio(); startGame(); });
@@ -1152,6 +1189,19 @@
       muteBtn.textContent = muted ? 'Sound off' : 'Sound on';
     });
     diffEl.addEventListener('change', () => { difficulty = diffEl.value; localStorage.setItem(KEY_DIFF, difficulty); });
+    const tutToggle = document.getElementById('tutorialToggle');
+    tutToggle.checked = tutorial;
+    tutToggle.addEventListener('change', () => {
+      tutorial = tutToggle.checked;
+      localStorage.setItem(KEY_TUT, tutorial ? '1' : '0');
+      if (tutorial) {
+        computeTutorial();
+      } else {
+        tutSeq++;
+        selectedPit = null; preview = null;
+        if (!anim && !aiThinking && state.turn === PLAYER && state.winner === 0) setStatus('Pick a pit on your side (bottom row) to sow.');
+      }
+    });
     themeSel.addEventListener('change', () => {
       activeTheme = THEMES[themeSel.value] ? themeSel.value : 'hardwood';
       document.body.dataset.theme = activeTheme;

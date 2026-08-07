@@ -7,12 +7,12 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <title>Dots &amp; Boxes — Play Free Online vs. the Computer | Limestone Games</title>
-    <meta name="description" content="Play Dots & Boxes free in your browser against the computer. Three difficulty tiers, three board sizes, no downloads. Complete boxes to outscore the computer.">
+    <meta name="description" content="Play Dots & Boxes free in your browser against the computer. Three difficulty tiers, three board sizes, and a tutorial mode that coaches every line.">
     <meta name="keywords" content="dots and boxes, dots & boxes, online dots and boxes, free dots and boxes, browser dots and boxes, dots and boxes vs Computer">
     <link rel="canonical" href="https://limestonegames.com/connect-dots/">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Dots & Boxes","description":"Play Dots & Boxes free in your browser against the computer. Three difficulty tiers and board sizes.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Dots & Boxes","description":"Play Dots & Boxes free in your browser against the computer. Three difficulty tiers and board sizes, plus a tutorial mode that coaches every line.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Dots & Boxes"}]}</script>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Dots and Boxes?","acceptedAnswer":{"@type":"Answer","text":"Click between two adjacent dots to draw a line. Whoever completes the fourth side of a box claims it and gets another turn. Most boxes wins."}},{"@type":"Question","name":"Is Dots and Boxes free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs."}},{"@type":"Question","name":"What's the trick to winning?","acceptedAnswer":{"@type":"Answer","text":"Avoid completing the third side of any box (it hands your opponent the easy claim), and learn the double-cross — sacrifice the last two boxes of a chain to force your opponent into the next chain."}},{"@type":"Question","name":"Does my record save?","acceptedAnswer":{"@type":"Answer","text":"Yes — your wins, losses, and streak are stored locally in your browser."}}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Dots and Boxes?","acceptedAnswer":{"@type":"Answer","text":"Click between two adjacent dots to draw a line. Whoever completes the fourth side of a box claims it and gets another turn. Most boxes wins."}},{"@type":"Question","name":"Is Dots and Boxes free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs."}},{"@type":"Question","name":"What's the trick to winning?","acceptedAnswer":{"@type":"Answer","text":"Avoid completing the third side of any box (it hands your opponent the easy claim), and learn the double-cross — sacrifice the last two boxes of a chain to force your opponent into the next chain."}},{"@type":"Question","name":"Does my record save?","acceptedAnswer":{"@type":"Answer","text":"Yes — your wins, losses, and streak are stored locally in your browser."}},{"@type":"Question","name":"Is there a tutorial?","acceptedAnswer":{"@type":"Answer","text":"Yes — switch on Tutorial mode under the board. Each turn it highlights a recommended line and explains why: it completes a box, it's safe, or it gives the computer the fewest boxes."}}]}</script>
     <meta property="og:title" content="Dots & Boxes — Play Free Online vs. the Computer | Limestone Games">
     <meta property="og:description" content="Play Dots & Boxes free in your browser against the computer. Three difficulty tiers.">
     <meta property="og:type" content="website">
@@ -160,6 +160,7 @@
         text-decoration: none; font-weight: 700; font-size: 13px;
       }
       .related-games-list a:hover { background: rgba(46, 108, 180, 0.2); }
+      /* .tut-switch styles come from ../strategy/strategy-chrome.css */
     </style>
     <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260807b">
 </head>
@@ -199,14 +200,15 @@
         <div class="turn" id="status">Click between two adjacent dots to draw a line.</div>
         <div class="controls">
             <button id="newGame">New game</button>
+            <label class="tut-switch"><input type="checkbox" id="tutorialToggle"><span class="tut-track"><span class="tut-knob"></span></span>Tutorial</label>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <p class="hint">Complete the fourth side of a box to claim it — and take another turn. Most boxes when every line is drawn wins. Bigger boards on higher difficulty.</p>        </div>
+        <p class="hint">Complete the fourth side of a box to claim it — and take another turn. Most boxes when every line is drawn wins. Bigger boards on higher difficulty. New to the game? Switch on Tutorial and the board highlights a recommended line each turn and explains why.</p>        </div>
         
 
         <details id="how">
             <summary><h2>How to play Dots &amp; Boxes</h2></summary>
-            <p>Dots &amp; Boxes is the classic pencil-and-paper game on a grid of dots. You and the computer take turns drawing one line between two adjacent dots. Complete the fourth side of a box and you claim it &mdash; and you get another turn. Whoever claims the most boxes when all lines are drawn wins.</p>
+            <p>Dots &amp; Boxes is the classic pencil-and-paper game on a grid of dots. You and the computer take turns drawing one line between two adjacent dots. Complete the fourth side of a box and you claim it &mdash; and you get another turn. Whoever claims the most boxes when all lines are drawn wins. This free browser version has three difficulty tiers on growing boards, plus an optional tutorial mode that highlights a recommended line each turn and explains why.</p>
 
             <h3>Controls</h3>
             <ul>
@@ -236,6 +238,7 @@
             <p><b>How do I play Dots &amp; Boxes?</b> Click between two adjacent dots to draw a line. Whoever completes the fourth side of a box claims it and gets another turn. Most boxes wins.</p>
             <p><b>Is Dots &amp; Boxes free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
             <p><b>What's the trick to winning?</b> Avoid completing the third side of any box (it hands your opponent the easy claim), and learn the double-cross.</p>
+            <p><b>Is there a tutorial?</b> Yes &mdash; switch on Tutorial mode under the board. Each turn it highlights a recommended line and explains why: it completes a box, it's safe, or it gives the computer the fewest boxes.</p>
             <p><b>Does my record save?</b> Yes &mdash; your wins, losses, and streak are stored locally in your browser.</p>
 
             <h3>More strategy games</h3>
@@ -270,6 +273,8 @@
         const KEY_LOSS   = 'dotsAndBoxesGamesLost';
         const KEY_DRAW   = 'dotsAndBoxesGamesDraw';
         const KEY_DIFF   = 'dotsAndBoxesDifficulty';
+        const KEY_TUT    = 'connectDotsTutorial';
+        const DEFAULT_STATUS = 'Click between two adjacent dots to draw a line.';
         function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
         function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} }
         function recordWin() { writeNum(KEY_WINS, readNum(KEY_WINS) + 1); const s = readNum(KEY_STREAK) + 1; writeNum(KEY_STREAK, s); if (s > readNum(KEY_BEST)) writeNum(KEY_BEST, s); }
@@ -289,6 +294,9 @@
         let boxAnims = [];
         let particles = [];
         let needsRedraw = true;
+
+        let tutorial = localStorage.getItem(KEY_TUT) === '1';
+        let tutHint = null;   // { move: {type,row,col}, msg }
 
         const PADDING = 50;
         let dotSpacing;
@@ -360,6 +368,7 @@
             overEl.classList.remove('show');
             updateUI();
             refreshStats();
+            computeHints();
             needsRedraw = true;
         }
 
@@ -369,6 +378,8 @@
             else if (currentTurn === 'player') turnEl.textContent = 'Your turn';
             else turnEl.textContent = 'Computer…';
         }
+
+        function setStatus(s) { statusEl.textContent = s; }
 
         // ===================== Coordinate helpers =====================
         function dotX(col) { return PADDING + col * dotSpacing; }
@@ -525,6 +536,27 @@
             ctx.restore();
         }
 
+        function drawTutHint() {
+            if (!tutorial || !tutHint || gameOver || currentTurn !== 'player') return;
+            const m = tutHint.move;
+            const now = performance.now();
+            ctx.save();
+            ctx.globalAlpha = 0.55 + 0.35 * Math.sin(now / 280);
+            ctx.shadowColor = 'rgba(255, 205, 90, 0.6)';
+            ctx.shadowBlur = 14;
+            ctx.strokeStyle = '#FFD75E';
+            ctx.lineWidth = HOVER_THICKNESS;
+            ctx.lineCap = 'round';
+            ctx.setLineDash([9, 7]);
+            ctx.lineDashOffset = -now / 40;
+            ctx.beginPath();
+            ctx.moveTo(dotX(m.col), dotY(m.row));
+            if (m.type === 'h') ctx.lineTo(dotX(m.col + 1), dotY(m.row));
+            else ctx.lineTo(dotX(m.col), dotY(m.row + 1));
+            ctx.stroke();
+            ctx.restore();
+        }
+
         function drawHover() {
             if (!hoveredLine || gameOver || currentTurn !== 'player' || computerThinking) return;
             ctx.save();
@@ -578,6 +610,7 @@
             drawBoxes();
             drawEmptyLines();
             drawClaimedLines();
+            drawTutHint();
             drawHover();
             drawDots();
             drawParticles();
@@ -604,7 +637,8 @@
                 p.life -= dt / 600;
                 if (p.life <= 0) particles.splice(i, 1);
             }
-            if (anyAnimActive || needsRedraw) { draw(); needsRedraw = false; }
+            const tutPulse = tutorial && tutHint && !gameOver && currentTurn === 'player';
+            if (anyAnimActive || needsRedraw || tutPulse) { draw(); needsRedraw = false; }
             requestAnimationFrame(animLoop);
         }
         requestAnimationFrame(animLoop);
@@ -645,10 +679,10 @@
             return count;
         }
 
-        function placeLine(type, row, col, owner) {
+        function placeLine(type, row, col, owner, silent) {
             if (type === 'h') horizontalLines[row][col] = owner;
             else verticalLines[row][col] = owner;
-            startLineAnim(type, row, col, owner);
+            if (!silent) startLineAnim(type, row, col, owner);
             let completedBoxes = 0;
             const completed = [];
             if (type === 'h') {
@@ -658,7 +692,7 @@
                 if (col > 0 && boxes[row][col - 1] === 0 && countBoxSides(row, col - 1) === 4) { boxes[row][col - 1] = owner; completed.push([row, col - 1]); completedBoxes++; }
                 if (col < cols && boxes[row][col] === 0 && countBoxSides(row, col) === 4) { boxes[row][col] = owner; completed.push([row, col]); completedBoxes++; }
             }
-            for (const [r, c] of completed) startBoxAnim(r, c, owner);
+            if (!silent) for (const [r, c] of completed) startBoxAnim(r, c, owner);
             return completedBoxes;
         }
 
@@ -735,6 +769,72 @@
             return bestMove;
         }
 
+        // ===================== Tutorial coach =====================
+        // Recommends a line using the same rules the hard computer plays by,
+        // applied from the player's side and at full strength on every level:
+        // take a completable box, else play a safe line, else give up the
+        // cheapest chain. Every message only claims what the board shows.
+        function completesCount(type, row, col) {
+            let n = 0;
+            if (type === 'h') {
+                if (row > 0 && boxes[row - 1][col] === 0 && countBoxSides(row - 1, col) === 3) n++;
+                if (row < rows && boxes[row][col] === 0 && countBoxSides(row, col) === 3) n++;
+            } else {
+                if (col > 0 && boxes[row][col - 1] === 0 && countBoxSides(row, col - 1) === 3) n++;
+                if (col < cols && boxes[row][col] === 0 && countBoxSides(row, col) === 3) n++;
+            }
+            return n;
+        }
+
+        // How many boxes the computer could take in a row if this line were
+        // drawn: draw it, greedily complete every three-sided box (each one
+        // earns another turn, so the whole chain falls), then restore.
+        function chainCost(type, row, col) {
+            const h = horizontalLines.map(r => r.slice());
+            const v = verticalLines.map(r => r.slice());
+            const b = boxes.map(r => r.slice());
+            placeLine(type, row, col, 2, true);
+            let cost = 0, next;
+            while ((next = getAvailableMoves().find(m => wouldCompleteBox(m.type, m.row, m.col)))) {
+                cost += placeLine(next.type, next.row, next.col, 2, true);
+            }
+            horizontalLines = h; verticalLines = v; boxes = b;
+            return cost;
+        }
+
+        function computeHints() {
+            tutHint = null;
+            needsRedraw = true;
+            if (!tutorial || gameOver || currentTurn !== 'player') { setStatus(DEFAULT_STATUS); return; }
+            const moves = getAvailableMoves();
+            if (!moves.length) { setStatus(DEFAULT_STATUS); return; }
+            const completing = moves.filter(m => wouldCompleteBox(m.type, m.row, m.col));
+            if (completing.length) {
+                let move = completing[0], n = completesCount(move.type, move.row, move.col);
+                for (const m of completing) {
+                    const k = completesCount(m.type, m.row, m.col);
+                    if (k > n) { move = m; n = k; }
+                }
+                const boxesTxt = n > 1 ? n + ' boxes' : 'a box';
+                tutHint = { move, msg: moves.length === 1
+                    ? 'Tutorial: the last line — it completes ' + boxesTxt + ' and ends the game.'
+                    : 'Tutorial: this line completes ' + boxesTxt + ' — you get another turn.' };
+            } else {
+                const safe = moves.filter(m => !wouldCreateThreeSided(m.type, m.row, m.col));
+                if (safe.length) {
+                    tutHint = { move: safe[0], msg: "Tutorial: safe line — it doesn't give the computer a box." };
+                } else {
+                    let move = moves[0], cost = chainCost(move.type, move.row, move.col);
+                    for (let i = 1; i < moves.length; i++) {
+                        const k = chainCost(moves[i].type, moves[i].row, moves[i].col);
+                        if (k < cost) { move = moves[i]; cost = k; }
+                    }
+                    tutHint = { move, msg: 'Tutorial: every line now gives the computer a box — this opens the fewest (' + (cost > 1 ? cost + ' boxes' : '1 box') + ').' };
+                }
+            }
+            setStatus(tutHint.msg);
+        }
+
         function makeMove(type, row, col, owner) {
             const ownerVal = owner === 'player' ? 1 : 2;
             const completed = placeLine(type, row, col, ownerVal);
@@ -744,13 +844,14 @@
                 else computerScore += completed;
             }
             updateUI();
-            if (isGameOver()) { endGame(); return; }
+            if (isGameOver()) { endGame(); computeHints(); return; }
             if (completed > 0) {
                 if (owner === 'computer') setTimeout(computerTurn, 450);
             } else {
                 if (owner === 'player') { currentTurn = 'computer'; updateUI(); setTimeout(computerTurn, 450); }
                 else { currentTurn = 'player'; updateUI(); }
             }
+            computeHints();
         }
 
         function computerTurn() {
@@ -819,6 +920,14 @@
         newGameBtn.addEventListener('click', () => startGame(difficulty));
         overBtn.addEventListener('click', () => startGame(difficulty));
         diffEl.addEventListener('change', () => startGame(diffEl.value));
+
+        const tutToggle = document.getElementById('tutorialToggle');
+        tutToggle.checked = tutorial;
+        tutToggle.addEventListener('change', () => {
+            tutorial = tutToggle.checked;
+            try { localStorage.setItem(KEY_TUT, tutorial ? '1' : '0'); } catch (e) {}
+            computeHints();
+        });
 
         // ===================== Init =====================
         difficulty = localStorage.getItem(KEY_DIFF) || 'medium';

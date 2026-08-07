@@ -7,7 +7,7 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <title>Checkers — Free Browser Checkers vs. Computer | Limestone Games</title>
-    <meta name="description" content="Play American checkers free in your browser against the computer. Mandatory captures, multi-jumps, kings — all standard rules. Three difficulty tiers, no downloads.">
+    <meta name="description" content="Play American checkers free in your browser against the computer. Mandatory captures, multi-jumps, kings, and a tutorial mode that marks your best move.">
     <meta name="keywords" content="checkers, draughts, online checkers, free checkers, browser checkers, checkers vs Computer">
     <link rel="canonical" href="https://limestonegames.com/checkers/">
     <link rel="icon" href="/favicon.ico" sizes="any">
@@ -17,7 +17,7 @@
     <link rel="manifest" href="/manifest.json">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Checkers","description":"Play American checkers in your browser against the computer. Mandatory captures, multi-jumps, king promotion. Three difficulty tiers.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Checkers"}]}</script>
-    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Checkers?", "acceptedAnswer": {"@type": "Answer", "text": "Click a piece, then click a diagonal destination square. Capture an opponent's piece by jumping over it into an empty square. Reach the far row to make a King."}}, {"@type": "Question", "name": "Is Checkers free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Why did the game force a capture?", "acceptedAnswer": {"@type": "Answer", "text": "Optional captures are off by default — when a capture is available, you must take it. Toggle the rule in the difficulty menu if you prefer the optional-capture variant."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Checkers?", "acceptedAnswer": {"@type": "Answer", "text": "Click a piece, then click a diagonal destination square. Capture an opponent's piece by jumping over it into an empty square. Reach the far row to make a King."}}, {"@type": "Question", "name": "Is Checkers free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Why did the game force a capture?", "acceptedAnswer": {"@type": "Answer", "text": "Optional captures are off by default — when a capture is available, you must take it. Toggle the rule in the difficulty menu if you prefer the optional-capture variant."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}, {"@type": "Question", "name": "Is there a tutorial?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — switch on Tutorial mode under the board. On your turn it outlines the best piece to move, stars its landing square, and explains the move in one line."}}]}</script>
     <meta property="og:title" content="Checkers — Free Browser Checkers vs. Computer">
     <meta property="og:description" content="American checkers with mandatory captures and multi-jumps. Three difficulties. No downloads.">
     <meta property="og:type" content="website">
@@ -190,6 +190,7 @@
         <div class="turn" id="status">Click a red piece to see its moves.</div>
         <div class="controls">
             <button id="newGame">New game</button>
+            <label class="tut-switch"><input type="checkbox" id="tutorialToggle"><span class="tut-track"><span class="tut-knob"></span></span>Tutorial</label>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
         <p class="hint" id="ruleHint">Captures are mandatory. If you can jump, you must — and chains of jumps must be completed in one turn.</p>        </div>
@@ -197,7 +198,7 @@
 
         <section class="game-overview" aria-label="About Checkers">
             <h2>How to play Checkers online</h2>
-            <p>Checkers (also called draughts) is the classic diagonal-capture race on an 8&times;8 board. You and the computer each start with twelve pieces; the goal is to capture all of your opponent's pieces &mdash; or leave them with no legal move. This free browser version offers three difficulty levels and a choice between forced and optional captures. No downloads, no signup.</p>
+            <p>Checkers (also called draughts) is the classic diagonal-capture race on an 8&times;8 board. You and the computer each start with twelve pieces; the goal is to capture all of your opponent's pieces &mdash; or leave them with no legal move. This free browser version offers three difficulty levels and a choice between forced and optional captures. Switch on Tutorial mode and each turn the game marks your strongest move and explains it in one line. No downloads, no signup.</p>
 
             <h3>Checkers rules</h3>
             <ul>
@@ -222,6 +223,7 @@
             <p><b>How do I play Checkers?</b> Move your pieces one square diagonally forward, and capture by jumping over an adjacent enemy piece into the empty square beyond. Chain jumps when you can, crown kings on the far row, and capture all the enemy pieces to win.</p>
             <p><b>Can you jump backwards in Checkers?</b> Only kings can. A regular piece captures forward only &mdash; once it's crowned a king it can jump both directions.</p>
             <p><b>Are captures forced?</b> Your choice: turn on <i>Mandatory</i> for the tournament forced-capture rule, or <i>Optional</i> to play freely.</p>
+            <p><b>Is there a tutorial?</b> Yes &mdash; switch on Tutorial mode under the board. On your turn it outlines the best piece to move, stars its landing square, and explains the move in one line.</p>
             <p><b>Is Checkers free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
 
             <h3>More strategy games</h3>
@@ -524,6 +526,7 @@
     const KEY_LOSS      = 'checkersGamesLost';
     const KEY_DIFF      = 'checkersDifficulty';
     const KEY_FORCEJUMP = 'checkersForceJumps';
+    const KEY_TUT       = 'checkersTutorial';
 
     const ANIM_MS = 180;
 
@@ -554,6 +557,8 @@
     diffEl.value = difficulty;
     let forceJumps = (localStorage.getItem(KEY_FORCEJUMP) || 'on') === 'on';
     forceEl.value = forceJumps ? 'on' : 'off';
+    let tutorial = localStorage.getItem(KEY_TUT) === '1';
+    let hint = null;           // tutorial pick: { move, isCapture, mustCapture, onlyMove, capCount, crowns, safeReply }
 
     function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
     function writeNum(k, v) { localStorage.setItem(k, String(v)); }
@@ -609,6 +614,31 @@
         ctx.textBaseline = 'middle';
         ctx.fillText('LG', cx, cy + SQ * 0.01);
       }
+    }
+
+    function drawStar(x, y, r, color) {
+      ctx.fillStyle = color;
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const ang = -Math.PI / 2 + i * Math.PI / 5;
+        const rad = i % 2 === 0 ? r : r * 0.45;
+        const px = x + Math.cos(ang) * rad, py = y + Math.sin(ang) * rad;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(0,0,0,0.2)'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+
+    // Gold outline + corner star on the recommended piece, gold star on its
+    // landing square. Same gold as the Connect 4 tutorial marker.
+    function drawHintMarkers() {
+      const a = squareXY(hint.move.from);
+      ctx.strokeStyle = '#D8940B';
+      ctx.lineWidth = 4;
+      ctx.strokeRect(a.x + 4, a.y + 4, SQ - 8, SQ - 8);
+      drawStar(a.x + SQ * 0.84, a.y + SQ * 0.16, SQ * 0.12, '#D8940B');
+      const b = squareXY(moveTarget(hint.move));
+      drawStar(b.x + SQ / 2, b.y + SQ / 2, SQ * 0.26, '#D8940B');
     }
 
     function draw() {
@@ -694,6 +724,9 @@
         drawPieceAt(x + SQ / 2, y + SQ / 2, e.piece);
       }
 
+      // Tutorial markers (player's turn only)
+      if (tutorial && hint && !anim && !aiThinking && state.turn === PLAYER) drawHintMarkers();
+
       // The flying piece, on top
       if (floating) drawPieceAt(floating.cx, floating.cy, floating.piece);
     }
@@ -775,11 +808,71 @@
       return 'Click one of your pieces to see its moves.';
     }
 
+    // ── Tutorial coach ────────────────────────────────────────────────────
+    function moveTarget(m) { return m.to != null ? m.to : m.chain[m.chain.length - 1]; }
+
+    // Same engine the computer uses, run from red's side (maximizing) at
+    // full Hard strength with no jitter — regardless of the Level setting.
+    function chooseBestPlayerMove() {
+      const moves = legalMoves(state);
+      if (moves.list.length === 0) return null;
+      let best = null, bestScore = -Infinity;
+      for (const m of moves.list) {
+        const next = clone(state);
+        if (isCaptureMove(m)) applyChain(next, m); else applyQuiet(next, m);
+        const v = minimax(next, 6, -Infinity, Infinity, false);
+        if (v > bestScore) { bestScore = v; best = m; }
+      }
+      return best;
+    }
+
+    function computeHints() {
+      hint = null;
+      if (!tutorial || aiThinking || anim || state.turn !== PLAYER) return;
+      if (overEl.classList.contains('show')) return;
+      const m = chooseBestPlayerMove();
+      if (!m) return;
+      const moves = legalMoves(state);
+      const isCapture = isCaptureMove(m);
+      const next = clone(state);
+      if (isCapture) applyChain(next, m); else applyQuiet(next, m);
+      hint = {
+        move: m,
+        isCapture,
+        mustCapture: moves.mustCapture,
+        onlyMove: moves.list.length === 1,
+        capCount: isCapture ? m.captures.length : 0,
+        crowns: state.board[m.from] === 'r' && rk(moveTarget(m)) === 0,
+        safeReply: allCaptures(next).length === 0,   // literally: no computer jump exists in reply
+      };
+      setStatus(coachLine());
+    }
+
+    // Every claim here must be checkable on the board: exact capture counts,
+    // crowning only when the move really lands a man on the back row, and
+    // "no jump in reply" only after checking every computer reply above.
+    function coachLine() {
+      const n = hint.capCount;
+      const pieces = n === 1 ? 'a piece' : (['', '', 'two', 'three', 'four', 'five'][n] || String(n)) + ' pieces';
+      const crown = hint.crowns ? ' and crowns a king' : '';
+      if (hint.isCapture) {
+        if (hint.mustCapture) {
+          const lead = hint.onlyMove ? 'this is your only jump' : 'this is your strongest capture';
+          return 'Tutorial: captures are mandatory — ' + lead + '. It takes ' + pieces + crown + '.';
+        }
+        return 'Tutorial: this jump captures ' + pieces + crown + '.';
+      }
+      if (hint.crowns) return 'Tutorial: this reaches the back row and crowns a king.';
+      if (hint.safeReply) return 'Tutorial: the strongest move — it leaves the computer no jump in reply.';
+      return 'Tutorial: the strongest move by thinking several moves ahead.';
+    }
+
     function makePlayerMove(m, isCapture) {
       const before = state.board.slice();
       if (isCapture) applyChain(state, m); else applyQuiet(state, m);
       selected = null;
       availableMoves = [];
+      hint = null;
       startAnimation(before, m, isCapture, () => {
         if (checkEnd()) return;
         setTurnLabel('Computer thinking');
@@ -800,6 +893,8 @@
         if (checkEnd()) return;
         setTurnLabel('Your move');
         setStatus(playerStatusForTurn());
+        computeHints();
+        draw();
       });
     }
 
@@ -860,10 +955,12 @@
       selected = null;
       availableMoves = [];
       anim = null;
+      hint = null;
       overEl.classList.remove('show');
       aiThinking = false;
       setTurnLabel('Your move');
       setStatus('Click a red piece to see its moves.');
+      computeHints();
       draw();
     }
 
@@ -878,6 +975,21 @@
       localStorage.setItem(KEY_FORCEJUMP, forceEl.value);
       refreshRuleHint();
       if (state.turn === PLAYER && !aiThinking && !anim) setStatus(playerStatusForTurn());
+      computeHints();   // the rule change can change which moves are legal
+      draw();
+    });
+
+    const tutToggle = document.getElementById('tutorialToggle');
+    tutToggle.checked = tutorial;
+    tutToggle.addEventListener('change', () => {
+      tutorial = tutToggle.checked;
+      localStorage.setItem(KEY_TUT, tutorial ? '1' : '0');
+      if (tutorial) {
+        computeHints();
+      } else {
+        hint = null;
+        if (state.turn === PLAYER && !aiThinking && !anim && !overEl.classList.contains('show')) setStatus(playerStatusForTurn());
+      }
       draw();
     });
 

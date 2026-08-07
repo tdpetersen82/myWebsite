@@ -7,7 +7,7 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <title>Backgammon — Free Browser Backgammon vs. Computer | Limestone Games</title>
-    <meta name="description" content="Play backgammon free in your browser against the computer. Standard rules — bar, bear-off, hits, doubles. Three difficulty tiers, no doubling cube, no downloads.">
+    <meta name="description" content="Play backgammon free in your browser against the computer. Standard rules — bar, hits, bear-off — plus a tutorial mode that suggests your move. No downloads.">
     <meta name="keywords" content="backgammon, online backgammon, free backgammon, browser backgammon, backgammon vs Computer">
     <link rel="canonical" href="https://limestonegames.com/backgammon/">
     <link rel="icon" href="/favicon.ico" sizes="any">
@@ -15,9 +15,9 @@
     <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
     <link rel="apple-touch-icon" href="/apple-touch-icon.png">
     <link rel="manifest" href="/manifest.json">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Backgammon","description":"Play backgammon in your browser against the computer. Standard rules with bar, bear-off, doubles, and hit/blot mechanics. Three difficulty tiers.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Backgammon","description":"Play backgammon in your browser against the computer. Standard rules with bar, bear-off, doubles, and hit/blot mechanics. Three difficulty tiers and a tutorial mode that suggests your move.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Backgammon"}]}</script>
-    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Backgammon?", "acceptedAnswer": {"@type": "Answer", "text": "Roll the dice to move your checkers around the board toward your home, then off the board. The first player to bear off all 15 checkers wins. The computer plays the other side automatically."}}, {"@type": "Question", "name": "Is Backgammon free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Is there a doubling cube?", "acceptedAnswer": {"@type": "Answer", "text": "Not in this version — it's single-game play only, no doubling cube. You roll, move your checkers, hit blots, and bear off to win."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Backgammon?", "acceptedAnswer": {"@type": "Answer", "text": "Roll the dice to move your checkers around the board toward your home, then off the board. The first player to bear off all 15 checkers wins. The computer plays the other side automatically."}}, {"@type": "Question", "name": "Is Backgammon free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Is there a doubling cube?", "acceptedAnswer": {"@type": "Answer", "text": "Not in this version — it's single-game play only, no doubling cube. You roll, move your checkers, hit blots, and bear off to win."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}, {"@type": "Question", "name": "Is there a tutorial?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — switch on Tutorial mode under the board. After each roll it highlights the checker move it recommends and gives a one-line reason — hits, points, bar entries, bear-offs."}}]}</script>
     <meta property="og:title" content="Backgammon — Free Browser Backgammon vs. Computer">
     <meta property="og:description" content="Standard rules with bar, bear-off, hits, and doubles. Three difficulties. No downloads.">
     <meta property="og:type" content="website">
@@ -127,6 +127,7 @@
       @media (max-width: 540px) {
         .controls { display: grid; grid-template-columns: 1fr 1fr; }
         .controls > button { width: 100%; }
+        .controls > .tut-switch { grid-column: 1 / -1; justify-content: center; }
         .controls > a { grid-column: 1 / -1; }
         .controls > a > button { width: 100%; }
       }
@@ -200,6 +201,7 @@
             <button id="undoBtn" class="ghost" disabled>Undo</button>
             <button id="endTurnBtn" class="ghost" disabled>End turn</button>
             <button id="newGameBtn" class="ghost">New game</button>
+            <label class="tut-switch"><input type="checkbox" id="tutorialToggle"><span class="tut-track"><span class="tut-knob"></span></span>Tutorial</label>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
         <p class="hint">Click "Roll dice", then click your checker (or the bar) and tap a destination point. Use both dice when possible — if only one can be used, the larger one is mandatory.</p>        </div>
@@ -207,7 +209,7 @@
 
         <section class="game-overview" aria-label="About Backgammon">
             <h2>How to play Backgammon online</h2>
-            <p>Backgammon is the classic race game of dice and strategy &mdash; one of the oldest board games still played. You and the computer each have fifteen checkers running in opposite directions around the board; the first to bring all fifteen home and bear them off wins. This free browser version offers three difficulty levels, no downloads, no signup.</p>
+            <p>Backgammon is the classic race game of dice and strategy &mdash; one of the oldest board games still played. You and the computer each have fifteen checkers running in opposite directions around the board; the first to bring all fifteen home and bear them off wins. This free browser version offers three difficulty levels, no downloads, no signup. New to backgammon? Switch on Tutorial mode and it highlights the move it recommends after every roll, with a one-line reason.</p>
 
             <h3>Backgammon rules</h3>
             <ul>
@@ -230,6 +232,7 @@
             <h3>Frequently asked</h3>
             <p><b>How do I play Backgammon?</b> Roll the dice and move your checkers around the board toward your home, hitting your opponent's exposed checkers and making points to block them. Once all your checkers are home, bear them off &mdash; first to clear all fifteen wins.</p>
             <p><b>Is Backgammon luck or skill?</b> Both. The dice add chance to every turn, but over a game the stronger player consistently makes better use of each roll &mdash; which is why skill wins out in the long run.</p>
+            <p><b>Is there a tutorial?</b> Yes &mdash; switch on Tutorial mode under the board. After each roll it highlights the checker move it recommends and gives a one-line reason &mdash; hits, points, bar entries, bear-offs.</p>
             <p><b>Is Backgammon free here?</b> Yes &mdash; no signup, no downloads, no installs.</p>
             <p><b>Does my record save?</b> Yes &mdash; your results are stored locally in your browser.</p>
 
@@ -552,6 +555,7 @@
     const KEY_WINS   = 'backgammonGamesWon';
     const KEY_LOSS   = 'backgammonGamesLost';
     const KEY_DIFF   = 'backgammonDifficulty';
+    const KEY_TUT    = 'backgammonTutorial';
 
     const canvas = document.getElementById('board');
     const ctx = canvas.getContext('2d');
@@ -578,6 +582,8 @@
     let aiThinking = false;
     let difficulty = localStorage.getItem(KEY_DIFF) || 'Medium';
     diffEl.value = difficulty;
+    let tutorial = localStorage.getItem(KEY_TUT) === '1';
+    let tutHint = null;      // { from, to, die } — suggested next checker move
 
     function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
     function writeNum(k, v) { localStorage.setItem(k, String(v)); }
@@ -746,6 +752,12 @@
           if (g.dir === 1) ctx.strokeRect(g.x + 2, g.y + 2, POINT_W - 4, POINT_H - 4);
           else ctx.strokeRect(g.x + 2, BOT_Y - POINT_H + 2, POINT_W - 4, POINT_H - 4);
         }
+      }
+
+      // Tutorial suggestion (player's turn only)
+      if (tutHint && state.turn === W && !aiThinking) {
+        drawTutMarker(tutHint.from, false);
+        drawTutMarker(tutHint.to, true);
       }
 
       // Checkers on points
@@ -936,6 +948,7 @@
       state = h.s; state.dice = h.dice;
       selected = null; availableTargets = [];
       refreshButtons();
+      computeTutHint();
       draw();
     }
 
@@ -967,6 +980,74 @@
       return movesMade < maxLen;
     }
 
+    // ── Tutorial ──────────────────────────────────────────────────────────
+    // Suggests one checker move at a time: the first move of the best full
+    // play for the remaining dice, scored with the same evaluate() the
+    // computer uses (Hard weights, no jitter) but from white's side.
+    const TUT_WEIGHTS = { pip: 1.0, off: 15, bar: 12, blot: 2.0, point: 8, homePoint: 9, barPoint: 16, stack: -2.5 };
+
+    function computeTutHint() {
+      tutHint = null;
+      if (!tutorial || state.turn !== W || aiThinking) return;
+      if (overEl.classList.contains('show')) return;
+      if (!state.rolledThisTurn) { setStatus("Tutorial: roll the dice — I'll suggest a move."); return; }
+      if (state.dice.length === 0) return;
+      const plays = enumeratePlays(state, state.dice);
+      let best = null, bestScore = -Infinity;
+      for (const p of plays) {
+        if (p.sequence.length === 0) continue;
+        const s = evaluate(p.end, W, TUT_WEIGHTS);
+        if (s > bestScore) { bestScore = s; best = p; }
+      }
+      if (!best) return;
+      const mv = best.sequence[0];
+      let to;
+      if (mv.from === 24) to = entryPoint(W, mv.die);
+      else {
+        const dest = mv.from + direction(W) * mv.die;
+        to = dest < 0 ? -1 : dest;
+      }
+      tutHint = { from: mv.from, to, die: mv.die };
+      setStatus(tutLine(mv.from, to));
+    }
+
+    // One-line reason — only claims the player can verify on the board.
+    function tutLine(from, to) {
+      const t = to >= 0 && to <= 23 ? state.points[to] : null;
+      if (t && t.color === B && t.count === 1) return "Tutorial: this move hits the computer's blot.";
+      if (to === -1) return 'Tutorial: this move bears off a checker.';
+      if (from === 24) return 'Tutorial: this move comes in from the bar.';
+      if (t && t.color === W && t.count === 1) return 'Tutorial: this move makes a point — two of your checkers guard it.';
+      if (from >= 18 && to < 18) return 'Tutorial: this move escapes your back checker.';
+      return 'Tutorial: the strongest move for this roll.';
+    }
+
+    // Gold dashed outline on the from-spot; the to-spot also gets a gold tint.
+    function drawTutMarker(idx, isTarget) {
+      let x, y, w, h;
+      if (idx === 24) {          // bar — white's (lower) half
+        x = PADDING + HALF_W; y = CH / 2; w = BAR_WIDTH; h = CH / 2 - PADDING;
+      } else if (idx === -1) {   // white bear-off tray
+        x = CW - PADDING - BEAR_W; y = CH / 2; w = BEAR_W; h = CH / 2 - PADDING;
+      } else {
+        const g = pointGeom(idx);
+        x = g.x; w = POINT_W; h = POINT_H;
+        y = g.dir === 1 ? g.y : BOT_Y - POINT_H;
+      }
+      if (isTarget) {
+        ctx.fillStyle = 'rgba(255, 201, 77, 0.20)';
+        ctx.fillRect(x + 2, y + 2, w - 4, h - 4);
+      }
+      ctx.setLineDash([8, 6]);
+      ctx.strokeStyle = 'rgba(58, 26, 18, 0.85)';
+      ctx.lineWidth = 5.5;
+      ctx.strokeRect(x + 4, y + 4, w - 8, h - 8);
+      ctx.strokeStyle = '#FFC94D';
+      ctx.lineWidth = 3;
+      ctx.strokeRect(x + 4, y + 4, w - 8, h - 8);
+      ctx.setLineDash([]);
+    }
+
     canvas.addEventListener('click', (e) => {
       if (aiThinking || state.turn !== W) return;
       if (overEl.classList.contains('show')) return;
@@ -996,6 +1077,7 @@
             }
             selected = null; availableTargets = [];
             refreshButtons();
+            computeTutHint();
             draw();
             // Auto-end turn when no more moves
             if (state.dice.length === 0 || allDiceUnplayable()) maybeEndTurn();
@@ -1051,6 +1133,7 @@
       state.rolledThisTurn = false;
       state.turn = B;
       selected = null; availableTargets = [];
+      tutHint = null;
       if (checkEnd()) return;
       refreshButtons();
       draw();
@@ -1087,6 +1170,7 @@
             setStatus('Your turn — click "Roll dice".');
             aiThinking = false;
             refreshButtons();
+            computeTutHint();
           }, 600);
         } catch (e) {
           aiThinking = false;
@@ -1110,6 +1194,7 @@
       } else {
         turnLabelEl.textContent = 'Your turn';
         setStatus(`Rolled ${dice.join(', ')}. Click a checker to move.`);
+        computeTutHint();
       }
       refreshButtons();
       draw();
@@ -1129,6 +1214,22 @@
       localStorage.setItem(KEY_DIFF, difficulty);
     });
 
+    const tutToggle = document.getElementById('tutorialToggle');
+    tutToggle.checked = tutorial;
+    tutToggle.addEventListener('change', () => {
+      tutorial = tutToggle.checked;
+      localStorage.setItem(KEY_TUT, tutorial ? '1' : '0');
+      if (tutorial) {
+        computeTutHint();
+      } else {
+        tutHint = null;
+        if (state.turn === W && !aiThinking && !overEl.classList.contains('show')) {
+          setStatus(state.rolledThisTurn ? 'Click a checker to move.' : 'Your turn — click "Roll dice".');
+        }
+      }
+      draw();
+    });
+
     function startGame() {
       state = startingState();
       history = [];
@@ -1139,6 +1240,7 @@
       overEl.classList.remove('show');
       turnLabelEl.textContent = 'Your turn';
       setStatus('Click "Roll dice" to start.');
+      computeTutHint();
       refreshButtons();
       draw();
     }

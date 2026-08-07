@@ -7,12 +7,12 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <title>Othello — Free Browser Reversi vs. Computer | Limestone Games</title>
-    <meta name="description" content="Play Othello (Reversi) free in your browser against the computer. Standard rules, three difficulty tiers, perfect endgame solver on Hard. No downloads.">
+    <meta name="description" content="Play Othello (Reversi) free in your browser against the computer. Three difficulty tiers plus a tutorial mode that marks the best square. No downloads.">
     <meta name="keywords" content="othello, reversi, online othello, free reversi, browser othello, othello vs Computer">
     <link rel="canonical" href="https://limestonegames.com/othello/">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Othello","description":"Play Othello (Reversi) in your browser against the computer. Three difficulty tiers, perfect endgame solver on Hard.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Othello","description":"Play Othello (Reversi) in your browser against the computer. Three difficulty tiers, perfect endgame solver on Hard, and a tutorial mode that marks the best square.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Othello"}]}</script>
-    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Othello?", "acceptedAnswer": {"@type": "Answer", "text": "Place a disc so that you flank one or more of your opponent's discs in a straight line between yours. All flanked discs flip to your color. Most discs on the board at the end wins."}}, {"@type": "Question", "name": "Is Othello free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Why can't I move there?", "acceptedAnswer": {"@type": "Answer", "text": "Every move must flank at least one of your opponent's discs. If a square doesn't flank anything, you can't play there. If no move flanks, your turn is skipped."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Othello?", "acceptedAnswer": {"@type": "Answer", "text": "Place a disc so that you flank one or more of your opponent's discs in a straight line between yours. All flanked discs flip to your color. Most discs on the board at the end wins."}}, {"@type": "Question", "name": "Is Othello free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "Why can't I move there?", "acceptedAnswer": {"@type": "Answer", "text": "Every move must flank at least one of your opponent's discs. If a square doesn't flank anything, you can't play there. If no move flanks, your turn is skipped."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}, {"@type": "Question", "name": "Is there a tutorial?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — switch on Tutorial mode under the board. Each turn it marks the strongest square with a gold star and explains the move — a corner grab, an edge square, or exactly how many discs it flips."}}]}</script>
     <meta property="og:title" content="Othello — Free Browser Reversi vs. Computer">
     <meta property="og:description" content="Play Othello (Reversi) in your browser against the computer. Three difficulty tiers. No downloads.">
     <meta property="og:type" content="website">
@@ -190,14 +190,15 @@
         <div class="turn" id="status">Click a green-dot square to place your disc.</div>
         <div class="controls">
             <button id="newGame">New game</button>
+            <label class="tut-switch"><input type="checkbox" id="tutorialToggle"><span class="tut-track"><span class="tut-knob"></span></span>Tutorial</label>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <p class="hint">You play Black; Black moves first. A move must flank at least one opponent disc — all flanked discs flip. If you have no legal move, your turn passes automatically.</p>        </div>
+        <p class="hint">You play Black; Black moves first. A move must flank at least one opponent disc — all flanked discs flip. If you have no legal move, your turn passes automatically. New to the game? Switch on Tutorial and a gold star marks the strongest square each turn.</p>        </div>
         
 
         <section class="game-overview" aria-label="About Othello">
             <h2>How to play Othello (Reversi) online</h2>
-            <p>Othello &mdash; also known as Reversi &mdash; is the &ldquo;a minute to learn, a lifetime to master&rdquo; disc-flipping game. You and the computer take turns placing discs on an 8&times;8 board, flipping the opponent's discs by trapping them. Whoever has the most discs of their color when the board fills up wins. This free browser version offers three difficulty levels, no downloads, no signup.</p>
+            <p>Othello &mdash; also known as Reversi &mdash; is the &ldquo;a minute to learn, a lifetime to master&rdquo; disc-flipping game. You and the computer take turns placing discs on an 8&times;8 board, flipping the opponent's discs by trapping them. Whoever has the most discs of their color when the board fills up wins. This free browser version offers three difficulty levels and an optional Tutorial mode that marks the strongest square each turn &mdash; no downloads, no signup.</p>
 
             <h3>Othello rules</h3>
             <ul>
@@ -224,6 +225,7 @@
             <p><b>How do I play Othello?</b> Place a disc so it traps a line of the opponent's discs between yours; every trapped disc flips to your color. You can only play where you flip at least one. Most discs when the board fills wins.</p>
             <p><b>What's the best first move in Othello?</b> All four opening moves are equivalent by symmetry &mdash; the real skill is in the midgame: take corners, keep your mobility, and avoid the squares next to corners.</p>
             <p><b>Is Othello the same as Reversi?</b> Essentially yes &mdash; Othello is the standardized modern form of Reversi.</p>
+            <p><b>Is there a tutorial?</b> Yes &mdash; switch on Tutorial mode under the board. Each turn it marks the strongest square with a gold star and explains the move &mdash; a corner grab, an edge square, or exactly how many discs it flips.</p>
             <p><b>Is it free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
 
             <h3>More strategy games</h3>
@@ -471,6 +473,9 @@
     const KEY_LOSS   = 'othelloGamesLost';
     const KEY_DRAW   = 'othelloGamesDraw';
     const KEY_DIFF   = 'othelloDifficulty';
+    const KEY_TUT    = 'othelloTutorial';
+
+    const DEFAULT_STATUS = 'Click a green-dot square to place your disc.';
 
     const PLACE_MS = 200;
     const FLIP_MS  = 220;
@@ -499,6 +504,8 @@
     let anim = null;   // { placeIdx, side, flips: [{idx, start}], placeStart, done }
     let difficulty = localStorage.getItem(KEY_DIFF) || 'Medium';
     diffEl.value = difficulty;
+    let tutorial = localStorage.getItem(KEY_TUT) === '1';
+    let hintIdx = null;   // tutorial-recommended square, shown only on the player's idle turn
 
     function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
     function writeNum(k, v) { localStorage.setItem(k, String(v)); }
@@ -554,6 +561,19 @@
       ctx.restore();
     }
 
+    function drawStar(cx, cy, radius) {
+      ctx.fillStyle = '#F6C453';
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const ang = -Math.PI / 2 + i * Math.PI / 5;
+        const rr = i % 2 === 0 ? radius : radius * 0.45;
+        const px = cx + Math.cos(ang) * rr, py = cy + Math.sin(ang) * rr;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.4)'; ctx.lineWidth = 1.5; ctx.stroke();
+    }
+
     function draw() {
       // Felt background with subtle grid
       ctx.fillStyle = 'var(--frame)';
@@ -593,6 +613,12 @@
           ctx.beginPath();
           ctx.arc(x + SQ / 2, y + SQ / 2, SQ * 0.13, 0, Math.PI * 2);
           ctx.fill();
+        }
+        // Tutorial marker — a gold star over the recommended square, so it
+        // reads apart from the small green legal-move dots.
+        if (tutorial && hintIdx !== null) {
+          const { x, y } = squareXY(hintIdx);
+          drawStar(x + SQ / 2, y + SQ / 2, SQ * 0.28);
         }
       }
 
@@ -685,6 +711,7 @@
       else if (s === 'white-wins') { recordLoss(); showOver('You lost', summary + ' Streak reset.'); }
       else { recordDraw(); showOver('Draw', summary + ' Streak reset.'); }
       refreshStats();
+      setStatus('');
       return true;
     }
 
@@ -716,6 +743,48 @@
       requestAnimationFrame(animTick);
     }
 
+    // ── Tutorial coach ─────────────────────────────────────────────────────
+    // Same negamax the computer uses, searched from the player's side and
+    // always at Hard strength (depth 6, perfect solver at ≤12 empties),
+    // regardless of the selected level.
+    function bestPlayerMove(moves) {
+      const { empty } = counts(state.board);
+      const usePerfect = empty <= 12;
+      const searchDepth = usePerfect ? empty : 6;
+      let best = moves[0], bestScore = -Infinity;
+      for (const m of moves) {
+        const next = clone(state);
+        applyMove(next, m);
+        const v = -negamax(next, searchDepth - 1, -Infinity, Infinity, usePerfect);
+        if (v > bestScore) { bestScore = v; best = m; }
+      }
+      return best;
+    }
+
+    // One line of "why" — only facts the player can check on the board:
+    // corners, edges, exact flip counts. No strategy abstractions.
+    function coachLine(m, moves) {
+      const n = m.flips.length;
+      const discs = n === 1 ? '1 disc' : n + ' discs';
+      if (moves.length === 1) return 'Tutorial: ★ — your only legal move. It flips ' + discs + '.';
+      if (CORNERS.includes(m.idx)) return 'Tutorial: ★ — takes a corner. Corner discs can never be flipped.';
+      const r = m.idx >> 3, f = m.idx & 7;
+      if (r === 0 || r === 7 || f === 0 || f === 7) return 'Tutorial: ★ — takes an edge square and flips ' + discs + '.';
+      if (moves.every(x => x === m || x.flips.length < n)) return 'Tutorial: ★ — flips ' + discs + ', more than any other move you have.';
+      return 'Tutorial: ★ — the strongest square by thinking several moves ahead. It flips ' + discs + '.';
+    }
+
+    function computeHint() {
+      hintIdx = null;
+      if (!tutorial || aiThinking || anim || state.turn !== PLAYER) return;
+      if (gameStatus(state) !== 'playing') return;
+      const moves = legalMoves(state);
+      if (moves.length === 0) return;   // no legal move — nextTurn handles the pass
+      const m = bestPlayerMove(moves);
+      hintIdx = m.idx;
+      setStatus(coachLine(m, moves));
+    }
+
     // Auto-pass loop: while side-to-move has zero legal moves and game not over,
     // pass and recurse. Returns true if game ended via double-pass.
     function autoPassIfNeeded(onPass) {
@@ -732,6 +801,7 @@
 
     function nextTurn() {
       // After any animation completes, check end / pass / hand off.
+      hintIdx = null;
       if (checkEnd()) return;
       // If side-to-move has no legal moves → pass automatically.
       const moves = legalMoves(state);
@@ -746,8 +816,9 @@
       }
       if (state.turn === PLAYER) {
         setTurnLabel('Your move');
-        setStatus('Click a green-dot square to place your disc.');
+        setStatus(DEFAULT_STATUS);
         refreshStats();
+        computeHint();
         draw();
       } else {
         setTurnLabel('Computer thinking');
@@ -797,10 +868,12 @@
       state = newGame();
       anim = null;
       aiThinking = false;
+      hintIdx = null;
       overEl.classList.remove('show');
       setTurnLabel('Your move');
-      setStatus('Click a green-dot square to place your disc.');
+      setStatus(DEFAULT_STATUS);
       refreshStats();
+      computeHint();
       draw();
     }
 
@@ -809,6 +882,20 @@
     diffEl.addEventListener('change', () => {
       difficulty = diffEl.value;
       localStorage.setItem(KEY_DIFF, difficulty);
+    });
+
+    const tutToggle = document.getElementById('tutorialToggle');
+    tutToggle.checked = tutorial;
+    tutToggle.addEventListener('change', () => {
+      tutorial = tutToggle.checked;
+      localStorage.setItem(KEY_TUT, tutorial ? '1' : '0');
+      if (tutorial) {
+        computeHint();
+      } else {
+        hintIdx = null;
+        if (!aiThinking && !anim && state.turn === PLAYER && gameStatus(state) === 'playing') setStatus(DEFAULT_STATUS);
+      }
+      draw();
     });
 
     startGame();

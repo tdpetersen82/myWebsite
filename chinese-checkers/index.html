@@ -7,12 +7,12 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
     <title>Chinese Checkers — Free Browser Game vs. Computer | Limestone Games</title>
-    <meta name="description" content="Play Chinese Checkers free in your browser. 2-, 3-, or 6-player vs. Computer on the classic 121-hole star board. Hop chains, three difficulty tiers, no downloads.">
+    <meta name="description" content="Play Chinese Checkers free in your browser. 2-, 3-, or 6-player vs. Computer on the classic star board. Tutorial mode marks the best move. No downloads.">
     <meta name="keywords" content="chinese checkers, halma, sternhalma, online chinese checkers, free chinese checkers, browser chinese checkers, chinese checkers vs Computer">
     <link rel="canonical" href="https://limestonegames.com/chinese-checkers/">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Chinese Checkers","description":"Play Chinese Checkers in your browser against computer opponents. 2, 3, or 6 player modes on the classic star board. Three difficulty tiers.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Chinese Checkers"}]}</script>
-    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Chinese Checkers?", "acceptedAnswer": {"@type": "Answer", "text": "Move your pegs across the star-shaped board to fill the opposite corner. Pegs move one space at a time or hop over other pegs in chains. First player to fill the opposite home triangle wins."}}, {"@type": "Question", "name": "Is Chinese Checkers free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "How many players?", "acceptedAnswer": {"@type": "Answer", "text": "You play against the computer with 2, 3, or 6 players. You always control one corner; the computer plays the rest."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Chinese Checkers?", "acceptedAnswer": {"@type": "Answer", "text": "Move your pegs across the star-shaped board to fill the opposite corner. Pegs move one space at a time or hop over other pegs in chains. First player to fill the opposite home triangle wins."}}, {"@type": "Question", "name": "Is Chinese Checkers free?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs."}}, {"@type": "Question", "name": "How many players?", "acceptedAnswer": {"@type": "Answer", "text": "You play against the computer with 2, 3, or 6 players. You always control one corner; the computer plays the rest."}}, {"@type": "Question", "name": "Does my record save?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — your wins, losses, and best streak are stored locally in your browser."}}, {"@type": "Question", "name": "Is there a tutorial?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — switch on Tutorial mode under the board. On your turn it rings the marble to move, stars the landing hole, and explains what the move does."}}]}</script>
     <meta property="og:title" content="Chinese Checkers — Free Browser Game vs. Computer">
     <meta property="og:description" content="2-, 3-, or 6-player Chinese Checkers in your browser. Hop chains, three difficulties, no downloads.">
     <meta property="og:type" content="website">
@@ -212,6 +212,7 @@
         <div class="turn" id="status">Click one of your marbles to see legal moves.</div>
         <div class="controls">
             <button id="newGame">New game</button>
+            <label class="tut-switch"><input type="checkbox" id="tutorialToggle"><span class="tut-track"><span class="tut-knob"></span></span>Tutorial</label>
             <button id="doneJump" class="done hidden">Done jumping</button>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
@@ -220,7 +221,7 @@
 
         <section class="game-overview" aria-label="About Chinese Checkers">
             <h2>How to play Chinese Checkers online</h2>
-            <p>Chinese Checkers is the classic hop-and-chain race played on a six-pointed star board. The goal: move all of your marbles out of your home triangle, across the board, and into the empty triangle directly opposite &mdash; before your opponents fill theirs. This free browser version plays against the computer with <b>2, 3, or 6 players</b> and three difficulty levels. No downloads, no signup.</p>
+            <p>Chinese Checkers is the classic hop-and-chain race played on a six-pointed star board. The goal: move all of your marbles out of your home triangle, across the board, and into the empty triangle directly opposite &mdash; before your opponents fill theirs. This free browser version plays against the computer with <b>2, 3, or 6 players</b> and three difficulty levels. An optional tutorial mode marks the strongest move each turn and explains what it does. No downloads, no signup.</p>
 
             <h3>Chinese Checkers rules</h3>
             <p>You play the triangle pointing toward you, with ten marbles, and aim for the matching triangle on the far side of the star. On each turn you make one kind of move:</p>
@@ -246,6 +247,7 @@
             <h3>Frequently asked</h3>
             <p><b>How do I play Chinese Checkers?</b> Move your marbles across the star board to fill the opposite triangle. Each turn, step a marble to an adjacent hole or hop it over a neighbor &mdash; and keep hopping to chain jumps. First to fill the far triangle wins.</p>
             <p><b>How many players can play?</b> You play against the computer with 2, 3, or 6 players. You always control one corner; the computer plays the rest.</p>
+            <p><b>Is there a tutorial?</b> Yes &mdash; switch on Tutorial mode under the board. On your turn it rings the marble to move, stars the landing hole, and explains what the move does.</p>
             <p><b>Is Chinese Checkers free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
             <p><b>Does my record save?</b> Yes &mdash; your wins, losses, and best streak are stored locally in your browser.</p>
 
@@ -642,6 +644,7 @@
     const KEY_DRAW     = 'chineseCheckersGamesDraw';
     const KEY_DIFF     = 'chineseCheckersDifficulty';
     const KEY_PLAYERS  = 'chineseCheckersPlayers';
+    const KEY_TUT      = 'chineseCheckersTutorial';
     const BEST_KEY = (n) => 'chineseCheckersBestMoves' + n + 'P';
 
     const HOP_MS = 170;
@@ -670,6 +673,7 @@
     let numPlayers = parseInt(localStorage.getItem(KEY_PLAYERS), 10);
     if (![2, 3, 6].includes(numPlayers)) numPlayers = 2;
     playersEl.value = String(numPlayers);
+    let tutorial = localStorage.getItem(KEY_TUT) === '1';
 
     let state = newGameState(numPlayers);
     let selected = null;            // idx of currently selected peg (or null)
@@ -679,6 +683,7 @@
     let chainOrigin = null;         // when player is mid-chain: idx where the marble currently sits
     let chainStartFrom = null;      // starting square of the chain (for back-out)
     let chainWasJump = false;       // chain mode is ON only after a jump
+    let hint = null;                // tutorial: { move } recommended for the human's turn
 
     function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
     function writeNum(k, v) { localStorage.setItem(k, String(v)); }
@@ -815,6 +820,19 @@
       }
       if (animPeg) drawMarble(animPeg.x, animPeg.y, animPeg.slot, false);
 
+      // 4.5) Tutorial suggestion: gold ring on the recommended marble, gold
+      // star on its landing hole (player's turn only, before they commit)
+      if (tutorial && hint && !anim && !aiThinking && chainOrigin == null &&
+          currentPlayer(state).slot === 4) {
+        const from = CELLS[hint.move.from], to = CELLS[hint.move.to];
+        ctx.beginPath();
+        ctx.arc(from.px, from.py, HOLE_R + 5, 0, Math.PI * 2);
+        ctx.strokeStyle = 'rgba(245, 196, 66, 0.95)';
+        ctx.lineWidth = 3;
+        ctx.stroke();
+        drawStar(to.px, to.py, HOLE_R * 0.55);
+      }
+
       // 5) Highlight chain origin + teach the "tap to finish" gesture
       if (chainOrigin != null && !anim && !aiThinking) {
         const c = CELLS[chainOrigin];
@@ -875,6 +893,22 @@
         ctx.lineWidth = 3;
         ctx.beginPath(); ctx.arc(cx, cy, r + 3, 0, Math.PI * 2); ctx.stroke();
       }
+    }
+
+    function drawStar(cx, cy, r) {
+      ctx.fillStyle = '#F5C442';
+      ctx.beginPath();
+      for (let i = 0; i < 10; i++) {
+        const ang = -Math.PI / 2 + i * Math.PI / 5;
+        const rad = i % 2 === 0 ? r : r * 0.45;
+        const px = cx + Math.cos(ang) * rad, py = cy + Math.sin(ang) * rad;
+        if (i === 0) ctx.moveTo(px, py); else ctx.lineTo(px, py);
+      }
+      ctx.closePath();
+      ctx.fill();
+      ctx.strokeStyle = 'rgba(0, 0, 0, 0.35)';
+      ctx.lineWidth = 1.5;
+      ctx.stroke();
     }
 
     function showOver(title, text) {
@@ -972,12 +1006,71 @@
       return 'Computer ' + (PLAYER_COLORS[slot].name.replace(/^./, m => m.toLowerCase())) + ' thinking';
     }
 
+    // ── Tutorial coach ───────────────────────────────────────────────────────
+    // Recommends a move for the human with the same engine the computers use,
+    // always at full strength regardless of the Level setting.
+    function computeHint() {
+      hint = null;
+      if (!tutorial || aiThinking || anim || chainOrigin != null) return;
+      if (currentPlayer(state).slot !== 4) return;
+      if (overEl.classList.contains('show')) return;
+      const m = chooseAIMove(state, 4, 'Hard');
+      if (!m) return;
+      hint = { move: m };
+      setStatus(coachLine(m));
+    }
+
+    // Distinct marbles a jump path hops over (the midpoint cell of each hop).
+    function hoppedMarbleCount(path) {
+      const seen = new Set();
+      for (let i = 0; i + 1 < path.length; i++) {
+        const a = CELLS[path[i]], b = CELLS[path[i + 1]];
+        seen.add(((a.q + b.q) / 2) + ',' + ((a.r + b.r) / 2));
+      }
+      return seen.size;
+    }
+
+    // One line saying what the recommended move does. Every claim must be
+    // checkable on the board: exact row progress (each unit of axial r is one
+    // visible row of holes, and the human's goal is the top triangle), exact
+    // hop counts, goal-triangle entry. Anything subtler falls back to
+    // "thinking ahead" — never abstract positional quality.
+    function coachLine(m) {
+      const me = state.players[0];                      // the human — always slot 4
+      const rows = CELLS[m.from].r - CELLS[m.to].r;     // rows toward the top goal
+      const isJump = m.path.length > 2 || isHopBetween(m.from, m.to);
+      const marbles = isJump ? hoppedMarbleCount(m.path) : 0;
+      const entersGoal = CELLS[m.to].region === me.goal && CELLS[m.from].region !== me.goal;
+      if (entersGoal && inGoal(state, 4) === 9) {
+        return 'Tutorial: ★ — this move puts your tenth marble in your goal triangle and wins the game.';
+      }
+      const fallback = 'Tutorial: ★ — moving the gold-ringed marble to the star is the strongest move by thinking ahead.';
+      if (rows < 0) return fallback;
+      let atHome = 0;
+      for (let i = 0; i < CELLS.length; i++) {
+        if (state.board[i] === 4 && CELLS[i].region === me.home) atHome++;
+      }
+      const lastOut = atHome === 1 && CELLS[m.from].region === me.home && CELLS[m.to].region !== me.home;
+      const clauses = [];
+      if (rows >= 1) clauses.push('moves the gold-ringed marble ' + (rows === 1 ? 'one row' : rows + ' rows') + ' forward');
+      if (marbles >= 2) clauses.push('hops over ' + marbles + ' marbles in one turn');
+      if (entersGoal) clauses.push('lands in your goal triangle');
+      if (lastOut) clauses.push('takes your last marble out of your start triangle');
+      if (clauses.length === 0) return fallback;
+      const subject = m.path.length > 2 ? 'this jump chain' : isJump ? 'this hop' : 'this step';
+      const list = clauses.length === 1 ? clauses[0]
+        : clauses.length === 2 ? clauses[0] + ' and ' + clauses[1]
+        : clauses.slice(0, -1).join(', ') + ', and ' + clauses[clauses.length - 1];
+      return 'Tutorial: ★ — ' + subject + ' ' + list + '.';
+    }
+
     function nextTurn() {
       selected = null;
       availableMoves = [];
       chainOrigin = null;
       chainStartFrom = null;
       chainWasJump = false;
+      hint = null;
       doneBtn.classList.add('hidden');
       if (checkEnd()) { draw(); return; }
       // If the current player has no legal moves, skip (record no progress).
@@ -995,6 +1088,7 @@
       if (cur.slot === 4) {
         setTurnLabel('Your move');
         setStatus('Click one of your marbles to see legal moves.');
+        computeHint();
         draw();
       } else {
         setTurnLabel(turnLabelFor(cur.slot));
@@ -1020,6 +1114,7 @@
     }
 
     function applyPlayerMoveAndContinue(m, isJump) {
+      hint = null;   // the recommendation is spent once the player commits a move
       // Apply the move but DON'T advance turn yet for jumps (they may chain).
       // Manual apply for chain mode:
       const slot = state.board[m.from];
@@ -1181,12 +1276,14 @@
       chainStartFrom = null;
       anim = null;
       aiThinking = false;
+      hint = null;
       overEl.classList.remove('show');
       doneBtn.classList.add('hidden');
       setTurnLabel('Your move');
       setStatus('Click one of your marbles to see legal moves.');
       refreshStats();
       renderRoster();
+      computeHint();
       draw();
     }
 
@@ -1195,6 +1292,8 @@
     diffEl.addEventListener('change', () => {
       difficulty = diffEl.value;
       localStorage.setItem(KEY_DIFF, difficulty);
+      computeHint();
+      draw();
     });
     playersEl.addEventListener('change', () => {
       const v = parseInt(playersEl.value, 10);
@@ -1211,6 +1310,23 @@
       numPlayers = v;
       localStorage.setItem(KEY_PLAYERS, String(numPlayers));
       startGame();
+    });
+
+    const tutToggle = document.getElementById('tutorialToggle');
+    tutToggle.checked = tutorial;
+    tutToggle.addEventListener('change', () => {
+      tutorial = tutToggle.checked;
+      localStorage.setItem(KEY_TUT, tutorial ? '1' : '0');
+      if (tutorial) {
+        computeHint();
+      } else {
+        hint = null;
+        if (!aiThinking && chainOrigin == null && currentPlayer(state).slot === 4 &&
+            !overEl.classList.contains('show')) {
+          setStatus('Click one of your marbles to see legal moves.');
+        }
+      }
+      draw();
     });
 
     startGame();
