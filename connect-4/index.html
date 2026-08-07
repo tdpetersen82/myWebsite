@@ -141,7 +141,7 @@
       .game-over.lose h2 { color: #C8455A; }
       .game-over.tie h2 { color: #6B7280; }
       .game-over p { font-size: 15px; color: rgba(22, 36, 59, 0.75); max-width: 380px; }
-      .hint { font-size: 13px; color: rgba(22, 36, 59, 0.6); text-align: center; max-width: 600px; }
+      .hint { font-size: 13px; color: rgba(22, 36, 59, 0.6); text-align: center; max-width: 600px; align-self: center; }
       #how { padding: 20px 16px; max-width: 640px; }
       #how h2 { font-family: 'Bricolage Grotesque', serif; font-size: 22px; color: var(--frame); margin-bottom: 8px; }
       #how h3 { font-family: 'Bricolage Grotesque', serif; font-size: 16px; color: var(--frame); margin: 16px 0 6px; }
@@ -190,7 +190,7 @@
                 <h1>Connect 4</h1>
             </div>
             <div class="stats">
-            <div><span class="l">Turn</span><span class="v" id="turn" data-reserve="Computer thinking">Your move</span></div>
+            <div><span class="l">Turn</span><span class="v" id="turn" data-reserve="Thinking…">Your move</span></div>
             <div><span class="l">Record</span><span class="v" id="wins" data-reserve="88–88">0–0</span></div>
             <div><span class="l">Streak</span><span class="v" id="streak" data-reserve="88">0</span></div>
             <div><span class="l">Level</span>
@@ -441,12 +441,64 @@
             setStatus(coachLine());
         }
 
+        // Which way does the four run if `who` drops at c? (assumes it completes four)
+        function lineDirAt(c, who) {
+            const r = dropRow(board, c);
+            board[r][c] = who;
+            const dirs = [[0, 1, 'across'], [1, 0, 'vertically'], [1, 1, 'diagonally'], [1, -1, 'diagonally']];
+            let name = 'in a row';
+            for (const [dr, dc, n] of dirs) {
+                let k = 1;
+                for (const s of [1, -1]) {
+                    let rr = r + dr * s, cc = c + dc * s;
+                    while (rr >= 0 && rr < ROWS && cc >= 0 && cc < COLS && board[rr][cc] === who) { k++; rr += dr * s; cc += dc * s; }
+                }
+                if (k >= 4) { name = n; break; }
+            }
+            board[r][c] = 0;
+            return name;
+        }
+
+        // The most salient tactical reason the engine's pick is strong.
+        function whyBest(c) {
+            const r = dropRow(board, c);
+            board[r][c] = PLAYER;
+            const myWinSpots = validCols(board).filter(d => winsAt(d, PLAYER)).length;
+            // Longest all-mine window through the new disc (no computer discs in it).
+            let open = 0;
+            for (let rr = 0; rr < ROWS; rr++) for (let cc = 0; cc < COLS; cc++) {
+                for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]) {
+                    const er = rr + dr * 3, ec = cc + dc * 3;
+                    if (er >= ROWS || ec < 0 || ec >= COLS) continue;
+                    let mine = 0, theirs = 0, hasNew = false;
+                    for (let k = 0; k < 4; k++) {
+                        const wr = rr + dr * k, wc = cc + dc * k;
+                        if (wr === r && wc === c) hasNew = true;
+                        if (board[wr][wc] === PLAYER) mine++; else if (board[wr][wc] === AI) theirs++;
+                    }
+                    if (hasNew && !theirs && mine > open) open = mine;
+                }
+            }
+            board[r][c] = 0;
+            if (myWinSpots >= 2) return '★ — this creates two ways to win at once; the computer can’t block both.';
+            if (myWinSpots === 1) return '★ — this makes three in a row; the computer must stop you.';
+            board[r][c] = AI;
+            const aiWinSpots = validCols(board).filter(d => winsAt(d, AI)).length;
+            board[r][c] = 0;
+            if (aiWinSpots) return '★ — this takes the square the computer needs to build its own three.';
+            if (open >= 3) return '★ — this puts three of your discs in an open line toward four.';
+            if (c === 3) return '★ — the center column joins more four-in-a-row lines than any other spot.';
+            if (open === 2) return '★ — this links your discs with open space toward four.';
+            return '★ — the strongest spot by thinking several moves ahead.';
+        }
+
         function coachLine() {
-            if (hints.wins.length) return 'Tutorial: green ring — drop there to connect four and win.';
+            if (hints.wins.length > 1) return 'Tutorial: green rings — you can connect four in two places. Pick either and win.';
+            if (hints.wins.length === 1) return 'Tutorial: green ring — drop there to connect four ' + lineDirAt(hints.wins[0], PLAYER) + ' and win.';
             if (hints.blocks.length > 1) return 'Tutorial: two red rings — the computer has two ways to win, and you can only block one.';
-            if (hints.blocks.length === 1) return 'Tutorial: red ring — the computer connects four there next turn. Block it.';
-            let s = 'Tutorial: ★ marks your strongest move.';
-            if (hints.avoid.length) s += ' A red ✕ lets the computer win right on top.';
+            if (hints.blocks.length === 1) return 'Tutorial: red ring — the computer can connect four ' + lineDirAt(hints.blocks[0], AI) + ' there. Block it now.';
+            let s = 'Tutorial: ' + whyBest(hints.best);
+            if (hints.avoid.length) s += ' Red ✕ = the computer wins right on top.';
             return s;
         }
 
@@ -602,7 +654,7 @@
             turn = AI;
             aiThinking = true;
             setStatus('Computer is thinking…');
-            turnEl.textContent = 'Computer thinking';
+            turnEl.textContent = 'Thinking…';
             draw();
             setTimeout(aiMove, 420);
         }
