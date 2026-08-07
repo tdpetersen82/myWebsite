@@ -194,7 +194,7 @@
       #how p { font-size: 14px; color: color-mix(in oklab, var(--ink) 80%, transparent); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: color-mix(in oklab, var(--ink) 84%, transparent); }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260618c">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260807a">
 </head>
 <body>
     <div class="game-shell">
@@ -206,8 +206,8 @@
                 <h1>Mancala</h1>
             </div>
             <div class="stats">
-            <div><span class="l">Turn</span><span class="v" id="turn">Your move</span></div>
-            <div><span class="l">Score</span><span class="v score" id="score">You 0 – Computer 0</span></div>
+            <div><span class="l">Turn</span><span class="v" id="turn" data-reserve="Computer thinking…">Your move</span></div>
+            <div><span class="l">Score</span><span class="v score" id="score" data-reserve="You 48 – Computer 48">You 0 – Computer 0</span></div>
             <div><span class="l">Record</span><span class="v" id="wins">0–0</span></div>
             <div><span class="l">Streak</span><span class="v" id="streak">0</span></div>
             <div><span class="l">Level</span>

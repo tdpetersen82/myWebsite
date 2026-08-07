@@ -38,6 +38,19 @@ body {
    own align-items if they want a different alignment. */
 .stats { align-items: flex-start; }
 
+/* Stat values that swap between strings of different widths ("Your move" ↔
+   "Computer thinking") change the top-bar's intrinsic width, and since the
+   console is width: fit-content the whole table resizes on every turn change.
+   Games opt in by putting their longest possible value in data-reserve; a
+   hidden zero-height copy of it keeps the stat's width constant. */
+.stats .v[data-reserve]::after {
+  content: attr(data-reserve);
+  display: block;
+  height: 0;
+  overflow: hidden;
+  visibility: hidden;
+}
+
 /* Dialog overlays: keep the board visible behind, present the message as a card. */
 .game-over, .promo, .modal-overlay, .toast-overlay { background: transparent; backdrop-filter: none; }
 .over-card {
