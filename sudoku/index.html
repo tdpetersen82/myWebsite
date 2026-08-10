@@ -252,7 +252,7 @@
         .np { font-size: 18px; border-radius: 8px; }
       }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260807b">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260810a">
 </head>
 <body>
     <div class="game-shell">
@@ -822,7 +822,7 @@
             const nat = boardEl.offsetWidth || 492;
             const viewW = Math.min(window.innerWidth, document.documentElement.clientWidth);
             const mw = Math.max(viewW - 44, 200);
-            const mh = window.innerHeight * 0.58;
+            const mh = Math.min(window.innerHeight * 0.58, window.innerHeight - 380);
             const s = Math.min(mw / nat, mh / nat, 1);
             boardEl.style.transform = 'scale(' + s + ')';
             boardFit.style.width = (nat * s) + 'px';

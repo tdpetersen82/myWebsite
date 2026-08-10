@@ -157,7 +157,7 @@
       .related-games-list a:hover { background: rgba(43, 95, 168, 0.2); }
       /* .tut-switch styles come from ../strategy/strategy-chrome.css */
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260807b">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260810a">
 </head>
 <body>
     <div class="game-shell">
@@ -731,7 +731,15 @@
                 c.style.height = bh + 'px';
                 const viewW = Math.min(window.innerWidth, document.documentElement.clientWidth);
                 const mw = Math.max(viewW - 64, 200);
-                const mh = window.innerHeight * 0.72;
+                const shellEl = c.closest('.console');
+                let mh = window.innerHeight * 0.72;
+                if (shellEl) {
+                    // Fit the whole table above the fold: subtract the measured chrome
+                    // (top bar, status, controls) instead of assuming a fixed fraction.
+                    const sr = shellEl.getBoundingClientRect();
+                    const chrome = sr.height - c.getBoundingClientRect().height;
+                    mh = Math.max(240, window.innerHeight - (sr.top + window.scrollY) - chrome - 8);
+                }
                 const s = Math.min(mw / bw, mh / bh, 1);
                 c.style.width = (bw * s) + 'px';
                 c.style.height = (bh * s) + 'px';

@@ -27,7 +27,7 @@
     <meta name="twitter:title" content="Chess — Free Browser Chess vs. Computer">
     <meta name="twitter:description" content="Full rules. Three difficulties. No downloads, no installs.">
 
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260807b">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260810a">
     <style>
       :root {
         --ink: #1A1310;
@@ -238,6 +238,10 @@
       .analysis-out[hidden] { display: none; }
       .analysis-out .acc-row { font-weight: 800; font-size: 13px; margin-top: 2px; }
       .analysis-out .dim { color: color-mix(in oklab, var(--ink) 55%, transparent); font-weight: 600; }
+      @media (max-height: 800px) {
+        /* Short viewports: shave the board so the whole table clears the fold. */
+        .board-col { --board-size: min(90vw, 58vh, 560px); }
+      }
       @media (max-width: 880px) {
         /* .game-shell and .console mobile width come from ../strategy/strategy-chrome.css */
         .layout { flex-direction: column; align-items: center; }

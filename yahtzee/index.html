@@ -126,6 +126,18 @@
 
       /* ── Scorecard ── */
       .card-wrap { flex: 1 1 340px; min-width: 0; position: relative; }
+      /* Upper + lower sections side by side so the card clears the fold. */
+      .card-cols { display: flex; gap: 10px; align-items: flex-start; }
+      .card-cols .card-frame { flex: 1 1 0; min-width: 0; }
+      @media (max-width: 1099px) {
+        .card-cols { flex-direction: column; }
+        .card-cols .card-frame { width: 100%; }
+      }
+      /* Short viewports with a mouse: tighten rows (44px stays for touch). */
+      @media (max-height: 800px) and (pointer: fine) {
+        .cell { min-height: 34px; }
+        .scard thead th { padding: 6px 8px; }
+      }
       .card-frame {
         background: var(--paper); border: 1px solid rgba(60,40,20,0.18);
         border-radius: 14px; overflow: hidden;
@@ -196,7 +208,7 @@
         .scard .valcol { width: 64px; }
       }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260807b">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260810a">
 </head>
 <body>
     <div class="game-shell" id="shell">
@@ -235,17 +247,31 @@
             </div>
 
             <div class="card-wrap">
+                <div class="card-cols">
                 <div class="card-frame">
-                <table class="scard" aria-label="Yahtzee scorecard">
+                <table class="scard" aria-label="Yahtzee scorecard — upper section">
                     <thead>
                         <tr>
                             <th class="lblh" scope="col">Scorecard</th>
-                            <th class="valcol colhead" scope="col" id="colYou">You</th>
-                            <th class="valcol colhead cpu-only" scope="col" id="colCpu">Computer</th>
+                            <th class="valcol colhead col-you" scope="col">You</th>
+                            <th class="valcol colhead col-cpu cpu-only" scope="col">Computer</th>
                         </tr>
                     </thead>
-                    <tbody id="cardBody"></tbody>
+                    <tbody id="cardBodyUpper"></tbody>
                 </table>
+                </div>
+                <div class="card-frame">
+                <table class="scard" aria-label="Yahtzee scorecard — lower section">
+                    <thead>
+                        <tr>
+                            <th class="lblh" scope="col">Scorecard</th>
+                            <th class="valcol colhead col-you" scope="col">You</th>
+                            <th class="valcol colhead col-cpu cpu-only" scope="col">Computer</th>
+                        </tr>
+                    </thead>
+                    <tbody id="cardBodyLower"></tbody>
+                </table>
+                </div>
                 </div>
                 <div class="game-over" id="over" role="dialog" aria-modal="true" aria-labelledby="overTitle">
                     <div class="over-card">
@@ -742,7 +768,9 @@
         // ── build scorecard ──
         var cellBtns = {}, cpuCells = {}, derived = {};
         (function buildCard() {
-            var tb = $('cardBody');
+            // Upper and lower sections live in side-by-side tables so the whole
+            // card fits above the fold; `tb` switches targets between sections.
+            var tb = $('cardBodyUpper');
             function secRow(label) {
                 var tr = document.createElement('tr');
                 tr.className = 'sec';
@@ -780,6 +808,7 @@
             UPPER.forEach(catRow);
             derivedRow('upSum', 'Upper subtotal');
             derivedRow('upBonus', 'Bonus · reach 63 for +35');
+            tb = $('cardBodyLower');
             secRow('Lower section');
             LOWER.forEach(catRow);
             derivedRow('yBonus', 'Extra Yahtzees · +100 each');
@@ -832,8 +861,8 @@
             derived.yBonus.cpu.textContent = tC.yahtzeeBonus ? '+' + tC.yahtzeeBonus : '—';
             derived.grand.you.textContent = tY.grand;
             derived.grand.cpu.textContent = tC.grand;
-            $('colYou').classList.toggle('active', S.turn === 'you' && !S.over);
-            $('colCpu').classList.toggle('active', S.turn === 'cpu' && !S.over);
+            document.querySelectorAll('.col-you').forEach(function (el) { el.classList.toggle('active', S.turn === 'you' && !S.over); });
+            document.querySelectorAll('.col-cpu').forEach(function (el) { el.classList.toggle('active', S.turn === 'cpu' && !S.over); });
         }
 
         function renderStats() {
