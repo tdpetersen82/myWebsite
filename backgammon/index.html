@@ -161,7 +161,7 @@
       #how p { font-size: 14px; color: rgba(26, 19, 16, 0.75); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(26, 19, 16, 0.8); }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260810a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260810c">
 </head>
 <body>
     <div class="game-shell">
@@ -173,7 +173,7 @@
                 <h1>Backgammon</h1>
             </div>
             <div class="stats">
-            <div><span class="l">Turn</span><span class="v" id="turnLabel">Roll dice</span></div>
+            <div><span class="l">Turn</span><span class="v" id="turnLabel" data-reserve="Thinking…">Roll dice</span></div>
             <div><span class="l">Record</span><span class="v" id="wins">0–0</span></div>
             <div><span class="l">Streak</span><span class="v" id="streak">0</span></div>
             <div><span class="l">Level</span>
@@ -1138,7 +1138,7 @@
       refreshButtons();
       draw();
       setStatus('Computer is thinking…');
-      turnLabelEl.textContent = "Computer's turn";
+      turnLabelEl.textContent = 'Thinking…';
       aiTurn();
     }
 

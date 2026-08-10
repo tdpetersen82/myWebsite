@@ -165,7 +165,7 @@
       #how p { font-size: 14px; color: rgba(21, 23, 31, 0.78); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(21, 23, 31, 0.82); }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260810a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260810c">
 </head>
 <body>
     <div class="game-shell">
@@ -177,7 +177,7 @@
                 <h1>Chinese Checkers</h1>
             </div>
             <div class="stats">
-            <div><span class="l">Turn</span><span class="v" id="turn" data-reserve="Computer upper right thinking">Your move</span></div>
+            <div><span class="l">Turn</span><span class="v" id="turn" data-reserve="Upper right">Your move</span></div>
             <div><span class="l">Moves</span><span class="v" id="moves" data-reserve="888">0</span></div>
             <div><span class="l">Record</span><span class="v" id="wins" data-reserve="88–88">0–0</span></div>
             <div><span class="l">Streak</span><span class="v" id="streak" data-reserve="88">0</span></div>
@@ -1002,8 +1002,11 @@
     }
 
     function turnLabelFor(slot) {
+      // Seat name only — "Top", "Upper right" — keeps the stat cell narrow
+      // (the status line below already says "<seat> is thinking..."). The
+      // computer-vs-you distinction is carried by the label being a seat.
       if (slot === 4) return 'Your move';
-      return 'Computer ' + (PLAYER_COLORS[slot].name.replace(/^./, m => m.toLowerCase())) + ' thinking';
+      return PLAYER_COLORS[slot].name;
     }
 
     // ── Tutorial coach ───────────────────────────────────────────────────────

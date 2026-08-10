@@ -101,6 +101,11 @@ body {
 .console > .note {
   color: #F3E8CE !important;
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
+  /* Width-capped text children of the flex console otherwise sit at
+     flex-start — visibly left-pinned on wide tables. Center the box
+     and the text. */
+  align-self: center;
+  text-align: center;
 }
 
 /* Ghost buttons that end up sitting directly on the wood: lighten so they read. */

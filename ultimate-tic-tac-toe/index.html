@@ -157,7 +157,7 @@
       #how p { font-size: 14px; color: rgba(42, 31, 14, 0.78); margin-bottom: 8px; }
       #how ul { padding-left: 20px; font-size: 14px; color: rgba(42, 31, 14, 0.82); }
     </style>
-    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260810a">
+    <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260810c">
 </head>
 <body>
     <div class="game-shell">
@@ -169,7 +169,7 @@
                 <h1>Ultimate Tic-Tac-Toe</h1>
             </div>
             <div class="stats">
-            <div><span class="l">Turn</span><span class="v" id="turn" data-reserve="Computer thinking">Your move</span></div>
+            <div><span class="l">Turn</span><span class="v" id="turn" data-reserve="Thinking…">Your move</span></div>
             <div><span class="l">Record</span><span class="v" id="wins" data-reserve="88–88">0–0</span></div>
             <div><span class="l">Streak</span><span class="v" id="streak" data-reserve="88">0</span></div>
             <div><span class="l">Level</span>
@@ -821,7 +821,7 @@
         computeHint();
         draw();
       } else {
-        setTurnLabel('Computer thinking');
+        setTurnLabel('Thinking…');
         setStatus('Computer is calculating its response.');
         refreshStats();
         draw();
