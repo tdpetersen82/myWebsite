@@ -28,6 +28,10 @@
         @media (max-width: 760px) {
             .ch-bezel #gameCanvas { max-height: 54vh; }
         }
+        /* Short laptop viewports: keep the well above the fold. */
+        @media (max-height: 800px) and (min-width: 761px) {
+            .ch-bezel #gameCanvas { max-height: 62vh; }
+        }
     </style>
     <meta name="description" content="Play Block Puzzle free in your browser. Stack falling blocks to complete lines and score big in this classic puzzle game! No downloads, no installs.">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Block Puzzle","description":"Play Block Puzzle free in your browser. Stack falling blocks to complete lines and score big in this classic puzzle game! No downloads, no installs.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>

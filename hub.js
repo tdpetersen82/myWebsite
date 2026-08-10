@@ -379,7 +379,7 @@
 
       const mosaic = el('<div class="hub-mosaic"></div>');
       featuredGames.forEach(f => mosaic.appendChild(renderTile(f.game, f.size, !!f.isHero)));
-      mosaic.appendChild(renderAdTile());
+      // Ad tile skipped until AdSense is approved (see limestone.css hide rule).
       main.appendChild(mosaic);
 
       // All games (excluding featured)

@@ -1129,3 +1129,7 @@ body.hub-root {
   .ch-head .tag { font-size: 14px; }
   .ch-scene { width: 132px; height: 132px; right: 8px; }
 }
+
+/* Ads are not live yet (AdSense pending approval) — hide every placeholder
+   slot, matching category.css. Remove this block when ads go live. */
+.ad-top, .ad-slot, .tile-ad { display: none !important; }
