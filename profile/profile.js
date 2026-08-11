@@ -33,6 +33,30 @@
       return transform ? transform(obj) : obj;
     } catch (e) { return null; }
   }
+  // Head-to-head games keep separate win/loss counters; null only when neither
+  // side has a value, so a losing record still counts as "played".
+  function readRecord(winKey, lossKey) {
+    const w = readBest(winKey), l = readBest(lossKey);
+    if (w == null && l == null) return null;
+    return (w || 0) + '–' + (l || 0);
+  }
+  // Games with several boards/difficulties store { variant: seconds }.
+  function readBestTime(key) {
+    const obj = readStatsKey(key);
+    if (!obj) return null;
+    const times = Object.keys(obj).map(k => obj[k]).filter(v => typeof v === 'number' && v > 0);
+    return times.length ? Math.min.apply(null, times) : null;
+  }
+  function fmtTime(secs) {
+    const s = Math.round(secs);
+    return Math.floor(s / 60) + ':' + String(s % 60).padStart(2, '0');
+  }
+  // wins vs (games - wins) for games that only bank a total-played counter.
+  function recordFromTotals(winKey, gamesKey) {
+    const w = readBest(winKey), g = readBest(gamesKey);
+    if (g == null) return null;
+    return (w || 0) + '–' + Math.max(0, g - (w || 0));
+  }
 
   const ARCADE_ROWS = [
     { name: 'Snake',          href: '../snake/',          best: () => readBest('snakeHighScore') },
@@ -56,15 +80,35 @@
     { name: 'Counting Critters',  href: '../counting-critters/',  best: () => readBest('kids-counting-critters-best') },
     { name: 'Shape Sorter',       href: '../shape-sorter/',       best: () => readBest('kids-shape-sorter-best') },
     { name: 'Animal Detective',   href: '../animal-detective/',   best: () => readBest('animalDetectiveBest') },
+    { name: 'Tic-Tac-Toe',        href: '../tic-tac-toe/',        best: () => readBest('ticTacToeBestStreak'),
+      formatBest: (n) => n + ' streak' },
+    { name: 'Go Fish',            href: '../go-fish/',            best: () => recordFromTotals('goFishWins', 'goFishGames') },
+    { name: 'Crazy Eights',       href: '../crazy-eights/',       best: () => recordFromTotals('crazyEightsWins', 'crazyEightsGames') },
   ];
 
   const STRAT_ROWS = [
-    { name: 'Connect 4',     href: '../connect-4/',     best: () => null },
-    { name: 'Dots & Boxes',  href: '../connect-dots/',  best: () => readStatsKey('dotsBoxesStats', s => s && (s.wins != null) ? `${s.wins}–${s.losses || 0}` : null) },
-    { name: '2048',          href: '../2048/',          best: () => readBest('2048HighScore') },
-    { name: 'Chess',         href: '../chess/',         best: () => null },
-    { name: 'Checkers',      href: '../checkers/',      best: () => null },
-    { name: 'Backgammon',    href: '../backgammon/',    best: () => null },
+    { name: 'Chess',                href: '../chess/',                best: () => readRecord('chessGamesWon', 'chessGamesLost') },
+    { name: 'Checkers',             href: '../checkers/',             best: () => readRecord('checkersGamesWon', 'checkersGamesLost') },
+    { name: 'Othello',              href: '../othello/',              best: () => readRecord('othelloGamesWon', 'othelloGamesLost') },
+    { name: 'Connect 4',            href: '../connect-4/',            best: () => readRecord('connect4GamesWon', 'connect4GamesLost') },
+    { name: 'Backgammon',           href: '../backgammon/',           best: () => readRecord('backgammonGamesWon', 'backgammonGamesLost') },
+    { name: 'Mancala',              href: '../mancala/',              best: () => readRecord('mancalaGamesWon', 'mancalaGamesLost') },
+    { name: 'Chinese Checkers',     href: '../chinese-checkers/',     best: () => readRecord('chineseCheckersGamesWon', 'chineseCheckersGamesLost') },
+    { name: 'Ultimate Tic-Tac-Toe', href: '../ultimate-tic-tac-toe/', best: () => readRecord('ultimateTicTacToeGamesWon', 'ultimateTicTacToeGamesLost') },
+    { name: 'Dots & Boxes',         href: '../connect-dots/',         best: () => readStatsKey('dotsBoxesStats', s => s && (s.wins != null) ? `${s.wins}–${s.losses || 0}` : null) },
+    { name: '2048',                 href: '../2048/',                 best: () => readBest('2048HighScore') },
+    { name: 'Yahtzee',              href: '../yahtzee/',              best: () => readBest('yahtzeeHighScore') },
+    { name: 'Farkle',               href: '../farkle/',               best: () => readBest('farkleHighScore') },
+    { name: 'Sudoku',               href: '../sudoku/',               best: () => readBestTime('sudokuBestTimes'),
+      formatBest: fmtTime },
+    { name: 'Minesweeper',          href: '../minesweeper/',          best: () => readBestTime('minesweeperBestTimes'),
+      formatBest: fmtTime },
+    { name: 'Word Search',          href: '../word-search/',          best: () => readBestTime('wordSearchBest'),
+      formatBest: fmtTime },
+    { name: 'Mahjong Solitaire',    href: '../mahjong/',              best: () => readBest('mahjongGamesWon'),
+      formatBest: (n) => n + (n === 1 ? ' clear' : ' clears') },
+    { name: 'Hangman',              href: '../hangman/',              best: () => readBest('hangmanHighScore'),
+      formatBest: (n) => n + ' streak' },
   ];
 
   const RARE_KEYS = [
@@ -324,7 +368,7 @@
       if (e.key === window.CASINO_STATS.KEY ||
           e.key === window.CASINO_BANKROLL.KEY ||
           e.key === window.CASINO_PLAYER.KEY ||
-          /HighScore|Stats|kids-/.test(e.key)) {
+          /HighScore|Stats|Games(Won|Lost)|Best|Wins|kids-/.test(e.key)) {
         update();
       }
     });

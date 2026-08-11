@@ -70,8 +70,13 @@
       select.diff:hover, .setup button:hover { border-color: var(--accent); }
 
       .stage-wrap { display: flex; justify-content: center; width: 100%; }
-      .board-fit { position: relative; }
-      .stage { transform-origin: top center; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 420px; }
+      /* overflow:hidden clips the stage's untransformed layout box — the
+         scale() transform shrinks it visually but not in layout, which
+         otherwise adds horizontal page scroll on phones. */
+      .board-fit { position: relative; overflow: hidden; }
+      /* top LEFT origin: the scaled visual box then exactly fills the
+         .board-fit wrapper (sized to nat×s), which .stage-wrap centers. */
+      .stage { transform-origin: top left; display: flex; flex-direction: column; align-items: center; gap: 10px; width: 420px; }
       svg.figure { width: 200px; height: 200px; display: block; }
       svg.figure .gallows { stroke: var(--frame); stroke-width: 6; stroke-linecap: round; fill: none; }
       svg.figure .part { stroke: var(--bad); stroke-width: 5; stroke-linecap: round; fill: none; opacity: 0; transition: opacity .25s ease; }

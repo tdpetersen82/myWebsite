@@ -334,7 +334,12 @@
                 const par = c.parentElement;
                 const ps = getComputedStyle(par);
                 const mw = par.clientWidth - parseFloat(ps.paddingLeft) - parseFloat(ps.paddingRight);
-                const mh = window.innerHeight * 0.7;
+                // Measure what actually sits below the board (the buttons) rather
+                // than guessing a fraction, so Restart is never sliced by the fold.
+                const top = c.getBoundingClientRect().top + window.scrollY;
+                const controls = document.querySelector('.controls');
+                const below = controls ? controls.offsetHeight + 28 : 0;
+                const mh = Math.max(260, window.innerHeight - top - below - 12);
                 const s = Math.min(mw / bw, mh / bh, 1);
                 c.style.width = (bw * s) + 'px';
                 c.style.height = (bh * s) + 'px';
