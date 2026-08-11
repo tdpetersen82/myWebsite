@@ -22,7 +22,7 @@ const MAX_CONTACT_BYTES = 8 * 1024;
 
 const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
 const JOURNAL_ENTRY_PREFIX = 'journal:entry:';
-const JOURNAL_PHOTO_PREFIX = 'journal/photos/';
+const JOURNAL_PHOTO_PREFIX = 'journal:photo:';
 const MAX_ENTRY_BYTES = 256 * 1024;
 const MAX_PHOTO_BYTES = 8 * 1024 * 1024;
 const PHOTO_TYPES = new Set(['image/jpeg', 'image/png', 'image/webp']);
@@ -119,7 +119,9 @@ async function handleContact(request, env) {
 //
 // Entries live in KV under journal:entry:{YYYY-MM-DD} as
 //   { date, text, photos: [photoId], updatedAt, deleted? }
-// Photos live in R2 under journal/photos/{uuid}.
+// Photo bytes live in KV too, under journal:photo:{uuid}, with the mime type in
+// KV metadata. R2 would be the natural home but needs an account-level opt-in
+// this account doesn't have; a downscaled photo is far under KV's 25MB limit.
 //
 // Deletes are tombstones (deleted: true) rather than real removals so a phone
 // that was offline during the delete doesn't resurrect the entry on next sync.
@@ -243,14 +245,10 @@ async function handleJournal(request, env, url) {
   }
 
   if (section === 'photos') {
-    if (!env.JOURNAL_PHOTOS) {
-      return json({ error: 'photo storage not configured' }, { status: 503 });
-    }
-
     if (!id || !UUID_RE.test(id)) {
       return json({ error: 'invalid photo id' }, { status: 400 });
     }
-    const objectKey = JOURNAL_PHOTO_PREFIX + id;
+    const photoKey = JOURNAL_PHOTO_PREFIX + id;
 
     if (request.method === 'PUT') {
       const type = request.headers.get('content-type') || '';
@@ -262,25 +260,26 @@ async function handleJournal(request, env, url) {
       if (bytes.byteLength > MAX_PHOTO_BYTES) {
         return json({ error: 'photo too large' }, { status: 413 });
       }
-      await env.JOURNAL_PHOTOS.put(objectKey, bytes, {
-        httpMetadata: { contentType: type },
-      });
+      // Photos live in KV rather than R2: R2 needs an account-level opt-in this
+      // account doesn't have, and a downscaled journal photo (~20-200KB) is far
+      // under KV's 25MB per-value ceiling. Mime type rides along as metadata.
+      await env.LIMESTONE_KV.put(photoKey, bytes, { metadata: { type } });
       return json({ id, type, bytes: bytes.byteLength });
     }
 
     if (request.method === 'GET') {
-      const obj = await env.JOURNAL_PHOTOS.get(objectKey);
-      if (!obj) return json({ error: 'not found' }, { status: 404 });
-      return new Response(obj.body, {
+      const hit = await env.LIMESTONE_KV.getWithMetadata(photoKey, { type: 'arrayBuffer' });
+      if (!hit || !hit.value) return json({ error: 'not found' }, { status: 404 });
+      return new Response(hit.value, {
         headers: {
-          'content-type': obj.httpMetadata?.contentType || 'application/octet-stream',
+          'content-type': (hit.metadata && hit.metadata.type) || 'application/octet-stream',
           'cache-control': 'private, max-age=31536000, immutable',
         },
       });
     }
 
     if (request.method === 'DELETE') {
-      await env.JOURNAL_PHOTOS.delete(objectKey);
+      await env.LIMESTONE_KV.delete(photoKey);
       return json({ ok: true });
     }
 
