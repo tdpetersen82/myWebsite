@@ -18,5 +18,13 @@
       "binding": "LIMESTONE_KV",
       "id": "1da1bd544eda433fa4d77d45db0a9b3b"
     }
+  ],
+  // Journal photos. Create the bucket once before deploying:
+  //   npx wrangler r2 bucket create limestone-journal
+  "r2_buckets": [
+    {
+      "binding": "JOURNAL_PHOTOS",
+      "bucket_name": "limestone-journal"
+    }
   ]
 }

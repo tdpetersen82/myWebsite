@@ -1,4 +1,5 @@
 User-agent: *
 Allow: /
+Disallow: /journal/
 
 Sitemap: https://limestonegames.com/sitemap.xml

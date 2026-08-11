@@ -1,0 +1,1028 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="robots" content="noindex, nofollow, noarchive">
+<title>Journal</title>
+<link rel="manifest" href="manifest.webmanifest">
+<meta name="theme-color" content="#14161b">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Journal">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="icon" href="icon-192.png">
+<style>
+  :root {
+    --bg: #14161b;
+    --panel: #1c1f26;
+    --panel-2: #232733;
+    --line: #2e3341;
+    --text: #e8eaf0;
+    --dim: #9aa2b4;
+    --faint: #6b7386;
+    --accent: #e0a458;
+    --danger: #e06a5c;
+    --ok: #6cc08b;
+    --safe-top: env(safe-area-inset-top, 0px);
+    --safe-bottom: env(safe-area-inset-bottom, 0px);
+  }
+
+  * { box-sizing: border-box; }
+
+  html, body {
+    margin: 0;
+    padding: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif;
+    -webkit-text-size-adjust: 100%;
+    overscroll-behavior-y: none;
+  }
+
+  body { min-height: 100dvh; }
+
+  /* ---------- passphrase gate ---------- */
+
+  #gate {
+    position: fixed;
+    inset: 0;
+    z-index: 100;
+    background: var(--bg);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+  }
+  #gate.hidden { display: none; }
+
+  .gate-card { width: 100%; max-width: 340px; text-align: center; }
+  .gate-card h1 { font-size: 1.25rem; font-weight: 600; margin: 0 0 6px; }
+  .gate-card p { color: var(--dim); font-size: 0.9rem; margin: 0 0 20px; line-height: 1.5; }
+
+  .gate-card input {
+    width: 100%;
+    padding: 14px 16px;
+    font-size: 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--text);
+    margin-bottom: 12px;
+  }
+  .gate-card input:focus { outline: none; border-color: var(--accent); }
+
+  .gate-card button {
+    width: 100%;
+    padding: 14px;
+    font-size: 1rem;
+    font-weight: 600;
+    background: var(--accent);
+    color: #1a1208;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+  }
+  #gate-error { color: var(--danger); font-size: 0.85rem; min-height: 1.2em; margin-top: 10px; }
+
+  /* ---------- shell ---------- */
+
+  #app { display: none; flex-direction: column; min-height: 100dvh; }
+  #app.ready { display: flex; }
+
+  header {
+    position: sticky;
+    top: 0;
+    z-index: 20;
+    background: rgba(20, 22, 27, 0.92);
+    backdrop-filter: blur(12px);
+    -webkit-backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--line);
+    padding: calc(var(--safe-top) + 10px) 12px 10px;
+  }
+
+  .datebar { display: flex; align-items: center; gap: 8px; }
+
+  .navbtn {
+    flex: 0 0 auto;
+    width: 40px;
+    height: 40px;
+    border-radius: 10px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    color: var(--text);
+    font-size: 1.1rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .navbtn:disabled { opacity: 0.3; cursor: default; }
+
+  .datelabel { flex: 1 1 auto; text-align: center; min-width: 0; }
+  .datelabel .d1 { font-size: 1.05rem; font-weight: 600; letter-spacing: -0.01em; }
+  .datelabel .d2 { font-size: 0.75rem; color: var(--faint); margin-top: 2px; }
+
+  .statusrow {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 8px;
+    font-size: 0.72rem;
+    color: var(--faint);
+    min-height: 14px;
+  }
+  .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); }
+  .dot.ok { background: var(--ok); }
+  .dot.busy { background: var(--accent); }
+  .dot.off { background: var(--danger); }
+
+  /* ---------- editor ---------- */
+
+  main { flex: 1 1 auto; padding: 14px 12px calc(var(--safe-bottom) + 24px); }
+
+  #editor {
+    width: 100%;
+    min-height: 180px;
+    padding: 14px;
+    font-size: 16px;
+    line-height: 1.6;
+    font-family: inherit;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    color: var(--text);
+    resize: none;
+    overflow: hidden;
+  }
+  #editor:focus { outline: none; border-color: #3c4356; }
+  #editor::placeholder { color: var(--faint); }
+
+  /* ---------- photos ---------- */
+
+  #photos {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    margin-top: 12px;
+  }
+  #photos:empty { display: none; }
+
+  .thumb {
+    position: relative;
+    aspect-ratio: 1;
+    border-radius: 10px;
+    overflow: hidden;
+    background: var(--panel-2);
+  }
+  .thumb img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  .thumb.pending::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: rgba(20, 22, 27, 0.45);
+  }
+  .thumb .rm {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    width: 26px;
+    height: 26px;
+    border-radius: 50%;
+    border: none;
+    background: rgba(0, 0, 0, 0.62);
+    color: #fff;
+    font-size: 0.9rem;
+    line-height: 1;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .actions { display: flex; gap: 8px; margin-top: 12px; }
+
+  .action {
+    flex: 1 1 auto;
+    padding: 12px;
+    font-size: 0.9rem;
+    font-weight: 500;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--text);
+    cursor: pointer;
+    text-align: center;
+  }
+  .action:active { background: var(--panel-2); }
+  #file { display: none; }
+
+  /* ---------- past entries ---------- */
+
+  .past-head {
+    margin: 28px 0 10px;
+    font-size: 0.72rem;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--faint);
+  }
+
+  .past-item {
+    display: flex;
+    gap: 10px;
+    align-items: flex-start;
+    width: 100%;
+    text-align: left;
+    padding: 12px;
+    margin-bottom: 8px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--text);
+    cursor: pointer;
+    font: inherit;
+  }
+  .past-item.current { border-color: var(--accent); }
+  .past-item .pi-body { flex: 1 1 auto; min-width: 0; }
+  .past-item .pi-date { font-size: 0.78rem; color: var(--accent); margin-bottom: 3px; }
+  .past-item .pi-text {
+    font-size: 0.88rem;
+    color: var(--dim);
+    line-height: 1.45;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+  .past-item .pi-count {
+    flex: 0 0 auto;
+    font-size: 0.72rem;
+    color: var(--faint);
+    padding-top: 2px;
+  }
+  .past-empty { color: var(--faint); font-size: 0.85rem; padding: 4px 2px; }
+
+  /* ---------- lightbox ---------- */
+
+  #lightbox {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    background: rgba(8, 9, 12, 0.94);
+    display: none;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+  }
+  #lightbox.show { display: flex; }
+  #lightbox img { max-width: 100%; max-height: 100%; border-radius: 8px; }
+
+  /* ---------- toast ---------- */
+
+  #toast {
+    position: fixed;
+    left: 50%;
+    bottom: calc(var(--safe-bottom) + 20px);
+    transform: translate(-50%, 20px);
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    color: var(--text);
+    padding: 10px 18px;
+    border-radius: 999px;
+    font-size: 0.85rem;
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.18s, transform 0.18s;
+    z-index: 80;
+    max-width: 88vw;
+    text-align: center;
+  }
+  #toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+  @media (min-width: 640px) {
+    header { padding-left: 0; padding-right: 0; }
+    header > * { max-width: 620px; margin-left: auto; margin-right: auto; }
+    main { max-width: 620px; margin: 0 auto; width: 100%; }
+  }
+</style>
+</head>
+<body>
+
+<div id="gate">
+  <div class="gate-card">
+    <h1>Journal</h1>
+    <p>Enter the passphrase to unlock. It's stored on this device so you only do this once.</p>
+    <input id="gate-input" type="password" autocomplete="current-password" placeholder="Passphrase" enterkeyhint="go">
+    <button id="gate-go">Unlock</button>
+    <div id="gate-error"></div>
+  </div>
+</div>
+
+<div id="app">
+  <header>
+    <div class="datebar">
+      <button class="navbtn" id="prev" aria-label="Previous day">‹</button>
+      <div class="datelabel">
+        <div class="d1" id="date-main">Today</div>
+        <div class="d2" id="date-sub"></div>
+      </div>
+      <button class="navbtn" id="next" aria-label="Next day">›</button>
+    </div>
+    <div class="statusrow">
+      <span class="dot" id="dot"></span>
+      <span id="status">Loading…</span>
+    </div>
+  </header>
+
+  <main>
+    <textarea id="editor" placeholder="What did you get up to?" enterkeyhint="enter"></textarea>
+    <div id="photos"></div>
+    <div class="actions">
+      <button class="action" id="add-photo">Add photo</button>
+      <button class="action" id="today">Today</button>
+    </div>
+    <input type="file" id="file" accept="image/*" multiple>
+
+    <div class="past-head">Recent</div>
+    <div id="past"></div>
+  </main>
+</div>
+
+<div id="lightbox"><img id="lightbox-img" alt=""></div>
+<div id="toast"></div>
+
+<script>
+(function () {
+  'use strict';
+
+  // -------------------------------------------------------------------------
+  // Config
+  // -------------------------------------------------------------------------
+
+  var API = '/api/journal';
+  var TOKEN_KEY = 'journal.token';
+  var PULLED_KEY = 'journal.lastPull';
+  var MAX_DIM = 1600;          // longest edge after downscale
+  var JPEG_QUALITY = 0.82;
+  var LOCAL_SAVE_MS = 350;     // debounce: keystroke -> IndexedDB
+  var SYNC_MS = 2000;          // debounce: IndexedDB -> server
+  var RECENT_LIMIT = 30;
+
+  var token = null;
+  var db = null;
+  var currentDate = todayStr();
+  var objectUrls = new Map();  // photoId -> blob: URL
+  var syncTimer = null;
+  var saveTimer = null;
+  var syncing = false;
+  var syncQueued = false;
+
+  // -------------------------------------------------------------------------
+  // Dates. Everything is local time — a journal day is the day you lived,
+  // not a UTC window.
+  // -------------------------------------------------------------------------
+
+  function todayStr() { return toStr(new Date()); }
+
+  function toStr(d) {
+    var m = String(d.getMonth() + 1).padStart(2, '0');
+    var day = String(d.getDate()).padStart(2, '0');
+    return d.getFullYear() + '-' + m + '-' + day;
+  }
+
+  function fromStr(s) {
+    var p = s.split('-');
+    return new Date(Number(p[0]), Number(p[1]) - 1, Number(p[2]));
+  }
+
+  function shiftDate(s, days) {
+    var d = fromStr(s);
+    d.setDate(d.getDate() + days);
+    return toStr(d);
+  }
+
+  function prettyDate(s) {
+    var d = fromStr(s);
+    var t = todayStr();
+    if (s === t) return 'Today';
+    if (s === shiftDate(t, -1)) return 'Yesterday';
+    var opts = { weekday: 'short', month: 'short', day: 'numeric' };
+    if (d.getFullYear() !== new Date().getFullYear()) opts.year = 'numeric';
+    return d.toLocaleDateString(undefined, opts);
+  }
+
+  function longDate(s) {
+    return fromStr(s).toLocaleDateString(undefined, {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // IndexedDB. Entries and photo blobs both live here; the server is a mirror,
+  // not the source of truth, so the app works with no signal.
+  // -------------------------------------------------------------------------
+
+  function openDb() {
+    return new Promise(function (resolve, reject) {
+      var req = indexedDB.open('journal', 1);
+      req.onupgradeneeded = function (e) {
+        var d = e.target.result;
+        if (!d.objectStoreNames.contains('entries')) {
+          d.createObjectStore('entries', { keyPath: 'date' });
+        }
+        if (!d.objectStoreNames.contains('photos')) {
+          d.createObjectStore('photos', { keyPath: 'id' });
+        }
+      };
+      req.onsuccess = function () { resolve(req.result); };
+      req.onerror = function () { reject(req.error); };
+    });
+  }
+
+  function tx(store, mode, fn) {
+    return new Promise(function (resolve, reject) {
+      var t = db.transaction(store, mode);
+      var req = fn(t.objectStore(store));
+      t.onerror = function () { reject(t.error); };
+      if (req) {
+        req.onsuccess = function () { resolve(req.result); };
+        req.onerror = function () { reject(req.error); };
+      } else {
+        t.oncomplete = function () { resolve(); };
+      }
+    });
+  }
+
+  var idbGet = function (s, k) { return tx(s, 'readonly', function (o) { return o.get(k); }); };
+  var idbAll = function (s) { return tx(s, 'readonly', function (o) { return o.getAll(); }); };
+  var idbPut = function (s, v) { return tx(s, 'readwrite', function (o) { return o.put(v); }); };
+  var idbDel = function (s, k) { return tx(s, 'readwrite', function (o) { return o.delete(k); }); };
+
+  // -------------------------------------------------------------------------
+  // API
+  // -------------------------------------------------------------------------
+
+  function api(path, opts) {
+    opts = opts || {};
+    var headers = opts.headers || {};
+    headers['Authorization'] = 'Bearer ' + token;
+    return fetch(API + path, {
+      method: opts.method || 'GET',
+      headers: headers,
+      body: opts.body,
+      cache: 'no-store'
+    }).then(function (res) {
+      if (res.status === 401) {
+        var err = new Error('unauthorized');
+        err.unauthorized = true;
+        throw err;
+      }
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      return res;
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Entry read / write
+  // -------------------------------------------------------------------------
+
+  function blankEntry(date) {
+    return { date: date, text: '', photos: [], updatedAt: 0, dirty: false, deleted: false };
+  }
+
+  function getEntry(date) {
+    return idbGet('entries', date).then(function (e) { return e || blankEntry(date); });
+  }
+
+  // Writes locally and marks dirty. The server push is debounced separately so
+  // typing never waits on the network.
+  function saveEntry(entry) {
+    entry.updatedAt = Date.now();
+    entry.dirty = true;
+    return idbPut('entries', entry).then(function () {
+      scheduleSync();
+      renderPast();
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Sync. Push dirty entries and un-uploaded photos, then pull anything the
+  // server has that's newer. Last-write-wins on updatedAt.
+  // -------------------------------------------------------------------------
+
+  function scheduleSync() {
+    clearTimeout(syncTimer);
+    syncTimer = setTimeout(function () { sync(); }, SYNC_MS);
+  }
+
+  function sync() {
+    if (syncing) { syncQueued = true; return Promise.resolve(); }
+    if (!navigator.onLine) { setStatus('off', 'Offline — saved on this device'); return Promise.resolve(); }
+
+    syncing = true;
+    setStatus('busy', 'Syncing…');
+
+    return pushPhotos()
+      .then(pushEntries)
+      .then(pull)
+      .then(function () {
+        setStatus('ok', 'Synced');
+      })
+      .catch(function (err) {
+        if (err && err.unauthorized) {
+          lock();
+          return;
+        }
+        setStatus('off', navigator.onLine ? 'Sync failed — saved on this device' : 'Offline — saved on this device');
+      })
+      .then(function () {
+        syncing = false;
+        if (syncQueued) { syncQueued = false; scheduleSync(); }
+      });
+  }
+
+  function pushPhotos() {
+    return idbAll('photos').then(function (all) {
+      var pending = all.filter(function (p) { return !p.uploaded; });
+      return pending.reduce(function (chain, p) {
+        return chain.then(function () {
+          return api('/photos/' + p.id, {
+            method: 'PUT',
+            headers: { 'Content-Type': p.type || 'image/jpeg' },
+            body: p.blob
+          }).then(function () {
+            p.uploaded = true;
+            return idbPut('photos', p);
+          });
+        });
+      }, Promise.resolve());
+    });
+  }
+
+  function pushEntries() {
+    return idbAll('entries').then(function (all) {
+      var dirty = all.filter(function (e) { return e.dirty; });
+      return dirty.reduce(function (chain, e) {
+        return chain.then(function () {
+          return api('/entries/' + e.date, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ text: e.text, photos: e.photos, deleted: !!e.deleted })
+          }).then(function (res) { return res.json(); })
+            .then(function (stored) {
+              // Re-read: the entry may have changed while the request was in
+              // flight, in which case it's still dirty and must not be cleared.
+              return idbGet('entries', e.date).then(function (fresh) {
+                if (!fresh || fresh.updatedAt !== e.updatedAt) return;
+                fresh.dirty = false;
+                fresh.updatedAt = stored.updatedAt;
+                return idbPut('entries', fresh);
+              });
+            });
+        });
+      }, Promise.resolve());
+    });
+  }
+
+  function pull() {
+    var since = Number(localStorage.getItem(PULLED_KEY)) || 0;
+    var startedAt = Date.now();
+    return api('/entries?since=' + since)
+      .then(function (res) { return res.json(); })
+      .then(function (data) {
+        var remote = data.entries || [];
+        return remote.reduce(function (chain, r) {
+          return chain.then(function () {
+            return idbGet('entries', r.date).then(function (local) {
+              // A local edit that hasn't been pushed yet always wins; it'll go
+              // up on the next push and become the newer copy anyway.
+              if (local && local.dirty) return;
+              if (local && (local.updatedAt || 0) >= (r.updatedAt || 0)) return;
+              return idbPut('entries', {
+                date: r.date,
+                text: r.text || '',
+                photos: r.photos || [],
+                updatedAt: r.updatedAt || 0,
+                deleted: !!r.deleted,
+                dirty: false
+              });
+            });
+          });
+        }, Promise.resolve()).then(function () {
+          localStorage.setItem(PULLED_KEY, String(startedAt));
+          if (remote.length) { renderPast(); refreshIfCurrent(remote); }
+        });
+      });
+  }
+
+  function refreshIfCurrent(remote) {
+    var hit = remote.some(function (r) { return r.date === currentDate; });
+    if (hit && document.activeElement !== editor) loadDay(currentDate);
+  }
+
+  // -------------------------------------------------------------------------
+  // Photos
+  // -------------------------------------------------------------------------
+
+  // Phone photos are 3-5MB and hundreds of times larger than they need to be
+  // for a journal thumbnail. Downscale before anything touches storage.
+  function downscale(file) {
+    return new Promise(function (resolve, reject) {
+      var url = URL.createObjectURL(file);
+      var img = new Image();
+      img.onload = function () {
+        var w = img.naturalWidth;
+        var h = img.naturalHeight;
+        var scale = Math.min(1, MAX_DIM / Math.max(w, h));
+        var cw = Math.max(1, Math.round(w * scale));
+        var ch = Math.max(1, Math.round(h * scale));
+        var canvas = document.createElement('canvas');
+        canvas.width = cw;
+        canvas.height = ch;
+        canvas.getContext('2d').drawImage(img, 0, 0, cw, ch);
+        URL.revokeObjectURL(url);
+        canvas.toBlob(function (blob) {
+          if (blob) resolve(blob);
+          else reject(new Error('encode failed'));
+        }, 'image/jpeg', JPEG_QUALITY);
+      };
+      img.onerror = function () {
+        URL.revokeObjectURL(url);
+        reject(new Error('decode failed'));
+      };
+      img.src = url;
+    });
+  }
+
+  function addPhotos(files) {
+    var list = Array.prototype.slice.call(files);
+    if (!list.length) return;
+    toast(list.length === 1 ? 'Adding photo…' : 'Adding ' + list.length + ' photos…');
+
+    getEntry(currentDate).then(function (entry) {
+      return list.reduce(function (chain, file) {
+        return chain.then(function () {
+          return downscale(file).then(function (blob) {
+            var id = uuid();
+            return idbPut('photos', {
+              id: id, blob: blob, type: 'image/jpeg', uploaded: false
+            }).then(function () {
+              entry.photos.push(id);
+            });
+          });
+        }).catch(function () {
+          toast("Couldn't read one of those images");
+        });
+      }, Promise.resolve()).then(function () {
+        return saveEntry(entry);
+      }).then(function () {
+        return renderPhotos(entry.photos);
+      });
+    });
+  }
+
+  function removePhoto(id) {
+    getEntry(currentDate).then(function (entry) {
+      entry.photos = entry.photos.filter(function (p) { return p !== id; });
+      return saveEntry(entry).then(function () {
+        return renderPhotos(entry.photos);
+      }).then(function () {
+        revokeUrl(id);
+        return idbDel('photos', id);
+      }).then(function () {
+        return api('/photos/' + id, { method: 'DELETE' }).catch(function () {});
+      });
+    });
+  }
+
+  // Returns a blob: URL for a photo, fetching from the server the first time
+  // this device sees a photo taken on another one.
+  function photoUrl(id) {
+    if (objectUrls.has(id)) return Promise.resolve(objectUrls.get(id));
+    return idbGet('photos', id).then(function (p) {
+      if (p && p.blob) return p.blob;
+      return api('/photos/' + id).then(function (res) { return res.blob(); })
+        .then(function (blob) {
+          return idbPut('photos', { id: id, blob: blob, type: blob.type, uploaded: true })
+            .then(function () { return blob; });
+        });
+    }).then(function (blob) {
+      var url = URL.createObjectURL(blob);
+      objectUrls.set(id, url);
+      return url;
+    });
+  }
+
+  function revokeUrl(id) {
+    if (objectUrls.has(id)) {
+      URL.revokeObjectURL(objectUrls.get(id));
+      objectUrls.delete(id);
+    }
+  }
+
+  function uuid() {
+    if (crypto.randomUUID) return crypto.randomUUID();
+    return 'xxxxxxxx-xxxx-4xxx-yxxx-xxxxxxxxxxxx'.replace(/[xy]/g, function (c) {
+      var r = (Math.random() * 16) | 0;
+      return (c === 'x' ? r : ((r & 0x3) | 0x8)).toString(16);
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Rendering
+  // -------------------------------------------------------------------------
+
+  var gate = document.getElementById('gate');
+  var gateInput = document.getElementById('gate-input');
+  var gateGo = document.getElementById('gate-go');
+  var gateError = document.getElementById('gate-error');
+  var app = document.getElementById('app');
+  var editor = document.getElementById('editor');
+  var photosEl = document.getElementById('photos');
+  var pastEl = document.getElementById('past');
+  var dateMain = document.getElementById('date-main');
+  var dateSub = document.getElementById('date-sub');
+  var statusEl = document.getElementById('status');
+  var dotEl = document.getElementById('dot');
+  var fileInput = document.getElementById('file');
+  var nextBtn = document.getElementById('next');
+  var lightbox = document.getElementById('lightbox');
+  var lightboxImg = document.getElementById('lightbox-img');
+  var toastEl = document.getElementById('toast');
+  var toastTimer = null;
+
+  function setStatus(kind, msg) {
+    dotEl.className = 'dot' + (kind ? ' ' + kind : '');
+    statusEl.textContent = msg;
+  }
+
+  function toast(msg) {
+    toastEl.textContent = msg;
+    toastEl.classList.add('show');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2200);
+  }
+
+  function autosize() {
+    editor.style.height = 'auto';
+    editor.style.height = Math.max(180, editor.scrollHeight) + 'px';
+  }
+
+  function loadDay(date) {
+    currentDate = date;
+    dateMain.textContent = prettyDate(date);
+    dateSub.textContent = longDate(date);
+    nextBtn.disabled = date >= todayStr();
+
+    return getEntry(date).then(function (entry) {
+      editor.value = entry.deleted ? '' : (entry.text || '');
+      autosize();
+      renderPast();
+      return renderPhotos(entry.deleted ? [] : entry.photos);
+    });
+  }
+
+  function renderPhotos(ids) {
+    photosEl.innerHTML = '';
+    if (!ids || !ids.length) return Promise.resolve();
+
+    return ids.reduce(function (chain, id) {
+      return chain.then(function () {
+        var wrap = document.createElement('div');
+        wrap.className = 'thumb pending';
+        var img = document.createElement('img');
+        img.alt = '';
+        var rm = document.createElement('button');
+        rm.className = 'rm';
+        rm.textContent = '×';
+        rm.setAttribute('aria-label', 'Remove photo');
+        rm.addEventListener('click', function (e) {
+          e.stopPropagation();
+          removePhoto(id);
+        });
+        wrap.appendChild(img);
+        wrap.appendChild(rm);
+        wrap.addEventListener('click', function () {
+          if (!img.src) return;
+          lightboxImg.src = img.src;
+          lightbox.classList.add('show');
+        });
+        photosEl.appendChild(wrap);
+
+        return photoUrl(id).then(function (url) {
+          img.src = url;
+          wrap.classList.remove('pending');
+        }).catch(function () {
+          wrap.classList.remove('pending');
+          wrap.style.background = 'var(--panel-2)';
+        });
+      });
+    }, Promise.resolve());
+  }
+
+  function renderPast() {
+    return idbAll('entries').then(function (all) {
+      var items = all
+        .filter(function (e) { return !e.deleted && (e.text.trim() || e.photos.length); })
+        .sort(function (a, b) { return a.date < b.date ? 1 : -1; })
+        .slice(0, RECENT_LIMIT);
+
+      pastEl.innerHTML = '';
+      if (!items.length) {
+        var empty = document.createElement('div');
+        empty.className = 'past-empty';
+        empty.textContent = 'Nothing yet. Write today’s first.';
+        pastEl.appendChild(empty);
+        return;
+      }
+
+      items.forEach(function (e) {
+        var btn = document.createElement('button');
+        btn.className = 'past-item' + (e.date === currentDate ? ' current' : '');
+
+        var body = document.createElement('div');
+        body.className = 'pi-body';
+
+        var d = document.createElement('div');
+        d.className = 'pi-date';
+        d.textContent = prettyDate(e.date);
+
+        var t = document.createElement('div');
+        t.className = 'pi-text';
+        t.textContent = e.text.trim() || (e.photos.length === 1 ? '1 photo' : e.photos.length + ' photos');
+
+        body.appendChild(d);
+        body.appendChild(t);
+        btn.appendChild(body);
+
+        if (e.photos.length && e.text.trim()) {
+          var c = document.createElement('div');
+          c.className = 'pi-count';
+          c.textContent = '📷 ' + e.photos.length;
+          btn.appendChild(c);
+        }
+
+        btn.addEventListener('click', function () {
+          loadDay(e.date);
+          window.scrollTo({ top: 0, behavior: 'smooth' });
+        });
+        pastEl.appendChild(btn);
+      });
+    });
+  }
+
+  // -------------------------------------------------------------------------
+  // Gate
+  // -------------------------------------------------------------------------
+
+  function unlock(candidate) {
+    gateError.textContent = '';
+    gateGo.textContent = 'Checking…';
+    token = candidate;
+    return api('/entries?since=' + Date.now())
+      .then(function () {
+        localStorage.setItem(TOKEN_KEY, candidate);
+        gate.classList.add('hidden');
+        app.classList.add('ready');
+        return start();
+      })
+      .catch(function (err) {
+        token = null;
+        gateGo.textContent = 'Unlock';
+        gateError.textContent = err && err.unauthorized
+          ? 'Wrong passphrase.'
+          : 'Could not reach the server.';
+      });
+  }
+
+  function lock() {
+    localStorage.removeItem(TOKEN_KEY);
+    token = null;
+    app.classList.remove('ready');
+    gate.classList.remove('hidden');
+    gateGo.textContent = 'Unlock';
+    gateError.textContent = 'Session expired — enter the passphrase again.';
+  }
+
+  gateGo.addEventListener('click', function () {
+    var v = gateInput.value.trim();
+    if (v) unlock(v);
+  });
+  gateInput.addEventListener('keydown', function (e) {
+    if (e.key === 'Enter') gateGo.click();
+  });
+
+  // -------------------------------------------------------------------------
+  // Wiring
+  // -------------------------------------------------------------------------
+
+  editor.addEventListener('input', function () {
+    autosize();
+    var text = editor.value;
+    var date = currentDate;
+    setStatus('busy', 'Saving…');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      getEntry(date).then(function (entry) {
+        entry.text = text;
+        entry.deleted = false;
+        return saveEntry(entry);
+      }).then(function () {
+        setStatus('ok', 'Saved on this device');
+      });
+    }, LOCAL_SAVE_MS);
+  });
+
+  document.getElementById('prev').addEventListener('click', function () {
+    loadDay(shiftDate(currentDate, -1));
+  });
+  nextBtn.addEventListener('click', function () {
+    if (currentDate < todayStr()) loadDay(shiftDate(currentDate, 1));
+  });
+  document.getElementById('today').addEventListener('click', function () {
+    loadDay(todayStr());
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  });
+
+  document.getElementById('add-photo').addEventListener('click', function () {
+    fileInput.click();
+  });
+  fileInput.addEventListener('change', function () {
+    addPhotos(fileInput.files);
+    fileInput.value = '';
+  });
+
+  lightbox.addEventListener('click', function () {
+    lightbox.classList.remove('show');
+    lightboxImg.src = '';
+  });
+
+  window.addEventListener('online', function () { scheduleSync(); });
+  window.addEventListener('offline', function () {
+    setStatus('off', 'Offline — saved on this device');
+  });
+
+  // Flush before the app is backgrounded — on iOS a suspended tab may never
+  // get another timer callback.
+  document.addEventListener('visibilitychange', function () {
+    if (document.visibilityState === 'hidden') {
+      clearTimeout(saveTimer);
+      clearTimeout(syncTimer);
+      var text = editor.value;
+      var date = currentDate;
+      getEntry(date).then(function (entry) {
+        if (entry.text === text) return;
+        entry.text = text;
+        entry.deleted = false;
+        return saveEntry(entry);
+      });
+    } else {
+      scheduleSync();
+    }
+  });
+
+  // -------------------------------------------------------------------------
+  // Boot
+  // -------------------------------------------------------------------------
+
+  function start() {
+    // Ask the browser not to evict us. Granted on installed home-screen apps;
+    // harmless no-op elsewhere.
+    if (navigator.storage && navigator.storage.persist) {
+      navigator.storage.persist().catch(function () {});
+    }
+    return loadDay(todayStr()).then(function () {
+      setStatus('', 'Ready');
+      return sync();
+    });
+  }
+
+  openDb().then(function (d) {
+    db = d;
+    var saved = localStorage.getItem(TOKEN_KEY);
+    if (saved) {
+      token = saved;
+      gate.classList.add('hidden');
+      app.classList.add('ready');
+      return start();
+    }
+    gateInput.focus();
+  }).catch(function () {
+    document.body.innerHTML =
+      '<div style="padding:40px;text-align:center;color:#9aa2b4;font-family:system-ui">' +
+      'This browser blocked local storage, so the journal can’t run. ' +
+      'Private browsing mode is the usual cause.</div>';
+  });
+
+  if ('serviceWorker' in navigator) {
+    window.addEventListener('load', function () {
+      navigator.serviceWorker.register('sw.js').catch(function () {});
+    });
+  }
+})();
+</script>
+</body>
+</html>

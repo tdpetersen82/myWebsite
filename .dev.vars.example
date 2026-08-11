@@ -1,0 +1,5 @@
+# Local-only secrets for `wrangler dev`. Copy to .dev.vars (gitignored).
+# In production these are set with: npx wrangler secret put JOURNAL_TOKEN
+
+# Passphrase that unlocks /journal/ and its API.
+JOURNAL_TOKEN=dev-passphrase
