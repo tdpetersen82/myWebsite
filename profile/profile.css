@@ -47,7 +47,12 @@
   color: var(--ink-soft);
   letter-spacing: 0.04em;
   text-transform: uppercase;
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 6px;
 }
+.prof-eyebrow-sep { opacity: 0.55; }
 .prof-sync {
   display: inline-flex;
   align-items: center;
@@ -424,4 +429,6 @@
   .prof-row-tiles { grid-template-columns: 1fr; }
   .prof-mini.wide { grid-column: auto; }
   .prof-skel-grid { grid-template-columns: 1fr; }
+  /* The eyebrow wraps here, which would leave the separator dangling. */
+  .prof-eyebrow-sep { display: none; }
 }
