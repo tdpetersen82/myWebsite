@@ -187,7 +187,10 @@ async function listEntries(env, since) {
       keys.slice(i, i + 25).map((k) => env.LIMESTONE_KV.get(k, 'json').catch(() => null))
     );
     for (const e of chunk) {
-      if (e && (!since || (e.updatedAt || 0) > since)) entries.push(e);
+      // >= rather than >: an entry written in the same millisecond the cursor
+      // was stamped must not fall through the gap. Re-sending a boundary entry
+      // is harmless — the merge is idempotent.
+      if (e && (!since || (e.updatedAt || 0) >= since)) entries.push(e);
     }
   }
   entries.sort((a, b) => (a.date < b.date ? 1 : -1));
@@ -208,7 +211,14 @@ async function handleJournal(request, env, url) {
         return json({ error: 'method not allowed' }, { status: 405 });
       }
       const since = Number(url.searchParams.get('since')) || 0;
-      return json({ entries: await listEntries(env, since) });
+      // Stamped before the read and handed back so the client's cursor comes
+      // from this clock, not the device's. A device-stamped cursor compared
+      // against server-stamped updatedAt silently skips every entry written
+      // while the phone's clock ran ahead, and never asks for them again.
+      // Anything written during the read lands at >= listedAt and so is picked
+      // up on the next pull.
+      const listedAt = Date.now();
+      return json({ entries: await listEntries(env, since), now: listedAt });
     }
 
     if (!DATE_RE.test(id)) return json({ error: 'invalid date' }, { status: 400 });

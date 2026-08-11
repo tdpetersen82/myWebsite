@@ -146,6 +146,7 @@
   }
 
   .statusrow {
+    position: relative;
     display: flex;
     align-items: center;
     justify-content: center;
@@ -153,8 +154,28 @@
     margin-top: 8px;
     font-size: 0.72rem;
     color: var(--faint);
-    min-height: 14px;
+    min-height: 22px;
   }
+
+  /* "Today" is navigation, so it lives with the date nav rather than among the
+     content actions — and only appears when you're actually away from today.
+     Absolutely positioned so it can't shove the status text off centre. */
+  .today-chip {
+    position: absolute;
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    padding: 4px 12px;
+    font: inherit;
+    font-size: 0.72rem;
+    font-weight: 600;
+    background: var(--panel-2);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    color: var(--accent);
+    cursor: pointer;
+  }
+  .today-chip[hidden] { display: none; }
   .dot { width: 6px; height: 6px; border-radius: 50%; background: var(--faint); }
   .dot.ok { background: var(--ok); }
   .dot.busy { background: var(--accent); }
@@ -257,6 +278,21 @@
   }
   .action:active { background: var(--panel-2); }
   #file { display: none; }
+
+  /* Deliberately low-emphasis: destructive, and you should have to look for it. */
+  .danger-link {
+    display: block;
+    margin: 14px auto 0;
+    padding: 8px 14px;
+    background: none;
+    border: none;
+    font: inherit;
+    font-size: 0.8rem;
+    color: var(--faint);
+    cursor: pointer;
+  }
+  .danger-link:active { color: var(--danger); }
+  .danger-link[hidden] { display: none; }
 
   /* ---------- past entries ---------- */
 
@@ -374,6 +410,7 @@
     <div class="statusrow">
       <span class="dot" id="dot"></span>
       <span id="status">Loading…</span>
+      <button class="today-chip" id="today" hidden>Today</button>
     </div>
   </header>
 
@@ -384,8 +421,8 @@
     <div id="photos"></div>
     <div class="actions">
       <button class="action" id="add-photo">Add photo</button>
-      <button class="action" id="today">Today</button>
     </div>
+    <button class="danger-link" id="delete-day" hidden>Delete this day</button>
     <input type="file" id="file" accept="image/*" multiple>
 
     <div class="past-head">Recent</div>
@@ -559,6 +596,7 @@
     return idbPut('entries', entry).then(function () {
       scheduleSync();
       renderPast();
+      if (entry.date === currentDate) refreshDayControls(entry);
     });
   }
 
@@ -692,15 +730,27 @@
             });
           });
         }, Promise.resolve()).then(function () {
-          localStorage.setItem(PULLED_KEY, String(startedAt));
+          // Cursor comes from the server's clock (data.now), not this device's.
+          // startedAt is only a fallback for an older Worker that omits it.
+          localStorage.setItem(PULLED_KEY, String(data.now || startedAt));
           if (remote.length) { renderPast(); refreshIfCurrent(remote); }
         });
       });
   }
 
+  // Re-render the open day when the server had something newer for it — but
+  // never at the cost of keystrokes. The local write is debounced behind the
+  // typing, so a sync landing in that gap would re-read the older stored text
+  // and wipe what's on screen. Blurring the field doesn't flush that pending
+  // write, so checking activeElement alone isn't enough.
   function refreshIfCurrent(remote) {
-    var hit = remote.some(function (r) { return r.date === currentDate; });
-    if (hit && document.activeElement !== editor) loadDay(currentDate);
+    if (saveTimer) return;
+    if (document.activeElement === editor) return;
+    if (!remote.some(function (r) { return r.date === currentDate; })) return;
+    return idbGet('entries', currentDate).then(function (local) {
+      if (local && local.dirty) return;   // our copy is ahead of the server's
+      return loadDay(currentDate);
+    });
   }
 
   // -------------------------------------------------------------------------
@@ -764,16 +814,52 @@
     });
   }
 
+  // Drops a photo's bytes from this device and the server. The entry that
+  // referenced it must already have been updated.
+  function purgePhoto(id) {
+    revokeUrl(id);
+    return idbDel('photos', id).then(function () {
+      return api('/photos/' + id, { method: 'DELETE' }).catch(function () {});
+    });
+  }
+
   function removePhoto(id) {
     getEntry(currentDate).then(function (entry) {
       entry.photos = entry.photos.filter(function (p) { return p !== id; });
       return saveEntry(entry).then(function () {
         return renderPhotos(entry.photos);
       }).then(function () {
-        revokeUrl(id);
-        return idbDel('photos', id);
+        return purgePhoto(id);
+      });
+    });
+  }
+
+  function deleteDay() {
+    var date = currentDate;
+    getEntry(date).then(function (entry) {
+      if (!entry.text.trim() && !entry.photos.length) return;
+
+      var what = entry.photos.length
+        ? 'The text and ' + (entry.photos.length === 1 ? 'its photo' : entry.photos.length + ' photos')
+        : 'The text';
+      if (!window.confirm(
+        'Delete ' + prettyDate(date) + '?\n\n' + what +
+        ' will be removed from this device and the server. This cannot be undone.'
+      )) return;
+
+      var photoIds = entry.photos.slice();
+      entry.text = '';
+      entry.photos = [];
+      entry.deleted = true;
+
+      return saveEntry(entry).then(function () {
+        return photoIds.reduce(function (chain, id) {
+          return chain.then(function () { return purgePhoto(id); });
+        }, Promise.resolve());
       }).then(function () {
-        return api('/photos/' + id, { method: 'DELETE' }).catch(function () {});
+        return loadDay(date);
+      }).then(function () {
+        toast('Deleted');
       });
     });
   }
@@ -831,6 +917,8 @@
   var fileInput = document.getElementById('file');
   var nextBtn = document.getElementById('next');
   var datePicker = document.getElementById('date-picker');
+  var todayChip = document.getElementById('today');
+  var deleteBtn = document.getElementById('delete-day');
   var lightbox = document.getElementById('lightbox');
   var lightboxImg = document.getElementById('lightbox-img');
   var toastEl = document.getElementById('toast');
@@ -853,6 +941,13 @@
     growWrap.dataset.value = editor.value;
   }
 
+  // "Today" only when you're away from it; delete only when there's something
+  // to delete.
+  function refreshDayControls(entry) {
+    todayChip.hidden = currentDate === todayStr();
+    deleteBtn.hidden = !(entry.text.trim() || entry.photos.length) || entry.deleted;
+  }
+
   function loadDay(date) {
     currentDate = date;
     dateMain.textContent = prettyDate(date);
@@ -866,6 +961,7 @@
     return getEntry(date).then(function (entry) {
       editor.value = entry.deleted ? '' : (entry.text || '');
       autosize();
+      refreshDayControls(entry);
       renderPast();
       return renderPhotos(entry.deleted ? [] : entry.photos);
     });
@@ -887,6 +983,9 @@
         rm.setAttribute('aria-label', 'Remove photo');
         rm.addEventListener('click', function (e) {
           e.stopPropagation();
+          // The x sits right on the photo you're trying to tap open, and the
+          // delete is immediate and server-side. Worth a confirm.
+          if (!window.confirm('Remove this photo?\n\nIt will be deleted from this device and the server. This cannot be undone.')) return;
           removePhoto(id);
         });
         wrap.appendChild(img);
@@ -1012,6 +1111,7 @@
     setStatus('busy', 'Saving…');
     clearTimeout(saveTimer);
     saveTimer = setTimeout(function () {
+      saveTimer = null;
       getEntry(date).then(function (entry) {
         entry.text = text;
         entry.deleted = false;
@@ -1035,10 +1135,12 @@
   nextBtn.addEventListener('click', function () {
     if (currentDate < todayStr()) loadDay(shiftDate(currentDate, 1));
   });
-  document.getElementById('today').addEventListener('click', function () {
+  todayChip.addEventListener('click', function () {
     loadDay(todayStr());
     window.scrollTo({ top: 0, behavior: 'smooth' });
   });
+
+  deleteBtn.addEventListener('click', deleteDay);
 
   document.getElementById('add-photo').addEventListener('click', function () {
     fileInput.click();
