@@ -143,19 +143,37 @@
 
   main { flex: 1 1 auto; padding: 14px 12px calc(var(--safe-bottom) + 24px); }
 
-  #editor {
+  /* Auto-growing textarea with no JS measurement. A hidden pseudo-element
+     mirrors the text into the same grid cell, so the grid tracks the content
+     and the textarea stretches to fill it. This sidesteps the scrollHeight
+     feedback loop (scrollHeight never reports less than the element's own box,
+     so one oversized reading would stick permanently). field-sizing: content
+     would do this natively but Safari doesn't support it yet. */
+  .grow-wrap { display: grid; }
+  .grow-wrap::after {
+    content: attr(data-value) " ";
+    white-space: pre-wrap;
+    word-break: break-word;
+    visibility: hidden;
+  }
+  .grow-wrap > textarea { resize: none; overflow: hidden; }
+  .grow-wrap > textarea,
+  .grow-wrap::after {
+    grid-area: 1 / 1 / 2 / 2;
     width: 100%;
     min-height: 180px;
     padding: 14px;
+    font: inherit;
     font-size: 16px;
     line-height: 1.6;
-    font-family: inherit;
-    background: var(--panel);
-    border: 1px solid var(--line);
+    border: 1px solid transparent;
     border-radius: 14px;
+    box-sizing: border-box;
+  }
+  #editor {
+    background: var(--panel);
+    border-color: var(--line);
     color: var(--text);
-    resize: none;
-    overflow: hidden;
   }
   #editor:focus { outline: none; border-color: #3c4356; }
   #editor::placeholder { color: var(--faint); }
@@ -338,7 +356,9 @@
   </header>
 
   <main>
-    <textarea id="editor" placeholder="What did you get up to?" enterkeyhint="enter"></textarea>
+    <div class="grow-wrap" id="grow" data-value="">
+      <textarea id="editor" placeholder="What did you get up to?" enterkeyhint="enter"></textarea>
+    </div>
     <div id="photos"></div>
     <div class="actions">
       <button class="action" id="add-photo">Add photo</button>
@@ -379,6 +399,7 @@
   var saveTimer = null;
   var syncing = false;
   var syncQueued = false;
+  var photosWaiting = 0;       // uploads still owed to the server
 
   // -------------------------------------------------------------------------
   // Dates. Everything is local time — a journal day is the day you lived,
@@ -480,9 +501,20 @@
         err.unauthorized = true;
         throw err;
       }
-      if (!res.ok) throw new Error('HTTP ' + res.status);
+      if (!res.ok) {
+        var httpErr = new Error('HTTP ' + res.status);
+        httpErr.status = res.status;
+        throw httpErr;
+      }
       return res;
     });
+  }
+
+  // A 4xx means this request will never succeed as-is, so retrying it forever
+  // just wedges the queue. Timeouts and rate limits are worth another go.
+  function permanentFailure(err) {
+    var s = err && err.status;
+    return typeof s === 'number' && s >= 400 && s < 500 && s !== 408 && s !== 429;
   }
 
   // -------------------------------------------------------------------------
@@ -529,7 +561,13 @@
       .then(pushEntries)
       .then(pull)
       .then(function () {
-        setStatus('ok', 'Synced');
+        if (photosWaiting) {
+          setStatus('busy', photosWaiting === 1
+            ? 'Synced — 1 photo still uploading'
+            : 'Synced — ' + photosWaiting + ' photos still uploading');
+        } else {
+          setStatus('ok', 'Synced');
+        }
       })
       .catch(function (err) {
         if (err && err.unauthorized) {
@@ -544,9 +582,14 @@
       });
   }
 
+  // Photo failures are isolated per photo and never abort the pass: entries are
+  // the irreplaceable part, and they push after this. A photo the server keeps
+  // rejecting (too large, storage not enabled) is parked rather than retried
+  // forever, which would wedge every later sync behind it.
   function pushPhotos() {
     return idbAll('photos').then(function (all) {
-      var pending = all.filter(function (p) { return !p.uploaded; });
+      var pending = all.filter(function (p) { return !p.uploaded && !p.failed; });
+      var parked = 0;
       return pending.reduce(function (chain, p) {
         return chain.then(function () {
           return api('/photos/' + p.id, {
@@ -556,9 +599,24 @@
           }).then(function () {
             p.uploaded = true;
             return idbPut('photos', p);
+          }).catch(function (err) {
+            if (err && err.unauthorized) throw err;
+            if (!permanentFailure(err)) return;   // offline or server blip — try again later
+            p.failed = true;
+            parked++;
+            return idbPut('photos', p);
           });
         });
-      }, Promise.resolve());
+      }, Promise.resolve()).then(function () {
+        if (parked) {
+          toast(parked === 1
+            ? "A photo couldn't be uploaded — it's still on this device"
+            : parked + " photos couldn't be uploaded — they're still on this device");
+        }
+        return idbAll('photos');
+      }).then(function (after) {
+        photosWaiting = after.filter(function (p) { return !p.uploaded && !p.failed; }).length;
+      });
     });
   }
 
@@ -741,6 +799,7 @@
   var gateError = document.getElementById('gate-error');
   var app = document.getElementById('app');
   var editor = document.getElementById('editor');
+  var growWrap = document.getElementById('grow');
   var photosEl = document.getElementById('photos');
   var pastEl = document.getElementById('past');
   var dateMain = document.getElementById('date-main');
@@ -766,9 +825,9 @@
     toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2200);
   }
 
+  // Feeds the CSS mirror in .grow-wrap; the grid does the actual sizing.
   function autosize() {
-    editor.style.height = 'auto';
-    editor.style.height = Math.max(180, editor.scrollHeight) + 'px';
+    growWrap.dataset.value = editor.value;
   }
 
   function loadDay(date) {

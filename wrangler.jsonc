@@ -19,12 +19,19 @@
       "id": "1da1bd544eda433fa4d77d45db0a9b3b"
     }
   ],
-  // Journal photos. Create the bucket once before deploying:
+  // Journal photos. R2 is not enabled on this account yet, so the binding is
+  // commented out — deploying with it would fail. Photos still work on the
+  // device (stored in IndexedDB) and the app keeps retrying the upload, so
+  // anything taken in the meantime syncs on its own once this is switched on.
+  //
+  // To enable: turn on R2 in the Cloudflare dashboard, then
   //   npx wrangler r2 bucket create limestone-journal
-  "r2_buckets": [
-    {
-      "binding": "JOURNAL_PHOTOS",
-      "bucket_name": "limestone-journal"
-    }
-  ]
+  // and uncomment the block below and redeploy.
+  //
+  // "r2_buckets": [
+  //   {
+  //     "binding": "JOURNAL_PHOTOS",
+  //     "bucket_name": "limestone-journal"
+  //   }
+  // ]
 }
