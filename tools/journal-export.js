@@ -53,6 +53,20 @@ function longDate(iso) {
   });
 }
 
+// Mirrors the app: an entry's text is its items, one per line. Entries written
+// before the list UI are a single line of comma-separated things, so those get
+// split on commas; anything stamped format:'items' splits on newlines only, so
+// a comma inside one item survives.
+function itemsOf(entry) {
+  const text = entry.text || '';
+  if (!text.trim()) return [];
+  let parts;
+  if (entry.format === 'items' || text.includes('\n')) parts = text.split('\n');
+  else if (text.includes(',')) parts = text.split(',');
+  else parts = [text];
+  return parts.map((s) => s.trim()).filter(Boolean);
+}
+
 function extFor(contentType) {
   if (contentType.includes('png')) return '.png';
   if (contentType.includes('webp')) return '.webp';
@@ -76,7 +90,11 @@ async function main() {
 
   for (const entry of live) {
     const lines = ['# ' + longDate(entry.date), ''];
-    if (entry.text.trim()) lines.push(entry.text.trim(), '');
+    const items = itemsOf(entry);
+    if (items.length) {
+      for (const item of items) lines.push('- ' + item);
+      lines.push('');
+    }
 
     for (let i = 0; i < entry.photos.length; i++) {
       const id = entry.photos[i];

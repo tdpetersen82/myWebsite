@@ -181,44 +181,117 @@
   .dot.busy { background: var(--accent); }
   .dot.off { background: var(--danger); }
 
-  /* ---------- editor ---------- */
+  /* ---------- entry items ---------- */
 
   main { flex: 1 1 auto; padding: 14px 12px calc(var(--safe-bottom) + 24px); }
 
-  /* Auto-growing textarea with no JS measurement. A hidden pseudo-element
-     mirrors the text into the same grid cell, so the grid tracks the content
-     and the textarea stretches to fill it. This sidesteps the scrollHeight
-     feedback loop (scrollHeight never reports less than the element's own box,
-     so one oversized reading would stick permanently). field-sizing: content
-     would do this natively but Safari doesn't support it yet. */
-  .grow-wrap { display: grid; }
-  .grow-wrap::after {
+  /* One row per thing you did. The whole list is a panel; each row is a
+     dot plus a text field that wraps and grows. */
+  #items {
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 6px 4px;
+  }
+  #items:focus-within { border-color: #3c4356; }
+
+  .item {
+    display: grid;
+    grid-template-columns: 22px 1fr 30px;
+    align-items: start;
+  }
+
+  .item .bullet {
+    grid-column: 1;
+    padding-top: 12px;
+    text-align: center;
+    color: var(--faint);
+    font-size: 0.6rem;
+    line-height: 1;
+    user-select: none;
+  }
+
+  /* Auto-growing field with no JS measurement: a hidden pseudo-element mirrors
+     the text in the same grid cell, so the grid tracks the content and the
+     textarea stretches to fill it. Avoids the scrollHeight feedback loop
+     (scrollHeight never reports less than the element's own box, so one
+     oversized reading would stick forever). field-sizing: content would do
+     this natively but Safari doesn't support it yet. */
+  .item .grow {
+    grid-column: 2;
+    display: grid;
+    min-width: 0;
+  }
+  .item .grow::after {
     content: attr(data-value) " ";
     white-space: pre-wrap;
     word-break: break-word;
     visibility: hidden;
   }
-  .grow-wrap > textarea { resize: none; overflow: hidden; }
-  .grow-wrap > textarea,
-  .grow-wrap::after {
+  .item textarea { resize: none; overflow: hidden; background: none; }
+  .item textarea,
+  .item .grow::after {
     grid-area: 1 / 1 / 2 / 2;
     width: 100%;
-    min-height: 180px;
-    padding: 14px;
+    padding: 8px 0;
+    border: none;
     font: inherit;
     font-size: 16px;
-    line-height: 1.6;
-    border: 1px solid transparent;
-    border-radius: 14px;
+    line-height: 1.5;
     box-sizing: border-box;
-  }
-  #editor {
-    background: var(--panel);
-    border-color: var(--line);
     color: var(--text);
   }
-  #editor:focus { outline: none; border-color: #3c4356; }
-  #editor::placeholder { color: var(--faint); }
+  .item textarea:focus { outline: none; }
+  .item textarea::placeholder { color: var(--faint); }
+
+  .item .drop {
+    grid-column: 3;
+    align-self: start;
+    margin-top: 6px;
+    width: 28px;
+    height: 28px;
+    border: none;
+    background: none;
+    color: var(--faint);
+    font-size: 1rem;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.55;
+  }
+  .item .drop:active { color: var(--danger); opacity: 1; }
+
+  .add-item {
+    display: block;
+    width: 100%;
+    margin-top: 10px;
+    padding: 11px;
+    background: none;
+    border: 1px dashed var(--line);
+    border-radius: 12px;
+    color: var(--dim);
+    font: inherit;
+    font-size: 0.88rem;
+    cursor: pointer;
+  }
+  .add-item:active { background: var(--panel); }
+
+  .search-wrap { margin-top: 28px; }
+  #search {
+    width: 100%;
+    padding: 11px 14px;
+    font: inherit;
+    font-size: 16px;
+    background: var(--panel);
+    border: 1px solid var(--line);
+    border-radius: 12px;
+    color: var(--text);
+    -webkit-appearance: none;
+    appearance: none;
+  }
+  #search:focus { outline: none; border-color: #3c4356; }
+  #search::placeholder { color: var(--faint); }
+
+  .hit { color: var(--accent); font-weight: 600; }
 
   /* ---------- photos ---------- */
 
@@ -297,7 +370,7 @@
   /* ---------- past entries ---------- */
 
   .past-head {
-    margin: 28px 0 10px;
+    margin: 16px 0 10px;
     font-size: 0.72rem;
     font-weight: 600;
     letter-spacing: 0.08em;
@@ -415,9 +488,8 @@
   </header>
 
   <main>
-    <div class="grow-wrap" id="grow" data-value="">
-      <textarea id="editor" placeholder="What did you do?" enterkeyhint="enter"></textarea>
-    </div>
+    <div id="items"></div>
+    <button class="add-item" id="add-item">+ Add</button>
     <div id="photos"></div>
     <div class="actions">
       <button class="action" id="add-photo">Add photo</button>
@@ -425,7 +497,10 @@
     <button class="danger-link" id="delete-day" hidden>Delete this day</button>
     <input type="file" id="file" accept="image/*" multiple>
 
-    <div class="past-head">Recent</div>
+    <div class="search-wrap">
+      <input type="search" id="search" placeholder="Search everything" autocomplete="off" enterkeyhint="search">
+    </div>
+    <div class="past-head" id="past-head">Recent</div>
     <div id="past"></div>
   </main>
 </div>
@@ -688,7 +763,12 @@
           return api('/entries/' + e.date, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ text: e.text, photos: e.photos, deleted: !!e.deleted })
+            body: JSON.stringify({
+              text: e.text,
+              photos: e.photos,
+              deleted: !!e.deleted,
+              format: e.format || undefined
+            })
           }).then(function (res) { return res.json(); })
             .then(function (stored) {
               // Re-read: the entry may have changed while the request was in
@@ -723,6 +803,7 @@
                 date: r.date,
                 text: r.text || '',
                 photos: r.photos || [],
+                format: r.format,
                 updatedAt: r.updatedAt || 0,
                 deleted: !!r.deleted,
                 dirty: false
@@ -745,7 +826,7 @@
   // write, so checking activeElement alone isn't enough.
   function refreshIfCurrent(remote) {
     if (saveTimer) return;
-    if (document.activeElement === editor) return;
+    if (itemsEl.contains(document.activeElement)) return;
     if (!remote.some(function (r) { return r.date === currentDate; })) return;
     return idbGet('entries', currentDate).then(function (local) {
       if (local && local.dirty) return;   // our copy is ahead of the server's
@@ -906,8 +987,10 @@
   var gateGo = document.getElementById('gate-go');
   var gateError = document.getElementById('gate-error');
   var app = document.getElementById('app');
-  var editor = document.getElementById('editor');
-  var growWrap = document.getElementById('grow');
+  var itemsEl = document.getElementById('items');
+  var addItemBtn = document.getElementById('add-item');
+  var searchEl = document.getElementById('search');
+  var pastHead = document.getElementById('past-head');
   var photosEl = document.getElementById('photos');
   var pastEl = document.getElementById('past');
   var dateMain = document.getElementById('date-main');
@@ -936,9 +1019,138 @@
     toastTimer = setTimeout(function () { toastEl.classList.remove('show'); }, 2200);
   }
 
-  // Feeds the CSS mirror in .grow-wrap; the grid does the actual sizing.
-  function autosize() {
-    growWrap.dataset.value = editor.value;
+  // Items are just the lines of the entry's text. Storage stays a plain
+  // string, so there's no schema to migrate and the export keeps working —
+  // if this UI ever breaks, the words are still sitting there as text.
+  //
+  // Entries written before the list existed are a single line of hand-typed,
+  // comma-separated things, so those are split on commas for display. Anything
+  // saved since is stamped format:'items' and splits on newlines only, so a
+  // comma inside one item ("Walgreens, for snacks") is never shredded.
+  function toItems(entry) {
+    var text = (entry && entry.text) || '';
+    if (!text.trim()) return [];
+    var parts;
+    if (entry.format === 'items' || text.indexOf('\n') >= 0) {
+      parts = text.split('\n');
+    } else if (text.indexOf(',') >= 0) {
+      parts = text.split(',');
+    } else {
+      parts = [text];
+    }
+    return parts.map(function (s) { return s.trim(); })
+                .filter(function (s) { return s.length; });
+  }
+
+  function fromItems(list) {
+    return list.map(function (s) { return s.trim(); })
+               .filter(function (s) { return s.length; })
+               .join('\n');
+  }
+
+  function readItems() {
+    return Array.prototype.map.call(
+      itemsEl.querySelectorAll('textarea'),
+      function (t) { return t.value; }
+    );
+  }
+
+  function makeRow(value) {
+    var row = document.createElement('div');
+    row.className = 'item';
+
+    var bullet = document.createElement('div');
+    bullet.className = 'bullet';
+    bullet.textContent = '●';
+
+    var grow = document.createElement('div');
+    grow.className = 'grow';
+    grow.dataset.value = value || '';
+
+    var ta = document.createElement('textarea');
+    ta.rows = 1;
+    ta.value = value || '';
+    ta.placeholder = 'What did you do?';
+    ta.setAttribute('enterkeyhint', 'enter');
+
+    ta.addEventListener('input', function () {
+      grow.dataset.value = ta.value;
+      queueSave();
+    });
+
+    ta.addEventListener('keydown', function (e) {
+      if (e.key === 'Enter') {
+        // Enter starts the next thing rather than a newline inside this one.
+        e.preventDefault();
+        var next = makeRow('');
+        itemsEl.insertBefore(next, row.nextSibling);
+        next.querySelector('textarea').focus();
+        queueSave();
+        return;
+      }
+      if (e.key === 'Backspace' && ta.value === '' && itemsEl.children.length > 1) {
+        e.preventDefault();
+        var focusRow = row.previousElementSibling || row.nextElementSibling;
+        row.remove();
+        if (focusRow) {
+          var t = focusRow.querySelector('textarea');
+          t.focus();
+          t.setSelectionRange(t.value.length, t.value.length);
+        }
+        queueSave();
+      }
+    });
+
+    var drop = document.createElement('button');
+    drop.className = 'drop';
+    drop.type = 'button';
+    drop.textContent = '×';
+    drop.setAttribute('aria-label', 'Remove this item');
+    drop.addEventListener('click', function () {
+      row.remove();
+      if (!itemsEl.children.length) itemsEl.appendChild(makeRow(''));
+      queueSave();
+    });
+
+    grow.appendChild(ta);
+    row.appendChild(bullet);
+    row.appendChild(grow);
+    row.appendChild(drop);
+    return row;
+  }
+
+  function renderItems(list) {
+    itemsEl.innerHTML = '';
+    var rows = list.length ? list : [''];
+    rows.forEach(function (v) { itemsEl.appendChild(makeRow(v)); });
+  }
+
+  function addItem() {
+    var row = makeRow('');
+    itemsEl.appendChild(row);
+    row.querySelector('textarea').focus();
+  }
+
+  function currentText() {
+    return fromItems(readItems());
+  }
+
+  function queueSave() {
+    var date = currentDate;
+    var text = currentText();
+    setStatus('busy', 'Saving…');
+    clearTimeout(saveTimer);
+    saveTimer = setTimeout(function () {
+      saveTimer = null;
+      getEntry(date).then(function (entry) {
+        entry.text = text;
+        entry.format = 'items';
+        entry.deleted = false;
+        return saveEntry(entry);
+      }).then(function () {
+        setStatus('ok', 'Saved on this device');
+      });
+    }, LOCAL_SAVE_MS);
   }
 
   // "Today" only when you're away from it; delete only when there's something
@@ -959,8 +1171,7 @@
     nextBtn.disabled = date >= todayStr();
 
     return getEntry(date).then(function (entry) {
-      editor.value = entry.deleted ? '' : (entry.text || '');
-      autosize();
+      renderItems(entry.deleted ? [] : toItems(entry));
       refreshDayControls(entry);
       renderPast();
       return renderPhotos(entry.deleted ? [] : entry.photos);
@@ -1008,18 +1219,54 @@
     }, Promise.resolve());
   }
 
+  // Builds text with every occurrence of the query wrapped, without ever
+  // putting user text through innerHTML.
+  function highlighted(text, q) {
+    var frag = document.createDocumentFragment();
+    if (!q) {
+      frag.appendChild(document.createTextNode(text));
+      return frag;
+    }
+    var lower = text.toLowerCase();
+    var i = 0;
+    for (;;) {
+      var at = lower.indexOf(q, i);
+      if (at < 0) {
+        frag.appendChild(document.createTextNode(text.slice(i)));
+        return frag;
+      }
+      if (at > i) frag.appendChild(document.createTextNode(text.slice(i, at)));
+      var mark = document.createElement('span');
+      mark.className = 'hit';
+      mark.textContent = text.slice(at, at + q.length);
+      frag.appendChild(mark);
+      i = at + q.length;
+    }
+  }
+
   function renderPast() {
+    var q = searchEl.value.trim().toLowerCase();
+
     return idbAll('entries').then(function (all) {
-      var items = all
+      var live = all
         .filter(function (e) { return !e.deleted && (e.text.trim() || e.photos.length); })
-        .sort(function (a, b) { return a.date < b.date ? 1 : -1; })
-        .slice(0, RECENT_LIMIT);
+        .sort(function (a, b) { return a.date < b.date ? 1 : -1; });
+
+      // Searching looks at everything; the unsearched list is just the tail.
+      var items = q
+        ? live.filter(function (e) { return e.text.toLowerCase().indexOf(q) >= 0; })
+        : live.slice(0, RECENT_LIMIT);
+
+      pastHead.textContent = q
+        ? (items.length === 1 ? '1 day' : items.length + ' days')
+        : 'Recent';
 
       pastEl.innerHTML = '';
       if (!items.length) {
         var empty = document.createElement('div');
         empty.className = 'past-empty';
-        empty.textContent = 'Nothing yet. Write today’s first.';
+        empty.textContent = q ? 'Nothing matches “' + searchEl.value.trim() + '”.'
+                              : 'Nothing yet. Write today’s first.';
         pastEl.appendChild(empty);
         return;
       }
@@ -1035,9 +1282,20 @@
         d.className = 'pi-date';
         d.textContent = prettyDate(e.date);
 
+        // When searching, show only the things that matched.
+        var list = toItems(e);
+        if (q) {
+          list = list.filter(function (it) { return it.toLowerCase().indexOf(q) >= 0; });
+        }
+        var preview = list.join(' · ');
+
         var t = document.createElement('div');
         t.className = 'pi-text';
-        t.textContent = e.text.trim() || (e.photos.length === 1 ? '1 photo' : e.photos.length + ' photos');
+        if (preview) {
+          t.appendChild(highlighted(preview, q));
+        } else {
+          t.textContent = e.photos.length === 1 ? '1 photo' : e.photos.length + ' photos';
+        }
 
         body.appendChild(d);
         body.appendChild(t);
@@ -1104,22 +1362,12 @@
   // Wiring
   // -------------------------------------------------------------------------
 
-  editor.addEventListener('input', function () {
-    autosize();
-    var text = editor.value;
-    var date = currentDate;
-    setStatus('busy', 'Saving…');
-    clearTimeout(saveTimer);
-    saveTimer = setTimeout(function () {
-      saveTimer = null;
-      getEntry(date).then(function (entry) {
-        entry.text = text;
-        entry.deleted = false;
-        return saveEntry(entry);
-      }).then(function () {
-        setStatus('ok', 'Saved on this device');
-      });
-    }, LOCAL_SAVE_MS);
+  addItemBtn.addEventListener('click', addItem);
+
+  var searchTimer = null;
+  searchEl.addEventListener('input', function () {
+    clearTimeout(searchTimer);
+    searchTimer = setTimeout(function () { renderPast(); }, 140);
   });
 
   datePicker.addEventListener('change', function () {
@@ -1165,12 +1413,14 @@
   document.addEventListener('visibilitychange', function () {
     if (document.visibilityState === 'hidden') {
       clearTimeout(saveTimer);
+      saveTimer = null;
       clearTimeout(syncTimer);
-      var text = editor.value;
+      var text = currentText();
       var date = currentDate;
       getEntry(date).then(function (entry) {
         if (entry.text === text) return;
         entry.text = text;
+        entry.format = 'items';
         entry.deleted = false;
         return saveEntry(entry);
       });

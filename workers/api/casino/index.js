@@ -161,13 +161,17 @@ function normalizeEntry(date, body) {
   const photos = Array.isArray(body.photos)
     ? body.photos.filter((id) => UUID_RE.test(id)).slice(0, 50)
     : [];
-  return {
+  const entry = {
     date,
     text: String(body.text || '').slice(0, 100000),
     photos,
     deleted: body.deleted === true,
     updatedAt: Date.now(),
   };
+  // Marks text whose newlines are item boundaries. Entries without it predate
+  // the list UI and are rendered by splitting on commas instead.
+  if (body.format === 'items') entry.format = 'items';
+  return entry;
 }
 
 async function listEntries(env, since) {
