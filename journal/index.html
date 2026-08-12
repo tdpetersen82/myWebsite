@@ -400,10 +400,21 @@
     font-size: 0.88rem;
     color: var(--dim);
     line-height: 1.45;
+  }
+  /* One line per thing. An annotated item ("Bike Park - I did the black
+     line…") gets two lines before it truncates, so the detail stays readable
+     without one long day pushing every other card off the screen. */
+  .past-item .pi-line {
     display: -webkit-box;
     -webkit-line-clamp: 2;
     -webkit-box-orient: vertical;
     overflow: hidden;
+  }
+  .past-item .pi-line + .pi-line { margin-top: 3px; }
+  .past-item .pi-more {
+    margin-top: 4px;
+    font-size: 0.78rem;
+    color: var(--faint);
   }
   .past-item .pi-count {
     flex: 0 0 auto;
@@ -524,6 +535,7 @@
   var LOCAL_SAVE_MS = 350;     // debounce: keystroke -> IndexedDB
   var SYNC_MS = 2000;          // debounce: IndexedDB -> server
   var RECENT_LIMIT = 30;
+  var PREVIEW_ITEMS = 3;       // items shown per card before "+N more"
 
   var token = null;
   var db = null;
@@ -1287,12 +1299,22 @@
         if (q) {
           list = list.filter(function (it) { return it.toLowerCase().indexOf(q) >= 0; });
         }
-        var preview = list.join(' · ');
 
         var t = document.createElement('div');
         t.className = 'pi-text';
-        if (preview) {
-          t.appendChild(highlighted(preview, q));
+        if (list.length) {
+          list.slice(0, PREVIEW_ITEMS).forEach(function (it) {
+            var line = document.createElement('div');
+            line.className = 'pi-line';
+            line.appendChild(highlighted(it, q));
+            t.appendChild(line);
+          });
+          if (list.length > PREVIEW_ITEMS) {
+            var more = document.createElement('div');
+            more.className = 'pi-more';
+            more.textContent = '+' + (list.length - PREVIEW_ITEMS) + ' more';
+            t.appendChild(more);
+          }
         } else {
           t.textContent = e.photos.length === 1 ? '1 photo' : e.photos.length + ' photos';
         }
