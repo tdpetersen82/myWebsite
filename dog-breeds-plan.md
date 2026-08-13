@@ -269,8 +269,14 @@ decision before wiring.
    Nothing under `/dogs/` is linked from the nav, the sitemap, the catalog or
    any category page yet. See §7; the Finder is a utility sharing a directory
    with a game, and `/utilities/` is a deliberately curated set.
-7. Human fact-check of `breeds.js`. Structure and behaviour are tested; the
-   *content* has never been read by a person.
+7. ~~Fact-check of `breeds.js`.~~ **Done** via `tools/check-breed-facts.js`
+   (`--online`): country of origin cross-checked against Wikidata P495, and
+   every `fact` string checked for corroboration in its Wikipedia article.
+   99/120 origins agreed; 10 claims were corrected or replaced with sourced
+   ones; 116/120 facts now corroborate. The four that don't are AKC
+   registration statistics Wikipedia doesn't cover, or phrasing mismatches
+   verified by hand. **The 1–5 behavioural scales remain editorial and
+   unverifiable by any source** — they're labelled as such in the UI.
 
 Deferred to v2: ~120 generated static breed detail pages (the long-tail SEO
 surface), photo-ID as a fourth mode.

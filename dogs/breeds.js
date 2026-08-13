@@ -203,7 +203,7 @@ window.DOG_BREEDS = [
     withKids: 4, withDogs: 4, aloneTolerance: 2, preyDrive: 4,
     jobs: ["scenting", "companion"], firstTimeOwner: false,
     blurb: "A gentle, speckled bird dog with a mellow streak the other setters don't have.",
-    fact: "Its flecked coat pattern has its own name — \"belton\", after a village in Northumberland.",
+    fact: "Its speckled coat colours have their own vocabulary — blue belton, orange belton, lemon belton.",
   },
   {
     slug: "gordon-setter", name: "Gordon Setter", aka: [],
@@ -361,7 +361,7 @@ window.DOG_BREEDS = [
     withKids: 4, withDogs: 4, aloneTolerance: 3, preyDrive: 5,
     jobs: ["coursing"], firstTimeOwner: true,
     blurb: "The racing sighthound — the fastest dog alive and, off the track, one of the laziest.",
-    fact: "It hits about 45 miles an hour, and then sleeps roughly eighteen hours a day.",
+    fact: "In full stride it clears 40 miles an hour, and then spends most of the day asleep on the sofa.",
   },
   {
     slug: "afghan-hound", name: "Afghan Hound", aka: [],
@@ -649,7 +649,7 @@ window.DOG_BREEDS = [
     withKids: 4, withDogs: 2, aloneTolerance: 3, preyDrive: 3,
     jobs: ["guarding"], firstTimeOwner: false,
     blurb: "An athletic Italian mastiff, intensely bonded to its family and deeply suspicious of strangers.",
-    fact: "Its name comes from Latin for something like \"bodyguard dog\", and it descends from Roman war dogs.",
+    fact: "Before it settled into guarding, it hunted big game and drove cattle, and its name is simply Italian for dog.",
   },
   {
     slug: "newfoundland", name: "Newfoundland", aka: ["Newfie"],
@@ -662,7 +662,7 @@ window.DOG_BREEDS = [
     withKids: 5, withDogs: 4, aloneTolerance: 3, preyDrive: 1,
     jobs: ["water-rescue", "drafting"], firstTimeOwner: false,
     blurb: "A giant, sweet, soaking-wet black bear of a dog bred to pull drowning people out of cold water.",
-    fact: "It has webbed feet and swims breaststroke rather than paddling like other dogs.",
+    fact: "It has webbed paws and a heavy water-repellent double coat, and it earns its keep pulling people out of the water.",
   },
   {
     slug: "portuguese-water-dog", name: "Portuguese Water Dog", aka: ["PWD"],
@@ -688,7 +688,7 @@ window.DOG_BREEDS = [
     withKids: 5, withDogs: 4, aloneTolerance: 1, preyDrive: 3,
     jobs: ["sledding", "herding"], firstTimeOwner: false,
     blurb: "A brilliant white spitz with a permanent smile and a coat that sheds like weather.",
-    fact: "The upturned corners of its mouth are functional — they stop it from drooling and forming icicles in the cold.",
+    fact: "Its mouth curves up at the corners into what owners call the smile, and it has a matching reputation for cheerfulness.",
   },
   {
     slug: "akita", name: "Akita", aka: ["Akita Inu"],
@@ -740,7 +740,7 @@ window.DOG_BREEDS = [
     withKids: 3, withDogs: 2, aloneTolerance: 4, preyDrive: 2,
     jobs: ["guarding"], firstTimeOwner: false,
     blurb: "An immense, lion-maned Himalayan guardian that works at night and takes orders from no one.",
-    fact: "It sheds its whole enormous coat once a year rather than continuously, and guarded monasteries at 14,000 feet.",
+    fact: "It sheds its whole enormous coat in one go each year, and it guarded monasteries and herds high in the Himalayas.",
   },
 
   // ══ TERRIER ════════════════════════════════════════════════════════════
@@ -1175,7 +1175,7 @@ window.DOG_BREEDS = [
     withKids: 5, withDogs: 4, aloneTolerance: 2, preyDrive: 1,
     jobs: ["companion", "lap"], firstTimeOwner: true,
     blurb: "A compact, bat-eared city dog that snores, sheds a little, and needs almost no exercise.",
-    fact: "Its bat ears are the breed's signature, and its build means it genuinely cannot swim — it sinks.",
+    fact: "Its erect bat ears are the breed's signature, and its build makes it a poor swimmer that needs watching near water.",
   },
   {
     slug: "bulldog", name: "Bulldog", aka: ["English Bulldog", "British Bulldog"],
@@ -1253,7 +1253,7 @@ window.DOG_BREEDS = [
     withKids: 5, withDogs: 5, aloneTolerance: 1, preyDrive: 1,
     jobs: ["companion", "lap"], firstTimeOwner: true,
     blurb: "A white powder-puff of a dog, cheerful to a fault and barely shedding at all.",
-    fact: "When it fell out of royal favor it ended up as a street performer's dog, doing tricks for coins.",
+    fact: "Spanish seamen carried it to Tenerife, and from the 13th century it turned up in the royal courts of Spain, Italy and France.",
   },
   {
     slug: "shiba-inu", name: "Shiba Inu", aka: ["Shiba"],
@@ -1318,7 +1318,7 @@ window.DOG_BREEDS = [
     withKids: 3, withDogs: 2, aloneTolerance: 4, preyDrive: 3,
     jobs: ["guarding"], firstTimeOwner: false,
     blurb: "A wrinkled, hippo-muzzled Chinese guard dog with a harsh, prickly coat and a wary temperament.",
-    fact: "Its name means \"sand skin\", and its loose folds were meant to let it twist free of a grip in a fight.",
+    fact: "It was driven to the brink of extinction in the twentieth century, and the West knows it for its deep wrinkles.",
   },
   {
     slug: "schipperke", name: "Schipperke", aka: [],
@@ -1542,7 +1542,7 @@ window.DOG_BREEDS = [
     withKids: 4, withDogs: 4, aloneTolerance: 2, preyDrive: 4,
     jobs: ["herding"], firstTimeOwner: false,
     blurb: "A scaled-down Australian Shepherd with all of the drive and none of the reduced exercise requirement people hope for.",
-    fact: "It was bred down from the smallest ranch herders by rodeo riders who wanted the same dog in a size that travelled easily.",
+    fact: "It was bred down in the western United States as a compact herding dog, and the AKC recognized it in 2015 as its 186th breed.",
   },
 
   // ══ CROSSBREEDS ════════════════════════════════════════════════════════
@@ -1551,7 +1551,7 @@ window.DOG_BREEDS = [
   // the finder because they're a large share of what people actually search.
   {
     slug: "goldendoodle", name: "Goldendoodle", aka: ["Groodle"],
-    group: "crossbreed", origin: "United States / Australia", fame: 5, inGame: false,
+    group: "crossbreed", origin: "United States", fame: 5, inGame: false,
     size: "large", heightIn: [13, 24], weightLb: [15, 90], lifespan: [10, 15],
     coat: "curly", coatTexture: "curly", colors: ["cream", "apricot", "red", "black"],
     ears: "floppy", tail: "feathered", muzzle: "medium",
