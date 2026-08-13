@@ -115,6 +115,21 @@
       formatBest: (n) => n + (n === 1 ? ' clear' : ' clears') },
     { name: 'Hangman',              href: '../hangman/',              best: () => readBest('hangmanHighScore'),
       formatBest: (n) => n + ' streak' },
+    // Card games that bank a plain win counter rather than casino bankroll
+    // stats — they were writing to localStorage but never surfaced here.
+    { name: 'Euchre',               href: '../euchre/',               best: () => readBest('euchreWon'),
+      formatBest: (n) => n + (n === 1 ? ' win' : ' wins') },
+    { name: 'Hearts',               href: '../hearts/',               best: () => readBest('heartsWon'),
+      formatBest: (n) => n + (n === 1 ? ' win' : ' wins') },
+    { name: 'Spades',               href: '../spades/',               best: () => readBest('spadesWon'),
+      formatBest: (n) => n + (n === 1 ? ' win' : ' wins') },
+    { name: 'FreeCell',             href: '../freecell/',             best: () => readBest('freecellBestTime'),
+      formatBest: fmtTime },
+    // Spider banks wins per suit-count (spiderWon1 / 2 / 4), so total them.
+    { name: 'Spider Solitaire',     href: '../spider-solitaire/',     best: () => {
+        const t = [1, 2, 4].reduce((sum, s) => sum + (readBest('spiderWon' + s) || 0), 0);
+        return t > 0 ? t : null;
+      }, formatBest: (n) => n + (n === 1 ? ' win' : ' wins') },
   ];
 
   const RARE_KEYS = [

@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Dealer panel + opponent seat for Texas Hold'em.
 // - DealerStrip: small portrait strip on the left of the table — reuses
-//   blackjack/assets/dealers/{female,male}/*.png.
+//   blackjack/assets/dealers/female/*.jpg (no male art exists yet).
 // - OpponentSeat: avatar + name + stack + bet for each AI opponent.
 
 const TH_DEALER_NAMES = ['Melissa', 'Marcus'];
