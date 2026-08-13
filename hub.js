@@ -55,6 +55,7 @@
 
   // Per-game inline SVG glyph (paths only; svg wrapper added at render time).
   const GLYPH_PATHS = {
+    'dog-breed-finder': '<circle cx="28" cy="27" r="13.5" fill="none" stroke="C" stroke-width="4"/><line x1="38" y1="37" x2="50" y2="49" stroke="C" stroke-width="5" stroke-linecap="round"/><circle cx="23.5" cy="23" r="2.4" fill="C"/><circle cx="32.5" cy="23" r="2.4" fill="C"/><ellipse cx="28" cy="30.5" rx="5" ry="4" fill="C"/>',
     dogs: '<ellipse cx="19" cy="24" rx="5.5" ry="7" fill="C"/><ellipse cx="27" cy="16.5" rx="5.5" ry="7.5" fill="C"/><ellipse cx="37" cy="16.5" rx="5.5" ry="7.5" fill="C"/><ellipse cx="45" cy="24" rx="5.5" ry="7" fill="C"/><path d="M32 28c7.2 0 13 5 13 11.2 0 6.2-5.2 9.3-13 9.3s-13-3.1-13-9.3C19 33 24.8 28 32 28z" fill="C"/>',
     spades:'<path d="M32 10 C32 10 12 26 12 38 C12 46 20 49 26 44 C24 49 22 52 18 55 L46 55 C42 52 40 49 38 44 C44 49 52 46 52 38 C52 26 32 10 32 10 Z" fill="C"/>',
     hearts: '<path d="M32 50C32 50 8 36 8 22C8 14 14 10 20 10C26 10 30 15 32 18C34 15 38 10 44 10C50 10 56 14 56 22C56 36 32 50 32 50Z" fill="C"/>',

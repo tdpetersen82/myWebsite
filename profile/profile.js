@@ -74,6 +74,12 @@
   ];
 
   const KIDS_ROWS = [
+    // Pup Quiz banks a JSON record, not a bare number — best daily streak.
+    { name: 'Pup Quiz',             href: '../dogs/play.html',        best: () => {
+        const r = readStatsKey('pupQuizDaily');
+        return r && r.best ? r.best : null;
+      },
+      formatBest: (n) => n + (n === 1 ? ' day' : ' days') },
     { name: 'Bubble Pop',         href: '../bubble-pop/',         best: () => readBest('kids-bubble-pop-best') },
     { name: 'Memory Match',       href: '../memory-match/',       best: () => readBest('kids-memory-match-best-hard-80'),
       formatBest: (n) => n + ' moves' },
@@ -109,12 +115,6 @@
       formatBest: (n) => n + (n === 1 ? ' clear' : ' clears') },
     { name: 'Hangman',              href: '../hangman/',              best: () => readBest('hangmanHighScore'),
       formatBest: (n) => n + ' streak' },
-    // Pup Quiz banks a JSON record, not a bare number — best daily streak.
-    { name: 'Pup Quiz',             href: '../dogs/play.html',        best: () => {
-        const r = readStatsKey('pupQuizDaily');
-        return r && r.best ? r.best : null;
-      },
-      formatBest: (n) => n + (n === 1 ? ' day' : ' days') },
   ];
 
   const RARE_KEYS = [

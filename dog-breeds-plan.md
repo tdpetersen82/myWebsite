@@ -265,10 +265,16 @@ decision before wiring.
 3. ~~Photo pass.~~ **Done** — 120 free-licensed, credited, visually verified.
 4. ~~Pup Quiz clue ladder + daily + share.~~ **Done.**
 5. ~~Higher/Lower, Odd One Out.~~ **Done** — both in `play.html`.
-6. **Registration surface — still open, and blocked on a placement decision.**
-   Nothing under `/dogs/` is linked from the nav, the sitemap, the catalog or
-   any category page yet. See §7; the Finder is a utility sharing a directory
-   with a game, and `/utilities/` is a deliberately curated set.
+6. ~~Registration surface.~~ **Done.** Placement settled 2026-08-13: the two
+   halves are registered as separate catalog entries, because they serve
+   different people.
+   - **Pup Quiz** → `cat: 'kids'`, card on `kids/index.html`, tile + profile
+     row under Kids. Its clues use breed groups and height ranges, so the card
+     carries a "Reading: Needed" cell rather than pretending it suits age 4.
+   - **Dog Breed Finder** → `cat: 'puzzle'`, card on `strategy/index.html`,
+     its own homepage tile. Precedent: Crossword Maker is also a tool rather
+     than a game and lives in Strategy.
+   Both use the `url` override since they share the `/dogs/` directory.
 7. ~~Fact-check of `breeds.js`.~~ **Done** via `tools/check-breed-facts.js`
    (`--online`): country of origin cross-checked against Wikidata P495, and
    every `fact` string checked for corroboration in its Wikipedia article.

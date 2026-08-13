@@ -14,6 +14,7 @@
     { id: 'tic-tac-toe',       name: 'Tic-Tac-Toe',       cat: 'kids',    desc: 'The classic Xs and Os. Three levels.', color: '#2EC4B6', isNew: true },
     { id: 'go-fish',           name: 'Go Fish',           cat: 'kids',    desc: 'Ask for animals, fish the pond, make books.', color: '#1E9BD7', isNew: true },
     { id: 'crazy-eights',      name: 'Crazy Eights',      cat: 'kids',    desc: 'Match the card or play a wild 8.', color: '#F58A3C', isNew: true },
+    { id: 'dogs',              name: 'Pup Quiz',          cat: 'kids',    desc: 'Five clues, one dog breed. New puzzle daily.', color: '#8A5A2B', isNew: true, url: '/dogs/play.html' },
     { id: 'pong',              name: 'Pong',              cat: 'classic', desc: 'Paddle vs. Computer. Keep it alive.',    color: '#8FA8E6'  },
     { id: 'breakout',          name: 'Breakout',          cat: 'classic', desc: 'Bricks, ball, bounce.',            color: '#F2A65A' },
     { id: 'space-invaders',    name: 'Space Invaders',    cat: 'classic', desc: 'Defend Earth from alien waves.',   color: '#9B7EDC' },
@@ -44,8 +45,9 @@
     { id: 'hangman',           name: 'Hangman',           cat: 'puzzle',  desc: 'Guess the word by theme. Build a streak.', color: '#2E8B57', isNew: true },
     { id: 'yahtzee',           name: 'Yahtzee',           cat: 'puzzle',  desc: 'Roll, hold, fill the card. Best total wins.', color: '#34558B', isNew: true },
     { id: 'farkle',            name: 'Farkle',            cat: 'puzzle',  desc: 'Push your luck to 10,000. Bank or bust.', color: '#B0413E', isNew: true },
-    // `url` override: /dogs/ is the breed finder, so the game lives alongside it.
-    { id: 'dogs',              name: 'Pup Quiz',          cat: 'puzzle',  desc: 'Five clues, one dog breed. New puzzle daily.', color: '#8A5A2B', isNew: true, url: '/dogs/play.html' },
+    // Both live under /dogs/ and so need the `url` override: the finder owns
+    // the directory index, the game sits beside it.
+    { id: 'dog-breed-finder',  name: 'Dog Breed Finder',  cat: 'puzzle',  desc: 'Answer eight questions, see which breeds fit.', color: '#A9743C', isNew: true, url: '/dogs/' },
     { id: 'blackjack',         name: 'Blackjack',         cat: 'casino',  desc: 'Hit 21 with strategy hints.',      color: '#7BC97B' },
     { id: 'roulette',          name: 'Roulette',          cat: 'casino',  desc: 'Spin the European wheel.',         color: '#F08488'  },
     { id: 'video-poker',       name: 'Video Poker',       cat: 'casino',  desc: 'Jacks or Better. Hold smart.',     color: '#A78BFA' },
