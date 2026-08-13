@@ -65,6 +65,9 @@
 
 .sheet-foot { margin-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 10.5px; color: #8a8172; }
 .sheet-foot .brand { font-weight: 700; color: #6b6152; }
+/* Trademark notice. Lives inside .sheet so it travels with the printed page —
+   the sheet is what gets photocopied and passed around, not the web page. */
+.sheet-note { margin-top: 12px; padding-top: 9px; border-top: 1px solid #E4DFD3; font-size: 9.5px; line-height: 1.45; color: #8a8172; }
 
 /* Reference blocks inside a sheet (payout charts, scoring keys) */
 .sheet .keybox { border: 1px solid #b9b2a4; border-radius: 4px; padding: 10px 12px; margin-top: 14px; background: #FBFAF5; }
