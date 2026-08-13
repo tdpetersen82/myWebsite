@@ -311,7 +311,9 @@
 
             <div class="pq-result" id="result">
                 <div class="pq-answer">
-                    <img id="ans-photo" src="" alt="">
+                    <!-- no src= until the answer is revealed: src="" resolves to the
+                         page URL and makes the browser re-fetch this document -->
+                    <img id="ans-photo" alt="">
                     <div class="who">
                         <h3 id="ans-name"></h3>
                         <div class="meta" id="ans-meta"></div>

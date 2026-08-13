@@ -115,7 +115,9 @@
 
 @media (max-width: 700px) {
   .pr-wrap, .pr-hero, .pr-crumb { padding-left: 16px; padding-right: 16px; }
-  .sheet { padding: 20px 16px 22px; }
+  /* A 7- or 9-column score sheet cannot fit a phone. Let the sheet scroll
+     inside its own box rather than pushing the whole page sideways. */
+  .sheet { padding: 20px 16px 22px; overflow-x: auto; -webkit-overflow-scrolling: touch; }
   .sheet .keybox ul { columns: 1; }
 }
 
@@ -131,6 +133,7 @@
     box-shadow: none !important; border: none !important; border-radius: 0 !important;
     padding: 0 !important; margin: 0 !important; max-width: none !important;
     width: 100%; page-break-inside: avoid;
+    overflow: visible !important; /* undo the mobile scroll box — it would clip the print */
   }
   .sheet th { background: #EEE !important; }
   .sheet td.lbl { background: #FAFAFA !important; }

@@ -61,7 +61,11 @@ function thPickLine(key, ctx = {}) {
 
 // Compact dealer pane on the left of the main felt: portrait + speech bubble.
 function THDealerStrip({ name, gender = 'female', expression = 'idle', message }) {
-  const src = `../blackjack/assets/dealers/${gender}/${expression}.png`;
+  // Only female dealer art exists in blackjack/assets/dealers/. 'Marcus' is
+  // still offered in the tweaks panel, so map male -> female art rather than
+  // 404 on every frame. Needs real male art to be correct.
+  const artGender = gender === 'male' ? 'female' : gender;
+  const src = `../blackjack/assets/dealers/${artGender}/${expression}.jpg`;
   return (
     <div style={{
       width: 200, height: '100%',
@@ -74,7 +78,7 @@ function THDealerStrip({ name, gender = 'female', expression = 'idle', message }
       <img
         src={src}
         alt={name}
-        onError={(e) => { e.currentTarget.src = `../blackjack/assets/dealers/female/idle.png`; }}
+        onError={(e) => { e.currentTarget.src = `../blackjack/assets/dealers/female/idle.jpg`; }}
         style={{
           position:'absolute', left:'50%', top: 0,
           height:'100%',

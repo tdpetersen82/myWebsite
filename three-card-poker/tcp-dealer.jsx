@@ -320,8 +320,12 @@ function tcpOutcomeToExpression(kind, hasBonus) {
 }
 
 function TCPDealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idle = false, mood = 0 }) {
+  // Only female dealer art exists in blackjack/assets/dealers/. 'Marcus' is
+  // still offered in the tweaks panel, so map male -> female art rather than
+  // 404 on every frame. Needs real male art to be correct.
+  const artGender = gender === 'male' ? 'female' : gender;
   const file = expression;
-  const src = `../blackjack/assets/dealers/${gender}/${file}.png`;
+  const src = `../blackjack/assets/dealers/${artGender}/${file}.jpg`;
   const [layers, setLayers] = React.useState(() => [{ key: 0, src, opacity: 1, blur: 0 }]);
   const counter = React.useRef(0);
   const lastSrc = React.useRef(src);
@@ -360,7 +364,7 @@ function TCPDealerPortrait({ expression = 'idle', shift = 0, gender = 'female', 
           key={layer.key}
           src={layer.src}
           alt="dealer"
-          onError={(e) => { e.currentTarget.src = `../blackjack/assets/dealers/female/${file}.png`; }}
+          onError={(e) => { e.currentTarget.src = `../blackjack/assets/dealers/female/${file}.jpg`; }}
           className={animClass}
           style={{
             position: 'absolute',
@@ -447,6 +451,10 @@ function TCPSpeechBubble({ text, dealerName = 'Melissa' }) {
 }
 
 function TCPDealerNameplate({ name, gender = 'female' }) {
+  // Only female dealer art exists in blackjack/assets/dealers/. 'Marcus' is
+  // still offered in the tweaks panel, so map male -> female art rather than
+  // 404 on every frame. Needs real male art to be correct.
+  const artGender = gender === 'male' ? 'female' : gender;
   return (
     <div style={{
       display: 'inline-flex', alignItems: 'center', gap: 10,
@@ -458,7 +466,7 @@ function TCPDealerNameplate({ name, gender = 'female' }) {
       boxShadow: '0 8px 18px rgba(0,0,0,.45)'
     }}>
       <img
-        src={`../blackjack/assets/dealers/${gender}/avatar.png`}
+        src={`../blackjack/assets/dealers/${artGender}/avatar.jpg`}
         alt=""
         style={{
           width: 30, height: 30, borderRadius: '50%',
