@@ -74,5 +74,5 @@
   <url><loc>https://limestonegames.com/minesweeper/</loc><lastmod>2026-06-05</lastmod><priority>0.85</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/privacy.html</loc><lastmod>2026-05-11</lastmod><priority>0.3</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://limestonegames.com/dogs/</loc><lastmod>2026-08-13</lastmod><priority>0.9</priority><changefreq>monthly</changefreq></url>
-  <url><loc>https://limestonegames.com/dogs/play.html</loc><lastmod>2026-08-13</lastmod><priority>0.85</priority><changefreq>daily</changefreq></url>
+  <url><loc>https://limestonegames.com/dogs/play</loc><lastmod>2026-08-13</lastmod><priority>0.85</priority><changefreq>daily</changefreq></url>
 </urlset>
