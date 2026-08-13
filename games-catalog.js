@@ -56,6 +56,7 @@
     { id: 'spider-solitaire',  name: 'Spider Solitaire',  cat: 'casino',  desc: 'Two decks. 1, 2, or 4 suits.',     color: '#9B7EDC', isNew: true },
     { id: 'hearts',            name: 'Hearts',            cat: 'casino',  desc: 'Dodge the Queen of Spades.',       color: '#C8423A', isNew: true },
     { id: 'spades',            name: 'Spades',            cat: 'casino',  desc: 'Bid, partner up, race to 500.',    color: '#4F7CAC', isNew: true },
+    { id: 'euchre',            name: 'Euchre',            cat: 'casino',  desc: 'Order up trump, play the bowers, race to 10.', color: '#7A5AA8', isNew: true },
     { id: 'craps',             name: 'Craps',             cat: 'casino',  desc: 'Roll the bones.',                  color: '#5DC4D9'  },
     { id: 'three-card-poker',  name: 'Three Card Poker',  cat: 'casino',  desc: 'Play or fold? Three cards.',       color: '#9B7EDC'  },
     { id: 'texas-holdem',      name: "Texas Hold'em",     cat: 'casino',  desc: '4-handed cash game. Equity hints.', color: '#E8B05B', isNew: true },

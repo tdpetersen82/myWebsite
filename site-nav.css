@@ -26,6 +26,7 @@
 [data-category="casino"]   { --cat-accent:#B83A4A; --cat-tint:#F7DEE0; --cat-glow:rgba(184,58,74,0.35); }
 [data-category="utilities"]{ --cat-accent:#147C7C; --cat-tint:#DCEFEC; --cat-glow:rgba(20,124,124,0.30); }
 [data-category="profile"]  { --cat-accent:#B83A4A; --cat-tint:#F7DEE0; --cat-glow:rgba(184,58,74,0.35); }
+[data-category="printables"]{ --cat-accent:#8A5A2B; --cat-tint:#F3E7D8; --cat-glow:rgba(138,90,43,0.30); }
 
 .nav {
   display: flex; align-items: center; justify-content: space-between;

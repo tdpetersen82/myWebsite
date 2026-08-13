@@ -1,0 +1,770 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+    <title>Euchre — Play the Free Online Card Game vs Computer | Limestone Games</title>
+    <meta name="description" content="Play Euchre free in your browser with a computer partner. Order up the trump, play the right and left bower, go alone for four points, and race to 10. No downloads, no signup.">
+    <meta name="keywords" content="euchre, euchre online, play euchre, free euchre, euchre card game, how to play euchre, right bower, left bower, going alone euchre, euchre vs computer">
+    <link rel="canonical" href="https://limestonegames.com/euchre/">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Euchre","description":"Play Euchre free in your browser — partner with the computer, order up trump, play the bowers, go alone, and race to 10.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Euchre"}]}</script>
+    <script type="application/ld+json">{"@context": "https://schema.org", "@type": "FAQPage", "mainEntity": [{"@type": "Question", "name": "How do I play Euchre?", "acceptedAnswer": {"@type": "Answer", "text": "Euchre uses a 24-card deck of 9 through Ace. You and your partner across the table face two opponents. One suit is named trump, then you play five tricks. The team that named trump must win at least three of them to score; first team to 10 points wins."}}, {"@type": "Question", "name": "What are the right and left bower in Euchre?", "acceptedAnswer": {"@type": "Answer", "text": "The right bower is the jack of the trump suit and is the highest card in the game. The left bower is the other jack of the same color, and it becomes a trump card for the whole hand — it is the second-highest card. So if spades are trump, the jack of clubs is a spade, not a club."}}, {"@type": "Question", "name": "What does going alone mean in Euchre?", "acceptedAnswer": {"@type": "Answer", "text": "When you name trump you can declare that you are going alone. Your partner sets their cards down and sits out the hand, so you play three-handed. Take all five tricks alone and you score 4 points instead of 2."}}, {"@type": "Question", "name": "What does it mean to be euchred?", "acceptedAnswer": {"@type": "Answer", "text": "If the team that named trump fails to win at least three of the five tricks, they are euchred and the defending team scores 2 points instead."}}, {"@type": "Question", "name": "Is Euchre free to play here?", "acceptedAnswer": {"@type": "Answer", "text": "Yes — no signup, no downloads, no installs. Play with a computer partner against two computer opponents right in your browser."}}]}</script>
+    <meta property="og:title" content="Euchre — Play the Free Online Card Game vs Computer | Limestone Games">
+    <meta property="og:description" content="Play Euchre free in your browser with a computer partner. Order up trump, play the bowers, go alone, race to 10.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/euchre/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Euchre — Play Free Online vs Computer | Limestone Games">
+    <meta name="twitter:description" content="Play Euchre free in your browser. Order up trump, play the bowers, race to 10.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+
+    <style>
+      :root { --ink:#EAF2E6; --felt-1:#1f7a44; --felt-2:#155f34; --gold:#E8C969; --cw:82px; }
+      * { box-sizing:border-box; margin:0; padding:0; }
+      html,body { height:100%; }
+      body { font-family:'Inter','Segoe UI',Tahoma,sans-serif; background:radial-gradient(120% 120% at 50% 0%, var(--felt-1) 0%, var(--felt-2) 70%, #0e4324 100%); color:var(--ink); min-height:100vh; display:flex; flex-direction:column; align-items:center; padding:14px 12px 32px; -webkit-user-select:none; user-select:none; -webkit-tap-highlight-color:transparent; }
+      .game-shell { width:100%; max-width:880px; display:flex; flex-direction:column; align-items:center; gap:12px; }
+      .top-bar { width:100%; display:flex; align-items:center; gap:14px; padding:10px 16px 11px; background:rgba(0,0,0,0.22); border:1px solid rgba(255,255,255,0.14); border-radius:14px; flex-wrap:wrap; }
+      .tb-back { display:inline-flex; align-items:center; gap:6px; white-space:nowrap; padding:7px 13px; border-radius:10px; border:1px solid rgba(255,255,255,0.25); color:var(--ink); text-decoration:none; font-size:13px; font-weight:600; }
+      .tb-back:hover { border-color:var(--gold); color:var(--gold); }
+      .tb-title { display:flex; flex-direction:column; gap:2px; margin-right:auto; }
+      .tb-eyebrow { display:inline-flex; align-items:center; gap:7px; font-size:11px; font-weight:700; letter-spacing:.09em; text-transform:uppercase; color:rgba(234,242,230,0.7); }
+      .tb-dot { width:6px; height:6px; border-radius:50%; background:var(--gold); }
+      .tb-title h1 { font-size:21px; font-weight:800; }
+      .scorebar { display:flex; gap:18px; flex-wrap:wrap; }
+      .scorebar > div { display:flex; flex-direction:column; gap:1px; min-width:82px; text-align:center; }
+      .scorebar .l { font-size:10px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; color:rgba(234,242,230,0.65); }
+      .scorebar .v { font-size:16px; font-weight:800; font-variant-numeric:tabular-nums; }
+      .scorebar .v.me { color:var(--gold); }
+      .scorebar .sub { font-size:10px; color:rgba(234,242,230,0.55); }
+
+      .controls { display:flex; gap:8px; flex-wrap:wrap; justify-content:center; align-items:center; min-height:38px; }
+      .controls button { font-family:inherit; font-size:13.5px; font-weight:700; color:var(--ink); background:rgba(255,255,255,0.10); cursor:pointer; border:1px solid rgba(255,255,255,0.22); border-radius:10px; padding:9px 14px; }
+      .controls button:hover:not(:disabled) { border-color:var(--gold); }
+      .controls button.alone { color:var(--gold); }
+      .controls button.alone.on { background:rgba(232,201,105,0.22); border-color:var(--gold); }
+      .controls button.suitbtn { min-width:44px; font-size:17px; line-height:1; padding:8px 12px; }
+      .controls button.suitbtn.red { color:#ff9c9c; }
+      .controls .lbl { font-size:13px; font-weight:700; color:rgba(234,242,230,0.85); margin-right:4px; }
+
+      .board-fit { position:relative; width:100%; display:flex; justify-content:center; overflow:hidden; }
+      .table { position:relative; width:700px; height:530px; transform-origin:top center; flex:0 0 auto; }
+      .seat { position:absolute; text-align:center; }
+      .seat .name { font-size:12px; font-weight:700; white-space:nowrap; }
+      .seat .name.active { color:var(--gold); }
+      .seat .name .tag { font-weight:600; color:rgba(234,242,230,0.7); }
+      .seat .name .dlr { display:inline-block; margin-left:5px; padding:1px 5px; border-radius:5px; background:rgba(232,201,105,0.22); color:var(--gold); font-size:10px; font-weight:800; letter-spacing:.04em; }
+      .seat-N { top:0; left:50%; transform:translateX(-50%); }
+      /* The side labels are wider than their 48px fan. Centring them pushes the
+         text past the table edge, where .board-fit's overflow clips it — so
+         anchor each one to the inside. */
+      .seat-W { left:0; top:46%; transform:translateY(-50%); text-align:left; }
+      .seat-E { right:0; top:46%; transform:translateY(-50%); text-align:right; }
+      .seat-W .mini, .seat-E .mini { justify-content:flex-start; }
+      .seat-E .mini { justify-content:flex-end; }
+      /* Vertical bands must not collide: trick → seat label → hand. The hand is
+         card-height + 22px tall, so the label needs ~148px of clearance. */
+      .seat-S { bottom:148px; left:50%; transform:translateX(-50%); }
+      .mini { display:flex; justify-content:center; }
+      .mini .b { width:34px; height:48px; border-radius:4px; margin-left:-22px; background:repeating-linear-gradient(45deg, rgba(255,255,255,0.10) 0 4px, transparent 4px 8px), linear-gradient(160deg,#2a4f86,#1c3a66); border:1.5px solid #e9eef7; }
+      .mini .b:first-child { margin-left:0; }
+      .seat-W .mini, .seat-E .mini { flex-direction:column; }
+      /* Side fans are rotated (48×34), so the vertical overlap has to be less
+         than the card height — otherwise each card stacks *above* the last. */
+      .seat-W .mini .b, .seat-E .mini .b { margin-left:0; margin-top:-22px; width:48px; height:34px; }
+      .seat-W .mini .b:first-child, .seat-E .mini .b:first-child { margin-top:0; }
+      .seat .out { font-size:11px; font-weight:700; color:rgba(234,242,230,0.5); font-style:italic; padding:6px 0; }
+
+      .trick { position:absolute; left:50%; top:44%; width:0; height:0; }
+      .card, .pcard { width:var(--cw); height:calc(var(--cw)*110/78); border-radius:7px; box-shadow:0 2px 5px rgba(0,0,0,0.4); }
+      .pcard { position:absolute; background-color:#fff; }
+      .pcard.t-S { transform:translate(-50%, 6px); }
+      .pcard.t-N { transform:translate(-50%, calc(-100% - 6px)); }
+      .pcard.t-W { transform:translate(calc(-100% - 6px), -50%); }
+      .pcard.t-E { transform:translate(6px, -50%); }
+
+      .upcard { position:absolute; left:50%; top:44%; transform:translate(-50%,-50%); display:flex; flex-direction:column; align-items:center; gap:6px; }
+      .upcard .card { background-color:#fff; }
+      .upcard .cap { font-size:11px; font-weight:700; letter-spacing:.05em; text-transform:uppercase; color:rgba(234,242,230,0.72); }
+
+      .hand { position:absolute; bottom:0; left:50%; transform:translateX(-50%); height:calc(var(--cw)*110/78 + 22px); }
+      .hand .card { position:absolute; bottom:0; background-color:#fff; cursor:default; transition:transform .12s, box-shadow .12s; }
+      .hand .card.legal { cursor:pointer; }
+      .hand .card.legal:hover { transform:translateY(-14px); box-shadow:0 8px 18px rgba(0,0,0,0.45); }
+      .hand .card.dim { filter:brightness(0.66); }
+
+      .center-msg { position:absolute; left:50%; top:26%; transform:translate(-50%,-50%); text-align:center; font-size:15px; font-weight:700; color:#fff; text-shadow:0 1px 3px rgba(0,0,0,0.6); pointer-events:none; max-width:300px; }
+      /* Pinned to the table's empty top-left corner so it can never sit under a
+         played card, whatever the trick looks like. */
+      .trump-flag { position:absolute; left:0; top:2px; transform:none; padding:5px 11px; border-radius:9px; background:rgba(0,0,0,0.30); border:1px solid rgba(232,201,105,0.35); font-size:13px; font-weight:800; color:var(--gold); white-space:nowrap; text-shadow:0 1px 3px rgba(0,0,0,0.6); pointer-events:none; }
+      .trump-flag .red { color:#ff9c9c; }
+      .trump-flag:empty { display:none; } /* no bare pill before trump is named */
+
+      .overlay { position:fixed; inset:0; display:none; align-items:center; justify-content:center; z-index:2000; background:rgba(8,40,22,0.62); backdrop-filter:blur(3px); }
+      .overlay.show { display:flex; }
+      .ov-card { background:#fffdf6; color:#23311f; border-radius:18px; padding:24px 28px; text-align:center; max-width:92%; box-shadow:0 30px 60px -20px rgba(0,0,0,0.6); }
+      .ov-card h2 { font-size:24px; margin-bottom:8px; }
+      .ov-card .note { font-size:13.5px; color:#4a5a44; margin-bottom:4px; }
+      .ov-card table { margin:10px auto 14px; border-collapse:collapse; font-variant-numeric:tabular-nums; }
+      .ov-card td, .ov-card th { padding:4px 16px; font-size:14px; text-align:right; }
+      .ov-card th:first-child, .ov-card td:first-child { text-align:left; }
+      .ov-card tr.win td { color:#1f7a44; font-weight:800; }
+      .ov-card button { font-family:inherit; font-size:14px; font-weight:700; cursor:pointer; border-radius:10px; padding:10px 18px; border:none; background:#1f7a44; color:#fff; }
+      .status { font-size:13px; color:rgba(234,242,230,0.9); text-align:center; min-height:18px; }
+      .sr-only { position:absolute; width:1px; height:1px; padding:0; margin:-1px; overflow:hidden; clip:rect(0,0,0,0); white-space:nowrap; border:0; }
+
+      .game-overview { max-width:720px; width:100%; margin:26px auto 0; padding:26px 30px 30px; background:#FFFDF8; border:1px solid rgba(0,0,0,0.12); border-radius:14px; color:#2A2017; line-height:1.62; text-align:left; box-shadow:0 16px 40px -26px rgba(0,0,0,0.6); }
+      .game-overview > :first-child { margin-top:0; }
+      .game-overview h2 { margin:0 0 12px; font-size:1.4rem; color:#14361f; }
+      .game-overview h3 { margin:26px 0 9px; font-size:1.08rem; color:#1f7a44; }
+      .game-overview p { margin:0 0 12px; }
+      .game-overview ul { margin:0 0 12px; padding-left:20px; }
+      .game-overview li { margin:0 0 7px; }
+      .game-overview b { color:#14361f; }
+      .game-overview table.rulestable { width:100%; border-collapse:collapse; margin:0 0 14px; font-size:.95rem; }
+      .game-overview table.rulestable th, .game-overview table.rulestable td { border:1px solid rgba(0,0,0,0.14); padding:7px 10px; text-align:left; }
+      .game-overview table.rulestable th { background:#F1EFE6; color:#14361f; }
+      .game-overview .printable-cta { display:block; margin:0 0 12px; padding:13px 16px; background:#F1F6EE; border:1px solid rgba(31,122,68,0.28); border-radius:10px; color:#1f5c34; text-decoration:none; font-weight:600; }
+      .game-overview .printable-cta:hover { border-color:#1f7a44; }
+      .game-overview .related-games-list { list-style:none; padding-left:0; display:flex; flex-wrap:wrap; gap:8px 18px; }
+      .game-overview .related-games-list a { color:#1f7a44; font-weight:600; text-decoration:none; }
+      .game-overview .related-games-list a:hover { text-decoration:underline; }
+      @media (prefers-reduced-motion: reduce) { *,*::before,*::after { animation-duration:.001ms !important; transition-duration:.001ms !important; } }
+    </style>
+</head>
+<body>
+    <div class="game-shell">
+        <header class="top-bar">
+            <a class="tb-back" href="../casino/">← Casino</a>
+            <div class="tb-title">
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Card game · vs Computer</span>
+                <h1>Euchre</h1>
+            </div>
+            <div class="scorebar" id="scorebar"></div>
+        </header>
+
+        <div class="controls" id="controls"></div>
+
+        <div class="board-fit">
+            <div class="table" id="table">
+                <div class="seat seat-N" id="seatN"></div>
+                <div class="seat seat-W" id="seatW"></div>
+                <div class="seat seat-E" id="seatE"></div>
+                <div class="seat seat-S"><div class="name" id="nameS">You</div></div>
+                <div class="upcard" id="upcard"></div>
+                <div class="trick" id="trick"></div>
+                <div class="center-msg" id="centerMsg"></div>
+                <div class="trump-flag" id="trumpFlag"></div>
+                <div class="hand" id="hand"></div>
+            </div>
+        </div>
+
+        <div class="status" id="status">Dealing…</div>
+        <div class="sr-only" aria-live="polite" id="live"></div>
+
+        <section class="game-overview" aria-label="About Euchre">
+            <h2>How to play Euchre</h2>
+            <p>Euchre is the fast partnership trick-taking game of the American Midwest and Ontario, played with a short 24-card deck. You and the player across the table are a team against the other two. One suit becomes <b>trump</b>, then the hand is over in five quick tricks. This free browser version gives you a computer partner and two computer opponents, with bowers, ordering up, going alone, and a race to 10. No downloads, no signup.</p>
+
+            <h3>The deck and the deal</h3>
+            <p>Euchre uses only the <b>9, 10, Jack, Queen, King and Ace</b> of each suit &mdash; 24 cards. Each player is dealt five, and the next card is turned face up. That turned-up card is the offer: it proposes its own suit as trump.</p>
+
+            <h3>Naming trump</h3>
+            <ul>
+                <li><b>Round one.</b> Starting to the dealer's left, each player may <b>order up</b> the turned-up suit as trump, or pass. If someone orders it up, the dealer picks that card into their hand and discards one.</li>
+                <li><b>Round two.</b> If everyone passes, players get a second chance to <b>name</b> any suit <i>other</i> than the turned-up suit.</li>
+                <li><b>All pass twice.</b> The hand is dead and is redealt by the next dealer.</li>
+                <li>The team that names trump are the <b>makers</b>. They must take at least three tricks or they get euchred.</li>
+            </ul>
+
+            <h3>The bowers &mdash; the rule that trips up new players</h3>
+            <p>Trump does not rank the way you expect. The <b>right bower</b> is the jack of the trump suit, and it is the highest card in the game. The <b>left bower</b> is the other jack <i>of the same color</i>, and for that entire hand it stops being its own suit and <b>becomes trump</b> &mdash; the second-highest card.</p>
+            <p>So if <b>spades are trump</b>, the jack of clubs is a spade. If someone leads clubs, you do not have to play it &mdash; it is not a club any more. The rest of trump then runs A, K, Q, 10, 9. Non-trump suits rank normally: A, K, Q, J, 10, 9.</p>
+
+            <h3>Euchre scoring</h3>
+            <table class="rulestable">
+                <tr><th>Result</th><th>Points</th></tr>
+                <tr><td>Makers take 3 or 4 tricks</td><td>1</td></tr>
+                <tr><td>Makers take all 5 (a march)</td><td>2</td></tr>
+                <tr><td>Makers take 3 or 4 going alone</td><td>1</td></tr>
+                <tr><td>Makers take all 5 going alone</td><td>4</td></tr>
+                <tr><td>Makers take fewer than 3 &mdash; <b>euchred</b></td><td>2 to the defenders</td></tr>
+            </table>
+            <p>First team to <b>10 points</b> wins the game.</p>
+
+            <h3>Going alone</h3>
+            <p>When you name trump you may declare that you are <b>going alone</b>. Your partner lays their hand down and sits out, so the hand is played three-handed. It is the only way to score 4 points at once, but you have no partner to cover you &mdash; and being euchred alone still hands the other team 2. Go alone when you hold both bowers plus the ace, or a hand with almost no losers.</p>
+
+            <h3>Euchre strategy &mdash; how to win</h3>
+            <ul>
+                <li><b>Count your trump before you order.</b> Three trump with one bower is a normal order-up. Two small trump and no bower is a pass.</li>
+                <li><b>Remember who gets the turned-up card.</b> Ordering up hands that card to the dealer. If the dealer is an opponent, you are strengthening them &mdash; you need a better hand to justify it.</li>
+                <li><b>Lead trump when you are the maker.</b> Pulling the opponents' trump protects your off-suit aces from being trumped later.</li>
+                <li><b>Do not trump your partner's winner.</b> If your partner is already taking the trick, throw off a loser instead of wasting a trump.</li>
+                <li><b>Count the left bower as trump when you count your suit.</b> The most common beginner mistake is treating it as its printed suit and misjudging a hand by a whole trick.</li>
+                <li><b>Defend hard at 8 or 9 points.</b> A euchre is worth 2 &mdash; often the cheapest way to close out a game.</li>
+            </ul>
+
+            <a class="printable-cta" href="../printables/euchre-score-sheet/">🖨️ Free printable Euchre score sheet (PDF-ready) &rarr;</a>
+
+            <h3>Frequently asked</h3>
+            <p><b>How many cards are in a Euchre deck?</b> 24 &mdash; the 9, 10, J, Q, K and A of each suit.</p>
+            <p><b>What is the highest card in Euchre?</b> The right bower, which is the jack of the trump suit. The left bower &mdash; the other jack of the same color &mdash; is second.</p>
+            <p><b>What does euchred mean?</b> The team that named trump won fewer than three tricks, so the defenders score 2 points.</p>
+            <p><b>How many points to win Euchre?</b> 10.</p>
+            <p><b>Is Euchre free here?</b> Yes &mdash; no signup, no downloads, no installs.</p>
+
+            <h3>More card &amp; casino games</h3>
+            <ul class="related-games-list">
+                <li><a href="../spades/">Spades</a></li>
+                <li><a href="../hearts/">Hearts</a></li>
+                <li><a href="../solitaire/">Klondike Solitaire</a></li>
+                <li><a href="../printables/">Printable score sheets</a></li>
+                <li><a href="../casino/">All casino games &rarr;</a></li>
+            </ul>
+        </section>
+    </div>
+
+    <div class="overlay" id="overlay">
+        <div class="ov-card" role="dialog" aria-modal="true" aria-labelledby="ovHeading">
+            <h2 id="ovHeading">Hand over</h2>
+            <div id="ovBody"></div>
+            <button id="ovBtn">Next hand</button>
+        </div>
+    </div>
+
+    <script src="../casino/casino-cards.js?v=20260508e"></script>
+    <script>
+    'use strict';
+    (function () {
+        const CARDS = window.CASINO_CARDS;
+        const SUITNAME = { s:'spades', h:'hearts', d:'diamonds', c:'clubs' };
+        const SUITCHAR = { s:'♠', h:'♥', d:'♦', c:'♣' };
+        const LEFT     = { s:'c', c:'s', h:'d', d:'h' }; // same-colour partner suit
+        const ISRED    = { h:true, d:true, s:false, c:false };
+        const NAMES = ['You', 'West', 'North', 'East'];
+        const SEAT  = ['S', 'W', 'N', 'E'];
+        const TEAMS = [[0,2],[1,3]]; // team0 = You+North, team1 = West+East
+        const TARGET = 10;
+        // Computer bidding thresholds, in the units strength() returns. Tuned
+        // against tools/test-euchre.js --auto: low enough that dead hands stay
+        // rare, high enough that the makers aren't euchred constantly.
+        const BID = { order:5.2, name:5.4, aloneOrder:9.2, aloneName:9.4 };
+        const $ = (id) => document.getElementById(id);
+        const handEl = $('hand'), trickEl = $('trick'), tableEl = $('table');
+        const statusEl = $('status'), liveEl = $('live'), centerMsg = $('centerMsg');
+
+        function rankStr(r){ return r===14?'A':r===13?'K':r===12?'Q':r===11?'J':String(r); }
+
+        // ── Trump logic — the heart of Euchre ────────────────────────────────
+        // The left bower (jack of the same colour) counts as trump, not as its
+        // printed suit. Every legality/winner check goes through effSuit().
+        function effSuit(card, trump){
+            if (!trump) return card.s;
+            if (card.r === 11 && card.s === LEFT[trump]) return trump;
+            return card.s;
+        }
+        function trumpVal(card, trump){          // only meaningful when effSuit===trump
+            if (card.r === 11 && card.s === trump)       return 100; // right bower
+            if (card.r === 11 && card.s === LEFT[trump]) return 99;  // left bower
+            return card.r;
+        }
+        function cardVal(card, trump){
+            return effSuit(card, trump) === trump ? trumpVal(card, trump) : card.r;
+        }
+
+        let hands, trump, maker, alone, sittingOut, turnUp, upSuit,
+            tricksWon, teamScore, trick, current, dealer, phase, bidRound,
+            passes, busy, lastHand;
+        let handNo = 0, gen = 0, aloneToggle = false;
+
+        function lsGet(k){ try { return parseInt(localStorage.getItem(k),10)||0; } catch(e){ return 0; } }
+        function lsSet(k,v){ try { localStorage.setItem(k,String(v)); } catch(e){} }
+
+        const partnerOf = (p) => (p+2)%4;
+        const teamOf    = (p) => (p===0||p===2) ? 0 : 1;
+        function nextP(p){ let q=(p+1)%4; if (q===sittingOut) q=(q+1)%4; return q; }
+        const activeCount = () => (sittingOut < 0 ? 4 : 3);
+
+        function newGame(){ teamScore=[0,0]; handNo=0; $('overlay').classList.remove('show'); startHand(); }
+
+        function startHand(){
+            gen++;
+            try { document.querySelector('.game-shell').inert = false; } catch (e) {}
+            const d=[];
+            for (const s of ['s','h','d','c']) for (const r of [9,10,11,12,13,14]) d.push({ r, s, id:s+r });
+            for (let i=d.length-1;i>0;i--){ const j=Math.floor(Math.random()*(i+1)); [d[i],d[j]]=[d[j],d[i]]; }
+            hands=[[],[],[],[]];
+            for (let i=0;i<20;i++) hands[i%4].push(d[i]);
+            turnUp = d[20]; upSuit = turnUp.s;
+            trump=null; maker=-1; alone=false; sittingOut=-1;
+            tricksWon=[0,0,0,0]; trick=[]; busy=false; aloneToggle=false; passes=0; lastHand=null;
+            dealer = handNo % 4;
+            hands.forEach(h=>sortHand(h,null));
+            phase='bid1'; bidRound=1; current=(dealer+1)%4;
+            render(); advanceBid();
+        }
+
+        function sortHand(h, tr){
+            const ord = { s:0, h:1, c:2, d:3 };
+            h.sort((a,b)=>{
+                const ea=effSuit(a,tr), eb=effSuit(b,tr);
+                const ta = (tr && ea===tr) ? -1 : ord[ea];
+                const tb = (tr && eb===tr) ? -1 : ord[eb];
+                if (ta!==tb) return ta-tb;
+                return cardVal(b,tr) - cardVal(a,tr);
+            });
+        }
+
+        // ── Hand evaluation for the computer players ────────────────────────
+        function strength(cards, tr, extra){
+            const pool = extra ? cards.concat([extra]) : cards;
+            let s = 0;
+            for (const c of pool){
+                if (effSuit(c,tr) === tr){
+                    const v = trumpVal(c,tr);
+                    s += v===100 ? 3.2 : v===99 ? 2.6 : v===14 ? 2.0 : v===13 ? 1.4 : v===12 ? 1.0 : 0.6;
+                } else if (c.r === 14) s += 1.0;
+                else if (c.r === 13) s += 0.35;
+            }
+            return s;
+        }
+        // Round 1: ordering up gives the turned-up card to the DEALER, so it's
+        // worth less when the dealer is an opponent.
+        function evalOrderUp(p){
+            const gain = (dealer === p) ? strength(hands[p], upSuit, turnUp) - strength(hands[p], upSuit)
+                       : (teamOf(dealer) === teamOf(p)) ? 0.7 : -0.9;
+            return strength(hands[p], upSuit) + gain;
+        }
+        function bestNamedSuit(p){
+            let best=null, bestS=-1;
+            for (const s of ['s','h','d','c']){
+                if (s === upSuit) continue;
+                const v = strength(hands[p], s);
+                if (v > bestS){ bestS=v; best=s; }
+            }
+            return { suit:best, score:bestS };
+        }
+
+        // ── Bidding ─────────────────────────────────────────────────────────
+        function advanceBid(){
+            if (current === 0){
+                render();
+                statusEl.textContent = bidRound===1
+                    ? (dealer===0 ? 'Take it up as trump, or pass?' : 'Order it up as trump, or pass?')
+                    : 'Name a trump suit, or pass.';
+                return;
+            }
+            busy = true; const g = gen;
+            setTimeout(()=>{
+                if (g !== gen) return;
+                busy = false;
+                if (bidRound === 1){
+                    const sc = evalOrderUp(current);
+                    if (sc >= BID.order) callTrump(current, upSuit, sc >= BID.aloneOrder);
+                    else passBid();
+                } else {
+                    const { suit, score } = bestNamedSuit(current);
+                    if (score >= BID.name) callTrump(current, suit, score >= BID.aloneName);
+                    else passBid();
+                }
+            }, 560);
+        }
+        function passBid(){
+            passes++;
+            if (bidRound === 1 && passes === 4){
+                bidRound = 2; phase = 'bid2'; passes = 0; current = (dealer+1)%4;
+                render(); advanceBid(); return;
+            }
+            if (bidRound === 2 && passes === 4){ showMisdeal(); return; }
+            current = (current+1)%4;
+            render(); advanceBid();
+        }
+        function callTrump(p, suit, goAlone){
+            trump = suit; maker = p; alone = !!goAlone;
+            sittingOut = alone ? partnerOf(p) : -1;
+            if (bidRound === 1){
+                // Dealer picks the turned-up card into hand and discards one.
+                hands[dealer].push(turnUp);
+                if (dealer === 0){
+                    const picked = rankStr(turnUp.r) + SUITCHAR[turnUp.s];
+                    turnUp = null; // it's in the hand now — don't also show it face-up
+                    phase = 'discard';
+                    sortHand(hands[0], trump);
+                    render();
+                    statusEl.textContent = 'You picked up the ' + picked + ' — click a card to discard.';
+                    return;
+                }
+                aiDiscard(dealer);
+            }
+            turnUp = null;
+            beginPlay();
+        }
+        function aiDiscard(p){
+            // Throw the lowest non-trump; prefer voiding a short off-suit.
+            const h = hands[p];
+            const counts = {};
+            h.forEach(c=>{ const e=effSuit(c,trump); counts[e]=(counts[e]||0)+1; });
+            let worst = null, worstScore = Infinity;
+            for (const c of h){
+                const e = effSuit(c, trump);
+                if (e === trump) continue;
+                const sc = c.r + (counts[e] === 1 ? -3 : 0) + (c.r === 14 ? 8 : 0);
+                if (sc < worstScore){ worstScore = sc; worst = c; }
+            }
+            if (!worst) worst = h.reduce((a,b)=> trumpVal(b,trump) < trumpVal(a,trump) ? b : a);
+            h.splice(h.indexOf(worst), 1);
+        }
+        function humanDiscard(card){
+            const i = hands[0].findIndex(c=>c.id===card.id);
+            if (i < 0) return;
+            hands[0].splice(i,1);
+            turnUp = null;
+            beginPlay();
+        }
+
+        function showMisdeal(){
+            phase = 'handover';
+            lastHand = { misdeal:true };
+            render();
+            $('ovHeading').textContent = 'Everyone passed';
+            $('ovBody').innerHTML = '<p class="note">No one named a trump suit, so the hand is dead. The deal moves on.</p>';
+            $('ovBtn').textContent = 'Redeal';
+            $('ovBtn').onclick = ()=>{ $('overlay').classList.remove('show'); handNo++; startHand(); };
+            $('overlay').classList.add('show');
+            try { document.querySelector('.game-shell').inert = true; } catch (e) {}
+            liveEl.textContent = 'Everyone passed — redeal.';
+            setTimeout(()=>{ try{ $('ovBtn').focus(); }catch(e){} },0);
+        }
+
+        // ── Play ────────────────────────────────────────────────────────────
+        function beginPlay(){
+            phase='playing';
+            hands.forEach(h=>sortHand(h,trump));
+            current = (dealer+1)%4;
+            if (current === sittingOut) current = nextP(current);
+            trick=[]; render(); advance();
+        }
+        // Pure: which of `hand` may be played into `tr` (the cards already on
+        // the table) at trump `tp`. Follow-suit is judged on effective suit, so
+        // the left bower follows trump and never its printed suit.
+        function legalFrom(hand, tr, tp){
+            if (tr.length === 0) return hand.slice();
+            const led = effSuit(tr[0].card, tp);
+            const follow = hand.filter(c=>effSuit(c,tp)===led);
+            return follow.length ? follow : hand.slice();
+        }
+        function winnerOf(tr, tp){
+            let best = tr[0];
+            for (let i=1;i<tr.length;i++){
+                const t = tr[i];
+                const es = effSuit(t.card, tp), bs = effSuit(best.card, tp);
+                if (es === tp && bs !== tp) best = t;
+                else if (es === bs && cardVal(t.card,tp) > cardVal(best.card,tp)) best = t;
+            }
+            return best;
+        }
+        const legalMoves  = (p) => legalFrom(hands[p], trick, trump);
+        const trickWinner = () => winnerOf(trick, trump);
+        function advance(){
+            if (busy) return;
+            if (trick.length === activeCount()){
+                busy = true; const g = gen;
+                setTimeout(()=>{ if (g!==gen) return; resolveTrick(); }, 820);
+                return;
+            }
+            if (current === 0){
+                render();
+                statusEl.textContent = 'Your turn — ' + (trick.length ? ('follow ' + SUITNAME[effSuit(trick[0].card,trump)]) : 'lead');
+            } else {
+                busy = true; const g = gen;
+                setTimeout(()=>{ if (g!==gen) return; busy=false; aiPlay(current); }, 540);
+            }
+        }
+        function playCard(p, card){
+            const idx = hands[p].findIndex(c=>c.id===card.id); if (idx < 0) return;
+            hands[p].splice(idx,1); trick.push({p, card});
+            current = nextP(p);
+            render(); advance();
+        }
+        function aiPlay(p){
+            const legal = legalMoves(p);
+            const partner = partnerOf(p);
+            const partnerIsOut = (partner === sittingOut);
+            let card;
+            if (trick.length === 0){
+                // Leading. Makers pull trump; otherwise lead an off-suit ace, else low.
+                const myTrump = legal.filter(c=>effSuit(c,trump)===trump);
+                const iAmMaker = (teamOf(p) === teamOf(maker));
+                if (iAmMaker && myTrump.length >= 2){
+                    card = myTrump.reduce((a,b)=> trumpVal(b,trump) > trumpVal(a,trump) ? b : a);
+                } else {
+                    const offAces = legal.filter(c=>effSuit(c,trump)!==trump && c.r===14);
+                    if (offAces.length) card = offAces[0];
+                    else {
+                        const off = legal.filter(c=>effSuit(c,trump)!==trump);
+                        card = (off.length?off:legal).reduce((a,b)=> cardVal(b,trump) < cardVal(a,trump) ? b : a);
+                    }
+                }
+            } else {
+                const led = effSuit(trick[0].card, trump);
+                const winning = trickWinner();
+                const partnerWinning = !partnerIsOut && winning.p === partner;
+                const isLast = (trick.length === activeCount() - 1);
+                const beats = legal.filter(c=>{
+                    const es = effSuit(c,trump), ws = effSuit(winning.card,trump);
+                    if (es === trump && ws !== trump) return true;
+                    if (es === ws) return cardVal(c,trump) > cardVal(winning.card,trump);
+                    return false;
+                });
+                const follow = legal.filter(c=>effSuit(c,trump)===led);
+                // Don't spend a card to beat a partner who's already winning —
+                // unless we're not last and they could still be overtaken.
+                const wantTrick = !(partnerWinning && isLast);
+                if (wantTrick && beats.length){
+                    card = beats.reduce((a,b)=> cardVal(b,trump) < cardVal(a,trump) ? b : a); // cheapest winner
+                } else {
+                    const pool = follow.length ? follow : legal;
+                    const off = pool.filter(c=>effSuit(c,trump)!==trump);
+                    card = (off.length?off:pool).reduce((a,b)=> cardVal(b,trump) < cardVal(a,trump) ? b : a);
+                }
+            }
+            playCard(p, card);
+        }
+        function resolveTrick(){
+            if (trick.length < activeCount()) return; // stale timer guard
+            const win = trickWinner();
+            tricksWon[win.p]++;
+            trick=[]; current=win.p; busy=false; render();
+            const done = tricksWon[0]+tricksWon[1]+tricksWon[2]+tricksWon[3];
+            if (done === 5){ endHand(); return; }
+            advance();
+        }
+
+        function endHand(){
+            const mt = teamOf(maker);
+            const makerTricks = tricksWon[TEAMS[mt][0]] + tricksWon[TEAMS[mt][1]];
+            const delta=[0,0];
+            let note;
+            if (makerTricks >= 3){
+                let pts;
+                if (makerTricks === 5){ pts = alone ? 4 : 2; note = alone ? 'A lone march — all five tricks, 4 points.' : 'A march — all five tricks, 2 points.'; }
+                else { pts = 1; note = 'Makers took ' + makerTricks + ' tricks — 1 point.'; }
+                delta[mt] = pts;
+            } else {
+                delta[1-mt] = 2;
+                note = 'Euchred! The makers took only ' + makerTricks + ' — defenders score 2.';
+            }
+            teamScore[0]+=delta[0]; teamScore[1]+=delta[1];
+            lastHand = { makerTricks, delta, note };
+            handNo++;
+            phase='handover';
+            const over = teamScore[0] >= TARGET || teamScore[1] >= TARGET;
+            render(); showOverlay(delta, over, note);
+        }
+
+        // ── Rendering ───────────────────────────────────────────────────────
+        function faceEl(card, cls){
+            const el = document.createElement('div'); el.className = cls || 'card';
+            Object.assign(el.style, CARDS.faceStyle(rankStr(card.r), card.s));
+            el.dataset.id = card.id; el.setAttribute('role','img');
+            el.setAttribute('aria-label', rankStr(card.r) + ' of ' + SUITNAME[card.s]);
+            return el;
+        }
+        function miniFan(n){ const w=document.createElement('div'); w.className='mini'; for (let i=0;i<Math.min(n,5);i++){ const b=document.createElement('div'); b.className='b'; w.appendChild(b); } return w; }
+        function seatTag(pl){
+            if (phase==='bid1'||phase==='bid2'||phase==='discard') {
+                if (pl === maker) return 'trump ' + SUITCHAR[trump];
+                return '';
+            }
+            let t = 'tricks ' + tricksWon[pl];
+            if (pl === maker) t = (alone ? 'alone · ' : 'maker · ') + t;
+            return t;
+        }
+        function render(){
+            renderScorebar(); renderControls();
+            ['N','W','E'].forEach(s=>{ $('seat'+s).innerHTML=''; });
+            [['N',2],['W',1],['E',3]].forEach(([seat,pl])=>{
+                const box = $('seat'+seat);
+                const nm = document.createElement('div');
+                nm.className = 'name' + (current===pl && phase!=='handover' && pl!==sittingOut ? ' active' : '');
+                const tag = seatTag(pl);
+                nm.innerHTML = NAMES[pl] + (tag ? ' <span class="tag">'+tag+'</span>' : '') + (dealer===pl ? '<span class="dlr">D</span>' : '');
+                const body = document.createElement('div');
+                if (pl === sittingOut){ body.className='out'; body.textContent='sitting out'; }
+                else body.appendChild(miniFan(hands[pl].length));
+                if (seat==='N'){ box.appendChild(body); box.appendChild(nm); }
+                else { box.appendChild(nm); box.appendChild(body); }
+            });
+            const tagS = seatTag(0);
+            $('nameS').className = 'name' + (current===0 && phase!=='handover' && sittingOut!==0 ? ' active' : '');
+            $('nameS').innerHTML = 'You' + (tagS ? ' <span class="tag">'+tagS+'</span>' : '') + (dealer===0 ? '<span class="dlr">D</span>' : '');
+
+            trickEl.innerHTML='';
+            trick.forEach(t=>{ const el=faceEl(t.card,'pcard'); el.classList.add('t-'+SEAT[t.p]); trickEl.appendChild(el); });
+
+            const up = $('upcard'); up.innerHTML='';
+            if (turnUp && (phase==='bid1'||phase==='bid2'||phase==='discard')){
+                const cap=document.createElement('div'); cap.className='cap';
+                cap.textContent = bidRound===1 ? 'Turned up' : 'Turned down';
+                const c=faceEl(turnUp); if (bidRound===2) c.style.filter='brightness(0.62)';
+                up.appendChild(c); up.appendChild(cap);
+            }
+
+            centerMsg.textContent =
+                (phase==='bid1'||phase==='bid2') ? (current===0 ? '' : NAMES[current]+' is thinking…') :
+                (phase==='discard') ? '' : '';
+
+            const tf = $('trumpFlag');
+            tf.innerHTML = trump && phase!=='handover'
+                ? 'Trump: <span class="'+(ISRED[trump]?'red':'')+'">'+SUITCHAR[trump]+'</span> ' + SUITNAME[trump] + (alone ? ' · ' + NAMES[maker] + ' alone' : '')
+                : '';
+
+            renderHand(); scaleTable();
+        }
+        function renderHand(){
+            handEl.innerHTML='';
+            const h = hands[0]; const n = h.length;
+            const canPlay = (phase==='playing' && current===0 && !busy && sittingOut!==0);
+            const legal = canPlay ? legalMoves(0).map(c=>c.id) : [];
+            const cw = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--cw'));
+            const span = Math.min(cw*0.86, n>1 ? (560-cw)/(n-1) : 0);
+            handEl.style.width = (cw + span*(n-1)) + 'px';
+            h.forEach((card,i)=>{
+                const el = faceEl(card); el.style.left = (i*span)+'px';
+                if (phase==='discard') el.classList.add('legal');
+                else if (canPlay){ if (legal.includes(card.id)) el.classList.add('legal'); else el.classList.add('dim'); }
+                handEl.appendChild(el);
+            });
+        }
+        function renderScorebar(){
+            const bar = $('scorebar'); bar.innerHTML='';
+            [['Your team',0],['Opponents',1]].forEach(([label,t])=>{
+                const d=document.createElement('div');
+                const l=document.createElement('div'); l.className='l'; l.textContent=label;
+                const v=document.createElement('div'); v.className='v'+(t===0?' me':''); v.textContent=teamScore[t];
+                const s=document.createElement('div'); s.className='sub';
+                s.textContent = phase==='playing'||phase==='handover'
+                    ? 'tricks ' + (tricksWon[TEAMS[t][0]]+tricksWon[TEAMS[t][1]])
+                    : 'to ' + TARGET;
+                d.appendChild(l); d.appendChild(v); d.appendChild(s); bar.appendChild(d);
+            });
+        }
+        function renderControls(){
+            const c = $('controls'); c.innerHTML='';
+            const ng=document.createElement('button'); ng.textContent='New game'; ng.onclick=newGame; c.appendChild(ng);
+
+            const myTurn = (current===0 && !busy);
+            if (phase==='bid1' && myTurn){
+                const lbl=document.createElement('span'); lbl.className='lbl';
+                lbl.textContent = (dealer===0 ? 'Take up' : 'Order up') + ' ' + SUITCHAR[upSuit] + '?';
+                c.appendChild(lbl);
+                c.appendChild(aloneBtn());
+                const yes=document.createElement('button');
+                yes.textContent = dealer===0 ? 'Take it up' : 'Order it up';
+                yes.onclick = ()=>callTrump(0, upSuit, aloneToggle);
+                c.appendChild(yes);
+                const no=document.createElement('button'); no.textContent='Pass'; no.onclick=()=>{ aloneToggle=false; passBid(); }; c.appendChild(no);
+            } else if (phase==='bid2' && myTurn){
+                const lbl=document.createElement('span'); lbl.className='lbl'; lbl.textContent='Name trump:'; c.appendChild(lbl);
+                c.appendChild(aloneBtn());
+                for (const s of ['s','h','d','c']){
+                    if (s===upSuit) continue;
+                    const b=document.createElement('button');
+                    b.className='suitbtn'+(ISRED[s]?' red':'');
+                    b.textContent=SUITCHAR[s];
+                    b.setAttribute('aria-label','Name '+SUITNAME[s]+' as trump');
+                    b.onclick=()=>callTrump(0, s, aloneToggle);
+                    c.appendChild(b);
+                }
+                const no=document.createElement('button'); no.textContent='Pass'; no.onclick=()=>{ aloneToggle=false; passBid(); }; c.appendChild(no);
+            } else if (phase==='discard'){
+                const lbl=document.createElement('span'); lbl.className='lbl'; lbl.textContent='Click a card to discard.'; c.appendChild(lbl);
+            }
+        }
+        function aloneBtn(){
+            const b=document.createElement('button');
+            b.className='alone'+(aloneToggle?' on':'');
+            b.textContent = aloneToggle ? '✓ Going alone' : 'Go alone';
+            b.setAttribute('aria-pressed', aloneToggle ? 'true' : 'false');
+            b.onclick=()=>{ aloneToggle=!aloneToggle; renderControls(); };
+            return b;
+        }
+
+        handEl.addEventListener('click',(e)=>{
+            const el = e.target.closest('.card'); if (!el) return;
+            const card = hands[0].find(c=>c.id===el.dataset.id); if (!card) return;
+            if (phase==='discard'){ humanDiscard(card); return; }
+            if (phase!=='playing' || current!==0 || busy || sittingOut===0) return;
+            if (legalMoves(0).some(c=>c.id===card.id)) playCard(0, card);
+        });
+
+        function showOverlay(delta, over, note){
+            const winScore = Math.max(teamScore[0], teamScore[1]);
+            const tie = over && teamScore[0]===teamScore[1];
+            if (tie) over = false;
+            let rows='';
+            [['Your team',0],['Opponents',1]].forEach(([label,t])=>{
+                const tricks = tricksWon[TEAMS[t][0]] + tricksWon[TEAMS[t][1]];
+                const madeIt = (teamOf(maker)===t) ? (alone ? 'alone' : 'yes') : '—';
+                rows += '<tr'+(over && teamScore[t]===winScore ? ' class="win"' : '')+'><td>'+label+'</td><td>'+madeIt+'</td><td>'+tricks+'</td><td>'+(delta[t]>0?'+':'')+delta[t]+'</td><td>'+teamScore[t]+'</td></tr>';
+            });
+            const head = over ? (teamScore[0]>teamScore[1] ? 'Your team wins! 🎉' : 'Opponents win')
+                              : (tie ? 'Tie — play on' : 'Hand over');
+            $('ovHeading').textContent = head;
+            $('ovBody').innerHTML = '<p class="note">'+note+'</p><table><tr><th>Team</th><th>Made trump</th><th>Tricks</th><th>Hand</th><th>Total</th></tr>'+rows+'</table>';
+            $('ovBtn').textContent = over ? 'New game' : 'Next hand';
+            $('ovBtn').onclick = over ? newGame : ()=>{ $('overlay').classList.remove('show'); startHand(); };
+            $('overlay').classList.add('show');
+            try { document.querySelector('.game-shell').inert = true; } catch (e) {}
+            if (over && teamScore[0] > teamScore[1]) lsSet('euchreWon', lsGet('euchreWon')+1);
+            liveEl.textContent = head + ' ' + note;
+            setTimeout(()=>{ try{ $('ovBtn').focus(); }catch(e){} },0);
+        }
+
+        function scaleTable(){
+            // Scale to the actual container, not the viewport — the shell has
+            // padding, and guessing at it left the seat labels hanging over the
+            // edge where .board-fit's overflow clipped them.
+            const host = tableEl.parentElement;
+            const availW = host.clientWidth
+                || (Math.min(window.innerWidth, document.documentElement.clientWidth) - 24);
+            if (!availW || !window.innerHeight) return;
+            tableEl.style.transform='none';
+            const s = Math.min(availW/700, (window.innerHeight*0.62)/530, 1.05);
+            tableEl.style.transform='scale('+s+')';
+            host.style.height=(530*s)+'px';
+        }
+        window.addEventListener('resize', scaleTable);
+        window.addEventListener('orientationchange', ()=>setTimeout(scaleTable,60));
+        window.addEventListener('keydown',(e)=>{
+            const t=(e.target&&e.target.tagName)||''; if(/^(INPUT|SELECT|TEXTAREA)$/.test(t)) return;
+            if (e.key==='Escape' && $('overlay').classList.contains('show')){ $('ovBtn').click(); return; }
+            if (e.key==='n'||e.key==='N') newGame();
+        });
+
+        // Expose the rules engine + the seat-0 decision points so the hand loop
+        // can be exercised headlessly by tools/test-euchre.js.
+        window.__euchre = {
+            effSuit, trumpVal, cardVal, legalFrom, winnerOf, LEFT,
+            callTrump, passBid, playCard, humanDiscard, legalMoves, newGame, startHand,
+            aiPlay, evalOrderUp, bestNamedSuit, BID,
+            state: () => ({ hands, trump, maker, alone, sittingOut, upSuit, tricksWon,
+                            teamScore, trick, current, dealer, phase, bidRound, handNo })
+        };
+
+        newGame();
+    })();
+    </script>
+</body>
+</html>

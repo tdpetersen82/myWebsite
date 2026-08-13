@@ -1,0 +1,139 @@
+/* Limestone Games — printables
+   Screen: a paper-on-desk preview that matches the site chrome.
+   Print:  everything but .sheet is stripped; the sheet fills the page.
+   Loaded after category.css + site-nav.css. */
+
+.pr-root { background: var(--cat-bg); }
+
+/* ── Screen layout ─────────────────────────────────────────────── */
+.pr-wrap { max-width: 1080px; margin: 0 auto; padding: 0 28px 64px; }
+
+.pr-hero { max-width: 1080px; margin: 0 auto; padding: 34px 28px 22px; }
+.pr-hero .eyebrow {
+  display: inline-flex; align-items: center; gap: 8px;
+  font-size: 11.5px; font-weight: 700; letter-spacing: .1em; text-transform: uppercase;
+  color: var(--cat-accent); margin-bottom: 10px;
+}
+.pr-hero h1 { font-family: 'Bricolage Grotesque', 'Inter', sans-serif; font-size: clamp(1.9rem, 4vw, 2.9rem); line-height: 1.08; margin: 0 0 12px; letter-spacing: -0.02em; }
+.pr-hero p.lede { max-width: 62ch; margin: 0; font-size: 1.02rem; line-height: 1.62; color: var(--cat-ink-soft); }
+
+.pr-crumb { max-width: 1080px; margin: 0 auto; padding: 18px 28px 0; font-size: 13px; color: var(--cat-ink-soft); }
+.pr-crumb a { color: var(--cat-ink-soft); text-decoration: none; }
+.pr-crumb a:hover { color: var(--cat-accent); text-decoration: underline; }
+
+/* ── Action bar ────────────────────────────────────────────────── */
+.pr-actions { display: flex; flex-wrap: wrap; gap: 10px; align-items: center; margin: 0 0 22px; }
+.pr-btn {
+  font: inherit; font-size: 14px; font-weight: 700; cursor: pointer;
+  border: none; border-radius: 10px; padding: 11px 18px;
+  background: var(--cat-ink); color: var(--cat-bg); text-decoration: none;
+  display: inline-flex; align-items: center; gap: 8px;
+}
+.pr-btn:hover { background: var(--cat-accent); }
+.pr-btn.ghost { background: transparent; color: var(--cat-ink); border: 1px solid var(--cat-line); }
+.pr-btn.ghost:hover { border-color: var(--cat-accent); color: var(--cat-accent); background: transparent; }
+.pr-hint { font-size: 12.5px; color: var(--cat-ink-soft); }
+
+/* ── The sheet ─────────────────────────────────────────────────── */
+.sheet {
+  background: #fff; color: #14110d;
+  border: 1px solid var(--cat-line);
+  border-radius: 6px;
+  box-shadow: 0 24px 50px -30px rgba(0,0,0,0.45);
+  padding: 30px 34px 34px;
+  margin: 0 0 30px;
+  max-width: 8.5in;
+  font-family: 'Inter', system-ui, sans-serif;
+}
+.sheet-head { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; border-bottom: 2px solid #14110d; padding-bottom: 9px; margin-bottom: 16px; }
+.sheet-head h2 { font-family: 'Bricolage Grotesque', 'Inter', sans-serif; font-size: 1.5rem; margin: 0; letter-spacing: -0.01em; }
+.sheet-head .sub { font-size: 11.5px; color: #6b6152; text-align: right; line-height: 1.4; }
+.sheet-head .sub b { color: #14110d; }
+
+.sheet table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.sheet th, .sheet td { border: 1px solid #b9b2a4; padding: 0; text-align: center; font-size: 12.5px; }
+.sheet th { background: #F1EFE6; font-weight: 700; padding: 6px 5px; font-size: 11.5px; }
+.sheet td { height: 27px; }
+.sheet td.lbl { text-align: left; padding: 4px 8px; font-weight: 600; background: #FBFAF5; white-space: nowrap; }
+/* Prose cells — sentences, not labels. Must wrap or the sheet runs off the page. */
+.sheet td.lbl.wrap { white-space: normal; font-weight: 400; line-height: 1.45; padding: 6px 9px; }
+.sheet td.lbl .note { display: block; font-weight: 400; font-size: 10.5px; color: #6b6152; }
+.sheet tr.total td { background: #F1EFE6; font-weight: 800; }
+.sheet tr.rule-row td { background: #14110d; padding: 0; height: 2px; border-color: #14110d; }
+.sheet .fill { background: #fff; }
+.sheet caption { caption-side: top; text-align: left; font-size: 12px; color: #6b6152; padding-bottom: 7px; }
+
+.sheet-foot { margin-top: 14px; display: flex; justify-content: space-between; align-items: center; gap: 12px; font-size: 10.5px; color: #8a8172; }
+.sheet-foot .brand { font-weight: 700; color: #6b6152; }
+
+/* Reference blocks inside a sheet (payout charts, scoring keys) */
+.sheet .keybox { border: 1px solid #b9b2a4; border-radius: 4px; padding: 10px 12px; margin-top: 14px; background: #FBFAF5; }
+.sheet .keybox h3 { margin: 0 0 7px; font-size: 12px; letter-spacing: .05em; text-transform: uppercase; color: #6b6152; }
+.sheet .keybox ul { margin: 0; padding-left: 17px; columns: 2; column-gap: 24px; font-size: 11.5px; line-height: 1.55; }
+.sheet .keybox li { margin: 0 0 3px; break-inside: avoid; }
+
+/* Blank grid boards (ultimate tic-tac-toe) */
+.uttt { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; background: #14110d; padding: 7px; width: 100%; max-width: 6.6in; margin: 0 auto; }
+.uttt .mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: #b9b2a4; }
+.uttt .mini span { background: #fff; aspect-ratio: 1; }
+
+/* ── Hub cards ─────────────────────────────────────────────────── */
+.pr-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr)); gap: 18px; margin: 0 0 40px; }
+.pr-card {
+  display: flex; flex-direction: column; gap: 9px;
+  background: var(--cat-paper); border: 1px solid var(--cat-line); border-radius: 12px;
+  padding: 20px 21px 21px; text-decoration: none; color: var(--cat-ink);
+  transition: border-color .14s, transform .14s;
+}
+.pr-card:hover { border-color: var(--cat-accent); transform: translateY(-2px); }
+.pr-card .ic { font-size: 22px; line-height: 1; }
+.pr-card h3 { margin: 0; font-size: 1.04rem; font-weight: 700; }
+.pr-card p { margin: 0; font-size: .89rem; line-height: 1.55; color: var(--cat-ink-soft); }
+.pr-card .tag { margin-top: auto; padding-top: 8px; font-size: 11.5px; font-weight: 700; color: var(--cat-accent); letter-spacing: .04em; text-transform: uppercase; }
+
+.pr-section-head { display: flex; align-items: center; gap: 14px; margin: 30px 0 16px; }
+.pr-section-head h2 { font-family: 'Bricolage Grotesque', 'Inter', sans-serif; font-size: 1.32rem; margin: 0; white-space: nowrap; }
+.pr-section-head .rule { flex: 1; height: 1px; background: var(--cat-line); }
+
+/* ── Prose ─────────────────────────────────────────────────────── */
+.pr-prose { max-width: 68ch; line-height: 1.68; }
+.pr-prose h2 { font-family: 'Bricolage Grotesque', 'Inter', sans-serif; font-size: 1.32rem; margin: 34px 0 11px; }
+.pr-prose h3 { font-size: 1.04rem; margin: 24px 0 8px; color: var(--cat-accent); }
+.pr-prose p { margin: 0 0 13px; }
+.pr-prose ul, .pr-prose ol { margin: 0 0 13px; padding-left: 21px; }
+.pr-prose li { margin: 0 0 6px; }
+.pr-prose a { color: var(--cat-accent); font-weight: 600; }
+.pr-prose table { width: 100%; border-collapse: collapse; margin: 0 0 16px; font-size: .95rem; }
+.pr-prose table th, .pr-prose table td { border: 1px solid var(--cat-line); padding: 8px 11px; text-align: left; }
+.pr-prose table th { background: var(--cat-paper-2); }
+.pr-related { list-style: none; padding: 0; display: flex; flex-wrap: wrap; gap: 9px 20px; }
+.pr-related a { color: var(--cat-accent); font-weight: 600; text-decoration: none; }
+.pr-related a:hover { text-decoration: underline; }
+
+@media (max-width: 700px) {
+  .pr-wrap, .pr-hero, .pr-crumb { padding-left: 16px; padding-right: 16px; }
+  .sheet { padding: 20px 16px 22px; }
+  .sheet .keybox ul { columns: 1; }
+}
+
+/* ── Print ─────────────────────────────────────────────────────── */
+@page { size: letter portrait; margin: 0.5in; }
+
+@media print {
+  html, body { background: #fff !important; margin: 0; padding: 0; }
+  nav, .pr-hero, .pr-crumb, .pr-actions, .pr-prose, .pr-related-wrap,
+  .site-footer, footer, .lg-search-overlay, .pr-noprint { display: none !important; }
+  .pr-wrap { max-width: none; padding: 0; margin: 0; }
+  .sheet {
+    box-shadow: none !important; border: none !important; border-radius: 0 !important;
+    padding: 0 !important; margin: 0 !important; max-width: none !important;
+    width: 100%; page-break-inside: avoid;
+  }
+  .sheet th { background: #EEE !important; }
+  .sheet td.lbl { background: #FAFAFA !important; }
+  .sheet tr.total td { background: #EEE !important; }
+  .sheet tr.rule-row td { background: #000 !important; }
+  .sheet, .sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+  .sheet-foot { color: #666 !important; }
+  a[href]:after { content: none !important; }
+}

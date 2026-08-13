@@ -2,7 +2,7 @@
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
   <url><loc>https://limestonegames.com/</loc><lastmod>2026-08-13</lastmod><priority>1.0</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://limestonegames.com/arcade/</loc><lastmod>2026-07-01</lastmod><priority>0.9</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://limestonegames.com/casino/</loc><lastmod>2026-06-18</lastmod><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://limestonegames.com/casino/</loc><lastmod>2026-08-13</lastmod><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://limestonegames.com/kids/</loc><lastmod>2026-08-13</lastmod><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://limestonegames.com/strategy/</loc><lastmod>2026-08-13</lastmod><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://limestonegames.com/utilities/</loc><lastmod>2026-05-21</lastmod><priority>0.8</priority><changefreq>weekly</changefreq></url>
@@ -75,4 +75,14 @@
   <url><loc>https://limestonegames.com/privacy</loc><lastmod>2026-08-13</lastmod><priority>0.3</priority><changefreq>yearly</changefreq></url>
   <url><loc>https://limestonegames.com/dogs/</loc><lastmod>2026-08-13</lastmod><priority>0.9</priority><changefreq>monthly</changefreq></url>
   <url><loc>https://limestonegames.com/dogs/play</loc><lastmod>2026-08-13</lastmod><priority>0.85</priority><changefreq>daily</changefreq></url>
+  <url><loc>https://limestonegames.com/euchre/</loc><lastmod>2026-08-13</lastmod><priority>0.85</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://limestonegames.com/printables/</loc><lastmod>2026-08-13</lastmod><priority>0.8</priority><changefreq>monthly</changefreq></url>
+  <url><loc>https://limestonegames.com/printables/yahtzee-score-sheet/</loc><lastmod>2026-08-13</lastmod><priority>0.75</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://limestonegames.com/printables/farkle-score-sheet/</loc><lastmod>2026-08-13</lastmod><priority>0.75</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://limestonegames.com/printables/spades-score-sheet/</loc><lastmod>2026-08-13</lastmod><priority>0.75</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://limestonegames.com/printables/hearts-score-sheet/</loc><lastmod>2026-08-13</lastmod><priority>0.75</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://limestonegames.com/printables/euchre-score-sheet/</loc><lastmod>2026-08-13</lastmod><priority>0.75</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://limestonegames.com/printables/three-card-poker-payouts/</loc><lastmod>2026-08-13</lastmod><priority>0.75</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://limestonegames.com/printables/ultimate-tic-tac-toe-board/</loc><lastmod>2026-08-13</lastmod><priority>0.75</priority><changefreq>yearly</changefreq></url>
+  <url><loc>https://limestonegames.com/printables/crazy-eights-rules/</loc><lastmod>2026-08-13</lastmod><priority>0.75</priority><changefreq>yearly</changefreq></url>
 </urlset>
