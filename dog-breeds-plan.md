@@ -25,8 +25,8 @@ dogs/
 person, the game uses the same predicates to build clues and to pick
 Odd-One-Out sets. One source of truth for what a trait *means*.
 
-Catalog placement: `cat: 'puzzle'` (→ Strategy landing page). It is not a kids'
-game — the Finder is squarely for adults.
+Catalog placement (settled 2026-08-13): two entries, not one. Pup Quiz is
+`cat: 'kids'`; the Finder is `cat: 'puzzle'` (→ Strategy). See §6.
 
 ## 2. Database (`breeds.js`) — **built**
 
