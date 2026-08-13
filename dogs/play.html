@@ -1,0 +1,809 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#8A5A2B">
+    <title>Pup Quiz — Guess the Dog Breed | Limestone Games</title>
+    <meta name="description" content="A daily dog breed guessing game. Five clues, one breed — guess it in as few as you can, then share your score. Plus Higher or Lower and Odd One Out across 113 breeds. Free, runs in your browser.">
+    <meta name="keywords" content="dog breed quiz, guess the dog breed, daily dog game, dog breed game, dog trivia, name that breed, dog breed guessing game">
+    <meta property="og:title" content="Pup Quiz — Guess the Dog Breed">
+    <meta property="og:description" content="Five clues, one breed. A new puzzle every day, plus Higher or Lower and Odd One Out.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/dogs/play.html">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Pup Quiz — Guess the Dog Breed">
+    <meta name="twitter:description" content="Five clues, one breed. A new puzzle every day.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/dogs/play.html">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Dog Breed Finder","item":"https://limestonegames.com/dogs/"},{"@type":"ListItem","position":3,"name":"Pup Quiz","item":"https://limestonegames.com/dogs/play.html"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"Game","name":"Pup Quiz","url":"https://limestonegames.com/dogs/play.html","genre":"Puzzle","gamePlatform":"Web browser","description":"A daily dog breed guessing game with five progressive clues, plus Higher or Lower and Odd One Out modes.","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"}}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../category.css?v=20260521a">
+    <link rel="stylesheet" href="../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../utility.css?v=20260522a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <!-- AdSense loader disabled until approved: <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+
+    <style>
+      /* Borrows the utilities control kit, not its teal palette. Same selector
+         as utility.css so cascade order decides, not specificity. */
+      .cat-root[data-category="utilities"] {
+        --cat-accent:        #8A5A2B;
+        --cat-tint:          #F4E7D6;
+        --cat-glow:          rgba(138, 90, 43, 0.28);
+        --cat-eyebrow-color: #8A5A2B;
+        --cat-cta-bg:        #8A5A2B;
+        --cat-cta-ink:       #fff;
+      }
+
+      /* This is a game page, so the hero is trimmed hard: the clues and the
+         guess box have to be reachable without scrolling. */
+      .u-crumb { margin-top: 16px; }
+      .u-head { margin: 12px 0 16px; }
+      .u-head h1 { font-size: 34px; margin-top: 12px; }
+      .u-lede { font-size: 15px; margin-top: 10px; max-width: 70ch; }
+      .u-lede a { color: var(--cat-eyebrow-color); text-decoration: underline; text-underline-offset: 2px; }
+      .u-lede a:hover { color: var(--cat-ink); }
+
+      .pq-modes { display: flex; gap: 6px; flex-wrap: wrap; margin-bottom: 14px; }
+      .pq-sub { display: flex; gap: 6px; align-items: center; flex-wrap: wrap; }
+
+      .pq-head {
+        display: flex; align-items: baseline; justify-content: space-between;
+        gap: 14px; flex-wrap: wrap; margin-bottom: 14px;
+      }
+      .pq-title {
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 22px; font-weight: 600; color: var(--cat-ink); line-height: 1.15;
+      }
+      .pq-stats { display: flex; gap: 16px; }
+      .pq-stat { text-align: right; }
+      .pq-stat .n {
+        font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px;
+        font-weight: 600; line-height: 1; color: var(--cat-ink);
+      }
+      .pq-stat .l {
+        font-family: var(--u-mono); font-size: 9.5px; letter-spacing: .1em;
+        text-transform: uppercase; color: var(--cat-ink-soft); margin-top: 5px;
+      }
+
+      /* ── Clue ladder ── */
+      .pq-clues { display: grid; gap: 6px; margin-bottom: 12px; }
+      .pq-clue {
+        display: grid; grid-template-columns: 24px 1fr; gap: 10px; align-items: start;
+        padding: 8px 13px; border-radius: 12px;
+        background: var(--cat-bg); border: 1px solid var(--cat-line);
+        font-size: 13.5px; line-height: 1.45; color: var(--cat-ink);
+      }
+      .pq-clue .num {
+        font-family: var(--u-mono); font-size: 11px; font-weight: 500;
+        color: var(--cat-eyebrow-color); background: var(--cat-tint);
+        border-radius: 999px; width: 22px; height: 22px;
+        display: grid; place-items: center;
+      }
+      .pq-clue.locked { color: var(--cat-ink-soft); opacity: .55; font-style: italic; }
+      .pq-clue.locked .num { background: var(--cat-line); color: var(--cat-ink-soft); }
+
+      /* ── Guessing ── */
+      .pq-guessbox { position: relative; }
+      .pq-guessrow { display: flex; gap: 8px; }
+      .pq-guessrow .u-input { flex: 1; }
+      .pq-suggest {
+        position: absolute; left: 0; right: 0; top: calc(100% + 6px); z-index: 30;
+        background: var(--cat-paper); border: 1px solid var(--cat-line);
+        border-radius: 14px; overflow: hidden; display: none;
+        box-shadow: 0 18px 40px -22px rgba(26, 22, 18, .5);
+      }
+      .pq-suggest.show { display: block; }
+      .pq-suggest button {
+        display: block; width: 100%; text-align: left; border: 0; cursor: pointer;
+        background: none; font-family: inherit; font-size: 14px; color: var(--cat-ink);
+        padding: 10px 14px;
+      }
+      .pq-suggest button:hover, .pq-suggest button.active { background: var(--cat-tint); }
+      .pq-suggest button small {
+        font-family: var(--u-mono); font-size: 10px; color: var(--cat-ink-soft);
+        text-transform: uppercase; letter-spacing: .05em; margin-left: 8px;
+      }
+
+      .pq-tries { display: grid; gap: 6px; margin-top: 12px; }
+      .pq-try {
+        display: flex; align-items: center; gap: 9px;
+        font-size: 13.5px; color: var(--cat-ink-soft);
+        padding: 8px 12px; border-radius: 11px; background: var(--cat-bg);
+        border: 1px solid var(--cat-line-2);
+      }
+      .pq-try .mark { font-size: 13px; }
+      .pq-try.right { color: #1B6B47; background: #E2F4EC; border-color: #B6E0CB; }
+
+      /* ── Result ── */
+      .pq-result { display: none; }
+      .pq-result.show { display: block; }
+      .pq-answer { display: flex; gap: 16px; align-items: flex-start; margin-bottom: 14px; }
+      .pq-answer img {
+        width: 156px; aspect-ratio: 4 / 3; object-fit: cover;
+        border-radius: 14px; display: block; background: var(--cat-bg); flex: 0 0 auto;
+      }
+      .pq-answer .who { min-width: 0; }
+      .pq-answer .who h3 {
+        font-family: 'Bricolage Grotesque', sans-serif; font-size: 22px;
+        font-weight: 600; color: var(--cat-ink); line-height: 1.15;
+      }
+      .pq-answer .who .meta {
+        font-family: var(--u-mono); font-size: 10.5px; letter-spacing: .05em;
+        text-transform: uppercase; color: var(--cat-ink-soft); margin-top: 6px;
+      }
+      .pq-answer .who p { font-size: 13.5px; color: var(--cat-ink-soft); line-height: 1.6; margin: 10px 0 0; }
+      .pq-credit {
+        font-family: var(--u-mono); font-size: 9.5px; color: var(--cat-ink-soft);
+        margin: 8px 0 0; line-height: 1.45;
+      }
+      .pq-credit a { color: inherit; }
+      .pq-outcome {
+        font-size: 14.5px; font-weight: 600; color: var(--cat-ink); margin-bottom: 4px;
+      }
+      .pq-outcome.miss { color: #A2563E; }
+      .pq-squares {
+        font-size: 20px; letter-spacing: 3px; margin: 4px 0 14px;
+      }
+      .pq-actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+      /* ── Higher / Lower ── */
+      .hl-q {
+        font-family: 'Bricolage Grotesque', sans-serif; font-size: 20px; font-weight: 600;
+        color: var(--cat-ink); text-align: center; margin-bottom: 14px; line-height: 1.25;
+      }
+      .hl-pair { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+      .hl-card {
+        border: 1px solid var(--cat-line); border-radius: 18px; overflow: hidden;
+        background: var(--cat-paper); cursor: pointer; padding: 0; text-align: center;
+        font-family: inherit; transition: border-color .15s, transform .12s;
+      }
+      .hl-card:hover:not(:disabled) { border-color: var(--cat-accent); transform: translateY(-2px); }
+      .hl-card img {
+        width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block;
+        background: var(--cat-bg);
+      }
+      .hl-card .nm {
+        font-family: 'Bricolage Grotesque', sans-serif; font-size: 15px; font-weight: 600;
+        color: var(--cat-ink); padding: 11px 12px 4px; line-height: 1.2;
+      }
+      .hl-card .vl {
+        font-family: var(--u-mono); font-size: 12px; color: var(--cat-ink-soft);
+        padding: 0 12px 12px; min-height: 26px;
+      }
+      .hl-card.win { border-color: #1B6B47; background: #E2F4EC; }
+      .hl-card.lose { border-color: #C46A62; background: #FBE7E6; }
+
+      /* ── Odd One Out ── */
+      .oo-q {
+        font-family: 'Bricolage Grotesque', sans-serif; font-size: 19px; font-weight: 600;
+        color: var(--cat-ink); text-align: center; margin-bottom: 14px; line-height: 1.3;
+      }
+      .oo-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 10px; }
+      .oo-card {
+        border: 1px solid var(--cat-line); border-radius: 16px; overflow: hidden;
+        background: var(--cat-paper); cursor: pointer; padding: 0; text-align: center;
+        font-family: inherit; transition: border-color .15s, transform .12s;
+      }
+      .oo-card:hover:not(:disabled) { border-color: var(--cat-accent); transform: translateY(-2px); }
+      .oo-card img {
+        width: 100%; aspect-ratio: 1 / 1; object-fit: cover; display: block;
+        background: var(--cat-bg);
+      }
+      .oo-card .nm {
+        font-size: 12.5px; font-weight: 600; color: var(--cat-ink);
+        padding: 9px 8px; line-height: 1.25;
+        /* Reserve two lines so a wrapping name doesn't make its card taller
+           than the others in the row. */
+        min-height: calc(2 * 1.25em + 18px);
+        display: flex; align-items: center; justify-content: center;
+      }
+      .oo-card.win { border-color: #1B6B47; background: #E2F4EC; }
+      .oo-card.lose { border-color: #C46A62; background: #FBE7E6; }
+
+      .pq-feedback {
+        text-align: center; font-size: 14px; color: var(--cat-ink-soft);
+        margin-top: 14px; line-height: 1.55; min-height: 22px;
+      }
+      .pq-feedback b { color: var(--cat-ink); }
+
+      .pq-note {
+        font-family: var(--u-mono); font-size: 11.5px; color: var(--cat-ink-soft);
+        margin-top: 16px; line-height: 1.55;
+      }
+
+      @media (max-width: 700px) {
+        .oo-grid { grid-template-columns: repeat(2, 1fr); }
+        .pq-answer { flex-direction: column; }
+        .pq-answer img { width: 100%; }
+        .hl-q { font-size: 17px; }
+      }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/dogs/">Dog Breed Finder</a><span class="sep">/</span>
+            <span class="cur">Pup Quiz</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Dogs · Guessing Game</span>
+            <h1>Pup <em>Quiz</em></h1>
+            <p class="u-lede">Five clues, one breed — guess it in as few as you can. New puzzle daily. <a href="/dogs/">Looking for a dog to actually own?</a></p>
+        </header>
+
+        <div class="pq-modes" role="tablist" aria-label="Game mode">
+            <button class="u-tab active" id="tab-quiz" role="tab" aria-selected="true" type="button">Pup Quiz</button>
+            <button class="u-tab" id="tab-hl" role="tab" aria-selected="false" type="button">Higher or Lower</button>
+            <button class="u-tab" id="tab-oo" role="tab" aria-selected="false" type="button">Odd One Out</button>
+        </div>
+
+        <!-- ── Pup Quiz ─────────────────────────────────────────────── -->
+        <section class="u-panel" id="panel-quiz">
+            <div class="pq-head">
+                <div>
+                    <div class="pq-title" id="quiz-title">Today's breed</div>
+                    <div class="pq-sub" style="margin-top:8px">
+                        <button class="u-tab active" id="mode-daily" type="button">Daily</button>
+                        <button class="u-tab" id="mode-endless" type="button">Endless</button>
+                    </div>
+                </div>
+                <div class="pq-stats">
+                    <div class="pq-stat"><div class="n" id="stat-streak">0</div><div class="l">Streak</div></div>
+                    <div class="pq-stat"><div class="n" id="stat-best">0</div><div class="l">Best</div></div>
+                </div>
+            </div>
+
+            <div class="pq-clues" id="clues"></div>
+
+            <div class="pq-guessbox" id="guessbox">
+                <div class="pq-guessrow">
+                    <input class="u-input" id="guess" type="text" autocomplete="off" spellcheck="false"
+                           placeholder="Name the breed…" aria-label="Your guess" aria-autocomplete="list">
+                    <button class="u-btn" id="submit" type="button">Guess</button>
+                    <button class="u-btn ghost" id="skip" type="button" title="Reveal the next clue">Next clue</button>
+                </div>
+                <div class="pq-suggest" id="suggest" role="listbox"></div>
+            </div>
+
+            <div class="pq-tries" id="tries"></div>
+
+            <div class="pq-result" id="result">
+                <div class="pq-answer">
+                    <img id="ans-photo" src="" alt="">
+                    <div class="who">
+                        <h3 id="ans-name"></h3>
+                        <div class="meta" id="ans-meta"></div>
+                        <p id="ans-blurb"></p>
+                        <p class="pq-credit" id="ans-credit"></p>
+                    </div>
+                </div>
+                <div class="pq-outcome" id="outcome"></div>
+                <div class="pq-squares" id="squares"></div>
+                <div class="pq-actions">
+                    <button class="u-btn" id="share" type="button">Share result</button>
+                    <button class="u-btn ghost" id="again" type="button">Another breed</button>
+                    <a class="u-btn ghost" href="/dogs/" id="see-finder">See it in the finder</a>
+                </div>
+            </div>
+
+            <p class="pq-note" id="quiz-note">The daily puzzle is the same for everyone and changes at midnight your time.</p>
+        </section>
+
+        <!-- ── Higher / Lower ───────────────────────────────────────── -->
+        <section class="u-panel" id="panel-hl" hidden>
+            <div class="pq-head">
+                <div class="pq-title">Higher or Lower</div>
+                <div class="pq-stats">
+                    <div class="pq-stat"><div class="n" id="hl-streak">0</div><div class="l">Streak</div></div>
+                    <div class="pq-stat"><div class="n" id="hl-best">0</div><div class="l">Best</div></div>
+                </div>
+            </div>
+            <div class="hl-q" id="hl-question">—</div>
+            <div class="hl-pair" id="hl-pair"></div>
+            <div class="pq-feedback" id="hl-feedback"></div>
+        </section>
+
+        <!-- ── Odd One Out ──────────────────────────────────────────── -->
+        <section class="u-panel" id="panel-oo" hidden>
+            <div class="pq-head">
+                <div class="pq-title">Odd One Out</div>
+                <div class="pq-stats">
+                    <div class="pq-stat"><div class="n" id="oo-streak">0</div><div class="l">Streak</div></div>
+                    <div class="pq-stat"><div class="n" id="oo-best">0</div><div class="l">Best</div></div>
+                </div>
+            </div>
+            <div class="oo-q" id="oo-question">—</div>
+            <div class="oo-grid" id="oo-grid"></div>
+            <div class="pq-feedback" id="oo-feedback"></div>
+        </section>
+
+        <section class="u-about">
+            <h2>How to play Pup Quiz</h2>
+            <p>A breed is chosen and the first clue is shown. Type a guess, or ask for the next clue. Each clue narrows it further — the first tells you the breed group and where it was developed, and the last is a fact distinctive enough to give the answer away. Guessing early is worth more, so the scoring rewards you for committing before the easy clues arrive.</p>
+
+            <h3>The daily puzzle</h3>
+            <p>Everyone gets the same breed on the same day, and it changes at midnight in your own time zone. Your streak counts consecutive days solved, and it's stored in your browser — there's no account, and nothing is uploaded. The daily draws from the more recognizable breeds so it stays gettable; the endless mode uses all 113.</p>
+
+            <h3>The other two modes</h3>
+            <p><b>Higher or Lower</b> shows two breeds and one question — which weighs more, lives longer, sheds more. Pairs that are too close to call are never used, so there's always a defensible right answer. <b>Odd One Out</b> shows four breeds where three share a breed group or a country of origin, and the question always names which. Asking "which doesn't belong?" without saying on what would have several defensible answers, which makes it a coin flip rather than a puzzle.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>Where do the clues come from?</summary>
+                    <p>The same breed database that powers the <a href="/dogs/">breed finder</a>. Group, origin, height, weight, lifespan and coat follow published breed standards, so the measurable clues are checkable facts rather than impressions.</p>
+                </details>
+                <details>
+                    <summary>Why isn't my doodle in the game?</summary>
+                    <p>Crossbreeds are in the finder but deliberately out of the quiz. They have no breed standard, so there's no fair set of clues to give — two dogs from the same litter can differ enough that any clue about size or coat would be a guess.</p>
+                </details>
+                <details>
+                    <summary>Does it accept nicknames?</summary>
+                    <p>Yes. Common alternatives are accepted — "Jack Russell", "Alsatian", "Frenchie", "Blue Heeler" and similar all resolve to the right breed, and capitalization, spacing and accents don't matter.</p>
+                </details>
+                <details>
+                    <summary>Do I lose my streak if I miss a day?</summary>
+                    <p>Yes — the daily streak counts consecutive days. It lives in this browser's local storage, so clearing site data or switching device resets it.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/dogs/">Breed finder</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <div class="u-toast" id="toast">Copied</div>
+
+    <script src="breeds.js?v=20260812a"></script>
+    <script src="clues.js?v=20260812a"></script>
+    <script src="photo-credits.js?v=20260812a"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        var Q = window.DOG_QUIZ;
+        var CREDITS = window.DOG_PHOTO_CREDITS || {};
+        var $ = function (id) { return document.getElementById(id); };
+
+        var GROUP_LABEL = {
+            sporting: 'Sporting', hound: 'Hound', working: 'Working', terrier: 'Terrier',
+            toy: 'Toy', 'non-sporting': 'Non-sporting', herding: 'Herding', crossbreed: 'Crossbreed',
+        };
+        var MAX_CLUES = 5;
+
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+        function load(key, fallback) {
+            try {
+                var raw = localStorage.getItem(key);
+                return raw ? JSON.parse(raw) : fallback;
+            } catch (e) { return fallback; }
+        }
+        function save(key, value) {
+            try { localStorage.setItem(key, JSON.stringify(value)); } catch (e) { /* ignore */ }
+        }
+        function toast(msg) {
+            var t = $('toast');
+            t.textContent = msg;
+            t.classList.add('show');
+            setTimeout(function () { t.classList.remove('show'); }, 1600);
+        }
+
+        // ══ Pup Quiz ═══════════════════════════════════════════════════
+        var K_DAILY = 'pupQuizDaily';
+        var K_ENDLESS = 'pupQuizEndless';
+
+        var daily = load(K_DAILY, { lastKey: null, streak: 0, best: 0, done: {} });
+        var endless = load(K_ENDLESS, { wins: 0, games: 0, best: 0, streak: 0 });
+
+        var isDaily = true;
+        var state = null;   // { breed, revealed, tries[], over, won }
+
+        function newRound(breed) {
+            state = { breed: breed, revealed: 1, tries: [], over: false, won: false };
+        }
+
+        function startDaily() {
+            isDaily = true;
+            $('mode-daily').classList.add('active');
+            $('mode-endless').classList.remove('active');
+            $('quiz-title').textContent = "Today's breed";
+            $('quiz-note').textContent = 'The daily puzzle is the same for everyone and changes at midnight your time.';
+            newRound(Q.dailyBreed());
+
+            // Restore a finished daily rather than letting it be replayed.
+            var key = Q.dailyKey();
+            var rec = daily.done && daily.done[key];
+            if (rec) {
+                state.revealed = rec.revealed;
+                state.tries = rec.tries || [];
+                state.over = true;
+                state.won = rec.won;
+            }
+            $('again').hidden = true;
+            renderQuiz();
+        }
+
+        function startEndless() {
+            isDaily = false;
+            $('mode-endless').classList.add('active');
+            $('mode-daily').classList.remove('active');
+            $('quiz-title').textContent = 'Endless';
+            $('quiz-note').textContent = 'Endless mode draws from all ' + Q.PLAYABLE.length + ' breeds, including the obscure ones.';
+            $('again').hidden = false;
+            newRound(Q.randomBreed());
+            renderQuiz();
+        }
+
+        function stats() { return isDaily ? daily : endless; }
+
+        function renderStats() {
+            var s = stats();
+            $('stat-streak').textContent = s.streak || 0;
+            $('stat-best').textContent = s.best || 0;
+        }
+
+        function renderQuiz() {
+            var b = state.breed;
+            var clues = Q.clues(b);
+
+            $('clues').innerHTML = clues.map(function (c, i) {
+                var open = i < state.revealed || state.over;
+                return '<div class="pq-clue' + (open ? '' : ' locked') + '">' +
+                    '<span class="num">' + (i + 1) + '</span>' +
+                    '<span>' + (open ? esc(c) : 'Locked — guess or ask for the next clue') + '</span>' +
+                    '</div>';
+            }).join('');
+
+            $('tries').innerHTML = state.tries.map(function (t) {
+                return '<div class="pq-try' + (t.right ? ' right' : '') + '">' +
+                    '<span class="mark">' + (t.right ? '✓' : '✗') + '</span>' +
+                    '<span>' + esc(t.text) + '</span></div>';
+            }).join('');
+
+            $('guessbox').hidden = state.over;
+            $('skip').disabled = state.revealed >= MAX_CLUES;
+            $('skip').textContent = state.revealed >= MAX_CLUES ? 'No clues left' : 'Next clue';
+
+            if (state.over) showResult(); else $('result').classList.remove('show');
+            renderStats();
+        }
+
+        function squares() {
+            var out = '';
+            for (var i = 0; i < MAX_CLUES; i++) {
+                if (state.won && i === state.revealed - 1) out += '🟩';
+                else if (i < state.revealed) out += (state.won ? '⬜' : '🟥');
+                else out += '⬜';
+            }
+            return out;
+        }
+
+        function showResult() {
+            var b = state.breed;
+            $('result').classList.add('show');
+            $('ans-photo').src = 'photos/' + b.slug + '.jpg';
+            $('ans-photo').alt = 'A ' + b.name;
+            $('ans-name').textContent = b.name;
+            $('outcome').textContent = state.won
+                ? 'Got it on clue ' + state.revealed + ' of ' + MAX_CLUES + '.'
+                : 'Not this time — all ' + MAX_CLUES + ' clues used.';
+            $('outcome').classList.toggle('miss', !state.won);
+            $('ans-meta').textContent = (GROUP_LABEL[b.group] || b.group) + ' · ' + b.size + ' · ' + b.origin;
+            $('ans-blurb').textContent = b.blurb;
+
+            var c = CREDITS[b.slug];
+            $('ans-credit').innerHTML = c
+                ? 'Photo: ' + esc(c.artist) + ' · ' +
+                  (c.licenseUrl ? '<a href="' + esc(c.licenseUrl) + '" rel="nofollow noopener" target="_blank">' + esc(c.license) + '</a>' : esc(c.license)) +
+                  (c.source ? ' · <a href="' + esc(c.source) + '" rel="nofollow noopener" target="_blank">source</a>' : '')
+                : '';
+
+            $('squares').textContent = squares();
+            $('see-finder').href = '/dogs/#' + b.slug;
+        }
+
+        function finish(won) {
+            state.over = true;
+            state.won = won;
+
+            if (isDaily) {
+                var key = Q.dailyKey();
+                if (!daily.done) daily.done = {};
+                if (!daily.done[key]) {
+                    daily.done[key] = { won: won, revealed: state.revealed, tries: state.tries };
+                    if (won) {
+                        // Consecutive days only: yesterday's key must be the last one solved.
+                        var y = new Date();
+                        y.setDate(y.getDate() - 1);
+                        daily.streak = (daily.lastKey === Q.dailyKey(y)) ? (daily.streak || 0) + 1 : 1;
+                        daily.best = Math.max(daily.best || 0, daily.streak);
+                    } else {
+                        daily.streak = 0;
+                    }
+                    daily.lastKey = key;
+                    // Keep storage small — only the last 30 days matter.
+                    var keys = Object.keys(daily.done).sort();
+                    while (keys.length > 30) delete daily.done[keys.shift()];
+                    save(K_DAILY, daily);
+                }
+            } else {
+                endless.games = (endless.games || 0) + 1;
+                if (won) {
+                    endless.wins = (endless.wins || 0) + 1;
+                    endless.streak = (endless.streak || 0) + 1;
+                    endless.best = Math.max(endless.best || 0, endless.streak);
+                } else {
+                    endless.streak = 0;
+                }
+                save(K_ENDLESS, endless);
+            }
+            renderQuiz();
+        }
+
+        function submitGuess(text) {
+            if (!text || state.over) return;
+            var slug = Q.resolveGuess(text);
+            if (!slug) {
+                var hits = Q.suggest(text, 1);
+                toast(hits.length ? 'Did you mean ' + hits[0].name + '?' : 'No breed by that name');
+                return;
+            }
+            if (slug === state.breed.slug) {
+                state.tries.push({ text: text, right: true });
+                finish(true);
+                return;
+            }
+            state.tries.push({ text: text, right: false });
+            if (state.revealed >= MAX_CLUES) { finish(false); return; }
+            state.revealed++;
+            $('guess').value = '';
+            hideSuggest();
+            renderQuiz();
+        }
+
+        // ── Autocomplete ───────────────────────────────────────────────
+        var sugIndex = -1;
+        function hideSuggest() { $('suggest').classList.remove('show'); sugIndex = -1; }
+
+        function renderSuggest() {
+            var text = $('guess').value.trim();
+            if (text.length < 2) { hideSuggest(); return; }
+            var hits = Q.suggest(text, 6);
+            if (!hits.length) { hideSuggest(); return; }
+            $('suggest').innerHTML = hits.map(function (b, i) {
+                return '<button type="button" data-name="' + esc(b.name) + '"' +
+                    (i === sugIndex ? ' class="active"' : '') + '>' + esc(b.name) +
+                    '<small>' + esc(GROUP_LABEL[b.group] || b.group) + '</small></button>';
+            }).join('');
+            $('suggest').classList.add('show');
+        }
+
+        $('guess').addEventListener('input', function () { sugIndex = -1; renderSuggest(); });
+        $('guess').addEventListener('keydown', function (e) {
+            var items = $('suggest').querySelectorAll('button');
+            if (e.key === 'ArrowDown' && items.length) {
+                e.preventDefault(); sugIndex = Math.min(sugIndex + 1, items.length - 1); renderSuggest();
+            } else if (e.key === 'ArrowUp' && items.length) {
+                e.preventDefault(); sugIndex = Math.max(sugIndex - 1, -1); renderSuggest();
+            } else if (e.key === 'Enter') {
+                e.preventDefault();
+                if (sugIndex >= 0 && items[sugIndex]) submitGuess(items[sugIndex].dataset.name);
+                else submitGuess($('guess').value.trim());
+            } else if (e.key === 'Escape') {
+                hideSuggest();
+            }
+        });
+        $('suggest').addEventListener('click', function (e) {
+            var btn = e.target.closest('button');
+            if (btn) submitGuess(btn.dataset.name);
+        });
+        document.addEventListener('click', function (e) {
+            if (!e.target.closest('.pq-guessbox')) hideSuggest();
+        });
+
+        $('submit').addEventListener('click', function () { submitGuess($('guess').value.trim()); });
+        $('skip').addEventListener('click', function () {
+            if (state.over || state.revealed >= MAX_CLUES) return;
+            state.revealed++;
+            renderQuiz();
+        });
+        $('again').addEventListener('click', function () {
+            newRound(Q.randomBreed());
+            $('guess').value = '';
+            renderQuiz();
+        });
+        $('mode-daily').addEventListener('click', startDaily);
+        $('mode-endless').addEventListener('click', startEndless);
+
+        $('share').addEventListener('click', function () {
+            var line = isDaily ? 'Pup Quiz — ' + Q.dailyKey() : 'Pup Quiz — endless';
+            var score = state.won ? 'got it on clue ' + state.revealed + '/' + MAX_CLUES : 'missed it';
+            var text = line + '\n' + squares() + '\n' + score + '\nlimestonegames.com/dogs/play.html';
+            if (navigator.share) {
+                navigator.share({ text: text }).catch(function () { /* dismissed */ });
+            } else if (navigator.clipboard) {
+                navigator.clipboard.writeText(text).then(function () { toast('Result copied'); },
+                    function () { toast('Could not copy'); });
+            } else {
+                toast('Sharing not supported');
+            }
+        });
+
+        // ══ Higher / Lower ═════════════════════════════════════════════
+        var K_HL = 'dogHigherLower';
+        var hl = load(K_HL, { games: 0, best: 0, streak: 0 });
+        var hlRound = null, hlLocked = false;
+
+        function hlNew() {
+            hlRound = Q.higherLowerRound();
+            hlLocked = false;
+            $('hl-question').textContent = 'Which ' + hlRound.trait.label + '?';
+            $('hl-feedback').textContent = '';
+            $('hl-pair').innerHTML = ['left', 'right'].map(function (side) {
+                var b = hlRound[side];
+                return '<button class="hl-card" data-slug="' + b.slug + '" type="button">' +
+                    '<img src="photos/' + b.slug + '.jpg" alt="" loading="lazy">' +
+                    '<div class="nm">' + esc(b.name) + '</div>' +
+                    '<div class="vl"></div></button>';
+            }).join('');
+            $('hl-streak').textContent = hl.streak || 0;
+            $('hl-best').textContent = hl.best || 0;
+        }
+
+        $('hl-pair').addEventListener('click', function (e) {
+            var btn = e.target.closest('.hl-card');
+            if (!btn || hlLocked) return;
+            hlLocked = true;
+            var right = btn.dataset.slug === hlRound.answer;
+
+            // Show both actual values, so the answer is checkable, not asserted.
+            var cards = $('hl-pair').querySelectorAll('.hl-card');
+            cards[0].querySelector('.vl').textContent = hlRound.values.left;
+            cards[1].querySelector('.vl').textContent = hlRound.values.right;
+            cards.forEach(function (c) {
+                c.disabled = true;
+                if (c.dataset.slug === hlRound.answer) c.classList.add('win');
+                else if (c === btn) c.classList.add('lose');
+            });
+
+            hl.games = (hl.games || 0) + 1;
+            if (right) {
+                hl.streak = (hl.streak || 0) + 1;
+                hl.best = Math.max(hl.best || 0, hl.streak);
+                $('hl-feedback').innerHTML = '<b>Correct.</b> Next one coming up…';
+            } else {
+                hl.streak = 0;
+                $('hl-feedback').innerHTML = '<b>Not quite.</b> Next one coming up…';
+            }
+            save(K_HL, hl);
+            $('hl-streak').textContent = hl.streak;
+            $('hl-best').textContent = hl.best;
+            setTimeout(hlNew, 1500);
+        });
+
+        // ══ Odd One Out ════════════════════════════════════════════════
+        var K_OO = 'dogOddOneOut';
+        var oo = load(K_OO, { games: 0, best: 0, streak: 0 });
+        var ooRound = null, ooLocked = false;
+
+        function ooNew() {
+            ooRound = Q.oddOneOutRound();
+            ooLocked = false;
+            $('oo-question').textContent = ooRound.question;
+            $('oo-feedback').textContent = '';
+            $('oo-grid').innerHTML = ooRound.options.map(function (b) {
+                return '<button class="oo-card" data-slug="' + b.slug + '" type="button">' +
+                    '<img src="photos/' + b.slug + '.jpg" alt="" loading="lazy">' +
+                    '<div class="nm">' + esc(b.name) + '</div></button>';
+            }).join('');
+            $('oo-streak').textContent = oo.streak || 0;
+            $('oo-best').textContent = oo.best || 0;
+        }
+
+        $('oo-grid').addEventListener('click', function (e) {
+            var btn = e.target.closest('.oo-card');
+            if (!btn || ooLocked) return;
+            ooLocked = true;
+            var right = btn.dataset.slug === ooRound.answer;
+            $('oo-grid').querySelectorAll('.oo-card').forEach(function (c) {
+                c.disabled = true;
+                if (c.dataset.slug === ooRound.answer) c.classList.add('win');
+                else if (c === btn) c.classList.add('lose');
+            });
+
+            oo.games = (oo.games || 0) + 1;
+            if (right) {
+                oo.streak = (oo.streak || 0) + 1;
+                oo.best = Math.max(oo.best || 0, oo.streak);
+            } else {
+                oo.streak = 0;
+            }
+            save(K_OO, oo);
+            $('oo-streak').textContent = oo.streak;
+            $('oo-best').textContent = oo.best;
+            $('oo-feedback').innerHTML = (right ? '<b>Correct.</b> ' : '<b>Not quite.</b> ') + esc(ooRound.because);
+            setTimeout(ooNew, 1900);
+        });
+
+        // ══ Mode switching ═════════════════════════════════════════════
+        var TABS = [
+            { tab: 'tab-quiz', panel: 'panel-quiz' },
+            { tab: 'tab-hl', panel: 'panel-hl', init: hlNew },
+            { tab: 'tab-oo', panel: 'panel-oo', init: ooNew },
+        ];
+        TABS.forEach(function (t) {
+            $(t.tab).addEventListener('click', function () {
+                TABS.forEach(function (o) {
+                    var on = o === t;
+                    $(o.tab).classList.toggle('active', on);
+                    $(o.tab).setAttribute('aria-selected', on ? 'true' : 'false');
+                    $(o.panel).hidden = !on;
+                });
+                if (t.init) t.init();
+            });
+        });
+
+        startDaily();
+    })();
+    </script>
+</body>
+</html>

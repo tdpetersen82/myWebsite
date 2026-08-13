@@ -4,8 +4,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Limestone Strategy — Chess, Othello, Chinese Checkers &amp; More</title>
-    <meta name="description" content="Free browser strategy &amp; puzzle games — chess, checkers, Othello, Yahtzee, Farkle, Chinese Checkers, Ultimate Tic-Tac-Toe, Mancala, backgammon, Connect 4, Sudoku, Minesweeper, 2048, and Mahjong Solitaire — plus a crossword maker to build, print, and share your own puzzles.">
-    <meta name="keywords" content="chess, checkers, othello, reversi, yahtzee, farkle, chinese checkers, ultimate tic-tac-toe, mancala, kalah, backgammon, connect 4, dots and boxes, sudoku, minesweeper, 2048, mahjong solitaire, crossword maker, make your own crossword, strategy games, browser strategy games, puzzle games">
+    <meta name="description" content="Free browser strategy &amp; puzzle games — chess, checkers, Othello, Yahtzee, Farkle, Chinese Checkers, Ultimate Tic-Tac-Toe, Mancala, backgammon, Connect 4, Sudoku, Minesweeper, 2048, and Mahjong Solitaire — plus Pup Quiz, a daily dog-breed guessing game, and a crossword maker to build, print, and share your own puzzles.">
+    <meta name="keywords" content="chess, checkers, othello, reversi, yahtzee, farkle, chinese checkers, ultimate tic-tac-toe, mancala, kalah, backgammon, connect 4, dots and boxes, sudoku, minesweeper, 2048, mahjong solitaire, pup quiz, dog breed quiz, daily puzzle, crossword maker, make your own crossword, strategy games, browser strategy games, puzzle games">
     <meta property="og:title" content="Limestone Strategy — Chess, Othello, Chinese Checkers &amp; More">
     <meta property="og:description" content="Strategy &amp; puzzle games — chess, Othello, Chinese Checkers, Mahjong Solitaire, and more. Three difficulty tiers, full rules, no downloads.">
     <meta property="og:type" content="website">
@@ -238,6 +238,27 @@
             <div class="rule"></div>
         </div>
         <div class="cat-grid two-col">
+
+            <a class="cat-card" href="../dogs/play.html">
+                <span class="cat-card-tag">New</span>
+                <div class="cat-card-head">
+                    <div class="cat-card-shot"><img src="../assets/thumbs/dogs.jpg" alt="" width="600" height="600" loading="lazy"></div>
+                    <div>
+                        <h3>Pup Quiz</h3>
+                        <div class="desc">Five clues, one dog breed. A new puzzle every day, plus Higher or Lower and Odd One Out.</div>
+                    </div>
+                </div>
+                <div class="cat-card-meta">
+                    <div><div class="l">Best streak</div><div class="v accent" id="card-dogs-best">—</div></div>
+                    <div><div class="l">Clues</div><div class="v sm">5</div></div>
+                    <div><div class="l">Breeds</div><div class="v sm">113</div></div>
+                    <div><div class="l">Modes</div><div class="v sm">3</div></div>
+                </div>
+                <div class="cat-card-foot">
+                    <span class="plays">Daily puzzle</span>
+                    <span class="play-btn">Play →</span>
+                </div>
+            </a>
 
             <a class="cat-card" href="../yahtzee/">
                 <span class="cat-card-tag">New</span>
@@ -862,6 +883,13 @@
             { const yz = readNum('yahtzeeHighScore'); if (yz != null) set('card-yahtzee-best', yz.toLocaleString()); }
             { const fk = readNum('farkleHighScore'); if (fk != null) set('card-farkle-best', fk.toLocaleString()); }
 
+            // Pup Quiz: best daily streak. Stored as a JSON record rather than
+            // a bare number, so readNum can't be used here.
+            try {
+                const pq = JSON.parse(localStorage.getItem('pupQuizDaily') || 'null');
+                if (pq && pq.best) set('card-dogs-best', pq.best);
+            } catch (e) {}
+
             // Aggregate stats
             const totalWins = Object.values(wins).reduce((s, v) => s + (v || 0), 0);
             const totalLosses = Object.values(losses).reduce((s, v) => s + (v || 0), 0);
@@ -888,7 +916,7 @@
             if (bestStreak > 0) set('strat-streak', bestStreak);
         })();
     </script>
-    <script src="../games-catalog.js?v=20260810b"></script>
+    <script src="../games-catalog.js?v=20260813a"></script>
     <script src="../global-search.js?v=20260619a"></script>
 </body>
 </html>

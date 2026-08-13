@@ -44,6 +44,8 @@
     { id: 'hangman',           name: 'Hangman',           cat: 'puzzle',  desc: 'Guess the word by theme. Build a streak.', color: '#2E8B57', isNew: true },
     { id: 'yahtzee',           name: 'Yahtzee',           cat: 'puzzle',  desc: 'Roll, hold, fill the card. Best total wins.', color: '#34558B', isNew: true },
     { id: 'farkle',            name: 'Farkle',            cat: 'puzzle',  desc: 'Push your luck to 10,000. Bank or bust.', color: '#B0413E', isNew: true },
+    // `url` override: /dogs/ is the breed finder, so the game lives alongside it.
+    { id: 'dogs',              name: 'Pup Quiz',          cat: 'puzzle',  desc: 'Five clues, one dog breed. New puzzle daily.', color: '#8A5A2B', isNew: true, url: '/dogs/play.html' },
     { id: 'blackjack',         name: 'Blackjack',         cat: 'casino',  desc: 'Hit 21 with strategy hints.',      color: '#7BC97B' },
     { id: 'roulette',          name: 'Roulette',          cat: 'casino',  desc: 'Spin the European wheel.',         color: '#F08488'  },
     { id: 'video-poker',       name: 'Video Poker',       cat: 'casino',  desc: 'Jacks or Better. Hold smart.',     color: '#A78BFA' },

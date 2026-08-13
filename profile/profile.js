@@ -109,6 +109,12 @@
       formatBest: (n) => n + (n === 1 ? ' clear' : ' clears') },
     { name: 'Hangman',              href: '../hangman/',              best: () => readBest('hangmanHighScore'),
       formatBest: (n) => n + ' streak' },
+    // Pup Quiz banks a JSON record, not a bare number — best daily streak.
+    { name: 'Pup Quiz',             href: '../dogs/play.html',        best: () => {
+        const r = readStatsKey('pupQuizDaily');
+        return r && r.best ? r.best : null;
+      },
+      formatBest: (n) => n + (n === 1 ? ' day' : ' days') },
   ];
 
   const RARE_KEYS = [
@@ -368,7 +374,7 @@
       if (e.key === window.CASINO_STATS.KEY ||
           e.key === window.CASINO_BANKROLL.KEY ||
           e.key === window.CASINO_PLAYER.KEY ||
-          /HighScore|Stats|Games(Won|Lost)|Best|Wins|kids-/.test(e.key)) {
+          /HighScore|Stats|Games(Won|Lost)|Best|Wins|kids-|pupQuiz/.test(e.key)) {
         update();
       }
     });

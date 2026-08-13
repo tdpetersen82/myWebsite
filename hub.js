@@ -55,7 +55,8 @@
 
   // Per-game inline SVG glyph (paths only; svg wrapper added at render time).
   const GLYPH_PATHS = {
-    spades: '<path d="M32 10 C32 10 12 26 12 38 C12 46 20 49 26 44 C24 49 22 52 18 55 L46 55 C42 52 40 49 38 44 C44 49 52 46 52 38 C52 26 32 10 32 10 Z" fill="C"/>',
+    dogs: '<ellipse cx="19" cy="24" rx="5.5" ry="7" fill="C"/><ellipse cx="27" cy="16.5" rx="5.5" ry="7.5" fill="C"/><ellipse cx="37" cy="16.5" rx="5.5" ry="7.5" fill="C"/><ellipse cx="45" cy="24" rx="5.5" ry="7" fill="C"/><path d="M32 28c7.2 0 13 5 13 11.2 0 6.2-5.2 9.3-13 9.3s-13-3.1-13-9.3C19 33 24.8 28 32 28z" fill="C"/>',
+    spades:'<path d="M32 10 C32 10 12 26 12 38 C12 46 20 49 26 44 C24 49 22 52 18 55 L46 55 C42 52 40 49 38 44 C44 49 52 46 52 38 C52 26 32 10 32 10 Z" fill="C"/>',
     hearts: '<path d="M32 50C32 50 8 36 8 22C8 14 14 10 20 10C26 10 30 15 32 18C34 15 38 10 44 10C50 10 56 14 56 22C56 36 32 50 32 50Z" fill="C"/>',
     'spider-solitaire': '<rect x="14" y="8" width="22" height="15" rx="2.5" fill="C"/><rect x="18" y="19" width="22" height="15" rx="2.5" fill="C" opacity="0.55"/><rect x="22" y="30" width="22" height="15" rx="2.5" fill="C"/><rect x="26" y="41" width="22" height="15" rx="2.5" fill="C" opacity="0.55"/>',
     freecell: '<rect x="7" y="9" width="11" height="14" rx="2" fill="none" stroke="C" stroke-width="2"/><rect x="20" y="9" width="11" height="14" rx="2" fill="none" stroke="C" stroke-width="2"/><rect x="34" y="9" width="11" height="14" rx="2" fill="C"/><rect x="47" y="9" width="11" height="14" rx="2" fill="none" stroke="C" stroke-width="2"/><rect x="20" y="32" width="17" height="22" rx="2.5" fill="C" opacity="0.5"/><rect x="20" y="40" width="17" height="22" rx="2.5" fill="C"/>',
@@ -128,7 +129,10 @@
     t.innerHTML = html.trim();
     return t.content.firstElementChild;
   }
-  function gameUrl(game) { return `${game.id}/`; }
+  // Most games live at /<id>/. A game may override with an absolute `url`
+  // when its directory holds more than the game itself — Pup Quiz shares
+  // /dogs/ with the breed finder, which owns the index.
+  function gameUrl(game) { return game.url || `${game.id}/`; }
 
   // ── Tile rendering ─────────────────────────────────────────────────────
   // The big hero tile keeps its showcase layout (ambient art + blurb + CTA).

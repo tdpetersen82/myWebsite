@@ -19,7 +19,7 @@
       cat: g.cat,
       catLabel: CAT_LABEL[g.cat] || '',
       isNew: !!g.isNew,
-      url: '/' + g.id + '/',
+      url: g.url || ('/' + g.id + '/'),
       nameLc: g.name.toLowerCase(),
       hay: (g.name + ' ' + (g.desc || '') + ' ' + (CAT_LABEL[g.cat] || '')).toLowerCase()
     };

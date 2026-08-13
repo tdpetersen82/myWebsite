@@ -1,0 +1,722 @@
+{
+  "labrador-retriever": {
+    "artist": "IDS.photos from Tiverton, UK",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Labrador_on_Quantock_(2175262184).jpg"
+  },
+  "golden-retriever": {
+    "artist": "\"Janneke Vreugdenhil\" Anka Friedrich (talk)",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Golden_Retriever_Dukedestiny01_drvd.jpg"
+  },
+  "german-shorthaired-pointer": {
+    "artist": "Lilly_M",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:German_Shorthaired_Pointer_Miedzynarodowa_wystawa_psow_rasowych_rybnik_kamien_pazdziernik_2011_12.jpg"
+  },
+  "english-springer-spaniel": {
+    "artist": "Ratsniffer",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source": "https://commons.wikimedia.org/wiki/File:Springer_Spaniel_Wide_Shot.jpg"
+  },
+  "cocker-spaniel": {
+    "artist": "Fcocker",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Gessa_d%27Aran_Copo_de_Nieve-_arancio_roano-_prop.Kalesa.jpg"
+  },
+  "english-cocker-spaniel": {
+    "artist": "Jean-Pol GRANDMONT",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:%22Bill%22_-_Cocker_spaniel_anglais_2.JPG"
+  },
+  "brittany": {
+    "artist": "John Blyberg",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Brittany_Spaniel_Lincoln.jpg"
+  },
+  "vizsla": {
+    "artist": "Markgraf1508",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Magyar_Vizsla_male_1_year_old_dog_in_forest.jpg"
+  },
+  "weimaraner": {
+    "artist": "Rufus46",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Weimaraner_Freika-2.jpg"
+  },
+  "chesapeake-bay-retriever": {
+    "artist": "George Makatura",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:CH_Chesapeake.jpg"
+  },
+  "irish-setter": {
+    "artist": "Luis Miguel Bugallo Sánchez (Lmbuga Commons)(Lmbuga…",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Can_Setter_dog_GFDL.jpg"
+  },
+  "english-setter": {
+    "artist": "Elf at English Wikipedia",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:EnglishSetter9_fx_wb.jpg"
+  },
+  "gordon-setter": {
+    "artist": "R. Arkesteyn",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Gordon_Setter_Teef.jpg"
+  },
+  "nova-scotia-duck-tolling-retriever": {
+    "artist": "Cal119 at English Wikipedia",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Duck_Toller.jpg"
+  },
+  "wirehaired-pointing-griffon": {
+    "artist": "CarolPtak",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:GCH_Int_Ch_UCH_Zerubbabel_von_Herrenhausen_CGC_MHA.jpg"
+  },
+  "flat-coated-retriever": {
+    "artist": "Gunnandreassen",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Flat_Coated_Retriever_-_black.jpg"
+  },
+  "pointer": {
+    "artist": "Canarian",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:English_Pointer_orange-white.jpg"
+  },
+  "beagle": {
+    "artist": "Brodo (Wikimedia Commons)",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Beagle_600.jpg"
+  },
+  "dachshund": {
+    "artist": "Katemil94",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:%EB%8B%A5%EC%8A%A4%ED%9B%88%ED%8A%B8(%EB%8B%A8%EB%AA%A8%EC%A2%85)_(Dachshund_(Short)).jpg"
+  },
+  "bloodhound": {
+    "artist": "User:Erland22",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Bloodhound_Erland22.jpg"
+  },
+  "basset-hound": {
+    "artist": "Cali1008",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:BassetHound_profil.jpg"
+  },
+  "rhodesian-ridgeback": {
+    "artist": "Bonnie van den Born, www.bonfoto.nl",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Rhodesian_ridgeback.jpg"
+  },
+  "whippet": {
+    "artist": "Canarian",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Whippet_2018_6.jpg"
+  },
+  "greyhound": {
+    "artist": "Neurodoc",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:GraceTheGreyhound.jpg"
+  },
+  "afghan-hound": {
+    "artist": "Weaveravel",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Afghan_dog_-_cropped.jpg"
+  },
+  "basenji": {
+    "artist": "fugzu",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Basenji_Profile_(loosercrop).jpg"
+  },
+  "irish-wolfhound": {
+    "artist": "Dux",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:(2)_Irish_Wolfhound_4.jpg"
+  },
+  "scottish-deerhound": {
+    "artist": "Wiki.awal",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Scottish_Deerhound.jpg"
+  },
+  "borzoi": {
+    "artist": "Pleple2000",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Chart_rosyjski_borzoj_rybnik-kamien_pl.jpg"
+  },
+  "saluki": {
+    "artist": "r",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Red_Smooth_Saluki.jpg"
+  },
+  "norwegian-elkhound": {
+    "artist": "HawkNightingale175",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Elkhound2020_(cropped).jpg"
+  },
+  "otterhound": {
+    "artist": "Machinecha",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Two_otterhounds.jpg"
+  },
+  "bluetick-coonhound": {
+    "artist": "Caronna (Wikimedia Commons)",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:BluetickCoonhound.jpg"
+  },
+  "plott": {
+    "artist": "Plotthund",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Plotthund_Kynnagardens_Ziggy_Lundamo.JPG"
+  },
+  "rottweiler": {
+    "artist": "Dr. Manfred Herrmann Allgemeiner Deutscher…",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Rottweiler_standing_facing_left.jpg"
+  },
+  "doberman-pinscher": {
+    "artist": "Miroslav Cacik",
+    "license": "Copyrighted free use",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Dobermann_handling.jpg"
+  },
+  "boxer": {
+    "artist": "Mood210",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Male_fawn_Boxer_undocked.jpg"
+  },
+  "great-dane": {
+    "artist": "Lilly M",
+    "license": "CC BY-SA 2.5",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5",
+    "source": "https://commons.wikimedia.org/wiki/File:Dog_niemiecki_%C5%BC%C3%B3%C5%82ty_LM980.jpg"
+  },
+  "siberian-husky": {
+    "artist": "xJaM (talk · contribs)",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Husky_L.jpg"
+  },
+  "alaskan-malamute": {
+    "artist": "SCMW",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Alaskan_Malamute.jpg"
+  },
+  "bernese-mountain-dog": {
+    "artist": "FriendlyToaster",
+    "license": "CC BY 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:3-BerneseMountainDogInGrass.jpg"
+  },
+  "great-pyrenees": {
+    "artist": "HeartSpoon",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Great_Pyrenees_Mountain_Dog_2.png"
+  },
+  "saint-bernard": {
+    "artist": "Blanky",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Hummel_Vedor_vd_Robandahoeve.jpg"
+  },
+  "mastiff": {
+    "artist": "Radovan Rohovsky",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Westgort_Anticipation_17_months.JPG"
+  },
+  "bullmastiff": {
+    "artist": "Fausto Moreno",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Bullmastiff_edited.JPG"
+  },
+  "cane-corso": {
+    "artist": "Claudio Domiziani",
+    "license": "CC BY-SA 2.5",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5",
+    "source": "https://commons.wikimedia.org/wiki/File:Cane_corso_temi_1_1024x768x24_(cropped).png"
+  },
+  "newfoundland": {
+    "artist": "Flickr user DanDee Shots",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Newfoundland_dog_Smoky.jpg"
+  },
+  "portuguese-water-dog": {
+    "artist": "Silke Hollje-Schumacher",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:C%C3%A3o_de_agua_Portugu%C3%AAs_2.jpg"
+  },
+  "samoyed": {
+    "artist": "Flickr user tanakawho . Photo uploaded to commons by…",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Samoyed_Image_001.jpg"
+  },
+  "akita": {
+    "artist": "Biser Yanev",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Akita_Inu_dog.jpg"
+  },
+  "giant-schnauzer": {
+    "artist": "Bonnie van den Born, www.bonfoto.nl",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Bvdb-riesen_schnauzer.jpg"
+  },
+  "standard-schnauzer": {
+    "artist": "Tamorlan",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Standard_Grey_Schnauzer_(cropped).JPG"
+  },
+  "tibetan-mastiff": {
+    "artist": "Svenska Mässan from Sweden",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:BIR_Grupp_2-_TIBETANSK_MASTIFF,_Legenda_Tibeta_Temudzhin_(23938629470).jpg"
+  },
+  "bull-terrier": {
+    "artist": "Pixabay User TC-TORRES",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source": "https://commons.wikimedia.org/wiki/File:Bullterrier-3453301920.jpg"
+  },
+  "american-staffordshire-terrier": {
+    "artist": "Svenska Mässan from Sweden",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:AMERICAN_STAFFORDSHIRE_TERRIER,_Zican%E2%80%99s_Bz_Ez_Dragon_(24208348891).2.jpg"
+  },
+  "staffordshire-bull-terrier": {
+    "artist": "User Sannse on en.wikipedia",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Staffordshire_Bull_Terrier_600.jpg"
+  },
+  "american-pit-bull-terrier": {
+    "artist": "geoggirl",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:001_American_Pit_Bull_Terrier.jpg"
+  },
+  "airedale-terrier": {
+    "artist": "by Jane@rangeairevision.com",
+    "license": "Copyrighted free use",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Airedale_Terrier.jpg"
+  },
+  "scottish-terrier": {
+    "artist": "Elise Carroll",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Scottish_Terrier_Photo_of_Face.jpg"
+  },
+  "west-highland-white-terrier": {
+    "artist": "Christopher Walker from Krakow, Poland",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:West_Highland_White_Terrier_Krakow.jpg"
+  },
+  "cairn-terrier": {
+    "artist": "Ronald Müller-Hagen (Ketterechts)",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Cairn-Terrier-Garten1.jpg"
+  },
+  "russell-terrier": {
+    "artist": "The original uploader was Russellsterrier at English…",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:FCI_JRT.jpg"
+  },
+  "rat-terrier": {
+    "artist": "Jadenschaul",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Amberina_the_Rat_Terrier.jpg"
+  },
+  "border-terrier": {
+    "artist": "Canarian",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Border_Terrier_male.jpg"
+  },
+  "wire-fox-terrier": {
+    "artist": "ATLAS IMPACT",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Wire_Fox_Terrier.jpg"
+  },
+  "miniature-schnauzer": {
+    "artist": "Canarian",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Miniature_Schnauzer_salt_%26_pepper_(cropped).jpg"
+  },
+  "bedlington-terrier": {
+    "artist": "David Owsiany",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Boutchie_apres_championnat_004.JPG"
+  },
+  "kerry-blue-terrier": {
+    "artist": "Peter Kumpert, Germany",
+    "license": "CC BY-SA 3.0 de",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/de/deed.en",
+    "source": "https://commons.wikimedia.org/wiki/File:Kerry_Blue_Terrier.jpg"
+  },
+  "soft-coated-wheaten-terrier": {
+    "artist": "Terrierkännaren",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Soft-Coated_Wheaten_Terrier.jpg"
+  },
+  "welsh-terrier": {
+    "artist": "Pleple2000",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Terier_walijski_suka_2009_pl.jpg"
+  },
+  "chihuahua": {
+    "artist": "Bonnie van den Born, www.bonfoto.nl. The original…",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Chihuahua1_bvdb.jpg"
+  },
+  "pomeranian": {
+    "artist": "Blackoranges",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Pomeranian.JPG"
+  },
+  "yorkshire-terrier": {
+    "artist": "Svenska Mässan from Sweden",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:(2_version)_Grupp_3,_YORKSHIRETERRIER,_NO_UCH_SE_UCH_Oxzar_Amazing_Bel%E2%80%99s_Toffy_(24310212305).jpg"
+  },
+  "shih-tzu": {
+    "artist": "Canino21",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Shihtzu_(cropped).jpg"
+  },
+  "maltese": {
+    "artist": "Sannse",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Maltese_600.jpg"
+  },
+  "pug": {
+    "artist": "Dagur Brynjólfsson from Hafnarfjordur, Iceland; Anka…",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Mops_oct09_cropped2.jpg"
+  },
+  "cavalier-king-charles-spaniel": {
+    "artist": "Andreweatock",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:CarterBIS.Tiki.13.6.09.jpg"
+  },
+  "papillon": {
+    "artist": "Gvdmoort",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Outdoor_Continental_Toy_Spaniel_Papillon.jpeg"
+  },
+  "havanese": {
+    "artist": "ThePointyHatGnome",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source": "https://commons.wikimedia.org/wiki/File:A_havanese_dog_in_Finland.jpg"
+  },
+  "miniature-pinscher": {
+    "artist": "Sebastian Wallin. Sebastian Wallin. Sebwal",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Miniature_pinscher.jpg"
+  },
+  "italian-greyhound": {
+    "artist": "christina",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Italian_Greyhound_standing_gray_(cropped).jpg"
+  },
+  "toy-poodle": {
+    "artist": "Harpagornis",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:White_Toy_poodle.jpg"
+  },
+  "pekingese": {
+    "artist": "SheltieBoy",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:1AKC_Pekingese_Dog_Show_2011.jpg"
+  },
+  "chinese-crested": {
+    "artist": "Tommy Gildseth",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:IndyStands.jpg"
+  },
+  "brussels-griffon": {
+    "artist": "Arne Fagerholt",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Monkey_Bizniz_Drama_Queen.jpg"
+  },
+  "french-bulldog": {
+    "artist": "Ildar Sagdejev (Specious)",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:2008-07-28_Dog_at_Frolick_Field.jpg"
+  },
+  "bulldog": {
+    "artist": "kaz-19203",
+    "license": "CC0",
+    "licenseUrl": "http://creativecommons.org/publicdomain/zero/1.0/deed.en",
+    "source": "https://commons.wikimedia.org/wiki/File:English_Bulldog_-Dog-220489-1280.jpg"
+  },
+  "standard-poodle": {
+    "artist": "Tim Wilson from Blaine, MN, USA",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Full_attention_(8067543690).jpg"
+  },
+  "miniature-poodle": {
+    "artist": "This Photo was taken by Timothy A. Gonsalves. Feel free…",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Head_Miniature_Poodle_Mysore_May24_A7CR_00091.jpg"
+  },
+  "dalmatian": {
+    "artist": "Bradlien",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Sun_Dog_Dalmatian.jpg"
+  },
+  "boston-terrier": {
+    "artist": "Andreas Schlaugat",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Boston-terrier-carlos-de.JPG"
+  },
+  "bichon-frise": {
+    "artist": "Heike Andres",
+    "license": "CC BY-SA 3.0 de",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0/de/deed.en",
+    "source": "https://commons.wikimedia.org/wiki/File:Bichon_Fris%C3%A9_-_studdogbichon.jpg"
+  },
+  "shiba-inu": {
+    "artist": "Takashiba at English Wikipedia",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Taka_Shiba.jpg"
+  },
+  "chow-chow": {
+    "artist": "Томасина",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Chow-chow_in_Tallinn.JPG"
+  },
+  "lhasa-apso": {
+    "artist": "Elminjas at Dutch Wikipedia",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Aishia.jpg"
+  },
+  "american-eskimo-dog": {
+    "artist": "Christmas w/a K",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:American_Eskimo_Dog_1.jpg"
+  },
+  "chinese-shar-pei": {
+    "artist": "Yan Mis/&Den Rakov",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Adult_sharpei.jpg"
+  },
+  "schipperke": {
+    "artist": "鏑木對馬守",
+    "license": "Public domain",
+    "licenseUrl": "",
+    "source": "https://commons.wikimedia.org/wiki/File:Schipperke0001.jpg"
+  },
+  "xoloitzcuintli": {
+    "artist": "Pets Adviser from Brooklyn, USA",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Xoloitzcuintli_-_GCH_Bayshore_Georgio_Armani_09_(16397731930).jpg"
+  },
+  "german-shepherd-dog": {
+    "artist": "gomagoti",
+    "license": "CC BY-SA 2.5",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.5",
+    "source": "https://commons.wikimedia.org/wiki/File:German_Shepherd_-_DSC_0346_(10096362833).jpg"
+  },
+  "australian-shepherd": {
+    "artist": "Trickdog-Fina",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Australian_Shepherd_red_bi.JPG"
+  },
+  "border-collie": {
+    "artist": "ToB (Wikimedia Commons)",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Border_Collie_600.jpg"
+  },
+  "pembroke-welsh-corgi": {
+    "artist": "Dog breed facts",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Welsh_Pembroke_Corgi.jpg"
+  },
+  "cardigan-welsh-corgi": {
+    "artist": "FatFairfax",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Cardigan_Welsh_Corgi,_Profile.png"
+  },
+  "shetland-sheepdog": {
+    "artist": "Flickr user nickobec (Nick Cowie)",
+    "license": "CC BY-SA 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Shetland_Sheepdog_sable.jpg"
+  },
+  "collie": {
+    "artist": "Yasu w",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Rough-Collie-japan08_(cropped).jpg"
+  },
+  "belgian-malinois": {
+    "artist": "Svenska Mässan from Sweden",
+    "license": "CC BY 2.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Grupp_1,_BELGISK_VALLHUND,_MALINOIS,_Krokasmedens_Epic_(24014622180).jpg"
+  },
+  "old-english-sheepdog": {
+    "artist": "AKS.9955",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Old_English_Sheepdog_(side).jpg"
+  },
+  "australian-cattle-dog": {
+    "artist": "Zingpix",
+    "license": "CC BY 3.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by/3.0",
+    "source": "https://commons.wikimedia.org/wiki/File:ACD-blue-spud.jpg"
+  },
+  "bearded-collie": {
+    "artist": "Antikon (Wikimedia Commons)",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Bearded_Collie_600.jpg"
+  },
+  "bouvier-des-flandres": {
+    "artist": "Basco at Dutch Wikipedia (Original text:…",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Bouvier.JPG"
+  },
+  "puli": {
+    "artist": "Original uploader was Elf at en.wikipedia",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:PuliBlack_wb.jpg"
+  },
+  "briard": {
+    "artist": "Birgit Balzer, Deutschland (uploaded by Caronna 17:00,…",
+    "license": "CC BY-SA 3.0",
+    "licenseUrl": "http://creativecommons.org/licenses/by-sa/3.0/",
+    "source": "https://commons.wikimedia.org/wiki/File:Briard_fauve.JPG"
+  },
+  "miniature-american-shepherd": {
+    "artist": "Lextergrace",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Blue_Merle_Miniature_American_Shepherd_in_Grass.jpg"
+  },
+  "goldendoodle": {
+    "artist": "Chris Rue",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Finnegan_the_Goldendoodle_having_fun_in_the_snow.jpg"
+  },
+  "labradoodle": {
+    "artist": "Anton Porsche",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Labradoodle-Brown-Male-SideFace.jpg"
+  },
+  "cockapoo": {
+    "artist": "BetacommandBot",
+    "license": "CC BY 2.5",
+    "licenseUrl": "https://creativecommons.org/licenses/by/2.5",
+    "source": "https://commons.wikimedia.org/wiki/File:Cockapoo_apricot_standing.jpg"
+  },
+  "cavapoo": {
+    "artist": "Aivi1987",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:F1_Red_Toy_Cavoodle_Puppy.jpg"
+  },
+  "maltipoo": {
+    "artist": "Rhododendrites",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:Maltipoo_dog_bouncing_(11875).jpg"
+  },
+  "puggle": {
+    "artist": "WyrehXVI",
+    "license": "CC BY-SA 4.0",
+    "licenseUrl": "https://creativecommons.org/licenses/by-sa/4.0",
+    "source": "https://commons.wikimedia.org/wiki/File:SecondGenPuggle.jpg"
+  }
+}

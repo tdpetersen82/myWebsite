@@ -1,0 +1,676 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#8A5A2B">
+    <title>Dog Breed Finder — Which Dog Is Right for Me? | Limestone Games</title>
+    <meta name="description" content="Answer eight questions about your home, your schedule, and your family, and see which dog breeds actually fit — with the reasons spelled out. Compare 120 breeds by size, shedding, energy, grooming, barking, and temperament. Free, runs entirely in your browser.">
+    <meta name="keywords" content="dog breed finder, what dog breed is right for me, dog breed quiz, best dog breed for apartments, hypoallergenic dog breeds, best dog for families, low shedding dog breeds, dog breed selector, dog breed comparison">
+    <meta property="og:title" content="Dog Breed Finder — Which Dog Is Right for Me?">
+    <meta property="og:description" content="Eight questions about your home and schedule, then 120 breeds ranked to fit — with the reasons, and the trade-offs, spelled out.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/dogs/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Dog Breed Finder — Which Dog Is Right for Me?">
+    <meta name="twitter:description" content="Eight questions about your home and schedule, then 120 breeds ranked to fit.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/dogs/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Dog Breed Finder","item":"https://limestonegames.com/dogs/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Dog Breed Finder","url":"https://limestonegames.com/dogs/","applicationCategory":"LifestyleApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Answer eight questions about your home and schedule and see which of 120 dog breeds fit, with the reasons and trade-offs shown."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../category.css?v=20260521a">
+    <link rel="stylesheet" href="../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../utility.css?v=20260522a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <!-- AdSense loader disabled until approved: <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+
+    <style>
+      /* This page borrows the utilities control kit but not its teal palette.
+         Same selector as utility.css so the cascade order decides, not
+         specificity. */
+      .cat-root[data-category="utilities"] {
+        --cat-accent:        #8A5A2B;
+        --cat-tint:          #F4E7D6;
+        --cat-glow:          rgba(138, 90, 43, 0.28);
+        --cat-eyebrow-color: #8A5A2B;
+        --cat-cta-bg:        #8A5A2B;
+        --cat-cta-ink:       #fff;
+      }
+
+      .u-lede a { color: var(--cat-eyebrow-color); text-decoration: underline; text-underline-offset: 2px; }
+      .u-lede a:hover { color: var(--cat-ink); }
+
+      /* ── Quiz ── */
+      .dq-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 18px 26px; }
+      .dq-q { border: 0; padding: 0; margin: 0; min-width: 0; }
+      .dq-q legend {
+        font-size: 14.5px; font-weight: 600; color: var(--cat-ink);
+        padding: 0; margin-bottom: 9px;
+      }
+      .dq-opts { display: flex; flex-wrap: wrap; gap: 6px; }
+      .dq-opt {
+        font-family: 'Inter', system-ui, sans-serif; font-size: 12.5px;
+        padding: 7px 13px; border-radius: 999px;
+        border: 1px solid var(--cat-line); background: var(--cat-paper);
+        color: var(--cat-ink-soft); cursor: pointer; text-align: left;
+        transition: color .15s, background .15s, border-color .15s;
+      }
+      .dq-opt:hover { color: var(--cat-ink); border-color: var(--cat-ink); }
+      .dq-opt[aria-pressed="true"] {
+        background: var(--cat-tint); color: var(--cat-eyebrow-color);
+        border-color: color-mix(in oklab, var(--cat-accent) 38%, transparent);
+        font-weight: 600;
+      }
+
+      /* ── Results header ── */
+      .dr-head {
+        display: flex; align-items: baseline; justify-content: space-between;
+        gap: 14px; flex-wrap: wrap; margin-bottom: 14px;
+      }
+      .dr-count {
+        font-family: 'Bricolage Grotesque', sans-serif;
+        font-size: 26px; font-weight: 600; color: var(--cat-ink); line-height: 1.1;
+      }
+      .dr-count small { font-size: 14px; color: var(--cat-ink-soft); font-weight: 500; }
+
+      .dr-active { display: flex; flex-wrap: wrap; gap: 7px; margin-bottom: 4px; }
+      .dr-fchip {
+        font-family: var(--u-mono); font-size: 11.5px;
+        background: var(--cat-tint); color: var(--cat-eyebrow-color);
+        border: 1px solid color-mix(in oklab, var(--cat-accent) 26%, transparent);
+        border-radius: 999px; padding: 5px 6px 5px 12px;
+        display: inline-flex; align-items: center; gap: 6px;
+      }
+      .dr-fchip .lock { opacity: .6; }
+      .dr-fchip button {
+        border: 0; background: color-mix(in oklab, var(--cat-accent) 16%, transparent);
+        color: inherit; cursor: pointer; border-radius: 999px;
+        width: 17px; height: 17px; line-height: 1; font-size: 12px; padding: 0;
+      }
+      .dr-fchip button:hover { background: color-mix(in oklab, var(--cat-accent) 34%, transparent); }
+
+      .dr-relax {
+        margin-top: 14px; padding-top: 14px; border-top: 1px dashed var(--cat-line);
+        display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+      }
+      .dr-relax .lbl {
+        font-family: var(--u-mono); font-size: 11px; letter-spacing: .08em;
+        text-transform: uppercase; color: var(--cat-ink-soft);
+      }
+      .dr-relax button {
+        font-family: 'Inter', sans-serif; font-size: 12.5px;
+        border: 1px solid var(--cat-line); background: var(--cat-paper);
+        color: var(--cat-ink); border-radius: 999px; padding: 6px 13px; cursor: pointer;
+      }
+      .dr-relax button:hover { border-color: var(--cat-ink); background: var(--cat-paper-2); }
+      .dr-relax button b { color: var(--cat-eyebrow-color); }
+
+      /* ── Result cards ── */
+      .dr-grid {
+        display: grid; grid-template-columns: repeat(auto-fill, minmax(268px, 1fr));
+        gap: 14px; margin-top: 18px;
+        /* Each card keeps its own height — otherwise expanding one card
+           stretches every card in its row to match. */
+        align-items: start;
+      }
+      .dc {
+        background: var(--cat-paper); border: 1px solid var(--cat-line);
+        border-radius: 18px; overflow: hidden; text-align: left;
+        display: flex; flex-direction: column;
+      }
+      .dc-top {
+        width: 100%; background: none; border: 0; padding: 15px 16px; cursor: pointer;
+        display: flex; gap: 13px; align-items: flex-start; text-align: left;
+        font-family: inherit; color: inherit;
+      }
+      .dc-top:hover { background: var(--cat-paper-2); }
+      /* The monogram sits underneath as the background, so a photo that fails
+         to load leaves a deliberate-looking initial rather than a broken icon. */
+      .dc-medal {
+        flex: 0 0 auto; width: 52px; height: 52px; border-radius: 14px;
+        display: grid; place-items: center; position: relative; overflow: hidden;
+        font-family: 'Bricolage Grotesque', sans-serif; font-size: 19px; font-weight: 600;
+        color: #fff; letter-spacing: -.02em;
+      }
+      .dc-medal img {
+        position: absolute; inset: 0; width: 100%; height: 100%;
+        object-fit: cover; display: block;
+      }
+      .dc-shot {
+        width: 100%; aspect-ratio: 4 / 3; object-fit: cover; display: block;
+        background: var(--cat-bg); margin-top: 13px; border-radius: 12px;
+      }
+      .dc-credit {
+        font-family: var(--u-mono); font-size: 9.5px; line-height: 1.45;
+        color: var(--cat-ink-soft); margin: 6px 0 0;
+      }
+      .dc-credit a { color: inherit; }
+      .dc-id { min-width: 0; flex: 1; }
+      /* Both are spans (they sit inside a button, which can't contain block
+         flow elements in valid HTML) so they must be told to stack. */
+      .dc-name {
+        display: block;
+        font-family: 'Bricolage Grotesque', sans-serif; font-size: 16px; font-weight: 600;
+        color: var(--cat-ink); line-height: 1.2;
+      }
+      .dc-sub {
+        display: block;
+        font-family: var(--u-mono); font-size: 10.5px; letter-spacing: .05em;
+        text-transform: uppercase; color: var(--cat-ink-soft); margin-top: 5px;
+        line-height: 1.35;
+      }
+      .dc-score {
+        flex: 0 0 auto; font-family: var(--u-mono); font-size: 11px; font-weight: 500;
+        color: var(--cat-eyebrow-color); background: var(--cat-tint);
+        border-radius: 999px; padding: 3px 9px;
+      }
+      .dc-why { padding: 0 16px 14px; display: flex; flex-wrap: wrap; gap: 5px; }
+      .dc-why span {
+        font-size: 11.5px; color: var(--cat-ink-soft);
+        background: var(--cat-bg); border: 1px solid var(--cat-line-2);
+        border-radius: 999px; padding: 3px 9px;
+      }
+      .dc-caveat {
+        padding: 0 16px 14px; margin-top: -6px;
+        font-size: 11.5px; color: var(--cat-ink-soft); line-height: 1.5;
+      }
+      .dc-caveat b { font-weight: 600; color: #A2563E; }
+
+      .dc-more { display: none; padding: 0 16px 16px; border-top: 1px solid var(--cat-line-2); }
+      .dc.open .dc-more { display: block; }
+      .dc-blurb { font-size: 13.5px; color: var(--cat-ink-soft); line-height: 1.6; margin: 13px 0 0; }
+      .dc-facts { margin-top: 12px; }
+      .dc-facts .u-kv { padding: 7px 0; }
+      .dc-facts .u-kv .ku, .dc-facts .u-kv .kvv { font-size: 12.5px; }
+      .dc-meters { margin-top: 12px; display: grid; gap: 7px; }
+      .dc-meter { display: grid; grid-template-columns: 92px 1fr; gap: 10px; align-items: center; }
+      .dc-meter .m-l {
+        font-family: var(--u-mono); font-size: 10px; letter-spacing: .07em;
+        text-transform: uppercase; color: var(--cat-ink-soft);
+      }
+      .dc-meter .m-b { display: flex; gap: 3px; }
+      .dc-meter .m-b i {
+        height: 6px; flex: 1; border-radius: 2px; background: var(--cat-line);
+      }
+      .dc-meter .m-b i.on { background: var(--cat-accent); }
+
+      .dr-empty {
+        text-align: center; padding: 34px 20px; color: var(--cat-ink-soft);
+        font-size: 14.5px; line-height: 1.6;
+      }
+      .dr-more-wrap { text-align: center; margin-top: 18px; }
+
+      .dr-note {
+        font-family: var(--u-mono); font-size: 11.5px; color: var(--cat-ink-soft);
+        margin-top: 16px; line-height: 1.55;
+      }
+
+      .dg-credits { margin-top: 10px; }
+      .dg-credits summary {
+        cursor: pointer; font-size: 14px; font-weight: 600; color: var(--cat-ink);
+      }
+      .dg-credits #credits-list {
+        margin-top: 12px; columns: 2; column-gap: 26px;
+        font-family: var(--u-mono); font-size: 10.5px; line-height: 1.6;
+        color: var(--cat-ink-soft);
+      }
+      .dg-credits #credits-list p { margin: 0 0 6px; break-inside: avoid; }
+      .dg-credits #credits-list b { color: var(--cat-ink); font-weight: 600; }
+      .dg-credits #credits-list a { color: inherit; }
+
+      @media (max-width: 760px) {
+        .dg-credits #credits-list { columns: 1; }
+        .dq-grid { grid-template-columns: 1fr; gap: 16px; }
+        .dr-grid { grid-template-columns: 1fr; }
+        .dc-meter { grid-template-columns: 80px 1fr; }
+      }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/utilities/">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <span class="cur">Dog Breed Finder</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Dogs · Breed Finder</span>
+            <h1>Dog Breed <em>Finder</em></h1>
+            <p class="u-lede">Answer eight questions about your home and your week, and every breed gets ranked to fit — with the reasons, and the trade-offs, written out. Change any answer and the list updates as you go. Just here for fun? Play <a href="play.html">Pup Quiz</a>, the daily breed-guessing game.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="u-panel-head">
+                <h2>About you</h2>
+                <button class="u-btn ghost" id="reset" type="button">Clear answers</button>
+            </div>
+            <div class="dq-grid" id="quiz"></div>
+        </section>
+
+        <section class="u-panel" id="results-panel">
+            <div class="dr-head">
+                <div class="dr-count" id="count">—</div>
+                <div class="u-toolbar">
+                    <button class="u-tab" id="toggle-cross" type="button" aria-pressed="false">Include crossbreeds</button>
+                </div>
+            </div>
+
+            <div class="dr-active" id="active-filters"></div>
+            <div class="dr-relax" id="relax" hidden></div>
+
+            <div class="dr-grid" id="grid"></div>
+            <div class="dr-empty" id="empty" hidden></div>
+            <div class="dr-more-wrap" id="more-wrap" hidden>
+                <button class="u-btn ghost" id="more" type="button">Show more</button>
+            </div>
+
+            <p class="dr-note">Size, weight, lifespan, coat and country of origin follow published breed standards. The 1–5 ratings for temperament, energy, shedding and grooming are general tendencies of a breed, not a prediction about any individual dog — upbringing and training matter more than breed for most of what a dog is like to live with.</p>
+        </section>
+
+        <section class="u-about">
+            <h2>How this dog breed finder works</h2>
+            <p>Most breed quizzes ask a few questions and hand back a single answer with no explanation. This one does the opposite: it ranks every breed in the database against what you said, shows you why each one placed where it did, and lets you take the constraints back off. If your answers only leave four breeds, it tells you that, and tells you exactly what to relax to see more.</p>
+
+            <h3>What counts as a hard requirement</h3>
+            <p>Only three things exclude a breed outright: needing a low-allergen coat, having toddlers at home, and being away from the house for most of the day. Those are welfare and safety constraints rather than preferences. Everything else — size, energy, shedding, grooming, barking, drooling — is scored instead of filtered, so a breed that misses on one point can still rank well if it fits everywhere else. That's deliberate: a Greyhound is famously good in a flat despite being a large dog, and a hard size filter would have hidden it from you.</p>
+
+            <h3>How the ranking is calculated</h3>
+            <p>Each answer sets a target on one or more traits. A breed is penalized in proportion to how far outside your target it sits, weighted by how much that trait actually affects daily life — being left alone and being safe with children count for more than drooling. The score you see is what's left after those penalties. Where breeds tie, the more familiar one is listed first.</p>
+
+            <h3>Choosing a breed is the start, not the decision</h3>
+            <p>Breed tells you the tendencies you're likely to be working with — how much exercise, how much coat, how much noise. It doesn't tell you about the individual dog in front of you, and a well-raised dog of a "difficult" breed is easier to live with than a neglected one of an "easy" breed. Meet the actual dog, talk to a breeder or shelter about that dog's temperament, and take the list here as a shortlist to go and check in person.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>Which dog breeds are best for apartments?</summary>
+                    <p>Less about size than about energy and noise. Choose <b>An apartment</b> above and the finder steers toward breeds that are quiet and content in a smaller space — which includes some surprisingly large dogs. Greyhounds and Great Danes are famously good flat dogs because they sleep most of the day, while a small terrier with a loud voice and a working drive can be much harder on close neighbours.</p>
+                </details>
+                <details>
+                    <summary>Are any dog breeds actually hypoallergenic?</summary>
+                    <p>No dog is truly non-allergenic. The allergen is a protein in dander and saliva, not the hair itself, so every dog produces some. What the low-allergen breeds have in common is a coat that sheds very little, which keeps far less dander moving around the house. Many people react much less to them, but some still react. If there's a diagnosed allergy, spend time with the specific dog before committing.</p>
+                </details>
+                <details>
+                    <summary>I work full time. Can I still have a dog?</summary>
+                    <p>Yes, but it narrows the field honestly. Answer <b>Six to nine hours</b> and the finder removes the breeds that are genuinely prone to separation distress rather than pretending it's fine. Most adult dogs shouldn't routinely be alone eight hours or more without a midday break — a dog walker or daycare widens your options far more than picking a different breed does.</p>
+                </details>
+                <details>
+                    <summary>Which breeds are best with young children?</summary>
+                    <p>Answer <b>Toddlers or babies</b> and only breeds rated four or five for tolerance with children are shown. Size matters less than you'd think: several giant breeds are excellent with small children, while some tiny ones are easily frightened and more likely to snap. Supervision matters more than either — no breed rating replaces watching a toddler and a dog together.</p>
+                </details>
+                <details>
+                    <summary>Why isn't my crossbreed listed?</summary>
+                    <p>The common poodle crosses are included — turn on <b>Include crossbreeds</b> above. They're kept separate because they have no breed standard: two dogs from the same litter can differ a lot, so their ratings are best-guess averages rather than a standard you can rely on. That's also why the coat you're buying them for isn't guaranteed.</p>
+                </details>
+                <details>
+                    <summary>Where does the breed data come from?</summary>
+                    <p>The measurable fields — height, weight, lifespan, coat type, ears, tail, breed group and country of origin — follow published breed standards. The 1–5 behavioural ratings are editorial summaries of how a breed is generally described. They're consistent across the database so comparisons are fair, but they're generalizations, and the range within any breed is wide.</p>
+                </details>
+            </div>
+
+            <h2>Photo credits</h2>
+            <p>Every breed photo comes from Wikimedia Commons under a free licence — Creative Commons or public domain. Each one is credited to its photographer with a link to the licence and the original file. Images were resized and re-encoded for the web; nothing else was altered. Photos under a share-alike licence remain under that licence.</p>
+            <details class="dg-credits">
+                <summary>All photo credits</summary>
+                <div id="credits-list"></div>
+            </details>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/dogs/play.html">Pup Quiz</a>
+            <a href="/">All games</a>
+            <a href="/utilities/">Utilities</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <script src="breeds.js?v=20260812a"></script>
+    <script src="filter.js?v=20260812a"></script>
+    <script src="photo-credits.js?v=20260812a"></script>
+    <script>
+    (function () {
+        'use strict';
+
+        var BREEDS = window.DOG_BREEDS;
+        var F = window.DOG_FINDER;
+        var $ = function (id) { return document.getElementById(id); };
+
+        var STORE = 'dogFinderAnswers';
+        var PAGE = 24;
+
+        var answers = {};
+        var dropped = {};            // criteria the user removed by hand
+        var relaxations = {};        // relaxations the user accepted
+        var showing = PAGE;
+        var includeCross = false;
+
+        try {
+            var saved = JSON.parse(localStorage.getItem(STORE) || '{}');
+            if (saved && typeof saved === 'object') answers = saved;
+        } catch (e) { /* ignore unreadable storage */ }
+
+        var GROUP_COLOR = {
+            sporting: '#C77A2A', hound: '#8A5A2B', working: '#5B6470',
+            terrier: '#B8683A', toy: '#C2708A', 'non-sporting': '#2F7D6E',
+            herding: '#4A7A46', crossbreed: '#7B7FA8',
+        };
+        var GROUP_LABEL = {
+            sporting: 'Sporting', hound: 'Hound', working: 'Working',
+            terrier: 'Terrier', toy: 'Toy', 'non-sporting': 'Non-sporting',
+            herding: 'Herding', crossbreed: 'Crossbreed',
+        };
+
+        function esc(s) {
+            return String(s).replace(/[&<>"']/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c];
+            });
+        }
+        function initials(name) {
+            var parts = name.split(/\s+/).filter(Boolean);
+            return (parts[0][0] + (parts.length > 1 ? parts[parts.length - 1][0] : '')).toUpperCase();
+        }
+        function range(r, unit) {
+            return r[0] === r[1] ? r[0] + ' ' + unit : r[0] + '–' + r[1] + ' ' + unit;
+        }
+
+        // ── Quiz ──────────────────────────────────────────────────────────
+        function renderQuiz() {
+            $('quiz').innerHTML = F.QUESTIONS.map(function (q) {
+                var opts = q.options.map(function (o) {
+                    var on = answers[q.id] === o.id;
+                    return '<button type="button" class="dq-opt" data-q="' + q.id + '" data-o="' + o.id +
+                           '" aria-pressed="' + (on ? 'true' : 'false') + '">' + esc(o.label) + '</button>';
+                }).join('');
+                return '<fieldset class="dq-q"><legend>' + esc(q.q) + '</legend>' +
+                       '<div class="dq-opts">' + opts + '</div></fieldset>';
+            }).join('');
+        }
+
+        // Current filters = quiz answers, minus anything dropped, plus any
+        // relaxation the user accepted.
+        function currentFilters() {
+            var f = F.answersToFilters(answers);
+            Object.keys(dropped).forEach(function (id) { delete f[id]; });
+            Object.keys(relaxations).forEach(function (id) {
+                if (f[id]) f[id] = relaxations[id];
+            });
+            return f;
+        }
+
+        function filterLabel(id, f) {
+            var c = F.byId[id];
+            if (!c) return id;
+            switch (c.kind) {
+                case 'set':  return c.label + ': ' + f.value.join(', ');
+                case 'flag': return c.label;
+                case 'max':  return c.label + ' ≤ ' + f.value;
+                // A floored filter has two numbers doing different jobs: the
+                // floor excludes, the value ranks. Saying only one of them
+                // makes the card caveats look like they contradict the chip.
+                case 'min':  return (f.floor != null && f.floor !== f.value)
+                    ? c.label + ' ≥ ' + f.floor + ', prefers ' + f.value
+                    : c.label + ' ≥ ' + f.value;
+                case 'target': return c.label + ' ≈ ' + f.value;
+                default: return c.label;
+            }
+        }
+
+        // ── Rendering ─────────────────────────────────────────────────────
+        // Every photo is someone else's work under a free licence — the credit
+        // and the licence link travel with the image, not just a page footer.
+        var CREDITS = window.DOG_PHOTO_CREDITS || {};
+        function credit(slug) {
+            var c = CREDITS[slug];
+            if (!c) return '';
+            var who = esc(c.artist || 'Unknown');
+            var lic = c.licenseUrl
+                ? '<a href="' + esc(c.licenseUrl) + '" rel="nofollow noopener" target="_blank">' + esc(c.license) + '</a>'
+                : esc(c.license);
+            var src = c.source
+                ? ' · <a href="' + esc(c.source) + '" rel="nofollow noopener" target="_blank">source</a>'
+                : '';
+            return '<p class="dc-credit">Photo: ' + who + ' · ' + lic + src + '</p>';
+        }
+
+        function meter(label, n) {
+            var bars = '';
+            for (var i = 1; i <= 5; i++) bars += '<i class="' + (i <= n ? 'on' : '') + '"></i>';
+            return '<div class="dc-meter"><span class="m-l">' + label + '</span><span class="m-b">' + bars + '</span></div>';
+        }
+
+        function card(r, idx) {
+            var b = r.breed;
+            var why = F.reasons(r, 3);
+            var caveats = F.caveats(r, 2);
+            var color = GROUP_COLOR[b.group] || '#8A5A2B';
+
+            return '<article class="dc" data-i="' + idx + '">' +
+              '<button class="dc-top" type="button" aria-expanded="false">' +
+                '<span class="dc-medal" style="background:' + color + '" aria-hidden="true">' + initials(b.name) +
+                  '<img src="photos/' + b.slug + '.jpg" alt="" loading="lazy" decoding="async" ' +
+                  'onerror="this.remove()">' +
+                '</span>' +
+                '<span class="dc-id">' +
+                  '<span class="dc-name">' + esc(b.name) + '</span>' +
+                  '<span class="dc-sub">' + esc(GROUP_LABEL[b.group] || b.group) + ' · ' + esc(b.size) + ' · ' + esc(b.origin) + '</span>' +
+                '</span>' +
+                '<span class="dc-score">' + r.score + '</span>' +
+              '</button>' +
+              (why.length ? '<div class="dc-why">' + why.map(function (w) { return '<span>' + esc(w) + '</span>'; }).join('') + '</div>' : '') +
+              (caveats.length ? '<p class="dc-caveat"><b>But:</b> ' + esc(caveats.join('; ')) + '.</p>' : '') +
+              '<div class="dc-more">' +
+                '<img class="dc-shot" src="photos/' + b.slug + '.jpg" alt="A ' + esc(b.name) +
+                  '" loading="lazy" decoding="async" onerror="this.remove()">' +
+                credit(b.slug) +
+                '<p class="dc-blurb">' + esc(b.blurb) + '</p>' +
+                '<div class="dc-facts">' +
+                  '<div class="u-kv"><span class="ku">Height</span><span class="kvv">' + range(b.heightIn, 'in') + '</span></div>' +
+                  '<div class="u-kv"><span class="ku">Weight</span><span class="kvv">' + range(b.weightLb, 'lb') + '</span></div>' +
+                  '<div class="u-kv"><span class="ku">Lifespan</span><span class="kvv">' + range(b.lifespan, 'yrs') + '</span></div>' +
+                  '<div class="u-kv"><span class="ku">Coat</span><span class="kvv">' +
+                    esc(b.coatTexture === 'none' ? b.coat : b.coat + ', ' + b.coatTexture) + '</span></div>' +
+                '</div>' +
+                '<div class="dc-meters">' +
+                  meter('Energy', b.energy) +
+                  meter('Shedding', b.shedding) +
+                  meter('Grooming', b.grooming) +
+                  meter('Barking', b.barking) +
+                  meter('Alone', b.aloneTolerance) +
+                  meter('With kids', b.withKids) +
+                '</div>' +
+              '</div>' +
+            '</article>';
+        }
+
+        var lastResults = [];
+
+        function render() {
+            var filters = currentFilters();
+            var results = F.rank(BREEDS, filters, { includeCrossbreeds: includeCross });
+            lastResults = results;
+
+            var pool = BREEDS.filter(function (b) { return includeCross || b.group !== 'crossbreed'; }).length;
+            var answered = Object.keys(answers).length;
+
+            // "114 breeds fit of 114" reads as though the answers did nothing.
+            // Only claim a narrowing when something was actually excluded.
+            if (!answered) {
+                $('count').innerHTML = pool + ' breeds <small>— answer anything above to rank them</small>';
+            } else if (results.length === pool) {
+                $('count').innerHTML = pool + ' breeds <small>ranked, best match first</small>';
+            } else {
+                $('count').innerHTML = results.length + ' breed' + (results.length === 1 ? '' : 's') +
+                    ' fit <small>of ' + pool + ', best match first</small>';
+            }
+
+            // Active filter chips
+            var chips = Object.keys(filters).map(function (id) {
+                var f = filters[id];
+                if (!f || f.value == null) return '';
+                var hard = f.hard || f.floor != null;
+                return '<span class="dr-fchip">' + (hard ? '<span class="lock" title="Excludes rather than ranks">●</span>' : '') +
+                       esc(filterLabel(id, f)) +
+                       '<button type="button" data-drop="' + id + '" aria-label="Remove this filter">×</button></span>';
+            }).join('');
+            $('active-filters').innerHTML = chips;
+
+            // Relaxations
+            var misses = F.nearMisses(BREEDS, filters, { includeCrossbreeds: includeCross });
+            if (misses.length) {
+                $('relax').hidden = false;
+                $('relax').innerHTML = '<span class="lbl">More if you</span>' + misses.map(function (m) {
+                    return '<button type="button" data-relax="' + m.id + '"><b>+' + m.count + '</b> · ' + esc(m.label) + '</button>';
+                }).join('');
+                // Stash so the click handler doesn't have to recompute.
+                $('relax').__misses = misses;
+            } else {
+                $('relax').hidden = true;
+                $('relax').innerHTML = '';
+            }
+
+            // Cards
+            if (!results.length) {
+                $('grid').innerHTML = '';
+                $('empty').hidden = false;
+                $('empty').textContent = 'Nothing matches every requirement. Remove a filter above, or take one of the options offered.';
+                $('more-wrap').hidden = true;
+                return;
+            }
+            $('empty').hidden = true;
+            $('grid').innerHTML = results.slice(0, showing).map(card).join('');
+            $('more-wrap').hidden = results.length <= showing;
+            $('more').textContent = 'Show more (' + (results.length - showing) + ' left)';
+        }
+
+        function save() {
+            try { localStorage.setItem(STORE, JSON.stringify(answers)); } catch (e) { /* ignore */ }
+        }
+
+        // ── Events ────────────────────────────────────────────────────────
+        $('quiz').addEventListener('click', function (e) {
+            var btn = e.target.closest('.dq-opt');
+            if (!btn) return;
+            var q = btn.dataset.q, o = btn.dataset.o;
+            // Tapping the selected option again clears that question.
+            if (answers[q] === o) delete answers[q]; else answers[q] = o;
+            // A changed answer invalidates hand-tweaks made against the old one.
+            dropped = {}; relaxations = {}; showing = PAGE;
+            save(); renderQuiz(); render();
+        });
+
+        $('active-filters').addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-drop]');
+            if (!btn) return;
+            dropped[btn.dataset.drop] = true;
+            showing = PAGE;
+            render();
+        });
+
+        $('relax').addEventListener('click', function (e) {
+            var btn = e.target.closest('[data-relax]');
+            if (!btn) return;
+            var misses = $('relax').__misses || [];
+            var id = btn.dataset.relax;
+            misses.forEach(function (m) { if (m.id === id) relaxations[id] = m.relaxed; });
+            showing = PAGE;
+            render();
+        });
+
+        $('grid').addEventListener('click', function (e) {
+            var top = e.target.closest('.dc-top');
+            if (!top) return;
+            var art = top.closest('.dc');
+            var open = art.classList.toggle('open');
+            top.setAttribute('aria-expanded', open ? 'true' : 'false');
+        });
+
+        $('more').addEventListener('click', function () {
+            showing += PAGE;
+            render();
+        });
+
+        $('toggle-cross').addEventListener('click', function () {
+            includeCross = !includeCross;
+            this.setAttribute('aria-pressed', includeCross ? 'true' : 'false');
+            this.classList.toggle('active', includeCross);
+            showing = PAGE;
+            render();
+        });
+
+        $('reset').addEventListener('click', function () {
+            answers = {}; dropped = {}; relaxations = {}; showing = PAGE;
+            save(); renderQuiz(); render();
+        });
+
+        // Full credit list, built once from the same generated data.
+        (function () {
+            var el = $('credits-list');
+            if (!el) return;
+            var byName = BREEDS.slice().sort(function (a, b) { return a.name.localeCompare(b.name); });
+            el.innerHTML = byName.map(function (b) {
+                var c = CREDITS[b.slug];
+                if (!c) return '';
+                var lic = c.licenseUrl
+                    ? '<a href="' + esc(c.licenseUrl) + '" rel="nofollow noopener" target="_blank">' + esc(c.license) + '</a>'
+                    : esc(c.license);
+                var src = c.source
+                    ? ' — <a href="' + esc(c.source) + '" rel="nofollow noopener" target="_blank">file</a>'
+                    : '';
+                return '<p><b>' + esc(b.name) + '</b> — ' + esc(c.artist || 'Unknown') + ', ' + lic + src + '</p>';
+            }).join('');
+        })();
+
+        renderQuiz();
+        render();
+    })();
+    </script>
+</body>
+</html>
