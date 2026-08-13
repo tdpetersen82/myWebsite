@@ -10,6 +10,8 @@ _design_handoff
 .DS_Store
 PRE-PUBLISH-CHECKLIST.md
 CLAUDE.md
+dog-breeds-plan.md
+tools
 wrangler.jsonc
 workers
 package.json
