@@ -1,6 +1,6 @@
 /* eslint-disable */
 // Shared playing-card sprite helper.
-// Sprite at /assets/cards.png — 13 columns (ranks) × 4 rows (suits).
+// Sprite at /assets/cards.webp — 13 columns (ranks) × 4 rows (suits).
 //   col index: A=0, 2=1, 3=2, 4=3, 5=4, 6=5, 7=6, 8=7, 9=8, 10=9, J=10, Q=11, K=12
 //   row index: spades=0, hearts=1, diamonds=2, clubs=3
 //
@@ -16,7 +16,7 @@
 // three-card-poker, texas-holdem default), 84×118 (texas-holdem table,
 // solitaire), 110×155 (video-poker), 36×51 (texas-holdem dealer minis).
 (function () {
-  const URL = '../assets/cards.png';
+  const URL = '../assets/cards.webp';
   const COLS = 13;
   const ROWS = 4;
 

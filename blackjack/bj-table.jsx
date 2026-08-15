@@ -198,7 +198,7 @@ function FeltBackdrop() {
       {/* felt texture */}
       <div style={{
         position:'absolute', inset: 0,
-        backgroundImage: 'url(assets/table/felt.png)',
+        backgroundImage: 'url(../assets/casino/felt.webp)',
         backgroundSize: 'cover',
         opacity: .25,
         mixBlendMode: 'overlay'

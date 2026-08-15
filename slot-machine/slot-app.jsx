@@ -209,10 +209,13 @@ function SlotApp() {
     <div className="slot-root">
       <div className="slot-topbar">
         <a className="slot-back" href="../casino/">‹ Casino</a>
-        <h1 className="slot-title">
+        {/* Not an <h1>: the page's single H1 is the static one in index.html.
+            Styling is class-based and computed margin is already 0, so this
+            renders identically. */}
+        <div className="slot-title">
           Slot Machine
           <span className="slot-title-sub">{theme.name}</span>
-        </h1>
+        </div>
         <div className="slot-bank">
           <div className="slot-bank-amt" id="slot-bank-amt">${bankroll.toLocaleString()}</div>
           <a className="slot-reload" href="../profile/?from=slot-machine">

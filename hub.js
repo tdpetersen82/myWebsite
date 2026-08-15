@@ -10,14 +10,21 @@
   const CATEGORIES = window.LG_CATEGORIES;
   const CAT_LABEL = window.LG_CAT_LABEL;
 
-  // Games with a real screenshot thumbnail in assets/thumbs/<id>.webp. Tiles for
-  // these show the captured frame; everything else falls back to the icon
-  // medallion. Add an id here when its thumbnail lands.
-  const THUMBS = new Set([
-    '2048', 'backgammon', 'checkers', 'chess', 'chinese-checkers',
-    'connect-4', 'connect-dots', 'mahjong', 'mancala', 'othello',
-    'ultimate-tic-tac-toe', 'sudoku', 'minesweeper',
-    'snake', 'pong', 'breakout', 'space-invaders', 'solar-system',
+  // Tile art in assets/thumbs/. Map id -> file extension, because not every
+  // tile is a screenshot: some are illustrated SVGs and one is a photo. The
+  // extension used to be hard-coded to .webp, which quietly hid the six
+  // non-webp tiles the category pages were already showing. Tiles for ids
+  // listed here show the art; everything else falls back to the icon medallion.
+  const THUMBS = new Map([
+    ['2048', 'webp'], ['backgammon', 'webp'], ['checkers', 'webp'],
+    ['chess', 'webp'], ['chinese-checkers', 'webp'], ['connect-4', 'webp'],
+    ['connect-dots', 'webp'], ['mahjong', 'webp'], ['mancala', 'webp'],
+    ['othello', 'webp'], ['ultimate-tic-tac-toe', 'webp'], ['sudoku', 'webp'],
+    ['minesweeper', 'webp'], ['snake', 'webp'], ['pong', 'webp'],
+    ['breakout', 'webp'], ['space-invaders', 'webp'], ['solar-system', 'webp'],
+    ['blackjack', 'webp'],
+    ['crossword-maker', 'svg'], ['farkle', 'svg'], ['hangman', 'svg'],
+    ['word-search', 'svg'], ['yahtzee', 'svg'], ['dogs', 'jpg'],
   ]);
 
   // Map of game id → localStorage key for personal best. If a key isn't here
@@ -116,13 +123,19 @@
     return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">${inner}</svg>`;
   }
 
-  // Featured rhythm: hero + tall + 2 wides + med, plus a native ad slot
+  // Featured rhythm: hero + tall + 2 wides + med. This is a *curated*
+  // showcase, so it is deliberately hand-written rather than derived — but it
+  // does go stale, so revisit it when a batch of games ships. Prefer ids that
+  // have tile art in THUMBS: the non-hero slots render the art and look empty
+  // without it. The hero slot should stay `snake` unless the hover preview is
+  // reworked too — wirePreview() animates a 5-cell snake across the grid.
+  // Unknown ids are skipped safely by the .filter() in the mosaic builder.
   const FEATURED_LAYOUT = [
-    { id: 'snake',          size: 's-hero', isHero: true },
-    { id: 'blackjack',      size: 's-tall' },
-    { id: 'asteroids',      size: 's-wide' },
-    { id: 'space-invaders', size: 's-wide' },
-    { id: 'bubble-pop',     size: 's-med'  },
+    { id: 'snake',           size: 's-hero', isHero: true },
+    { id: 'blackjack',       size: 's-tall' },
+    { id: 'yahtzee',         size: 's-wide' },
+    { id: 'word-search',     size: 's-wide' },
+    { id: 'dogs',            size: 's-med'  },
   ];
   const FEATURED_IDS = FEATURED_LAYOUT.map(f => f.id);
 
@@ -146,9 +159,10 @@
 
     const best = getBest(game.id);
     const cat = CAT_LABEL[game.cat] || '';
-    const hasShot = THUMBS.has(game.id);
+    const ext = THUMBS.get(game.id);
+    const hasShot = !!ext;
     const top = hasShot
-      ? `<img class="shot-img" src="assets/thumbs/${game.id}.webp" alt="${game.name} screenshot" loading="lazy" decoding="async" width="600" height="600">`
+      ? `<img class="shot-img${ext === 'svg' ? ' is-art' : ''}" src="assets/thumbs/${game.id}.${ext}" alt="${game.name} ${ext === 'svg' ? 'artwork' : 'screenshot'}" loading="lazy" decoding="async" width="600" height="600">`
       : `<div class="shot-ph" style="background:${game.color}22">${glyph(game, size === 's-tall' ? 84 : 56)}</div>`;
 
     return el(`
@@ -313,11 +327,15 @@
       </div>
     `));
 
-    // New this month
-    const newGames = GAMES.filter(g => g.isNew);
+    // Recently added — sorted newest-first by ship date, not catalog order.
+    // (Catalog order used to win, so this card showed four of the *oldest*
+    // games that happened to be flagged new.) "Recently added" rather than
+    // "New this month" so the card is still honest during a quiet month.
+    const newGames = GAMES.filter(g => g.added)
+      .sort((a, b) => b.added.localeCompare(a.added));
     const newCard = el(`
       <div class="side-card">
-        <h4>New this month</h4>
+        <h4>Recently added</h4>
       </div>
     `);
     newGames.slice(0, 4).forEach(g => {

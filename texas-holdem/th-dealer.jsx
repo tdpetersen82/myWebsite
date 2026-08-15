@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Dealer panel + opponent seat for Texas Hold'em.
 // - DealerStrip: small portrait strip on the left of the table — reuses
-//   blackjack/assets/dealers/female/*.jpg (no male art exists yet).
+//   assets/casino/dealers/female/*.webp (no male art exists yet).
 // - OpponentSeat: avatar + name + stack + bet for each AI opponent.
 
 const TH_DEALER_NAMES = ['Melissa', 'Marcus'];
@@ -61,11 +61,11 @@ function thPickLine(key, ctx = {}) {
 
 // Compact dealer pane on the left of the main felt: portrait + speech bubble.
 function THDealerStrip({ name, gender = 'female', expression = 'idle', message }) {
-  // Only female dealer art exists in blackjack/assets/dealers/. 'Marcus' is
+  // Only female dealer art exists in assets/casino/dealers/. 'Marcus' is
   // still offered in the tweaks panel, so map male -> female art rather than
   // 404 on every frame. Needs real male art to be correct.
   const artGender = gender === 'male' ? 'female' : gender;
-  const src = `../blackjack/assets/dealers/${artGender}/${expression}.jpg`;
+  const src = `../assets/casino/dealers/${artGender}/${expression}.webp`;
   return (
     <div style={{
       width: 200, height: '100%',
@@ -78,7 +78,7 @@ function THDealerStrip({ name, gender = 'female', expression = 'idle', message }
       <img
         src={src}
         alt={name}
-        onError={(e) => { e.currentTarget.src = `../blackjack/assets/dealers/female/idle.jpg`; }}
+        onError={(e) => { e.currentTarget.src = `../assets/casino/dealers/female/idle.webp`; }}
         style={{
           position:'absolute', left:'50%', top: 0,
           height:'100%',

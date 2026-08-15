@@ -177,7 +177,7 @@ function FeltBackdrop() {
     }}>
       <div style={{
         position: 'absolute', inset: 0,
-        backgroundImage: 'url(../blackjack/assets/table/felt.png)',
+        backgroundImage: 'url(../assets/casino/felt.webp)',
         backgroundSize: 'cover',
         opacity: .25,
         mixBlendMode: 'overlay'

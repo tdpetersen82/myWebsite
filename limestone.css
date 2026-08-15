@@ -653,6 +653,17 @@ body.hub-root {
 }
 .tile.tileB:hover .shot-img { transform: scale(1.05); }
 
+/* Illustrated (SVG) tile art is composed as a square logo, not a screenshot.
+   The short tile slots are ~2.8:1, so object-fit:cover throws away roughly
+   two-thirds of the drawing. Contain it over the game's colour wash instead —
+   the whole illustration reads, and the letterboxing looks deliberate. */
+.tile.tileB .shot-img.is-art {
+  object-fit: contain;
+  padding: 10px;
+  background: rgba(0, 0, 0, 0.035);
+  background: color-mix(in srgb, var(--g, #888) 9%, transparent);
+}
+
 /* Icon-medallion placeholder for games without a screenshot yet. */
 .tile.tileB .shot-ph {
   width: 100%;

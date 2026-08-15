@@ -50,7 +50,7 @@
   }
 
   // ── Maddie portrait (zookeeper sprite) ────────────────────────────────
-  // assets/zookeepersprite.png is a 2x2 grid of expressions:
+  // assets/zookeepersprite.webp is a 2x2 grid of expressions:
   //   ┌──────────┬──────────┐
   //   │  happy   │   sad    │   ← top row: happy (yes/win), sad (lose)
   //   ├──────────┼──────────┤

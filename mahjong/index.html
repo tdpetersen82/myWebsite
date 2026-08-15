@@ -17,7 +17,7 @@
     <meta property="og:description" content="Match free tiles to clear the board. Three layouts, always-solvable deals, hints and undo. No downloads.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://limestonegames.com/mahjong/">
-    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta property="og:image" content="https://limestonegames.com/assets/og/mahjong.png">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Mahjong Solitaire — Free Browser Tile-Matching Game">
     <meta name="twitter:description" content="Classic Mahjong Solitaire with always-solvable boards, three layouts, hints and undo.">
@@ -414,7 +414,10 @@
     const sprite = new Image();
     sprite.onload = () => { if (sprite.naturalWidth > 0) { spriteReady = true; drawStatic(); } };
     sprite.onerror = () => { spriteReady = false; };
-    sprite.src = 'tiles.png';
+    // No sprite sheet ships today — the vector fallback below is what players
+    // see. Requesting a missing tiles.png only bought a 404 on every load, so
+    // the src is only set when the sheet is actually present.
+    // sprite.src = 'tiles.png';
 
     function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
     function fmtTime(sec) { const m = Math.floor(sec / 60), s = sec % 60; return m + ':' + String(s).padStart(2, '0'); }
