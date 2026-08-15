@@ -16,13 +16,23 @@
   // non-webp tiles the category pages were already showing. Tiles for ids
   // listed here show the art; everything else falls back to the icon medallion.
   const THUMBS = new Map([
-    ['2048', 'webp'], ['backgammon', 'webp'], ['checkers', 'webp'],
-    ['chess', 'webp'], ['chinese-checkers', 'webp'], ['connect-4', 'webp'],
-    ['connect-dots', 'webp'], ['mahjong', 'webp'], ['mancala', 'webp'],
-    ['othello', 'webp'], ['ultimate-tic-tac-toe', 'webp'], ['sudoku', 'webp'],
-    ['minesweeper', 'webp'], ['snake', 'webp'], ['pong', 'webp'],
-    ['breakout', 'webp'], ['space-invaders', 'webp'], ['solar-system', 'webp'],
-    ['blackjack', 'webp'],
+    // Screenshots
+    ['2048', 'webp'], ['asteroids', 'webp'], ['backgammon', 'webp'],
+    ['blackjack', 'webp'], ['block-puzzle', 'webp'], ['breakout', 'webp'],
+    ['checkers', 'webp'], ['chess', 'webp'], ['chinese-checkers', 'webp'],
+    ['connect-4', 'webp'], ['connect-dots', 'webp'], ['craps', 'webp'],
+    ['crazy-eights', 'webp'], ['defender', 'webp'], ['euchre', 'webp'],
+    ['freecell', 'webp'], ['frogger', 'webp'], ['go-fish', 'webp'],
+    ['hearts', 'webp'], ['lunar-lander', 'webp'], ['mahjong', 'webp'],
+    ['mancala', 'webp'], ['memory-match', 'webp'], ['minesweeper', 'webp'],
+    ['othello', 'webp'], ['pong', 'webp'], ['roulette', 'webp'],
+    ['simon', 'webp'], ['slot-machine', 'webp'], ['snake', 'webp'],
+    ['solar-system', 'webp'], ['solitaire', 'webp'], ['space-invaders', 'webp'],
+    ['spacex-lander', 'webp'], ['spades', 'webp'], ['spider-solitaire', 'webp'],
+    ['sudoku', 'webp'], ['texas-holdem', 'webp'], ['three-card-poker', 'webp'],
+    ['tic-tac-toe', 'webp'], ['ultimate-tic-tac-toe', 'webp'],
+    ['video-poker', 'webp'],
+    // Illustrated art (contained, not cropped — see .shot-img.is-art)
     ['crossword-maker', 'svg'], ['farkle', 'svg'], ['hangman', 'svg'],
     ['word-search', 'svg'], ['yahtzee', 'svg'], ['dogs', 'jpg'],
   ]);

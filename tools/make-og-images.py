@@ -84,8 +84,10 @@ def build(gid, name, art_path):
     d.text((left, H - 104), "LIMESTONE GAMES", font=fbrand, fill=(255, 255, 255))
     d.line([(left, H - 118), (left + 250, H - 118)], fill=(108, 106, 210), width=3)
 
-    out = os.path.join(OUT, f"{gid}.png")
-    bg.save(out, "PNG", optimize=True)
+    # JPEG, not PNG: these are flat cards with one photographic panel, and PNG
+    # made them ~6MB across the set for no visible gain.
+    out = os.path.join(OUT, f"{gid}.jpg")
+    bg.save(out, "JPEG", quality=86, optimize=True, progressive=True)
     return out
 
 
