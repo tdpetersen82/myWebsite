@@ -60,12 +60,22 @@ function thPickLine(key, ctx = {}) {
 }
 
 // Compact dealer pane on the left of the main felt: portrait + speech bubble.
+// No male dealer art exists in assets/casino/dealers/. Showing the female
+// photo under the name 'Marcus' looked like a bug, so male falls back to a
+// neutral silhouette until real art exists.
+const DEALER_SILHOUETTE = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 960">' +
+  '<rect width="640" height="960" fill="#1b140d"/>' +
+  '<circle cx="320" cy="335" r="132" fill="#3b2d1d"/>' +
+  '<path d="M96 960c0-146 100-262 224-262s224 116 224 262z" fill="#3b2d1d"/>' +
+  '</svg>');
+
 function THDealerStrip({ name, gender = 'female', expression = 'idle', message }) {
   // Only female dealer art exists in assets/casino/dealers/. 'Marcus' is
   // still offered in the tweaks panel, so map male -> female art rather than
   // 404 on every frame. Needs real male art to be correct.
   const artGender = gender === 'male' ? 'female' : gender;
-  const src = `../assets/casino/dealers/${artGender}/${expression}.webp`;
+  const src = gender === 'male' ? DEALER_SILHOUETTE : `../assets/casino/dealers/${artGender}/${expression}.webp`;
   return (
     <div style={{
       width: 200, height: '100%',

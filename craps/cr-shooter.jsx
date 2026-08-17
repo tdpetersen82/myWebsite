@@ -333,13 +333,23 @@ function crOutcomeToExpression(bannerKind, totalWon) {
   return 'idle';
 }
 
+// No male dealer art exists in assets/casino/dealers/. Showing the female
+// photo under the name 'Marcus' looked like a bug, so male falls back to a
+// neutral silhouette until real art exists.
+const DEALER_SILHOUETTE = 'data:image/svg+xml;utf8,' + encodeURIComponent(
+  '<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 640 960">' +
+  '<rect width="640" height="960" fill="#1b140d"/>' +
+  '<circle cx="320" cy="335" r="132" fill="#3b2d1d"/>' +
+  '<path d="M96 960c0-146 100-262 224-262s224 116 224 262z" fill="#3b2d1d"/>' +
+  '</svg>');
+
 function CRDealerPortrait({ expression = 'idle', shift = 0, gender = 'female', idle = false, mood = 0 }) {
   // Only female dealer art exists in assets/casino/dealers/. 'Marcus' is
   // still offered in the tweaks panel, so map male -> female art rather than
   // 404 on every frame. Needs real male art to be correct.
   const artGender = gender === 'male' ? 'female' : gender;
   const file = expression;
-  const src = `../assets/casino/dealers/${artGender}/${file}.webp`;
+  const src = gender === 'male' ? DEALER_SILHOUETTE : `../assets/casino/dealers/${artGender}/${file}.webp`;
   const [layers, setLayers] = React.useState(() => [{ key: 0, src, opacity: 1, blur: 0 }]);
   const counter = React.useRef(0);
   const lastSrc = React.useRef(src);
@@ -476,7 +486,7 @@ function CRDealerNameplate({ name, gender = 'female' }) {
       boxShadow: '0 8px 18px rgba(0,0,0,.45)'
     }}>
       <img
-        src={`../assets/casino/dealers/${artGender}/avatar.webp`}
+        src={gender === 'male' ? DEALER_SILHOUETTE : `../assets/casino/dealers/${artGender}/avatar.webp`}
         alt=""
         style={{
           width: 30, height: 30, borderRadius: '50%',
