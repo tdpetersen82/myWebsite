@@ -75,6 +75,25 @@
 .sheet .keybox ul { margin: 0; padding-left: 17px; columns: 2; column-gap: 24px; font-size: 11.5px; line-height: 1.55; }
 .sheet .keybox li { margin: 0 0 3px; break-inside: avoid; }
 
+/* Action-coded strategy grids (blackjack). The colour IS the information here —
+   you read the chart by scanning for a block of one shade — so it has to survive
+   the print path, hence the !important overrides in @media print below.
+   Row height is tuned so all three grids plus the key fit one Letter page —
+   34 rows at 21px overflowed onto a second sheet. Don't loosen without re-measuring. */
+.sheet table.bj td { height: 16px; line-height: 1.05; font-weight: 700; font-size: 10.5px; }
+.sheet table.bj td.lbl { font-size: 10.5px; white-space: nowrap; padding: 2px 7px; }
+.sheet table.bj th { font-size: 10.5px; padding: 4px 3px; }
+.sheet table.bj caption { padding-bottom: 5px; }
+
+/* Long single-column reference lists (video poker hold order) — same reason. */
+.sheet table.compact td { height: 20px; }
+.sheet table.compact td.lbl.wrap { padding: 3px 8px; line-height: 1.35; font-size: 11.5px; }
+.sheet table.bj td.a-H { background: #FBE4DE; }
+.sheet table.bj td.a-S { background: #E2EDDD; }
+.sheet table.bj td.a-D { background: #FCEFCB; }
+.sheet table.bj td.a-P { background: #DFE9F5; }
+.sheet table.bj td.a-R { background: #EADDEF; }
+
 /* Blank grid boards (ultimate tic-tac-toe) */
 .uttt { display: grid; grid-template-columns: repeat(3, 1fr); gap: 7px; background: #14110d; padding: 7px; width: 100%; max-width: 6.6in; margin: 0 auto; }
 .uttt .mini { display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; background: #b9b2a4; }
@@ -139,6 +158,11 @@
   .sheet td.lbl { background: #FAFAFA !important; }
   .sheet tr.total td { background: #EEE !important; }
   .sheet tr.rule-row td { background: #000 !important; }
+  .sheet table.bj td.a-H { background: #FBE4DE !important; }
+  .sheet table.bj td.a-S { background: #E2EDDD !important; }
+  .sheet table.bj td.a-D { background: #FCEFCB !important; }
+  .sheet table.bj td.a-P { background: #DFE9F5 !important; }
+  .sheet table.bj td.a-R { background: #EADDEF !important; }
   .sheet, .sheet * { -webkit-print-color-adjust: exact; print-color-adjust: exact; }
   .sheet-foot { color: #666 !important; }
   a[href]:after { content: none !important; }
