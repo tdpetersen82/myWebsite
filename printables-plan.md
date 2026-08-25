@@ -119,6 +119,13 @@ Niche cards (thin-to-zero competition):
 
 ## Canary-gated (do NOT build until the canary reports)
 
+**Update 2026-08-25: /utilities/tournament-generator/ shipped** — an interactive
+single/double-elim + round-robin builder (2–32 entrants, click-to-advance, print-ready,
+`?format=` deep links). It targets the *generator/maker/creator*-intent half of the
+bracket cluster, which printyourbrackets' static PDFs don't serve. The static printable
+PAGES below stay canary-gated; if they get built, they must cross-link the tool and
+vice versa.
+
 Brackets + round-robin had the BIGGEST raw demand (82/62/62/50) but printyourbrackets.com
 owns both spaces with full sitelinks. Our **football-squares page competes with that exact
 site** — it is the live canary:
