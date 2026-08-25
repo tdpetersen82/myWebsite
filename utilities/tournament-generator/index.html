@@ -280,7 +280,7 @@
                 </details>
                 <details>
                     <summary>Why is double elimination capped at 16?</summary>
-                    <p>A 16-entry double elimination is already 30+ matches and a lower bracket 6 rounds deep — about the limit of what prints legibly on one sheet. Single elimination goes to 32 and round robin to 16 (15 rounds). If your event is bigger, split it into groups and run the group winners through a final bracket.</p>
+                    <p>A 16-entry double elimination is already 30+ matches and a lower bracket 6 rounds deep — about the limit of what prints legibly on one sheet. Single elimination goes to 32 and round robin to 16 (15 rounds). Everything scales to fit one printed page, so a 32-entry bracket prints small — fine as a hand-out, but for a wall chart consider running it on screen. If your event is bigger, split it into groups and run the group winners through a final bracket.</p>
                 </details>
                 <details>
                     <summary>Does the round robin schedule balance who's listed first?</summary>
@@ -904,13 +904,22 @@
         function beforePrint() {
             updatePrintHead(getPlayers().length);
             pageStyle.textContent = '@page { size: letter ' + (format === 'rr' ? 'portrait' : 'landscape') + '; margin: 0.5in; }';
-            var usable = format === 'rr' ? 720 : 960; // letter minus 0.5in margins @96dpi
+            // Letter minus 0.5in margins @96dpi; height also leaves room for the print
+            // header and section label sharing the first page with the board.
+            var usableW = format === 'rr' ? 720 : 960;
+            var usableH = format === 'rr' ? 890 : 500;
             printZoomEls = [];
-            document.querySelectorAll('.tg-board, .tg-rr-table').forEach(function (el) {
-                var w = el.scrollWidth;
-                if (w > usable) {
-                    var z = Math.max(0.4, usable / w);
-                    el.style.zoom = z;
+            document.querySelectorAll('.tg-board').forEach(function (el) {
+                var z = Math.min(1, usableW / el.scrollWidth, usableH / el.scrollHeight);
+                if (z < 1) {
+                    el.style.zoom = Math.max(0.35, z);
+                    printZoomEls.push(el);
+                }
+            });
+            document.querySelectorAll('.tg-rr-table').forEach(function (el) {
+                // Tables break cleanly at row boundaries, so only width matters here.
+                if (el.scrollWidth > usableW) {
+                    el.style.zoom = Math.max(0.4, usableW / el.scrollWidth);
                     printZoomEls.push(el);
                 }
             });
@@ -929,7 +938,15 @@
 
         // ---- init ----
         if (!loadState()) {
-            elNames.value = DEFAULT_NAMES.join('\n');
+            // ?n=16 pre-fills a blank numbered field on first visit (never overrides a saved list)
+            var qn = parseInt(new URLSearchParams(location.search).get('n'), 10);
+            if (qn >= 2 && qn <= 32) {
+                var blanks = [];
+                for (var bi = 1; bi <= qn; bi++) { blanks.push('Team ' + bi); }
+                elNames.value = blanks.join('\n');
+            } else {
+                elNames.value = DEFAULT_NAMES.join('\n');
+            }
         }
         var qFormat = new URLSearchParams(location.search).get('format');
         if (qFormat && LIMITS[qFormat]) { format = qFormat; }
