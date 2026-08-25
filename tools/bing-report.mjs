@@ -30,7 +30,7 @@ const BASE = 'https://ssl.bing.com/webmaster/api.svc/json';
 
 function parseArgs(argv) {
     const args = {
-        site: 'https://limestonegames.com',
+        site: 'https://limestonegames.com/',  // exact registered form — Bing matches siteUrl verbatim, slash included
         keyFile: process.env.BING_API_KEY_FILE || DEFAULT_KEY_FILE,
         out: DEFAULT_OUT,
     };
