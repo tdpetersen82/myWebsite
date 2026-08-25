@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>Tournament Bracket Generator — Single, Double Elimination &amp; Round Robin</title>
+    <meta name="description" content="Free tournament bracket generator. Enter names and get a single or double elimination bracket (2–32 teams) or a round robin schedule — click to advance winners, then print a clean copy. No sign-up.">
+    <meta name="keywords" content="tournament bracket generator, bracket maker, bracket creator, 8 team double elimination bracket, 16 team bracket, single elimination bracket, round robin schedule generator, round robin maker, printable tournament bracket, free bracket builder">
+    <meta property="og:title" content="Tournament Bracket Generator — Single, Double Elimination &amp; Round Robin">
+    <meta property="og:description" content="Enter names, pick a format, and get a bracket or round robin schedule you can run on screen or print. Free, no sign-up.">
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://limestonegames.com/utilities/tournament-generator/">
+    <meta property="og:image" content="https://limestonegames.com/og-image.png">
+    <meta name="twitter:card" content="summary_large_image">
+    <meta name="twitter:title" content="Tournament Bracket Generator — Single, Double Elimination &amp; Round Robin">
+    <meta name="twitter:description" content="Enter names, pick a format, and get a bracket or round robin schedule you can run on screen or print. Free, no sign-up.">
+    <meta name="twitter:image" content="https://limestonegames.com/og-image.png">
+    <link rel="canonical" href="https://limestonegames.com/utilities/tournament-generator/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Utilities","item":"https://limestonegames.com/utilities/"},{"@type":"ListItem","position":3,"name":"Tournament Bracket Generator","item":"https://limestonegames.com/utilities/tournament-generator/"}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Tournament Bracket Generator","url":"https://limestonegames.com/utilities/tournament-generator/","applicationCategory":"UtilitiesApplication","operatingSystem":"Any (web browser)","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"description":"Generate a single elimination bracket, double elimination bracket, or round robin schedule from a list of names. Advance winners on screen or print a clean copy."}</script>
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="../../category.css?v=20260521a">
+    <link rel="stylesheet" href="../../site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="../../utility.css?v=20260522a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <!-- Google AdSense -->
+    <!-- AdSense loader disabled until approved: <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-XXXXXXXXXXXXXXXX" crossorigin="anonymous"></script> -->
+
+    <style>
+      .tg-controls { display: grid; grid-template-columns: 1.1fr 1fr; gap: 22px; align-items: start; }
+      .tg-names-meta {
+        display: flex; justify-content: space-between; align-items: center; margin-top: 8px; gap: 10px;
+        font-family: var(--u-mono); font-size: 11.5px; color: var(--cat-ink-soft);
+      }
+      .tg-opts { display: flex; flex-direction: column; gap: 14px; }
+      .tg-check { display: flex; align-items: center; gap: 9px; font-size: 14px; color: var(--cat-ink); cursor: pointer; }
+      .tg-check input { width: 16px; height: 16px; accent-color: #147C7C; cursor: pointer; }
+      .tg-actions { display: flex; gap: 10px; flex-wrap: wrap; margin-top: 4px; }
+
+      .tg-out { margin-top: 26px; }
+      .tg-sec { margin-top: 26px; }
+      .tg-sec h3 {
+        font-family: var(--u-mono); font-size: 11px; letter-spacing: 0.14em; text-transform: uppercase;
+        color: var(--cat-ink-soft); margin: 0 0 12px;
+      }
+      .tg-scroll { overflow-x: auto; padding-bottom: 6px; }
+      .tg-board { position: relative; display: inline-block; min-width: 100%; }
+      .tg-grid { display: flex; align-items: stretch; gap: 38px; position: relative; z-index: 1; }
+      .tg-round-col { display: flex; flex-direction: column; }
+      .tg-round { flex: 1; display: flex; flex-direction: column; justify-content: space-around; gap: 12px; }
+      .tg-round-label {
+        font-family: var(--u-mono); font-size: 10.5px; letter-spacing: 0.1em; text-transform: uppercase;
+        color: var(--cat-ink-soft); text-align: center; margin-bottom: 2px;
+      }
+      .tg-wires { position: absolute; inset: 0; z-index: 0; pointer-events: none; }
+      .tg-wires path { stroke: var(--cat-line); stroke-width: 2; fill: none; }
+
+      .tg-match {
+        width: 196px; background: var(--cat-bg); border: 1px solid var(--cat-line);
+        border-radius: 12px; overflow: hidden; flex: none;
+      }
+      .tg-mid {
+        font-family: var(--u-mono); font-size: 9.5px; color: var(--cat-ink-soft);
+        padding: 3px 10px 0; letter-spacing: 0.08em;
+      }
+      .tg-slot {
+        display: flex; align-items: center; gap: 7px; padding: 7px 10px; font-size: 13.5px;
+        color: var(--cat-ink); line-height: 1.25; min-height: 32px;
+      }
+      .tg-slot + .tg-slot { border-top: 1px dashed var(--cat-line); }
+      .tg-slot .seed {
+        font-family: var(--u-mono); font-size: 10px; color: var(--cat-ink-soft);
+        min-width: 16px; text-align: right; flex: none;
+      }
+      .tg-slot .nm { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+      .tg-slot.pickable { cursor: pointer; }
+      .tg-slot.pickable:hover { background: var(--cat-paper-2); }
+      .tg-slot.tbd .nm, .tg-slot.bye .nm { color: var(--cat-ink-soft); font-style: italic; }
+      .tg-slot.win { background: rgba(20, 124, 124, 0.12); font-weight: 600; }
+      .tg-slot.win .nm { color: #0F5F5F; }
+      .tg-slot.out { opacity: 0.5; }
+      .tg-match.decided { border-color: rgba(20, 124, 124, 0.45); }
+      .tg-match.ghost { border-style: dashed; opacity: 0.75; }
+
+      .tg-champ {
+        width: 196px; flex: none; align-self: center; text-align: center;
+        border: 2px solid #147C7C; border-radius: 14px; padding: 12px 14px;
+        background: rgba(20, 124, 124, 0.08);
+      }
+      .tg-champ .cap {
+        font-family: var(--u-mono); font-size: 10px; letter-spacing: 0.14em;
+        text-transform: uppercase; color: var(--cat-ink-soft); margin-bottom: 5px;
+      }
+      .tg-champ .who { font-weight: 700; font-size: 15.5px; color: #0F5F5F; overflow-wrap: break-word; }
+
+      .tg-hint {
+        font-family: var(--u-mono); font-size: 11.5px; color: var(--cat-ink-soft);
+        margin: 14px 0 0; line-height: 1.55;
+      }
+
+      /* Round robin */
+      .tg-rr-wrap { display: grid; gap: 22px; }
+      .tg-rr-rounds { display: grid; grid-template-columns: repeat(auto-fill, minmax(230px, 1fr)); gap: 12px; }
+      .tg-rr-round { background: var(--cat-bg); border: 1px solid var(--cat-line); border-radius: 12px; padding: 12px 14px; }
+      .tg-rr-round h4 { margin: 0 0 8px; font-size: 13px; color: var(--cat-ink); }
+      .tg-rr-round ul { list-style: none; margin: 0; padding: 0; font-size: 13px; color: var(--cat-ink); }
+      .tg-rr-round li { padding: 3.5px 0; border-top: 1px dashed var(--cat-line); }
+      .tg-rr-round li:first-child { border-top: 0; }
+      .tg-rr-round .vs { color: var(--cat-ink-soft); font-family: var(--u-mono); font-size: 10.5px; padding: 0 4px; }
+      .tg-rr-round .sit { color: var(--cat-ink-soft); font-style: italic; }
+      .tg-table-scroll { overflow-x: auto; }
+      .tg-rr-table { border-collapse: collapse; width: 100%; font-size: 12.5px; }
+      .tg-rr-table th, .tg-rr-table td {
+        border: 1px solid var(--cat-line); padding: 6px 8px; text-align: center; color: var(--cat-ink);
+        min-width: 34px; height: 30px;
+      }
+      .tg-rr-table th { background: var(--cat-paper-2); font-weight: 600; font-size: 12px; }
+      .tg-rr-table td.self { background: var(--cat-line); }
+      .tg-rr-table th.rowname, .tg-rr-table td.rowname {
+        text-align: left; white-space: nowrap; max-width: 180px; overflow: hidden; text-overflow: ellipsis;
+      }
+
+      /* Print */
+      .tg-print-head { display: none; }
+      @media print {
+        .nav, .u-crumb, .u-head, .u-panel .tg-controls, .tg-actions, .u-about, .cat-foot,
+        .tg-hint, .u-msg { display: none !important; }
+        .u-wrap { max-width: none; margin: 0; padding: 0; }
+        .u-panel { border: 0; padding: 0; background: transparent; box-shadow: none; }
+        .tg-print-head { display: block; margin-bottom: 14px; }
+        .tg-print-head .t { font-size: 20px; font-weight: 700; color: #111; }
+        .tg-print-head .s { font-family: var(--u-mono); font-size: 10.5px; color: #555; margin-top: 3px; }
+        html, body { background: #fff !important; }
+        .tg-scroll, .tg-table-scroll { overflow: visible; }
+        .tg-board { min-width: 0; }
+        .tg-match, .tg-champ, .tg-rr-round { break-inside: avoid; background: #fff; }
+        .tg-sec { break-inside: avoid-page; }
+        .tg-sec:first-of-type { break-inside: auto; }
+        .tg-slot.pickable:hover { background: transparent; }
+        .tg-match, .tg-rr-round, .tg-rr-table th, .tg-rr-table td { border-color: #999; }
+        .tg-wires path { stroke: #999; }
+        .tg-slot.win { background: #e8f1f0 !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+      }
+
+      @media (max-width: 820px) {
+        .tg-controls { grid-template-columns: 1fr; }
+      }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/printables/">Printables</a>
+                <a href="/utilities/" class="active">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Runs in your browser
+        </div>
+    </nav>
+
+    <main class="u-wrap">
+        <nav class="u-crumb" aria-label="Breadcrumb">
+            <a href="/">Home</a><span class="sep">/</span>
+            <a href="/utilities/">Utilities</a><span class="sep">/</span>
+            <span class="cur">Tournament Generator</span>
+        </nav>
+
+        <header class="u-head">
+            <span class="u-eyebrow">⬡ Events · Brackets &amp; schedules</span>
+            <h1>Tournament <em>Generator</em></h1>
+            <p class="u-lede">Type a list of names and get a single elimination bracket, a double elimination bracket, or a round robin schedule. Run it live — click a name to advance the winner — or print a clean copy to fill in by hand. Everything stays on your device.</p>
+        </header>
+
+        <section class="u-panel">
+            <div class="tg-controls">
+                <div>
+                    <div class="u-field">
+                        <label class="u-label" for="tg-names">Players or teams — one per line, top seed first</label>
+                        <textarea id="tg-names" class="u-textarea" rows="10" spellcheck="false" autocomplete="off"></textarea>
+                    </div>
+                    <div class="tg-names-meta">
+                        <span id="tg-count">—</span>
+                        <button class="u-btn ghost" id="tg-shuffle" type="button" title="Randomize the order of the list">🔀 Shuffle order</button>
+                    </div>
+                </div>
+                <div class="tg-opts">
+                    <div class="u-field">
+                        <label class="u-label" for="tg-title">Tournament name <span style="text-transform:none;letter-spacing:0">(optional — shows on the printout)</span></label>
+                        <input id="tg-title" class="u-input" type="text" autocomplete="off" placeholder="Garage Cup 2026">
+                    </div>
+                    <div class="u-field">
+                        <span class="u-label">Format</span>
+                        <div class="u-tabs" style="margin-bottom:0">
+                            <button class="u-tab active" type="button" data-format="single">Single elim</button>
+                            <button class="u-tab" type="button" data-format="double">Double elim</button>
+                            <button class="u-tab" type="button" data-format="rr">Round robin</button>
+                        </div>
+                    </div>
+                    <label class="tg-check" id="tg-third-wrap">
+                        <input type="checkbox" id="tg-third"> Include a 3rd-place match
+                    </label>
+                    <label class="tg-check" id="tg-double-rr-wrap" style="display:none">
+                        <input type="checkbox" id="tg-doublerr"> Double round robin (everyone plays everyone twice)
+                    </label>
+                    <div class="tg-actions">
+                        <button class="u-btn" id="tg-print" type="button">🖨 Print</button>
+                        <button class="u-btn ghost" id="tg-clear" type="button">Clear results</button>
+                    </div>
+                </div>
+            </div>
+
+            <div class="tg-print-head" id="tg-print-head"></div>
+            <div class="u-msg" id="tg-msg" style="display:none"></div>
+            <div class="tg-out" id="tg-out"></div>
+            <p class="tg-hint" id="tg-hint"></p>
+        </section>
+
+        <section class="u-about">
+            <h2>About this tournament generator</h2>
+            <p>This tool builds three tournament formats from nothing but a list of names. Brackets are seeded the standard way — the order you enter names is the seed order, so the top two seeds can only meet in the final — and byes are handed to the top seeds automatically when the entry count isn't a power of two. You can run the whole event on screen by clicking winners (progress is saved in your browser), or print the empty bracket and run it with a pen.</p>
+
+            <h3>The three formats</h3>
+            <ul>
+                <li><b>Single elimination</b> (2–32 entries): lose once and you're out. Fastest format — an 8-team bracket is done in 7 matches. Optional 3rd-place match between the semifinal losers.</li>
+                <li><b>Double elimination</b> (2–16 entries): lose once and you drop to the lower bracket; lose twice and you're out. The lower-bracket survivor meets the upper-bracket winner in the grand final — and because that finalist has yet to lose twice, a second deciding match is played if they win the first one (the "bracket reset").</li>
+                <li><b>Round robin</b> (2–16 entries): everyone plays everyone once (or twice), scheduled by the classic circle method so no one plays twice in the same round. With an odd entry count, one entrant sits out each round. You get the round-by-round schedule, a results crosstable, and a standings table.</li>
+            </ul>
+
+            <h3>How to use it</h3>
+            <ul>
+                <li>Enter one player or team per line. Line order = seeding; use <b>Shuffle</b> for a random draw.</li>
+                <li>Pick a format. The bracket or schedule rebuilds instantly as you type.</li>
+                <li>To run it live, <b>click the winner</b> of any match — they advance (and in double elimination, the loser drops to the lower bracket). Click the other name to change the result; anything that depended on it resets.</li>
+                <li>To run it on paper, hit <b>Print</b> — the page prints just the bracket, sized to fit, in landscape for brackets and portrait for round robin.</li>
+            </ul>
+
+            <h3>Is my information private?</h3>
+            <p>Completely. Names never leave your device — there's no server, no account, and nothing uploaded. Your bracket is saved in your own browser's storage so it survives a page reload, and "Clear results" wipes the results while keeping your list.</p>
+
+            <p>Prefer paper for the whole event? The <a href="/printables/football-squares/">football squares grid</a>, <a href="/printables/euchre-rotation-charts/">euchre rotation charts</a>, and <a href="/printables/white-elephant-rules/">White Elephant rules &amp; slips</a> in our <a href="/printables/">printables collection</a> cover the party side.</p>
+
+            <div class="u-faq">
+                <details>
+                    <summary>How are byes assigned?</summary>
+                    <p>The bracket is padded up to the next power of two (a 6-team field becomes an 8-slot bracket with 2 byes), and byes are placed opposite the top seeds — seed 1 gets the first bye, seed 2 the next, and so on. That's the standard convention: the reward for seeding high is a first-round rest.</p>
+                </details>
+                <details>
+                    <summary>What's a bracket reset in double elimination?</summary>
+                    <p>The upper-bracket champion arrives at the grand final with zero losses; the lower-bracket champion has one. If the lower-bracket player wins the grand final, both now have one loss — so a second, winner-take-all match is played. The tool shows this match greyed out until it's actually needed.</p>
+                </details>
+                <details>
+                    <summary>Can the same two players meet twice in double elimination?</summary>
+                    <p>Yes — that's inherent to the format, most visibly in the grand final. The tool reduces <em>early</em> lower-bracket rematches by flipping the order in which upper-bracket losers drop in on alternating rounds, but with small fields a rematch before the final can still happen. That matches how the format is run in real events.</p>
+                </details>
+                <details>
+                    <summary>Why is double elimination capped at 16?</summary>
+                    <p>A 16-entry double elimination is already 30+ matches and a lower bracket 6 rounds deep — about the limit of what prints legibly on one sheet. Single elimination goes to 32 and round robin to 16 (15 rounds). If your event is bigger, split it into groups and run the group winners through a final bracket.</p>
+                </details>
+                <details>
+                    <summary>Does the round robin schedule balance who's listed first?</summary>
+                    <p>Pairings come from the circle method, which guarantees everyone meets everyone exactly once with no repeats in a round. In a double round robin every return meeting is flipped, so "listed first" balances exactly. In a single round robin it can't balance perfectly for everyone (each entrant plays an odd number of opponents at most sizes), but sides rotate as the schedule advances, so no one is stuck listed first all event.</p>
+                </details>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/utilities/">All utilities</a>
+            <a href="/printables/">Printables</a>
+            <a href="/">All games</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <script>
+    (function () {
+        'use strict';
+        /*TG-CORE-START*/
+        // ---------- pure tournament math (also exercised by the node test harness) ----------
+
+        var BYE = { bye: true };
+
+        // Standard seed placement: returns seed numbers in bracket-slot order for size m
+        // (power of two). Pairs are consecutive slots; seeds s and m+1-s meet in round 1.
+        function seedOrder(m) {
+            var a = [1];
+            while (a.length < m) {
+                var size = a.length * 2, b = [];
+                for (var i = 0; i < a.length; i++) { b.push(a[i], size + 1 - a[i]); }
+                a = b;
+            }
+            return a;
+        }
+
+        function nextPow2(n) { var m = 1; while (m < n) { m *= 2; } return m; }
+
+        // Build the match graph for single or double elimination.
+        // players: array of names. Returns { matches, format, meta }.
+        // Each match: { id, label, section, round, slots:[src,src], pick:null }
+        // src: {seed:k} | {win:matchId} | {lose:matchId}
+        function buildElim(players, format, thirdPlace) {
+            var N = players.length;
+            var M = nextPow2(Math.max(2, N));
+            var K = Math.round(Math.log2(M));
+            var order = seedOrder(M);
+            var matches = [];
+            var byId = {};
+            var mnum = 0, lnum = 0;
+
+            function add(section, round, slots, label) {
+                var id = section === 'L' ? 'L' + (++lnum) : (label || 'M' + (++mnum));
+                var m = { id: id, section: section, round: round, slots: slots, pick: null };
+                matches.push(m); byId[id] = m;
+                return m;
+            }
+
+            // Upper bracket
+            var prev = [];
+            for (var i = 0; i < M / 2; i++) {
+                prev.push(add('W', 1, [{ seed: order[2 * i] }, { seed: order[2 * i + 1] }]));
+            }
+            var wRounds = [prev];
+            for (var r = 2; r <= K; r++) {
+                var cur = [];
+                for (var j = 0; j < prev.length / 2; j++) {
+                    cur.push(add('W', r, [{ win: prev[2 * j].id }, { win: prev[2 * j + 1].id }]));
+                }
+                wRounds.push(cur); prev = cur;
+            }
+            var wFinal = prev[0];
+
+            var meta = { N: N, M: M, K: K, wRounds: wRounds, lRounds: [], gf: null, reset: null, third: null };
+
+            if (format === 'single') {
+                if (thirdPlace && K >= 2) {
+                    var semis = wRounds[K - 2];
+                    meta.third = add('T', 1, [{ lose: semis[0].id }, { lose: semis[1].id }], 'M' + (mnum + 1));
+                    mnum++;
+                }
+                return { matches: matches, byId: byId, format: format, meta: meta };
+            }
+
+            // Lower bracket (double elimination)
+            if (M === 2) {
+                // Degenerate but valid: the W-final loser gets a second life in the grand final.
+                meta.gf = add('G', 1, [{ win: wFinal.id }, { lose: wFinal.id }], 'GF');
+                meta.reset = add('G', 2, [{ win: 'GF' }, { lose: 'GF' }], 'GF2');
+                meta.reset.resetOf = 'GF';
+                return { matches: matches, byId: byId, format: format, meta: meta };
+            }
+
+            var lPrev = [];
+            // L round 1: pair the upper round-1 losers
+            var lr = [];
+            for (var a = 0; a < wRounds[0].length; a += 2) {
+                lr.push(add('L', 1, [{ lose: wRounds[0][a].id }, { lose: wRounds[0][a + 1].id }]));
+            }
+            meta.lRounds.push(lr); lPrev = lr;
+            var lRoundNo = 1;
+
+            for (var wr = 2; wr <= K; wr++) {
+                // Major round: winners of previous L round vs losers dropping from upper round wr.
+                // Alternate the drop-in order to push rematches later.
+                var drops = wRounds[wr - 1].slice();
+                if (wr % 2 === 0) { drops.reverse(); }
+                var major = [];
+                lRoundNo++;
+                for (var d = 0; d < drops.length; d++) {
+                    major.push(add('L', lRoundNo, [{ lose: drops[d].id }, { win: lPrev[d].id }]));
+                }
+                meta.lRounds.push(major); lPrev = major;
+                if (wr < K) {
+                    // Minor round: pair up the major-round winners.
+                    var minor = [];
+                    lRoundNo++;
+                    for (var e = 0; e < lPrev.length; e += 2) {
+                        minor.push(add('L', lRoundNo, [{ win: lPrev[e].id }, { win: lPrev[e + 1].id }]));
+                    }
+                    meta.lRounds.push(minor); lPrev = minor;
+                }
+            }
+            var lFinal = lPrev[0];
+
+            meta.gf = add('G', 1, [{ win: wFinal.id }, { win: lFinal.id }], 'GF');
+            meta.reset = add('G', 2, [{ win: 'GF' }, { lose: 'GF' }], 'GF2');
+            meta.reset.resetOf = 'GF';
+            return { matches: matches, byId: byId, format: format, meta: meta };
+        }
+
+        // Resolve entrants + results from picks. Mutates nothing; returns a state map:
+        // state[id] = { entrants:[p|BYE|null], winner, loser, live, decided }
+        // p is a player index; picks: {matchId: {side, names:[a,b]}} — a pick only counts
+        // while the two names it was made against still occupy the match.
+        function resolveElim(built, players, picks) {
+            var state = {};
+            var champion = null;
+
+            function nameOf(p) { return p === BYE ? null : (p === null ? null : players[p]); }
+
+            function entrantFrom(src) {
+                if (src.seed !== undefined) {
+                    return src.seed <= players.length ? src.seed - 1 : BYE;
+                }
+                var s = state[src.win !== undefined ? src.win : src.lose];
+                if (!s) { return null; }
+                return src.win !== undefined ? s.winner : s.loser;
+            }
+
+            for (var i = 0; i < built.matches.length; i++) {
+                var m = built.matches[i];
+                var e0 = entrantFrom(m.slots[0]);
+                var e1 = entrantFrom(m.slots[1]);
+                var st = { entrants: [e0, e1], winner: null, loser: null, live: false, decided: false, isReset: !!m.resetOf };
+
+                if (m.resetOf) {
+                    // The reset match only exists if the lower-bracket side won game 1.
+                    var g = state[m.resetOf];
+                    var lowerWon = g && g.decided && g.winner !== null && g.winner === g.entrants[1] && g.entrants[0] !== null && g.entrants[0] !== BYE;
+                    if (!lowerWon) {
+                        st.entrants = [null, null];
+                        st.needed = false;
+                        state[m.id] = st;
+                        continue;
+                    }
+                    st.needed = true;
+                    st.entrants = [g.entrants[0], g.entrants[1]];
+                    e0 = st.entrants[0]; e1 = st.entrants[1];
+                }
+
+                if (e0 === BYE && e1 === BYE) {
+                    st.winner = BYE; st.loser = BYE; st.decided = true;
+                } else if (e0 === BYE && e1 !== null) {
+                    st.winner = e1; st.loser = BYE; st.decided = true;
+                } else if (e1 === BYE && e0 !== null) {
+                    st.winner = e0; st.loser = BYE; st.decided = true;
+                } else if (e0 !== null && e1 !== null) {
+                    st.live = true;
+                    var pk = picks[m.id];
+                    if (pk && pk.names && pk.names[0] === nameOf(e0) && pk.names[1] === nameOf(e1)) {
+                        st.winner = pk.side === 0 ? e0 : e1;
+                        st.loser = pk.side === 0 ? e1 : e0;
+                        st.decided = true;
+                    }
+                }
+                state[m.id] = st;
+            }
+
+            // Champion
+            var meta = built.meta;
+            if (built.format === 'single') {
+                var f = state[meta.wRounds[meta.wRounds.length - 1][0].id];
+                if (f && f.decided && f.winner !== null && f.winner !== BYE) { champion = f.winner; }
+            } else {
+                var gf = state['GF'], rs = state['GF2'];
+                if (gf && gf.decided && gf.winner !== null && gf.winner !== BYE) {
+                    if (gf.winner === gf.entrants[0]) {
+                        champion = gf.winner;            // upper-bracket side stayed unbeaten
+                    } else if (rs && rs.decided && rs.winner !== null && rs.winner !== BYE) {
+                        champion = rs.winner;            // reset match decides it
+                    }
+                }
+            }
+            return { state: state, champion: champion };
+        }
+
+        // Round robin via the circle method. Returns rounds: [ [ [a,b]|[p,null(sit)] ] ]
+        // with player indices; null opponent = sits out. doubleRR appends flipped return legs.
+        function buildRR(players, doubleRR) {
+            var idx = [];
+            for (var i = 0; i < players.length; i++) { idx.push(i); }
+            var hasBye = idx.length % 2 === 1;
+            if (hasBye) { idx.push(-1); }
+            var n = idx.length;
+            var fixed = idx[0];
+            var rot = idx.slice(1);
+            var rounds = [];
+            for (var r = 0; r < n - 1; r++) {
+                var arr = [fixed].concat(rot);
+                var pairs = [];
+                for (var k = 0; k < n / 2; k++) {
+                    var p1 = arr[k], p2 = arr[n - 1 - k];
+                    // Alternate sides so "listed first" evens out across rounds.
+                    var pair = (r % 2 === 1 && k === 0) || (k > 0 && k % 2 === 0) ? [p2, p1] : [p1, p2];
+                    if (pair[0] === -1) { pairs.push([pair[1], null]); }
+                    else if (pair[1] === -1) { pairs.push([pair[0], null]); }
+                    else { pairs.push(pair); }
+                }
+                rounds.push(pairs);
+                rot.unshift(rot.pop());
+            }
+            if (doubleRR) {
+                var back = rounds.map(function (pairs) {
+                    return pairs.map(function (p) { return p[1] === null ? [p[0], null] : [p[1], p[0]]; });
+                });
+                rounds = rounds.concat(back);
+            }
+            return rounds;
+        }
+        /*TG-CORE-END*/
+
+        // ---------- UI ----------
+        var $ = function (id) { return document.getElementById(id); };
+        var LIMITS = { single: 32, double: 16, rr: 16 };
+        var STORE_KEY = 'lg-tournament-v1';
+        var DEFAULT_NAMES = ['The Aces', 'Basement Kings', 'Lucky Sevens', 'Team Thunder', 'The Underdogs', 'Corner Pocket', 'Night Owls', 'The Naturals'];
+
+        var elNames = $('tg-names'), elTitle = $('tg-title'), elCount = $('tg-count'),
+            elOut = $('tg-out'), elMsg = $('tg-msg'), elHint = $('tg-hint'),
+            elThird = $('tg-third'), elDoubleRR = $('tg-doublerr');
+
+        var format = 'single';
+        var picks = {};
+        var built = null;
+
+        // ---- storage ----
+        function saveState() {
+            try {
+                localStorage.setItem(STORE_KEY, JSON.stringify({
+                    names: elNames.value, title: elTitle.value, format: format,
+                    third: elThird.checked, doubleRR: elDoubleRR.checked, picks: picks
+                }));
+            } catch (e) { /* storage unavailable — run without persistence */ }
+        }
+        function loadState() {
+            try {
+                var raw = localStorage.getItem(STORE_KEY);
+                if (!raw) { return false; }
+                var s = JSON.parse(raw);
+                elNames.value = s.names || '';
+                elTitle.value = s.title || '';
+                elThird.checked = !!s.third;
+                elDoubleRR.checked = !!s.doubleRR;
+                picks = s.picks && typeof s.picks === 'object' ? s.picks : {};
+                setFormat(LIMITS[s.format] ? s.format : 'single', true);
+                return (s.names || '').trim() !== '';
+            } catch (e) { return false; }
+        }
+
+        function getPlayers() {
+            return elNames.value.split('\n').map(function (s) { return s.trim(); }).filter(Boolean);
+        }
+
+        function setFormat(f, quiet) {
+            format = f;
+            var tabs = document.querySelectorAll('.u-tab[data-format]');
+            tabs.forEach(function (t) { t.classList.toggle('active', t.dataset.format === f); });
+            $('tg-third-wrap').style.display = f === 'single' ? '' : 'none';
+            $('tg-double-rr-wrap').style.display = f === 'rr' ? '' : 'none';
+            if (!quiet) { render(); }
+        }
+
+        // ---- rendering ----
+        function esc(s) {
+            return String(s).replace(/[&<>"]/g, function (c) {
+                return { '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c];
+            });
+        }
+
+        function roundLabel(section, r, totalRounds, matchCount) {
+            if (section === 'L') { return 'Lower R' + r; }
+            if (section === 'W') {
+                if (r === totalRounds) { return 'Final'; }
+                if (r === totalRounds - 1 && matchCount === 2) { return 'Semifinals'; }
+                if (r === totalRounds - 2 && matchCount === 4) { return 'Quarterfinals'; }
+                return 'Round ' + r;
+            }
+            return '';
+        }
+
+        function srcText(src, byId) {
+            if (src.seed !== undefined) { return 'BYE'; }
+            if (src.win !== undefined) { return 'Winner of ' + src.win; }
+            return 'Loser of ' + src.lose;
+        }
+
+        function slotHTML(m, side, res, players, seedBySlot) {
+            var st = res.state[m.id];
+            var e = st.entrants[side];
+            var cls = 'tg-slot', txt, seed = '';
+            if (e === BYE) { cls += ' bye'; txt = 'BYE'; }
+            else if (e === null) {
+                cls += ' tbd';
+                txt = st.isReset ? (st.needed === false ? '—' : '…') : srcText(m.slots[side], null);
+            } else {
+                txt = players[e];
+                seed = '<span class="seed">' + (e + 1) + '</span>';
+                if (st.decided) { cls += st.winner === e ? ' win' : ' out'; }
+                if (st.live) { cls += ' pickable'; }
+            }
+            var interactive = cls.indexOf('pickable') !== -1
+                ? ' role="button" tabindex="0" aria-label="Record ' + esc(txt) + ' as the winner of ' + m.id + '"'
+                : '';
+            return '<div class="' + cls + '" data-m="' + m.id + '" data-side="' + side + '"' + interactive + '>' + seed +
+                   '<span class="nm">' + esc(txt) + '</span></div>';
+        }
+
+        function matchHTML(m, res, players) {
+            var st = res.state[m.id];
+            var cls = 'tg-match' + (st.decided && st.winner !== BYE ? ' decided' : '');
+            if (st.isReset && st.needed === false) { cls += ' ghost'; }
+            var idLine = '<div class="tg-mid">' + m.id + (st.isReset ? ' · if needed' : '') + '</div>';
+            return '<div class="' + cls + '" data-mbox="' + m.id + '">' + idLine +
+                   slotHTML(m, 0, res, players) + slotHTML(m, 1, res, players) + '</div>';
+        }
+
+        function bracketSection(title, roundsArr, res, players, totalW, champHTML) {
+            var h = '<div class="tg-sec"><h3>' + title + '</h3><div class="tg-scroll"><div class="tg-board">';
+            h += '<svg class="tg-wires" aria-hidden="true"></svg><div class="tg-grid">';
+            roundsArr.forEach(function (roundMatches) {
+                var r = roundMatches[0].round;
+                var sec = roundMatches[0].section;
+                h += '<div class="tg-round-col"><div class="tg-round-label">' +
+                     roundLabel(sec, r, totalW, roundMatches.length) + '</div><div class="tg-round">';
+                roundMatches.forEach(function (m) { h += matchHTML(m, res, players); });
+                h += '</div></div>';
+            });
+            if (champHTML) { h += champHTML; }
+            h += '</div></div></div>';
+            return h;
+        }
+
+        function champBox(res, players, label) {
+            var who = res.champion !== null ? esc(players[res.champion]) : '—';
+            return '<div class="tg-champ"><div class="cap">🏆 ' + label + '</div><div class="who">' + who + '</div></div>';
+        }
+
+        function renderElim(players) {
+            built = buildElim(players, format, elThird.checked);
+            var res = resolveElim(built, players, picks);
+            prunePicks(res);
+            res = resolveElim(built, players, picks);
+
+            var meta = built.meta;
+            var html = '';
+            var byeCount = meta.M - meta.N;
+
+            var upperRounds = meta.wRounds;
+            var champ = format === 'single' ? champBox(res, players, 'Champion') : null;
+            html += bracketSection(format === 'double' ? 'Upper bracket' : 'Bracket',
+                                   upperRounds, res, players, meta.K, champ);
+
+            if (meta.third) {
+                html += '<div class="tg-sec"><h3>3rd-place match</h3><div class="tg-grid">' +
+                        matchHTML(meta.third, res, players) + '</div></div>';
+            }
+
+            if (format === 'double') {
+                if (meta.lRounds.length) {
+                    html += bracketSection('Lower bracket', meta.lRounds, res, players, meta.K, null);
+                }
+                var gfRow = '<div class="tg-sec"><h3>Grand final</h3><div class="tg-grid">' +
+                            matchHTML(built.byId['GF'], res, players) +
+                            matchHTML(built.byId['GF2'], res, players) +
+                            champBox(res, players, 'Champion') + '</div></div>';
+                html += gfRow;
+            }
+
+            elOut.innerHTML = html;
+            drawWires();
+
+            var bits = [meta.N + ' entrants', 'bracket of ' + meta.M,
+                        byeCount ? byeCount + (byeCount === 1 ? ' bye' : ' byes') + ' (top seeds)' : 'no byes'];
+            elCount.textContent = bits.join(' · ');
+            elHint.textContent = 'Click a name to record the winner of that match. Click the other name to change it — later rounds that depended on the old result reset automatically.';
+        }
+
+        function renderRR(players) {
+            built = null;
+            var rounds = buildRR(players, elDoubleRR.checked);
+            var half = elDoubleRR.checked ? rounds.length / 2 : rounds.length;
+            var html = '<div class="tg-rr-wrap">';
+
+            html += '<div class="tg-sec"><h3>Schedule</h3><div class="tg-rr-rounds">';
+            rounds.forEach(function (pairs, i) {
+                var lab = 'Round ' + (i + 1) + (elDoubleRR.checked ? (i < half ? '' : ' · return leg') : '');
+                html += '<div class="tg-rr-round"><h4>' + lab + '</h4><ul>';
+                pairs.forEach(function (p) {
+                    if (p[1] === null) {
+                        html += '<li><span class="sit">' + esc(players[p[0]]) + ' sits out</span></li>';
+                    } else {
+                        html += '<li>' + esc(players[p[0]]) + '<span class="vs">vs</span>' + esc(players[p[1]]) + '</li>';
+                    }
+                });
+                html += '</ul></div>';
+            });
+            html += '</div></div>';
+
+            // Crosstable
+            html += '<div class="tg-sec"><h3>Results crosstable</h3><div class="tg-table-scroll"><table class="tg-rr-table"><tr><th class="rowname"></th>';
+            players.forEach(function (_, i) { html += '<th>' + (i + 1) + '</th>'; });
+            html += '<th>W</th><th>L</th></tr>';
+            players.forEach(function (p, i) {
+                html += '<tr><th class="rowname">' + (i + 1) + '. ' + esc(p) + '</th>';
+                players.forEach(function (_, j) { html += i === j ? '<td class="self"></td>' : '<td></td>'; });
+                html += '<td></td><td></td></tr>';
+            });
+            html += '</table></div></div>';
+
+            html += '</div>';
+            elOut.innerHTML = html;
+
+            var games = 0;
+            rounds.forEach(function (pairs) { pairs.forEach(function (p) { if (p[1] !== null) { games++; } }); });
+            elCount.textContent = players.length + ' entrants · ' + rounds.length + ' rounds · ' + games + ' matches';
+            elHint.textContent = 'Print this page to get the schedule, crosstable, and standings on paper — fill results in as you play.';
+        }
+
+        function render() {
+            var players = getPlayers();
+            elMsg.style.display = 'none';
+            var seen = {};
+            for (var i = 0; i < players.length; i++) {
+                if (seen[players[i]]) {
+                    elMsg.textContent = '"' + players[i] + '" appears more than once — give duplicates a number (e.g. "' + players[i] + ' 2") so results stay unambiguous.';
+                    elMsg.style.display = '';
+                    break;
+                }
+                seen[players[i]] = true;
+            }
+            if (players.length < 2) {
+                elOut.innerHTML = '';
+                elCount.textContent = players.length === 0 ? 'Enter at least 2 names' : '1 entrant — enter at least 2';
+                elHint.textContent = '';
+                saveState();
+                return;
+            }
+            if (players.length > LIMITS[format]) {
+                elOut.innerHTML = '';
+                elCount.textContent = players.length + ' entrants';
+                elMsg.textContent = 'That\'s ' + players.length + ' entries — this format supports up to ' + LIMITS[format] +
+                    '. Trim the list, or split into groups and bracket the group winners.';
+                elMsg.style.display = '';
+                elHint.textContent = '';
+                saveState();
+                return;
+            }
+            updatePrintHead(players.length);
+            if (format === 'rr') { renderRR(players); } else { renderElim(players); }
+            saveState();
+        }
+
+        // Drop stored picks whose match no longer holds the same two names.
+        function prunePicks(res) {
+            Object.keys(picks).forEach(function (id) {
+                var st = res.state[id];
+                if (!st) { delete picks[id]; return; }
+                var pk = picks[id];
+                var players = getPlayers();
+                var n0 = st.entrants[0] !== null && st.entrants[0] !== BYE ? players[st.entrants[0]] : null;
+                var n1 = st.entrants[1] !== null && st.entrants[1] !== BYE ? players[st.entrants[1]] : null;
+                if (!pk.names || pk.names[0] !== n0 || pk.names[1] !== n1) { delete picks[id]; }
+            });
+        }
+
+        // ---- connector lines ----
+        function drawWires() {
+            document.querySelectorAll('.tg-board').forEach(function (board) {
+                var svg = board.querySelector('.tg-wires');
+                if (!svg) { return; }
+                var bRect = board.getBoundingClientRect();
+                svg.setAttribute('width', board.scrollWidth);
+                svg.setAttribute('height', board.scrollHeight);
+                svg.setAttribute('viewBox', '0 0 ' + board.scrollWidth + ' ' + board.scrollHeight);
+                var paths = [];
+                if (built) {
+                    built.matches.forEach(function (m) {
+                        m.slots.forEach(function (src) {
+                            var fromId = src.win !== undefined ? src.win : (src.lose !== undefined ? src.lose : null);
+                            if (!fromId) { return; }
+                            if (src.lose !== undefined && m.section !== 'W') { return; } // cross-section drops stay textual
+                            if (src.lose !== undefined) { return; }                      // 3rd-place feeds stay textual
+                            var a = board.querySelector('[data-mbox="' + fromId + '"]');
+                            var b = board.querySelector('[data-mbox="' + m.id + '"]');
+                            if (!a || !b) { return; }                                    // different section
+                            var ra = a.getBoundingClientRect(), rb = b.getBoundingClientRect();
+                            var x1 = ra.right - bRect.left, y1 = ra.top + ra.height / 2 - bRect.top;
+                            var x2 = rb.left - bRect.left, y2 = rb.top + rb.height / 2 - bRect.top;
+                            if (x2 <= x1) { return; }
+                            var mx = (x1 + x2) / 2;
+                            paths.push('M' + x1 + ' ' + y1 + ' H' + mx + ' V' + y2 + ' H' + x2);
+                        });
+                    });
+                    // Final → champion box (single elim)
+                    var champ = board.querySelector('.tg-champ');
+                    if (champ && built.format === 'single') {
+                        var fm = built.meta.wRounds[built.meta.wRounds.length - 1][0];
+                        var fEl = board.querySelector('[data-mbox="' + fm.id + '"]');
+                        if (fEl) {
+                            var rf = fEl.getBoundingClientRect(), rc = champ.getBoundingClientRect();
+                            var xa = rf.right - bRect.left, ya = rf.top + rf.height / 2 - bRect.top;
+                            var xb = rc.left - bRect.left, yb = rc.top + rc.height / 2 - bRect.top;
+                            if (xb > xa) {
+                                var mmx = (xa + xb) / 2;
+                                paths.push('M' + xa + ' ' + ya + ' H' + mmx + ' V' + yb + ' H' + xb);
+                            }
+                        }
+                    }
+                }
+                svg.innerHTML = paths.map(function (d) { return '<path d="' + d + '"/>'; }).join('');
+            });
+        }
+
+        // ---- interactions ----
+        elOut.addEventListener('click', function (ev) {
+            var slot = ev.target.closest('.tg-slot.pickable');
+            if (!slot || !built) { return; }
+            var id = slot.dataset.m, side = Number(slot.dataset.side);
+            var res = resolveElim(built, getPlayers(), picks);
+            var st = res.state[id];
+            if (!st || !st.live) { return; }
+            var players = getPlayers();
+            var names = [players[st.entrants[0]], players[st.entrants[1]]];
+            var existing = picks[id];
+            if (existing && existing.side === side) { delete picks[id]; }
+            else { picks[id] = { side: side, names: names }; }
+            render();
+            var again = elOut.querySelector('.tg-slot[data-m="' + id + '"][data-side="' + side + '"][tabindex]');
+            if (again) { again.focus({ preventScroll: true }); }
+        });
+
+        elOut.addEventListener('keydown', function (ev) {
+            if (ev.key !== 'Enter' && ev.key !== ' ') { return; }
+            var slot = ev.target.closest('.tg-slot.pickable');
+            if (!slot) { return; }
+            ev.preventDefault();
+            slot.click();
+        });
+
+        document.querySelectorAll('.u-tab[data-format]').forEach(function (t) {
+            t.addEventListener('click', function () { setFormat(t.dataset.format); });
+        });
+
+        elNames.addEventListener('input', render);
+        elTitle.addEventListener('input', function () { updatePrintHead(getPlayers().length); saveState(); });
+        elThird.addEventListener('change', render);
+        elDoubleRR.addEventListener('change', render);
+
+        $('tg-shuffle').addEventListener('click', function () {
+            var lines = getPlayers();
+            for (var i = lines.length - 1; i > 0; i--) {
+                var j = Math.floor(Math.random() * (i + 1));
+                var t = lines[i]; lines[i] = lines[j]; lines[j] = t;
+            }
+            elNames.value = lines.join('\n');
+            render();
+        });
+
+        $('tg-clear').addEventListener('click', function () {
+            picks = {};
+            render();
+        });
+
+        // ---- printing ----
+        var FORMAT_NAMES = { single: 'Single elimination', double: 'Double elimination', rr: 'Round robin' };
+        function updatePrintHead(n) {
+            var t = elTitle.value.trim();
+            $('tg-print-head').innerHTML =
+                '<div class="t">' + esc(t || (format === 'rr' ? 'Round robin schedule' : 'Tournament bracket')) + '</div>' +
+                '<div class="s">' + FORMAT_NAMES[format] + ' · ' + n + ' entrants · ' +
+                esc(new Date().toLocaleDateString()) +
+                ' · limestonegames.com/utilities/tournament-generator/</div>';
+        }
+
+        var pageStyle = document.createElement('style');
+        document.head.appendChild(pageStyle);
+        var printZoomEls = [];
+        function beforePrint() {
+            updatePrintHead(getPlayers().length);
+            pageStyle.textContent = '@page { size: letter ' + (format === 'rr' ? 'portrait' : 'landscape') + '; margin: 0.5in; }';
+            var usable = format === 'rr' ? 720 : 960; // letter minus 0.5in margins @96dpi
+            printZoomEls = [];
+            document.querySelectorAll('.tg-board, .tg-rr-table').forEach(function (el) {
+                var w = el.scrollWidth;
+                if (w > usable) {
+                    var z = Math.max(0.4, usable / w);
+                    el.style.zoom = z;
+                    printZoomEls.push(el);
+                }
+            });
+        }
+        function afterPrint() {
+            printZoomEls.forEach(function (el) { el.style.zoom = ''; });
+            printZoomEls = [];
+            drawWires();
+        }
+        window.addEventListener('beforeprint', beforePrint);
+        window.addEventListener('afterprint', afterPrint);
+        $('tg-print').addEventListener('click', function () { window.print(); });
+
+        window.addEventListener('resize', drawWires);
+        if (document.fonts && document.fonts.ready) { document.fonts.ready.then(drawWires); }
+
+        // ---- init ----
+        if (!loadState()) {
+            elNames.value = DEFAULT_NAMES.join('\n');
+        }
+        var qFormat = new URLSearchParams(location.search).get('format');
+        if (qFormat && LIMITS[qFormat]) { format = qFormat; }
+        setFormat(format, true);
+        render();
+    })();
+    </script>
+</body>
+</html>
