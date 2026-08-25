@@ -94,6 +94,28 @@
 .sheet table.bj td.a-P { background: #DFE9F5; }
 .sheet table.bj td.a-R { background: #EADDEF; }
 
+/* Qwinto-compatible roll-and-write boards. The geometry is load-bearing:
+   each row is 9 fields plus one void on a 12-column grid, offset so exactly
+   five columns stack three fields — one pentagon (bonus) per such column.
+   Pentagons use clip-path, which would clip a border, so they mark themselves
+   with a solid darker fill instead of an outline. */
+.qw { display: grid; grid-template-columns: repeat(12, 46px); gap: 7px; justify-content: center; }
+.qw + .qw { margin-top: 7px; }
+.qw span { width: 46px; height: 40px; border: 1.6px solid; border-radius: 50%; background: #fff; box-sizing: border-box; }
+.qw .pent { border: none; border-radius: 0; clip-path: polygon(50% 0, 100% 36%, 82% 100%, 18% 100%, 0 36%); }
+.qw .void { visibility: hidden; }
+.qw .o { border-color: #D98A3D; background: #FDF3E7; }
+.qw .y { border-color: #C9A93A; background: #FCF6DC; }
+.qw .p { border-color: #8A6FB8; background: #F0EAF7; }
+.qw .o.pent { background: #F2C08A; }
+.qw .y.pent { background: #EBD37E; }
+.qw .p.pent { background: #C9B4E4; }
+.qw-tally { display: flex; align-items: center; justify-content: center; gap: 5px; margin: 10px 0 2px; font-size: 11px; color: #6b6152; }
+.qw-tally .bx { width: 34px; height: 24px; border: 1px solid #b9b2a4; border-radius: 4px; background: #fff; }
+.qw-tally .bx.pent5 { width: 26px; }
+.qw-board { padding: 12px 0 14px; }
+.qw-board + .qw-board { border-top: 1px dashed #b9b2a4; }
+
 /* Blank dot lattice (dots and boxes). Dots are drawn as pseudo-elements so the
    spacing stays exact — a text bullet would shift with the font. */
 .dotgrid { display: grid; width: fit-content; margin: 0 auto; }
