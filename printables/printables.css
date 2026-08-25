@@ -87,6 +87,8 @@
 
 /* Long single-column reference lists (video poker hold order) — same reason. */
 .sheet table.compact td { height: 20px; }
+/* 26-row A-Z pads (60 Second Slam) — 28 rows at compact height overflow Letter by 7px. */
+.sheet table.tight td { height: 17px; line-height: 1.1; }
 .sheet table.compact td.lbl.wrap { padding: 3px 8px; line-height: 1.35; font-size: 11.5px; }
 .sheet table.bj td.a-H { background: #FBE4DE; }
 .sheet table.bj td.a-S { background: #E2EDDD; }
