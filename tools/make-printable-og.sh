@@ -14,6 +14,10 @@ ROOT="$(cd "$(dirname "$0")/.." && pwd)"
 CHROME="/Applications/Google Chrome.app/Contents/MacOS/Google Chrome"
 BASE="http://localhost:8091"
 
+# A dead server produces valid-looking 25KB blanks — fail fast instead.
+curl -sf -o /dev/null --max-time 4 "$BASE/printables/" || {
+  echo "ERROR: no server at $BASE — start the 'website' preview first." >&2; exit 1; }
+
 slugs="$*"
 [ -z "$slugs" ] && slugs=$(cd "$ROOT/printables" && ls -d */ | tr -d '/' )
 

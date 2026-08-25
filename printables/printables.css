@@ -118,6 +118,46 @@
 .qw-board { padding: 12px 0 14px; }
 .qw-board + .qw-board { border-top: 1px dashed #b9b2a4; }
 
+/* Qwixx-compatible rows: 11 number cells + lock circle per row, red/yellow
+   ascending and green/blue descending per the official rules. Numbers are
+   printed in the cells; players cross them out. */
+.qx { display: grid; grid-template-columns: repeat(11, 46px) 34px; gap: 6px; justify-content: center; margin-bottom: 7px; }
+.qx span { height: 34px; border: 1.6px solid; border-radius: 7px; background: #fff; display: flex; align-items: center; justify-content: center; font-size: 14px; font-weight: 700; }
+.qx .lock { border-radius: 50%; font-size: 11px; }
+.qx.r span { border-color: #C96A5B; background: #FBEAE6; color: #A94A3C; }
+.qx.y span { border-color: #C9A93A; background: #FCF6DC; color: #9A7E1E; }
+.qx.g span { border-color: #6BA06B; background: #E9F2E7; color: #47774A; }
+.qx.b span { border-color: #6A87C0; background: #E8EEF8; color: #47619A; }
+.qx-pen { display: flex; align-items: center; justify-content: flex-end; gap: 6px; font-size: 11px; color: #6b6152; margin: 4px 0 0; }
+.qx-pen span { width: 26px; height: 24px; border: 1px solid #b9b2a4; border-radius: 4px; background: #fff; }
+
+/* Football squares: 10x10 pool grid with blank number strips on both axes. */
+.sq { border-collapse: collapse; margin: 0 auto; }
+.sq td, .sq th { border: 1px solid #b9b2a4; width: 44px; height: 30px; padding: 0; font-size: 10px; }
+.sq th { background: #F1EFE6; }
+.sq .axis { background: #FBFAF5; height: 24px; }
+
+/* Checkered 8x8 boards (chess / checkers) + cut-apart piece tiles. */
+.b8 { display: grid; grid-template-columns: repeat(8, 54px); margin: 0 auto; border: 2px solid #14110d; width: fit-content; }
+.b8 span { height: 54px; display: flex; align-items: center; justify-content: center; }
+.b8 span.d { background: #DCD2BE; }
+.pieces { display: grid; grid-template-columns: repeat(8, 54px); gap: 5px; justify-content: center; margin-top: 12px; }
+.pieces span { height: 44px; border: 1px dashed #b9b2a4; border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 27px; background: #fff; }
+.pieces span.dk { background: #F1EFE6; }
+
+/* Mancala board: two rows of six pits between two stores. */
+.manc { display: grid; grid-template-columns: 76px repeat(6, 76px) 76px; gap: 10px; justify-content: center; align-items: center; }
+.manc .pit { height: 68px; border: 2px solid #8a8172; border-radius: 50%; background: #FBFAF5; }
+.manc .store { height: 150px; grid-row: span 2; border: 2px solid #8a8172; border-radius: 38px; background: #F1EFE6; }
+.manc .lblrow { grid-column: 2 / span 6; text-align: center; font-size: 10.5px; color: #6b6152; }
+
+/* Cribbage track: pencil-hole dots, five per block. */
+.crib { display: grid; grid-template-columns: repeat(30, 19px); gap: 4px 3px; justify-content: center; }
+.crib span { width: 9px; height: 9px; border: 1.4px solid #14110d; border-radius: 50%; background: #fff; justify-self: center; }
+.crib span.s5 { background: #DCD2BE; }
+.crib-wrap { border: 1px solid #b9b2a4; border-radius: 6px; padding: 10px 8px 12px; margin-top: 10px; }
+.crib-wrap h4 { margin: 0 0 8px; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: #6b6152; text-align: center; }
+
 /* Blank dot lattice (dots and boxes). Dots are drawn as pseudo-elements so the
    spacing stays exact — a text bullet would shift with the font. */
 .dotgrid { display: grid; width: fit-content; margin: 0 auto; }
