@@ -109,13 +109,22 @@ Bar & backyard:
 
 Niche cards (thin-to-zero competition):
 - [ ] rook-score-sheet — bid/score columns + point-card values (verify); trademark note
-- [ ] pitch-score-sheet — Pitch/Setback; 4-point standard (high/low/jack/game), 10-point variant noted
+- [ ] pitch-score-sheet — Pitch/Setback; 4-point standard (high/low/jack/game), 10-point variant
+      noted. **Promoted: Tier-A** — GSC-observed miss "pitch card game score sheet" pos 39
+      (2026-08-24 pull); build with the next batch regardless of wave
 - [ ] nertz-score-sheet — tally to 100 (−2/card left, verify); links solitaire game
 - [ ] sheepshead-score-sheet — Wisconsin standard scoring, leasters/doublers variant note
 - [ ] garbage-rules-card — Garbage/Trash both names in title; kids link
 - [ ] kings-in-the-corner-rules — rules card
 - [ ] tripoley-layout — Tripoley/Michigan Rummy layout mat + rules; verify 9-section layout;
       trademark note
+
+## New candidates from report runs (verify at build time)
+
+- **printable parlay cards** — GSC-observed (pos 28, no page, 2026-08-24 pull). Sports-betting
+  parlay sheets; casino-family adjacent (football-squares audience). Run the autocomplete +
+  thin-field checks before building — office-pool sites may own it.
+- **poker run score sheet** — second GSC sighting (already wave 2); signal strengthening.
 
 ## Canary-gated (do NOT build until the canary reports)
 
