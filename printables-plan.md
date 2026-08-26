@@ -27,38 +27,38 @@ that ranks. Every page below has observed demand behind it. Steady batches beat 
 7. Hub card on `/printables/`, sitemap entry, deploy (`npx wrangler deploy`), then
    `node tools/bing-submit.mjs <urls>` same day.
 
-## Wave 1 — card & dice classics (16)
+## Wave 1 — card & dice classics (16) — SHIPPED 2026-08-26 (+ pitch promoted from wave 3)
 
 Rummy family (cross-link the whole set; competitor watch: **ruleskit.com** runs our exact
 one-page-HTML playbook in this space — only real incumbent):
-- [ ] rummy-score-sheet — generic family HUB page; links all below + gin + frustration
-- [ ] rummy-500-score-sheet — top rummy query; scoring: cards played minus deadwood, verify point values
-- [ ] shanghai-rummy-score-sheet — include the 10-round contract list (the list IS the content); variant note
-- [ ] liverpool-rummy-score-sheet — include hands/rounds list; variant note
-- [ ] contract-rummy-score-sheet — rounds list; variant note (7 rounds standard)
-- [ ] progressive-rummy-score-sheet — flagged since batch 4, reconfirmed
+- [x] rummy-score-sheet — generic family HUB page; links all below + gin + frustration
+- [x] rummy-500-score-sheet — top rummy query; scoring: cards played minus deadwood, verify point values
+- [x] shanghai-rummy-score-sheet — include the 10-round contract list (the list IS the content); variant note
+- [x] liverpool-rummy-score-sheet — include hands/rounds list; variant note
+- [x] contract-rummy-score-sheet — rounds list; variant note (7 rounds standard)
+- [x] progressive-rummy-score-sheet — flagged since batch 4, reconfirmed
 
 Trick-takers & bridge:
-- [ ] oh-hell-score-sheet — title covers Oh Hell / Up and Down the River / Oh Heck (all
+- [x] oh-hell-score-sheet — title covers Oh Hell / Up and Down the River / Oh Heck (all
       confirmed names); bid/made grid; scoring variants (10+tricks vs 1-per-trick+bonus) → variant note
-- [ ] whist-score-sheets — whist DRIVE scorecards (UK demand, rotation like euchre charts)
+- [x] whist-score-sheets — whist DRIVE scorecards (UK demand, rotation like euchre charts)
       + bid whist tally (US); cross-link euchre-rotation-charts
-- [ ] bridge-score-sheet — rubber/Chicago pad (WE/THEY above-below line) + contract-value
+- [x] bridge-score-sheet — rubber/Chicago pad (WE/THEY above-below line) + contract-value
       reference; scoring is standardized, source it properly
-- [ ] bridge-tally-cards — 2/3/4-table party-bridge tallies, cut-out format (white-elephant
+- [x] bridge-tally-cards — 2/3/4-table party-bridge tallies, cut-out format (white-elephant
       slips precedent); hyper-specific queries, empty field
 
 Dice:
-- [ ] yardzee-score-card — field-checked WIDE OPEN; large-print yahtzee-style card + yard
+- [x] yardzee-score-card — field-checked WIDE OPEN; large-print yahtzee-style card + yard
       dice rules; frame as "Yardzee / yard dice" (name is contested — generic-trademark note);
       links yahtzee + triple-yahtzee + farkle. Seasonal: backyard season is NOW.
-- [ ] kismet-score-sheet — blind-seed discovery, both engines; verify categories from
+- [x] kismet-score-sheet — blind-seed discovery, both engines; verify categories from
       published rules (colored combos differ from Yahtzee); confirm current publisher for note
-- [ ] 10000-dice-score-sheet — aka Ten Thousand; tally + scoring chart; folk variants
+- [x] 10000-dice-score-sheet — aka Ten Thousand; tally + scoring chart; folk variants
       (5000 variant gets a mention) → variant note; links farkle
-- [ ] shut-the-box-score-sheet — sheet + rules card; 1-9 vs 1-12 tile variants noted
-- [ ] ship-captain-crew-score-sheet — round tally + rules (6-5-4 is stable)
-- [ ] skip-bo-score-sheet — Mattel trademark note; verify scoring variant (points per card
+- [x] shut-the-box-score-sheet — sheet + rules card; 1-9 vs 1-12 tile variants noted
+- [x] ship-captain-crew-score-sheet — round tally + rules (6-5-4 is stable)
+- [x] skip-bo-score-sheet — Mattel trademark note; verify scoring variant (points per card
       in opponents' stock, 500-point game) from official rules before printing
 
 ## Wave 2 — new hotness + party (14)
@@ -109,7 +109,7 @@ Bar & backyard:
 
 Niche cards (thin-to-zero competition):
 - [ ] rook-score-sheet — bid/score columns + point-card values (verify); trademark note
-- [ ] pitch-score-sheet — Pitch/Setback; 4-point standard (high/low/jack/game), 10-point variant
+- [x] pitch-score-sheet — Pitch/Setback; 4-point standard (high/low/jack/game), 10-point variant
       noted. **Promoted: Tier-A** — GSC-observed miss "pitch card game score sheet" pos 39
       (2026-08-24 pull); build with the next batch regardless of wave
 - [ ] nertz-score-sheet — tally to 100 (−2/card left, verify); links solitaire game
