@@ -61,34 +61,34 @@ Dice:
 - [x] skip-bo-score-sheet — Mattel trademark note; verify scoring variant (points per card
       in opponents' stock, 500-point game) from official rules before printing
 
-## Wave 2 — new hotness + party (14)
+## Wave 2 — new hotness + party (14) — SHIPPED 2026-08-28
 
 Trend games (blind-seed discoveries; cheap tally sheets, trademark notes all):
-- [ ] flip-7-score-sheet — The Op; target-200 tally + bust/Flip-7-bonus reference; young
+- [x] flip-7-score-sheet — The Op; target-200 tally + bust/Flip-7-bonus reference; young
       exact-match incumbent exists (flip7score.com) → tempered expectations, still cheap
-- [ ] skyjo-score-sheet — Magilano; round tally, game ends when someone crosses 100, lowest wins
-- [ ] qwirkle-score-sheet — MindWare; tally + Qwirkle-bonus (12) reference
-- [ ] play-nine-score-sheet — 9-hole golf-card-game pad; verify hole-in-one bonus from
+- [x] skyjo-score-sheet — Magilano; round tally, game ends when someone crosses 100, lowest wins
+- [x] qwirkle-score-sheet — MindWare; tally + Qwirkle-bonus (12) reference
+- [x] play-nine-score-sheet — 9-hole golf-card-game pad; verify hole-in-one bonus from
       official rules; links golf-card-game-score-sheet
 
 Party & trivia (peaks Oct–Dec — ship before then):
-- [ ] trivia-answer-sheets — field-checked winnable (scattered small sites, no wall);
+- [x] trivia-answer-sheets — field-checked winnable (scattered small sites, no wall);
       10-Q and 20-Q team answer slips + host score grid; US Letter is our edge (top rival is A4/UK)
-- [ ] game-night-score-sheets — generic multi-game round-tally pads (4/6/8 players) + leaderboard
-- [ ] pictionary-word-lists — GENERIC word lists (easy/kids/adult/Christmas sets — Christmas
+- [x] game-night-score-sheets — generic multi-game round-tally pads (4/6/8 players) + leaderboard
+- [x] pictionary-word-lists — GENERIC word lists (easy/kids/adult/Christmas sets — Christmas
       variant is the holiday hook); "works with Pictionary®-style drawing games" framing, Mattel note
-- [ ] charades-cards — cut-out cards, same generic-words framing
+- [x] charades-cards — cut-out cards, same generic-words framing
 
 Compounders & classics:
-- [ ] chess-score-sheet — notation sheet (numbered move pairs, event header) + brief
+- [x] chess-score-sheet — notation sheet (numbered move pairs, event header) + brief
       "how to write algebraic notation" teaching angle (that long-tail is open; chess.com owns
       the head term); links chess game + chess-board template
-- [ ] darts-score-sheets — cricket scoreboard + 501 tally + killer sheet on one page
-- [ ] left-center-right-rules — rules card + regular-dice conversion chart (L/C/R faces);
+- [x] darts-score-sheets — cricket scoreboard + 501 tally + killer sheet on one page
+- [x] left-center-right-rules — rules card + regular-dice conversion chart (L/C/R faces);
       LCR is a registered trademark (George & Co.) → note
-- [ ] pig-dice-score-sheet — race-to-100 tally + rules; classroom audience; links kids section
-- [ ] mini-golf-scorecard — 9/18-hole cards; backyard + bucket-golf mention
-- [ ] poker-run-score-sheet — our one Tier-A GSC signal (earned an impression with no page);
+- [x] pig-dice-score-sheet — race-to-100 tally + rules; classroom audience; links kids section
+- [x] mini-golf-scorecard — 9/18-hole cards; backyard + bucket-golf mention
+- [x] poker-run-score-sheet — our one Tier-A GSC signal (earned an impression with no page);
       rider info + 5 checkpoint boxes + hand-ranking footer; links poker-hand-rankings
 
 ## Wave 3 — boards, bar games, niche cards (16)
