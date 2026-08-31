@@ -368,11 +368,53 @@
     if (state.filter === 'new' && !g.isNew) return false;
     if (state.filter !== 'all' && state.filter !== 'new' && g.cat !== state.filter) return false;
     if (state.query) {
-      const q = state.query.toLowerCase();
-      const hay = (g.name + ' ' + g.desc + ' ' + g.cat).toLowerCase();
-      if (!hay.includes(q)) return false;
+      // Shared scorer from games-catalog.js — same tiers as the palette, and
+      // typo-tolerant so "yachtzee" still surfaces Yahtzee.
+      const q = state.query.trim().toLowerCase();
+      const hay = (g.name + ' ' + g.desc + ' ' + g.cat + ' ' + (CAT_LABEL[g.cat] || '')).toLowerCase();
+      if (q && window.LG_SCORE(q, g.name.toLowerCase(), hay) < 0) return false;
     }
     return true;
+  }
+
+  // Printables/utilities that match the query — rendered as a compact strip
+  // under the game grid, never as game tiles.
+  function extrasFor(query) {
+    const q = (query || '').trim().toLowerCase();
+    if (!q || !window.LG_EXTRAS) return [];
+    const metaMap = window.LG_EXTRA_META || {};
+    return window.LG_EXTRAS
+      .map(x => ({ x, s: window.LG_SCORE(q, x.name.toLowerCase(),
+        (x.name + ' ' + (x.desc || '') + ' ' + ((metaMap[x.cat] || {}).label || '')).toLowerCase()) }))
+      .filter(e => e.s >= 0)
+      .sort((a, b) => b.s - a.s || a.x.name.localeCompare(b.x.name))
+      .map(e => e.x);
+  }
+
+  function renderExtras(main, list) {
+    if (!list.length) return;
+    const metaMap = window.LG_EXTRA_META || {};
+    main.appendChild(el(`
+      <div class="hub-section-head">
+        <h2>Elsewhere on the site</h2>
+        <div class="rule"></div>
+      </div>
+    `));
+    const wrap = el('<div class="hub-extras"></div>');
+    list.slice(0, 12).forEach(x => {
+      const meta = metaMap[x.cat] || {};
+      wrap.appendChild(el(`
+        <a class="hub-extra" href="${x.url}" style="--x:${meta.color || '#8A5A2B'}">
+          <span class="dot"></span>
+          <span class="nm">${x.name}</span>
+          <span class="tg">${meta.label || ''}</span>
+        </a>
+      `));
+    });
+    if (list.length > 12) {
+      wrap.appendChild(el('<a class="hub-extra more" href="/printables/"><span class="nm">All printables →</span></a>'));
+    }
+    main.appendChild(wrap);
   }
 
   function renderGrid() {
@@ -397,13 +439,17 @@
       resultsEl.style.display = 'none';
     }
 
+    const extrasMatching = extrasFor(state.query);
+
     if (allMatching.length === 0) {
       main.appendChild(el(`
         <div class="hub-empty">
           <h3>No games match.</h3>
-          <p>Try another keyword or clear the filters.</p>
+          <p>${extrasMatching.length ? 'But it might be one of these:' : 'Try another keyword or clear the filters.'}</p>
+          <a class="hub-empty-fb" href="/feedback/?from=search">Missing something we should add? Tell us →</a>
         </div>
       `));
+      renderExtras(main, extrasMatching);
       return;
     }
 
@@ -443,6 +489,8 @@
       allMatching.forEach(g => grid.appendChild(renderTile(g, 's-base', false)));
       main.appendChild(grid);
     }
+
+    renderExtras(main, extrasMatching);
   }
 
   // ── Filter pills ───────────────────────────────────────────────────────

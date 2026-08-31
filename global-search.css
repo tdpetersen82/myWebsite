@@ -229,3 +229,18 @@ html.gs-locked { overflow: hidden; }
 @media (prefers-reduced-motion: reduce) {
   .gs-overlay, .gs-panel { transition: none; }
 }
+
+/* ---- Empty-state feedback link — a dead-end search is a feature request ---- */
+.gs-empty .gs-empty-fb {
+  display: inline-block;
+  margin-top: 12px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--nav-ink, #1A140C);
+  text-decoration: none;
+  border: 1px solid var(--nav-line, rgba(26,20,12,0.14));
+  border-radius: 999px;
+  padding: 7px 14px;
+  background: var(--paper-soft, #F3ECDC);
+}
+.gs-empty .gs-empty-fb:hover { border-color: var(--nav-ink3, #8A7E6F); }

@@ -1144,3 +1144,52 @@ body.hub-root {
 /* Ads are not live yet (AdSense pending approval) — hide every placeholder
    slot, matching category.css. Remove this block when ads go live. */
 .ad-top, .ad-slot, .tile-ad { display: none !important; }
+
+/* Feedback link inside the search empty state */
+.hub-empty-fb {
+  display: inline-block;
+  margin-top: 14px;
+  font-size: 12.5px;
+  font-weight: 600;
+  color: var(--ink);
+  text-decoration: none;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 8px 15px;
+  background: var(--paper);
+}
+.hub-empty-fb:hover { border-color: var(--ink-soft); }
+
+/* "Elsewhere on the site" — printables/utilities matching a search */
+.hub-extras {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.hub-extra {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  border: 1px solid var(--line);
+  background: var(--paper);
+  border-radius: 999px;
+  padding: 8px 14px 8px 11px;
+  text-decoration: none;
+  color: var(--ink);
+  font-size: 13px;
+  font-weight: 600;
+}
+.hub-extra:hover { border-color: var(--x, var(--ink-soft)); }
+.hub-extra .dot {
+  width: 8px; height: 8px; border-radius: 50%;
+  background: var(--x, var(--ink-soft));
+  flex: none;
+}
+.hub-extra .tg {
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-soft);
+}
+.hub-extra.more { color: var(--ink-soft); }

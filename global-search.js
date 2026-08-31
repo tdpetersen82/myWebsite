@@ -1,6 +1,8 @@
 // Limestone Games — global command-palette search.
 // Injects a search field into the page nav and opens an overlay that searches
-// the WHOLE catalog (games-catalog.js) from any page — never a dead end.
+// the whole site — games (games-catalog.js) plus printables and utilities
+// (LG_EXTRAS) — from any page — never a dead end. Scoring lives in
+// games-catalog.js (LG_SCORE) so the homepage search ranks identically.
 // The homepage has its own in-place search, so this skips that page.
 (function () {
   'use strict';
@@ -10,6 +12,7 @@
 
   var CAT_LABEL = window.LG_CAT_LABEL || {};
   var CATEGORIES = window.LG_CATEGORIES || [];
+  var EXTRA_META = window.LG_EXTRA_META || {};
 
   var games = window.LG_GAMES.map(function (g) {
     return {
@@ -19,29 +22,41 @@
       cat: g.cat,
       catLabel: CAT_LABEL[g.cat] || '',
       isNew: !!g.isNew,
+      kind: 0, // games outrank extras on score ties
       url: g.url || ('/' + g.id + '/'),
       nameLc: g.name.toLowerCase(),
       hay: (g.name + ' ' + (g.desc || '') + ' ' + (CAT_LABEL[g.cat] || '')).toLowerCase()
     };
   });
 
+  var extras = (window.LG_EXTRAS || []).map(function (x) {
+    var meta = EXTRA_META[x.cat] || {};
+    return {
+      name: x.name,
+      desc: x.desc || '',
+      color: meta.color || '#C77A2A',
+      cat: x.cat,
+      catLabel: meta.label || '',
+      isNew: false,
+      kind: 1,
+      url: x.url,
+      nameLc: x.name.toLowerCase(),
+      hay: (x.name + ' ' + (x.desc || '') + ' ' + (meta.label || '')).toLowerCase()
+    };
+  });
+
+  var all = games.concat(extras);
+
   // ── Matching / ranking ────────────────────────────────────────────────
-  function score(g, q) {
-    var n = g.nameLc;
-    if (n === q) return 100;
-    if (n.indexOf(q) === 0) return 80;
-    if (n.split(/\s+/).some(function (w) { return w.indexOf(q) === 0; })) return 70;
-    if (n.indexOf(q) !== -1) return 50;
-    if (g.hay.indexOf(q) !== -1) return 20;
-    return -1;
-  }
   function search(q) {
     q = q.trim().toLowerCase();
     if (!q) return null; // null => empty query (show full catalogue)
-    return games
-      .map(function (g) { return { g: g, s: score(g, q) }; })
+    return all
+      .map(function (g) { return { g: g, s: window.LG_SCORE(q, g.nameLc, g.hay) }; })
       .filter(function (x) { return x.s >= 0; })
-      .sort(function (a, b) { return b.s - a.s || a.g.name.localeCompare(b.g.name); })
+      .sort(function (a, b) {
+        return b.s - a.s || a.g.kind - b.g.kind || a.g.name.localeCompare(b.g.name);
+      })
       .map(function (x) { return x.g; });
   }
 
@@ -132,9 +147,17 @@
         html += '<div class="gs-group-label">' + esc(cat.label) + '</div>';
         inCat.forEach(function (g) { html += rowHTML(g, flat.length); flat.push(g); });
       });
+      // Not games, still worth finding: the two other hubs + the feedback door.
+      html += '<div class="gs-group-label">More</div>';
+      [
+        { name: 'Printables', desc: 'Score sheets, boards, and rules to print', color: '#8A5A2B', catLabel: '', url: '/printables/' },
+        { name: 'Utilities', desc: 'Calculators, converters, and generators', color: '#147C7C', catLabel: '', url: '/utilities/' },
+        { name: 'Send feedback', desc: 'Tell us what to fix or add — a person reads it', color: '#147C7C', catLabel: '', url: '/feedback/?from=search' }
+      ].forEach(function (g) { html += rowHTML(g, flat.length); flat.push(g); });
     } else if (list.length === 0) {
-      html = '<div class="gs-empty"><strong>No games match.</strong>' +
-             '<span>Try another title or a category like “casino”.</span></div>';
+      html = '<div class="gs-empty"><strong>Nothing matches.</strong>' +
+             '<span>Try another title or a category like “casino”.</span>' +
+             '<a class="gs-empty-fb" href="/feedback/?from=search">Can’t find it? Tell us what’s missing →</a></div>';
     } else {
       list.forEach(function (g) { html += rowHTML(g, flat.length); flat.push(g); });
     }

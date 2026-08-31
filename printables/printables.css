@@ -277,3 +277,49 @@
   .pcard { border-color: #999; }
   .tiles span { border-color: #000; }
 }
+
+/* ── Hub index (2026-08-31): dense lists replaced the card wall ── */
+.pr-toolbar { display: flex; flex-wrap: wrap; gap: 12px; align-items: center; margin: 0 0 26px; }
+.pr-filter {
+  flex: 1; min-width: 210px; max-width: 330px;
+  font: 500 14px/1.2 Inter, system-ui, sans-serif;
+  color: var(--cat-ink);
+  background: #fffdf8;
+  border: 1.5px solid var(--cat-line);
+  border-radius: 10px;
+  padding: 10px 13px;
+}
+.pr-filter:focus { outline: none; border-color: var(--cat-accent); }
+.pr-jump { display: flex; flex-wrap: wrap; gap: 6px; }
+.pr-jump a {
+  font: 600 11.5px/1 Inter, system-ui, sans-serif;
+  letter-spacing: 0.02em;
+  color: var(--cat-ink-soft);
+  border: 1px solid var(--cat-line);
+  border-radius: 999px;
+  padding: 8px 12px;
+  text-decoration: none;
+  background: #fffdf8;
+}
+.pr-jump a:hover { color: var(--cat-accent); border-color: var(--cat-accent); }
+
+.pr-block { margin: 0 0 34px; }
+.pr-block[hidden] { display: none; }
+.pr-list { columns: 3; column-gap: 30px; }
+@media (max-width: 900px) { .pr-list { columns: 2; } }
+@media (max-width: 560px) { .pr-list { columns: 1; } }
+.pr-item {
+  display: flex; align-items: center; gap: 10px;
+  break-inside: avoid; -webkit-column-break-inside: avoid;
+  padding: 8px 6px;
+  border-bottom: 1px dashed var(--cat-line);
+  color: var(--cat-ink);
+  text-decoration: none;
+  font: 500 13.5px/1.35 Inter, system-ui, sans-serif;
+}
+.pr-item:hover { color: var(--cat-accent); }
+.pr-item .ic { font-size: 15px; flex: none; width: 20px; text-align: center; }
+.pr-item[hidden] { display: none; }
+.pr-nomatch { font-size: 14px; color: var(--cat-ink-soft); margin: -8px 0 34px; }
+.pr-nomatch[hidden] { display: none; }
+.pr-nomatch a { color: var(--cat-accent); }
