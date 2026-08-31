@@ -147,7 +147,6 @@
     { id: 'word-search',     size: 's-wide' },
     { id: 'dogs',            size: 's-med'  },
   ];
-  const FEATURED_IDS = FEATURED_LAYOUT.map(f => f.id);
 
   // ── DOM helpers ────────────────────────────────────────────────────────
   function el(html) {
@@ -164,7 +163,9 @@
   // The big hero tile keeps its showcase layout (ambient art + blurb + CTA).
   // Every other tile uses the "Style B" frame: a screenshot up top (real game
   // frame when we have one, otherwise an icon medallion) over a clean footer.
-  function renderTile(game, size, isHero) {
+  // showCat: category eyebrow on the card — only for mixed-category views
+  // (search/filter results); inside a category section it's redundant noise.
+  function renderTile(game, size, isHero, showCat) {
     if (isHero) return renderHeroTile(game, size);
 
     const best = getBest(game.id);
@@ -181,10 +182,10 @@
         <div class="shot">${top}</div>
         <div class="tfoot">
           <div class="tf-text">
-            <span class="tf-eyebrow">${cat}</span>
+            ${showCat ? `<span class="tf-eyebrow">${cat}</span>` : ''}
             <h3>${game.name}</h3>
           </div>
-          <span class="tf-cta">${best != null ? `★ ${best}` : 'Play'}</span>
+          ${best != null ? `<span class="tf-best">★ ${best}</span>` : '<span class="tf-go" aria-hidden="true">→</span>'}
         </div>
       </a>
     `);
@@ -195,7 +196,6 @@
     const a = el(`
       <a class="tile ${size} has-preview" href="${gameUrl(game)}" style="background:${game.color}22;--g:${game.color}">
         ${game.isNew ? '<span class="tile-new">NEW</span>' : ''}
-        <span class="tile-tag">★ Featured</span>
         <div class="tile-decoration"></div>
         <div class="tile-art">${glyph(game, 140)}</div>
         <div class="tile-preview" style="background:${game.color}14">
@@ -203,11 +203,8 @@
         </div>
         <div class="tile-meta">
           <h3>${game.name}</h3>
-          <p class="desc">${game.desc} Pick up where you left off — your scores are saved locally.</p>
-          <div class="meta-row">
-            <span>▸ Free</span>
-            ${best != null ? `<span class="best">★ ${best}</span>` : ''}
-          </div>
+          <p class="desc">${game.desc}</p>
+          ${best != null ? `<div class="meta-row"><span class="best">★ ${best}</span></div>` : ''}
           <span class="play-cta">Play now →</span>
         </div>
       </a>
@@ -245,89 +242,12 @@
     });
   }
 
-  function renderAdTile() {
-    return el(`
-      <div class="tile-ad">
-        <div class="ad-tag">Sponsored</div>
-        <div class="ad-body">Native 300×250</div>
-        <h4>Blends with cards</h4>
-      </div>
-    `);
-  }
-
   // ── Sidebar ────────────────────────────────────────────────────────────
-  function readNumStorage(key) {
-    const n = parseInt(localStorage.getItem(key), 10);
-    return isFinite(n) && n > 0 ? n : null;
-  }
-
+  // (The "At a glance" stats card is gone — for a fresh visitor it showed
+  // Play/Play/Play/$1,000, a dashboard with no data. Show nothing instead.)
   function renderSidebar() {
     const side = document.getElementById('hub-side');
     side.innerHTML = '';
-
-    // Pull what we actually know from localStorage; show editorial picks otherwise.
-    const snakeBest = readNumStorage('snakeHighScore');
-    const asteroidsBest = readNumStorage('asteroidsHighScore');
-    const blockPuzzleBest = readNumStorage('blockPuzzleHighScore'); // not yet persisted
-    const arcadeBest = Math.max(asteroidsBest || 0, blockPuzzleBest || 0,
-      readNumStorage('breakoutHighScore') || 0,
-      readNumStorage('spaceInvadersHighScore') || 0,
-      readNumStorage('pongHighScore') || 0) || null;
-
-    let casinoBankroll = null;
-    try {
-      const api = window.CASINO_BANKROLL;
-      const raw = api ? api.read() : Number(localStorage.getItem('casinoBankroll'));
-      if (isFinite(raw) && raw >= 0) casinoBankroll = Math.floor(raw);
-    } catch (e) {}
-
-    const cats = [
-      { id: 'classic', label: 'Arcade',  href: 'arcade/',  color: '#FF4F2D',
-        metric: arcadeBest != null ? arcadeBest.toLocaleString() : 'Play',
-        sub:    arcadeBest != null ? 'Top arcade score' : 'Classic & 80s' },
-      { id: 'kids',    label: 'Kids',    href: 'kids/',    color: '#FF4F8B',
-        metric: snakeBest != null ? snakeBest.toLocaleString() : 'Play',
-        sub:    snakeBest != null ? 'Snake best' : 'Gentle & ad-free' },
-      { id: 'puzzle',  label: 'Strategy', href: 'strategy/', color: '#1F5A3D',
-        metric: 'Play', sub: 'Chess, Othello & more' },
-      { id: 'casino',  label: 'Casino',  href: 'casino/',  color: '#C8A14A',
-        metric: casinoBankroll != null ? '$' + casinoBankroll.toLocaleString() : '$1,000',
-        sub:    casinoBankroll != null ? 'Bankroll' : 'Free starting stake' },
-    ];
-
-    const tilesHtml = cats.map(c => `
-      <a class="stats-cat" href="${c.href}" style="--cat:${c.color}">
-        <div class="l"><span class="dot"></span>${c.label}</div>
-        <div class="n">${c.metric}</div>
-        <div class="s">${c.sub}</div>
-      </a>
-    `).join('');
-
-    // Anchor: only show a top score if we actually have one.
-    const realScores = [
-      arcadeBest != null ? { label: 'Arcade best',  value: arcadeBest.toLocaleString(),  game: 'Top arcade run' } : null,
-      snakeBest  != null ? { label: 'Snake best',   value: snakeBest.toLocaleString(),   game: 'Snake' } : null,
-    ].filter(Boolean);
-    const anchor = realScores.length
-      ? realScores.reduce((a, b) => (parseInt(a.value.replace(/,/g, ''), 10) >= parseInt(b.value.replace(/,/g, ''), 10) ? a : b))
-      : null;
-
-    const stats = el(`
-      <div class="stats-card">
-        <h4>At a glance</h4>
-        ${anchor ? `
-        <div class="stats-anchor">
-          <div class="stats-anchor-chip">★</div>
-          <div class="stats-anchor-body">
-            <div class="l">${anchor.label}</div>
-            <div class="n">${anchor.value}</div>
-            <div class="s">${anchor.game}</div>
-          </div>
-        </div>` : ''}
-        <div class="stats-cats">${tilesHtml}</div>
-      </div>
-    `);
-    side.appendChild(stats);
 
     // Sidebar ad
     side.appendChild(el(`
@@ -464,18 +384,22 @@
       // Ad tile skipped until AdSense is approved (see limestone.css hide rule).
       main.appendChild(mosaic);
 
-      // All games (excluding featured)
-      const rest = GAMES.filter(g => !FEATURED_IDS.includes(g.id) && matches(g));
-      const head = el(`
-        <div class="hub-section-head">
-          <h2>All games</h2>
-          <div class="rule"></div>
-        </div>
-      `);
-      main.appendChild(head);
-      const grid = el('<div class="hub-mosaic tight"></div>');
-      rest.forEach(g => grid.appendChild(renderTile(g, 's-base', false)));
-      main.appendChild(grid);
+      // The catalogue, grouped by category — catalog order used to dump all
+      // ten Kids games as the first two rows. Featured games appear in their
+      // section too: the mosaic is a showcase, the sections are the catalogue.
+      CATEGORIES.forEach(cat => {
+        const inCat = GAMES.filter(g => g.cat === cat.id && matches(g));
+        if (!inCat.length) return;
+        main.appendChild(el(`
+          <div class="hub-section-head">
+            <h2>${cat.label}</h2>
+            <div class="rule"></div>
+          </div>
+        `));
+        const grid = el('<div class="hub-catgrid"></div>');
+        inCat.forEach(g => grid.appendChild(renderTile(g, '', false)));
+        main.appendChild(grid);
+      });
     } else {
       const head = el(`
         <div class="hub-section-head">
@@ -485,8 +409,8 @@
         </div>
       `);
       main.appendChild(head);
-      const grid = el('<div class="hub-mosaic tight"></div>');
-      allMatching.forEach(g => grid.appendChild(renderTile(g, 's-base', false)));
+      const grid = el('<div class="hub-catgrid"></div>');
+      allMatching.forEach(g => grid.appendChild(renderTile(g, '', false, true)));
       main.appendChild(grid);
     }
 

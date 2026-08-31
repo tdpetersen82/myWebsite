@@ -27,7 +27,7 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="limestone.css?v=20260831a">
+    <link rel="stylesheet" href="limestone.css?v=20260831b">
 
     <!-- Google Analytics -->
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
@@ -406,9 +406,11 @@
                 <div id="hub-results" class="hub-results" style="display:none"></div>
                 <div id="hub-main-grids"></div>
 
-                <section class="all-games" aria-labelledby="all-games-h" style="margin-top:48px;padding-top:24px;border-top:1px solid rgba(31,27,22,0.08)">
-                    <h2 id="all-games-h" style="font-size:18px;font-weight:600;margin:0 0 14px;color:var(--ink)">All games A–Z</h2>
-                    <ul style="list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(180px,1fr));gap:8px 18px;font-size:14px">
+                <!-- Static A-Z: the grid above is JS-rendered, so these are the
+                     homepage's only crawlable game links. Kept, styled quiet. -->
+                <section class="all-games" aria-labelledby="all-games-h" style="margin-top:52px;padding-top:20px;border-top:1px solid rgba(31,27,22,0.08)">
+                    <h2 id="all-games-h" style="font:600 10.5px/1 'JetBrains Mono',ui-monospace,monospace;letter-spacing:0.12em;text-transform:uppercase;margin:0 0 12px;color:var(--ink-soft)">All games A–Z</h2>
+                    <ul style="list-style:none;padding:0;margin:0;display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:5px 16px;font-size:12.5px">
                         <li><a href="2048/" style="color:var(--ink-soft);text-decoration:none">2048</a></li>
                         <li><a href="animal-detective/" style="color:var(--ink-soft);text-decoration:none">Animal Detective</a></li>
                         <li><a href="asteroids/" style="color:var(--ink-soft);text-decoration:none">Asteroids</a></li>
@@ -490,8 +492,7 @@
         </footer>
     </div>
 
-    <script src="casino/casino-bankroll.js"></script>
     <script src="games-catalog.js?v=20260831b"></script>
-    <script src="hub.js?v=20260831a"></script>
+    <script src="hub.js?v=20260831b"></script>
 </body>
 </html>
