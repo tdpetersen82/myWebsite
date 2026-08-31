@@ -24,8 +24,13 @@ that ranks. Every page below has observed demand behind it. Steady batches beat 
    failure signature).
 6. **Reciprocal links**: printable is the FIRST related item on its game page; printable
    links back. Cross-link within each family (all rummy pages link each other + the hub page).
-7. Hub card on `/printables/`, sitemap entry, deploy (`npx wrangler deploy`), then
-   `node tools/bing-submit.mjs <urls>` same day.
+7. Hub row on `/printables/` — since the 2026-08-31 de-card redesign that is a
+   `.pr-item` link (emoji + name, desc in `title=`) appended in ALPHA order inside the
+   right `.pr-block` section, NOT a `.pr-card`. Plus an `LG_EXTRAS` entry in
+   `games-catalog.js` (site search can't find the page without it) — then run
+   `node tools/check-search-index.mjs` (exits 1 on drift) and bump `games-catalog.js?v=`
+   site-wide. Sitemap entry, deploy (`npx wrangler deploy`), then
+   `node tools/bing-submit.mjs <urls>` + `node tools/indexnow-submit.mjs <urls>` same day.
 
 ## Wave 1 — card & dice classics (16) — SHIPPED 2026-08-26 (+ pitch promoted from wave 3)
 
