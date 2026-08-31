@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="theme-color" content="#147C7C">
+    <title>Feedback — Limestone Games</title>
+    <meta name="description" content="Tell us what to fix, add, or change — feedback goes straight to the person who builds the site.">
+    <meta name="robots" content="noindex,follow">
+    <link rel="canonical" href="https://limestonegames.com/feedback/">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,400;12..96,500;12..96,600;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="/category.css?v=20260521a">
+    <link rel="stylesheet" href="/site-nav.css?v=20260521b">
+    <link rel="stylesheet" href="/utility.css?v=20260522a">
+
+    <!-- Google Analytics -->
+    <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+    <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+
+    <style>
+      .fb-panel { max-width: 640px; }
+      .fb-about { display: flex; align-items: center; gap: 10px; }
+      .fb-about .u-input { flex: 1; }
+      .fb-hp { position: absolute; left: -9999px; top: -9999px; }
+      .fb-done { text-align: center; padding: 30px 10px; display: none; }
+      .fb-done .big { font-size: 40px; margin-bottom: 10px; }
+      .fb-done h2 { margin: 0 0 8px; color: var(--cat-ink); }
+      .fb-done p { color: var(--cat-ink-soft); margin: 0 0 18px; }
+      .fb-note {
+        font-family: var(--u-mono); font-size: 11.5px; color: var(--cat-ink-soft);
+        margin-top: 14px; line-height: 1.55;
+      }
+    </style>
+</head>
+<body class="cat-root" data-category="utilities">
+
+    <nav class="nav">
+        <div class="nav-left">
+            <a class="logo" href="/">
+                <img src="/assets/logo-96.png" alt="Limestone Games home" width="28" height="28">
+                <span class="wordmark">Limestone <span class="light">Games</span></span>
+            </a>
+            <div class="nav-links">
+                <a href="/arcade/">Arcade</a>
+                <a href="/kids/">Kids</a>
+                <a href="/strategy/">Strategy</a>
+                <a href="/casino/">Casino</a>
+                <a href="/printables/">Printables</a>
+                <a href="/utilities/">Utilities</a>
+                <a href="/profile/">Profile</a>
+            </div>
+        </div>
+        <div class="nav-meta">
+            <span class="dot"></span>
+            Read by a human
+        </div>
+    </nav>
+
+    <main class="u-wrap fb-panel">
+        <header class="u-head">
+            <span class="u-eyebrow">💬 Feedback</span>
+            <h1>Tell us <em>anything</em></h1>
+            <p class="u-lede">Found a bug? A game too hard or too easy? Want a game or a printable we don't have? It goes straight to the one person who builds this site, and it's the main way things here get fixed. No account, no email — just say it.</p>
+        </header>
+
+        <section class="u-panel">
+            <form id="fb-form" novalidate>
+                <div class="fb-hp" aria-hidden="true">
+                    <label>Leave this empty<input type="text" name="website" tabindex="-1" autocomplete="off"></label>
+                </div>
+                <div class="u-field">
+                    <label class="u-label" for="fb-page">What's it about?</label>
+                    <div class="fb-about">
+                        <input id="fb-page" class="u-input" type="text" maxlength="200" autocomplete="off" placeholder="a game, a tool, the site…">
+                    </div>
+                </div>
+                <div class="u-field" style="margin-top:14px">
+                    <label class="u-label" for="fb-message">Your message</label>
+                    <textarea id="fb-message" class="u-textarea" rows="6" maxlength="4000" placeholder="What happened, what you expected, what you'd change — anything helps."></textarea>
+                </div>
+                <div class="u-toolbar" style="margin-top:16px">
+                    <button class="u-btn" id="fb-send" type="submit">Send feedback</button>
+                    <span class="u-msg" id="fb-status" style="display:none"></span>
+                </div>
+                <p class="fb-note">Sent anonymously and stored privately until it's read. Don't include personal info — there's no reply mechanism, we just fix things.</p>
+            </form>
+
+            <div class="fb-done" id="fb-done">
+                <div class="big">🙌</div>
+                <h2>Got it — thank you</h2>
+                <p>It'll be read by a person, promise. This is genuinely how things here get improved.</p>
+                <a class="u-btn ghost" id="fb-back" href="/">← Back to the games</a>
+            </div>
+        </section>
+    </main>
+
+    <footer class="cat-foot">
+        <a class="cat-logo" href="/">
+            <svg width="20" height="20" viewBox="0 0 40 40" aria-hidden="true">
+                <path d="M8 18c-1-7 6-13 13-12s12 5 13 12c1 6-3 11-9 13-5 2-12 1-15-3-3-3-2-7-2-10z" fill="#C9BCA3"/>
+                <circle cx="30" cy="26" r="2.4" fill="#F08488"/>
+            </svg>
+            <span class="wordmark" style="font-size:14px">Limestone <span class="light">Games</span></span>
+        </a>
+        <div class="cat-foot-links">
+            <a href="/">All games</a>
+            <a href="/utilities/">Utilities</a>
+            <a href="/printables/">Printables</a>
+            <a href="/about.html">About</a>
+            <a href="/privacy.html">Privacy</a>
+            <a href="/terms.html">Terms</a>
+            <span>© 2026 Limestone Games</span>
+        </div>
+    </footer>
+
+    <script>
+    (function () {
+        var form = document.getElementById('fb-form');
+        var pageEl = document.getElementById('fb-page');
+        var msgEl = document.getElementById('fb-message');
+        var statusEl = document.getElementById('fb-status');
+        var btn = document.getElementById('fb-send');
+
+        // Pre-fill "about" from ?from= (set by the links) or the referrer.
+        var from = new URLSearchParams(location.search).get('from');
+        if (!from && document.referrer) {
+            try {
+                var ref = new URL(document.referrer);
+                if (ref.hostname === location.hostname && ref.pathname !== '/feedback/') {
+                    from = ref.pathname.replace(/^\/|\/$/g, '');
+                }
+            } catch (e) { /* ignore malformed referrers */ }
+        }
+        if (from) {
+            pageEl.value = from.replace(/[^\w\s\/-]/g, '').slice(0, 200);
+            var back = document.getElementById('fb-back');
+            back.href = '/' + from.replace(/^\//, '') + (from.endsWith('/') ? '' : '/');
+        }
+
+        function fail(text) {
+            statusEl.textContent = text;
+            statusEl.style.display = '';
+            btn.disabled = false;
+        }
+
+        form.addEventListener('submit', function (e) {
+            e.preventDefault();
+            statusEl.style.display = 'none';
+            var message = msgEl.value.trim();
+            if (message.length < 3) { fail('Write a little more than that — even one sentence helps.'); return; }
+            btn.disabled = true;
+            fetch('/api/feedback', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    message: message,
+                    page: pageEl.value.trim(),
+                    website: form.elements['website'].value
+                })
+            }).then(function (r) {
+                if (!r.ok) throw new Error('http ' + r.status);
+                return r.json();
+            }).then(function () {
+                form.style.display = 'none';
+                document.getElementById('fb-done').style.display = 'block';
+            }).catch(function () {
+                fail("Couldn't send just now — try again in a moment.");
+            });
+        });
+    })();
+    </script>
+</body>
+</html>

@@ -5,6 +5,7 @@
 //   PUT    /api/casino/stats   → store blob, stamp updatedAt
 //   DELETE /api/casino/stats   → delete blob (used by future "wipe cloud" UI)
 //   POST   /api/contact        → store a contact-form submission
+//   POST   /api/feedback       → store anonymous page feedback (feedback:{ts}:{id})
 //   *      /api/journal/*      → private single-user journal (see below)
 // Anything else → static assets via env.ASSETS.
 //
@@ -109,6 +110,46 @@ async function handleContact(request, env) {
   await env.LIMESTONE_KV.put(key, JSON.stringify({
     name, email, message, ts,
     ip: request.headers.get('cf-connecting-ip') || '',
+    ua: request.headers.get('user-agent') || '',
+  }));
+  return json({ ok: true });
+}
+
+// POST /api/feedback — anonymous page feedback, stored under feedback:{ts}:{id}.
+// No email, no name; just the message and which page it's about. Read + clear
+// with tools/feedback-read.mjs. Honeypot plus a soft per-IP daily cap; both
+// failure modes return ok so bots and spammers learn nothing.
+async function handleFeedback(request, env) {
+  if (request.method !== 'POST') {
+    return json({ error: 'method not allowed' }, { status: 405 });
+  }
+  const text = await request.text();
+  if (text.length > MAX_CONTACT_BYTES) {
+    return json({ error: 'message too large' }, { status: 413 });
+  }
+  let body;
+  try { body = JSON.parse(text); }
+  catch { return json({ error: 'invalid json' }, { status: 400 }); }
+  if (!body || typeof body !== 'object') {
+    return json({ error: 'invalid request' }, { status: 400 });
+  }
+  if (body.website) return json({ ok: true });
+
+  const message = String(body.message || '').trim().slice(0, 4000);
+  const page = String(body.page || '').trim().slice(0, 200);
+  if (message.length < 3) return json({ error: 'message is required' }, { status: 400 });
+
+  const ip = request.headers.get('cf-connecting-ip') || '';
+  const rlKey = `fbrl:${ip}:${new Date().toISOString().slice(0, 10)}`;
+  const count = parseInt((await env.LIMESTONE_KV.get(rlKey)) || '0', 10);
+  if (count >= 10) return json({ ok: true });
+  await env.LIMESTONE_KV.put(rlKey, String(count + 1), { expirationTtl: 172800 });
+
+  const ts = new Date().toISOString();
+  const key = `feedback:${ts}:${crypto.randomUUID().slice(0, 8)}`;
+  await env.LIMESTONE_KV.put(key, JSON.stringify({
+    message, page, ts,
+    ip,
     ua: request.headers.get('user-agent') || '',
   }));
   return json({ ok: true });
@@ -311,6 +352,9 @@ export default {
     }
     if (url.pathname === '/api/contact') {
       return handleContact(request, env);
+    }
+    if (url.pathname === '/api/feedback') {
+      return handleFeedback(request, env);
     }
     if (url.pathname.startsWith('/api/journal/')) {
       return handleJournal(request, env, url);
