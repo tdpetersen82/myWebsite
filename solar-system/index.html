@@ -138,11 +138,13 @@
     -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
   #dock .dgroup{display:flex;align-items:center;gap:4px;}
   #dock .dgroup + .dgroup{border-left:1px solid rgba(150,170,210,0.18);padding-left:10px;}
-  #dock button{font:600 13px/1 system-ui,sans-serif;color:var(--ink);background:transparent;border:none;
+  #dock button{color:var(--ink);background:transparent;border:none;
     border-radius:8px;padding:8px 9px;cursor:pointer;}
   #dock button:hover{background:rgba(120,150,210,0.18);}
+  #dock button svg{display:block;width:16px;height:16px;fill:currentColor;}
   /* transport gets bigger targets than the icon buttons */
-  #dock .dgroup:first-of-type button{font-size:18px;padding:9px 13px;}
+  #dock .dgroup:first-of-type button{padding:9px 13px;}
+  #dock .dgroup:first-of-type svg{width:19px;height:19px;}
   #rate{font:600 12px/1 ui-monospace,Menlo,monospace;color:var(--soft);min-width:42px;text-align:center;
     font-variant-numeric:tabular-nums;white-space:nowrap;}
   #dock .chip{display:inline-flex;align-items:center;position:relative;padding:3px 2px;}
@@ -163,6 +165,10 @@
     border:1px solid var(--pnl-line);border-radius:999px;padding:9px 16px;pointer-events:none;
     transition:opacity .5s;}
 
+  /* narrow desktop: the dock spans wide enough to reach the pill's corner */
+  @media(max-width:1060px){
+    #fb-pill{bottom:78px !important;}
+  }
   @media(max-width:760px){
     #ss-nav{font-size:11px;gap:10px;}
     #hud{top:40px;}
@@ -268,16 +274,16 @@
 <div id="events"></div>
 <div id="dock">
   <div class="dgroup">
-    <button type="button" data-act="slower" aria-label="Slower or reverse" title="Slower / reverse">⏪</button>
-    <button type="button" data-act="pause" aria-label="Pause or resume" title="Pause [Space]">⏸</button>
-    <button type="button" data-act="faster" aria-label="Faster" title="Faster">⏩</button>
+    <button type="button" data-act="slower" aria-label="Slower or reverse" title="Slower / reverse"><svg viewBox="0 0 24 24"><polygon points="20,6 20,18 12,12"/><polygon points="11,6 11,18 3,12"/></svg></button>
+    <button type="button" data-act="pause" aria-label="Pause or resume" title="Pause [Space]"><svg viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.5"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.5"/></svg></button>
+    <button type="button" data-act="faster" aria-label="Faster" title="Faster"><svg viewBox="0 0 24 24"><polygon points="4,6 4,18 12,12"/><polygon points="13,6 13,18 21,12"/></svg></button>
     <span id="rate">×6</span>
   </div>
   <div class="dgroup" id="dock-bodies"></div>
   <div class="dgroup">
-    <button type="button" data-act="resetview" title="Whole system [0]">⊙</button>
-    <button type="button" data-act="reset" title="Reset the system [R]">↺</button>
-    <button type="button" data-act="data" title="Data table [D]">⊞</button>
+    <button type="button" data-act="resetview" title="Whole system [0]"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.1"/><circle cx="12" cy="12" r="2.7"/></svg></button>
+    <button type="button" data-act="reset" title="Reset the system [R]"><svg viewBox="0 0 24 24"><path d="M18.9 15.4a7.6 7.6 0 1 1 .7-6.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><polygon points="20.9,4.4 20.3,10.5 15.1,7.3"/></svg></button>
+    <button type="button" data-act="data" title="Data table [D]"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7.2" height="7.2" rx="1.6"/><rect x="12.8" y="4" width="7.2" height="7.2" rx="1.6"/><rect x="4" y="12.8" width="7.2" height="7.2" rx="1.6"/><rect x="12.8" y="12.8" width="7.2" height="7.2" rx="1.6"/></svg></button>
   </div>
 </div>
 <div id="microhint" hidden>Scroll to zoom · click any body to inspect it</div>
@@ -1347,7 +1353,9 @@
   });
   // ---- time transport (⏪ ⏸ ⏩ — halve/double through zero, pause is its own button) ----
   function setRate(v){ timeRate = Math.max(-32, Math.min(32, Math.round(v))); if (timeRate !== 0) lastRate = timeRate; syncPause(); }
-  function syncPause(){ const b = document.querySelector('#dock [data-act="pause"]'); if (b) b.textContent = (timeRate === 0 ? '▶' : '⏸'); }
+  const SVG_PAUSE = '<svg viewBox="0 0 24 24"><rect x="6" y="5" width="4.2" height="14" rx="1.5"/><rect x="13.8" y="5" width="4.2" height="14" rx="1.5"/></svg>';
+  const SVG_PLAY = '<svg viewBox="0 0 24 24"><polygon points="7.5,5 20,12 7.5,19"/></svg>';
+  function syncPause(){ const b = document.querySelector('#dock [data-act="pause"]'); if (b) b.innerHTML = (timeRate === 0 ? SVG_PLAY : SVG_PAUSE); }
   function faster(){ setRate(timeRate <= 0 ? (timeRate >= -1 ? 1 : Math.round(timeRate/2)) : Math.min(32, timeRate*2)); }
   function slower(){ setRate(timeRate >= 0 ? (timeRate <= 1 ? -1 : Math.round(timeRate/2)) : Math.max(-32, timeRate*2)); }
   function earthView(){ follow = EARTH; if (zoom < 5) zoom = 5; }
