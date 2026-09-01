@@ -189,6 +189,14 @@
     { name: 'Text Diff', cat: 'utility', url: '/utilities/text-diff/', desc: '' },
     { name: 'Gradient Generator', cat: 'utility', url: '/utilities/gradient-generator/', desc: '' },
     { name: 'Tournament Generator', cat: 'utility', url: '/utilities/tournament-generator/', desc: '' },
+    { name: 'Bocce score cards', cat: 'printable', url: '/printables/bocce-score-cards/', desc: 'Frame-by-frame bocce cards, two per page, with the closest-to-the-pallino scoring rules printed on the card.' },
+    { name: 'Nertz score sheet', cat: 'printable', url: '/printables/nertz-score-sheet/', desc: 'Round scores and running totals to 100 for six players, with the +1/−2 Nertz scoring printed on the pad.' },
+    { name: 'Rook score sheet', cat: 'printable', url: '/printables/rook-score-sheet/', desc: 'WE/THEY pad to 300 with bid column, counter card values, and the set rule printed on the sheet.' },
+    { name: 'Sheepshead score sheet', cat: 'printable', url: '/printables/sheepshead-score-sheet/', desc: 'Five-player pad with the Wisconsin payout table — picker, partner, schneider, schwarz, and leasters.' },
+    { name: 'Shuffleboard score cards', cat: 'printable', url: '/printables/shuffleboard-score-cards/', desc: 'Table shuffleboard to 15/21 and the outdoor court game to 75, with zones, hangers, and 10-OFF on the sheet.' },
+    { name: 'Garbage (Trash) rules card', cat: 'printable', url: '/printables/garbage-rules-card/', desc: 'The kids\u2019 classic on one card: 2×5 layout diagram, wild Jacks, dead Queens and Kings, shrinking rounds.' },
+    { name: 'Kings in the Corner rules', cat: 'printable', url: '/printables/kings-in-the-corner-rules/', desc: 'Layout diagram, corner Kings, pile moves, and the common 10-per-King scoring on one printable card.' },
+    { name: 'Tripoley layout mat', cat: 'printable', url: '/printables/tripoley-layout/', desc: 'The classic nine-section Michigan Rummy mat with the three-phase rules printed under it.' },
     { name: 'Send feedback', cat: 'feedback', url: '/feedback/', desc: 'Report a bug, request a game or printable — read by the person who builds the site.' },
   ];
 

@@ -96,7 +96,7 @@ Compounders & classics:
 - [x] poker-run-score-sheet — our one Tier-A GSC signal (earned an impression with no page);
       rider info + 5 checkpoint boxes + hand-ranking footer; links poker-hand-rankings
 
-## Wave 3 — boards, bar games, niche cards (16)
+## Wave 3 — boards, bar games, niche cards (16) — PARTIAL SHIP 2026-09-01: bar/backyard + niche cards (8 pages) SHIPPED; game boards DEFERRED at owner request ("dont' do the game boards") — do not build without a new go
 
 Boards (print-format risk: measure early; chess/checkers needed cell-shrinks at 974px):
 - [ ] snakes-and-ladders-board — design OUR OWN snake/ladder positions (don't copy the
@@ -109,19 +109,19 @@ Boards (print-format risk: measure early; chess/checkers needed cell-shrinks at 
 - [ ] boggle-grids — blank 4×4 + 5×5 + word-length tally; teacher demand; Hasbro note
 
 Bar & backyard:
-- [ ] shuffleboard-score-cards — table vs floor scoring differs → variant note
-- [ ] bocce-score-cards — frames to 12/13/16 w/ variant note
+- [x] shuffleboard-score-cards — table vs floor scoring differs → variant note
+- [x] bocce-score-cards — frames to 12/13/16 w/ variant note
 
 Niche cards (thin-to-zero competition):
-- [ ] rook-score-sheet — bid/score columns + point-card values (verify); trademark note
+- [x] rook-score-sheet — bid/score columns + point-card values (verify); trademark note
 - [x] pitch-score-sheet — Pitch/Setback; 4-point standard (high/low/jack/game), 10-point variant
       noted. **Promoted: Tier-A** — GSC-observed miss "pitch card game score sheet" pos 39
       (2026-08-24 pull); build with the next batch regardless of wave
-- [ ] nertz-score-sheet — tally to 100 (−2/card left, verify); links solitaire game
-- [ ] sheepshead-score-sheet — Wisconsin standard scoring, leasters/doublers variant note
-- [ ] garbage-rules-card — Garbage/Trash both names in title; kids link
-- [ ] kings-in-the-corner-rules — rules card
-- [ ] tripoley-layout — Tripoley/Michigan Rummy layout mat + rules; verify 9-section layout;
+- [x] nertz-score-sheet — tally to 100 (−2/card left, verify); links solitaire game
+- [x] sheepshead-score-sheet — Wisconsin standard scoring, leasters/doublers variant note
+- [x] garbage-rules-card — Garbage/Trash both names in title; kids link
+- [x] kings-in-the-corner-rules — rules card
+- [x] tripoley-layout — Tripoley/Michigan Rummy layout mat + rules; verify 9-section layout;
       trademark note
 
 ## New candidates from report runs (verify at build time)
@@ -150,15 +150,18 @@ site** — it is the live canary:
   rotations), cornhole-bracket variant mentions, beer-pong bracket.
 - If NO → the wall is real; drop the cluster and stop reconsidering it.
 
-**VERDICT 2026-09-01 (a week early, but conclusive): NO.** 28 days of GSC show ZERO
-query rows for bracket / round robin / tournament / football squares / euchre rotation,
-and the tournament-generator page has no GSC rows either. The wall is real — cluster
-DROPPED, per the rule above. Do not reconsider.
+**Status 2026-09-01: canary still open — owner's call.** 28 days of GSC show zero
+query rows for the OLD pages (football-squares, euchre-rotations) — bad sign for the
+static-printable cluster. But the tournament-generator only shipped Aug 25 (≤5 days of
+GSC data at this check) — too new to judge; zero rows likely = not indexed yet, not
+no-demand. Re-submitted to IndexNow + Bing 2026-09-01. **Check football-squares Sep 8
+as planned; give the tournament-generator until ~Sep 15** before any verdict on the
+generator-intent half.
 
 ## Free tweaks (do with any next deploy, no new pages)
 
-- [ ] five-crowns-score-sheet: mention "5 Crowns" digit spelling in prose
-- [ ] dominoes-score-sheet: mention Spinner dominoes variant
+- [x] five-crowns-score-sheet: mention "5 Crowns" digit spelling in prose (was already live)
+- [x] dominoes-score-sheet: mention Spinner dominoes variant (was already live)
 - [ ] hand-and-foot-score-sheet: add "Hand, Knee and Foot" variant section (3 dealt piles) —
       surprising blind-seed demand on both engines
 
