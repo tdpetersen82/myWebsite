@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Hearts — dodging the Queen of Spades">
+  <defs>
+  <radialGradient id="felt" cx="0.5" cy="0.28" r="1.05">
+      <stop offset="0" stop-color="#5B3A44"/>
+      <stop offset="0.6" stop-color="#4A2E38"/>
+      <stop offset="1" stop-color="#38222B"/>
+    </radialGradient>
+  <linearGradient id="cardface" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#FFFEF8"/>
+      <stop offset="1" stop-color="#EFE5CE"/>
+    </linearGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.45" r="0.85">
+      <stop offset="0.62" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.30"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#felt)"/>
+<g transform="translate(300 300) scale(16) translate(-12 -12)" fill="rgba(192,71,59,0.13)"><path d="M12,21 C12,21 3,15 3,9 C3,5.5 5.5,3.5 8,3.5 C10,3.5 11.3,4.8 12,6 C12.7,4.8 14,3.5 16,3.5 C18.5,3.5 21,5.5 21,9 C21,15 12,21 12,21 Z"/></g><ellipse cx="300" cy="510" rx="230" ry="26" fill="#000" opacity="0.25"/><g transform="translate(70 168) rotate(-14 80.0 112.0)"><rect width="160" height="224" rx="16" fill="url(#cardface)" stroke="#2A2017" stroke-opacity="0.35" stroke-width="2"/><text x="21" y="51" font-family="Georgia, serif" font-weight="700" font-size="42" fill="#C0473B">J</text><g transform="translate(32 80) scale(0.96) translate(-12 -12)" fill="#C0473B"><path d="M12,21 C12,21 3,15 3,9 C3,5.5 5.5,3.5 8,3.5 C10,3.5 11.3,4.8 12,6 C12.7,4.8 14,3.5 16,3.5 C18.5,3.5 21,5.5 21,9 C21,15 12,21 12,21 Z"/></g><g transform="translate(80.0 143.36) scale(2.7733333333333334) translate(-12 -12)" fill="#C0473B"><path d="M12,21 C12,21 3,15 3,9 C3,5.5 5.5,3.5 8,3.5 C10,3.5 11.3,4.8 12,6 C12.7,4.8 14,3.5 16,3.5 C18.5,3.5 21,5.5 21,9 C21,15 12,21 12,21 Z"/></g></g><g transform="translate(370 168) rotate(14 80.0 112.0)"><rect width="160" height="224" rx="16" fill="url(#cardface)" stroke="#2A2017" stroke-opacity="0.35" stroke-width="2"/><text x="21" y="51" font-family="Georgia, serif" font-weight="700" font-size="42" fill="#C0473B">3</text><g transform="translate(32 80) scale(0.96) translate(-12 -12)" fill="#C0473B"><path d="M12,21 C12,21 3,15 3,9 C3,5.5 5.5,3.5 8,3.5 C10,3.5 11.3,4.8 12,6 C12.7,4.8 14,3.5 16,3.5 C18.5,3.5 21,5.5 21,9 C21,15 12,21 12,21 Z"/></g><g transform="translate(80.0 143.36) scale(2.7733333333333334) translate(-12 -12)" fill="#C0473B"><path d="M12,21 C12,21 3,15 3,9 C3,5.5 5.5,3.5 8,3.5 C10,3.5 11.3,4.8 12,6 C12.7,4.8 14,3.5 16,3.5 C18.5,3.5 21,5.5 21,9 C21,15 12,21 12,21 Z"/></g></g><g transform="translate(206 120) rotate(0 100.0 140.0)"><rect width="200" height="280" rx="20" fill="url(#cardface)" stroke="#2A2017" stroke-opacity="0.35" stroke-width="2"/><text x="26" y="64" font-family="Georgia, serif" font-weight="700" font-size="52" fill="#22262E">Q</text><g transform="translate(40 100) scale(1.2) translate(-12 -12)" fill="#22262E"><path d="M12,2 C12,2 4,10 4,14.5 C4,17.5 7,19 9.5,17.2 C9,19.4 8,21 6.5,22 L17.5,22 C16,21 15,19.4 14.5,17.2 C17,19 20,17.5 20,14.5 C20,10 12,2 12,2 Z"/></g><g transform="translate(100.0 179.2) scale(3.466666666666667) translate(-12 -12)" fill="#22262E"><path d="M12,2 C12,2 4,10 4,14.5 C4,17.5 7,19 9.5,17.2 C9,19.4 8,21 6.5,22 L17.5,22 C16,21 15,19.4 14.5,17.2 C17,19 20,17.5 20,14.5 C20,10 12,2 12,2 Z"/></g></g>  <rect width="600" height="600" fill="url(#vig)"/>
+</svg>

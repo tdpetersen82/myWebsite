@@ -1,0 +1,31 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Solar System sandbox — sun, planets, comet">
+  <defs>
+  <radialGradient id="vig" cx="0.5" cy="0.45" r="0.85">
+      <stop offset="0.62" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.30"/>
+    </radialGradient>
+  <linearGradient id="sky" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#0A0F22"/>
+      <stop offset="1" stop-color="#1A1E3E"/>
+    </linearGradient>
+    <radialGradient id="corona" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF2C0"/>
+      <stop offset="0.35" stop-color="#F7C73C"/>
+      <stop offset="0.7" stop-color="rgba(242,166,90,0.5)"/>
+      <stop offset="1" stop-color="rgba(242,166,90,0)"/>
+    </radialGradient>
+    <linearGradient id="ctail" x1="1" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="rgba(190,224,255,0.95)"/>
+      <stop offset="1" stop-color="rgba(190,224,255,0)"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#sky)"/>
+  <g fill="#FFFFFF">
+    <circle cx="60" cy="80" r="3" opacity="0.7"/><circle cx="180" cy="46" r="2" opacity="0.5"/>
+    <circle cx="330" cy="70" r="2.5" opacity="0.6"/><circle cx="470" cy="50" r="3" opacity="0.7"/>
+    <circle cx="545" cy="130" r="2" opacity="0.5"/><circle cx="90" cy="200" r="2" opacity="0.4"/>
+    <circle cx="520" cy="230" r="2.5" opacity="0.55"/><circle cx="260" cy="150" r="2" opacity="0.45"/>
+    <circle cx="60" cy="430" r="2" opacity="0.45"/><circle cx="540" cy="470" r="2.5" opacity="0.5"/>
+  </g>
+<g fill="none" stroke="#8FA8E6" stroke-opacity="0.3" stroke-width="2.5"><circle cx="90" cy="520" r="250"/><circle cx="90" cy="520" r="360"/><circle cx="90" cy="520" r="470"/></g><g fill="#D9C9A0" opacity="0.8"><circle cx="430" cy="180" r="3"/><circle cx="455" cy="225" r="2.5"/><circle cx="400" cy="150" r="2.5"/><circle cx="470" cy="270" r="3"/><circle cx="415" cy="205" r="2"/><circle cx="478" cy="318" r="2.5"/><circle cx="445" cy="140" r="2"/><circle cx="490" cy="368" r="2"/><circle cx="462" cy="175" r="2.5"/><circle cx="432" cy="248" r="2"/></g><circle cx="90" cy="520" r="185" fill="url(#corona)"/><circle cx="90" cy="520" r="88" fill="#F7C73C"/><circle cx="90" cy="520" r="88" fill="none" stroke="#FFF2C0" stroke-width="4" opacity="0.7"/><circle cx="262" cy="345" r="26" fill="#3A78D6"/><circle cx="262" cy="345" r="26" fill="none" stroke="#7FB3FF" stroke-width="3" opacity="0.6"/><ellipse cx="252" cy="336" rx="9" ry="6" fill="#4EA34E"/><g transform="rotate(-18 448 118)"><ellipse cx="448" cy="118" rx="58" ry="16" fill="none" stroke="#D8C68F" stroke-width="5" opacity="0.85"/><circle cx="448" cy="118" r="30" fill="#E0CD96"/></g><path d="M560,430 L400,520" stroke="url(#ctail)" stroke-width="10" stroke-linecap="round"/><circle cx="398" cy="521" r="12" fill="#EAF4FF"/>  <rect width="600" height="600" fill="url(#vig)"/>
+</svg>

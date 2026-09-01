@@ -1,0 +1,20 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Go Fish — a card on the fishing hook">
+  <defs>
+  <linearGradient id="cardface" x1="0" y1="0" x2="0.7" y2="1">
+      <stop offset="0" stop-color="#FFFEF8"/>
+      <stop offset="1" stop-color="#EFE5CE"/>
+    </linearGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.45" r="0.85">
+      <stop offset="0.62" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.30"/>
+    </radialGradient>
+  <linearGradient id="pond" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#BDE7F2"/>
+      <stop offset="0.52" stop-color="#8FD1E4"/>
+      <stop offset="0.55" stop-color="#4FA8C9"/>
+      <stop offset="1" stop-color="#2E7D9E"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#pond)"/>
+<path d="M0,318 Q150,306 300,318 T600,318" fill="none" stroke="#FFFFFF" stroke-width="6" opacity="0.6"/><line x1="452" y1="0" x2="452" y2="128" stroke="#4A5568" stroke-width="4"/><path d="M452,128 q0,26 -22,26 q-18,0 -18,-18" fill="none" stroke="#8B93A8" stroke-width="6" stroke-linecap="round"/><g transform="translate(360 150) rotate(8 80.0 112.0)"><rect width="160" height="224" rx="16" fill="#3D7EA8" stroke="#2A2017" stroke-opacity="0.4" stroke-width="2"/><rect x="14" y="10" width="131" height="195" rx="10" fill="none" stroke="#D8EFF8" stroke-width="3" stroke-opacity="0.7"/><circle cx="80.0" cy="112.0" r="26" fill="none" stroke="#D8EFF8" stroke-width="3" stroke-opacity="0.7"/></g><g fill="#F2955A"><path d="M110,430 q45,-42 105,0 q-60,42 -105,0 Z"/><polygon points="112,430 74,404 74,456"/><circle cx="185" cy="424" r="5" fill="#22262E"/></g><g fill="#FFFFFF" opacity="0.7"><circle cx="240" cy="370" r="9"/><circle cx="262" cy="398" r="6"/><circle cx="228" cy="418" r="5"/></g><g fill="#FFFFFF" opacity="0.55"><circle cx="470" cy="390" r="7"/><circle cx="452" cy="420" r="5"/></g>  <rect width="600" height="600" fill="url(#vig)"/>
+</svg>
