@@ -1380,17 +1380,34 @@
   // near-frozen), and they run on evClock so they pause/reverse with time.
   // Exact numbers live in the tooltip.
   const CHIP_SLOW = 8;
-  const CHIP_DATA = {   // tilt°, rotation period (hours), band stripes, [color, longitude, latitude, size] features
-    Sun:     { tilt:7.25,  ph:609.6,  base:'#f7c73c', spots:[['#ffe9a8',0.0,0.30,0.34],['#f0a82e',2.1,-0.25,0.30],['#ffe9a8',4.2,-0.55,0.24]], glow:true },
-    Mercury: { tilt:0.03,  ph:1407.6, base:'#b9b0a3', spots:[['#8f887d',0.5,0.25,0.30],['#cfc7b8',2.8,-0.35,0.26],['#978f83',4.4,0.6,0.22]] },
-    Venus:   { tilt:177.4, ph:5832.5, base:'#e6c87a', spots:[['#d2b05c',1.2,0.15,0.36],['#f2dfa0',3.9,-0.30,0.30],['#d8b866',5.3,0.55,0.24]] },
-    Earth:   { tilt:23.4,  ph:23.93,  base:'#3a78d6', cap:'#eef4fb', spots:[['#4ea34e',0.3,0.10,0.40],['#57b06a',2.4,-0.45,0.32],['#c9b07e',4.6,0.35,0.26]] },
-    Mars:    { tilt:25.2,  ph:24.62,  base:'#d9603b', cap:'#f1e8dd', spots:[['#a84527',1.0,0.20,0.34],['#f0a17a',3.6,-0.30,0.28],['#b34d2c',5.5,0.5,0.22]] },
-    Jupiter: { tilt:3.1,   ph:9.93,   bands:['#e8d0ae','#c79b6a','#e4cba6','#ad7f52','#e8d0ae','#c0925f'], spots:[['#c65840',0.8,0.35,0.34],['#f2e2c4',3.2,-0.2,0.24]] },
-    Saturn:  { tilt:26.7,  ph:10.66,  bands:['#ead9ab','#d9c084','#f0e4c0','#d2b878'], rings:true, spots:[['#c9ab62',1.5,0.3,0.26]] },
-    Uranus:  { tilt:97.8,  ph:17.24,  base:'#a6dde6', spots:[['#8fcfdb',0.9,0.30,0.30],['#c4ecf2',3.7,-0.35,0.24]] },
-    Neptune: { tilt:28.3,  ph:16.11,  base:'#4a66d4', spots:[['#2f4bb0',1.1,0.25,0.34],['#dfe8ff',3.4,-0.40,0.20]] },
-    Moon:    { tilt:6.7,   ph:655.7,  base:'#cfd3da', spots:[['#a9adb6',0.6,0.20,0.30],['#b8bcc4',2.9,-0.40,0.26],['#9fa3ac',4.7,0.55,0.20]] },
+  const CHIP_DATA = {   // tilt°, rotation hours (verified) + per-body art: bands/spots/craters/clouds/caps/atmo
+    Sun:     { tilt:7.25,  ph:609.6,  base:'#f7c73c', glow:true,
+               spots:[['#ffe9a8',0.0,0.30,0.34],['#f0a82e',2.1,-0.25,0.30],['#ffe9a8',4.2,-0.55,0.24],['#f5b83d',5.3,0.6,0.20]] },
+    Mercury: { tilt:0.03,  ph:1407.6, base:'#b9b0a3',
+               craters:[[0.5,0.25,0.30],[2.8,-0.35,0.26],[4.4,0.6,0.22],[1.6,-0.05,0.16],[3.7,0.45,0.14],[5.4,-0.6,0.18]] },
+    Venus:   { tilt:177.4, ph:5832.5, base:'#e6c87a', atmo:'rgba(240,220,170,0.5)',
+               bands:['#e2c273','#ecd28a','#dbba62','#eed898','#e2c273'],
+               clouds:[[1.2,0.15,0.40],[3.9,-0.30,0.34],[5.2,0.5,0.26]] },
+    Earth:   { tilt:23.4,  ph:23.93,  base:'#3a78d6', cap:'#eef4fb', atmo:'rgba(130,185,255,0.6)',
+               spots:[['#4ea34e',0.3,0.10,0.42],['#57b06a',2.4,-0.45,0.34],['#c9b07e',4.6,0.35,0.26],['#4c9b55',5.6,-0.1,0.20]],
+               clouds:[[0.9,-0.2,0.34],[2.9,0.4,0.30],[4.4,-0.55,0.26]] },
+    Mars:    { tilt:25.2,  ph:24.62,  base:'#d9603b', cap:'#f1e8dd', cap2:'#ecdfd2',
+               spots:[['#a84527',1.0,0.20,0.36],['#8f3a20',3.6,-0.30,0.30],['#b34d2c',5.5,0.5,0.24],['#f0a17a',2.2,-0.6,0.20]] },
+    Jupiter: { tilt:3.1,   ph:9.93,   atmo:'rgba(230,205,170,0.35)',
+               bands:['#d9b98c','#f0e3c8','#b9834f','#ecd9b4','#c79b6a','#f3e8d0','#ad7f52','#e3cba2'],
+               spots:[['#c65840',0.8,0.38,0.30],['#f6ecd6',3.2,-0.2,0.20],['#f2e4c6',4.6,0.15,0.16]] },
+    Saturn:  { tilt:26.7,  ph:10.66,  rings:true, atmo:'rgba(234,217,171,0.35)',
+               bands:['#e3cf98','#f0e4bc','#d9c084','#eee0b0','#cdb173','#ead9ab'],
+               spots:[['#c9ab62',1.5,0.3,0.22]] },
+    Uranus:  { tilt:97.8,  ph:17.24,  base:'#a6dde6', atmo:'rgba(180,235,242,0.45)', pole:'#d8f2f6',
+               bands:['#a0d8e2','#ade2ea','#98d2dc','#b4e6ee'],
+               spots:[['#c4ecf2',3.7,-0.35,0.20]] },
+    Neptune: { tilt:28.3,  ph:16.11,  base:'#4a66d4', atmo:'rgba(140,165,255,0.45)',
+               bands:['#4560cc','#5570dc','#3e57bd','#5b76e0'],
+               spots:[['#2f4bb0',1.1,0.25,0.34],['#dfe8ff',3.4,-0.40,0.18],['#e8efff',5.0,0.5,0.12]] },
+    Moon:    { tilt:6.7,   ph:655.7,  base:'#cfd3da',
+               spots:[['#a9adb6',0.6,0.20,0.34],['#b0b4bd',2.9,-0.35,0.30]],
+               craters:[[1.8,0.5,0.20],[4.7,-0.55,0.22],[3.8,0.05,0.14],[5.6,0.3,0.12]] },
   };
   const fmtSpin = ph => ph < 48 ? ph.toFixed(1).replace(/\.0$/,'') + ' h' : Math.round(ph/24) + ' d';
   const dockBodies = document.getElementById('dock-bodies');
@@ -1423,17 +1440,35 @@
     g.fillStyle = 'rgba(230,237,248,0.9)';
     g.beginPath(); g.arc(0, -R-3.5*px, 1.2*px, 0, 2*Math.PI); g.fill();   // north-pole tick
     if (d.glow){
-      const gl = g.createRadialGradient(0, 0, R*0.5, 0, 0, R*1.6);
-      gl.addColorStop(0, 'rgba(255,211,90,0.5)'); gl.addColorStop(1, 'rgba(255,211,90,0)');
-      g.fillStyle = gl; g.beginPath(); g.arc(0, 0, R*1.6, 0, 2*Math.PI); g.fill();
+      const gl = g.createRadialGradient(0, 0, R*0.5, 0, 0, R*1.75);
+      gl.addColorStop(0, 'rgba(255,211,90,0.55)'); gl.addColorStop(1, 'rgba(255,211,90,0)');
+      g.fillStyle = gl; g.beginPath(); g.arc(0, 0, R*1.75, 0, 2*Math.PI); g.fill();
     }
     g.save();
     g.beginPath(); g.arc(0, 0, R, 0, 2*Math.PI); g.clip();
-    if (d.bands){                                            // latitudinal stripes (gas giants)
+    const blur = Math.max(0.5, R * 0.05);
+    if (d.bands){
+      // latitudinal bands with SPHERICAL spacing (compressed toward the poles),
+      // blurred so the seams read as weather, not stripes
+      g.filter = 'blur(' + blur + 'px)';
       const n = d.bands.length;
-      for (let i = 0; i < n; i++){ g.fillStyle = d.bands[i]; g.fillRect(-R, -R + i*(2*R/n), 2*R, 2*R/n + 1); }
-    } else { g.fillStyle = d.base; g.fillRect(-R, -R, 2*R, 2*R); }
-    for (const [col, lon, lat, sz] of d.spots){              // surface features carried around by the spin
+      for (let i = 0; i < n; i++){
+        const y0 = -R * Math.sin(Math.PI/2 - i*Math.PI/n);
+        const y1 = -R * Math.sin(Math.PI/2 - (i+1)*Math.PI/n);
+        g.fillStyle = d.bands[i];
+        g.fillRect(-R, y0 - blur, 2*R, (y1 - y0) + 2*blur);
+      }
+      g.filter = 'none';
+    } else if (d.glow){
+      const sg = g.createRadialGradient(0, 0, R*0.15, 0, 0, R);
+      sg.addColorStop(0, '#fff6d8'); sg.addColorStop(0.55, d.base); sg.addColorStop(1, '#ef9d2a');
+      g.fillStyle = sg; g.fillRect(-R, -R, 2*R, 2*R);
+    } else {
+      g.fillStyle = d.base; g.fillRect(-R, -R, 2*R, 2*R);
+    }
+    // moving surface features — soft-edged
+    g.filter = 'blur(' + blur + 'px)';
+    for (const [col, lon, lat, sz] of (d.spots || [])){
       const a = th + lon, vis = Math.cos(a);
       if (vis <= 0.05) continue;
       const sq = Math.sqrt(Math.max(0, 1 - lat*lat));
@@ -1442,19 +1477,64 @@
       g.beginPath(); g.ellipse(Math.sin(a)*R*0.8*sq, lat*R, R*sz*Math.max(0.35, vis), R*sz*0.72, 0, 0, 2*Math.PI); g.fill();
       g.globalAlpha = 1;
     }
-    if (d.cap){ g.fillStyle = d.cap;                         // polar ice cap sits on the spin axis
-      g.beginPath(); g.ellipse(0, -R*0.87, R*0.42, R*0.2, 0, 0, 2*Math.PI); g.fill(); }
+    // clouds ride slightly faster than the surface (differential winds)
+    for (const [lon, lat, sz] of (d.clouds || [])){
+      const a = th*1.18 + lon, vis = Math.cos(a);
+      if (vis <= 0.05) continue;
+      const sq = Math.sqrt(Math.max(0, 1 - lat*lat));
+      g.globalAlpha = 0.4 * Math.min(1, vis + 0.2);
+      g.fillStyle = '#ffffff';
+      g.beginPath(); g.ellipse(Math.sin(a)*R*0.8*sq, lat*R, R*sz*Math.max(0.35, vis), R*sz*0.5, 0, 0, 2*Math.PI); g.fill();
+      g.globalAlpha = 1;
+    }
+    g.filter = 'none';
+    // craters: floor + bright rim, carried by the spin
+    for (const [lon, lat, sz] of (d.craters || [])){
+      const a = th + lon, vis = Math.cos(a);
+      if (vis <= 0.05) continue;
+      const sq = Math.sqrt(Math.max(0, 1 - lat*lat));
+      const x = Math.sin(a)*R*0.8*sq, y = lat*R;
+      const rx = R*sz*Math.max(0.35, vis), ry = R*sz*0.72;
+      g.globalAlpha = Math.min(1, vis + 0.15);
+      g.fillStyle = 'rgba(30,28,40,0.28)';
+      g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 2*Math.PI); g.fill();
+      g.strokeStyle = 'rgba(255,252,240,0.28)'; g.lineWidth = px*0.8;
+      g.beginPath(); g.ellipse(x, y, rx, ry, 0, 0, 2*Math.PI); g.stroke();
+      g.globalAlpha = 1;
+    }
+    if (d.cap){ g.filter = 'blur(' + blur*0.7 + 'px)'; g.fillStyle = d.cap;   // north polar cap on the spin axis
+      g.beginPath(); g.ellipse(0, -R*0.87, R*0.42, R*0.2, 0, 0, 2*Math.PI); g.fill(); g.filter = 'none'; }
+    if (d.cap2){ g.filter = 'blur(' + blur*0.7 + 'px)'; g.fillStyle = d.cap2; // smaller south cap (Mars)
+      g.beginPath(); g.ellipse(0, R*0.9, R*0.26, R*0.13, 0, 0, 2*Math.PI); g.fill(); g.filter = 'none'; }
+    if (d.pole){ g.filter = 'blur(' + blur + 'px)'; g.globalAlpha = 0.5; g.fillStyle = d.pole;   // bright pole (Uranus)
+      g.beginPath(); g.ellipse(0, -R*0.8, R*0.5, R*0.3, 0, 0, 2*Math.PI); g.fill(); g.globalAlpha = 1; g.filter = 'none'; }
+    if (d.rings){                                            // the rings' shadow falls across the globe
+      g.strokeStyle = 'rgba(25,18,6,0.30)'; g.lineWidth = 2.0*px;
+      g.beginPath(); g.ellipse(0, 0, R*1.52, R*0.43, 0, 0, 2*Math.PI); g.stroke();
+    }
     g.restore();                                             // unclip (still tilted)
-    if (d.rings){
-      g.strokeStyle = 'rgba(216,198,143,0.85)'; g.lineWidth = 1.4*px;
-      g.beginPath(); g.ellipse(0, 0, R*1.62, R*0.46, 0, 0, 2*Math.PI); g.stroke();
-      g.strokeStyle = 'rgba(216,198,143,0.35)'; g.lineWidth = px;
-      g.beginPath(); g.ellipse(0, 0, R*1.32, R*0.36, 0, 0, 2*Math.PI); g.stroke();
+    if (d.atmo){                                             // thin atmosphere rim + soft outer haze
+      g.strokeStyle = d.atmo; g.lineWidth = 1.6*px;
+      g.beginPath(); g.arc(0, 0, R + 0.6*px, 0, 2*Math.PI); g.stroke();
+      const hz = g.createRadialGradient(0, 0, R, 0, 0, R*1.22);
+      hz.addColorStop(0, d.atmo.replace(/[\d.]+\)$/, '0.22)')); hz.addColorStop(1, 'rgba(0,0,0,0)');
+      g.fillStyle = hz; g.beginPath(); g.arc(0, 0, R*1.22, 0, 2*Math.PI); g.fill();
+    }
+    if (d.rings){                                            // three ring layers with a visible division
+      g.strokeStyle = 'rgba(216,198,143,0.35)'; g.lineWidth = 0.9*px;
+      g.beginPath(); g.ellipse(0, 0, R*1.28, R*0.355, 0, 0, 2*Math.PI); g.stroke();
+      g.strokeStyle = 'rgba(224,206,152,0.9)'; g.lineWidth = 2.4*px;
+      g.beginPath(); g.ellipse(0, 0, R*1.52, R*0.43, 0, 0, 2*Math.PI); g.stroke();
+      g.strokeStyle = 'rgba(216,198,143,0.55)'; g.lineWidth = 1.1*px;
+      g.beginPath(); g.ellipse(0, 0, R*1.68, R*0.475, 0, 0, 2*Math.PI); g.stroke();
     }
     g.restore();                                             // untilt — lighting is fixed in space
     if (!d.glow){
+      const hl = g.createRadialGradient(w/2 - R*0.5, h/2 - R*0.5, R*0.1, w/2 - R*0.35, h/2 - R*0.35, R*0.95);
+      hl.addColorStop(0, 'rgba(255,255,255,0.16)'); hl.addColorStop(1, 'rgba(255,255,255,0)');
+      g.fillStyle = hl; g.beginPath(); g.arc(w/2, h/2, R, 0, 2*Math.PI); g.fill();
       const sh = g.createRadialGradient(w/2 - R*0.45, h/2 - R*0.45, R*0.25, w/2, h/2, R*1.02);
-      sh.addColorStop(0, 'rgba(5,8,16,0)'); sh.addColorStop(1, 'rgba(5,8,16,0.5)');
+      sh.addColorStop(0, 'rgba(5,8,16,0)'); sh.addColorStop(0.72, 'rgba(5,8,16,0.10)'); sh.addColorStop(1, 'rgba(5,8,16,0.55)');
       g.fillStyle = sh; g.beginPath(); g.arc(w/2, h/2, R, 0, 2*Math.PI); g.fill();
     }
   }
