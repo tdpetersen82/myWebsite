@@ -82,6 +82,13 @@
   #edit-head b{color:#fff;font-size:13px;}
   #edit-close{background:none;border:none;color:var(--soft);font-size:17px;line-height:1;cursor:pointer;padding:0 2px;}
   #edit-close:hover{color:#fff;}
+  #sel-hero{display:flex;align-items:center;gap:12px;margin:0 0 11px;}
+  #sel-planet{width:92px;height:80px;flex:none;border-radius:12px;
+    background:radial-gradient(circle at 50% 45%, rgba(150,170,210,0.10), rgba(150,170,210,0) 72%);}
+  #sel-caption{font:500 10.5px/1.6 system-ui,sans-serif;color:var(--soft);}
+  #sel-caption b{color:var(--ink);font-variant-numeric:tabular-nums;}
+  #sel-adjust{width:100%;padding:8px;text-align:center;}
+  #sel-edit{margin-top:11px;padding-top:11px;border-top:1px solid rgba(150,170,210,0.16);}
   #sel-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:0 0 12px;}
   #sel-stats .st{background:rgba(150,170,210,0.08);border-radius:8px;padding:7px 9px;min-width:0;}
   #sel-stats .v{display:block;font:600 12.5px/1.2 ui-monospace,Menlo,monospace;color:var(--ink);
@@ -167,8 +174,10 @@
     #dock{flex-wrap:wrap;justify-content:center;max-width:94vw;row-gap:2px;padding:6px 8px;}
     #dock .dgroup + .dgroup{border-left:none;padding-left:0;}
     #dock-bodies{flex-basis:100%;flex-wrap:wrap;justify-content:center;}
+    .chip .nm{display:none !important;}  /* wrapped dock: the card title names the selection */
     .chip .pc{width:25px;height:22px;}
-    #edit-panel{bottom:118px;left:12px;width:210px;}
+    /* the wrapped dock owns the bottom on phones — the card becomes a top sheet */
+    #edit-panel{bottom:auto;top:78px;left:12px;right:12px;width:auto;max-height:calc(100vh - 350px);overflow-y:auto;}
     #launch-panel{right:12px;}
     #events{bottom:122px;}
     #events .ev{font-size:11px;white-space:normal;text-align:center;}
@@ -219,12 +228,18 @@
 </div>
 <div id="edit-panel" class="panel" hidden>
   <div id="edit-head"><b id="edit-name"></b><button id="edit-close" type="button" aria-label="Close">×</button></div>
+  <div id="sel-hero" hidden>
+    <canvas id="sel-planet" width="0" height="0"></canvas>
+    <div id="sel-caption"></div>
+  </div>
   <div id="sel-stats">
     <div class="st"><span class="v" id="st-dist"></span><span class="l">from Sun</span></div>
     <div class="st"><span class="v" id="st-spd"></span><span class="l">speed</span></div>
     <div class="st"><span class="v" id="st-per"></span><span class="l">period</span></div>
     <div class="st"><span class="v" id="st-mass"></span><span class="l">mass</span></div>
   </div>
+  <button id="sel-adjust" class="btn" type="button">⚙ Adjust this body</button>
+  <div id="sel-edit" hidden>
   <label>Mass <span id="em-val"></span><input id="em-slider" type="range" min="0" max="1000" value="500"></label>
   <div id="nudge-box" hidden>
     <div id="nudge-title">Nudge — fire an external thruster</div>
@@ -241,6 +256,7 @@
     <button id="edit-nudge" class="btn primary" type="button">Nudge ⟶</button>
   </div>
   <button id="edit-delete" class="btn danger" type="button">Delete this body</button>
+  </div>
 </div>
 <div id="launch-panel" class="panel" hidden>
   <div id="launch-title">🛰 Launch to orbit</div>
@@ -984,6 +1000,17 @@
   const nfEl = document.getElementById('nf-slider'), ndEl = document.getElementById('nd-slider');
   const nfV = document.getElementById('nf-val'), ndV = document.getElementById('nd-val');
   const dialArrow = document.getElementById('nudge-dial-arrow');
+  const selHero = document.getElementById('sel-hero');
+  const selPlanet = document.getElementById('sel-planet');
+  const selCap = document.getElementById('sel-caption');
+  const selEdit = document.getElementById('sel-edit');
+  const selAdjust = document.getElementById('sel-adjust');
+  // real-body facts for the card caption (equatorial width vs Earth's 12,742 km)
+  const DIAM_RE = { Sun: 109, Mercury: 0.38, Venus: 0.95, Mars: 0.53, Jupiter: 11.2, Saturn: 9.45, Uranus: 4.0, Neptune: 3.9, Moon: 0.27 };
+  selAdjust.addEventListener('click', () => {
+    selEdit.hidden = !selEdit.hidden;
+    selAdjust.textContent = selEdit.hidden ? '⚙ Adjust this body' : '▴ Hide controls';
+  });
   // Mass slider is log-scaled from ~10⁻¹³ M☉ up to a per-body ceiling. Planets/Moon/comets are capped
   // SUB-STELLAR (~31 Jupiter masses): a full solar-mass body makes a second sun, which both breaks the
   // single-centre log view (barycentre lands in empty space) and blows the fixed-step integrator up on
@@ -1009,6 +1036,20 @@
     emEl.value = massToSlider(o.m);
     emV.textContent = fmtEditMass(o.m);              // resting label = the body's true mass, not the quantised slider step
     nudgeBox.hidden = (o === SUN);                   // the Sun is the anchor; everything else can be nudged
+    // hero render: the body itself, spinning at its real tilt (planets/Sun/Moon
+    // only — comets and interlopers have no CHIP_DATA entry)
+    const cd = CHIP_DATA[o.name];
+    if (cd){
+      if (!selPlanet.width){                         // size the canvas once, at first use
+        selPlanet.width = Math.round(92 * chipDpr); selPlanet.height = Math.round(80 * chipDpr);
+      }
+      selCap.innerHTML = `Axial tilt <b>${cd.tilt}°</b>${cd.tilt > 90 ? ' — retrograde spin' : ''}<br>` +
+        `One rotation: <b>${fmtSpin(cd.ph)}</b><br>` +
+        (o.name === 'Earth' ? 'Width: <b>12,742 km</b>' : `Width: <b>${DIAM_RE[o.name]}×</b> Earth's`);
+      selHero.hidden = false;
+    } else selHero.hidden = true;
+    selEdit.hidden = true;                           // card opens as an inspector; controls on demand
+    selAdjust.textContent = '⚙ Adjust this body';
     editLabels(); ePanel.hidden = false;
   }
   function deselect(){ selected = null; ePanel.hidden = true; }
@@ -1098,11 +1139,15 @@
       c.el.classList.toggle('on', c.obj === selected);
       c.el.classList.toggle('dead', !!c.obj.deleted);
     }
-    // selection card stats, live
+    // selection card stats, live — and the hero planet spinning at its real tilt
     if (selected && !ePanel.hidden){
       const s = statParts(selected);
       stDist.textContent = s.dist; stSpd.textContent = s.spd;
       stPer.textContent = s.per; stMass.textContent = s.mass;
+      const cd = CHIP_DATA[selected.name];
+      if (cd && !selHero.hidden){
+        drawBody(selPlanet.getContext('2d'), cd, selPlanet.width, selPlanet.height, 26 * chipDpr, 1.4 * chipDpr, spinPhase(cd));
+      }
     }
     // the data drawer only pays its DOM cost while open
     if (!drawer.hidden){
@@ -1364,56 +1409,58 @@
     dockBodies.appendChild(b);
     return { obj: o, el: b, d, g: cv.getContext('2d'), w: cv.width, h: cv.height };
   });
-  function drawChips(){
-    const R = 10 * chipDpr;
-    for (const c of chips){
-      const { g, d, w, h } = c;
-      g.clearRect(0, 0, w, h);
-      const th = reducedMotion ? 0 : 2*Math.PI * evClock / ((d.ph/8766) * CHIP_SLOW);   // ph hours → years
-      g.save();
-      g.translate(w/2, h/2);
-      g.rotate(d.tilt * Math.PI/180);
-      // spin axis, poking past both poles so the tilt reads at a glance
-      g.strokeStyle = 'rgba(207,214,230,0.5)'; g.lineWidth = chipDpr;
-      g.beginPath(); g.moveTo(0, -R-3.5*chipDpr); g.lineTo(0, R+3.5*chipDpr); g.stroke();
-      g.fillStyle = 'rgba(230,237,248,0.9)';
-      g.beginPath(); g.arc(0, -R-3.5*chipDpr, 1.2*chipDpr, 0, 2*Math.PI); g.fill();   // north-pole tick
-      if (d.glow){
-        const gl = g.createRadialGradient(0, 0, R*0.5, 0, 0, R*1.6);
-        gl.addColorStop(0, 'rgba(255,211,90,0.5)'); gl.addColorStop(1, 'rgba(255,211,90,0)');
-        g.fillStyle = gl; g.beginPath(); g.arc(0, 0, R*1.6, 0, 2*Math.PI); g.fill();
-      }
-      g.save();
-      g.beginPath(); g.arc(0, 0, R, 0, 2*Math.PI); g.clip();
-      if (d.bands){                                            // latitudinal stripes (gas giants)
-        const n = d.bands.length;
-        for (let i = 0; i < n; i++){ g.fillStyle = d.bands[i]; g.fillRect(-R, -R + i*(2*R/n), 2*R, 2*R/n + 1); }
-      } else { g.fillStyle = d.base; g.fillRect(-R, -R, 2*R, 2*R); }
-      for (const [col, lon, lat, sz] of d.spots){              // surface features carried around by the spin
-        const a = th + lon, vis = Math.cos(a);
-        if (vis <= 0.05) continue;
-        const sq = Math.sqrt(Math.max(0, 1 - lat*lat));
-        g.globalAlpha = Math.min(1, vis + 0.15);
-        g.fillStyle = col;
-        g.beginPath(); g.ellipse(Math.sin(a)*R*0.8*sq, lat*R, R*sz*Math.max(0.35, vis), R*sz*0.72, 0, 0, 2*Math.PI); g.fill();
-        g.globalAlpha = 1;
-      }
-      if (d.cap){ g.fillStyle = d.cap;                         // polar ice cap sits on the spin axis
-        g.beginPath(); g.ellipse(0, -R*0.87, R*0.42, R*0.2, 0, 0, 2*Math.PI); g.fill(); }
-      g.restore();                                             // unclip (still tilted)
-      if (d.rings){
-        g.strokeStyle = 'rgba(216,198,143,0.85)'; g.lineWidth = 1.4*chipDpr;
-        g.beginPath(); g.ellipse(0, 0, R*1.62, R*0.46, 0, 0, 2*Math.PI); g.stroke();
-        g.strokeStyle = 'rgba(216,198,143,0.35)'; g.lineWidth = chipDpr;
-        g.beginPath(); g.ellipse(0, 0, R*1.32, R*0.36, 0, 0, 2*Math.PI); g.stroke();
-      }
-      g.restore();                                             // untilt — lighting is fixed in space
-      if (!d.glow){
-        const sh = g.createRadialGradient(w/2 - R*0.45, h/2 - R*0.45, R*0.25, w/2, h/2, R*1.02);
-        sh.addColorStop(0, 'rgba(5,8,16,0)'); sh.addColorStop(1, 'rgba(5,8,16,0.5)');
-        g.fillStyle = sh; g.beginPath(); g.arc(w/2, h/2, R, 0, 2*Math.PI); g.fill();
-      }
+  // Render one tilted, spinning body into a canvas context — shared by the
+  // dock chips (small) and the selection card's hero render (large). `px` is
+  // the device-pixel scale for line weights; `th` the current spin phase.
+  function drawBody(g, d, w, h, R, px, th){
+    g.clearRect(0, 0, w, h);
+    g.save();
+    g.translate(w/2, h/2);
+    g.rotate(d.tilt * Math.PI/180);
+    // spin axis, poking past both poles so the tilt reads at a glance
+    g.strokeStyle = 'rgba(207,214,230,0.5)'; g.lineWidth = px;
+    g.beginPath(); g.moveTo(0, -R-3.5*px); g.lineTo(0, R+3.5*px); g.stroke();
+    g.fillStyle = 'rgba(230,237,248,0.9)';
+    g.beginPath(); g.arc(0, -R-3.5*px, 1.2*px, 0, 2*Math.PI); g.fill();   // north-pole tick
+    if (d.glow){
+      const gl = g.createRadialGradient(0, 0, R*0.5, 0, 0, R*1.6);
+      gl.addColorStop(0, 'rgba(255,211,90,0.5)'); gl.addColorStop(1, 'rgba(255,211,90,0)');
+      g.fillStyle = gl; g.beginPath(); g.arc(0, 0, R*1.6, 0, 2*Math.PI); g.fill();
     }
+    g.save();
+    g.beginPath(); g.arc(0, 0, R, 0, 2*Math.PI); g.clip();
+    if (d.bands){                                            // latitudinal stripes (gas giants)
+      const n = d.bands.length;
+      for (let i = 0; i < n; i++){ g.fillStyle = d.bands[i]; g.fillRect(-R, -R + i*(2*R/n), 2*R, 2*R/n + 1); }
+    } else { g.fillStyle = d.base; g.fillRect(-R, -R, 2*R, 2*R); }
+    for (const [col, lon, lat, sz] of d.spots){              // surface features carried around by the spin
+      const a = th + lon, vis = Math.cos(a);
+      if (vis <= 0.05) continue;
+      const sq = Math.sqrt(Math.max(0, 1 - lat*lat));
+      g.globalAlpha = Math.min(1, vis + 0.15);
+      g.fillStyle = col;
+      g.beginPath(); g.ellipse(Math.sin(a)*R*0.8*sq, lat*R, R*sz*Math.max(0.35, vis), R*sz*0.72, 0, 0, 2*Math.PI); g.fill();
+      g.globalAlpha = 1;
+    }
+    if (d.cap){ g.fillStyle = d.cap;                         // polar ice cap sits on the spin axis
+      g.beginPath(); g.ellipse(0, -R*0.87, R*0.42, R*0.2, 0, 0, 2*Math.PI); g.fill(); }
+    g.restore();                                             // unclip (still tilted)
+    if (d.rings){
+      g.strokeStyle = 'rgba(216,198,143,0.85)'; g.lineWidth = 1.4*px;
+      g.beginPath(); g.ellipse(0, 0, R*1.62, R*0.46, 0, 0, 2*Math.PI); g.stroke();
+      g.strokeStyle = 'rgba(216,198,143,0.35)'; g.lineWidth = px;
+      g.beginPath(); g.ellipse(0, 0, R*1.32, R*0.36, 0, 0, 2*Math.PI); g.stroke();
+    }
+    g.restore();                                             // untilt — lighting is fixed in space
+    if (!d.glow){
+      const sh = g.createRadialGradient(w/2 - R*0.45, h/2 - R*0.45, R*0.25, w/2, h/2, R*1.02);
+      sh.addColorStop(0, 'rgba(5,8,16,0)'); sh.addColorStop(1, 'rgba(5,8,16,0.5)');
+      g.fillStyle = sh; g.beginPath(); g.arc(w/2, h/2, R, 0, 2*Math.PI); g.fill();
+    }
+  }
+  const spinPhase = d => reducedMotion ? 0 : 2*Math.PI * evClock / ((d.ph/8766) * CHIP_SLOW);   // ph hours → years
+  function drawChips(){
+    for (const c of chips) drawBody(c.g, c.d, c.w, c.h, 10 * chipDpr, chipDpr, spinPhase(c.d));
   }
   // mute lives on [M] only (dock button removed at owner's request); state still persists
   function toggleMute(){
