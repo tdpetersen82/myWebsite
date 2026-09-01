@@ -150,6 +150,11 @@ site** — it is the live canary:
   rotations), cornhole-bracket variant mentions, beer-pong bracket.
 - If NO → the wall is real; drop the cluster and stop reconsidering it.
 
+**VERDICT 2026-09-01 (a week early, but conclusive): NO.** 28 days of GSC show ZERO
+query rows for bracket / round robin / tournament / football squares / euchre rotation,
+and the tournament-generator page has no GSC rows either. The wall is real — cluster
+DROPPED, per the rule above. Do not reconsider.
+
 ## Free tweaks (do with any next deploy, no new pages)
 
 - [ ] five-crowns-score-sheet: mention "5 Crowns" digit spelling in prose
