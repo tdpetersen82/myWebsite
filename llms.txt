@@ -1,0 +1,44 @@
+# Limestone Games
+
+> Free browser games and printable tabletop resources at limestonegames.com. Every game runs directly in the browser — no signup, no download, no payment. Printables are one-page sheets that print on US Letter or A4 (or save as PDF from the print dialog). No account or email is required for anything on the site.
+
+Key facts:
+- Games play against the computer or a friend on the same screen; scores save locally in the browser.
+- Board and card game pages include visible rules, strategy notes, and FAQs.
+- Printable score sheets carry their scoring rules printed on the sheet itself.
+- The site is built and maintained by one person; feedback goes straight to them.
+
+## Play in the browser
+- [Solar System Simulator](https://limestonegames.com/solar-system/): real N-body gravity sandbox — all eight planets and the Moon orbiting a free-moving Sun, an asteroid belt, comet launching, impacts, captures and ejections, with a spinning Earth view and satellite launches.
+- [Chess](https://limestonegames.com/chess/): full rules, three difficulty levels, hints, undo and review.
+- [Yahtzee](https://limestonegames.com/yahtzee/): the five-dice classic with the full scorecard.
+- [Farkle](https://limestonegames.com/farkle/): push-your-luck dice to 10,000.
+- [Hangman](https://limestonegames.com/hangman/): themed word guessing with streaks.
+- [Spades](https://limestonegames.com/spades/), [Hearts](https://limestonegames.com/hearts/), [Euchre](https://limestonegames.com/euchre/): partnership card classics against the computer.
+- [Checkers](https://limestonegames.com/checkers/), [Backgammon](https://limestonegames.com/backgammon/), [Othello](https://limestonegames.com/othello/), [Mancala](https://limestonegames.com/mancala/): board classics with full rules.
+- [Pup Quiz](https://limestonegames.com/dogs/play.html): daily dog-breed guessing puzzle — five clues, new puzzle every day.
+- [Dog Breed Finder](https://limestonegames.com/dogs/): answer eight questions, see which breeds fit your home.
+- [Sudoku](https://limestonegames.com/sudoku/), [Minesweeper](https://limestonegames.com/minesweeper/), [Mahjong Solitaire](https://limestonegames.com/mahjong/), [2048](https://limestonegames.com/2048/): daily-break puzzles.
+- [Solitaire](https://limestonegames.com/solitaire/), [FreeCell](https://limestonegames.com/freecell/), [Spider Solitaire](https://limestonegames.com/spider-solitaire/): patience games.
+- [Blackjack](https://limestonegames.com/blackjack/), [Roulette](https://limestonegames.com/roulette/), [Video Poker](https://limestonegames.com/video-poker/), [Craps](https://limestonegames.com/craps/), [Texas Hold'em](https://limestonegames.com/texas-holdem/): play-money casino games with strategy hints — no real gambling.
+- Full catalogs: [Arcade](https://limestonegames.com/arcade/), [Kids](https://limestonegames.com/kids/), [Strategy](https://limestonegames.com/strategy/), [Casino](https://limestonegames.com/casino/)
+
+## Printable score sheets, rules cards & boards
+- [All printables](https://limestonegames.com/printables/): free one-page score sheets, rules cards, strategy charts, and blank boards — Yahtzee family, Farkle, the rummy family, bridge, Euchre, Spades, Hearts, dominoes games, dice games, party and trivia sheets, and more. No watermark, no signup.
+- [Poker hand rankings](https://limestonegames.com/printables/poker-hand-rankings/): the standard rankings chart.
+- [Blackjack strategy chart](https://limestonegames.com/printables/blackjack-strategy-chart/): basic strategy on one page.
+- [Football squares grid](https://limestonegames.com/printables/football-squares/): the 10×10 party grid with rules.
+- [Sheepshead score sheet](https://limestonegames.com/printables/sheepshead-score-sheet/): Wisconsin scoring with the payout table.
+- [Tripoley layout mat](https://limestonegames.com/printables/tripoley-layout/): the nine-section Michigan Rummy mat.
+
+## Make-your-own tools
+- [Crossword Maker](https://limestonegames.com/crossword-maker/): turn any word list into a printable crossword with clues and an answer key; share a puzzle as a single link.
+- [Word Search](https://limestonegames.com/word-search/): play themed puzzles or generate your own printable word search.
+- [Tournament Generator](https://limestonegames.com/utilities/tournament-generator/): single/double elimination brackets and round-robin schedules for 2–32 entrants, print-ready.
+- [Utilities](https://limestonegames.com/utilities/): calculators and converters — percentages, loans, units, colors, text tools, JSON/regex/JWT developer tools.
+
+## Feedback
+- [Send feedback](https://limestonegames.com/feedback/): anonymous, no account — read by the person who builds the site.
+
+## Machine-readable
+- Sitemap: https://limestonegames.com/sitemap.xml
