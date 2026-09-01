@@ -257,10 +257,8 @@
   </div>
   <div class="dgroup" id="dock-bodies"></div>
   <div class="dgroup">
-    <button type="button" data-act="earth" title="Earth view [E]">🌍</button>
     <button type="button" data-act="resetview" title="Whole system [0]">⊙</button>
     <button type="button" data-act="reset" title="Reset the system [R]">↺</button>
-    <button type="button" data-act="mute" aria-label="Toggle sound" title="Sound [M]">🔊</button>
     <button type="button" data-act="data" title="Data table [D]">⊞</button>
   </div>
 </div>
@@ -1415,25 +1413,20 @@
       }
     }
   }
-  const muteBtn = document.querySelector('#dock [data-act="mute"]');
-  function syncMute(){ muteBtn.textContent = muted ? '🔇' : '🔊'; }
+  // mute lives on [M] only (dock button removed at owner's request); state still persists
   function toggleMute(){
     muted = !muted;
     try { localStorage.setItem('ssMuted', muted ? '1' : '0'); } catch(e){}
     if (!muted) sfx('capture');   // audible confirmation that sound is back
-    syncMute();
   }
-  syncMute();
   document.getElementById('dock').addEventListener('click', e => {
     const btn = e.target.closest('button'); if (!btn) return;
     const act = btn.dataset.act;
     if (act === 'pause') togglePause();
     else if (act === 'slower') slower();
     else if (act === 'faster') faster();
-    else if (act === 'earth') earthView();
     else if (act === 'resetview') resetView();
     else if (act === 'reset') reset();
-    else if (act === 'mute') toggleMute();
     else if (act === 'data') setDrawer(drawer.hidden);
   });
 
