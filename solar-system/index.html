@@ -136,9 +136,8 @@
   #dock button:hover{background:rgba(120,150,210,0.18);}
   #rate{font:600 11px/1 ui-monospace,Menlo,monospace;color:var(--soft);min-width:38px;text-align:center;
     font-variant-numeric:tabular-nums;white-space:nowrap;}
-  .chip{display:inline-flex;align-items:center;position:relative;}
-  .chip .c{width:9px;height:9px;border-radius:50%;background:var(--cc,#888);flex:none;
-    box-shadow:0 0 6px color-mix(in srgb, var(--cc,#888) 60%, transparent);}
+  #dock .chip{display:inline-flex;align-items:center;position:relative;padding:3px 2px;}
+  .chip .pc{display:block;width:34px;height:30px;flex:none;}
   /* the name floats ABOVE the chip so showing it never shifts the dock layout */
   .chip .nm{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
     margin-bottom:7px;font:600 10.5px/1 system-ui,sans-serif;color:var(--ink);white-space:nowrap;
@@ -147,7 +146,7 @@
   .chip.on .nm{display:block;}
   @media(hover:hover){ .chip:hover .nm{display:block;} }
   .chip.dead{opacity:0.35;}
-  .chip.dead .c{box-shadow:none;background:#555;}
+  .chip.dead .pc{filter:grayscale(1);}
 
   /* One-time micro-hint (replaces the permanent hint bar). */
   #microhint{position:fixed;left:50%;transform:translateX(-50%);top:52px;z-index:7;
@@ -165,6 +164,8 @@
     #data-drawer{top:80px;font-size:10px;}
     #dock{flex-wrap:wrap;justify-content:center;max-width:94vw;row-gap:2px;padding:6px 8px;}
     #dock .dgroup + .dgroup{border-left:none;padding-left:0;}
+    #dock-bodies{flex-basis:100%;flex-wrap:wrap;justify-content:center;}
+    .chip .pc{width:25px;height:22px;}
     #edit-panel{bottom:118px;left:12px;width:210px;}
     #launch-panel{right:12px;}
     #events{bottom:122px;}
@@ -1224,7 +1225,7 @@
     } else warping = 1;
     stepSparks(stepped * DT);
     decayFx();
-    draw(); updHud();
+    draw(); drawChips(); updHud();
     requestAnimationFrame(frame);
   }
 
@@ -1325,17 +1326,95 @@
     else if (e.key === 'r' || e.key === 'R') reset();
   });
 
-  // ---- the dock: body chips + action buttons ----
+  // ---- the dock: mini-planet chips + action buttons ----
+  // Each chip is a tiny rendered planet: axis drawn at the REAL axial tilt
+  // (obliquity to orbit — Uranus lies on its side, Venus is flipped past 90°
+  // so its prograde spin reads retrograde, which is physically true), surface
+  // features rotating at the real sidereal period. All chips share one ×8
+  // slowdown so RELATIVE speeds stay honest (Jupiter whirls, Venus is
+  // near-frozen), and they run on evClock so they pause/reverse with time.
+  // Exact numbers live in the tooltip.
+  const CHIP_SLOW = 8;
+  const CHIP_DATA = {   // tilt°, rotation period (hours), band stripes, [color, longitude, latitude, size] features
+    Sun:     { tilt:7.25,  ph:609.6,  base:'#f7c73c', spots:[['#ffe9a8',0.0,0.30,0.34],['#f0a82e',2.1,-0.25,0.30],['#ffe9a8',4.2,-0.55,0.24]], glow:true },
+    Mercury: { tilt:0.03,  ph:1407.6, base:'#b9b0a3', spots:[['#8f887d',0.5,0.25,0.30],['#cfc7b8',2.8,-0.35,0.26],['#978f83',4.4,0.6,0.22]] },
+    Venus:   { tilt:177.4, ph:5832.5, base:'#e6c87a', spots:[['#d2b05c',1.2,0.15,0.36],['#f2dfa0',3.9,-0.30,0.30],['#d8b866',5.3,0.55,0.24]] },
+    Earth:   { tilt:23.4,  ph:23.93,  base:'#3a78d6', cap:'#eef4fb', spots:[['#4ea34e',0.3,0.10,0.40],['#57b06a',2.4,-0.45,0.32],['#c9b07e',4.6,0.35,0.26]] },
+    Mars:    { tilt:25.2,  ph:24.62,  base:'#d9603b', cap:'#f1e8dd', spots:[['#a84527',1.0,0.20,0.34],['#f0a17a',3.6,-0.30,0.28],['#b34d2c',5.5,0.5,0.22]] },
+    Jupiter: { tilt:3.1,   ph:9.93,   bands:['#e8d0ae','#c79b6a','#e4cba6','#ad7f52','#e8d0ae','#c0925f'], spots:[['#c65840',0.8,0.35,0.34],['#f2e2c4',3.2,-0.2,0.24]] },
+    Saturn:  { tilt:26.7,  ph:10.66,  bands:['#ead9ab','#d9c084','#f0e4c0','#d2b878'], rings:true, spots:[['#c9ab62',1.5,0.3,0.26]] },
+    Uranus:  { tilt:97.8,  ph:17.24,  base:'#a6dde6', spots:[['#8fcfdb',0.9,0.30,0.30],['#c4ecf2',3.7,-0.35,0.24]] },
+    Neptune: { tilt:28.3,  ph:16.11,  base:'#4a66d4', spots:[['#2f4bb0',1.1,0.25,0.34],['#dfe8ff',3.4,-0.40,0.20]] },
+    Moon:    { tilt:6.7,   ph:655.7,  base:'#cfd3da', spots:[['#a9adb6',0.6,0.20,0.30],['#b8bcc4',2.9,-0.40,0.26],['#9fa3ac',4.7,0.55,0.20]] },
+  };
+  const fmtSpin = ph => ph < 48 ? ph.toFixed(1).replace(/\.0$/,'') + ' h' : Math.round(ph/24) + ' d';
   const dockBodies = document.getElementById('dock-bodies');
+  const chipDpr = Math.min(window.devicePixelRatio || 1, 2);
   const chips = [SUN, ...planets, MOON].map(o => {
+    const d = CHIP_DATA[o.name];
     const b = document.createElement('button');
-    b.type = 'button'; b.className = 'chip'; b.title = o.name;
-    b.style.setProperty('--cc', o.color);
-    b.innerHTML = `<span class="c"></span><span class="nm">${o.name}</span>`;
+    b.type = 'button'; b.className = 'chip';
+    b.title = `${o.name} — axial tilt ${d.tilt}°${d.tilt > 90 ? ' (retrograde spin)' : ''}, rotates in ${fmtSpin(d.ph)}`;
+    const cv = document.createElement('canvas');
+    cv.className = 'pc'; cv.width = Math.round(34*chipDpr); cv.height = Math.round(30*chipDpr);
+    const nm = document.createElement('span');
+    nm.className = 'nm'; nm.textContent = o.name;
+    b.appendChild(cv); b.appendChild(nm);
     b.addEventListener('click', () => { if (!o.deleted){ pick(o); killHint(); } });
     dockBodies.appendChild(b);
-    return { obj: o, el: b };
+    return { obj: o, el: b, d, g: cv.getContext('2d'), w: cv.width, h: cv.height };
   });
+  function drawChips(){
+    const R = 10 * chipDpr;
+    for (const c of chips){
+      const { g, d, w, h } = c;
+      g.clearRect(0, 0, w, h);
+      const th = reducedMotion ? 0 : 2*Math.PI * evClock / ((d.ph/8766) * CHIP_SLOW);   // ph hours → years
+      g.save();
+      g.translate(w/2, h/2);
+      g.rotate(d.tilt * Math.PI/180);
+      // spin axis, poking past both poles so the tilt reads at a glance
+      g.strokeStyle = 'rgba(207,214,230,0.5)'; g.lineWidth = chipDpr;
+      g.beginPath(); g.moveTo(0, -R-3.5*chipDpr); g.lineTo(0, R+3.5*chipDpr); g.stroke();
+      g.fillStyle = 'rgba(230,237,248,0.9)';
+      g.beginPath(); g.arc(0, -R-3.5*chipDpr, 1.2*chipDpr, 0, 2*Math.PI); g.fill();   // north-pole tick
+      if (d.glow){
+        const gl = g.createRadialGradient(0, 0, R*0.5, 0, 0, R*1.6);
+        gl.addColorStop(0, 'rgba(255,211,90,0.5)'); gl.addColorStop(1, 'rgba(255,211,90,0)');
+        g.fillStyle = gl; g.beginPath(); g.arc(0, 0, R*1.6, 0, 2*Math.PI); g.fill();
+      }
+      g.save();
+      g.beginPath(); g.arc(0, 0, R, 0, 2*Math.PI); g.clip();
+      if (d.bands){                                            // latitudinal stripes (gas giants)
+        const n = d.bands.length;
+        for (let i = 0; i < n; i++){ g.fillStyle = d.bands[i]; g.fillRect(-R, -R + i*(2*R/n), 2*R, 2*R/n + 1); }
+      } else { g.fillStyle = d.base; g.fillRect(-R, -R, 2*R, 2*R); }
+      for (const [col, lon, lat, sz] of d.spots){              // surface features carried around by the spin
+        const a = th + lon, vis = Math.cos(a);
+        if (vis <= 0.05) continue;
+        const sq = Math.sqrt(Math.max(0, 1 - lat*lat));
+        g.globalAlpha = Math.min(1, vis + 0.15);
+        g.fillStyle = col;
+        g.beginPath(); g.ellipse(Math.sin(a)*R*0.8*sq, lat*R, R*sz*Math.max(0.35, vis), R*sz*0.72, 0, 0, 2*Math.PI); g.fill();
+        g.globalAlpha = 1;
+      }
+      if (d.cap){ g.fillStyle = d.cap;                         // polar ice cap sits on the spin axis
+        g.beginPath(); g.ellipse(0, -R*0.87, R*0.42, R*0.2, 0, 0, 2*Math.PI); g.fill(); }
+      g.restore();                                             // unclip (still tilted)
+      if (d.rings){
+        g.strokeStyle = 'rgba(216,198,143,0.85)'; g.lineWidth = 1.4*chipDpr;
+        g.beginPath(); g.ellipse(0, 0, R*1.62, R*0.46, 0, 0, 2*Math.PI); g.stroke();
+        g.strokeStyle = 'rgba(216,198,143,0.35)'; g.lineWidth = chipDpr;
+        g.beginPath(); g.ellipse(0, 0, R*1.32, R*0.36, 0, 0, 2*Math.PI); g.stroke();
+      }
+      g.restore();                                             // untilt — lighting is fixed in space
+      if (!d.glow){
+        const sh = g.createRadialGradient(w/2 - R*0.45, h/2 - R*0.45, R*0.25, w/2, h/2, R*1.02);
+        sh.addColorStop(0, 'rgba(5,8,16,0)'); sh.addColorStop(1, 'rgba(5,8,16,0.5)');
+        g.fillStyle = sh; g.beginPath(); g.arc(w/2, h/2, R, 0, 2*Math.PI); g.fill();
+      }
+    }
+  }
   const muteBtn = document.querySelector('#dock [data-act="mute"]');
   function syncMute(){ muteBtn.textContent = muted ? '🔇' : '🔊'; }
   function toggleMute(){
