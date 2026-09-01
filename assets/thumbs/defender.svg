@@ -1,0 +1,40 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Defender ship over mountain ridge">
+  <defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0D1226"/>
+      <stop offset="1" stop-color="#20163A"/>
+    </linearGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.45" r="0.85">
+      <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.32"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#sky)"/>
+  <g fill="#FFFFFF">
+    <circle cx="60" cy="80" r="3" opacity="0.7"/><circle cx="180" cy="46" r="2" opacity="0.5"/>
+    <circle cx="330" cy="70" r="2.5" opacity="0.6"/><circle cx="470" cy="50" r="3" opacity="0.7"/>
+    <circle cx="545" cy="130" r="2" opacity="0.5"/><circle cx="90" cy="200" r="2" opacity="0.4"/>
+    <circle cx="520" cy="230" r="2.5" opacity="0.55"/><circle cx="260" cy="150" r="2" opacity="0.45"/>
+    <circle cx="410" cy="170" r="2" opacity="0.4"/><circle cx="40" cy="320" r="2" opacity="0.4"/>
+  </g>
+  <g stroke="#F2A65A" stroke-linecap="round" opacity="0.75">
+    <line x1="60" y1="286" x2="190" y2="286" stroke-width="10"/>
+    <line x1="30" y1="306" x2="150" y2="306" stroke-width="7" opacity="0.6"/>
+  </g>
+  <g transform="translate(210 250)">
+    <polygon points="0,36 130,22 180,44 130,58 0,50" fill="#EFE5CE"/>
+    <polygon points="130,22 180,44 130,36" fill="#8FA8E6"/>
+    <polygon points="26,22 78,10 92,26 40,36" fill="#8FA8E6"/>
+  </g>
+  <g fill="#B9A6F2">
+    <ellipse cx="470" cy="150" rx="34" ry="14"/><ellipse cx="470" cy="141" rx="14" ry="10"/>
+    <ellipse cx="120" cy="120" rx="28" ry="12" opacity="0.8"/><ellipse cx="120" cy="112" rx="12" ry="8" opacity="0.8"/>
+  </g>
+  <g fill="#7BC97B">
+    <rect x="466" y="404" width="14" height="22" rx="4"/><circle cx="473" cy="396" r="9"/>
+  </g>
+  <line x1="470" y1="164" x2="473" y2="392" stroke="#B9A6F2" stroke-width="4" stroke-dasharray="4 10" opacity="0.7"/>
+  <polyline points="0,520 70,440 140,500 220,420 300,505 380,450 450,510 530,435 600,500" fill="none" stroke="#F08488" stroke-width="9" stroke-linejoin="round"/>
+  <polyline points="0,600 0,530 70,450 140,510 220,430 300,515 380,460 450,520 530,445 600,510 600,600" fill="#1A1330"/>
+  <rect width="600" height="600" fill="url(#vig)"/>
+</svg>

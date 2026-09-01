@@ -1,0 +1,48 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Lunar Lander descending to the Moon">
+  <defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#0B1022"/>
+      <stop offset="1" stop-color="#1B2140"/>
+    </linearGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.45" r="0.85">
+      <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.32"/>
+    </radialGradient>
+  <linearGradient id="moon" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#D8DCE6"/>
+      <stop offset="1" stop-color="#9AA2B6"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#sky)"/>
+  <g fill="#FFFFFF">
+    <circle cx="60" cy="80" r="3" opacity="0.7"/><circle cx="180" cy="46" r="2" opacity="0.5"/>
+    <circle cx="330" cy="70" r="2.5" opacity="0.6"/><circle cx="470" cy="50" r="3" opacity="0.7"/>
+    <circle cx="545" cy="130" r="2" opacity="0.5"/><circle cx="90" cy="200" r="2" opacity="0.4"/>
+    <circle cx="520" cy="230" r="2.5" opacity="0.55"/><circle cx="260" cy="150" r="2" opacity="0.45"/>
+    <circle cx="410" cy="170" r="2" opacity="0.4"/><circle cx="40" cy="320" r="2" opacity="0.4"/>
+  </g>
+  <g transform="translate(210 150)">
+    <line x1="90" y1="-26" x2="90" y2="0" stroke="#CFD6E6" stroke-width="5" stroke-linecap="round"/>
+    <circle cx="90" cy="-28" r="6" fill="#CFD6E6"/>
+    <rect x="48" y="0" width="84" height="42" rx="12" fill="#CFD6E6"/>
+    <rect x="60" y="12" width="24" height="14" rx="6" fill="#2A3350"/>
+    <rect x="30" y="42" width="120" height="56" rx="10" fill="#F2C14E"/>
+    <g stroke="#CFD6E6" stroke-width="9" stroke-linecap="round">
+      <line x1="46" y1="98" x2="18" y2="150"/><line x1="134" y1="98" x2="162" y2="150"/>
+      <line x1="6" y1="150" x2="30" y2="150"/><line x1="150" y1="150" x2="174" y2="150"/>
+    </g>
+    <polygon points="74,98 106,98 90,158" fill="#F2A65A"/>
+    <polygon points="80,98 100,98 90,132" fill="#FFF6D8"/>
+  </g>
+  <path d="M0,470 Q90,430 180,462 Q290,498 390,458 Q500,420 600,460 L600,600 L0,600 Z" fill="url(#moon)"/>
+  <g fill="#7C859B" opacity="0.75">
+    <ellipse cx="140" cy="500" rx="42" ry="14"/>
+    <ellipse cx="360" cy="530" rx="30" ry="10"/>
+    <ellipse cx="500" cy="492" rx="24" ry="9"/>
+  </g>
+  <g stroke="#2A2017" stroke-width="0" fill="#5F6B85" opacity="0.5">
+    <ellipse cx="140" cy="496" rx="30" ry="9"/>
+    <ellipse cx="360" cy="527" rx="20" ry="6"/>
+  </g>
+  <rect width="600" height="600" fill="url(#vig)"/>
+</svg>

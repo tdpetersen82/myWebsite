@@ -1,0 +1,45 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Booster landing on the drone ship">
+  <defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#101A33"/>
+      <stop offset="1" stop-color="#27547A"/>
+    </linearGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.45" r="0.85">
+      <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.32"/>
+    </radialGradient>
+  <linearGradient id="sea" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#173A57"/>
+      <stop offset="1" stop-color="#0E2438"/>
+    </linearGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#sky)"/>
+  <g fill="#FFFFFF">
+    <circle cx="60" cy="80" r="3" opacity="0.7"/><circle cx="180" cy="46" r="2" opacity="0.5"/>
+    <circle cx="330" cy="70" r="2.5" opacity="0.6"/><circle cx="470" cy="50" r="3" opacity="0.7"/>
+    <circle cx="545" cy="130" r="2" opacity="0.5"/><circle cx="90" cy="200" r="2" opacity="0.4"/>
+    <circle cx="520" cy="230" r="2.5" opacity="0.55"/><circle cx="260" cy="150" r="2" opacity="0.45"/>
+    <circle cx="410" cy="170" r="2" opacity="0.4"/><circle cx="40" cy="320" r="2" opacity="0.4"/>
+  </g>
+  <g transform="translate(258 90)">
+    <rect x="0" y="0" width="84" height="270" rx="16" fill="#EFEFF2"/>
+    <rect x="0" y="196" width="84" height="34" fill="#2A2E3C" opacity="0.85"/>
+    <g fill="#8B93A8">
+      <rect x="-20" y="26" width="22" height="42" rx="5"/><rect x="82" y="26" width="22" height="42" rx="5"/>
+    </g>
+    <g stroke="#B9C0D0" stroke-width="10" stroke-linecap="round">
+      <line x1="10" y1="262" x2="-30" y2="330"/><line x1="74" y1="262" x2="114" y2="330"/>
+    </g>
+    <polygon points="28,272 56,272 42,352" fill="#F2A65A"/>
+    <polygon points="34,272 50,272 42,326" fill="#FFF6D8"/>
+  </g>
+  <rect x="0" y="470" width="600" height="130" fill="url(#sea)"/>
+  <g stroke="#2E5E82" stroke-width="7" stroke-linecap="round" opacity="0.8">
+    <line x1="40" y1="520" x2="120" y2="520"/><line x1="200" y1="556" x2="290" y2="556"/>
+    <line x1="430" y1="530" x2="530" y2="530"/><line x1="90" y1="580" x2="170" y2="580"/>
+  </g>
+  <rect x="150" y="440" width="300" height="42" rx="8" fill="#22262F"/>
+  <circle cx="300" cy="461" r="13" fill="none" stroke="#F2C14E" stroke-width="6"/>
+  <rect x="150" y="440" width="300" height="8" fill="#F2C14E" opacity="0.55"/>
+  <rect width="600" height="600" fill="url(#vig)"/>
+</svg>

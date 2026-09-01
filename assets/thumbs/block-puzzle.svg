@@ -1,0 +1,34 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Block Puzzle piece falling onto the stack">
+  <defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#101426"/>
+      <stop offset="1" stop-color="#1D2240"/>
+    </linearGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.45" r="0.85">
+      <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.32"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#sky)"/>
+  <g opacity="0.14" stroke="#8FA8E6" stroke-width="2">
+    <path d="M75,0 V600 M150,0 V600 M225,0 V600 M300,0 V600 M375,0 V600 M450,0 V600 M525,0 V600"/>
+    <path d="M0,75 H600 M0,150 H600 M0,225 H600 M0,300 H600 M0,375 H600 M0,450 H600 M0,525 H600"/>
+  </g>
+  <g transform="translate(230 90) rotate(8 75 38)">
+    <rect x="0" y="0" width="72" height="72" rx="10" fill="#5DC4D9"/>
+    <rect x="76" y="0" width="72" height="72" rx="10" fill="#5DC4D9"/>
+    <rect x="76" y="76" width="72" height="72" rx="10" fill="#5DC4D9"/>
+  </g>
+  <g stroke="#5DC4D9" stroke-width="6" stroke-linecap="round" opacity="0.4">
+    <line x1="262" y1="60" x2="262" y2="20"/><line x1="330" y1="52" x2="330" y2="16"/>
+  </g>
+  <g>
+    <rect x="0" y="525" width="600" height="75" fill="#141A30"/>
+    <g fill="#C0473B"><rect x="8" y="454" width="66" height="66" rx="9"/><rect x="83" y="454" width="66" height="66" rx="9"/></g>
+    <g fill="#F2C14E"><rect x="158" y="454" width="66" height="66" rx="9"/><rect x="8" y="379" width="66" height="66" rx="9"/></g>
+    <g fill="#7BC97B"><rect x="458" y="454" width="66" height="66" rx="9"/><rect x="533" y="454" width="66" height="66" rx="9"/><rect x="533" y="379" width="66" height="66" rx="9"/></g>
+    <g fill="#F2A65A"><rect x="308" y="454" width="66" height="66" rx="9"/><rect x="383" y="454" width="66" height="66" rx="9"/></g>
+    <rect x="233" y="454" width="66" height="66" rx="9" fill="#8FA8E6" opacity="0.45"/>
+  </g>
+  <rect width="600" height="600" fill="url(#vig)"/>
+</svg>

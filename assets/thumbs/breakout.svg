@@ -1,0 +1,32 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Breakout bricks, paddle and ball">
+  <defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#141226"/>
+      <stop offset="1" stop-color="#242044"/>
+    </linearGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.45" r="0.85">
+      <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.32"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#sky)"/>
+  <g rx="6">
+    <g fill="#C0473B"><rect x="36" y="66" width="122" height="44" rx="8"/><rect x="170" y="66" width="122" height="44" rx="8"/><rect x="304" y="66" width="122" height="44" rx="8"/><rect x="438" y="66" width="122" height="44" rx="8"/></g>
+    <g fill="#F2A65A"><rect x="36" y="122" width="122" height="44" rx="8"/><rect x="170" y="122" width="122" height="44" rx="8"/><rect x="438" y="122" width="122" height="44" rx="8"/></g>
+    <g fill="#F2C14E"><rect x="36" y="178" width="122" height="44" rx="8"/><rect x="304" y="178" width="122" height="44" rx="8"/><rect x="438" y="178" width="122" height="44" rx="8"/></g>
+    <g fill="#7BC97B"><rect x="170" y="234" width="122" height="44" rx="8"/><rect x="304" y="234" width="122" height="44" rx="8"/></g>
+  </g>
+  <g fill="#F2A65A">
+    <rect x="316" y="130" width="26" height="16" rx="4" transform="rotate(24 329 138)" opacity="0.9"/>
+    <rect x="352" y="156" width="20" height="13" rx="4" transform="rotate(-18 362 162)" opacity="0.75"/>
+    <rect x="300" y="182" width="15" height="10" rx="3" transform="rotate(40 307 187)" opacity="0.6"/>
+  </g>
+  <g stroke="#FFFEF8" stroke-linecap="round" opacity="0.55">
+    <line x1="404" y1="420" x2="374" y2="372" stroke-width="9"/>
+    <line x1="430" y1="466" x2="408" y2="428" stroke-width="6" opacity="0.6"/>
+  </g>
+  <circle cx="362" cy="352" r="19" fill="#FFFEF8"/>
+  <rect x="230" y="500" width="170" height="30" rx="15" fill="#EFE5CE"/>
+  <rect x="230" y="500" width="170" height="30" rx="15" fill="none" stroke="#F2A65A" stroke-width="4" opacity="0.5"/>
+  <rect width="600" height="600" fill="url(#vig)"/>
+</svg>

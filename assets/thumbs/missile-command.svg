@@ -1,0 +1,44 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Missile Command trails over a city">
+  <defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#120F2A"/>
+      <stop offset="1" stop-color="#2A1E44"/>
+    </linearGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.45" r="0.85">
+      <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.32"/>
+    </radialGradient>
+  <radialGradient id="boom" cx="0.5" cy="0.5" r="0.5">
+      <stop offset="0" stop-color="#FFF6D8"/>
+      <stop offset="0.45" stop-color="#F2C14E"/>
+      <stop offset="1" stop-color="#C0473B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="600" height="600" fill="url(#sky)"/>
+  <g fill="#FFFFFF">
+    <circle cx="60" cy="80" r="3" opacity="0.7"/><circle cx="180" cy="46" r="2" opacity="0.5"/>
+    <circle cx="330" cy="70" r="2.5" opacity="0.6"/><circle cx="470" cy="50" r="3" opacity="0.7"/>
+    <circle cx="545" cy="130" r="2" opacity="0.5"/><circle cx="90" cy="200" r="2" opacity="0.4"/>
+    <circle cx="520" cy="230" r="2.5" opacity="0.55"/><circle cx="260" cy="150" r="2" opacity="0.45"/>
+    <circle cx="410" cy="170" r="2" opacity="0.4"/><circle cx="40" cy="320" r="2" opacity="0.4"/>
+  </g>
+  <g stroke="#C0473B" stroke-width="6" stroke-linecap="round" opacity="0.9">
+    <line x1="80" y1="0" x2="210" y2="330"/>
+    <line x1="250" y1="0" x2="330" y2="240"/>
+    <line x1="480" y1="0" x2="420" y2="300"/>
+    <line x1="560" y1="40" x2="470" y2="330"/>
+  </g>
+  <circle cx="330" cy="245" r="86" fill="url(#boom)"/>
+  <circle cx="330" cy="245" r="30" fill="#FFFEF8"/>
+  <g stroke="#8FA8E6" stroke-width="5" stroke-linecap="round" opacity="0.9">
+    <line x1="184" y1="418" x2="210" y2="444"/><line x1="210" y1="418" x2="184" y2="444"/>
+  </g>
+  <rect x="0" y="500" width="600" height="100" fill="#1B1630"/>
+  <g fill="#5F719C">
+    <rect x="60" y="452" width="34" height="48"/><rect x="104" y="470" width="26" height="30"/>
+    <rect x="230" y="460" width="30" height="40"/><rect x="268" y="444" width="24" height="56"/>
+    <rect x="420" y="456" width="34" height="44"/><rect x="464" y="472" width="22" height="28"/>
+    <rect x="530" y="448" width="28" height="52"/>
+  </g>
+  <rect width="600" height="600" fill="url(#vig)"/>
+</svg>

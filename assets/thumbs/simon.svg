@@ -1,0 +1,36 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 600 600" width="600" height="600" role="img" aria-label="Simon four-color disc, green lit">
+  <defs>
+  <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#161226"/>
+      <stop offset="1" stop-color="#221A38"/>
+    </linearGradient>
+  <radialGradient id="vig" cx="0.5" cy="0.45" r="0.85">
+      <stop offset="0.6" stop-color="#000" stop-opacity="0"/>
+      <stop offset="1" stop-color="#000" stop-opacity="0.32"/>
+    </radialGradient>
+  <radialGradient id="lit" cx="0.5" cy="0.5" r="0.7">
+      <stop offset="0" stop-color="#B6F2B6" stop-opacity="0.95"/>
+      <stop offset="1" stop-color="#7BC97B" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <clipPath id="qgreen"><path d="M300,300 L74,300 A226,226 0 0 1 300,74 Z"/></clipPath>
+  <rect width="600" height="600" fill="url(#sky)"/>
+  <circle cx="300" cy="300" r="250" fill="#0E0B1A"/>
+  <g>
+    <path d="M300,300 L300,74 A226,226 0 0 1 526,300 Z" fill="#C0473B"/>
+    <path d="M300,300 L526,300 A226,226 0 0 1 300,526 Z" fill="#8FA8E6"/>
+    <path d="M300,300 L300,526 A226,226 0 0 1 74,300 Z" fill="#F2C14E"/>
+    <path d="M300,300 L74,300 A226,226 0 0 1 300,74 Z" fill="#7BC97B"/>
+  </g>
+  <g clip-path="url(#qgreen)"><circle cx="185" cy="185" r="165" fill="url(#lit)"/></g>
+  <g stroke="#0E0B1A" stroke-width="26">
+    <line x1="300" y1="52" x2="300" y2="548"/>
+    <line x1="52" y1="300" x2="548" y2="300"/>
+  </g>
+  <circle cx="300" cy="300" r="92" fill="#0E0B1A"/>
+  <circle cx="300" cy="300" r="92" fill="none" stroke="#EFE5CE" stroke-width="6" opacity="0.35"/>
+  <g fill="#EFE5CE" opacity="0.85">
+    <circle cx="268" cy="292" r="9"/><circle cx="300" cy="292" r="9"/><circle cx="332" cy="292" r="9"/>
+  </g>
+  <rect width="600" height="600" fill="url(#vig)"/>
+</svg>
