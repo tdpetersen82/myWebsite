@@ -25,114 +25,152 @@
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
 <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
 <style>
+  :root{
+    --pnl:rgba(15,21,34,0.9); --pnl-line:rgba(150,170,210,0.26);
+    --ink:#e6edf8; --soft:#9fabc2; --dim:#7c869c; --acc:#6f9dff;
+  }
   html,body{margin:0;height:100%;background:#05060a;overflow:hidden;}
   canvas{display:block;cursor:crosshair;}
-  #hud{
-    position:fixed;top:14px;left:16px;
-    font:13px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;
-    color:#cfd6e6;pointer-events:none;text-shadow:0 1px 3px #000;
-  }
-  #hud h1{font:600 15px/1.4 system-ui,sans-serif;margin:0 0 6px;color:#fff;letter-spacing:.2px;}
-  #speed-ctrl{display:flex;align-items:center;gap:7px;margin:0 0 7px;pointer-events:auto;max-width:330px;}
-  #speed-ctrl .speed-end{font:600 10px/1 system-ui,sans-serif;color:#8fa0bd;white-space:nowrap;}
-  #speed-slider{flex:1;min-width:0;accent-color:#6f9dff;cursor:pointer;height:16px;}
-  #hud .row{white-space:pre;}
-  #hud .dim{color:#7c869c;margin-top:2px;}
-  #hud .dim.ok{color:#6ee787;}
-  #hud .dim.warn{color:#ffcf5a;}
-  #hint{
-    position:fixed;bottom:16px;right:16px;white-space:nowrap;
-    font:12px/1.45 system-ui,sans-serif;color:#697089;pointer-events:none;
-  }
-  #comet-ui{position:fixed;top:14px;right:16px;font:600 12px/1.3 system-ui,sans-serif;color:#e6edf8;text-align:right;}
-  #comet-toggle,#comet-launch{font:inherit;color:#e6edf8;background:rgba(42,54,78,0.72);border:1px solid rgba(150,170,210,0.35);border-radius:9px;padding:9px 14px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
-  #comet-toggle:hover,#comet-launch:hover{background:rgba(62,78,112,0.9);}
-  #comet-panel{margin-top:8px;padding:13px 14px 11px;width:214px;text-align:left;background:rgba(18,24,38,0.9);border:1px solid rgba(150,170,210,0.28);border-radius:10px;-webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);}
-  #comet-panel label{display:block;margin:0 0 12px;color:#9fabc2;font-weight:500;}
-  #comet-panel label span{float:right;color:#eaf1ff;font-weight:600;font-variant-numeric:tabular-nums;}
-  #comet-panel input[type=range]{width:100%;margin:7px 0 0;accent-color:#6f9dff;cursor:pointer;}
-  #launch-panel{position:fixed;right:16px;bottom:16px;width:206px;padding:13px 14px 11px;text-align:left;
-    background:rgba(18,24,38,0.92);border:1px solid rgba(150,170,210,0.3);border-radius:10px;
-    -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);font:600 12px/1.3 system-ui,sans-serif;color:#e6edf8;}
-  #launch-title{font-weight:700;color:#fff;margin:0 0 11px;}
-  #launch-panel label{display:block;margin:0 0 11px;color:#9fabc2;font-weight:500;}
-  #launch-panel label span{float:right;color:#eaf1ff;font-weight:600;font-variant-numeric:tabular-nums;}
-  #launch-panel input[type=range]{width:100%;margin:7px 0 0;accent-color:#6f9dff;cursor:pointer;}
-  #launch-dir{width:100%;margin:0 0 7px;padding:7px;text-align:center;cursor:pointer;font:inherit;color:#dfe7f5;
-    background:rgba(42,54,78,0.7);border:1px solid rgba(150,170,210,0.35);border-radius:8px;}
-  #launch-dir:hover{background:rgba(62,78,112,0.9);}
-  #launch-go{width:100%;padding:8px;text-align:center;cursor:pointer;font:inherit;font-weight:600;color:#eaf1ff;
-    background:rgba(74,108,190,0.6);border:1px solid rgba(150,180,255,0.6);border-radius:8px;}
-  #launch-go:hover{background:rgba(92,130,225,0.82);}
-  #comet-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px;}
-  #comet-launch{flex:1 1 100%;text-align:center;background:rgba(74,108,190,0.55);border-color:rgba(150,180,255,0.6);}
-  #comet-random,#comet-storm{flex:1;font:inherit;color:#e6edf8;background:rgba(42,54,78,0.72);border:1px solid rgba(150,170,210,0.35);border-radius:9px;padding:9px 8px;cursor:pointer;white-space:nowrap;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
-  #comet-storm{background:rgba(96,64,134,0.6);border-color:rgba(170,140,220,0.55);}
-  #comet-random:hover{background:rgba(62,78,112,0.9);}
-  #comet-storm:hover{background:rgba(120,82,166,0.85);}
-  #hud .row.clickable{pointer-events:auto;cursor:pointer;border-radius:4px;padding:0 4px;margin-left:-4px;}
-  #hud .row.clickable:hover{background:rgba(120,150,210,0.16);}
-  #hud .row.sel{background:rgba(120,150,210,0.28);}
-  #edit-panel{position:fixed;left:16px;bottom:56px;width:216px;padding:12px 14px 11px;
-    background:rgba(18,24,38,0.92);border:1px solid rgba(150,170,210,0.3);border-radius:10px;
-    -webkit-backdrop-filter:blur(5px);backdrop-filter:blur(5px);font:600 12px/1.3 system-ui,sans-serif;color:#e6edf8;}
-  #edit-head{display:flex;justify-content:space-between;align-items:center;margin:0 0 11px;font-weight:700;}
-  #edit-head b{color:#fff;}
-  #edit-close{background:none;border:none;color:#9fabc2;font-size:17px;line-height:1;cursor:pointer;padding:0 2px;}
-  #edit-close:hover{color:#fff;}
-  #edit-panel label{display:block;margin:0 0 11px;color:#9fabc2;font-weight:500;}
-  #edit-panel label span{float:right;color:#eaf1ff;font-weight:600;font-variant-numeric:tabular-nums;}
-  #edit-panel input[type=range]{width:100%;margin:7px 0 0;accent-color:#6f9dff;cursor:pointer;}
-  #nudge-box{margin:1px 0 11px;padding:10px 0 2px;border-top:1px solid rgba(150,170,210,0.16);}
-  #nudge-title{color:#8fa0bd;font-weight:600;font-size:11px;margin:0 0 9px;}
-  #nudge-dial{display:block;margin:0 auto 11px;}
-  #nudge-dial-arrow{transition:transform 0.06s linear;}
-  #edit-nudge{width:100%;margin-top:1px;padding:8px;text-align:center;cursor:pointer;font:inherit;font-weight:600;color:#eaf1ff;
-    background:rgba(74,110,200,0.5);border:1px solid rgba(130,160,235,0.55);border-radius:8px;}
-  #edit-nudge:hover{background:rgba(92,132,232,0.72);}
-  #edit-delete{width:100%;margin-top:2px;padding:8px;text-align:center;cursor:pointer;font:inherit;color:#ffecec;
-    background:rgba(150,60,60,0.5);border:1px solid rgba(220,140,140,0.5);border-radius:8px;}
-  #edit-delete:hover{background:rgba(180,72,72,0.72);}
-  /* Back-nav — was missing entirely; visitors landing from search were trapped. */
+
+  /* Back-nav — visitors landing from search need a way out. */
   #ss-nav{position:fixed;top:14px;left:16px;z-index:8;display:flex;gap:14px;
     pointer-events:auto;font:600 12px/1 system-ui,sans-serif;}
   #ss-nav a{color:#9fb2d6;text-decoration:none;text-shadow:0 1px 3px #000;white-space:nowrap;}
   #ss-nav a:hover{color:#fff;}
-  #hud{top:42px;}
+
+  /* Top strip: title + clock + energy dot. The data table lives in the drawer. */
+  #hud{position:fixed;top:42px;left:16px;pointer-events:none;color:#cfd6e6;text-shadow:0 1px 3px #000;}
+  #hud h1{font:600 15px/1.3 system-ui,sans-serif;margin:0 0 3px;color:#fff;letter-spacing:.2px;}
+  #time{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--dim);
+    display:flex;align-items:center;gap:7px;font-variant-numeric:tabular-nums;}
+  #drift{width:7px;height:7px;border-radius:50%;background:#6ee787;pointer-events:auto;cursor:help;flex:none;}
+  #drift.warn{background:#ffcf5a;}
+
+  /* One panel language for every floating surface. */
+  .panel{background:var(--pnl);border:1px solid var(--pnl-line);border-radius:12px;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    font:600 12px/1.3 system-ui,sans-serif;color:var(--ink);
+    transition:opacity .16s ease,transform .16s ease,display .16s allow-discrete;}
+  .panel[hidden]{opacity:0;transform:translateY(8px);}
+  #data-drawer[hidden]{transform:translateX(-50%) translateY(8px);}
+  @starting-style{ .panel{opacity:0;transform:translateY(8px);}
+    #data-drawer{transform:translateX(-50%) translateY(8px);} }
+  .panel label{display:block;margin:0 0 11px;color:var(--soft);font-weight:500;}
+  .panel label span{float:right;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums;}
+  .panel input[type=range]{width:100%;margin:7px 0 0;accent-color:var(--acc);cursor:pointer;}
+  .btn{font:inherit;color:var(--ink);background:rgba(42,54,78,0.72);border:1px solid rgba(150,170,210,0.35);
+    border-radius:9px;padding:9px 12px;cursor:pointer;
+    -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
+  .btn:hover{background:rgba(62,78,112,0.9);}
+  .btn.primary{background:rgba(74,108,190,0.6);border-color:rgba(150,180,255,0.6);}
+  .btn.primary:hover{background:rgba(92,130,225,0.82);}
+  .btn.danger{color:#ffecec;background:rgba(150,60,60,0.5);border-color:rgba(220,140,140,0.5);}
+  .btn.danger:hover{background:rgba(180,72,72,0.72);}
+
+  /* Comet launcher */
+  #comet-ui{position:fixed;top:14px;right:16px;font:600 12px/1.3 system-ui,sans-serif;color:var(--ink);text-align:right;}
+  #comet-panel{margin-top:8px;padding:13px 14px 11px;width:214px;text-align:left;}
+  #comet-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px;}
+  #comet-launch{flex:1 1 100%;text-align:center;}
+  #comet-random,#comet-storm{flex:1;white-space:nowrap;padding:9px 8px;}
+  #comet-storm{background:rgba(96,64,134,0.6);border-color:rgba(170,140,220,0.55);}
+  #comet-storm:hover{background:rgba(120,82,166,0.85);}
+
+  /* Selection card: the one place a body's stats + controls live. */
+  #edit-panel{position:fixed;left:16px;bottom:72px;width:226px;padding:13px 14px 11px;}
+  #edit-head{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;font-weight:700;}
+  #edit-head b{color:#fff;font-size:13px;}
+  #edit-close{background:none;border:none;color:var(--soft);font-size:17px;line-height:1;cursor:pointer;padding:0 2px;}
+  #edit-close:hover{color:#fff;}
+  #sel-stats{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin:0 0 12px;}
+  #sel-stats .st{background:rgba(150,170,210,0.08);border-radius:8px;padding:7px 9px;min-width:0;}
+  #sel-stats .v{display:block;font:600 12.5px/1.2 ui-monospace,Menlo,monospace;color:var(--ink);
+    font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #sel-stats .l{display:block;font:500 9.5px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;
+    color:var(--dim);margin-top:4px;}
+  #nudge-box{margin:1px 0 11px;padding:10px 0 2px;border-top:1px solid rgba(150,170,210,0.16);}
+  #nudge-title{color:var(--soft);font-weight:600;font-size:11px;margin:0 0 9px;}
+  #nudge-dial{display:block;margin:0 auto 11px;}
+  #nudge-dial-arrow{transition:transform 0.06s linear;}
+  #edit-nudge{width:100%;margin-top:1px;padding:8px;text-align:center;}
+  #edit-delete{width:100%;margin-top:8px;padding:8px;text-align:center;}
+
+  /* Satellite launcher (Earth view) */
+  #launch-panel{position:fixed;right:16px;bottom:16px;width:206px;padding:13px 14px 11px;text-align:left;}
+  #launch-title{font-weight:700;color:#fff;margin:0 0 11px;}
+  #launch-dir{width:100%;margin:0 0 7px;padding:7px;text-align:center;}
+  #launch-go{width:100%;padding:8px;text-align:center;}
+  #ev-note{margin-top:9px;font:500 10.5px/1.35 system-ui,sans-serif;color:var(--dim);}
+
+  /* Data drawer — the old always-on table, now on demand (⊞ or [D]). */
+  #data-drawer{position:fixed;top:56px;left:50%;transform:translateX(-50%);padding:11px 13px;max-width:calc(100vw - 24px);
+    font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfd6e6;}
+  #data-drawer .row{white-space:pre;}
+  #data-drawer .dim{color:var(--dim);margin-top:2px;}
+  #data-drawer .dim.ok{color:#6ee787;}
+  #data-drawer .dim.warn{color:#ffcf5a;}
+  #data-drawer .row.clickable{pointer-events:auto;cursor:pointer;border-radius:4px;padding:0 4px;margin-left:-4px;}
+  #data-drawer .row.clickable:hover{background:rgba(120,150,210,0.16);}
+  #data-drawer .row.sel{background:rgba(120,150,210,0.28);}
+
   /* Event feed — the sim narrates ejections, captures, impacts. */
-  #events{position:fixed;left:50%;transform:translateX(-50%);bottom:64px;z-index:7;
+  #events{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;z-index:7;
     display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;max-width:92vw;}
   #events .ev{font:600 12.5px/1.2 system-ui,sans-serif;color:#cfd6e6;padding:8px 15px;border-radius:999px;
-    background:rgba(14,19,32,0.85);border:1px solid rgba(150,170,210,0.3);white-space:nowrap;
+    background:var(--pnl);border:1px solid var(--pnl-line);white-space:nowrap;
     -webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);transition:opacity 0.7s;}
   #events .ev.impact{color:#ffd9a0;border-color:rgba(255,200,120,0.5);}
   #events .ev.eject{color:#ff9d9d;border-color:rgba(255,140,140,0.5);}
   #events .ev.capture{color:#9fe0ff;border-color:rgba(140,205,255,0.5);}
   #events .ev.escape{color:#9fb2d6;}
-  /* On-screen buttons for the actions that used to be keyboard-only (Earth view, reset, mute). */
-  #touch-ctrl{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:8;
-    display:flex;gap:8px;}
-  #touch-ctrl button{font:600 13px/1 system-ui,sans-serif;color:#e6edf8;
-    background:rgba(42,54,78,0.82);border:1px solid rgba(150,170,210,0.4);border-radius:10px;
-    padding:11px 13px;cursor:pointer;-webkit-backdrop-filter:blur(4px);backdrop-filter:blur(4px);}
-  #touch-ctrl button:active{background:rgba(74,108,190,0.85);}
-  /* Phones: surface the touch controls, drop the keyboard hint, and keep the
-     data table from overflowing the right edge. */
+
+  /* The dock: transport · bodies · view actions. */
+  #dock{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:8;
+    display:flex;align-items:center;gap:10px;padding:6px 10px;
+    background:var(--pnl);border:1px solid var(--pnl-line);border-radius:14px;
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
+  #dock .dgroup{display:flex;align-items:center;gap:4px;}
+  #dock .dgroup + .dgroup{border-left:1px solid rgba(150,170,210,0.18);padding-left:10px;}
+  #dock button{font:600 13px/1 system-ui,sans-serif;color:var(--ink);background:transparent;border:none;
+    border-radius:8px;padding:8px 9px;cursor:pointer;}
+  #dock button:hover{background:rgba(120,150,210,0.18);}
+  #rate{font:600 11px/1 ui-monospace,Menlo,monospace;color:var(--soft);min-width:38px;text-align:center;
+    font-variant-numeric:tabular-nums;white-space:nowrap;}
+  .chip{display:inline-flex;align-items:center;position:relative;}
+  .chip .c{width:9px;height:9px;border-radius:50%;background:var(--cc,#888);flex:none;
+    box-shadow:0 0 6px color-mix(in srgb, var(--cc,#888) 60%, transparent);}
+  /* the name floats ABOVE the chip so showing it never shifts the dock layout */
+  .chip .nm{display:none;position:absolute;bottom:100%;left:50%;transform:translateX(-50%);
+    margin-bottom:7px;font:600 10.5px/1 system-ui,sans-serif;color:var(--ink);white-space:nowrap;
+    background:var(--pnl);border:1px solid var(--pnl-line);border-radius:7px;padding:5px 9px;pointer-events:none;}
+  .chip.on{background:rgba(120,150,210,0.2);}
+  .chip.on .nm{display:block;}
+  @media(hover:hover){ .chip:hover .nm{display:block;} }
+  .chip.dead{opacity:0.35;}
+  .chip.dead .c{box-shadow:none;background:#555;}
+
+  /* One-time micro-hint (replaces the permanent hint bar). */
+  #microhint{position:fixed;left:50%;transform:translateX(-50%);top:52px;z-index:7;
+    font:600 12px/1.3 system-ui,sans-serif;color:var(--soft);background:var(--pnl);
+    border:1px solid var(--pnl-line);border-radius:999px;padding:9px 16px;pointer-events:none;
+    transition:opacity .5s;}
+
   @media(max-width:760px){
-    #hint{display:none;}
-    #events{bottom:74px;}
-    #events .ev{font-size:11px;white-space:normal;text-align:center;}
-    /* the button row spans most of the width here — lift the feedback pill above it */
-    #fb-pill{bottom:74px !important;}
     #ss-nav{font-size:11px;gap:10px;}
-    #hud{top:40px;font-size:10px;max-width:calc(100vw - 24px);}
+    #hud{top:40px;}
     #hud h1{font-size:13px;}
-    /* status lines are prose, not table columns — let them wrap instead of
-       running off the right edge */
-    #hud .dim{white-space:normal;}
-    #speed-ctrl{max-width:78vw;}
+    #time{font-size:10.5px;}
     #comet-ui{font-size:11px;}
     #comet-panel{width:188px;}
+    #data-drawer{top:80px;font-size:10px;}
+    #dock{flex-wrap:wrap;justify-content:center;max-width:94vw;row-gap:2px;padding:6px 8px;}
+    #dock .dgroup + .dgroup{border-left:none;padding-left:0;}
+    #edit-panel{bottom:118px;left:12px;width:210px;}
+    #launch-panel{right:12px;}
+    #events{bottom:122px;}
+    #events .ev{font-size:11px;white-space:normal;text-align:center;}
+    #fb-pill{bottom:122px !important;}
+    #microhint{max-width:88vw;text-align:center;}
   }
   /* Accessibility: honor prefers-reduced-motion — calm decorative CSS
      animation for motion-sensitive users. Canvas/JS gameplay is unaffected. */
@@ -153,33 +191,37 @@
   <a href="../arcade/">All arcade games</a>
 </nav>
 <div id="comet-ui">
-  <button id="comet-toggle" type="button">☄ Comet ▾</button>
-  <div id="comet-panel" hidden>
+  <button id="comet-toggle" class="btn" type="button">☄ Comet ▾</button>
+  <div id="comet-panel" class="panel" hidden>
     <label>Mass <span id="m-val"></span><input id="m-slider" type="range" min="0" max="1000" value="90"></label>
     <label>Speed <span id="s-val"></span><input id="s-slider" type="range" min="0" max="1000" value="320"></label>
     <label>Direction <span id="d-val"></span><input id="d-slider" type="range" min="0" max="359" value="210"></label>
     <label>Aim <span id="a-val"></span><input id="a-slider" type="range" min="-60" max="60" value="12"></label>
     <div id="comet-btns">
-      <button id="comet-launch" type="button">Launch ☄</button>
-      <button id="comet-random" type="button" title="Random direction &amp; aim — click repeatedly">🎲 Random</button>
-      <button id="comet-storm" type="button" title="~100 random specks (not listed in the table)">🌩 Storm</button>
+      <button id="comet-launch" class="btn primary" type="button">Launch ☄</button>
+      <button id="comet-random" class="btn" type="button" title="Random direction &amp; aim — click repeatedly">🎲 Random</button>
+      <button id="comet-storm" class="btn" type="button" title="~100 random specks (not listed in the table)">🌩 Storm</button>
     </div>
   </div>
 </div>
 <div id="hud">
   <h1>Solar System</h1>
-  <div id="speed-ctrl">
-    <span class="speed-end">◀ reverse</span>
-    <input id="speed-slider" type="range" min="-32" max="32" value="6" title="Time speed — left = reverse, centre = pause, right = forward">
-    <span class="speed-end">forward ▶</span>
-  </div>
-  <div class="row" id="time"></div>
+  <div id="time"><span id="time-t">t = 0.00 yr</span><span id="drift" title="total energy drift"></span></div>
+</div>
+<div id="data-drawer" class="panel" hidden>
   <div id="rows"></div>
   <div class="row dim" id="health"></div>
   <div class="row dim" id="view"></div>
+  <div class="row dim">[Space] pause · [↑↓] speed · [E] Earth · [C] comet · [D] data · [M] mute · [0] view · [R] reset</div>
 </div>
-<div id="edit-panel" hidden>
-  <div id="edit-head">Editing <b id="edit-name"></b><button id="edit-close" type="button">×</button></div>
+<div id="edit-panel" class="panel" hidden>
+  <div id="edit-head"><b id="edit-name"></b><button id="edit-close" type="button" aria-label="Close">×</button></div>
+  <div id="sel-stats">
+    <div class="st"><span class="v" id="st-dist"></span><span class="l">from Sun</span></div>
+    <div class="st"><span class="v" id="st-spd"></span><span class="l">speed</span></div>
+    <div class="st"><span class="v" id="st-per"></span><span class="l">period</span></div>
+    <div class="st"><span class="v" id="st-mass"></span><span class="l">mass</span></div>
+  </div>
   <label>Mass <span id="em-val"></span><input id="em-slider" type="range" min="0" max="1000" value="500"></label>
   <div id="nudge-box" hidden>
     <div id="nudge-title">Nudge — fire an external thruster</div>
@@ -193,25 +235,35 @@
     </svg>
     <label>Force <span id="nf-val"></span><input id="nf-slider" type="range" min="0" max="1000" value="250"></label>
     <label>Direction <span id="nd-val"></span><input id="nd-slider" type="range" min="0" max="359" value="0"></label>
-    <button id="edit-nudge" type="button">Nudge ⟶</button>
+    <button id="edit-nudge" class="btn primary" type="button">Nudge ⟶</button>
   </div>
-  <button id="edit-delete" type="button">Delete this body</button>
+  <button id="edit-delete" class="btn danger" type="button">Delete this body</button>
 </div>
-<div id="launch-panel" hidden>
+<div id="launch-panel" class="panel" hidden>
   <div id="launch-title">🛰 Launch to orbit</div>
   <label>Altitude <span id="la-val"></span><input id="la-slider" type="range" min="200" max="35786" value="800"></label>
-  <button id="launch-dir" type="button">↻ prograde (with spin)</button>
-  <button id="launch-go" type="button">Launch 🚀</button>
+  <button id="launch-dir" class="btn" type="button">↻ prograde (with spin)</button>
+  <button id="launch-go" class="btn primary" type="button">Launch 🚀</button>
+  <div id="ev-note">orbit altitudes real · speeds illustrative</div>
 </div>
 <div id="events"></div>
-<div id="touch-ctrl">
-  <button type="button" data-act="pause" aria-label="Pause or resume">⏸</button>
-  <button type="button" data-act="earth">🌍 Earth</button>
-  <button type="button" data-act="resetview">⊙ View</button>
-  <button type="button" data-act="reset">↺ Reset</button>
-  <button type="button" data-act="mute" aria-label="Toggle sound">🔊</button>
+<div id="dock">
+  <div class="dgroup">
+    <button type="button" data-act="slower" aria-label="Slower or reverse" title="Slower / reverse">⏪</button>
+    <button type="button" data-act="pause" aria-label="Pause or resume" title="Pause [Space]">⏸</button>
+    <button type="button" data-act="faster" aria-label="Faster" title="Faster">⏩</button>
+    <span id="rate">×6</span>
+  </div>
+  <div class="dgroup" id="dock-bodies"></div>
+  <div class="dgroup">
+    <button type="button" data-act="earth" title="Earth view [E]">🌍</button>
+    <button type="button" data-act="resetview" title="Whole system [0]">⊙</button>
+    <button type="button" data-act="reset" title="Reset the system [R]">↺</button>
+    <button type="button" data-act="mute" aria-label="Toggle sound" title="Sound [M]">🔊</button>
+    <button type="button" data-act="data" title="Data table [D]">⊞</button>
+  </div>
 </div>
-<div id="hint"><b>Scroll</b> to zoom · <b>click</b> a body to select &amp; edit · <b>[Space]</b> pause</div>
+<div id="microhint" hidden>Scroll to zoom · click any body to inspect it</div>
 <script>
 (() => {
   const canvas = document.getElementById('c');
@@ -822,6 +874,12 @@
       ctx.beginPath(); ctx.arc(sp[0], sp[1], (selected.size || 6) + 6, 0, 2*Math.PI); ctx.stroke();
       ctx.globalAlpha = 1;
     }
+    // hover ring — subtle "this is clickable" affordance (hit-tested in updHud, so one frame behind)
+    if (hoverBody && hoverBody !== selected && hoverBody._drawn && !hoverBody.deleted && !hoverBody.dead){
+      ctx.strokeStyle = '#fff'; ctx.globalAlpha = 0.28; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.arc(hoverBody._sx, hoverBody._sy, (hoverBody.sun ? 12 : hoverBody._hitR || hoverBody.size || 6) + 7, 0, 2*Math.PI); ctx.stroke();
+      ctx.globalAlpha = 1;
+    }
 
     // labels (reset the per-frame declutter tracker first)
     placedLabels.length = 0;
@@ -906,15 +964,19 @@
   }
 
   // ---- HUD ----
-  const elTime = document.getElementById('time');
+  const timeT = document.getElementById('time-t');
+  const driftEl = document.getElementById('drift');
+  const rateEl = document.getElementById('rate');
   const elHealth = document.getElementById('health');
   const elView = document.getElementById('view');
   const launchPanel = document.getElementById('launch-panel');
+  const drawer = document.getElementById('data-drawer');
   const rowsEl = document.getElementById('rows');
   const pad = (s,n) => (s + '            ').slice(0,n);   // (KMS lives in the physics core)
 
-  // ---- Editor: select any object (table row or canvas click) → tweak mass / velocity, or delete ----
+  // ---- Editor: select any object (table row, dock chip, or canvas click) → tweak mass / velocity, or delete ----
   let selected = null;
+  let mouseX = -1, mouseY = -1, hoverBody = null;   // canvas hover state (ring + pointer cursor)
   const ePanel = document.getElementById('edit-panel'), eName = document.getElementById('edit-name');
   const emEl = document.getElementById('em-slider'), emV = document.getElementById('em-val');
   const nudgeBox = document.getElementById('nudge-box');
@@ -998,8 +1060,8 @@
     if (me >= 0.001) return me.toFixed(3)+' M⊕';
     return me.toExponential(1).replace('e-','e-')+' M⊕';   // tiny comets
   }
-  function rowText(o){
-    const nm = `<span style="color:${o.color||'#cfd6e6'}">${pad(o.name||'Comet',14)}</span>`;
+  // Live stats for one body — shared by the table rows and the selection card.
+  function statParts(o){
     const rs = Math.hypot(o.x-SUN.x, o.y-SUN.y);
     const dist = o===SUN ? '—' : (rs>=100 ? rs.toFixed(0) : rs.toFixed(2))+' AU';
     const spd = (o===SUN ? Math.hypot(SUN.vx,SUN.vy) : Math.hypot(o.vx-SUN.vx, o.vy-SUN.vy)) * KMS;
@@ -1010,27 +1072,54 @@
     const per = o===SUN ? '—' : a>0
       ? (() => { const T=2*Math.PI*Math.sqrt(a*a*a/mu); return T<0.5 ? Math.round(T*365.25)+' d' : T.toFixed(2)+' yr'; })()
       : 'unbound';
-    return `${nm} ${pad(fmtMass(o.m||0),12)} ${pad(dist,9)} ${pad(spd.toFixed(1)+' km/s',11)} ${per}`;
+    return { dist, spd: spd.toFixed(1)+' km/s', per, mass: fmtMass(o.m||0) };
   }
+  function rowText(o){
+    const s = statParts(o);
+    return `<span style="color:${o.color||'#cfd6e6'}">${pad(o.name||'Comet',14)}</span> ${pad(s.mass,12)} ${pad(s.dist,9)} ${pad(s.spd,11)} ${s.per}`;
+  }
+
+  const stDist = document.getElementById('st-dist'), stSpd = document.getElementById('st-spd'),
+        stPer = document.getElementById('st-per'), stMass = document.getElementById('st-mass');
 
   function updHud(){
     if (selected && (selected.deleted || selected.dead)) deselect();        // selected object went away
     if (follow && (follow.deleted || follow.dead)){ follow = null; zoom = 1; }
     launchPanel.hidden = follow !== EARTH;                                   // satellite-launch panel only in the planet view
-    document.getElementById('hint').style.display = follow === EARTH ? 'none' : '';   // it shares the corner with that panel
-    elTime.textContent = `t = ${t.toFixed(2)} yr     ${timeRate===0 ? '(paused)' : (timeRate<0?'◀ reverse ×'+(-timeRate):'speed ×'+timeRate)}${warping>1 ? '  ▸▸ fast-forwarding approach' : ''}`;
-    const objs = [SUN, ...planets.filter(p=>!p.deleted), ...(MOON.deleted?[]:[MOON]), ...comets];
-    if (tableRows.length !== objs.length || tableRows.some((tr,i)=> tr.obj !== objs[i])) rebuildTable(objs);
-    tableRows.forEach(tr => { const html = rowText(tr.obj);     // only rewrite when the text actually changes (less DOM churn)
-      if (tr._html !== html){ tr.el.innerHTML = html; tr._html = html; }
-      tr.el.classList.toggle('sel', tr.obj === selected); });
+    timeT.textContent = `t = ${t.toFixed(2)} yr`;
+    rateEl.textContent = (timeRate===0 ? 'paused' : (timeRate<0 ? '◀×'+(-timeRate) : '×'+timeRate)) + (warping>1 ? ' ▸▸' : '');
+    rateEl.title = warping>1 ? 'fast-forwarding the empty approach' : 'time speed';
     const rel = Math.abs((energy() - E0) / E0), ok = rel < 1e-3;
-    elHealth.className = 'row dim' + (ok ? ' ok' : ' warn');
-    elHealth.textContent = `total energy conserved — drift ${rel.toExponential(1)} ${ok ? '✓' : ''}`;
-    const z = zoom < 10 ? zoom.toFixed(1) : Math.round(zoom);
-    elView.textContent = follow === EARTH
-      ? `view: Earth ×${z}   ·   spinning · real orbiter altitudes (log scale) · speeds illustrative`
-      : `view: ${follow ? 'following ' + (follow.name||'comet') : 'whole system'}  ×${z}   ·   inner true-scale · outer compressed · Moon ×${MOON_EXAG}`;
+    driftEl.className = ok ? '' : 'warn';
+    driftEl.title = `total energy drift ${rel.toExponential(1)} ${ok ? '— conserved ✓' : '— integrator stressed'}`;
+    // dock chips mirror selection + survival
+    for (const c of chips){
+      c.el.classList.toggle('on', c.obj === selected);
+      c.el.classList.toggle('dead', !!c.obj.deleted);
+    }
+    // selection card stats, live
+    if (selected && !ePanel.hidden){
+      const s = statParts(selected);
+      stDist.textContent = s.dist; stSpd.textContent = s.spd;
+      stPer.textContent = s.per; stMass.textContent = s.mass;
+    }
+    // the data drawer only pays its DOM cost while open
+    if (!drawer.hidden){
+      const objs = [SUN, ...planets.filter(p=>!p.deleted), ...(MOON.deleted?[]:[MOON]), ...comets];
+      if (tableRows.length !== objs.length || tableRows.some((tr,i)=> tr.obj !== objs[i])) rebuildTable(objs);
+      tableRows.forEach(tr => { const html = rowText(tr.obj);   // only rewrite when the text actually changes (less DOM churn)
+        if (tr._html !== html){ tr.el.innerHTML = html; tr._html = html; }
+        tr.el.classList.toggle('sel', tr.obj === selected); });
+      elHealth.className = 'row dim' + (ok ? ' ok' : ' warn');
+      elHealth.textContent = `total energy conserved — drift ${rel.toExponential(1)} ${ok ? '✓' : ''}`;
+      const z = zoom < 10 ? zoom.toFixed(1) : Math.round(zoom);
+      elView.textContent = follow === EARTH
+        ? `view: Earth ×${z}   ·   spinning · real orbiter altitudes (log scale) · speeds illustrative`
+        : `view: ${follow ? 'following ' + (follow.name||'comet') : 'whole system'}  ×${z}   ·   inner true-scale · outer compressed · Moon ×${MOON_EXAG}`;
+    }
+    // hover affordance (hit-test against last drawn positions; ring drawn next frame)
+    hoverBody = mouseX < 0 ? null : hitTest(mouseX, mouseY);
+    canvas.style.cursor = hoverBody ? 'pointer' : 'crosshair';
   }
 
   // ---- Effects layer (render-side): sparks, shake, slow-mo, sun flare ----
@@ -1140,25 +1229,34 @@
   }
 
   // ---- Controls ----
-  canvas.addEventListener('wheel', e => {
-    e.preventDefault();
-    zoom *= e.deltaY < 0 ? 1.15 : 1/1.15;
-    zoom = Math.max(0.2, Math.min(4000, zoom));
-  }, {passive:false});
-  canvas.addEventListener('click', e => {
-    const rect = canvas.getBoundingClientRect();
-    const mx = e.clientX-rect.left, my = e.clientY-rect.top;
+  // hit-test EVERY drawn object (Sun, planets, Moon, comets) against where it was actually drawn —
+  // not its true position (the Moon is drawn ×40 off Earth) — with a generous, finger-friendly radius
+  function hitTest(mx, my){
     let best = null, bd = 1e9;
-    // hit-test EVERY drawn object (Sun, planets, Moon, comets) against where it was actually drawn —
-    // not its true position (the Moon is drawn ×40 off Earth) — with a generous, finger-friendly radius
     for (const b of [...bodies, ...comets]){
       if (b.deleted || b.dead || !b._drawn) continue;
       const d = Math.hypot(b._sx-mx, b._sy-my);
       const thr = Math.max((b.sun?21:(b._hitR||b.size||3))+14, 20);
       if (d < thr && d < bd){ bd = d; best = b; }
     }
+    return best;
+  }
+  canvas.addEventListener('wheel', e => {
+    e.preventDefault();
+    zoom *= e.deltaY < 0 ? 1.15 : 1/1.15;
+    zoom = Math.max(0.2, Math.min(4000, zoom));
+    killHint();
+  }, {passive:false});
+  canvas.addEventListener('mousemove', e => {
+    const rect = canvas.getBoundingClientRect();
+    mouseX = e.clientX-rect.left; mouseY = e.clientY-rect.top;
+  });
+  canvas.addEventListener('mouseleave', () => { mouseX = mouseY = -1; });
+  canvas.addEventListener('click', e => {
+    const rect = canvas.getBoundingClientRect();
+    const best = hitTest(e.clientX-rect.left, e.clientY-rect.top);
     if (!best){ follow = null; zoom = 1; deselect(); }   // empty space → deselect + back to system view
-    else pick(best);
+    else { pick(best); killHint(); }
   });
   // ---- Comet launch panel ----
   const cPanel = document.getElementById('comet-panel'), cToggle = document.getElementById('comet-toggle');
@@ -1201,14 +1299,20 @@
     launches.push({ targetR, dir: launchDir, phase0: 2*Math.PI*evClock/EARTH_SPIN, t0: evClock, period, trail: [] });
     if (launches.length > 8) launches.shift();
   });
-  // ---- time speed (forward / pause / reverse) ----
-  const speedSlider = document.getElementById('speed-slider');
-  function setRate(v){ timeRate = Math.max(-32, Math.min(32, Math.round(v))); if (timeRate !== 0) lastRate = timeRate; speedSlider.value = timeRate; syncPause(); }
-  function syncPause(){ const b = document.querySelector('#touch-ctrl [data-act="pause"]'); if (b) b.textContent = (timeRate === 0 ? '▶' : '⏸'); }
-  speedSlider.addEventListener('input', () => setRate(+speedSlider.value));
+  // ---- time transport (⏪ ⏸ ⏩ — halve/double through zero, pause is its own button) ----
+  function setRate(v){ timeRate = Math.max(-32, Math.min(32, Math.round(v))); if (timeRate !== 0) lastRate = timeRate; syncPause(); }
+  function syncPause(){ const b = document.querySelector('#dock [data-act="pause"]'); if (b) b.textContent = (timeRate === 0 ? '▶' : '⏸'); }
+  function faster(){ setRate(timeRate <= 0 ? (timeRate >= -1 ? 1 : Math.round(timeRate/2)) : Math.min(32, timeRate*2)); }
+  function slower(){ setRate(timeRate >= 0 ? (timeRate <= 1 ? -1 : Math.round(timeRate/2)) : Math.max(-32, timeRate*2)); }
   function earthView(){ follow = EARTH; if (zoom < 5) zoom = 5; }
   function resetView(){ follow = null; zoom = 1; }
   function togglePause(){ setRate(timeRate !== 0 ? 0 : lastRate); }
+  // the data drawer (the old always-on table) — open state persists
+  function setDrawer(open){
+    drawer.hidden = !open;
+    try { localStorage.setItem('ssDataOpen', open ? '1' : '0'); } catch(e){}
+  }
+  try { if (localStorage.getItem('ssDataOpen') === '1') drawer.hidden = false; } catch(e){}
   window.addEventListener('keydown', e=>{
     if (e.code === 'Space'){ togglePause(); e.preventDefault(); }
     else if (e.code === 'ArrowUp')   setRate(timeRate + 1);
@@ -1216,12 +1320,23 @@
     else if (e.key === 'e' || e.key === 'E') earthView();
     else if (e.key === 'c' || e.key === 'C') launchComet();
     else if (e.key === 'm' || e.key === 'M') toggleMute();
+    else if (e.key === 'd' || e.key === 'D') setDrawer(drawer.hidden);
     else if (e.key === '0') resetView();
     else if (e.key === 'r' || e.key === 'R') reset();
   });
 
-  // On-screen controls (shown on phones) — mirror the keyboard-only actions.
-  const muteBtn = document.querySelector('#touch-ctrl [data-act="mute"]');
+  // ---- the dock: body chips + action buttons ----
+  const dockBodies = document.getElementById('dock-bodies');
+  const chips = [SUN, ...planets, MOON].map(o => {
+    const b = document.createElement('button');
+    b.type = 'button'; b.className = 'chip'; b.title = o.name;
+    b.style.setProperty('--cc', o.color);
+    b.innerHTML = `<span class="c"></span><span class="nm">${o.name}</span>`;
+    b.addEventListener('click', () => { if (!o.deleted){ pick(o); killHint(); } });
+    dockBodies.appendChild(b);
+    return { obj: o, el: b };
+  });
+  const muteBtn = document.querySelector('#dock [data-act="mute"]');
   function syncMute(){ muteBtn.textContent = muted ? '🔇' : '🔊'; }
   function toggleMute(){
     muted = !muted;
@@ -1230,15 +1345,31 @@
     syncMute();
   }
   syncMute();
-  document.getElementById('touch-ctrl').addEventListener('click', e => {
+  document.getElementById('dock').addEventListener('click', e => {
     const btn = e.target.closest('button'); if (!btn) return;
     const act = btn.dataset.act;
     if (act === 'pause') togglePause();
+    else if (act === 'slower') slower();
+    else if (act === 'faster') faster();
     else if (act === 'earth') earthView();
     else if (act === 'resetview') resetView();
     else if (act === 'reset') reset();
     else if (act === 'mute') toggleMute();
+    else if (act === 'data') setDrawer(drawer.hidden);
   });
+
+  // ---- one-time micro-hint (replaces the permanent hint bar) ----
+  const microhint = document.getElementById('microhint');
+  let hintSeen = false;
+  try { hintSeen = localStorage.getItem('ssHintSeen') === '1'; } catch(e){}
+  if (!hintSeen) microhint.hidden = false;
+  function killHint(){
+    if (microhint.hidden) return;
+    microhint.style.opacity = '0';
+    setTimeout(() => { microhint.hidden = true; }, 500);
+    try { localStorage.setItem('ssHintSeen', '1'); } catch(e){}
+  }
+  setTimeout(killHint, 14000);
 
   // Pinch-to-zoom on touch devices (the wheel handler is desktop-only).
   let pinchD = 0;
@@ -1250,6 +1381,7 @@
       const d = touchDist(e.touches);
       zoom = Math.max(0.2, Math.min(4000, zoom * (d / pinchD)));
       pinchD = d;
+      killHint();
     }
   }, {passive:false});
   canvas.addEventListener('touchend', e => { if (e.touches.length < 2) pinchD = 0; }, {passive:true});
