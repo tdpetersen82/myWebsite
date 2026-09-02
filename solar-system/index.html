@@ -10,7 +10,7 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Arcade","item":"https://limestonegames.com/arcade/"},{"@type":"ListItem","position":3,"name":"Solar System"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Is this a real simulation or a looping animation?","acceptedAnswer":{"@type":"Answer","text":"A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press R to rebuild the solar system from scratch."}},
-  {"@type":"Question","name":"Are the sizes and distances to scale?","acceptedAnswer":{"@type":"Answer","text":"Distances and masses are real (the planet data uses actual AU distances, solar-mass ratios, and eccentricities). Drawn sizes are not — at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click."}},
+  {"@type":"Question","name":"Are the sizes and distances to scale?","acceptedAnswer":{"@type":"Answer","text":"The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on true-scale distances in the dock's view options to see the honest spacing. Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click."}},
   {"@type":"Question","name":"Why does the Sun wobble?","acceptedAnswer":{"@type":"Answer","text":"Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it. The real Sun does the same — detecting that wobble in other stars is one of the main ways exoplanets are discovered."}},
   {"@type":"Question","name":"Can planets collide or be destroyed?","acceptedAnswer":{"@type":"Answer","text":"Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape."}},
   {"@type":"Question","name":"What are the controls?","acceptedAnswer":{"@type":"Answer","text":"Scroll or pinch to zoom, click or tap any body to inspect it. Keyboard: Space pause, up/down arrows time rate, E Earth view, C comet, D data table, 0 reset view, R reset the system."}},
@@ -173,6 +173,13 @@
   .chip.dead .pc{filter:grayscale(1);}
 
   /* One-time micro-hint (replaces the permanent hint bar). */
+  /* View options popover — bottom-right, floated above the dock's row
+     (auto-closed when the Earth-view launch panel needs the corner) */
+  #view-panel{position:absolute;right:16px;bottom:76px;width:216px;padding:12px 13px 11px;z-index:8;}
+  #view-title{font-weight:700;color:#fff;margin:0 0 9px;}
+  .vo{display:block;width:100%;margin-top:6px;text-align:left;}
+  .vo.off{opacity:.55;}
+
   /* ---- the article below the sim ---- */
   #about{max-width:720px;margin:0 auto;padding:70px 20px 90px;
     font:400 15px/1.7 system-ui,sans-serif;color:var(--soft);}
@@ -220,6 +227,7 @@
     /* touch scrolls straight past the sim, so the About link is a
        desktop-only affordance — it collides with the comet button here */
     #ab-link{display:none;}
+    #view-panel{right:12px;}
     #hud{top:40px;}
     #hud h1{font-size:13px;}
     #time{font-size:10.5px;}
@@ -335,7 +343,15 @@
     <button type="button" data-act="resetview" title="Whole system [0]"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.1"/><circle cx="12" cy="12" r="2.7"/></svg></button>
     <button type="button" data-act="reset" title="Reset the system [R]"><svg viewBox="0 0 24 24"><path d="M18.9 15.4a7.6 7.6 0 1 1 .7-6.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><polygon points="20.9,4.4 20.3,10.5 15.1,7.3"/></svg></button>
     <button type="button" data-act="data" title="Data table [D]"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7.2" height="7.2" rx="1.6"/><rect x="12.8" y="4" width="7.2" height="7.2" rx="1.6"/><rect x="4" y="12.8" width="7.2" height="7.2" rx="1.6"/><rect x="12.8" y="12.8" width="7.2" height="7.2" rx="1.6"/></svg></button>
+    <button type="button" data-act="view" title="View options"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" fill="none"/><circle cx="9.5" cy="7" r="2.5"/><circle cx="15" cy="12" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg></button>
   </div>
+</div>
+<div id="view-panel" class="panel" hidden>
+  <div id="view-title">View</div>
+  <button id="vo-scale" class="btn vo" type="button" title="Compressed squeezes the outer orbits so all eight planets fit on screen. True scale spaces the orbits honestly — mostly emptiness; zoom in to find the inner planets."></button>
+  <button id="vo-guides" class="btn vo" type="button" title="Faint ellipses marking each planet's nominal orbit"></button>
+  <button id="vo-labels" class="btn vo" type="button" title="Name tags on the bodies"></button>
+  <button id="vo-trails" class="btn vo" type="button" title="Fading path history behind each planet"></button>
 </div>
 <div id="microhint" hidden>Scroll to zoom · click any body to inspect it</div>
 </div>
@@ -359,6 +375,7 @@
     <div class="ab-col"><h3>Stretched to be visible</h3>
       <ul>
         <li><b>Drawn sizes</b> — at true scale Earth would be far thinner than a pixel</li>
+        <li><b>Orbit spacing</b> is gently compressed so all eight planets fit on screen — the dock's view options can switch to true-scale distances</li>
         <li>Everything orbits in <b>one flat plane</b></li>
         <li>Satellite <b>speeds</b> in Earth view are sped up to stay watchable</li>
         <li><b>Time</b> — a year passes in seconds, faster at higher rates</li>
@@ -389,7 +406,7 @@
 
   <h2>Frequently asked questions</h2>
   <details><summary>Is this a real simulation or a looping animation?</summary><p>A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press <b>R</b> to rebuild the solar system from scratch.</p></details>
-  <details><summary>Are the sizes and distances to scale?</summary><p>Distances and masses are real (the planet data uses actual AU distances, solar-mass ratios, and eccentricities). Drawn sizes are not — at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click.</p></details>
+  <details><summary>Are the sizes and distances to scale?</summary><p>The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on <b>true-scale distances</b> in the dock's view options to see the honest spacing (mostly emptiness; zoom in to find the inner planets). Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click.</p></details>
   <details><summary>Why does the Sun wobble?</summary><p>Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it. The real Sun does the same — detecting that wobble in other stars is one of the main ways exoplanets are discovered.</p></details>
   <details><summary>Can planets collide or be destroyed?</summary><p>Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape.</p></details>
   <details><summary>What are the controls?</summary><p>Scroll or pinch to zoom, click or tap any body to inspect it. Keyboard: <b>Space</b> pause, <b>↑↓</b> time rate, <b>E</b> Earth view, <b>C</b> comet, <b>D</b> data table, <b>0</b> reset view, <b>R</b> reset the system.</p></details>
@@ -757,13 +774,22 @@
   // eccentric orbits read as true ellipses, not log-exaggerated eggs) and logarithmic far out (so all 8
   // still fit). Angle is preserved, so motion stays true — only radial spacing is squeezed.
   const RSCALE = 0.5;   // AU; orbits within ~this stay near true-scale, beyond it they compress
+
+  // ---- view options (persisted) ----
+  // scale: true = honest radial distances (mostly emptiness), false = asinh-compressed
+  const viewOpts = { scale:false, guides:true, labels:true, trails:true };
+  try { Object.assign(viewOpts, JSON.parse(localStorage.getItem('ssViewOpts') || '{}')); } catch(e){}
+
   function disp(x, y){
-    const rx = x - baryX, ry = y - baryY, r = Math.hypot(rx, ry);   // relative to the system barycentre
+    const rx = x - baryX, ry = y - baryY;                           // relative to the system barycentre
+    if (viewOpts.scale) return [rx, ry];                            // true scale: no radial squeeze
+    const r = Math.hypot(rx, ry);
     if (r < 1e-9) return [0, 0];
     const k = RSCALE * Math.asinh(r / RSCALE) / r;
     return [rx*k, ry*k];
   }
   const maxDispR = Math.max(...planets.map(p => RSCALE * Math.asinh(p.a*(1+p.e) / RSCALE)));
+  const maxTrueR = Math.max(...planets.map(p => p.a*(1+p.e)));
 
   let baseScale, zoom = 1, follow = null;
   const camD = () => follow ? disp(follow.x, follow.y) : [0, 0];
@@ -771,6 +797,8 @@
   const scr = (x, y) => { const [X, Y] = disp(x, y), [cX, cY] = camD(); return [cx + (X - cX)*S(), cy - (Y - cY)*S()]; };
 
   let W, H, cx, cy, dpr, stars = [];
+  // fit Neptune's aphelion (compressed or true, per the view option), with margin for labels
+  function refit(){ baseScale = Math.min(W,H) * 0.40 / (viewOpts.scale ? maxTrueR : maxDispR); }
   function resize(){
     dpr = window.devicePixelRatio || 1;
     // clientWidth, not innerWidth: the page scrolls now, and innerWidth
@@ -780,7 +808,7 @@
     canvas.style.width = W+'px'; canvas.style.height = H+'px';
     ctx.setTransform(dpr,0,0,dpr,0,0);
     cx = W/2; cy = H/2;
-    baseScale = Math.min(W,H) * 0.40 / maxDispR;     // fit Neptune's (compressed) aphelion, with margin for labels
+    refit();
     stars = [];
     const n = Math.round(W*H/9000);
     for (let i=0;i<n;i++)
@@ -892,7 +920,7 @@
     const zoomedIn = follow && !earthView && zoom > 20;
     // orbit lines — sampled & compressed (true ellipses become smooth closed curves);
     // no guides without a Sun to orbit
-    if (!zoomedIn && !earthView && !SUN.deleted){
+    if (!zoomedIn && !earthView && !SUN.deleted && viewOpts.guides){
       ctx.strokeStyle = 'rgba(120,140,180,0.16)'; ctx.lineWidth = 1;
       for (const p of planets){
         if (p.deleted || p.edited) continue;     // no nominal-orbit guide for removed/edited bodies
@@ -908,7 +936,7 @@
     }
     ctx.lineCap = 'round';
     if (!zoomedIn && !earthView){
-      for (const p of planets){ if (!p.deleted) fadedTrail(p.trail, q => scr(q.x, q.y), p.color, 1.2, 0.38); }
+      if (viewOpts.trails) for (const p of planets){ if (!p.deleted) fadedTrail(p.trail, q => scr(q.x, q.y), p.color, 1.2, 0.38); }
     }
     // asteroid belt — dim crawling specks between Mars and Jupiter
     if (!earthView && belt.length){
@@ -1033,9 +1061,11 @@
 
     // labels (reset the per-frame declutter tracker first)
     placedLabels.length = 0;
-    if (!earthView && !SUN.deleted) label('Sun', SUN.color, sxp, syp, 15);
-    for (const p of shown){ const [bx, by] = scr(p.x, p.y); label(p.name, p.color, bx, by, (earthView && p===EARTH ? 14*zoom+6 : p.size+5)); }
-    if (!earthView && !MOON.deleted && !EARTH.deleted && Math.hypot(mX-eix, mY-eiy) > 11) label('Moon', MOON.color, mX, mY, MOON.size+5);   // earth view labels its own Moon
+    if (viewOpts.labels){
+      if (!earthView && !SUN.deleted) label('Sun', SUN.color, sxp, syp, 15);
+      for (const p of shown){ const [bx, by] = scr(p.x, p.y); label(p.name, p.color, bx, by, (earthView && p===EARTH ? 14*zoom+6 : p.size+5)); }
+      if (!earthView && !MOON.deleted && !EARTH.deleted && Math.hypot(mX-eix, mY-eiy) > 11) label('Moon', MOON.color, mX, mY, MOON.size+5);   // earth view labels its own Moon
+    }
 
     // comets / interlopers — size & colour scale with mass — + impact flashes
     for (const c of comets){
@@ -1264,6 +1294,7 @@
     if (selected && (selected.deleted || selected.dead)) deselect();        // selected object went away
     if (follow && (follow.deleted || follow.dead)){ follow = null; zoom = 1; }
     launchPanel.hidden = follow !== EARTH;                                   // satellite-launch panel only in the planet view
+    if (!launchPanel.hidden && !viewPanel.hidden) viewPanel.hidden = true;   // the two share the corner — launch wins
     timeT.textContent = `t = ${t.toFixed(2)} yr`;
     rateEl.textContent = (timeRate===0 ? 'paused' : (timeRate<0 ? '◀×'+(-timeRate) : '×'+timeRate)) + (warping>1 ? ' ▸▸' : '');
     rateEl.title = warping>1 ? 'fast-forwarding the empty approach' : 'time speed';
@@ -1702,7 +1733,41 @@
     else if (act === 'resetview') resetView();
     else if (act === 'reset') reset();
     else if (act === 'data') setDrawer(drawer.hidden);
+    else if (act === 'view'){ viewPanel.hidden = !viewPanel.hidden; if (!viewPanel.hidden) placeViewPanel(); }
   });
+
+  // The dock wraps to 1-3 rows depending on width, so the panel's offset is
+  // measured from the dock's actual top rather than hardcoded.
+  function placeViewPanel(){
+    const d = document.getElementById('dock').getBoundingClientRect();
+    viewPanel.style.bottom = (window.innerHeight - d.top + 10) + 'px';
+  }
+  window.addEventListener('resize', () => { if (!viewPanel.hidden) placeViewPanel(); });
+
+  // ---- view options panel ----
+  const viewPanel = document.getElementById('view-panel');
+  const VO_TEXT = {
+    scale:  v => 'Distances · ' + (v ? 'true scale' : 'compressed'),
+    guides: v => (v ? '✓ ' : '') + 'Orbit guides',
+    labels: v => (v ? '✓ ' : '') + 'Labels',
+    trails: v => (v ? '✓ ' : '') + 'Planet trails'
+  };
+  function syncViewPanel(){
+    for (const k of Object.keys(VO_TEXT)){
+      const b = document.getElementById('vo-' + k);
+      b.textContent = VO_TEXT[k](viewOpts[k]);
+      b.classList.toggle('off', k !== 'scale' && !viewOpts[k]);
+    }
+  }
+  function setViewOpt(k){
+    viewOpts[k] = !viewOpts[k];
+    try { localStorage.setItem('ssViewOpts', JSON.stringify(viewOpts)); } catch(e){}
+    if (k === 'scale') refit();
+    syncViewPanel();
+  }
+  for (const k of Object.keys(VO_TEXT))
+    document.getElementById('vo-' + k).addEventListener('click', () => setViewOpt(k));
+  syncViewPanel();
 
   // ---- one-time micro-hint (replaces the permanent hint bar) ----
   const microhint = document.getElementById('microhint');
