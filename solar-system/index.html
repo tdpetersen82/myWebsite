@@ -94,6 +94,18 @@
   #act-storm:hover{background:rgba(120,82,166,0.85);}
   #act-star{background:rgba(134,96,44,0.55);border-color:rgba(230,190,120,0.5);}
   #act-star:hover{background:rgba(170,124,58,0.8);}
+  /* lightspeed message target picker + in-flight status chip */
+  #msg-panel{width:216px;padding:11px 12px 10px;}
+  #msg-title{font-weight:700;color:#fff;margin:0 0 8px;text-align:left;}
+  #msg-panel .lm{float:right;color:var(--dim);font-variant-numeric:tabular-nums;}
+  #msg-note{margin-top:8px;font:500 10.5px/1.35 system-ui,sans-serif;color:var(--dim);text-align:left;}
+  #msg-status{position:absolute;left:50%;transform:translateX(-50%);top:52px;z-index:7;
+    display:flex;align-items:center;gap:10px;font:600 12px/1.3 system-ui,sans-serif;
+    color:var(--ink);background:var(--pnl);border:1px solid var(--pnl-line);
+    border-radius:999px;padding:7px 9px 7px 16px;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  #msg-cancel{width:22px;height:22px;border-radius:50%;border:1px solid var(--pnl-line);
+    background:rgba(42,54,78,0.72);color:var(--ink);font:600 13px/1 system-ui,sans-serif;cursor:pointer;}
+  #msg-cancel:hover{background:rgba(70,88,124,0.9);}
 
   /* Selection card: the one place a body's stats + controls live. */
   #edit-panel{position:absolute;left:16px;bottom:72px;width:226px;padding:13px 14px 11px;}
@@ -280,6 +292,13 @@
     <button id="act-random" class="btn act" type="button" title="A random comet from a random direction — click repeatedly">🎲 Random comet</button>
     <button id="act-storm" class="btn act" type="button" title="~100 icy specks from every direction. Massless — they never disturb the planets.">🌩 Comet storm</button>
     <button id="act-star" class="btn act" type="button" title="A quarter-solar-mass intruder crosses the system — orbits bend as it passes, and anything it sweeps too close to is consumed">⭐ Rogue star flyby</button>
+    <button id="act-msg" class="btn act" type="button" title="Send a radio pulse from Earth at the true speed of light — time holds still while it crosses">📡 Lightspeed message…</button>
+  </div>
+  <div id="msg-panel" class="panel" hidden>
+    <div id="msg-title">📡 Lightspeed message</div>
+    <button id="msg-mars" class="btn act" type="button" title="Send a pulse from Earth to Mars at the speed of light">→ Mars <span class="lm" id="lm-mars"></span></button>
+    <button id="msg-jupiter" class="btn act" type="button" title="Send a pulse from Earth to Jupiter at the speed of light">→ Jupiter <span class="lm" id="lm-jupiter"></span></button>
+    <div id="msg-note">Time holds still while light crosses — 1&nbsp;s here = 3 light-minutes</div>
   </div>
   <div id="comet-panel" class="panel" hidden>
     <label>Mass <span id="m-val"></span><input id="m-slider" type="range" min="0" max="1000" value="90"></label>
@@ -365,6 +384,7 @@
   <button id="vo-trails" class="btn vo" type="button" title="Fading path history behind each planet"></button>
 </div>
 <div id="microhint" hidden>Scroll to zoom · click any body to inspect it</div>
+<div id="msg-status" hidden><span id="msg-text"></span><button id="msg-cancel" type="button" aria-label="Cancel transmission">×</button></div>
 </div>
 
 <article id="about" aria-label="About this simulator">
@@ -394,11 +414,12 @@
     </div>
   </div>
 
-  <h2>Nine experiments worth running</h2>
+  <h2>Ten experiments worth running</h2>
   <ol>
     <li><b>Put a comet into Jupiter.</b> Open ⚡ Actions → ☄ Launch a comet, aim with the direction and aim sliders, and fire. A hit flashes on impact and lands in the event feed.</li>
     <li><b>Fire the comet storm.</b> ~100 random specks at once — then watch the feed report captures, ejections, and impacts as gravity sorts them out.</li>
     <li><b>Invite a rogue star.</b> A quarter-solar-mass intruder crosses the system: orbits bend as it passes, and anything it sweeps too close to is consumed — the event feed keeps score of the damage.</li>
+    <li><b>Send a lightspeed message.</b> ⚡ Actions → Lightspeed message: a radio pulse leaves Earth for Mars (3 to 22 light-minutes away, depending on where the orbits stand) or Jupiter (33 to 54). The planets hold still while it crawls — because at any speed where you can see planets move, light is effectively instantaneous.</li>
     <li><b>Delete the Sun.</b> Click it, open <i>Adjust this body</i>, delete. The planets fly off along near-straight lines — the leash made visible.</li>
     <li><b>Make Jupiter heavier.</b> Drag its mass slider upward and watch the rest of the system start to wobble.</li>
     <li><b>Nudge Earth.</b> A small thruster burn permanently changes its orbit — there's no script pulling it back.</li>
@@ -1076,6 +1097,34 @@
       ctx.globalAlpha = 1;
     }
 
+    // lightspeed message — the beam is sampled in world space (the compressed
+    // view bends straight lines into curves), the pulse rides it at constant
+    // world-space speed, so light moves honestly in both view scales
+    if (msg && !earthView){
+      const lerp = k => [msg.x0 + (msg.x1-msg.x0)*k, msg.y0 + (msg.y1-msg.y0)*k];
+      const prog = Math.min(1, msg.doneLm / msg.totalLm);
+      ctx.strokeStyle = 'rgba(140,180,255,0.35)'; ctx.lineWidth = 1; ctx.setLineDash([4,5]);
+      ctx.beginPath();
+      for (let k=0;k<=40;k++){ const [X,Y] = scr(...lerp(k/40)); k ? ctx.lineTo(X,Y) : ctx.moveTo(X,Y); }
+      ctx.stroke(); ctx.setLineDash([]);
+      ctx.globalCompositeOperation = 'lighter';
+      for (let k=0;k<=6;k++){                                        // bright head + fading wake
+        const [X,Y] = scr(...lerp(Math.max(0, prog - k*0.008)));
+        ctx.fillStyle = `rgba(170,205,255,${0.85*(1 - k/7)})`;
+        ctx.beginPath(); ctx.arc(X, Y, k === 0 ? 3.2 : 2.4 - k*0.2, 0, 2*Math.PI); ctx.fill();
+      }
+      ctx.globalCompositeOperation = 'source-over';
+    }
+    if (msgFx.length && !earthView){                                 // send/arrival rings (wall-clock, so they run while paused)
+      const now = performance.now();
+      msgFx = msgFx.filter(f => now - f.born < 900);
+      for (const f of msgFx){
+        const a = (now - f.born)/900, [X,Y] = scr(f.x, f.y);
+        ctx.strokeStyle = `rgba(170,205,255,${0.7*(1-a)})`; ctx.lineWidth = 1.6;
+        ctx.beginPath(); ctx.arc(X, Y, 4 + a*26, 0, 2*Math.PI); ctx.stroke();
+      }
+    }
+
     // labels (reset the per-frame declutter tracker first)
     placedLabels.length = 0;
     if (viewOpts.labels){
@@ -1443,10 +1492,28 @@
 
   // ---- Main loop ----
   function frame(ts){
-    if (timeRate !== 0 && lastTs && ts){                             // planet-view spin/orbits run on a steady wall clock
-      evClock += Math.sign(timeRate) * Math.min(0.05, (ts - lastTs)/1000) * EV_SPEED;
+    const rawDt = (ts && lastTs) ? Math.min(0.05, (ts - lastTs)/1000) : 0;   // wall-clock seconds
+    if (timeRate !== 0){                                             // planet-view spin/orbits run on a steady wall clock
+      evClock += Math.sign(timeRate) * rawDt * EV_SPEED;
     }
     lastTs = ts || lastTs;
+
+    // lightspeed message — advances on the wall clock against the frozen sky
+    if (msg){
+      if (timeRate !== 0) endMessage('📡 Transmission lost — time resumed');
+      else if (EARTH.deleted || msg.to.deleted) endMessage('📡 Transmission lost');
+      else {
+        msg.doneLm += rawDt * MSG_LM_PER_SEC;
+        msgText.textContent = `📡 → ${msg.to.name} · ${Math.min(msg.doneLm, msg.totalLm).toFixed(1)} / ${msg.totalLm.toFixed(1)} light-min · planets frozen · 1s = ${MSG_LM_PER_SEC} light-min`;
+        if (msg.doneLm >= msg.totalLm){
+          msgFx.push({ x: msg.x1, y: msg.y1, born: performance.now() });
+          announce(`📡 Message reached ${msg.to.name} — ${msg.totalLm.toFixed(1)} minutes at light speed`, 'capture');
+          sfx('capture');
+          const r = msg.prevRate; endMessage(); setRate(r);
+        }
+      }
+    }
+    if (!msgPanel.hidden) updMsgRows();                              // live light-minute readouts while picking
     let stepped = 0;
     if (timeRate !== 0){
       warping = warpFactor();
@@ -1514,13 +1581,14 @@
   updCometLabels();
   // The Actions menu: comet designing is one action among several.
   const actMenu = document.getElementById('action-menu');
-  function setActCaret(){ cToggle.textContent = '⚡ Actions ' + ((actMenu.hidden && cPanel.hidden) ? '▾' : '▴'); }
+  const msgPanel = document.getElementById('msg-panel');
+  function setActCaret(){ cToggle.textContent = '⚡ Actions ' + ((actMenu.hidden && cPanel.hidden && msgPanel.hidden) ? '▾' : '▴'); }
   cToggle.addEventListener('click', () => {
-    if (!actMenu.hidden || !cPanel.hidden){ actMenu.hidden = true; cPanel.hidden = true; }
+    if (!actMenu.hidden || !cPanel.hidden || !msgPanel.hidden){ actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; }
     else actMenu.hidden = false;
     setActCaret();
   });
-  document.getElementById('act-comet').addEventListener('click', () => { actMenu.hidden = true; cPanel.hidden = false; setActCaret(); });
+  document.getElementById('act-comet').addEventListener('click', () => { actMenu.hidden = true; msgPanel.hidden = true; cPanel.hidden = false; setActCaret(); });
   document.getElementById('comet-launch').addEventListener('click', () => launchComet());
   const fireRandomComet = () => {                       // random direction + aim, then fire — spam-clickable
     dEl.value = Math.floor(Math.random()*360);
@@ -1537,6 +1605,50 @@
     dir: Math.random()*2*Math.PI,
     impact: Math.random()*6 - 3                          // through the inner system, ±3 AU
   }));
+
+  // ---- lightspeed message: a radio pulse crosses the frozen system ----
+  // At any playback rate where the planets visibly move, light is effectively
+  // instantaneous — so the sim pauses and the pulse crawls on the wall clock,
+  // compressed to MSG_LM_PER_SEC. The counter shows the true light-time.
+  const LM_PER_AU = 8.3167;          // one AU = 8.3167 light-minutes (499 s)
+  const MSG_LM_PER_SEC = 3;          // animation: 1 real second = 3 light-minutes
+  let msg = null;                    // { to, x0,y0,x1,y1, totalLm, doneLm, prevRate }
+  let msgFx = [];                    // expanding rings at send + arrival
+  const msgStatus = document.getElementById('msg-status'), msgText = document.getElementById('msg-text');
+  const MSG_TARGETS = ['Mars', 'Jupiter'].map(n => planets.find(p => p.name === n));
+  function lmTo(t){ return Math.hypot(t.x-EARTH.x, t.y-EARTH.y) * LM_PER_AU; }
+  function updMsgRows(){
+    for (const t of MSG_TARGETS){
+      const el = document.getElementById('lm-' + t.name.toLowerCase());
+      el.textContent = (t.deleted || EARTH.deleted) ? '—' : lmTo(t).toFixed(1) + ' light-min';
+    }
+  }
+  function startMessage(t){
+    if (EARTH.deleted){ announce('📡 No Earth to transmit from', 'escape'); return; }
+    if (t.deleted){ announce(`📡 ${t.name} isn't there any more`, 'escape'); return; }
+    if (follow === EARTH) resetView();                  // the beam lives in the system view
+    msg = { to: t, x0: EARTH.x, y0: EARTH.y, x1: t.x, y1: t.y,
+            totalLm: lmTo(t), doneLm: 0, prevRate: timeRate };
+    msgFx.push({ x: EARTH.x, y: EARTH.y, born: performance.now() });
+    setRate(0);
+    actMenu.hidden = true; msgPanel.hidden = true; cPanel.hidden = true; setActCaret();
+    msgStatus.hidden = false;
+    sfx('launch');
+  }
+  function endMessage(note){
+    if (!msg) return;
+    if (note) announce(note, 'escape');
+    msgStatus.hidden = true;
+    msg = null;
+  }
+  document.getElementById('act-msg').addEventListener('click', () => { actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = false; setActCaret(); updMsgRows(); });
+  document.getElementById('msg-mars').addEventListener('click', () => startMessage(MSG_TARGETS[0]));
+  document.getElementById('msg-jupiter').addEventListener('click', () => startMessage(MSG_TARGETS[1]));
+  document.getElementById('msg-cancel').addEventListener('click', () => {
+    const r = msg ? msg.prevRate : 0;
+    endMessage('📡 Transmission abandoned');
+    setRate(r);
+  });
   // ---- satellite launch (planet view) ----
   const laEl = document.getElementById('la-slider'), laV = document.getElementById('la-val'), launchDirBtn = document.getElementById('launch-dir');
   function updLaunchLabel(){ const a = +laEl.value, band = a >= 35000 ? 'geostationary' : a >= 2000 ? 'MEO' : 'LEO';
