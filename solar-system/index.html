@@ -633,6 +633,9 @@
   // Event detection — runs every 0.01 sim-years (not per frame), with hysteresis
   // counted in passes so one wild frame during a close encounter can't false-fire.
   function detectPass(){
+    // Sun-relative detectors (ejections, captures) are meaningless without a
+    // Sun — with it deleted there's no "system" to leave or join.
+    if (!SUN.deleted)
     for (const p of planets){
       if (p.deleted) continue;
       if (aOf(p, SUN) <= 0){ if (++p._ub === 30) EMIT('eject', { name: p.name }); }  // ~0.3 yr sustained
@@ -642,6 +645,7 @@
       if (aOf(MOON, EARTH) <= 0){ if (++MOON._ubE >= 20){ MOON._torn = true; EMIT('moontorn', {}); } }
       else MOON._ubE = 0;
     }
+    if (!SUN.deleted)
     for (const c of comets){
       if (c.dead) continue;
       const a = aOf(c, SUN);
@@ -886,8 +890,9 @@
 
     const earthView = follow === EARTH;
     const zoomedIn = follow && !earthView && zoom > 20;
-    // orbit lines — sampled & compressed (true ellipses become smooth closed curves)
-    if (!zoomedIn && !earthView){
+    // orbit lines — sampled & compressed (true ellipses become smooth closed curves);
+    // no guides without a Sun to orbit
+    if (!zoomedIn && !earthView && !SUN.deleted){
       ctx.strokeStyle = 'rgba(120,140,180,0.16)'; ctx.lineWidth = 1;
       for (const p of planets){
         if (p.deleted || p.edited) continue;     // no nominal-orbit guide for removed/edited bodies
@@ -911,9 +916,10 @@
       for (const c of belt){ const bp = scr(c.x, c.y); ctx.fillRect(bp[0]-0.7, bp[1]-0.7, 1.4, 1.4); }
     }
 
-    // Sun (hidden in the local Earth view, so the rest of the system doesn't wheel around Earth)
+    // Sun (hidden in the local Earth view, so the rest of the system doesn't wheel
+    // around Earth — and gone for real when the user deletes it)
     let sxp, syp;
-    if (!earthView){
+    if (!earthView && !SUN.deleted){
       [sxp, syp] = scr(SUN.x, SUN.y);
       SUN._sx = sxp; SUN._sy = syp; SUN._drawn = true;
       // corona: breathes slowly, grows with zoom, flares briefly when something falls in
@@ -1027,7 +1033,7 @@
 
     // labels (reset the per-frame declutter tracker first)
     placedLabels.length = 0;
-    if (!earthView) label('Sun', SUN.color, sxp, syp, 15);
+    if (!earthView && !SUN.deleted) label('Sun', SUN.color, sxp, syp, 15);
     for (const p of shown){ const [bx, by] = scr(p.x, p.y); label(p.name, p.color, bx, by, (earthView && p===EARTH ? 14*zoom+6 : p.size+5)); }
     if (!earthView && !MOON.deleted && !EARTH.deleted && Math.hypot(mX-eix, mY-eiy) > 11) label('Moon', MOON.color, mX, mY, MOON.size+5);   // earth view labels its own Moon
 
@@ -1039,14 +1045,16 @@
       fadedTrail(c.trail, q => scr(q.x, q.y), `rgb(${col})`, me < 0.3 ? 1.4 : 2, 0.6);
       const [hx, hy] = scr(c.x, c.y);
       c._sx = hx; c._sy = hy; c._drawn = true; c._hitR = headR;
-      if (me < 0.3){                                               // anti-solar gas tail for small icy comets
-        const [ssx, ssy] = scr(SUN.x, SUN.y);
-        let tx = hx-ssx, ty = hy-ssy; const td = Math.hypot(tx,ty) || 1; tx/=td; ty/=td;
-        const r = Math.hypot(c.x-baryX, c.y-baryY), tl = Math.max(8, Math.min(46, 12/Math.max(r,0.2)));
-        const tg = ctx.createLinearGradient(hx, hy, hx+tx*tl, hy+ty*tl);
-        tg.addColorStop(0,`rgba(${col},0.7)`); tg.addColorStop(1,`rgba(${col},0)`);
-        ctx.strokeStyle = tg; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
-        ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(hx+tx*tl, hy+ty*tl); ctx.stroke();
+      if (me < 0.3){                                               // small icy comet: anti-solar gas tail (no Sun, no tail)
+        if (!SUN.deleted){
+          const [ssx, ssy] = scr(SUN.x, SUN.y);
+          let tx = hx-ssx, ty = hy-ssy; const td = Math.hypot(tx,ty) || 1; tx/=td; ty/=td;
+          const r = Math.hypot(c.x-baryX, c.y-baryY), tl = Math.max(8, Math.min(46, 12/Math.max(r,0.2)));
+          const tg = ctx.createLinearGradient(hx, hy, hx+tx*tl, hy+ty*tl);
+          tg.addColorStop(0,`rgba(${col},0.7)`); tg.addColorStop(1,`rgba(${col},0)`);
+          ctx.strokeStyle = tg; ctx.lineWidth = 2.2; ctx.lineCap = 'round';
+          ctx.beginPath(); ctx.moveTo(hx,hy); ctx.lineTo(hx+tx*tl, hy+ty*tl); ctx.stroke();
+        }
       } else {                                                     // glow for a massive interloper
         const gg = ctx.createRadialGradient(hx,hy,0,hx,hy,headR*2.4);
         gg.addColorStop(0,`rgba(${col},0.5)`); gg.addColorStop(1,`rgba(${col},0)`);
@@ -1199,6 +1207,7 @@
     if (comets.includes(b)) b.dead = true;                                  // a comet / interloper
     else { b.deleted = true; if (b === EARTH) MOON.deleted = true; }         // a Moon with no Earth makes no sense
     if (follow === b){ follow = null; zoom = 1; }                            // stop tracking a ghost
+    EMIT('removed', { name: b.name, sun: b === SUN });
     E0 = energy(); deselect();
   });
   function pick(o){
@@ -1376,6 +1385,10 @@
     else if (type === 'flung') announce(`☄ ${d.name} flung back out of the system`, 'escape');
     else if (type === 'escape') announce(`☄ ${d.name} left the system`, 'escape');
     else if (type === 'moontorn'){ announce('The Moon has been torn from Earth', 'eject'); sfx('eject'); }
+    else if (type === 'removed'){
+      if (d.sun){ announce('The Sun is gone — nothing holds the planets now', 'eject'); sfx('eject'); }
+      else announce(`${d.name} removed from the simulation`, 'escape');
+    }
     else if (type === 'reset') announce('System restored', 'escape');
   };
   FX = onFx;
