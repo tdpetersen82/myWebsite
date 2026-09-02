@@ -310,6 +310,7 @@
     <button id="act-storm" class="btn act" type="button" title="~100 icy specks from every direction. Massless — they never disturb the planets.">🌩 Comet storm</button>
     <button id="act-star" class="btn act" type="button" title="A quarter-solar-mass intruder crosses the system — orbits bend as it passes, and anything it sweeps too close to is consumed">⭐ Rogue star flyby</button>
     <button id="act-probe" class="btn act" type="button" title="Launch a spacecraft from Earth to Mars on a real Hohmann transfer orbit — it waits for the launch window, then coasts on gravity for months while the planets keep moving">🚀 Probe to Mars</button>
+    <button id="act-jupiter" class="btn act" type="button" title="Launch a spacecraft from Earth to Jupiter on a real Hohmann transfer — a ~2.7-year cruise out past the asteroid belt, waiting for the launch window first">🪐 Probe to Jupiter</button>
     <button id="act-moon" class="btn act" type="button" title="Fly a probe from Earth to the Moon in a to-scale Earth–Moon view — see how far and how small the Moon really is">🌙 Probe to the Moon</button>
     <button id="act-msg" class="btn act" type="button" title="Send a radio pulse from Earth at the true speed of light — time holds still while it crosses">📡 Lightspeed message…</button>
   </div>
@@ -435,12 +436,12 @@
     </div>
   </div>
 
-  <h2>Twelve experiments worth running</h2>
+  <h2>A dozen-plus experiments worth running</h2>
   <ol>
     <li><b>Put a comet into Jupiter.</b> Open ⚡ Actions → ☄ Launch a comet, aim with the direction and aim sliders, and fire. A hit flashes on impact and lands in the event feed.</li>
     <li><b>Fire the comet storm.</b> ~100 random specks at once — then watch the feed report captures, ejections, and impacts as gravity sorts them out.</li>
     <li><b>Invite a rogue star.</b> A quarter-solar-mass intruder crosses the system: orbits bend as it passes, and anything it sweeps too close to is consumed — the event feed keeps score of the damage.</li>
-    <li><b>Fly a probe to Mars.</b> ⚡ Actions → Probe to Mars: the spacecraft waits for the launch window (Mars has to lead Earth by about 44°), then coasts along a real Hohmann transfer orbit for roughly eight months while the planets keep moving — arriving where Mars will be, not where it is now.</li>
+    <li><b>Fly a probe to Mars — or Jupiter.</b> ⚡ Actions → Probe to Mars: the spacecraft waits for the launch window (Mars has to lead Earth by about 44°), then coasts along a real Hohmann transfer orbit for roughly eight months while the planets keep moving — arriving where Mars will be, not where it is now. <b>Probe to Jupiter</b> is the same idea at grand scale: a ~97° launch window and a ~2.7-year cruise out past the asteroid belt.</li>
     <li><b>Fly a probe to the Moon.</b> ⚡ Actions → Probe to the Moon opens a to-scale Earth–Moon view — Earth and the Moon at their true relative size and distance, with the geostationary-satellite ring drawn in for contrast. The probe rides a real translunar trajectory: injected at about 10.8 km/s (the actual Apollo departure speed) and coasting three days on Earth's and the Moon's gravity.</li>
     <li><b>Send a lightspeed message.</b> ⚡ Actions → Lightspeed message: a radio pulse leaves Earth for Mars (3 to 22 light-minutes away, depending on where the orbits stand) or Jupiter (33 to 54). The planets hold still while it crawls — because at any speed where you can see planets move, light is effectively instantaneous.</li>
     <li><b>Delete the Sun.</b> Click it, open <i>Adjust this body</i>, delete. The planets fly off along near-straight lines — the leash made visible.</li>
@@ -1789,40 +1790,41 @@
   // Earth), then is injected prograde from Earth at the transfer-orbit speed and
   // coasts on gravity — the planets keep moving through the months-long cruise.
   const MARS = planets.find(p => p.name === 'Mars');
+  const JUPITER = planets.find(p => p.name === 'Jupiter');
   const probeStatus = document.getElementById('probe-status'), probeText = document.getElementById('probe-text');
   let probePlan = null, probeCraft = null;
   const distSun = b => Math.hypot(b.x-SUN.x, b.y-SUN.y);
-  function transferTime(){ const at = (distSun(EARTH)+distSun(MARS))/2; return Math.PI*Math.sqrt(at*at*at/(G*SUN.m)); }
-  function startProbe(){
+  const transferTime = tgt => { const at = (distSun(EARTH)+distSun(tgt))/2; return Math.PI*Math.sqrt(at*at*at/(G*SUN.m)); };
+  function startProbe(target){
     if (EARTH.deleted){ announce('🚀 No Earth to launch from', 'escape'); return; }
-    if (MARS.deleted){ announce("🚀 Mars isn't there any more", 'escape'); return; }
+    if (target.deleted){ announce(`🚀 ${target.name} isn't there any more`, 'escape'); return; }
     if (msg){ announce('🚀 Finish the transmission first', 'escape'); return; }   // the two chips share the corner + fight over time
     if (probePlan) return;                                     // one mission at a time
     if (follow === EARTH) resetView();
     actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; setActCaret();
-    probePlan = { phase: 'wait', savedRate: timeRate, waitStart: t };
+    probePlan = { phase: 'wait', savedRate: timeRate, waitStart: t, target };
     setRate(timeRate <= 0 ? 16 : Math.max(timeRate, 16));       // fast-forward to the launch window
     probeStatus.hidden = false;
   }
   function injectProbe(tT){
-    const mu = G*SUN.m;
-    // Aim at where Mars WILL be after the transfer, and solve Lambert for the
-    // exact intercept velocity (accounts for Mars's eccentric orbit).
-    const mFut = keplerProp(MARS, tT);
+    const mu = G*SUN.m, target = probePlan.target;
+    // Aim at where the target WILL be after the transfer, and solve Lambert for
+    // the exact intercept velocity (accounts for the target's eccentric orbit).
+    const mFut = keplerProp(target, tT);
     let vx, vy;
     const v1 = lambertV([EARTH.x-SUN.x, EARTH.y-SUN.y], [mFut[0]-SUN.x, mFut[1]-SUN.y], tT, mu);
     if (v1){ vx = SUN.vx+v1[0]; vy = SUN.vy+v1[1]; }
     else {                                                      // fallback: plain prograde Hohmann kick
-      const r1 = distSun(EARTH), at = (r1+distSun(MARS))/2, vp = Math.sqrt(mu*(2/r1 - 1/at));
+      const r1 = distSun(EARTH), at = (r1+distSun(target))/2, vp = Math.sqrt(mu*(2/r1 - 1/at));
       let dvx = EARTH.vx-SUN.vx, dvy = EARTH.vy-SUN.vy; const vl = Math.hypot(dvx,dvy)||1;
       vx = SUN.vx + dvx/vl*vp; vy = SUN.vy + dvy/vl*vp;
     }
     let ux = EARTH.vx-SUN.vx, uy = EARTH.vy-SUN.vy; const ul = Math.hypot(ux,uy)||1;   // nudge start just off Earth
     probeCraft = { x: EARTH.x+ux/ul*0.012, y: EARTH.y+uy/ul*0.012, vx, vy,
-                   trail: [], t0: t, target: MARS, closest: Infinity, arrived: false, done: false };
+                   trail: [], t0: t, target, closest: Infinity, arrived: false, done: false };
     probes.push(probeCraft);
     probePlan.phase = 'cruise'; probePlan.tTransfer = tT;
-    setRate(probePlan.savedRate > 0 ? Math.min(probePlan.savedRate, 8) : 8);   // a watchable cruise pace
+    setRate(Math.max(6, Math.min(24, Math.round(tT*5))));       // pace the cruise to the distance (far targets run faster)
     msgFx.push({ x: EARTH.x, y: EARTH.y, born: performance.now() });
     sfx('launch');
   }
@@ -1830,35 +1832,38 @@
   function abortProbe(note){ if (note) announce(note, 'escape'); finishProbe(); }
   function stepProbe(){
     if (!probePlan) return;
-    if (EARTH.deleted || MARS.deleted){ abortProbe('🚀 Mission scrubbed — a body was lost'); return; }
+    const target = probePlan.target, name = target.name;
+    if (EARTH.deleted || target.deleted){ abortProbe('🚀 Mission scrubbed — a body was lost'); return; }
     if (probePlan.phase === 'wait'){
-      const r2 = distSun(MARS), mu = G*SUN.m, tT = transferTime();
-      const omM = Math.sqrt(mu/(r2*r2*r2));                     // Mars mean motion
-      let alpha = Math.PI - omM*tT;                             // required lead of Mars ahead of Earth
+      const r2 = distSun(target), mu = G*SUN.m, tT = transferTime(target);
+      const omM = Math.sqrt(mu/(r2*r2*r2));                     // target mean motion
+      let alpha = Math.PI - omM*tT;                             // required lead of the target ahead of Earth
       alpha = ((alpha % (2*Math.PI)) + 2*Math.PI) % (2*Math.PI);
-      const thE = Math.atan2(EARTH.y-SUN.y, EARTH.x-SUN.x), thM = Math.atan2(MARS.y-SUN.y, MARS.x-SUN.x);
+      const thE = Math.atan2(EARTH.y-SUN.y, EARTH.x-SUN.x), thM = Math.atan2(target.y-SUN.y, target.x-SUN.x);
       const lead = ((thM-thE) % (2*Math.PI) + 2*Math.PI) % (2*Math.PI);
       let diff = Math.abs(lead-alpha); if (diff > Math.PI) diff = 2*Math.PI - diff;
-      probeText.textContent = `🛰 Waiting for launch window · ${(diff*180/Math.PI).toFixed(0)}° to alignment`;
-      if (diff < 0.10 || t - probePlan.waitStart > 3) injectProbe(tT);   // 3-yr safety > one synodic period
+      probeText.textContent = `🛰 Waiting for the ${name} launch window · ${(diff*180/Math.PI).toFixed(0)}° to alignment`;
+      if (diff < 0.10 || t - probePlan.waitStart > 13) injectProbe(tT);   // safety > one synodic period (13 yr covers Jupiter)
     } else {
       const pr = probeCraft;
       if (!pr){ finishProbe(); return; }
-      const days = (t - pr.t0)*365.25;
+      const days = (t - pr.t0)*365.25, yrs = (t - pr.t0);
+      const elapsed = yrs >= 1 ? `${yrs.toFixed(1)} yr` : `day ${Math.round(days)}`;
       if (pr.arrived){
         msgFx.push({ x: pr.x, y: pr.y, born: performance.now() });
-        announce(`🚀 Probe reached Mars — ${Math.round(days)} days in transit`, 'capture'); sfx('capture');
+        announce(`🚀 Probe reached ${name} — ${yrs >= 1 ? yrs.toFixed(1)+' years' : Math.round(days)+' days'} in transit`, 'capture'); sfx('capture');
         finishProbe();
       } else if (t - pr.t0 > probePlan.tTransfer*1.7){
-        announce(`🚀 Probe missed Mars — closest ${pr.closest.toFixed(2)} AU (off the launch window)`, 'escape');
+        announce(`🚀 Probe missed ${name} — closest ${pr.closest.toFixed(2)} AU (off the launch window)`, 'escape');
         finishProbe();
       } else {
-        const dM = Math.hypot(pr.x-MARS.x, pr.y-MARS.y);
-        probeText.textContent = `🚀 → Mars · day ${Math.round(days)} · ${dM.toFixed(2)} AU to Mars`;
+        const dM = Math.hypot(pr.x-target.x, pr.y-target.y);
+        probeText.textContent = `🚀 → ${name} · ${elapsed} · ${dM.toFixed(2)} AU to ${name}`;
       }
     }
   }
-  document.getElementById('act-probe').addEventListener('click', startProbe);
+  document.getElementById('act-probe').addEventListener('click', () => startProbe(MARS));
+  document.getElementById('act-jupiter').addEventListener('click', () => startProbe(JUPITER));
   document.getElementById('probe-cancel').addEventListener('click', () => abortProbe());
 
   // ---- Earth → Moon: a to-scale Earth–Moon view ----

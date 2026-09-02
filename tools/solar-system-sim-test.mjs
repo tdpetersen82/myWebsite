@@ -201,6 +201,20 @@ const ok = (cond, name, detail = '') => {
     for (let i=0;i<steps;i++) api.advance(32,1);
     ok(pr.closest < 0.05, `probe rendezvous with Mars at ${stageDeg}° (closest ${pr.closest.toFixed(3)} AU)`);
   }
+  // Earth → Jupiter: a ~2.7-yr Hohmann transfer must also reach its target
+  {
+    const api = boot();
+    const E = api.EARTH, S = api.SUN, J = api.planets.find(p => p.name === 'Jupiter'), mu = api.G*S.m;
+    const r1 = Math.hypot(E.x-S.x, E.y-S.y), at = (r1+J.a)/2, tT = Math.PI*Math.sqrt(at*at*at/mu);
+    const jFut = api.keplerProp(J, tT);
+    const v1 = api.lambertV([E.x-S.x, E.y-S.y], [jFut[0]-S.x, jFut[1]-S.y], tT, mu);
+    ok(!!v1, 'Jupiter Lambert solves');
+    const pr = { x:E.x, y:E.y, vx:S.vx+v1[0], vy:S.vy+v1[1], trail:[], closest:Infinity, arrived:false, done:false, target:J };
+    api.addProbe(pr);
+    const steps = Math.ceil((tT*1.05)/(32*api.DT));
+    for (let i=0;i<steps;i++) api.advance(32,1);
+    ok(pr.closest < 0.05, `probe rendezvous with Jupiter (closest ${pr.closest.toFixed(3)} AU, ${tT.toFixed(2)} yr)`);
+  }
 }
 
 // ── T8c: Earth→Moon translunar injection reaches the Moon ──
