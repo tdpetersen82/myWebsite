@@ -54,7 +54,12 @@ function FeltLogo() {
   );
 }
 
-function BrassRail({ bankroll, biggestWin, spinsPlayed, spinsWon, peak, showHints, onToggleHints, compact }) {
+// Six-figure chip counts get the compact form so the rail never overflows the felt.
+function fmtRail(n) {
+  return n >= 100000 ? '$' + (Math.round(n / 100) / 10).toLocaleString() + 'k' : '$' + n.toLocaleString();
+}
+
+function BrassRail({ bankroll, biggestWin, spinsPlayed, spinsWon, peak, showHints, onToggleHints, laPartage, onToggleLaPartage, compact }) {
   const winRate = spinsPlayed ? Math.round(spinsWon / spinsPlayed * 100) : null;
   if (compact) {
     return (
@@ -74,7 +79,7 @@ function BrassRail({ bankroll, biggestWin, spinsPlayed, spinsWon, peak, showHint
         }}>← Lobby</a>
         <div style={{ display:'flex', alignItems:'baseline', gap: 6 }}>
           <span style={{ fontSize: 8, letterSpacing:'.24em', color:'var(--ivory-dim)', textTransform:'uppercase' }}>Bankroll</span>
-          <span style={{ fontFamily:"'Playfair Display', serif", fontStyle:'italic', fontWeight: 700, fontSize: 19, color:'var(--brass-2)' }}>${bankroll.toLocaleString()}</span>
+          <span style={{ fontFamily:"'Playfair Display', serif", fontStyle:'italic', fontWeight: 700, fontSize: 19, color:'var(--brass-2)' }}>{fmtRail(bankroll)}</span>
         </div>
         <button onClick={onToggleHints} style={{
           padding:'6px 10px',
@@ -146,23 +151,47 @@ function BrassRail({ bankroll, biggestWin, spinsPlayed, spinsWon, peak, showHint
             fontStyle:'italic', fontWeight: 600, letterSpacing:'.02em', lineHeight: 1
           }}>Limestone Games</div>
           <div style={{ fontSize: 9, letterSpacing:'.32em', color:'var(--ivory-dim)', textTransform:'uppercase', marginTop: 3 }}>
-            Vegas Strip · Single Zero
+            European Table · Single Zero
           </div>
         </div>
       </a>
 
       <div style={{ flex: 1, display:'flex', alignItems:'center', justifyContent:'flex-end', gap: 0 }}>
-        <RailStat label="Bankroll" value={`$${bankroll.toLocaleString()}`} accent />
-        <RailStat label="Biggest" value={biggestWin > 0 ? `$${biggestWin.toLocaleString()}` : '—'} highlight={biggestWin >= 500} />
+        <RailStat label="Bankroll" value={fmtRail(bankroll)} accent />
+        <RailStat label="Biggest" value={biggestWin > 0 ? fmtRail(biggestWin) : '—'} highlight={biggestWin >= 500} />
         <RailStat label="Spins" value={spinsPlayed || '—'} />
         <RailStat label="Win Rate" value={winRate !== null ? `${winRate}%` : '—'} />
-        <RailStat label="Peak" value={`$${peak.toLocaleString()}`} small />
+        <RailStat label="Peak" value={fmtRail(peak)} small />
+        <button
+          onClick={onToggleLaPartage}
+          title={laPartage
+            ? 'La partage is on — zero refunds half of even-money bets (1.35% edge on them). Click to switch back to classic European rules.'
+            : 'Turn on la partage — the French rule where zero refunds half of red/black, odd/even and high/low bets, cutting their edge to 1.35%.'}
+          style={{
+            marginLeft: 10,
+            padding:'8px 11px',
+            background: laPartage
+              ? 'linear-gradient(180deg, #e6c590, #c9a26a)'
+              : 'rgba(20,12,6,.6)',
+            color: laPartage ? '#1a1208' : 'var(--brass-2)',
+            border:'1px solid rgba(201,162,106,.5)',
+            borderRadius: 999,
+            fontSize: 10, fontWeight: 700, letterSpacing:'.18em',
+            textTransform:'uppercase',
+            cursor:'pointer',
+            whiteSpace:'nowrap',
+            transition:'all .2s',
+            boxShadow: laPartage ? '0 4px 10px rgba(230,197,144,.35)' : '0 2px 6px rgba(0,0,0,.3)'
+          }}
+        >
+          {laPartage ? '½ Partage' : 'Partage'}
+        </button>
         <button
           onClick={onToggleHints}
           title={showHints ? 'Hide the odds coach' : 'Show the odds coach'}
           style={{
-            marginLeft: 14,
-            padding:'8px 14px',
+            marginLeft: 10,
+            padding:'8px 11px',
             background: showHints
               ? 'linear-gradient(180deg, #e6c590, #c9a26a)'
               : 'rgba(20,12,6,.6)',
@@ -177,7 +206,7 @@ function BrassRail({ bankroll, biggestWin, spinsPlayed, spinsWon, peak, showHint
             boxShadow: showHints ? '0 4px 10px rgba(230,197,144,.35)' : '0 2px 6px rgba(0,0,0,.3)'
           }}
         >
-          {showHints ? '✦ Coach On' : 'Coach Off'}
+          {showHints ? '✦ Coach' : 'Coach'}
         </button>
       </div>
     </div>
@@ -187,10 +216,10 @@ function BrassRail({ bankroll, biggestWin, spinsPlayed, spinsWon, peak, showHint
 function RailStat({ label, value, accent, highlight, small }) {
   return (
     <div style={{
-      padding:'4px 18px',
+      padding:'4px 10px',
       borderLeft:'1px solid rgba(201,162,106,.18)',
       textAlign:'right',
-      minWidth: small ? 80 : 100
+      minWidth: small ? 66 : 84
     }}>
       <div style={{ fontSize: 8, letterSpacing:'.28em', color:'var(--ivory-dim)', textTransform:'uppercase', fontWeight: 600 }}>{label}</div>
       <div style={{
@@ -280,9 +309,9 @@ function ResultBigNumber({ result }) {
 
 // Exact-odds coach — roulette's version of the blackjack EV coach. Every
 // figure is computed over the 37 pockets, not estimated.
-function CoachBar({ bets, visible, portrait }) {
+function CoachBar({ bets, visible, portrait, laPartage }) {
   if (!visible) return null;
-  const out = computeOutcomes(bets);
+  const out = computeOutcomes(bets, { laPartage });
 
   const shell = {
     margin: portrait ? '0 10px' : '0 24px',
@@ -308,8 +337,12 @@ function CoachBar({ bets, visible, portrait }) {
           fontSize: portrait ? 12.5 : 14, color:'var(--ivory)', lineHeight: 1.3
         }}>
           {portrait
-            ? 'Pick your variance — every bet pays the house the same 2.7%.'
-            : 'Every bet on this wheel gives the house the same 2.7% — pick your variance, not your edge. Outside bets hit almost half the time; a straight number hits once in 37 but pays 35:1.'}
+            ? (laPartage
+              ? 'La partage is on — even-money bets cost half as much (1.35%).'
+              : 'Pick your variance — every bet pays the house the same 2.7%.')
+            : (laPartage
+              ? 'La partage is on: zero refunds half of red/black, odd/even and high/low, cutting those bets to a 1.35% edge. Everything else still pays the house 2.7%.'
+              : 'Every bet on this wheel gives the house the same 2.7% — pick your variance, not your edge. Outside bets hit almost half the time; a straight number hits once in 37 but pays 35:1.')}
         </span>
       </div>
     );
@@ -356,6 +389,7 @@ function ResultBanner({ kind, payout }) {
     bigwin: { text: `BIG WIN +$${payout}`, color:'#ffe79b', border:'rgba(255,231,155,.7)' },
     straight: { text: `STRAIGHT UP +$${payout}`, color:'#ffe79b', border:'rgba(255,231,155,.85)' },
     push: { text: 'EVEN — STAKE BACK', color:'#ffd27a', border:'rgba(255,210,122,.5)' },
+    lp: { text: `ZERO — HALF BACK −$${payout}`, color:'#ffd27a', border:'rgba(255,210,122,.5)' },
     lose: { text: payout > 0 ? `NO WIN −$${payout}` : 'NO WIN', color:'#ff9286', border:'rgba(255,146,134,.5)' }
   };
   const m = map[kind] || map.lose;

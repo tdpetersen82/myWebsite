@@ -49,7 +49,7 @@
     // the directory index, the game sits beside it.
     { id: 'dog-breed-finder',  name: 'Dog Breed Finder',  cat: 'puzzle',  desc: 'Answer eight questions, see which breeds fit.', color: '#A9743C', url: '/dogs/', added: '2026-08-13' },
     { id: 'blackjack',         name: 'Blackjack',         cat: 'casino',  desc: 'Hit 21 with strategy hints.',      color: '#7BC97B', added: '2026-03-27' },
-    { id: 'roulette',          name: 'Roulette',          cat: 'casino',  desc: 'Spin the European wheel.',         color: '#F08488', added: '2026-03-27' },
+    { id: 'roulette',          name: 'Roulette',          cat: 'casino',  desc: 'European single-zero wheel with la partage.', color: '#F08488', added: '2026-03-27' },
     { id: 'video-poker',       name: 'Video Poker',       cat: 'casino',  desc: 'Jacks or Better. Hold smart.',     color: '#A78BFA', added: '2026-03-27' },
     { id: 'solitaire',         name: 'Solitaire',         cat: 'casino',  desc: 'Klondike — beat the deck.',        color: '#5DC4D9', added: '2026-05-06' },
     { id: 'freecell',          name: 'FreeCell',          cat: 'casino',  desc: 'All cards up. Pure skill.',        color: '#3FA796', added: '2026-06-18' },

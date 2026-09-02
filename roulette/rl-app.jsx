@@ -12,6 +12,7 @@ const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
   "dealerName": "Melissa",
   "showHints": true,
   "soundOn": false,
+  "laPartage": false,
   "startingBankroll": 1000
 }/*EDITMODE-END*/;
 
@@ -281,7 +282,7 @@ function App() {
     const isRedN = !isZero && RED_NUMBERS.includes(num);
     const colorKey = isZero ? 'result_zero' : (isRedN ? 'result_red' : 'result_black');
 
-    const r = settleBets(bets, num);
+    const r = settleBets(bets, num, { laPartage: tweaks.laPartage });
     const winnings = r.winnings;
     const profit = r.profit;
     const hadStraight = r.hadStraight;
@@ -324,6 +325,8 @@ function App() {
       setResultBanner({ kind: 'win', payout: profit });
     } else if (profit === 0 && winnings > 0) {
       setResultBanner({ kind: 'push', payout: 0 });
+    } else if (r.lpBack > 0) {
+      setResultBanner({ kind: 'lp', payout: -profit });
     } else {
       setResultBanner({ kind: 'lose', payout: -profit });
     }
@@ -341,7 +344,7 @@ function App() {
       } else if (profit > 0) {
         say('win_small', 'happy');
         if (tweaks.soundOn) RL_SFX.win();
-      } else if (winnings > 0) {
+      } else if (profit === 0 && winnings > 0) {
         say('push');
       } else {
         if (lossStreakRef.current >= 3) say('lose_streak', 'sad');
@@ -436,6 +439,7 @@ function App() {
         </TweakSection>
         <TweakSection title="Game">
           <TweakToggle label="Odds coach" value={tweaks.showHints} onChange={v => setTweak('showHints', v)} />
+          <TweakToggle label="La partage (half back on 0)" value={tweaks.laPartage} onChange={v => setTweak('laPartage', v)} />
           <TweakToggle label="Sound" value={tweaks.soundOn} onChange={v => setTweak('soundOn', v)} />
           <TweakNumber label="Starting bankroll" value={tweaks.startingBankroll} onChange={v => setTweak('startingBankroll', Number(v))} min={100} max={100000} step={100} />
           <TweakButton label="Reset bankroll" onClick={() => {
@@ -482,6 +486,8 @@ function App() {
             bankroll={bankroll}
             showHints={tweaks.showHints}
             onToggleHints={() => setTweak('showHints', !tweaks.showHints)}
+            laPartage={tweaks.laPartage}
+            onToggleLaPartage={() => setTweak('laPartage', !tweaks.laPartage)}
           />
 
           <div style={{ display:'flex', alignItems:'center', justifyContent:'center', gap: 14, position:'relative' }}>
@@ -497,7 +503,7 @@ function App() {
             <HistoryStrip history={history} />
           </div>
 
-          <CoachBar bets={bets} visible={tweaks.showHints && phase === 'betting'} portrait />
+          <CoachBar bets={bets} visible={tweaks.showHints && phase === 'betting'} portrait laPartage={tweaks.laPartage} />
 
           <div style={{ flex: 1, minHeight: 0 }}>
             <BettingBoard
@@ -574,6 +580,8 @@ function App() {
               peak={stats.biggestBankroll}
               showHints={tweaks.showHints}
               onToggleHints={() => setTweak('showHints', !tweaks.showHints)}
+              laPartage={tweaks.laPartage}
+              onToggleLaPartage={() => setTweak('laPartage', !tweaks.laPartage)}
             />
 
             {/* Wheel + result row */}
@@ -605,7 +613,7 @@ function App() {
               display:'flex', flexDirection:'column', gap: 12,
               justifyContent:'flex-end'
             }}>
-              <CoachBar bets={bets} visible={tweaks.showHints && phase === 'betting'} />
+              <CoachBar bets={bets} visible={tweaks.showHints && phase === 'betting'} laPartage={tweaks.laPartage} />
               <div style={{ padding:'0 24px' }}>
                 <BettingBoard
                   bets={bets}

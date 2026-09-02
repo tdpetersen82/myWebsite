@@ -28,6 +28,10 @@
   const RED_NUMBERS_SET = [1,3,5,7,9,12,14,16,18,19,21,23,25,27,30,32,34,36];
   const RED_LOOKUP = new Set(RED_NUMBERS_SET);
 
+  // Even-money bet types eligible for la partage — the French-table rule
+  // where zero refunds half of each even-money stake instead of taking it all.
+  const EVEN_MONEY_TYPES = new Set(['red', 'black', 'odd', 'even', 'low', 'high']);
+
   function range(a, b) { const r = []; for (let i = a; i <= b; i++) r.push(i); return r; }
   function rangeFilter(a, b, fn) { return range(a, b).filter(fn); }
 
@@ -135,7 +139,10 @@
 
   // ── Settlement ─────────────────────────────────────────
   // Returns gross winnings (stake + profit) for the winning bets.
-  function settleBets(bets, num) {
+  // rules.laPartage: when zero hits, each even-money bet gets half its stake
+  // back (total refund rounded UP to the whole dollar — the shared casino
+  // bankroll is integer, and the rounding only ever favors the player).
+  function settleBets(bets, num, rules) {
     let winnings = 0;
     let bestPayout = 0;
     let hadStraight = false;
@@ -149,19 +156,26 @@
         winners.push(b.id);
       }
     });
+    let lpBack = 0;
+    if (num === 0 && rules && rules.laPartage) {
+      let half = 0;
+      bets.forEach(b => { if (EVEN_MONEY_TYPES.has(b.type)) half += b.amount / 2; });
+      lpBack = Math.ceil(half);
+      winnings += lpBack;
+    }
     const totalBet = bets.reduce((s, b) => s + b.amount, 0);
-    return { winnings, totalBet, profit: winnings - totalBet, bestPayout, hadStraight, winners };
+    return { winnings, totalBet, profit: winnings - totalBet, bestPayout, hadStraight, winners, lpBack };
   }
 
   // ── Exact outcome distribution over the 37 pockets ─────
-  function computeOutcomes(bets) {
+  function computeOutcomes(bets, rules) {
     const totalBet = bets.reduce((s, b) => s + b.amount, 0);
     if (!totalBet) return null;
     let win = 0, push = 0, lose = 0, evSum = 0, best = 0;
     const covered = new Set();
     bets.forEach(b => b.numbers.forEach(n => covered.add(n)));
     for (let n = 0; n <= 36; n++) {
-      const r = settleBets(bets, n);
+      const r = settleBets(bets, n, rules);
       evSum += r.profit;
       best = Math.max(best, r.profit);
       if (r.profit > 0) win++;
@@ -171,7 +185,9 @@
     return {
       totalBet,
       winP: win / 37, pushP: push / 37, loseP: lose / 37,
-      ev: evSum / 37,                 // expected net per spin (always ≈ -2.70% of stake)
+      // expected net per spin: ≈ -2.70% of stake, except even-money stakes
+      // under la partage which cost half that (≈ -1.35%)
+      ev: evSum / 37,
       bestProfit: best,
       covered: covered.size,
       hasZero: covered.has(0)

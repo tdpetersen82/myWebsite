@@ -154,6 +154,56 @@ allBets.forEach(b => {
   check('straight best profit 350', out.bestProfit === 350);
 }
 
+// ── 6. La partage (French rule): zero refunds half of even-money stakes ──
+{
+  const LP = { laPartage: true };
+  const red10 = [{ id: 'red', type: 'red', numbers: byId.red.numbers, amount: 10 }];
+
+  // no rules object → behavior unchanged
+  const base = settleBets(red10, 0);
+  check('lp off: red loses all on 0', base.winnings === 0 && base.profit === -10 && base.lpBack === 0);
+
+  // $10 red on zero → $5 back
+  const r = settleBets(red10, 0, LP);
+  check('lp: $10 red on 0 refunds $5', r.winnings === 5 && r.profit === -5 && r.lpBack === 5);
+
+  // non-zero spins are untouched by the rule
+  const r18 = settleBets(red10, 18, LP);
+  check('lp: red win on 18 unchanged', r18.winnings === 20 && r18.profit === 10 && r18.lpBack === 0);
+
+  // odd stake rounds the refund UP: $5 red → ceil(2.5) = $3
+  const red5 = [{ id: 'red', type: 'red', numbers: byId.red.numbers, amount: 5 }];
+  const r5 = settleBets(red5, 0, LP);
+  check('lp: $5 red on 0 refunds $3 (ceil)', r5.winnings === 3 && r5.profit === -2 && r5.lpBack === 3);
+
+  // all six even-money types refund; dozens/columns/insides do not
+  ['red','black','odd','even','low','high'].forEach(t => {
+    const b = [{ id: t, type: t, numbers: byId[t === 'low' ? 'low' : t === 'high' ? 'high' : t].numbers, amount: 10 }];
+    const s = settleBets(b, 0, LP);
+    check(`lp: ${t} refunds half`, s.lpBack === 5 && s.profit === -5);
+  });
+  ['dz1', 'col1'].forEach(id => {
+    const c = byId[id];
+    const s = settleBets([{ id, type: c.type, numbers: c.numbers, amount: 10 }], 0, LP);
+    check(`lp: ${c.type} gets no refund`, s.lpBack === 0 && s.profit === -10);
+  });
+
+  // straight-up 0 still pays in full alongside the refund
+  const zeroPlusRed = [
+    { id: '0', type: 'straight', numbers: [0], amount: 10 },
+    { id: 'red', type: 'red', numbers: byId.red.numbers, amount: 10 }
+  ];
+  const rz = settleBets(zeroPlusRed, 0, LP);
+  check('lp: straight 0 + red on 0', rz.winnings === 365 && rz.profit === 345 && rz.lpBack === 5);
+
+  // EV: $10 even-money under la partage = -5/37 per spin (1.35% edge)
+  const out = computeOutcomes(red10, LP);
+  check('lp: red EV = -5/37', Math.abs(out.ev - (-5/37)) < 1e-12, `ev ${out.ev}`);
+  // ...and a straight bet's EV is untouched by the rule
+  const outS = computeOutcomes([{ id: 'n17', type: 'straight', numbers: [17], amount: 10 }], LP);
+  check('lp: straight EV still -10/37', Math.abs(outS.ev - (-10/37)) < 1e-12, `ev ${outS.ev}`);
+}
+
 console.log(failed === 0
   ? `✓ all ${passed} checks passed (${allBets.length} bet definitions × 37 outcomes verified)`
   : `${failed} FAILED, ${passed} passed`);

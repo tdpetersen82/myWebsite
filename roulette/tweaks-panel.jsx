@@ -140,7 +140,7 @@ const __TWEAKS_STYLE = `
 // Player-scoped fields (playerName, showHints, soundOn) are also mirrored to
 // window.CASINO_PLAYER so they persist across games and tabs. Fields not in
 // SHARED_TWEAKS stay local to this game (e.g. dealerName, feltColor, drawMode).
-const SHARED_TWEAKS = { showHints: 'showHints', soundOn: 'soundOn' };
+const SHARED_TWEAKS = { showHints: 'showHints', soundOn: 'soundOn', laPartage: 'rlLaPartage' };
 
 function useTweaks(defaults) {
   const [values, setValues] = React.useState(() => {

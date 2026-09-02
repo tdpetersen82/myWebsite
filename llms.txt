@@ -20,7 +20,7 @@ Key facts:
 - [Dog Breed Finder](https://limestonegames.com/dogs/): answer eight questions, see which breeds fit your home.
 - [Sudoku](https://limestonegames.com/sudoku/), [Minesweeper](https://limestonegames.com/minesweeper/), [Mahjong Solitaire](https://limestonegames.com/mahjong/), [2048](https://limestonegames.com/2048/): daily-break puzzles.
 - [Solitaire](https://limestonegames.com/solitaire/), [FreeCell](https://limestonegames.com/freecell/), [Spider Solitaire](https://limestonegames.com/spider-solitaire/): patience games.
-- [Blackjack](https://limestonegames.com/blackjack/), [Roulette](https://limestonegames.com/roulette/), [Video Poker](https://limestonegames.com/video-poker/), [Craps](https://limestonegames.com/craps/), [Texas Hold'em](https://limestonegames.com/texas-holdem/): play-money casino games with strategy hints — no real gambling.
+- [Blackjack](https://limestonegames.com/blackjack/), [European Roulette](https://limestonegames.com/roulette/) (single-zero wheel with optional la partage), [Video Poker](https://limestonegames.com/video-poker/), [Craps](https://limestonegames.com/craps/), [Texas Hold'em](https://limestonegames.com/texas-holdem/): play-money casino games with strategy hints — no real gambling.
 - Full catalogs: [Arcade](https://limestonegames.com/arcade/), [Kids](https://limestonegames.com/kids/), [Strategy](https://limestonegames.com/strategy/), [Casino](https://limestonegames.com/casino/)
 
 ## Printable score sheets, rules cards & boards
