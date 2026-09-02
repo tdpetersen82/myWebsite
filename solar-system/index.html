@@ -546,7 +546,7 @@
     for (const b of bodies){ px += b.m*b.vx; py += b.m*b.vy; M += b.m; }
     const vcx = px/M, vcy = py/M;
     for (const b of bodies){ b.vx -= vcx; b.vy -= vcy; }
-    for (const b of bodies){ b.trail = []; b.deleted = false; b._ub = 0; b._glow = 0; }
+    for (const b of bodies){ b.trail = []; b.deleted = false; b._ub = 0; b._glow = 0; b._ejected = false; b._reb = 0; }
     MOON.rel = []; MOON._torn = false; MOON._ubE = 0;
     const wasRun = t > 0.05;                       // suppress the toast on initial page load
     comets = []; flashes = []; cometSeq = 0; storm = []; launches = []; detAcc = 0;
@@ -689,8 +689,17 @@
     if (!SUN.deleted)
     for (const p of planets){
       if (p.deleted) continue;
-      if (aOf(p, SUN) <= 0){ if (++p._ub === 30) EMIT('eject', { name: p.name }); }  // ~0.3 yr sustained
-      else p._ub = 0;
+      if (aOf(p, SUN) <= 0){                                   // unbound from the Sun
+        p._reb = 0;
+        if (!p._ejected && ++p._ub === 30){ p._ejected = true; EMIT('eject', { name: p.name }); }  // ~0.3 yr sustained
+      } else {                                                 // bound again
+        p._ub = 0;
+        // A slingshot flickers a planet across the bound/unbound line many times;
+        // the _ejected latch stops it re-announcing on every crossing. Only a
+        // sustained recapture (~0.6 yr bound) clears it, so a genuine later
+        // ejection can still report.
+        if (p._ejected && ++p._reb >= 60){ p._ejected = false; p._reb = 0; }
+      }
     }
     if (!MOON.deleted && !EARTH.deleted && !MOON._torn){
       if (aOf(MOON, EARTH) <= 0){ if (++MOON._ubE >= 20){ MOON._torn = true; EMIT('moontorn', {}); } }

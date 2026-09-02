@@ -143,6 +143,24 @@ const ok = (cond, name, detail = '') => {
   ok(emits.filter(e => e[0] === 'eject').length === 1, 'no repeat eject while it stays unbound');
 }
 
+// ── T7b: a slingshot flickering across the bound/unbound line ejects once ──
+// (regression: a rogue-star pass re-announced the same planet on every crossing)
+{
+  const api = boot();
+  const emits = [];
+  api.onEmit((type, d) => emits.push([type, d]));
+  const p = api.EARTH;
+  const setUnbound = () => { p.x = 3; p.y = 0; p.vx = 0; p.vy = 20; };   // a<0 vs the Sun
+  const setBound   = () => { p.x = 1; p.y = 0; p.vx = 0; p.vy = 2*Math.PI; }; // ~circular, a>0
+  const pass = (fn, n) => { for (let i=0;i<n;i++){ fn(); api.detectPass(); } };
+  pass(setUnbound, 35);                              // → one eject
+  ok(emits.filter(e => e[0] === 'eject').length === 1, 'flicker: first unbound stretch → one eject');
+  pass(setBound, 10); pass(setUnbound, 35);         // brief dip back, then unbound again
+  ok(emits.filter(e => e[0] === 'eject').length === 1, 'flicker: brief recross does NOT re-eject');
+  pass(setBound, 70); pass(setUnbound, 35);         // sustained recapture clears the latch, then a real re-ejection
+  ok(emits.filter(e => e[0] === 'eject').length === 2, 'sustained rebind then unbound → a fresh eject');
+}
+
 // ── T8: capture detector — right period, no refire ──
 {
   const api = boot();
