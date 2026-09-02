@@ -8,6 +8,14 @@
 <link rel="canonical" href="https://limestonegames.com/solar-system/">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Solar System Simulator","description":"A real-time N-body gravity simulator: all eight planets and the Moon orbit a free-moving Sun. Zoom, edit any body, switch to Earth view, and launch comets to watch gravity reshape the system.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Arcade","item":"https://limestonegames.com/arcade/"},{"@type":"ListItem","position":3,"name":"Solar System"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
+  {"@type":"Question","name":"Is this a real simulation or a looping animation?","acceptedAnswer":{"@type":"Answer","text":"A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press R to rebuild the solar system from scratch."}},
+  {"@type":"Question","name":"Are the sizes and distances to scale?","acceptedAnswer":{"@type":"Answer","text":"Distances and masses are real (the planet data uses actual AU distances, solar-mass ratios, and eccentricities). Drawn sizes are not — at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click."}},
+  {"@type":"Question","name":"Why does the Sun wobble?","acceptedAnswer":{"@type":"Answer","text":"Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it. The real Sun does the same — detecting that wobble in other stars is one of the main ways exoplanets are discovered."}},
+  {"@type":"Question","name":"Can planets collide or be destroyed?","acceptedAnswer":{"@type":"Answer","text":"Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape."}},
+  {"@type":"Question","name":"What are the controls?","acceptedAnswer":{"@type":"Answer","text":"Scroll or pinch to zoom, click or tap any body to inspect it. Keyboard: Space pause, up/down arrows time rate, E Earth view, C comet, D data table, 0 reset view, R reset the system."}},
+  {"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes — free, in the browser, no download and no signup."}}
+]}</script>
 <meta property="og:title" content="Solar System Simulator — Interactive N-Body Gravity Sandbox | Limestone Games">
 <meta property="og:description" content="A real-time N-body solar system simulator. All eight planets and the Moon orbit a free-moving Sun — zoom, edit any body, and launch comets. Free, no downloads.">
 <meta property="og:type" content="website">
@@ -29,17 +37,22 @@
     --pnl:rgba(15,21,34,0.9); --pnl-line:rgba(150,170,210,0.26);
     --ink:#e6edf8; --soft:#9fabc2; --dim:#7c869c; --acc:#6f9dff;
   }
-  html,body{margin:0;height:100%;background:#05060a;overflow:hidden;}
-  canvas{display:block;cursor:crosshair;}
+  html{scroll-behavior:smooth;}
+  html,body{margin:0;background:#05060a;}
+  /* The sim is a self-contained viewport-height app; the page scrolls past it
+     to the article below. Everything that was position:fixed is absolute
+     inside #app so it stays with the sim instead of following the reader. */
+  #app{position:relative;height:100vh;height:100dvh;overflow:hidden;}
+  #c{display:block;cursor:crosshair;}
 
   /* Back-nav — visitors landing from search need a way out. */
-  #ss-nav{position:fixed;top:14px;left:16px;z-index:8;display:flex;gap:14px;
+  #ss-nav{position:absolute;top:14px;left:16px;z-index:8;display:flex;gap:14px;
     pointer-events:auto;font:600 12px/1 system-ui,sans-serif;}
   #ss-nav a{color:#9fb2d6;text-decoration:none;text-shadow:0 1px 3px #000;white-space:nowrap;}
   #ss-nav a:hover{color:#fff;}
 
   /* Top strip: title + clock + energy dot. The data table lives in the drawer. */
-  #hud{position:fixed;top:42px;left:16px;pointer-events:none;color:#cfd6e6;text-shadow:0 1px 3px #000;}
+  #hud{position:absolute;top:42px;left:16px;pointer-events:none;color:#cfd6e6;text-shadow:0 1px 3px #000;}
   #hud h1{font:600 15px/1.3 system-ui,sans-serif;margin:0 0 3px;color:#fff;letter-spacing:.2px;}
   #time{font:12px/1.5 ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--dim);
     display:flex;align-items:center;gap:7px;font-variant-numeric:tabular-nums;}
@@ -68,7 +81,7 @@
   .btn.danger:hover{background:rgba(180,72,72,0.72);}
 
   /* Comet launcher */
-  #comet-ui{position:fixed;top:14px;right:16px;font:600 12px/1.3 system-ui,sans-serif;color:var(--ink);text-align:right;}
+  #comet-ui{position:absolute;top:14px;right:16px;font:600 12px/1.3 system-ui,sans-serif;color:var(--ink);text-align:right;}
   #comet-panel{margin-top:8px;padding:13px 14px 11px;width:214px;text-align:left;}
   #comet-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px;}
   #comet-launch{flex:1 1 100%;text-align:center;}
@@ -77,7 +90,7 @@
   #comet-storm:hover{background:rgba(120,82,166,0.85);}
 
   /* Selection card: the one place a body's stats + controls live. */
-  #edit-panel{position:fixed;left:16px;bottom:72px;width:226px;padding:13px 14px 11px;}
+  #edit-panel{position:absolute;left:16px;bottom:72px;width:226px;padding:13px 14px 11px;}
   #edit-head{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;font-weight:700;}
   #edit-head b{color:#fff;font-size:13px;}
   #edit-close{background:none;border:none;color:var(--soft);font-size:17px;line-height:1;cursor:pointer;padding:0 2px;}
@@ -103,14 +116,14 @@
   #edit-delete{width:100%;margin-top:8px;padding:8px;text-align:center;}
 
   /* Satellite launcher (Earth view) */
-  #launch-panel{position:fixed;right:16px;bottom:16px;width:206px;padding:13px 14px 11px;text-align:left;}
+  #launch-panel{position:absolute;right:16px;bottom:16px;width:206px;padding:13px 14px 11px;text-align:left;}
   #launch-title{font-weight:700;color:#fff;margin:0 0 11px;}
   #launch-dir{width:100%;margin:0 0 7px;padding:7px;text-align:center;}
   #launch-go{width:100%;padding:8px;text-align:center;}
   #ev-note{margin-top:9px;font:500 10.5px/1.35 system-ui,sans-serif;color:var(--dim);}
 
   /* Data drawer — the old always-on table, now on demand (⊞ or [D]). */
-  #data-drawer{position:fixed;top:56px;left:50%;transform:translateX(-50%);padding:11px 13px;max-width:calc(100vw - 24px);
+  #data-drawer{position:absolute;top:56px;left:50%;transform:translateX(-50%);padding:11px 13px;max-width:calc(100vw - 24px);
     font:12px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;color:#cfd6e6;}
   #data-drawer .row{white-space:pre;}
   #data-drawer .dim{color:var(--dim);margin-top:2px;}
@@ -121,7 +134,7 @@
   #data-drawer .row.sel{background:rgba(120,150,210,0.28);}
 
   /* Event feed — the sim narrates ejections, captures, impacts. */
-  #events{position:fixed;left:50%;transform:translateX(-50%);bottom:76px;z-index:7;
+  #events{position:absolute;left:50%;transform:translateX(-50%);bottom:76px;z-index:7;
     display:flex;flex-direction:column;align-items:center;gap:6px;pointer-events:none;max-width:92vw;}
   #events .ev{font:600 12.5px/1.2 system-ui,sans-serif;color:#cfd6e6;padding:8px 15px;border-radius:999px;
     background:var(--pnl);border:1px solid var(--pnl-line);white-space:nowrap;
@@ -132,7 +145,7 @@
   #events .ev.escape{color:#9fb2d6;}
 
   /* The dock: transport · bodies · view actions. */
-  #dock{position:fixed;left:50%;transform:translateX(-50%);bottom:14px;z-index:8;
+  #dock{position:absolute;left:50%;transform:translateX(-50%);bottom:14px;z-index:8;
     display:flex;align-items:center;gap:10px;padding:6px 10px;
     background:var(--pnl);border:1px solid var(--pnl-line);border-radius:14px;
     -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);}
@@ -160,7 +173,40 @@
   .chip.dead .pc{filter:grayscale(1);}
 
   /* One-time micro-hint (replaces the permanent hint bar). */
-  #microhint{position:fixed;left:50%;transform:translateX(-50%);top:52px;z-index:7;
+  /* ---- the article below the sim ---- */
+  #about{max-width:720px;margin:0 auto;padding:70px 20px 90px;
+    font:400 15px/1.7 system-ui,sans-serif;color:var(--soft);}
+  #about h2{font:600 21px/1.3 system-ui,sans-serif;color:var(--ink);margin:52px 0 14px;letter-spacing:.2px;}
+  #about h2:first-of-type{margin-top:0;}
+  #about p{margin:0 0 14px;}
+  #about b,#about strong{color:var(--ink);font-weight:600;}
+  #about a{color:var(--acc);text-decoration:none;}
+  #about a:hover{text-decoration:underline;}
+  #about ul,#about ol{margin:0 0 14px;padding-left:22px;}
+  #about li{margin:0 0 9px;}
+  #about li b{color:var(--ink);}
+  .ab-cols{display:grid;grid-template-columns:1fr 1fr;gap:16px;margin:0 0 14px;}
+  .ab-col{padding:14px 16px;border:1px solid rgba(150,170,210,0.22);border-radius:12px;
+    background:rgba(20,26,40,0.45);}
+  .ab-col h3{font:700 11px/1 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;
+    color:var(--dim);margin:0 0 10px;}
+  .ab-col ul{margin:0;padding-left:18px;}
+  @media(max-width:560px){.ab-cols{grid-template-columns:1fr;}}
+  #about details{margin:0 0 9px;border:1px solid rgba(150,170,210,0.22);border-radius:10px;
+    background:rgba(20,26,40,0.45);}
+  #about summary{cursor:pointer;padding:11px 14px;font-weight:600;color:var(--ink);list-style:none;}
+  #about summary::-webkit-details-marker{display:none;}
+  #about summary::before{content:'▸ ';color:var(--dim);}
+  #about details[open] summary::before{content:'▾ ';}
+  #about details p{margin:0;padding:0 14px 12px;}
+  .ab-games{display:flex;flex-wrap:wrap;gap:10px;padding:0;margin:0;list-style:none;}
+  .ab-games li{margin:0;}
+  .ab-games a{display:block;padding:8px 14px;border:1px solid rgba(150,170,210,0.3);border-radius:999px;
+    color:var(--ink);background:rgba(42,54,78,0.5);font-weight:600;font-size:13px;}
+  .ab-games a:hover{text-decoration:none;border-color:var(--acc);}
+  .ab-top{display:inline-block;margin-top:34px;font-weight:600;}
+
+  #microhint{position:absolute;left:50%;transform:translateX(-50%);top:52px;z-index:7;
     font:600 12px/1.3 system-ui,sans-serif;color:var(--soft);background:var(--pnl);
     border:1px solid var(--pnl-line);border-radius:999px;padding:9px 16px;pointer-events:none;
     transition:opacity .5s;}
@@ -171,6 +217,9 @@
   }
   @media(max-width:760px){
     #ss-nav{font-size:11px;gap:10px;}
+    /* touch scrolls straight past the sim, so the About link is a
+       desktop-only affordance — it collides with the comet button here */
+    #ab-link{display:none;}
     #hud{top:40px;}
     #hud h1{font-size:13px;}
     #time{font-size:10.5px;}
@@ -203,10 +252,12 @@
 </style>
 </head>
 <body>
+<div id="app">
 <canvas id="c"></canvas>
 <nav id="ss-nav">
   <a href="../">← Limestone Games</a>
   <a href="../arcade/">All arcade games</a>
+  <a id="ab-link" href="#about">About this simulator ▾</a>
 </nav>
 <div id="comet-ui">
   <button id="comet-toggle" class="btn" type="button">☄ Comet ▾</button>
@@ -223,7 +274,7 @@
   </div>
 </div>
 <div id="hud">
-  <h1>Solar System</h1>
+  <h1>Solar System Simulator</h1>
   <div id="time"><span id="time-t">t = 0.00 yr</span><span id="drift" title="total energy drift"></span></div>
 </div>
 <div id="data-drawer" class="panel" hidden>
@@ -287,6 +338,74 @@
   </div>
 </div>
 <div id="microhint" hidden>Scroll to zoom · click any body to inspect it</div>
+</div>
+
+<article id="about" aria-label="About this simulator">
+  <h2>Real gravity, not an animation</h2>
+  <p>Most solar-system visualizations move planets along pre-drawn ellipses. This one doesn't. Every frame, the simulator computes the gravitational pull between <b>every pair of bodies</b> — Sun, eight planets, the Moon, the asteroid belt, and any comets you launch — and lets the orbits fall out of the physics. Nothing is on rails, and the Sun isn't nailed down: the planets tug it around the system's common center of mass just like the real one.</p>
+  <p>Because the orbits are computed rather than drawn, you can break them. Give Earth a shove with the thruster and it settles into a permanently different orbit. Crank a planet's mass and its neighbors feel it. Delete the Sun and everything sails away. The <b>t = … yr</b> clock and the drift readout in the corner track how faithfully the integration is conserving energy while you meddle.</p>
+
+  <h2>What's real, what's illustrative</h2>
+  <div class="ab-cols">
+    <div class="ab-col"><h3>Real numbers</h3>
+      <ul>
+        <li>Planet <b>masses</b> (in solar masses) and <b>distances</b> (in AU)</li>
+        <li>Orbital <b>eccentricities</b> — Mercury's stretched path is genuine</li>
+        <li><b>Orbital periods</b> — not typed in, they emerge from gravity</li>
+        <li><b>Axial tilts and rotation periods</b> in the planet inspector and dock</li>
+        <li>Satellite <b>orbit altitudes</b> in Earth view, up to the 35,786&nbsp;km geostationary ring</li>
+      </ul>
+    </div>
+    <div class="ab-col"><h3>Stretched to be visible</h3>
+      <ul>
+        <li><b>Drawn sizes</b> — at true scale Earth would be far thinner than a pixel</li>
+        <li>Everything orbits in <b>one flat plane</b></li>
+        <li>Satellite <b>speeds</b> in Earth view are sped up to stay watchable</li>
+        <li><b>Time</b> — a year passes in seconds, faster at higher rates</li>
+      </ul>
+    </div>
+  </div>
+
+  <h2>Eight experiments worth running</h2>
+  <ol>
+    <li><b>Put a comet into Jupiter.</b> Open the ☄ Comet panel, aim with the direction and aim sliders, and fire. A hit flashes on impact and lands in the event feed.</li>
+    <li><b>Fire the Storm.</b> ~100 random specks at once — then watch the feed report captures, ejections, and impacts as gravity sorts them out.</li>
+    <li><b>Delete the Sun.</b> Click it, open <i>Adjust this body</i>, delete. The planets fly off along near-straight lines — the leash made visible.</li>
+    <li><b>Make Jupiter heavier.</b> Drag its mass slider upward and watch the rest of the system start to wobble.</li>
+    <li><b>Nudge Earth.</b> A small thruster burn permanently changes its orbit — there's no script pulling it back.</li>
+    <li><b>Launch satellites.</b> Press <b>E</b> for Earth view, then launch at 200&nbsp;km and again at 35,786&nbsp;km and compare the orbits.</li>
+    <li><b>Run time backwards.</b> The ⏪ button reverses the integration — orbits retrace themselves.</li>
+    <li><b>Zoom all the way out.</b> Find the asteroid belt, push the speed to ×32, and watch Mercury lap the outer planets.</li>
+  </ol>
+
+  <h2>Using it in a classroom</h2>
+  <p>The simulator runs free in any browser with no account, no install, and nothing to set up — it projects well and works on student laptops, tablets, and phones. A few demonstrations it makes concrete:</p>
+  <ul>
+    <li><b>Closer means faster.</b> Click any planet and the inspector shows its orbital period. Mercury's fraction of a year against Neptune's 165 isn't a table entry here — you can watch it happen.</li>
+    <li><b>Eccentric orbits change speed.</b> Launch a slow comet and watch it crawl at the far end of its arc, then whip around the Sun — Kepler's second law, live.</li>
+    <li><b>Axial tilt.</b> The dock's mini-planets spin at their real tilts and relative rates: Uranus rolls on its side, Venus turns backwards, slowly.</li>
+    <li><b>The Sun moves too.</b> Zoom in tight on the Sun and watch it circle the system's center of mass — the same wobble astronomers use to find planets around other stars.</li>
+  </ul>
+
+  <h2>Frequently asked questions</h2>
+  <details><summary>Is this a real simulation or a looping animation?</summary><p>A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press <b>R</b> to rebuild the solar system from scratch.</p></details>
+  <details><summary>Are the sizes and distances to scale?</summary><p>Distances and masses are real (the planet data uses actual AU distances, solar-mass ratios, and eccentricities). Drawn sizes are not — at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click.</p></details>
+  <details><summary>Why does the Sun wobble?</summary><p>Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it. The real Sun does the same — detecting that wobble in other stars is one of the main ways exoplanets are discovered.</p></details>
+  <details><summary>Can planets collide or be destroyed?</summary><p>Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape.</p></details>
+  <details><summary>What are the controls?</summary><p>Scroll or pinch to zoom, click or tap any body to inspect it. Keyboard: <b>Space</b> pause, <b>↑↓</b> time rate, <b>E</b> Earth view, <b>C</b> comet, <b>D</b> data table, <b>0</b> reset view, <b>R</b> reset the system.</p></details>
+  <details><summary>Is it free?</summary><p>Yes — free, in the browser, no download and no signup, like <a href="../">everything on this site</a>.</p></details>
+
+  <h2>More space games</h2>
+  <ul class="ab-games">
+    <li><a href="../lunar-lander/">Lunar Lander</a></li>
+    <li><a href="../spacex-lander/">SpaceX Lander</a></li>
+    <li><a href="../asteroids/">Asteroids</a></li>
+    <li><a href="../missile-command/">Missile Command</a></li>
+    <li><a href="../arcade/">All arcade games</a></li>
+  </ul>
+
+  <a class="ab-top" href="#app">↑ Back to the simulator</a>
+</article>
 <script>
 (() => {
   const canvas = document.getElementById('c');
@@ -650,7 +769,9 @@
   let W, H, cx, cy, dpr, stars = [];
   function resize(){
     dpr = window.devicePixelRatio || 1;
-    W = window.innerWidth; H = window.innerHeight;
+    // clientWidth, not innerWidth: the page scrolls now, and innerWidth
+    // includes the scrollbar — sizing to it would shift the sim's center.
+    W = document.documentElement.clientWidth; H = window.innerHeight;
     canvas.width = W*dpr; canvas.height = H*dpr;
     canvas.style.width = W+'px'; canvas.style.height = H+'px';
     ctx.setTransform(dpr,0,0,dpr,0,0);
@@ -1368,6 +1489,9 @@
   }
   try { if (localStorage.getItem('ssDataOpen') === '1') drawer.hidden = false; } catch(e){}
   window.addEventListener('keydown', e=>{
+    // Hotkeys belong to the sim only while it's on screen — once the reader
+    // has scrolled to the article, Space/arrows must scroll the page again.
+    if (window.scrollY > window.innerHeight/2) return;
     if (e.code === 'Space'){ togglePause(); e.preventDefault(); }
     else if (e.code === 'ArrowUp')   setRate(timeRate + 1);
     else if (e.code === 'ArrowDown') setRate(timeRate - 1);
