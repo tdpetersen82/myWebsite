@@ -215,6 +215,49 @@ const ok = (cond, name, detail = '') => {
     for (let i=0;i<steps;i++) api.advance(32,1);
     ok(pr.closest < 0.05, `probe rendezvous with Jupiter (closest ${pr.closest.toFixed(3)} AU, ${tT.toFixed(2)} yr)`);
   }
+  // Earth → Saturn: a ~6-yr Hohmann transfer must reach its target
+  {
+    const api = boot();
+    const E = api.EARTH, S = api.SUN, SAT = api.planets.find(p => p.name === 'Saturn'), mu = api.G*S.m;
+    const r1 = Math.hypot(E.x-S.x, E.y-S.y), at = (r1+SAT.a)/2, tT = Math.PI*Math.sqrt(at*at*at/mu);
+    const sFut = api.keplerProp(SAT, tT);
+    const v1 = api.lambertV([E.x-S.x, E.y-S.y], [sFut[0]-S.x, sFut[1]-S.y], tT, mu);
+    ok(!!v1, 'Saturn Lambert solves');
+    const pr = { x:E.x, y:E.y, vx:S.vx+v1[0], vy:S.vy+v1[1], trail:[], closest:Infinity, arrived:false, done:false, target:SAT };
+    api.addProbe(pr);
+    const steps = Math.ceil((tT*1.05)/(32*api.DT));
+    for (let i=0;i<steps;i++) api.advance(32,1);
+    // Saturn's SOI is ~0.36 AU, so a ~0.12 AU approach is a genuine arrival (matches the app's SOI-scaled arrival radius)
+    ok(pr.closest < 0.15, `probe rendezvous with Saturn (closest ${pr.closest.toFixed(3)} AU, ${tT.toFixed(2)} yr)`);
+  }
+}
+
+// ── T8d: Voyager — a close Jupiter flyby really boosts the probe's speed ──
+// A trailing-side flyby (aim offset −0.2 AU perpendicular) must raise the
+// heliocentric speed: a genuine gravity assist, not a scripted number.
+{
+  const api = boot();
+  const E = api.EARTH, S = api.SUN, J = api.planets.find(p => p.name === 'Jupiter'), mu = api.G*S.m;
+  const at = (1+J.a)/2, tT = Math.PI*Math.sqrt(at*at*at/mu), omJ = Math.sqrt(mu/(J.a**3));
+  let alpha = Math.PI - omJ*tT; alpha = ((alpha%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
+  for (let g=0; g<40000; g++){
+    const thE=Math.atan2(E.y-S.y,E.x-S.x), thJ=Math.atan2(J.y-S.y,J.x-S.x);
+    let lead=((thJ-thE)%(2*Math.PI)+2*Math.PI)%(2*Math.PI); let d=Math.abs(lead-alpha); if(d>Math.PI)d=2*Math.PI-d;
+    if (d<0.05) break; api.advance(32,1);
+  }
+  const jFut = api.keplerProp(J, tT), jr = Math.hypot(jFut[0]-S.x, jFut[1]-S.y);
+  const aim = [jFut[0] - (jFut[1]-S.y)/jr*-0.2, jFut[1] + (jFut[0]-S.x)/jr*-0.2];
+  const v1 = api.lambertV([E.x-S.x, E.y-S.y], [aim[0]-S.x, aim[1]-S.y], tT, mu);
+  const pr = { x:E.x, y:E.y, vx:S.vx+v1[0], vy:S.vy+v1[1], trail:[], closest:Infinity, arrived:false, done:false, target:null };
+  api.addProbe(pr);
+  const vhel = () => Math.hypot(pr.vx-S.vx, pr.vy-S.vy);
+  let jMin=Infinity, vBefore=0, vAfter=0, boosted=false;
+  const steps = Math.ceil(20/(32*api.DT));
+  for (let i=0;i<steps;i++){ const before=vhel(); api.advance(32,1);
+    const dJ=Math.hypot(pr.x-J.x,pr.y-J.y); if(dJ<jMin){jMin=dJ;vBefore=before;}
+    if(!boosted && jMin<8 && dJ>jMin+1.0){ vAfter=vhel(); boosted=true; } }
+  ok(jMin < 0.1, `Voyager flies close past Jupiter (${jMin.toFixed(3)} AU)`);
+  ok(boosted && vAfter > vBefore, `gravity assist boosts speed (${(vBefore*4.74057).toFixed(1)} → ${(vAfter*4.74057).toFixed(1)} km/s)`);
 }
 
 // ── T8c: Earth→Moon translunar injection reaches the Moon ──
