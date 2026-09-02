@@ -1929,11 +1929,11 @@
     const g = ctx.createRadialGradient(mx-mr*0.45, my-mr*0.45, mr*0.1, mx, my, mr);
     g.addColorStop(0,'#e8e6df'); g.addColorStop(0.6,'#b7b4ac'); g.addColorStop(1,'#6f6d67');
     ctx.fillStyle = g; ctx.beginPath(); ctx.arc(mx, my, mr, 0, 2*Math.PI); ctx.fill();
-    if (mr >= 3){                                                 // a couple of craters when there's room
-      ctx.fillStyle = 'rgba(90,88,82,0.5)';
-      for (const [dx,dy,s] of [[-0.2,-0.15,0.22],[0.3,0.25,0.16],[0.05,0.4,0.13]]){
-        ctx.beginPath(); ctx.arc(mx+dx*mr, my+dy*mr, s*mr, 0, 2*Math.PI); ctx.fill();
-      }
+    // near-side maria, biased toward Earth (−x). Tidally locked, so this face never
+    // turns away — the visible cue that the Moon isn't just a blank ball.
+    ctx.fillStyle = 'rgba(92,90,86,0.55)';
+    for (const [dx,dy,s] of [[-0.35,-0.2,0.30],[-0.15,0.3,0.24],[-0.5,0.25,0.18],[0.15,-0.1,0.16]]){
+      ctx.beginPath(); ctx.arc(mx+dx*mr, my+dy*mr, s*mr, 0, 2*Math.PI); ctx.fill();
     }
   }
   function drawMoonScene(){
@@ -1970,7 +1970,9 @@
     ctx.fillStyle = '#cfd6e6'; ctx.fillText(dimTxt, W/2, H-24);
     ctx.textAlign = 'left';
     // Earth (real texture if loaded) + atmosphere
-    const spin = 2*Math.PI * evClock / EARTH_SPIN;
+    // Earth's spin runs at the REAL once-a-day rate over the mission, so across the
+    // 3-day trip it turns ~3 times — a truthful rate, not an arbitrary one.
+    const spin = 2*Math.PI * ((moonMission ? moonMission.t : 0)/86400);
     let ha = ctx.createRadialGradient(ex, ey, erE*0.92, ex, ey, erE*1.35);
     ha.addColorStop(0,'rgba(120,180,255,0.35)'); ha.addColorStop(1,'rgba(120,180,255,0)');
     ctx.fillStyle = ha; ctx.beginPath(); ctx.arc(ex, ey, erE*1.35, 0, 2*Math.PI); ctx.fill();
@@ -1984,9 +1986,15 @@
     ctx.fillStyle = '#d7d4cc'; ctx.font = '11px ui-monospace,Menlo,monospace';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillText('Moon', mmx, mmy - mrE - 9); ctx.textAlign = 'left';
-    // scale caption (top)
-    ctx.fillStyle = '#7c869c'; ctx.font = "600 11px system-ui, sans-serif";
-    ctx.fillText('Earth and Moon shown to scale — a real translunar trajectory', margin, H*0.13);
+    // scale caption (top) + a note on why the Moon looks still
+    ctx.textAlign = 'left';
+    const capFit = (s, y, col, max) => {                          // shrink to fit narrow screens
+      let fs = 11; ctx.font = `600 ${fs}px system-ui, sans-serif`;
+      while (ctx.measureText(s).width > max && fs > 8){ fs--; ctx.font = `600 ${fs}px system-ui, sans-serif`; }
+      ctx.fillStyle = col; ctx.fillText(s, margin, y);
+    };
+    capFit('Earth and Moon shown to scale — a real translunar trajectory', H*0.13, '#7c869c', W-margin*2);
+    capFit('🔒 Tidally locked — one face always toward Earth', H*0.13+18, '#5f6a80', W-margin*2);
 
     // the probe — real integrated translunar trajectory
     if (moonMission){
