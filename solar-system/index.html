@@ -312,7 +312,7 @@
     <button id="act-probe" class="btn act" type="button" title="Launch a spacecraft from Earth to Mars on a real Hohmann transfer orbit — it waits for the launch window, then coasts on gravity for months while the planets keep moving">🚀 Probe to Mars</button>
     <button id="act-jupiter" class="btn act" type="button" title="Launch a spacecraft from Earth to Jupiter on a real Hohmann transfer — a ~2.7-year cruise out past the asteroid belt, waiting for the launch window first">🪐 Probe to Jupiter</button>
     <button id="act-saturn" class="btn act" type="button" title="Launch a spacecraft from Earth to Saturn on a real Hohmann transfer — a ~6-year direct cruise to the ringed planet">🪐 Probe to Saturn</button>
-    <button id="act-voyager" class="btn act" type="button" title="Recreate Voyager's signature move: swing close past Jupiter for a real gravity assist — a free speed boost stolen from Jupiter's motion that flings the probe toward the outer solar system">🛰 Voyager (Jupiter slingshot)</button>
+    <button id="act-voyager" class="btn act" type="button" title="Recreate Voyager: arranges the four giant planets in the rare 1977 Grand Tour alignment, then swings a probe close past Jupiter for a real gravity assist — a free speed boost stolen from Jupiter's motion">🛰 Voyager — 1977 Grand Tour</button>
     <button id="act-moon" class="btn act" type="button" title="Fly a probe from Earth to the Moon in a to-scale Earth–Moon view — see how far and how small the Moon really is">🌙 Probe to the Moon</button>
     <button id="act-msg" class="btn act" type="button" title="Send a radio pulse from Earth at the true speed of light — time holds still while it crosses">📡 Lightspeed message…</button>
   </div>
@@ -444,7 +444,7 @@
     <li><b>Fire the comet storm.</b> ~100 random specks at once — then watch the feed report captures, ejections, and impacts as gravity sorts them out.</li>
     <li><b>Invite a rogue star.</b> A quarter-solar-mass intruder crosses the system: orbits bend as it passes, and anything it sweeps too close to is consumed — the event feed keeps score of the damage.</li>
     <li><b>Fly a probe to Mars, Jupiter, or Saturn.</b> ⚡ Actions → Probe to Mars: the spacecraft waits for the launch window (Mars has to lead Earth by about 44°), then coasts along a real Hohmann transfer orbit for roughly eight months while the planets keep moving — arriving where Mars will be, not where it is now. <b>Jupiter</b> and <b>Saturn</b> are the same idea at grand scale: bigger launch windows and multi-year cruises out past the asteroid belt.</li>
-    <li><b>Recreate Voyager's slingshot.</b> ⚡ Actions → Voyager sends a probe swinging close past Jupiter for a real gravity assist — the sim's own gravity flings it faster on the way out, and the event feed reports the actual speed it stole from Jupiter's motion. It's the trick that let two small spacecraft reach the outer planets and, eventually, interstellar space.</li>
+    <li><b>Recreate Voyager's 1977 Grand Tour.</b> ⚡ Actions → Voyager first arranges the four giant planets in the rare arc they actually formed in 1977 — an alignment that comes around once every ~176 years — then sends a probe swinging close past Jupiter for a real gravity assist. The sim's own gravity flings it faster on the way out, and the event feed reports the actual speed it stole from Jupiter's motion. It's the trick that let two small spacecraft tour the outer planets and, eventually, leave the solar system.</li>
     <li><b>Fly a probe to the Moon.</b> ⚡ Actions → Probe to the Moon opens a to-scale Earth–Moon view — Earth and the Moon at their true relative size and distance, with the geostationary-satellite ring drawn in for contrast. The probe rides a real translunar trajectory: injected at about 10.8 km/s (the actual Apollo departure speed) and coasting three days on Earth's and the Moon's gravity.</li>
     <li><b>Send a lightspeed message.</b> ⚡ Actions → Lightspeed message: a radio pulse leaves Earth for Mars (3 to 22 light-minutes away, depending on where the orbits stand) or Jupiter (33 to 54). The planets hold still while it crawls — because at any speed where you can see planets move, light is effectively instantaneous.</li>
     <li><b>Delete the Sun.</b> Click it, open <i>Adjust this body</i>, delete. The planets fly off along near-straight lines — the leash made visible.</li>
@@ -1879,11 +1879,14 @@
         if (p.deleted || pr.passed[p.name]) continue;
         if (Math.hypot(pr.x-p.x, pr.y-p.y) < 0.6){ pr.passed[p.name] = 1; msgFx.push({ x: pr.x, y: pr.y, born: performance.now() }); announce(`🛰 ${p.name} flyby!`, 'capture'); sfx('capture'); }
       }
+      if (pr.boosted && rSun > (pr.maxR || 0)) pr.maxR = rSun;   // track how far the boost carried it
       probeText.textContent = pr.boosted
         ? `🛰 Voyager · ${yrs.toFixed(1)} yr · outbound · ${rSun.toFixed(1)} AU from the Sun`
         : `🛰 Voyager · ${yrs.toFixed(1)} yr · approaching Jupiter · ${dJ.toFixed(2)} AU`;
-      if ((pr.boosted && rSun > 20) || yrs > 28){
-        announce(`🛰 Voyager — outbound past ${rSun.toFixed(0)} AU, bound for the edge of the solar system`, 'escape');
+      // end when it passes apoapsis and falls back, or after a long coast (it's bound —
+      // one Jupiter assist can't reach escape; the real four-giant tour needed a perfect launch)
+      if (pr.boosted && ((pr.maxR && rSun < pr.maxR - 0.4) || yrs > 18)){
+        announce(`🛰 Jupiter's slingshot carried Voyager out to ${(pr.maxR||rSun).toFixed(1)} AU`, 'escape');
         finishProbe();
       }
     } else {
@@ -1904,10 +1907,41 @@
       }
     }
   }
+  // Arrange the four giant planets in the real 1977 Grand Tour alignment — the
+  // rare arc (once in ~176 years) that let Voyager chain gravity assists across
+  // the outer solar system — then place Earth at the Jupiter launch window.
+  const L1977 = { Jupiter: 88, Saturn: 147, Uranus: 217, Neptune: 253 };   // heliocentric longitudes, deg
+  function arrangeGrandTour(){
+    reset();                                                   // clean slate, then override the giants
+    const mu = G*SUN.m;
+    for (const p of planets){
+      if (L1977[p.name] === undefined) continue;
+      const th = L1977[p.name]*Math.PI/180, v = Math.sqrt(mu/p.a);
+      p.x = p.a*Math.cos(th); p.y = p.a*Math.sin(th);
+      p.vx = -v*Math.sin(th); p.vy = v*Math.cos(th);
+    }
+    // Earth at the Earth→Jupiter launch window (Jupiter leads by α) so it can depart at once
+    const at = (1+JUPITER.a)/2, tT = Math.PI*Math.sqrt(at*at*at/mu), omJ = Math.sqrt(mu/(JUPITER.a**3));
+    const thE = 88*Math.PI/180 - (Math.PI - omJ*tT), ve = Math.sqrt(mu);
+    EARTH.x = Math.cos(thE); EARTH.y = Math.sin(thE); EARTH.vx = -ve*Math.sin(thE); EARTH.vy = ve*Math.cos(thE);
+    let px=0, py=0, M=0;                                       // re-zero total momentum so the barycentre holds still
+    for (const b of bodies){ if (b.deleted) continue; px += b.m*b.vx; py += b.m*b.vy; M += b.m; }
+    const vcx = px/M, vcy = py/M;
+    for (const b of bodies){ b.vx -= vcx; b.vy -= vcy; }
+    E0 = energy();
+  }
+  function startVoyager(){
+    if (msg || probePlan){ announce('🛰 Finish the current mission first', 'escape'); return; }
+    if (EARTH.deleted || JUPITER.deleted){ announce('🛰 Need Earth and Jupiter for a Grand Tour', 'escape'); return; }
+    actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; setActCaret();
+    arrangeGrandTour(); resetView();
+    announce('🛰 The giant planets — arranged in the 1977 Grand Tour alignment', 'capture'); sfx('capture');
+    startProbe(JUPITER, { voyager: true });
+  }
   document.getElementById('act-probe').addEventListener('click', () => startProbe(MARS));
   document.getElementById('act-jupiter').addEventListener('click', () => startProbe(JUPITER));
   document.getElementById('act-saturn').addEventListener('click', () => startProbe(SATURN));
-  document.getElementById('act-voyager').addEventListener('click', () => startProbe(JUPITER, { voyager: true }));
+  document.getElementById('act-voyager').addEventListener('click', startVoyager);
   document.getElementById('probe-cancel').addEventListener('click', () => abortProbe());
 
   // ---- Earth → Moon: a to-scale Earth–Moon view ----
