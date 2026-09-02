@@ -85,9 +85,15 @@
   #comet-panel{margin-top:8px;padding:13px 14px 11px;width:214px;text-align:left;}
   #comet-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px;}
   #comet-launch{flex:1 1 100%;text-align:center;}
-  #comet-random,#comet-storm{flex:1;white-space:nowrap;padding:9px 8px;}
-  #comet-storm{background:rgba(96,64,134,0.6);border-color:rgba(170,140,220,0.55);}
-  #comet-storm:hover{background:rgba(120,82,166,0.85);}
+  #comet-random{flex:1;white-space:nowrap;padding:9px 8px;}
+  /* the Actions menu — comet designing, storms, rogue stars */
+  #action-menu{width:196px;padding:11px 12px 10px;}
+  .act{display:block;width:100%;margin-top:6px;text-align:left;white-space:nowrap;}
+  .act:first-child{margin-top:0;}
+  #act-storm{background:rgba(96,64,134,0.6);border-color:rgba(170,140,220,0.55);}
+  #act-storm:hover{background:rgba(120,82,166,0.85);}
+  #act-star{background:rgba(134,96,44,0.55);border-color:rgba(230,190,120,0.5);}
+  #act-star:hover{background:rgba(170,124,58,0.8);}
 
   /* Selection card: the one place a body's stats + controls live. */
   #edit-panel{position:absolute;left:16px;bottom:72px;width:226px;padding:13px 14px 11px;}
@@ -268,7 +274,13 @@
   <a id="ab-link" href="#about">About this simulator ▾</a>
 </nav>
 <div id="comet-ui">
-  <button id="comet-toggle" class="btn" type="button">☄ Comet ▾</button>
+  <button id="comet-toggle" class="btn" type="button">⚡ Actions ▾</button>
+  <div id="action-menu" class="panel" hidden>
+    <button id="act-comet" class="btn act" type="button" title="Open the comet designer — set mass, speed, direction and aim, then fire [C]">☄ Launch a comet…</button>
+    <button id="act-random" class="btn act" type="button" title="A random comet from a random direction — click repeatedly">🎲 Random comet</button>
+    <button id="act-storm" class="btn act" type="button" title="~100 icy specks from every direction. Massless — they never disturb the planets.">🌩 Comet storm</button>
+    <button id="act-star" class="btn act" type="button" title="A quarter-solar-mass intruder crosses the system — orbits bend as it passes, and anything it sweeps too close to is consumed">⭐ Rogue star flyby</button>
+  </div>
   <div id="comet-panel" class="panel" hidden>
     <label>Mass <span id="m-val"></span><input id="m-slider" type="range" min="0" max="1000" value="90"></label>
     <label>Speed <span id="s-val"></span><input id="s-slider" type="range" min="0" max="1000" value="320"></label>
@@ -277,7 +289,6 @@
     <div id="comet-btns">
       <button id="comet-launch" class="btn primary" type="button">Launch ☄</button>
       <button id="comet-random" class="btn" type="button" title="Random direction &amp; aim — click repeatedly">🎲 Random</button>
-      <button id="comet-storm" class="btn" type="button" title="~100 random specks (not listed in the table)">🌩 Storm</button>
     </div>
   </div>
 </div>
@@ -383,10 +394,11 @@
     </div>
   </div>
 
-  <h2>Eight experiments worth running</h2>
+  <h2>Nine experiments worth running</h2>
   <ol>
-    <li><b>Put a comet into Jupiter.</b> Open the ☄ Comet panel, aim with the direction and aim sliders, and fire. A hit flashes on impact and lands in the event feed.</li>
-    <li><b>Fire the Storm.</b> ~100 random specks at once — then watch the feed report captures, ejections, and impacts as gravity sorts them out.</li>
+    <li><b>Put a comet into Jupiter.</b> Open ⚡ Actions → ☄ Launch a comet, aim with the direction and aim sliders, and fire. A hit flashes on impact and lands in the event feed.</li>
+    <li><b>Fire the comet storm.</b> ~100 random specks at once — then watch the feed report captures, ejections, and impacts as gravity sorts them out.</li>
+    <li><b>Invite a rogue star.</b> A quarter-solar-mass intruder crosses the system: orbits bend as it passes, and anything it sweeps too close to is consumed — the event feed keeps score of the damage.</li>
     <li><b>Delete the Sun.</b> Click it, open <i>Adjust this body</i>, delete. The planets fly off along near-straight lines — the leash made visible.</li>
     <li><b>Make Jupiter heavier.</b> Drag its mass slider upward and watch the rest of the system start to wobble.</li>
     <li><b>Nudge Earth.</b> A small thruster burn permanently changes its orbit — there's no script pulling it back.</li>
@@ -741,12 +753,17 @@
   }
   /*SS-CORE-END*/
 
-  function launchComet(){   // params come from the panel sliders (paramMass/Speed/Dir/Impact, defined below)
-    const dir = paramDir(), R = 22, m = paramMass();
+  // Params come from the designer sliders unless overridden — the Actions menu's
+  // one-click presets (random comet, rogue star) pass {m, speed, dir, impact}.
+  function launchComet(o){
+    o = o || {};
+    const dir = o.dir !== undefined ? o.dir : paramDir(), R = 22;
+    const m = o.m !== undefined ? o.m : paramMass();
     const x = R*Math.cos(dir), y = R*Math.sin(dir);
-    const px = -Math.sin(dir), py = Math.cos(dir), im = paramImpact();   // impact parameter ⟂ to approach
+    const px = -Math.sin(dir), py = Math.cos(dir);
+    const im = o.impact !== undefined ? o.impact : paramImpact();        // impact parameter ⟂ to approach
     let dx = im*px - x, dy = im*py - y; const d = Math.hypot(dx, dy); dx/=d; dy/=d;
-    const v = Math.sqrt(2*G*SUN.m/R) * paramSpeed();
+    const v = Math.sqrt(2*G*SUN.m/R) * (o.speed !== undefined ? o.speed : paramSpeed());
     const me = m/3.0035e-6;
     const kind = m>=0.04?'Rogue star':me>=50?'Brown dwarf':me>=0.5?'Interloper':'Comet';
     comets.push({ x, y, vx:dx*v, vy:dy*v, m, trail:[], id: ++cometSeq,
@@ -1495,15 +1512,31 @@
   }
   [mEl,sEl,dEl,aEl].forEach(el => el.addEventListener('input', updCometLabels));
   updCometLabels();
-  cToggle.addEventListener('click', () => { cPanel.hidden = !cPanel.hidden; cToggle.textContent = '☄ Comet ' + (cPanel.hidden ? '▾' : '▴'); });
-  document.getElementById('comet-launch').addEventListener('click', launchComet);
-  document.getElementById('comet-random').addEventListener('click', () => {   // random direction + aim, then fire — spam-clickable
+  // The Actions menu: comet designing is one action among several.
+  const actMenu = document.getElementById('action-menu');
+  function setActCaret(){ cToggle.textContent = '⚡ Actions ' + ((actMenu.hidden && cPanel.hidden) ? '▾' : '▴'); }
+  cToggle.addEventListener('click', () => {
+    if (!actMenu.hidden || !cPanel.hidden){ actMenu.hidden = true; cPanel.hidden = true; }
+    else actMenu.hidden = false;
+    setActCaret();
+  });
+  document.getElementById('act-comet').addEventListener('click', () => { actMenu.hidden = true; cPanel.hidden = false; setActCaret(); });
+  document.getElementById('comet-launch').addEventListener('click', () => launchComet());
+  const fireRandomComet = () => {                       // random direction + aim, then fire — spam-clickable
     dEl.value = Math.floor(Math.random()*360);
     aEl.value = Math.round(Math.random()*120 - 60);     // full aim range (-6..6 AU miss)
     updCometLabels();
     launchComet();
-  });
-  document.getElementById('comet-storm').addEventListener('click', launchStorm);
+  };
+  document.getElementById('comet-random').addEventListener('click', fireRandomComet);
+  document.getElementById('act-random').addEventListener('click', fireRandomComet);
+  document.getElementById('act-storm').addEventListener('click', launchStorm);
+  document.getElementById('act-star').addEventListener('click', () => launchComet({
+    m: 0.25,                                            // a red-dwarf intruder — well past the 0.04 M☉ "rogue star" line
+    speed: 1.35,                                        // clearly hyperbolic: it passes through, it doesn't stay
+    dir: Math.random()*2*Math.PI,
+    impact: Math.random()*6 - 3                          // through the inner system, ±3 AU
+  }));
   // ---- satellite launch (planet view) ----
   const laEl = document.getElementById('la-slider'), laV = document.getElementById('la-val'), launchDirBtn = document.getElementById('launch-dir');
   function updLaunchLabel(){ const a = +laEl.value, band = a >= 35000 ? 'geostationary' : a >= 2000 ? 'MEO' : 'LEO';
