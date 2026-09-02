@@ -1914,12 +1914,10 @@
       if (dM < m.closest) m.closest = dM;
       if (dM < MOON_R_KM*1.4) m.arrived = true;                  // reached the Moon
     }
-    // store the trail in the Moon's ROTATING frame (rotate by −Moon-angle) so the
-    // Moon stays fixed on screen and the trajectory reads as a curve, not a line
-    // that sweeps as the Moon orbits.
-    const a = -WMOON*m.t, cx = pr.x*Math.cos(a) - pr.y*Math.sin(a), cy = pr.x*Math.sin(a) + pr.y*Math.cos(a);
-    if (m.trail.length === 0 || Math.hypot(cx-m.trail[m.trail.length-1][0], cy-m.trail[m.trail.length-1][1]) > EM_D*0.006)
-      m.trail.push([cx, cy]);
+    // trail in the real (inertial) Earth-centred frame — the Moon genuinely
+    // orbits ~40° during the 3-day transit, and we show that.
+    if (m.trail.length === 0 || Math.hypot(pr.x-m.trail[m.trail.length-1][0], pr.y-m.trail[m.trail.length-1][1]) > EM_D*0.006)
+      m.trail.push([pr.x, pr.y]);
     if (m.trail.length > 400) m.trail.shift();
   }
   document.getElementById('act-moon').addEventListener('click', enterMoon);
@@ -1938,11 +1936,13 @@
   }
   function drawMoonScene(){
     placedLabels.length = 0;
-    const margin = Math.max(40, W*0.10), ey = H*0.52;
-    const R = Math.max(120, W - 2*margin);                        // Earth→Moon distance on screen
+    // Earth sits lower-left; the Moon starts on the right and orbits ~40° up over
+    // the 3-day transit. R is sized so that arc always stays on screen.
+    const margin = Math.max(40, W*0.09), ey = H*0.70;
+    const R = Math.max(120, Math.min(W - 2*margin, (ey - 70)/Math.sin(42*Math.PI/180)));
     const erE = Math.max(3, R/EM_DIST_RE), mrE = Math.max(1.2, erE*EM_SIZE);
     const ex = margin, k = R/EM_D;                                // px per km; Earth at (ex,ey)
-    const sc = (x,y) => [ex + x*k, ey - y*k];                     // Earth-frame km → screen
+    const sc = (x,y) => [ex + x*k, ey - y*k];                     // inertial Earth-centred km → screen
 
     // advance the mission on the wall clock (a 3-day transit plays over EM_DUR ms)
     if (moonMission){
@@ -1950,8 +1950,8 @@
       moonMission.lastTs = now;
       if (!moonMission.arrived && moonMission.t < EM_T) stepMoonProbe(wall * (EM_T/(EM_DUR/1000)));
     }
-    // rotating frame: the Moon is drawn fixed on the right (angle 0)
-    const [mmx, mmy] = sc(EM_D, 0);
+    // the Moon at its real orbital position (it moves ~40° during the transit)
+    const [mmx, mmy] = sc(...moonPosKm(moonMission ? moonMission.t : 0));
 
     // Moon's monthly orbit (faint) + geostationary ring for contrast
     ctx.strokeStyle = 'rgba(150,170,210,0.14)'; ctx.lineWidth = 1;
@@ -1994,7 +1994,7 @@
       ctx.fillStyle = col; ctx.fillText(s, margin, y);
     };
     capFit('Earth and Moon shown to scale — a real translunar trajectory', H*0.13, '#7c869c', W-margin*2);
-    capFit('🔒 Tidally locked — one face always toward Earth', H*0.13+18, '#5f6a80', W-margin*2);
+    capFit('The Moon orbits once a month — it creeps only ~40° while Earth spins 3× over the 3-day trip', H*0.13+18, '#5f6a80', W-margin*2);
 
     // the probe — real integrated translunar trajectory
     if (moonMission){
@@ -2004,9 +2004,8 @@
         for (let i=0;i<m.trail.length;i++){ const [tx,ty] = sc(m.trail[i][0], m.trail[i][1]); i?ctx.lineTo(tx,ty):ctx.moveTo(tx,ty); }
         ctx.stroke();
       }
-      const ra = -WMOON*m.t, rc = Math.cos(ra), rs = Math.sin(ra);           // rotate probe into the Moon's frame
-      const [px, py] = sc(m.probe.x*rc - m.probe.y*rs, m.probe.x*rs + m.probe.y*rc);
-      let heading = 0;                                                        // from the last trail segment (already rotating-frame)
+      const [px, py] = sc(m.probe.x, m.probe.y);                             // inertial — matches the trail
+      let heading = 0;                                                        // from the last trail segment
       if (m.trail.length > 1){ const [ax,ay] = sc(...m.trail[m.trail.length-1]), [bx,by] = sc(...m.trail[m.trail.length-2]); heading = Math.atan2(ay-by, ax-bx); }
       ctx.save(); ctx.translate(px, py); ctx.rotate(heading);
       ctx.fillStyle = '#e9fff4'; ctx.strokeStyle = 'rgba(150,235,190,0.9)'; ctx.lineWidth = 1;
