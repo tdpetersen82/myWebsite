@@ -15,11 +15,13 @@ function boot(){
   const api = new Function(core + `;
     return {
       G, DT, SUN, planets, EARTH, MOON, bodies,
-      reset, advance, warpFactor, aOf, mergeInto, energy, detectPass, seedBelt,
-      state: () => ({ t, comets, belt, storm, E0 }),
+      reset, advance, warpFactor, aOf, mergeInto, energy, detectPass, seedBelt, keplerProp, lambertV,
+      state: () => ({ t, comets, belt, storm, probes, E0 }),
       onEmit: f => { EMIT = f; },
       setRate: r => { timeRate = r; },
       addComet: c => { comets.push(c); },
+      addProbe: p => { probes.push(p); },
+      MARS: planets.find(p => p.name === 'Mars'),
     };`)();
   api.reset();
   return api;
@@ -174,6 +176,31 @@ const ok = (cond, name, detail = '') => {
   ok(caps.length && Math.abs(caps[0][1].T - Math.sqrt(27)) < 0.3, 'capture period ≈ 5.2 yr', caps[0] && String(caps[0][1].T));
   years(api, 0.5);
   ok(emits.filter(e => e[0] === 'capture').length === 1, 'capture does not refire');
+}
+
+// ── T8b: Earth→Mars probe — Lambert-targeted transfer actually rendezvous ──
+// Uses the SHIPPED targeting (keplerProp + lambertV): aim at where Mars will be
+// after a Hohmann-time transfer, solve for the departure velocity, integrate the
+// probe under full N-body, and require a genuine close approach across several
+// launch geometries (the launch window the app waits for).
+{
+  const rot = (x,y,a)=>[x*Math.cos(a)-y*Math.sin(a), x*Math.sin(a)+y*Math.cos(a)];
+  for (const stageDeg of [0, 44, 90, 300]){
+    const api = boot();
+    const E = api.EARTH, S = api.SUN, M = api.MARS, mu = api.G*S.m;
+    const a = stageDeg*Math.PI/180;
+    [M.x, M.y] = rot(M.x-S.x, M.y-S.y, a).map((v,i)=>v+(i?S.y:S.x));
+    [M.vx, M.vy] = rot(M.vx-S.vx, M.vy-S.vy, a).map((v,i)=>v+(i?S.vy:S.vx));
+    const r1 = Math.hypot(E.x-S.x, E.y-S.y), at = (r1+M.a)/2, tT = Math.PI*Math.sqrt(at*at*at/mu);
+    const mFut = api.keplerProp(M, tT);
+    const v1 = api.lambertV([E.x-S.x, E.y-S.y], [mFut[0]-S.x, mFut[1]-S.y], tT, mu);
+    ok(!!v1, `lambert solves at ${stageDeg}°`);
+    const pr = { x:E.x, y:E.y, vx:S.vx+v1[0], vy:S.vy+v1[1], trail:[], closest:Infinity, arrived:false, done:false, target:M };
+    api.addProbe(pr);
+    const steps = Math.ceil((tT*1.05)/(32*api.DT));
+    for (let i=0;i<steps;i++) api.advance(32,1);
+    ok(pr.closest < 0.05, `probe rendezvous with Mars at ${stageDeg}° (closest ${pr.closest.toFixed(3)} AU)`);
+  }
 }
 
 // ── T9: reversibility — forward then backward returns the system home ──
