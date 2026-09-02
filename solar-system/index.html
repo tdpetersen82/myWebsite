@@ -103,6 +103,7 @@
     display:flex;align-items:center;gap:10px;font:600 12px/1.3 system-ui,sans-serif;
     color:var(--ink);background:var(--pnl);border:1px solid var(--pnl-line);
     border-radius:999px;padding:7px 9px 7px 16px;white-space:nowrap;font-variant-numeric:tabular-nums;}
+  #msg-status[hidden]{display:none;}   /* the explicit display:flex above would otherwise defeat the hidden attr */
   #msg-cancel{width:22px;height:22px;border-radius:50%;border:1px solid var(--pnl-line);
     background:rgba(42,54,78,0.72);color:var(--ink);font:600 13px/1 system-ui,sans-serif;cursor:pointer;}
   #msg-cancel:hover{background:rgba(70,88,124,0.9);}
@@ -379,7 +380,7 @@
 <div id="view-panel" class="panel" hidden>
   <div id="view-title">View</div>
   <button id="vo-scale" class="btn vo" type="button" title="Compressed squeezes the outer orbits so all eight planets fit on screen. True scale spaces the orbits honestly — mostly emptiness; zoom in to find the inner planets."></button>
-  <button id="vo-guides" class="btn vo" type="button" title="Faint ellipses marking each planet's nominal orbit"></button>
+  <button id="vo-guides" class="btn vo" type="button" title="Faint ellipses tracing each planet's current orbit — they follow nudges and close encounters"></button>
   <button id="vo-labels" class="btn vo" type="button" title="Name tags on the bodies"></button>
   <button id="vo-trails" class="btn vo" type="button" title="Fading path history behind each planet"></button>
 </div>
@@ -545,7 +546,7 @@
     for (const b of bodies){ px += b.m*b.vx; py += b.m*b.vy; M += b.m; }
     const vcx = px/M, vcy = py/M;
     for (const b of bodies){ b.vx -= vcx; b.vy -= vcy; }
-    for (const b of bodies){ b.trail = []; b.deleted = false; b.edited = false; b._ub = 0; b._glow = 0; }
+    for (const b of bodies){ b.trail = []; b.deleted = false; b._ub = 0; b._glow = 0; }
     MOON.rel = []; MOON._torn = false; MOON._ubE = 0;
     const wasRun = t > 0.05;                       // suppress the toast on initial page load
     comets = []; flashes = []; cometSeq = 0; storm = []; launches = []; detAcc = 0;
@@ -956,17 +957,30 @@
 
     const earthView = follow === EARTH;
     const zoomedIn = follow && !earthView && zoom > 20;
-    // orbit lines — sampled & compressed (true ellipses become smooth closed curves);
-    // no guides without a Sun to orbit
+    // orbit lines — LIVE osculating ellipses from each planet's actual state
+    // (position + velocity relative to the Sun), so guides follow reality after
+    // nudges, impacts, and rogue-star passes instead of showing the launch orbit.
+    // No guides without a Sun to orbit.
     if (!zoomedIn && !earthView && !SUN.deleted && viewOpts.guides){
       ctx.strokeStyle = 'rgba(120,140,180,0.16)'; ctx.lineWidth = 1;
       for (const p of planets){
-        if (p.deleted || p.edited) continue;     // no nominal-orbit guide for removed/edited bodies
-        const b = p.a*Math.sqrt(1-p.e*p.e);
+        if (p.deleted) continue;
+        const mu = G*(SUN.m + p.m);
+        const rx = p.x-SUN.x, ry = p.y-SUN.y, r = Math.hypot(rx, ry);
+        const vx = p.vx-SUN.vx, vy = p.vy-SUN.vy, v2 = vx*vx + vy*vy;
+        const a = 1/(2/r - v2/mu);
+        if (!(a > 0) || a > 60) continue;        // unbound or flung far out — the trail tells that story
+        const rv = rx*vx + ry*vy;
+        const ex = ((v2 - mu/r)*rx - rv*vx)/mu, ey = ((v2 - mu/r)*ry - rv*vy)/mu;
+        const e = Math.hypot(ex, ey);
+        if (e >= 0.995) continue;
+        const b = a*Math.sqrt(1-e*e);
+        const ux = e > 1e-9 ? ex/e : 1, uy = e > 1e-9 ? ey/e : 0;   // unit vector toward periapsis
+        const ocx = SUN.x - a*e*ux, ocy = SUN.y - a*e*uy;           // ellipse centre (Sun at the focus)
         ctx.beginPath();
         for (let k=0;k<=120;k++){
-          const phi = k/120*2*Math.PI;
-          const [X, Y] = scr(SUN.x - p.a*p.e + p.a*Math.cos(phi), SUN.y + b*Math.sin(phi));
+          const phi = k/120*2*Math.PI, ca = a*Math.cos(phi), sb = b*Math.sin(phi);
+          const [X, Y] = scr(ocx + ca*ux - sb*uy, ocy + ca*uy + sb*ux);
           if (k===0) ctx.moveTo(X,Y); else ctx.lineTo(X,Y);
         }
         ctx.stroke();
@@ -1284,7 +1298,7 @@
     editLabels(); ePanel.hidden = false;
   }
   function deselect(){ selected = null; ePanel.hidden = true; }
-  function applyMass(){ if (!selected) return; selected.m = sliderToMass(emEl.value); selected.edited = true; E0 = energy(); emV.textContent = fmtEditMass(selected.m); }
+  function applyMass(){ if (!selected) return; selected.m = sliderToMass(emEl.value); E0 = energy(); emV.textContent = fmtEditMass(selected.m); }
   // a discrete external impulse (thruster burn): add Δv in the chosen heading — leaves the nominal orbit guide so the deviation shows
   function applyNudge(){
     if (!selected || selected === SUN) return;
@@ -1646,7 +1660,7 @@
   document.getElementById('msg-jupiter').addEventListener('click', () => startMessage(MSG_TARGETS[1]));
   document.getElementById('msg-cancel').addEventListener('click', () => {
     const r = msg ? msg.prevRate : 0;
-    endMessage('📡 Transmission abandoned');
+    endMessage();                       // deliberate cancel: the chip vanishing is feedback enough, no feed toast
     setRate(r);
   });
   // ---- satellite launch (planet view) ----
