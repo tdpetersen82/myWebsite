@@ -203,6 +203,29 @@ const ok = (cond, name, detail = '') => {
   }
 }
 
+// ── T8c: Earth→Moon translunar injection reaches the Moon ──
+// Mirrors the shipped Earth–Moon model (km, s): Earth fixed at origin with its
+// real GM, the Moon on its real circular orbit, a Lambert TLI from a parking
+// orbit, integrated under both gravities. Uses the shipped lambertV.
+{
+  const api = boot();
+  const MU_E = 398600.4418, MU_M = 4902.8, D = 384400, wM = 2*Math.PI/(27.3217*86400), r0 = 6671, T = 3*86400;
+  const moonAt = t => [D*Math.cos(wM*t), D*Math.sin(wM*t)];
+  const p0 = [r0*Math.cos(Math.PI), r0*Math.sin(Math.PI)];      // far-side parking point (φ=180°)
+  const v1 = api.lambertV(p0, moonAt(T), T, MU_E);
+  ok(!!v1, 'translunar Lambert solves');
+  const v0 = Math.hypot(v1[0], v1[1]);
+  ok(v0 > 10.4 && v0 < 11.2, `TLI speed ≈ real ~10.8 km/s (${v0.toFixed(2)})`);
+  let x=p0[0], y=p0[1], vx=v1[0], vy=v1[1], closest=Infinity;
+  const acc=(x,y,t)=>{ const [mx,my]=moonAt(t); const r=Math.hypot(x,y)||1, mm=Math.hypot(x-mx,y-my)||1;
+    return [ -MU_E*x/(r*r*r) - MU_M*(x-mx)/(mm*mm*mm), -MU_E*y/(r*r*r) - MU_M*(y-my)/(mm*mm*mm) ]; };
+  const dt=20, n=Math.round(T/dt);
+  for (let i=0;i<n;i++){ const t=i*dt; let [ax,ay]=acc(x,y,t); x+=vx*dt+0.5*ax*dt*dt; y+=vy*dt+0.5*ay*dt*dt;
+    const [a2,b2]=acc(x,y,t+dt); vx+=0.5*(ax+a2)*dt; vy+=0.5*(ay+b2)*dt;
+    const [mx,my]=moonAt(t+dt); closest=Math.min(closest, Math.hypot(x-mx,y-my)); }
+  ok(closest < 5000, `probe reaches the Moon (closest ${Math.round(closest)} km)`);
+}
+
 // ── T9: reversibility — forward then backward returns the system home ──
 {
   const api = boot();

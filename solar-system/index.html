@@ -441,7 +441,7 @@
     <li><b>Fire the comet storm.</b> ~100 random specks at once — then watch the feed report captures, ejections, and impacts as gravity sorts them out.</li>
     <li><b>Invite a rogue star.</b> A quarter-solar-mass intruder crosses the system: orbits bend as it passes, and anything it sweeps too close to is consumed — the event feed keeps score of the damage.</li>
     <li><b>Fly a probe to Mars.</b> ⚡ Actions → Probe to Mars: the spacecraft waits for the launch window (Mars has to lead Earth by about 44°), then coasts along a real Hohmann transfer orbit for roughly eight months while the planets keep moving — arriving where Mars will be, not where it is now.</li>
-    <li><b>Fly a probe to the Moon.</b> ⚡ Actions → Probe to the Moon opens a to-scale Earth–Moon view — Earth and the Moon at their true relative size and distance, with the geostationary-satellite ring drawn in for contrast. It's the honest picture: the Moon is a small thing, 30 Earth-diameters away, a three-day trip.</li>
+    <li><b>Fly a probe to the Moon.</b> ⚡ Actions → Probe to the Moon opens a to-scale Earth–Moon view — Earth and the Moon at their true relative size and distance, with the geostationary-satellite ring drawn in for contrast. The probe rides a real translunar trajectory: injected at about 10.8 km/s (the actual Apollo departure speed) and coasting three days on Earth's and the Moon's gravity.</li>
     <li><b>Send a lightspeed message.</b> ⚡ Actions → Lightspeed message: a radio pulse leaves Earth for Mars (3 to 22 light-minutes away, depending on where the orbits stand) or Jupiter (33 to 54). The planets hold still while it crawls — because at any speed where you can see planets move, light is effectively instantaneous.</li>
     <li><b>Delete the Sun.</b> Click it, open <i>Adjust this body</i>, delete. The planets fly off along near-straight lines — the leash made visible.</li>
     <li><b>Make Jupiter heavier.</b> Drag its mass slider upward and watch the rest of the system start to wobble.</li>
@@ -1865,19 +1865,63 @@
   // The Moon is 60 Earth-radii away and sub-pixel in the system view, so this is
   // its own frame — Earth and Moon drawn at TRUE relative size and distance so the
   // real scale is visible. The transit is an illustrative ~3-day coast.
-  const EM_DIST_RE = 60.27, EM_SIZE = 0.2724, EM_KM = 384400, EM_TRANSIT_H = 72.4, EM_DUR = 8500; // ms of animation
+  // The Earth–Moon transit is a genuine integrated trajectory in an Earth-centred
+  // frame (km, seconds): Earth fixed at the origin with its real GM, the Moon on
+  // its real circular orbit, the probe a test particle under both gravities,
+  // injected on a Lambert-solved translunar trajectory (≈10.8 km/s — the real TLI).
+  const EM_DIST_RE = 60.27, EM_SIZE = 0.2724, EM_KM = 384400;
+  const MU_E = 398600.4418, MU_M = 4902.8;          // km³/s²  (Earth, Moon)
+  const EM_D = 384400, MOON_R_KM = 1737, PARK_R = 6671;   // km
+  const WMOON = 2*Math.PI/(27.3217*86400);          // Moon mean motion, rad/s
+  const EM_T = 3*86400;                              // 3-day transit (s)
+  const EM_DUR = 10000;                              // animation wall-clock length (ms) for the whole transit
   const appEl = document.getElementById('app'), moonExit = document.getElementById('moon-exit');
   let moonView = false, moonMission = null;
+  const moonPosKm = t => { const a = WMOON*t; return [EM_D*Math.cos(a), EM_D*Math.sin(a)]; };   // Moon starts on +x (angle 0)
   function enterMoon(){
     if (EARTH.deleted){ announce('🌙 No Earth to launch from', 'escape'); return; }
     if (msg || probePlan){ announce('🌙 A mission is already under way', 'escape'); return; }
     actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; setActCaret();
     moonView = true; appEl.classList.add('moon-mode'); moonExit.hidden = false;
-    moonMission = { start: performance.now(), done: false };
+    // Lambert translunar injection: from a parking-orbit point on Earth's far side
+    // (φ=180°, the natural TLI perigee) to where the Moon will be after 3 days.
+    const p0 = [PARK_R*Math.cos(Math.PI), PARK_R*Math.sin(Math.PI)];
+    const mFut = moonPosKm(EM_T);
+    let v = lambertV(p0, mFut, EM_T, MU_E);
+    if (!v){ const vc = Math.sqrt(MU_E/PARK_R)*1.4; v = [0, vc]; }   // degenerate fallback
+    moonMission = { t: 0, done: false, arrived: false, closest: Infinity, lastTs: performance.now(),
+                    probe: { x: p0[0], y: p0[1], vx: v[0], vy: v[1] }, trail: [] };
     msgFx = [];                                                  // rings here are screen-space; don't mix with world-space ones
     sfx('launch');
   }
   function exitMoon(){ moonView = false; moonMission = null; appEl.classList.remove('moon-mode'); moonExit.hidden = true; msgFx = []; }
+  // integrate the probe forward by `dtSim` seconds under Earth + Moon gravity
+  function stepMoonProbe(dtSim){
+    const m = moonMission, pr = m.probe, h = 40;                 // 40 s internal step
+    let n = Math.max(1, Math.round(dtSim/h)), dt = dtSim/n;
+    const acc = (x,y,t) => {
+      const [mx,my] = moonPosKm(t);
+      const r = Math.hypot(x,y) || 1, mm = Math.hypot(x-mx, y-my) || 1;
+      return [ -MU_E*x/(r*r*r) - MU_M*(x-mx)/(mm*mm*mm),
+               -MU_E*y/(r*r*r) - MU_M*(y-my)/(mm*mm*mm) ];
+    };
+    for (let i=0;i<n && !m.arrived;i++){
+      let [ax,ay] = acc(pr.x, pr.y, m.t);
+      pr.x += pr.vx*dt + 0.5*ax*dt*dt; pr.y += pr.vy*dt + 0.5*ay*dt*dt; m.t += dt;
+      const [ax2,ay2] = acc(pr.x, pr.y, m.t);
+      pr.vx += 0.5*(ax+ax2)*dt; pr.vy += 0.5*(ay+ay2)*dt;
+      const [mx,my] = moonPosKm(m.t), dM = Math.hypot(pr.x-mx, pr.y-my);
+      if (dM < m.closest) m.closest = dM;
+      if (dM < MOON_R_KM*1.4) m.arrived = true;                  // reached the Moon
+    }
+    // store the trail in the Moon's ROTATING frame (rotate by −Moon-angle) so the
+    // Moon stays fixed on screen and the trajectory reads as a curve, not a line
+    // that sweeps as the Moon orbits.
+    const a = -WMOON*m.t, cx = pr.x*Math.cos(a) - pr.y*Math.sin(a), cy = pr.x*Math.sin(a) + pr.y*Math.cos(a);
+    if (m.trail.length === 0 || Math.hypot(cx-m.trail[m.trail.length-1][0], cy-m.trail[m.trail.length-1][1]) > EM_D*0.006)
+      m.trail.push([cx, cy]);
+    if (m.trail.length > 400) m.trail.shift();
+  }
   document.getElementById('act-moon').addEventListener('click', enterMoon);
   moonExit.addEventListener('click', exitMoon);
 
@@ -1897,21 +1941,33 @@
     const margin = Math.max(40, W*0.10), ey = H*0.52;
     const R = Math.max(120, W - 2*margin);                        // Earth→Moon distance on screen
     const erE = Math.max(3, R/EM_DIST_RE), mrE = Math.max(1.2, erE*EM_SIZE);
-    const ex = margin, mx = ex + R, my = ey;
-    // the Moon's monthly orbit around Earth (faint) + geostationary ring for contrast
+    const ex = margin, k = R/EM_D;                                // px per km; Earth at (ex,ey)
+    const sc = (x,y) => [ex + x*k, ey - y*k];                     // Earth-frame km → screen
+
+    // advance the mission on the wall clock (a 3-day transit plays over EM_DUR ms)
+    if (moonMission){
+      const now = performance.now(), wall = Math.min(0.06, (now - moonMission.lastTs)/1000);
+      moonMission.lastTs = now;
+      if (!moonMission.arrived && moonMission.t < EM_T) stepMoonProbe(wall * (EM_T/(EM_DUR/1000)));
+    }
+    // rotating frame: the Moon is drawn fixed on the right (angle 0)
+    const [mmx, mmy] = sc(EM_D, 0);
+
+    // Moon's monthly orbit (faint) + geostationary ring for contrast
     ctx.strokeStyle = 'rgba(150,170,210,0.14)'; ctx.lineWidth = 1;
     ctx.beginPath(); ctx.arc(ex, ey, R, 0, 2*Math.PI); ctx.stroke();
     ctx.strokeStyle = 'rgba(232,211,160,0.28)'; ctx.setLineDash([3,4]);
     ctx.beginPath(); ctx.arc(ex, ey, 6.61*erE, 0, 2*Math.PI); ctx.stroke(); ctx.setLineDash([]);
     label('geostationary orbit', '#e8d3a0', ex + 6.61*erE, ey, 6);
-    // dimension line
-    ctx.strokeStyle = 'rgba(150,170,210,0.35)'; ctx.lineWidth = 1; ctx.setLineDash([2,4]);
-    ctx.beginPath(); ctx.moveTo(ex+erE, ey+erE+16); ctx.lineTo(mx-mrE, ey+erE+16); ctx.stroke(); ctx.setLineDash([]);
+    // Earth→Moon reference line
+    ctx.strokeStyle = 'rgba(150,170,210,0.22)'; ctx.lineWidth = 1; ctx.setLineDash([2,5]);
+    ctx.beginPath(); ctx.moveTo(ex, ey); ctx.lineTo(mmx, mmy); ctx.stroke(); ctx.setLineDash([]);
+    // scale caption (static, bottom)
     const dimTxt = `${EM_KM.toLocaleString('en-US')} km  ·  ${Math.round(EM_DIST_RE/2)} Earth-diameters apart  ·  1.28 light-seconds`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
     let dimFs = 12; ctx.font = `600 ${dimFs}px system-ui, sans-serif`;
-    while (ctx.measureText(dimTxt).width > W-24 && dimFs > 8){ dimFs--; ctx.font = `600 ${dimFs}px system-ui, sans-serif`; }   // fit narrow screens
-    ctx.fillStyle = '#cfd6e6'; ctx.fillText(dimTxt, W/2, ey+erE+34);
+    while (ctx.measureText(dimTxt).width > W-24 && dimFs > 8){ dimFs--; ctx.font = `600 ${dimFs}px system-ui, sans-serif`; }
+    ctx.fillStyle = '#cfd6e6'; ctx.fillText(dimTxt, W/2, H-24);
     ctx.textAlign = 'left';
     // Earth (real texture if loaded) + atmosphere
     const spin = 2*Math.PI * evClock / EARTH_SPIN;
@@ -1923,37 +1979,43 @@
       g.addColorStop(0,'#8ec5ff'); g.addColorStop(1,'#1a3a6b');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(ex, ey, erE, 0, 2*Math.PI); ctx.fill();
     }
-    drawMoonDisc(mx, my, mrE);
+    drawMoonDisc(mmx, mmy, mrE);
     label('Earth', '#8ec5ff', ex, ey, erE+6);
-    ctx.fillStyle = '#d7d4cc'; ctx.font = '11px ui-monospace,Menlo,monospace';   // Moon label centered above, so it never clips the right edge
+    ctx.fillStyle = '#d7d4cc'; ctx.font = '11px ui-monospace,Menlo,monospace';
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
-    ctx.fillText('Moon', mx, my - mrE - 9); ctx.textAlign = 'left';
-    // scale caption
+    ctx.fillText('Moon', mmx, mmy - mrE - 9); ctx.textAlign = 'left';
+    // scale caption (top)
     ctx.fillStyle = '#7c869c'; ctx.font = "600 11px system-ui, sans-serif";
-    ctx.fillText('Earth and Moon shown to scale — true size and distance', margin, H*0.13);
-    // the probe transit
+    ctx.fillText('Earth and Moon shown to scale — a real translunar trajectory', margin, H*0.13);
+
+    // the probe — real integrated translunar trajectory
     if (moonMission){
-      const p = Math.min(1, (performance.now() - moonMission.start)/EM_DUR);
-      const P0 = [ex+erE, ey], P1 = [mx-mrE, ey], C = [(ex+mx)/2, ey - R*0.14];   // gentle arc
-      const px = (1-p)*(1-p)*P0[0] + 2*(1-p)*p*C[0] + p*p*P1[0];
-      const py = (1-p)*(1-p)*P0[1] + 2*(1-p)*p*C[1] + p*p*P1[1];
-      // trail
-      ctx.strokeStyle = 'rgba(150,235,190,0.5)'; ctx.lineWidth = 1.4; ctx.beginPath();
-      for (let k=0;k<=30;k++){ const q=Math.min(p,k/30); const qx=(1-q)*(1-q)*P0[0]+2*(1-q)*q*C[0]+q*q*P1[0], qy=(1-q)*(1-q)*P0[1]+2*(1-q)*q*C[1]+q*q*P1[1]; k?ctx.lineTo(qx,qy):ctx.moveTo(qx,qy); }
-      ctx.stroke();
-      // probe marker
-      const dx = 2*(1-p)*(C[0]-P0[0]) + 2*p*(P1[0]-C[0]), dy = 2*(1-p)*(C[1]-P0[1]) + 2*p*(P1[1]-C[1]);
-      ctx.save(); ctx.translate(px, py); ctx.rotate(Math.atan2(dy, dx));
+      const m = moonMission;
+      if (m.trail.length > 1){
+        ctx.strokeStyle = 'rgba(150,235,190,0.5)'; ctx.lineWidth = 1.4; ctx.beginPath();
+        for (let i=0;i<m.trail.length;i++){ const [tx,ty] = sc(m.trail[i][0], m.trail[i][1]); i?ctx.lineTo(tx,ty):ctx.moveTo(tx,ty); }
+        ctx.stroke();
+      }
+      const ra = -WMOON*m.t, rc = Math.cos(ra), rs = Math.sin(ra);           // rotate probe into the Moon's frame
+      const [px, py] = sc(m.probe.x*rc - m.probe.y*rs, m.probe.x*rs + m.probe.y*rc);
+      let heading = 0;                                                        // from the last trail segment (already rotating-frame)
+      if (m.trail.length > 1){ const [ax,ay] = sc(...m.trail[m.trail.length-1]), [bx,by] = sc(...m.trail[m.trail.length-2]); heading = Math.atan2(ay-by, ax-bx); }
+      ctx.save(); ctx.translate(px, py); ctx.rotate(heading);
       ctx.fillStyle = '#e9fff4'; ctx.strokeStyle = 'rgba(150,235,190,0.9)'; ctx.lineWidth = 1;
       ctx.beginPath(); ctx.moveTo(6,0); ctx.lineTo(-4,3.4); ctx.lineTo(-4,-3.4); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
-      const hrs = Math.round(p*EM_TRANSIT_H);
+      const hrs = Math.round(m.t/3600), tot = Math.round(EM_T/3600);
+      const kkm = Math.round(Math.hypot(m.probe.x - moonPosKm(m.t)[0], m.probe.y - moonPosKm(m.t)[1]));
       ctx.fillStyle = '#cfd6e6'; ctx.font = "600 13px system-ui, sans-serif"; ctx.textAlign = 'center';
-      ctx.fillText(p < 1 ? `🌙 Transit to the Moon · hour ${hrs} / ${Math.round(EM_TRANSIT_H)}` : '🌙 Arrived — 3-day journey, 384,400 km', W/2, H*0.20);
+      ctx.fillText(m.arrived
+        ? `🌙 Reached the Moon — ${(m.t/86400).toFixed(1)}-day journey, ${EM_KM.toLocaleString('en-US')} km`
+        : `🌙 Transit to the Moon · hour ${hrs} / ${tot} · ${kkm.toLocaleString('en-US')} km to go`, W/2, H*0.20);
       ctx.textAlign = 'left';
-      if (p >= 1 && !moonMission.done){
-        moonMission.done = true;
-        msgFx.push({ x: mx, y: my, born: performance.now() });
-        announce('🌙 Probe reached the Moon — a 3-day, 384,400 km journey', 'capture'); sfx('capture');
+      if ((m.arrived || m.t >= EM_T) && !m.done){
+        m.done = true;
+        msgFx.push({ x: mmx, y: mmy, born: performance.now() });
+        announce(m.arrived
+          ? `🌙 Probe reached the Moon — a ${(m.t/86400).toFixed(1)}-day, ${EM_KM.toLocaleString('en-US')} km journey`
+          : `🌙 Flyby — closest ${Math.round(m.closest).toLocaleString('en-US')} km`, 'capture'); sfx('capture');
       }
     }
     // arrival ring (wall-clock; screen-space coords in this view)
