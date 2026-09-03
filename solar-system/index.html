@@ -12,6 +12,8 @@
   {"@type":"Question","name":"Is this a real simulation or a looping animation?","acceptedAnswer":{"@type":"Answer","text":"A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press R to rebuild the solar system from scratch."}},
   {"@type":"Question","name":"Are the sizes and distances to scale?","acceptedAnswer":{"@type":"Answer","text":"The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on true-scale distances in the dock's view options to see the honest spacing. Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click."}},
   {"@type":"Question","name":"Why does the Sun wobble?","acceptedAnswer":{"@type":"Answer","text":"Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it. The real Sun does the same — detecting that wobble in other stars is one of the main ways exoplanets are discovered."}},
+  {"@type":"Question","name":"What would happen if the Sun suddenly disappeared?","acceptedAnswer":{"@type":"Answer","text":"The planets would fly off in straight lines at whatever speed and heading they had at that instant — about 30 km/s for Earth — because nothing would be pulling them into a curve any more. That is Newton's first law. The Moon would stay with Earth, since Earth's own gravity is unaffected. One subtlety the simulator can't show: gravity travels at the speed of light, so the real Earth would keep orbiting the vanished Sun for 8 minutes 20 seconds before it noticed. The What if? lesson runs the experiment for real."}},
+  {"@type":"Question","name":"How long does it take a radio signal to reach Mars?","acceptedAnswer":{"@type":"Answer","text":"Between about 3 and 22 minutes one way, depending on where Earth and Mars are in their orbits — the gap between them swings from roughly 55 to 400 million km, and radio travels at the speed of light, 300,000 km per second. A reply takes just as long coming back, so a round trip is 6 to 44 minutes, which is why rovers are driven by pre-planned commands rather than live. The What if? lesson sends a real pulse across today's gap and times it."}},
   {"@type":"Question","name":"Why do Mars missions only launch every 26 months?","acceptedAnswer":{"@type":"Answer","text":"Because the rocket is the fixed part and the timing is the free part. A launcher can add only so much speed beyond Earth's own orbital motion, and the cheapest path to Mars — a transfer orbit that just reaches Mars's distance — only works if Mars will be at the far end of it when the probe arrives. Mars keeps moving during the roughly eight-month trip, so it has to be a specific angle ahead of Earth at launch. Earth catches up to that geometry once every synodic period, about 780 days. The What if? lesson lets you test it: launch whenever you like and see where Mars actually is when you get there."}},
   {"@type":"Question","name":"Can planets collide or be destroyed?","acceptedAnswer":{"@type":"Answer","text":"Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape."}},
   {"@type":"Question","name":"What are the controls?","acceptedAnswer":{"@type":"Answer","text":"Scroll or pinch to zoom, click or tap any body to inspect it. Keyboard: Space pause, up/down arrows time rate, E Earth view, C comet, D data table, 0 reset view, R reset the system."}},
@@ -507,7 +509,9 @@
   </ol>
 
   <h2>What if? — guided experiments</h2>
-  <p>The 🎓 <b>What if?</b> menu turns the sandbox into a lab. Each lesson poses a question, asks for your prediction, runs the experiment on the real physics, and shows the number that answers it. The first one is the question every Mars mission is built around:</p>
+  <p>The 🎓 <b>What if?</b> menu turns the sandbox into a lab. Each lesson poses a question, asks for your prediction, runs the experiment on the real physics, and shows the number that answers it. Three are live so far.</p>
+  <p><b>What if the Sun vanished?</b> Predict first — keep circling, spiral inward, or fly off straight — then the lesson deletes the Sun for real. Every planet keeps exactly the speed and heading it had: Earth carries on at the same 30 km/s along a straight line the overlay draws for you, and the coach reports its speed before and after. That is Newton's first law with the training wheels off — the circle was the Sun's doing all along. The one thing the simulator can't show is that gravity travels at light speed, so the real Earth would keep circling a vanished Sun for another 8 minutes 20 seconds.</p>
+  <p><b>How long does a message to Mars take?</b> Guess — instantly, a second, minutes, hours — then send a real radio pulse across whatever gap the planets are at right now. The planets freeze on purpose: at any speed where you could see them move, light would be instantaneous. Today's answer lands somewhere between 3 and 22 minutes depending on where Mars is, a reply takes just as long coming back, and that round trip is the reason Mars rovers drive themselves. Then try Jupiter, where the delay runs past half an hour.</p>
   <p><b>Why can't we fly straight to Mars?</b> You take the launch controls. The rocket is fixed — it can leave Earth about 3.7 km/s faster than Earth is already moving, a realistic figure for a Mars launcher — and the only thing you choose is <i>when</i>. Leave with Mars in the wrong place and the probe coasts out to Mars's distance from the Sun and finds empty space: over an eight-month transfer Mars travels well over a hundred degrees further around its orbit, so it has to be tens of degrees ahead of Earth at the moment you go. From whatever moment you pick, the simulator prices the cheapest real transfer (one row of the "porkchop plot" mission planners draw) and flies it if the rocket can afford it. The brief stretch when it can is the launch window — and because Earth laps Mars only every 26 months, that's how often it comes around.</p>
 
   <h2>Using it in a classroom</h2>
@@ -523,6 +527,8 @@
   <details><summary>Is this a real simulation or a looping animation?</summary><p>A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press <b>R</b> to rebuild the solar system from scratch.</p></details>
   <details><summary>Are the sizes and distances to scale?</summary><p>The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on <b>true-scale distances</b> in the dock's view options to see the honest spacing (mostly emptiness; zoom in to find the inner planets). Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click.</p></details>
   <details><summary>Why does the Sun wobble?</summary><p>Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it. The real Sun does the same — detecting that wobble in other stars is one of the main ways exoplanets are discovered.</p></details>
+  <details><summary>What would happen if the Sun suddenly disappeared?</summary><p>The planets would fly off in straight lines at whatever speed and heading they had at that instant — about 30 km/s for Earth — because nothing would be pulling them into a curve any more. That is Newton's first law. The Moon would stay with Earth, since Earth's own gravity is unaffected. One subtlety the simulator can't show: gravity travels at the speed of light, so the real Earth would keep orbiting the vanished Sun for 8 minutes 20 seconds before it noticed. The 🎓 <b>What if?</b> lesson runs the experiment for real.</p></details>
+  <details><summary>How long does it take a radio signal to reach Mars?</summary><p>Between about 3 and 22 minutes one way, depending on where Earth and Mars are in their orbits — the gap between them swings from roughly 55 to 400 million km, and radio travels at the speed of light, 300,000 km per second. A reply takes just as long coming back, so a round trip is 6 to 44 minutes, which is why rovers are driven by pre-planned commands rather than live. The 🎓 <b>What if?</b> lesson sends a real pulse across today's gap and times it.</p></details>
   <details><summary>Why do Mars missions only launch every 26 months?</summary><p>Because the rocket is the fixed part and the timing is the free part. A launcher can add only so much speed beyond Earth's own orbital motion, and the cheapest path to Mars — a transfer orbit that just reaches Mars's distance — only works if Mars will be at the far end of it when the probe arrives. Mars keeps moving during the roughly eight-month trip, so it has to be a specific angle ahead of Earth at launch. Earth catches up to that geometry once every synodic period, about 780 days. The 🎓 <b>What if?</b> lesson lets you test it: launch whenever you like and see where Mars actually is when you get there.</p></details>
   <details><summary>Can planets collide or be destroyed?</summary><p>Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape.</p></details>
   <details><summary>What are the controls?</summary><p>Scroll or pinch to zoom, click or tap any body to inspect it. Keyboard: <b>Space</b> pause, <b>↑↓</b> time rate, <b>E</b> Earth view, <b>C</b> comet, <b>D</b> data table, <b>0</b> reset view, <b>R</b> reset the system.</p></details>
@@ -543,6 +549,7 @@
 (() => {
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d');
+  let lesson = null;   // the running "What if?" lesson — declared up top because draw() reads it every frame
 
   // ---- Earth texture (real Blue Marble), mapped onto the spinning globe in the planet view ----
   let earthTex = null, earthReady = false;
@@ -1142,6 +1149,7 @@
 
   function draw(){
     [baryX, baryY] = curBary();    // recentre the view on the system's barycentre each frame
+    if (lesson && lesson.pin){ baryX = lesson.pin[0]; baryY = lesson.pin[1]; }   // a lesson may hold the view on a fixed point (where the Sun was)
     for (const b of bodies) b._drawn = false;       // click hit-testing uses the actual drawn position (set below)
     for (const c of comets) c._drawn = false;
     ctx.fillStyle = '#05060a'; ctx.fillRect(0,0,W,H);
@@ -1534,15 +1542,14 @@
   ndEl.addEventListener('input', editLabels);
   document.getElementById('edit-nudge').addEventListener('click', applyNudge);
   document.getElementById('edit-close').addEventListener('click', deselect);
-  document.getElementById('edit-delete').addEventListener('click', () => {
-    if (!selected) return;
-    const b = selected;
+  function removeBody(b){                                                    // the inspector's Delete — lessons use it too
     if (comets.includes(b)) b.dead = true;                                  // a comet / interloper
     else { b.deleted = true; if (b === EARTH) MOON.deleted = true; }         // a Moon with no Earth makes no sense
     if (follow === b){ follow = null; zoom = 1; }                            // stop tracking a ghost
     EMIT('removed', { name: b.name, sun: b === SUN });
     E0 = energy(); deselect();
-  });
+  }
+  document.getElementById('edit-delete').addEventListener('click', () => { if (selected) removeBody(selected); });
   function pick(o){
     selectBody(o); if (!selected) return;
     if (o === SUN || o.moon) follow = null;                                 // Sun + Moon: edit in the system view
@@ -1863,24 +1870,28 @@
       el.textContent = (t.deleted || EARTH.deleted) ? '—' : lmTo(t).toFixed(1) + ' light-min';
     }
   }
-  function startMessage(t){
+  function startMessage(t, opts){
+    opts = opts || {};
     if (EARTH.deleted){ announce('📡 No Earth to transmit from', 'escape'); return; }
     if (t.deleted){ announce(`📡 ${t.name} isn't there any more`, 'escape'); return; }
     if (probePlan){ announce('📡 A probe is in flight — wait for it', 'escape'); return; }   // shared corner + opposite time models
     if (follow === EARTH) resetView();                  // the beam lives in the system view
     msg = { to: t, x0: EARTH.x, y0: EARTH.y, x1: t.x, y1: t.y,
-            totalLm: lmTo(t), doneLm: 0, prevRate: timeRate };
+            totalLm: lmTo(t), doneLm: 0, prevRate: timeRate,
+            lesson: opts.lesson || null, onEnd: opts.onEnd || null };   // a lesson hears how the transmission ended
     msgFx.push({ x: EARTH.x, y: EARTH.y, born: performance.now() });
     setRate(0);
     actMenu.hidden = true; msgPanel.hidden = true; cPanel.hidden = true; setActCaret();
     msgStatus.hidden = false;
     sfx('launch');
+    return true;
   }
   function endMessage(note){
     if (!msg) return;
+    const m = msg; msg = null;
     if (note) announce(note, 'escape');
     msgStatus.hidden = true;
-    msg = null;
+    if (m.onEnd) m.onEnd({ arrived: m.doneLm >= m.totalLm, lost: !!note, totalLm: m.totalLm });
   }
   document.getElementById('act-msg').addEventListener('click', () => { actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = false; setActCaret(); updMsgRows(); });
   document.getElementById('msg-mars').addEventListener('click', () => startMessage(MSG_TARGETS[0]));
@@ -2083,7 +2094,7 @@
   const coach = document.getElementById('coach'), coachStep = document.getElementById('coach-step'),
         coachTitle = document.getElementById('coach-title'), coachBody = document.getElementById('coach-body'),
         coachBtns = document.getElementById('coach-btns');
-  let lesson = null;                                           // the running lesson's state
+  // (`lesson` itself is declared at the top of the script)
   let lessonsDone = {};
   try { lessonsDone = JSON.parse(localStorage.getItem('ssLessons') || '{}'); } catch(e){}
   function markLesson(id, data){
@@ -2093,7 +2104,9 @@
   }
   const track = (name, id) => { if (typeof gtag === 'function') gtag('event', name, { lesson: id }); };
   const LESSONS = [
-    { id: 'mars', q: 'Why can\'t we fly straight to Mars?', s: 'You pick the launch moment. Same rocket every time — only the timing changes.', run: () => startMarsLesson() },
+    { id: 'sun',   q: 'What if the Sun vanished?', s: 'Predict what the planets do — then delete it for real.', run: () => startSunLesson() },
+    { id: 'light', q: 'How long does a message to Mars take?', s: 'Guess, then send a real lightspeed pulse across today\'s gap.', run: () => startLightLesson(MARS) },
+    { id: 'mars',  q: 'Why can\'t we fly straight to Mars?', s: 'You pick the launch moment. Same rocket every time — only the timing changes.', run: () => startMarsLesson() },
   ];
   function renderLearnMenu(){
     learnList.innerHTML = '';
@@ -2124,10 +2137,15 @@
     if (!lesson) return;
     const L = lesson; lesson = null; coach.hidden = true;
     if (probePlan && probePlan.lesson === L.id){ probePlan.onEnd = null; abortProbe(); }   // quiet abort: the card closing is the feedback
+    if (msg && msg.lesson === L.id){ msg.onEnd = null; const r = msg.prevRate; endMessage(); setRate(r); }
+    if (L.restore) L.restore();                                // a lesson that changed the view puts it back
+    if (L.savedRate !== undefined) setRate(L.savedRate);
   }
   document.getElementById('coach-close').addEventListener('click', endLesson);
+  function lessonTick(){ if (lesson && lesson.tick) lesson.tick(); }        // each lesson supplies its own per-frame hook…
+  function drawLessonFx(){ if (lesson && lesson.draw) lesson.draw(); }      // …and its own canvas overlay
   let ltFrame = 0;
-  function lessonTick(){
+  function marsTick(){
     if (!lesson || lesson.id !== 'mars') return;
     if (lesson.step === 'arm' && probePlan){
       coachLive('.lv-lead', marsLead().toFixed(0) + '°');
@@ -2167,7 +2185,7 @@
         btns: [{ label: 'Restore the system', cls: 'primary', fn: () => { reset(); startMarsLesson(); } }, { label: 'Not now', fn: endLesson }] });
       return;
     }
-    lesson = { id: 'mars', step: 'intro', attempts: 0, reveal: false, fx: null, launch: null };
+    lesson = { id: 'mars', step: 'intro', attempts: 0, reveal: false, fx: null, launch: null, tick: marsTick, draw: marsDraw };
     track('lesson_start', 'mars');
     deselect(); if (follow) resetView(); killHint();
     showCoach({ step: 'What if? · 1 of 3', title: 'Why can\'t we fly straight to Mars?',
@@ -2263,7 +2281,7 @@
   }
   // lesson overlays: the Earth→Mars lead-angle wedge while aiming; once launched,
   // the probe's far point against where Mars will actually be
-  function drawLessonFx(){
+  function marsDraw(){
     if (!lesson || !lesson.fx || SUN.deleted) return;
     const [sx, sy] = scr(SUN.x, SUN.y);
     if (lesson.fx.wedge && !EARTH.deleted && !MARS.deleted){
@@ -2297,6 +2315,168 @@
       ctx.fillStyle = '#bff5da'; ctx.fillText(L.inBudget ? 'aim point' : 'probe\'s far point', ax+10, ay + (L.inBudget ? 13 : 0));
       ctx.restore();
     }
+  }
+
+  // ---- Lesson: what if the Sun vanished? ----
+  // Predict, then delete the Sun for real. Every planet keeps the speed and
+  // heading it had (Newton's first law); the overlay draws the straight line
+  // Earth follows if nothing pulls on it, so the trail can be checked against
+  // it, and the coach reports Earth's measured speed before and after. The view
+  // is pinned on the Sun's last position in TRUE scale for the run — the usual
+  // compressed view bends straight paths into curves, which would bury the point.
+  const SUN_RUN_YR = 0.35;                                    // drift time before the debrief
+  const GUESS_SUN = { circle: 'keep circling', inward: 'spiral inward', straight: 'fly off in straight lines' };
+  const earthKms = () => Math.hypot(EARTH.vx, EARTH.vy) * KMS;
+  function startSunLesson(){
+    if (lesson) endLesson();
+    if (msg || probePlan){ announce('🎓 Finish the current mission first', 'escape'); return; }
+    if (SUN.deleted || EARTH.deleted){
+      lesson = { id: 'sun', step: 'blocked' };
+      showCoach({ step: 'What if? · the Sun', title: 'What if the Sun vanished?',
+        html: '<p>This lesson needs the Sun and Earth in place to begin with.</p>',
+        btns: [{ label: 'Restore the system', cls: 'primary', fn: () => { reset(); startSunLesson(); } }, { label: 'Not now', fn: endLesson }] });
+      return;
+    }
+    lesson = { id: 'sun', step: 'intro', tick: sunTick, draw: sunDraw, fx: null, savedRate: timeRate };
+    track('lesson_start', 'sun');
+    deselect(); if (follow) resetView(); killHint();
+    showCoach({ step: 'What if? · 1 of 3', title: 'What if the Sun vanished?',
+      html: `<p>Right now the Sun's gravity is the only thing bending Earth's path into a circle. Suppose the Sun blinked out of existence this instant — mass, gravity, everything.</p>
+             <p>What do the planets do? Make your prediction:</p>`,
+      btns: [{ label: 'Keep circling', fn: () => sunRun('circle') }, { label: 'Spiral inward', fn: () => sunRun('inward') }, { label: 'Fly off straight', fn: () => sunRun('straight') }] });
+  }
+  function sunRun(guess){
+    if (!lesson || lesson.id !== 'sun' || lesson.step !== 'intro') return;
+    if (SUN.deleted || EARTH.deleted){ endLesson(); return; }
+    lesson.guess = guess; lesson.step = 'run'; lesson.t0 = t; lesson.v0 = earthKms();
+    lesson.sunAt = [SUN.x, SUN.y]; lesson.pin = [SUN.x, SUN.y];
+    const saved = { scale: viewOpts.scale };                   // true scale keeps straight lines straight; put back at the end
+    lesson.restore = () => { viewOpts.scale = saved.scale; refit(); syncViewPanel(); resetView(); };
+    viewOpts.scale = true; refit(); syncViewPanel(); follow = null; zoom = 12;   // inner system fills the view; Earth's 0.35-yr drift stays on screen
+    removeBody(SUN);                                           // the same path as the inspector's Delete
+    lesson.fx = { sunGone: true };
+    setRate(8);
+    showCoach({ step: 'What if? · 2 of 3 · the Sun is gone', title: 'Nothing holds the planets now',
+      html: `<p>You said: <b>${GUESS_SUN[guess]}</b>. Watch the trails.</p>
+             <p>Earth's speed: <b class="lv-spd">—</b> km/s · <b class="lv-days">—</b> since the Sun vanished · <b class="lv-dist">—</b> million km from where it was.</p>
+             <p>The dashed line is where Earth goes if nothing pulls on it.</p>`,
+      btns: [] });
+  }
+  function sunTick(){
+    if (!lesson || lesson.id !== 'sun' || lesson.step !== 'run') return;
+    if (!SUN.deleted || EARTH.deleted){ endLesson(); return; }   // a reset brought the Sun back, or Earth was removed
+    const days = (t - lesson.t0)*365.25, dist = Math.hypot(EARTH.x-lesson.sunAt[0], EARTH.y-lesson.sunAt[1])*MKM;
+    const d = Math.round(days);
+    coachLive('.lv-spd', earthKms().toFixed(1)); coachLive('.lv-days', `${d} day${d === 1 ? '' : 's'}`); coachLive('.lv-dist', dist.toFixed(0));
+    if (t - lesson.t0 >= SUN_RUN_YR) sunResult(dist);
+  }
+  function sunResult(dist){
+    lesson.step = 'result';
+    const v = earthKms(), right = lesson.guess === 'straight';
+    markLesson('sun', { guess: lesson.guess }); track('lesson_complete', 'sun');
+    showCoach({ step: 'What if? · result', title: right ? 'You called it — straight lines' : 'Straight lines, not circles',
+      html: `<p>Every planet kept exactly the speed and heading it had. Earth is still moving at <b>${v.toFixed(1)} km/s</b> — it was <b>${lesson.v0.toFixed(1)}</b> when the Sun vanished — and it's now <b>${dist.toFixed(0)} million km</b> from where the Sun was, on a straight line. No pull, no turn: that's Newton's first law. The circle was the Sun's doing all along.</p>
+             <p>The Moon came along for the ride — Earth's gravity didn't go anywhere.</p>
+             <p class="note">One thing the sim can't show: gravity travels at light speed. The real Earth would keep circling a Sun that no longer existed for 8 minutes 20 seconds — exactly as long as its last light kept arriving.</p>`,
+      btns: [{ label: 'Bring the Sun back', fn: () => { endLesson(); reset(); } }, { label: 'Done ✓', cls: 'primary', fn: endLesson }] });
+  }
+  function sunDraw(){
+    if (!lesson || !lesson.fx || !lesson.fx.sunGone || EARTH.deleted) return;
+    const [ox, oy] = scr(lesson.sunAt[0], lesson.sunAt[1]);
+    ctx.save();
+    ctx.strokeStyle = 'rgba(255,207,90,0.7)'; ctx.lineWidth = 1.5;                    // where the Sun was
+    ctx.beginPath(); ctx.moveTo(ox-6,oy-6); ctx.lineTo(ox+6,oy+6); ctx.moveTo(ox-6,oy+6); ctx.lineTo(ox+6,oy-6); ctx.stroke();
+    ctx.fillStyle = '#ffcf5a'; ctx.font = '600 10.5px system-ui,sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    ctx.fillText('where the Sun was', ox+10, oy);
+    // Earth's straight line if nothing pulls — sampled in world space so it stays honest in any view
+    const vl = Math.hypot(EARTH.vx, EARTH.vy) || 1, ux = EARTH.vx/vl, uy = EARTH.vy/vl;
+    ctx.setLineDash([4,5]); ctx.strokeStyle = 'rgba(191,245,218,0.7)'; ctx.lineWidth = 1.2;
+    ctx.beginPath();
+    for (let k=0;k<=30;k++){ const s = -0.6 + 1.8*k/30, [X,Y] = scr(EARTH.x+ux*s, EARTH.y+uy*s); k ? ctx.lineTo(X,Y) : ctx.moveTo(X,Y); }
+    ctx.stroke(); ctx.setLineDash([]);
+    ctx.restore();
+  }
+
+  // ---- Lesson: how long does a message to Mars take? ----
+  // Predict, then send the real lightspeed pulse. The planets freeze on purpose
+  // (at any watchable speed light is effectively instant); the coach reports the
+  // true light-time for the gap the planets are at right now.
+  const MKM_PER_LM = MKM / LM_PER_AU;                          // million km per light-minute (≈18.0)
+  const GUESS_LIGHT = { instant: 'instantly', second: 'about a second', minutes: 'minutes', hours: 'hours' };
+  const LIGHT_FACTS = {
+    Mars:    { range: 'about 3 minutes to 22', rt: 'the quickest possible round trip is 6 minutes, and it can be 44',
+               note: 'That\'s why Mars rovers drive themselves — a driver on Earth would see the cliff only after the rover had reached it. When Perseverance landed on 18 February 2021, word of its touchdown took 11 minutes 22 seconds to reach Earth.' },
+    Jupiter: { range: 'about 33 minutes to 54', rt: 'a round trip is never under an hour, and can run to about 1 h 48 min',
+               note: 'Juno, in orbit at Jupiter, lives with that delay: nothing about it can be flown live, so every manoeuvre is scripted and sent ahead of time.' },
+  };
+  function startLightLesson(target){
+    target = target || MARS;
+    if (lesson) endLesson();
+    if (msg || probePlan){ announce('🎓 Finish the current mission first', 'escape'); return; }
+    if (EARTH.deleted || target.deleted){
+      lesson = { id: 'light', step: 'blocked' };
+      showCoach({ step: 'What if? · lightspeed', title: `How long does a message to ${target.name} take?`,
+        html: `<p>This lesson needs Earth and ${target.name} — and one of them is gone.</p>`,
+        btns: [{ label: 'Restore the system', cls: 'primary', fn: () => { reset(); startLightLesson(target); } }, { label: 'Not now', fn: endLesson }] });
+      return;
+    }
+    lesson = { id: 'light', step: 'intro', target, tick: lightTick, fx: null };
+    track('lesson_start', 'light');
+    deselect(); if (follow) resetView(); killHint();
+    showCoach({ step: 'What if? · 1 of 3', title: `How long does a message to ${target.name} take?`,
+      html: `<p>Earth and ${target.name} are both moving, so the gap between them is never the same twice. Right now it's <b class="lv-gap">—</b> million km.</p>
+             <p>A radio message crosses that gap at the speed of light — 300,000 km every second. How long until it arrives? Predict:</p>`,
+      btns: [{ label: 'Instantly', fn: () => lightSend('instant') }, { label: 'About a second', fn: () => lightSend('second') },
+             { label: 'Minutes', fn: () => lightSend('minutes') }, { label: 'Hours', fn: () => lightSend('hours') }] });
+  }
+  function lightSend(guess){
+    if (!lesson || lesson.id !== 'light' || lesson.step !== 'intro') return;
+    const target = lesson.target;
+    lesson.guess = guess;
+    if (!startMessage(target, { lesson: 'light', onEnd: lightEnded })){ endLesson(); return; }
+    msgStatus.hidden = true;                                   // the coach carries the readout during a lesson
+    lesson.step = 'run';
+    showCoach({ step: 'What if? · 2 of 3 · in transit', title: 'The pulse is crossing',
+      html: `<p>You said: <b>${GUESS_LIGHT[guess]}</b>.</p>
+             <p>Crossed <b class="lv-lm">0.0</b> of <b>${msg.totalLm.toFixed(1)} light-minutes</b> · <b class="lv-km">0</b> million km so far.</p>
+             <p>The planets are frozen on purpose: at any speed where you could see them move, light would be instantaneous. Even so, every second here is three light-minutes.</p>`,
+      btns: [] });
+  }
+  function lightTick(){
+    if (!lesson || lesson.id !== 'light') return;
+    if (lesson.step === 'intro'){
+      if (EARTH.deleted || lesson.target.deleted){ endLesson(); return; }
+      coachLive('.lv-gap', (Math.hypot(lesson.target.x-EARTH.x, lesson.target.y-EARTH.y)*MKM).toFixed(0));
+    } else if (lesson.step === 'run' && msg){
+      const lm = Math.min(msg.doneLm, msg.totalLm);
+      coachLive('.lv-lm', lm.toFixed(1)); coachLive('.lv-km', (lm*MKM_PER_LM).toFixed(0));
+    }
+  }
+  function lightEnded(res){
+    if (!lesson || lesson.id !== 'light') return;
+    const target = lesson.target, name = target.name;
+    if (!res.arrived){
+      if (!res.lost){ endLesson(); return; }                   // cancelled: the card closing is the feedback
+      lesson.step = 'result';
+      showCoach({ step: 'What if? · lost', title: 'Transmission lost',
+        html: '<p>Time started moving again, and the pulse only crosses while the planets hold still.</p>',
+        btns: [{ label: 'Send it again', cls: 'primary', fn: () => startLightLesson(target) }, { label: 'Stop', fn: endLesson }] });
+      return;
+    }
+    lesson.step = 'result';
+    const secs = Math.round(res.totalLm*60), m = Math.floor(secs/60), s = secs % 60, km = res.totalLm*MKM_PER_LM;   // round once, then split — never "32 min 60 s"
+    const g = lesson.guess, f = LIGHT_FACTS[name] || LIGHT_FACTS.Mars;
+    const verdict = g === 'minutes' ? 'Your guess — <b>minutes</b> — was right.'
+                  : g === 'instant' ? `You guessed <b>instantly</b>. Light is fast, but it isn't instant: that gap took <b>${Math.round(secs)} seconds</b> to cross.`
+                  : g === 'second'  ? `You guessed <b>about a second</b>. It took <b>${Math.round(secs)}</b> of them.`
+                  :                   `You guessed <b>hours</b>. It was under one — <b>${m} minutes</b>.`;
+    markLesson('light', { target: name, minutes: +res.totalLm.toFixed(1) }); track('lesson_complete', 'light');
+    showCoach({ step: 'What if? · result', title: `${m} min ${s} s to ${name}`,
+      html: `<p>The message crossed <b>${km.toFixed(0)} million km</b> in <b>${m} min ${s} s</b>. ${verdict}</p>
+             <p>It isn't always this long: as the two planets move, the delay to ${name} runs from ${f.range} minutes — and a reply takes just as long coming back, so ${f.rt}.</p>
+             <p class="note">${f.note}</p>`,
+      btns: (name === 'Mars' ? [{ label: 'Now try Jupiter', fn: () => startLightLesson(JUPITER) }] : [{ label: 'Back to Mars', fn: () => startLightLesson(MARS) }])
+            .concat([{ label: 'Done ✓', cls: 'primary', fn: endLesson }]) });
   }
 
   // ---- Earth → Moon: a to-scale Earth–Moon view ----
