@@ -11,7 +11,9 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Is this a real simulation or a looping animation?","acceptedAnswer":{"@type":"Answer","text":"A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press R to rebuild the solar system from scratch."}},
   {"@type":"Question","name":"Are the sizes and distances to scale?","acceptedAnswer":{"@type":"Answer","text":"The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on true-scale distances in the dock's view options to see the honest spacing. Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click."}},
-  {"@type":"Question","name":"Why does the Sun wobble?","acceptedAnswer":{"@type":"Answer","text":"Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it. The real Sun does the same — detecting that wobble in other stars is one of the main ways exoplanets are discovered."}},
+  {"@type":"Question","name":"Why does the Sun wobble?","acceptedAnswer":{"@type":"Answer","text":"Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it — about 12 m/s, once every 12 years, in a loop slightly larger than the Sun itself. The real Sun does the same, and detecting that wobble in other stars is one of the main ways exoplanets are discovered: 51 Pegasi b, the first planet found around a Sun-like star, showed up in 1995 as a 56 m/s swing repeating every 4.2 days. The What if? lesson zooms in to show the loop."}},
+  {"@type":"Question","name":"How far away is the Moon?","acceptedAnswer":{"@type":"Answer","text":"About 384,000 km — 30 Earth-diameters. Shrink Earth to a basketball and the Moon is a tennis ball about 7 metres away, much farther than most pictures suggest. Light takes 1.3 seconds to cross the gap; Apollo took about three days. The simulator's Earth–Moon view draws both at true relative size and distance, and the What if? lesson flies a probe across it."}},
+  {"@type":"Question","name":"How does a gravity assist make a spacecraft go faster?","acceptedAnswer":{"@type":"Answer","text":"Relative to the planet, it doesn't: a spacecraft leaves a flyby at the same speed it arrived, because gravity gives back on the way out what it took on the way in. But the planet is moving around the Sun — Jupiter at about 13 km/s — and the flyby bends the spacecraft's path to travel more along the planet's direction, so relative to the Sun it gains speed. Momentum is conserved: the planet slows by an immeasurably tiny amount. Voyager used this at Jupiter, Saturn, Uranus and Neptune; the What if? lesson measures the gain in the simulator."}},
   {"@type":"Question","name":"What would happen if the Sun suddenly disappeared?","acceptedAnswer":{"@type":"Answer","text":"The planets would fly off in straight lines at whatever speed and heading they had at that instant — about 30 km/s for Earth — because nothing would be pulling them into a curve any more. That is Newton's first law. The Moon would stay with Earth, since Earth's own gravity is unaffected. One subtlety the simulator can't show: gravity travels at the speed of light, so the real Earth would keep orbiting the vanished Sun for 8 minutes 20 seconds before it noticed. The What if? lesson runs the experiment for real."}},
   {"@type":"Question","name":"How long does it take a radio signal to reach Mars?","acceptedAnswer":{"@type":"Answer","text":"Between about 3 and 22 minutes one way, depending on where Earth and Mars are in their orbits — the gap between them swings from roughly 55 to 400 million km, and radio travels at the speed of light, 300,000 km per second. A reply takes just as long coming back, so a round trip is 6 to 44 minutes, which is why rovers are driven by pre-planned commands rather than live. The What if? lesson sends a real pulse across today's gap and times it."}},
   {"@type":"Question","name":"Why do Mars missions only launch every 26 months?","acceptedAnswer":{"@type":"Answer","text":"Because the rocket is the fixed part and the timing is the free part. A launcher can add only so much speed beyond Earth's own orbital motion, and the cheapest path to Mars — a transfer orbit that just reaches Mars's distance — only works if Mars will be at the far end of it when the probe arrives. Mars keeps moving during the roughly eight-month trip, so it has to be a specific angle ahead of Earth at launch. Earth catches up to that geometry once every synodic period, about 780 days. The What if? lesson lets you test it: launch whenever you like and see where Mars actually is when you get there."}},
@@ -119,7 +121,7 @@
   #top-btns{display:flex;gap:8px;justify-content:flex-end;}
   #learn-toggle{background:rgba(74,108,190,0.45);border-color:rgba(150,180,255,0.5);}
   #learn-toggle:hover{background:rgba(92,130,225,0.7);}
-  #learn-menu{width:276px;padding:11px 12px 10px;text-align:left;}
+  #learn-menu{width:276px;padding:11px 12px 10px;text-align:left;max-height:calc(100vh - 80px);overflow-y:auto;}
   #learn-title{font-weight:700;color:#fff;margin:0 0 3px;}
   #learn-sub{font:500 10.5px/1.35 system-ui,sans-serif;color:var(--dim);margin:0 0 9px;}
   .lcard{display:block;width:100%;text-align:left;white-space:normal;padding:9px 11px;margin-top:6px;}
@@ -145,7 +147,7 @@
   #coach-btns:empty{display:none;}
   #coach-btns .btn{flex:1 1 auto;text-align:center;padding:8px 10px;}
   #coach-btns .btn.wide{flex-basis:100%;}
-  #app.moon-mode #coach{display:none !important;}
+  /* (the coach stays visible in the Earth–Moon view — the Moon lesson runs there) */
   /* Earth–Moon view: hide the system chrome, show a back button */
   #app.moon-mode #dock, #app.moon-mode #comet-ui, #app.moon-mode #hud, #app.moon-mode #ss-nav,
   #app.moon-mode #view-panel, #app.moon-mode #data-drawer, #app.moon-mode #microhint{display:none !important;}
@@ -509,10 +511,13 @@
   </ol>
 
   <h2>What if? — guided experiments</h2>
-  <p>The 🎓 <b>What if?</b> menu turns the sandbox into a lab. Each lesson poses a question, asks for your prediction, runs the experiment on the real physics, and shows the number that answers it. Three are live so far.</p>
+  <p>The 🎓 <b>What if?</b> menu turns the sandbox into a lab. Each lesson poses a question, asks for your prediction, runs the experiment on the real physics, and shows the number that answers it. Six are live so far.</p>
   <p><b>What if the Sun vanished?</b> Predict first — keep circling, spiral inward, or fly off straight — then the lesson deletes the Sun for real. Every planet keeps exactly the speed and heading it had: Earth carries on at the same 30 km/s along a straight line the overlay draws for you, and the coach reports its speed before and after. That is Newton's first law with the training wheels off — the circle was the Sun's doing all along. The one thing the simulator can't show is that gravity travels at light speed, so the real Earth would keep circling a vanished Sun for another 8 minutes 20 seconds.</p>
   <p><b>How long does a message to Mars take?</b> Guess — instantly, a second, minutes, hours — then send a real radio pulse across whatever gap the planets are at right now. The planets freeze on purpose: at any speed where you could see them move, light would be instantaneous. Today's answer lands somewhere between 3 and 22 minutes depending on where Mars is, a reply takes just as long coming back, and that round trip is the reason Mars rovers drive themselves. Then try Jupiter, where the delay runs past half an hour.</p>
   <p><b>Why can't we fly straight to Mars?</b> You take the launch controls. The rocket is fixed — it can leave Earth about 3.7 km/s faster than Earth is already moving, a realistic figure for a Mars launcher — and the only thing you choose is <i>when</i>. Leave with Mars in the wrong place and the probe coasts out to Mars's distance from the Sun and finds empty space: over an eight-month transfer Mars travels well over a hundred degrees further around its orbit, so it has to be tens of degrees ahead of Earth at the moment you go. From whatever moment you pick, the simulator prices the cheapest real transfer (one row of the "porkchop plot" mission planners draw) and flies it if the rocket can afford it. The brief stretch when it can is the launch window — and because Earth laps Mars only every 26 months, that's how often it comes around.</p>
+  <p><b>How far is the Moon, really?</b> Shrink Earth to a basketball and guess where the Moon goes — then fly there in a view drawn to true relative size and distance. The answer is 30 Earth-diameters, about 7 m on the basketball scale, with the geostationary satellite ring not even a tenth of the way out. The probe rides the real three-day Apollo-speed trajectory, and the debrief notes that light makes the same trip in 1.3 seconds.</p>
+  <p><b>Does the Sun move?</b> Predict, then watch from close in with the system's centre of mass marked. The Sun loops around it at about 12 m/s — a cyclist's pace — once every 12 years, dragged mostly by Jupiter, with the loop a little larger than the Sun itself. That wobble, read as a rhythm in a star's light, is how the first exoplanets were found; the lesson lets you make Jupiter ten times heavier and watch the Sun's speed jump.</p>
+  <p><b>Where does Voyager's speed come from?</b> Predict whether a spacecraft swinging past Jupiter with its engines off leaves faster, slower, or at the same speed — then fly the real 1977 launch and read the speedometer before and after the flyby. Relative to Jupiter the speed is unchanged; relative to the Sun the probe gains several km/s, paid for by Jupiter's own orbital motion, which slows by an amount far too small to ever measure.</p>
 
   <h2>Using it in a classroom</h2>
   <p>The simulator runs free in any browser with no account, no install, and nothing to set up — it projects well and works on student laptops, tablets, and phones. A few demonstrations it makes concrete:</p>
@@ -526,7 +531,9 @@
   <h2>Frequently asked questions</h2>
   <details><summary>Is this a real simulation or a looping animation?</summary><p>A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press <b>R</b> to rebuild the solar system from scratch.</p></details>
   <details><summary>Are the sizes and distances to scale?</summary><p>The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on <b>true-scale distances</b> in the dock's view options to see the honest spacing (mostly emptiness; zoom in to find the inner planets). Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click.</p></details>
-  <details><summary>Why does the Sun wobble?</summary><p>Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it. The real Sun does the same — detecting that wobble in other stars is one of the main ways exoplanets are discovered.</p></details>
+  <details><summary>Why does the Sun wobble?</summary><p>Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it — about 12 m/s, once every 12 years, in a loop slightly larger than the Sun itself. The real Sun does the same, and detecting that wobble in other stars is one of the main ways exoplanets are discovered: 51 Pegasi b, the first planet found around a Sun-like star, showed up in 1995 as a 56 m/s swing repeating every 4.2 days. The 🎓 <b>What if?</b> lesson zooms in to show the loop.</p></details>
+  <details><summary>How far away is the Moon?</summary><p>About 384,000 km — 30 Earth-diameters. Shrink Earth to a basketball and the Moon is a tennis ball about 7 metres away, much farther than most pictures suggest. Light takes 1.3 seconds to cross the gap; Apollo took about three days. The simulator's Earth–Moon view draws both at true relative size and distance, and the 🎓 <b>What if?</b> lesson flies a probe across it.</p></details>
+  <details><summary>How does a gravity assist make a spacecraft go faster?</summary><p>Relative to the planet, it doesn't: a spacecraft leaves a flyby at the same speed it arrived, because gravity gives back on the way out what it took on the way in. But the planet is moving around the Sun — Jupiter at about 13 km/s — and the flyby bends the spacecraft's path to travel more along the planet's direction, so relative to the Sun it gains speed. Momentum is conserved: the planet slows by an immeasurably tiny amount. Voyager used this at Jupiter, Saturn, Uranus and Neptune; the 🎓 <b>What if?</b> lesson measures the gain in the simulator.</p></details>
   <details><summary>What would happen if the Sun suddenly disappeared?</summary><p>The planets would fly off in straight lines at whatever speed and heading they had at that instant — about 30 km/s for Earth — because nothing would be pulling them into a curve any more. That is Newton's first law. The Moon would stay with Earth, since Earth's own gravity is unaffected. One subtlety the simulator can't show: gravity travels at the speed of light, so the real Earth would keep orbiting the vanished Sun for 8 minutes 20 seconds before it noticed. The 🎓 <b>What if?</b> lesson runs the experiment for real.</p></details>
   <details><summary>How long does it take a radio signal to reach Mars?</summary><p>Between about 3 and 22 minutes one way, depending on where Earth and Mars are in their orbits — the gap between them swings from roughly 55 to 400 million km, and radio travels at the speed of light, 300,000 km per second. A reply takes just as long coming back, so a round trip is 6 to 44 minutes, which is why rovers are driven by pre-planned commands rather than live. The 🎓 <b>What if?</b> lesson sends a real pulse across today's gap and times it.</p></details>
   <details><summary>Why do Mars missions only launch every 26 months?</summary><p>Because the rocket is the fixed part and the timing is the free part. A launcher can add only so much speed beyond Earth's own orbital motion, and the cheapest path to Mars — a transfer orbit that just reaches Mars's distance — only works if Mars will be at the far end of it when the probe arrives. Mars keeps moving during the roughly eight-month trip, so it has to be a specific angle ahead of Earth at launch. Earth catches up to that geometry once every synodic period, about 780 days. The 🎓 <b>What if?</b> lesson lets you test it: launch whenever you like and see where Mars actually is when you get there.</p></details>
@@ -1222,13 +1229,14 @@
       const pulse = 0.5 + 0.5*Math.sin(lastTs*0.0009);
       const zs = Math.max(1, Math.pow(zoom, 0.45));
       const sunViz = viewOpts.scale ? Math.sqrt(maxDispR/maxTrueR) : 1;
-      const cr = Math.min(120, (19 + 6*pulse + 30*sunFlare) * zs * sunViz);
+      const calm = !!(lesson && lesson.fx && lesson.fx.calmSun);   // a lesson can tone the glow down and draw the disc at its true size
+      const cr = Math.min(120, (19 + 6*pulse + 30*sunFlare) * zs * sunViz) * (calm ? 0.3 : 1);
       ctx.globalCompositeOperation = 'lighter';
       const g = ctx.createRadialGradient(sxp,syp,0,sxp,syp,cr);
       g.addColorStop(0,'#fff7d6'); g.addColorStop(0.35,'rgba(255,211,90,0.85)'); g.addColorStop(1,'rgba(255,180,40,0)');
       ctx.fillStyle = g; ctx.beginPath(); ctx.arc(sxp,syp,cr,0,2*Math.PI); ctx.fill();
       ctx.globalCompositeOperation = 'source-over';
-      ctx.fillStyle = '#ffe08a'; ctx.beginPath(); ctx.arc(sxp,syp,Math.max(2, Math.min(26, 6.5*zs)*sunViz),0,2*Math.PI); ctx.fill();
+      ctx.fillStyle = '#ffe08a'; ctx.beginPath(); ctx.arc(sxp,syp,calm ? Math.max(2, 0.00465*S()) : Math.max(2, Math.min(26, 6.5*zs)*sunViz),0,2*Math.PI); ctx.fill();
     }
 
     // planets — Earth view shows Earth only; deleted bodies vanish
@@ -1925,7 +1933,7 @@
     actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; setActCaret();
     probePlan = { phase: opts.arm ? 'arm' : 'wait', savedRate: timeRate, waitStart: t, target, voyager: !!opts.voyager,
                   budget: opts.budget || 0,                     // AU/yr: wait for a transfer that costs ≤ this (a real window), not for a fixed angle
-                  onLaunch: opts.onLaunch || null, onEnd: opts.onEnd || null };   // lessons listen for the launch and for how it ended
+                  onLaunch: opts.onLaunch || null, onEnd: opts.onEnd || null, onBoost: opts.onBoost || null };   // lessons listen for the launch, the flyby, and how it ended
     if (probePlan.phase === 'wait'){                           // 'arm' = a lesson launches it by hand, on its own clock
       setRate(timeRate <= 0 ? 16 : Math.max(timeRate, 16));     // fast-forward to the launch window
       probeStatus.hidden = false;
@@ -1961,7 +1969,7 @@
     probeCraft = { x: EARTH.x+ux/ul*0.012, y: EARTH.y+uy/ul*0.012, vx, vy,
                    trail: [], t0: t, closest: Infinity, arrived: false, done: false, arrR,
                    target: probePlan.voyager ? null : target,  // voyager never "arrives" — it flies by and coasts on
-                   jMin: Infinity, vBefore: 0, boosted: false, passed: {} };
+                   jMin: Infinity, boosted: false, passed: {} };
     probes.push(probeCraft);
     probePlan.phase = 'cruise'; probePlan.tTransfer = tT; probeStatus.hidden = false;
     setRate(Math.max(6, Math.min(24, Math.round(tT*5))));       // pace the cruise to the distance (far targets run faster)
@@ -2003,12 +2011,22 @@
       const pr = probeCraft; if (!pr){ finishProbe(); return; }
       const yrs = t - pr.t0, dJ = Math.hypot(pr.x-JUPITER.x, pr.y-JUPITER.y), rSun = distSun(pr);
       const vhel = Math.hypot(pr.vx-SUN.vx, pr.vy-SUN.vy);
-      if (dJ < pr.jMin){ pr.jMin = dJ; pr.vBefore = vhel; }    // fastest approach = pre-flyby speed
-      if (!pr.boosted && pr.jMin < 8 && dJ > pr.jMin + 1.0){   // receding well past closest → flyby done
+      // The assist is the change in the probe's HELIOCENTRIC ORBITAL ENERGY across the
+      // encounter, reported as its speed at Jupiter's distance from the Sun before vs
+      // after — the same solar potential both times, so the difference is purely what
+      // Jupiter gave. (Comparing the periapsis speed to the outbound speed only shows the
+      // fall into and climb out of Jupiter's well; comparing raw speeds at a ring around
+      // Jupiter is masked by the Sun's well, since the outbound point sits farther out.)
+      const muS = G*SUN.m, eps = vhel*vhel/2 - muS/rSun;          // orbital energy per unit mass, about the Sun
+      if (pr.eIn === undefined && dJ < 1.0) pr.eIn = eps;          // entering Jupiter's neighbourhood
+      if (dJ < pr.jMin) pr.jMin = dJ;
+      if (!pr.boosted && pr.eIn !== undefined && pr.jMin < 0.5 && dJ > 1.0){   // back out again → flyby done
         pr.boosted = true;
-        const b0 = pr.vBefore*KMS, b1 = vhel*KMS, g = b1 - b0;
+        const rJ = distSun(JUPITER), vAt = e => { const v2 = 2*(e + muS/rJ); return v2 > 0 ? Math.sqrt(v2)*KMS : 0; };
+        const b0 = vAt(pr.eIn), b1 = vAt(eps), g = b1 - b0;
         msgFx.push({ x: pr.x, y: pr.y, born: performance.now() });
-        announce(`🛰 Jupiter gravity assist — ${b0.toFixed(1)} → ${b1.toFixed(1)} km/s (${g>=0?'+':''}${g.toFixed(1)} km/s, stolen from Jupiter)`, 'capture'); sfx('capture');
+        announce(`🛰 Jupiter gravity assist — ${b0.toFixed(1)} → ${b1.toFixed(1)} km/s at Jupiter's distance (${g>=0?'+':''}${g.toFixed(1)} km/s, stolen from Jupiter)`, 'capture'); sfx('capture');
+        if (probePlan.onBoost) probePlan.onBoost({ b0, b1, g, jMin: pr.jMin, escaped: eps >= 0 });   // the Voyager lesson debriefs on the measured boost
       }
       for (const p of OUTER){                                  // opportunistic outer-planet flybys
         if (p.deleted || pr.passed[p.name]) continue;
@@ -2104,9 +2122,12 @@
   }
   const track = (name, id) => { if (typeof gtag === 'function') gtag('event', name, { lesson: id }); };
   const LESSONS = [
-    { id: 'sun',   q: 'What if the Sun vanished?', s: 'Predict what the planets do — then delete it for real.', run: () => startSunLesson() },
-    { id: 'light', q: 'How long does a message to Mars take?', s: 'Guess, then send a real lightspeed pulse across today\'s gap.', run: () => startLightLesson(MARS) },
-    { id: 'mars',  q: 'Why can\'t we fly straight to Mars?', s: 'You pick the launch moment. Same rocket every time — only the timing changes.', run: () => startMarsLesson() },
+    { id: 'sun',     q: 'What if the Sun vanished?', s: 'Predict what the planets do — then delete it for real.', run: () => startSunLesson() },
+    { id: 'light',   q: 'How long does a message to Mars take?', s: 'Guess, then send a real lightspeed pulse across today\'s gap.', run: () => startLightLesson(MARS) },
+    { id: 'moon',    q: 'How far is the Moon, really?', s: 'Guess on a basketball scale, then fly there — drawn to scale.', run: () => startMoonLesson() },
+    { id: 'wobble',  q: 'Does the Sun move?', s: 'Watch from close in — and see how exoplanets are found.', run: () => startWobbleLesson() },
+    { id: 'mars',    q: 'Why can\'t we fly straight to Mars?', s: 'You pick the launch moment. Same rocket every time — only the timing changes.', run: () => startMarsLesson() },
+    { id: 'voyager', q: 'Where does Voyager\'s speed come from?', s: 'Fly the 1977 Jupiter flyby and read the speedometer.', run: () => startVoyagerLesson() },
   ];
   function renderLearnMenu(){
     learnList.innerHTML = '';
@@ -2479,6 +2500,202 @@
             .concat([{ label: 'Done ✓', cls: 'primary', fn: endLesson }]) });
   }
 
+  // ---- Lesson: where does Voyager's speed come from? ----
+  // Predict, then fly the real 1977 launch: the giants are placed in their 1977
+  // positions and the probe swings close past Jupiter. The sim measures the
+  // Sun-relative speed before and after; the debrief explains the trade — the
+  // same speed relative to Jupiter in and out, but Jupiter's own 13 km/s of
+  // orbital motion is what the probe walks away with.
+  const GUESS_VOY = { faster: 'faster', same: 'the same speed', slower: 'slower' };
+  const VOYAGER_KG = 825, JUPITER_KG = 1.898e27;
+  const sup = n => String(n).replace(/-/g, '⁻').replace(/[0-9]/g, d => '⁰¹²³⁴⁵⁶⁷⁸⁹'[d]);
+  function startVoyagerLesson(){
+    if (lesson) endLesson();
+    if (msg || probePlan){ announce('🎓 Finish the current mission first', 'escape'); return; }
+    lesson = { id: 'voyager', step: 'intro', tick: voyTick, fx: null };
+    track('lesson_start', 'voyager');
+    deselect(); if (follow) resetView(); killHint();
+    showCoach({ step: 'What if? · 1 of 3', title: 'Where does Voyager\'s speed come from?',
+      html: `<p>In 1979 Voyager 1 swung close past Jupiter with its engines off. Gravity pulled it in on the way toward the planet — and pulled it back on the way out.</p>
+             <p>Relative to the Sun, did it leave Jupiter faster, slower, or at the same speed it arrived? Predict:</p>
+             <p class="note">This lesson rearranges the solar system into its real 1977 layout.</p>`,
+      btns: [{ label: 'Faster', fn: () => voyRun('faster') }, { label: 'Same speed', fn: () => voyRun('same') }, { label: 'Slower', fn: () => voyRun('slower') }] });
+  }
+  function voyRun(guess){
+    if (!lesson || lesson.id !== 'voyager' || lesson.step !== 'intro') return;
+    lesson.guess = guess;
+    arrangeGrandTour(); resetView();
+    announce('🛰 The giant planets — arranged in the 1977 Grand Tour alignment', 'capture'); sfx('capture');
+    if (!startProbe(JUPITER, { voyager: true, onBoost: voyBoost, onEnd: voyEnded })){ endLesson(); return; }
+    probePlan.lesson = 'voyager';
+    lesson.step = 'run';
+    showCoach({ step: 'What if? · 2 of 3 · outbound', title: 'Coasting to Jupiter',
+      html: `<p>You said: <b>${GUESS_VOY[guess]}</b>.</p>
+             <p>The probe leaves Earth now and coasts about 2½ years to Jupiter on gravity alone. Speed relative to the Sun: <b class="lv-v">—</b> km/s · <b class="lv-rs">—</b> AU from the Sun · <b class="lv-dj">—</b> AU to Jupiter.</p>
+             <p>Watch the speed fall as it climbs away from the Sun — then watch what Jupiter does to it.</p>`,
+      btns: [] });
+  }
+  function voyTick(){
+    if (!lesson || lesson.id !== 'voyager' || lesson.step !== 'run' || !probeCraft) return;
+    const pr = probeCraft;
+    coachLive('.lv-v', (Math.hypot(pr.vx-SUN.vx, pr.vy-SUN.vy)*KMS).toFixed(1));
+    coachLive('.lv-rs', distSun(pr).toFixed(2));
+    coachLive('.lv-dj', Math.hypot(pr.x-JUPITER.x, pr.y-JUPITER.y).toFixed(2));
+  }
+  function voyBoost(b){
+    if (!lesson || lesson.id !== 'voyager') return;
+    lesson.step = 'result';
+    const g = lesson.guess, right = g === 'faster';
+    const vJ = Math.hypot(JUPITER.vx-SUN.vx, JUPITER.vy-SUN.vy)*KMS;
+    const slow = (VOYAGER_KG/JUPITER_KG)*Math.abs(b.g)*1e6;   // Jupiter's recoil, mm/s
+    const [sm, se] = slow.toExponential(0).split('e');
+    markLesson('voyager', { gain: +b.g.toFixed(1) }); track('lesson_complete', 'voyager');
+    if (probePlan){ probePlan.lesson = null; probePlan.onEnd = null; probePlan.onBoost = null; }   // the flight carries on as an ordinary mission
+    showCoach({ step: 'What if? · result', title: right ? 'You called it — faster' : 'Faster, with no rocket',
+      html: `<p>Before the flyby, the probe's path had it doing <b>${b.b0.toFixed(1)} km/s</b> relative to the Sun at Jupiter's distance. After it: <b>${b.b1.toFixed(1)} km/s</b> — <b>${b.g >= 0 ? '+' : ''}${b.g.toFixed(1)} km/s</b> for free. You said <b>${GUESS_VOY[g]}</b>.</p>
+             <p>Relative to <i>Jupiter</i>, the speed in and out really is the same — gravity gives back on the way out exactly what it took on the way in. But Jupiter is itself moving at <b>${vJ.toFixed(1)} km/s</b> around the Sun, and the swing bent the probe's path to run more along Jupiter's direction. Relative to the Sun, that's the gain. It isn't free for Jupiter: momentum is conserved, and Jupiter slowed by about <b>${sm}×10${sup(se)} mm/s</b> — a billionth of a billionth of a millimetre per second.</p>
+             <p>Both numbers are the probe's speed at the <i>same</i> distance from the Sun, so they compare like with like. The live readout shot past 20 km/s at closest approach — that was Jupiter's own pull, and Jupiter took it back on the way out.</p>
+             <p class="note">The real Voyagers used the trick at Jupiter, then Saturn, and Voyager 2 again at Uranus and Neptune — which is why they had to fly in 1977: the giants line up for it once every 176 years. Both are now leaving the solar system. The probe here is still flying; the mission chip follows it.</p>`,
+      btns: [{ label: 'Done ✓', cls: 'primary', fn: endLesson }] });
+  }
+  function voyEnded(){ if (lesson && lesson.id === 'voyager' && lesson.step !== 'result') endLesson(); }
+
+  // ---- Lesson: how far is the Moon, really? ----
+  // Predict on a basketball scale, then ride the to-scale Earth–Moon view: Earth
+  // and the Moon at true relative size and distance, the probe on the real
+  // three-day translunar trajectory. The coach carries the live readout.
+  const GUESS_MOON = { touch: 'almost touching', arm: 'an arm\'s length away', room: 'across a big room', street: 'down the street' };
+  const EARTH_DIAM_KM = 12742, BALL_CM = 24;
+  function startMoonLesson(){
+    if (lesson) endLesson();
+    if (msg || probePlan || moonView){ announce('🎓 Finish the current mission first', 'escape'); return; }
+    if (EARTH.deleted){
+      lesson = { id: 'moon', step: 'blocked' };
+      showCoach({ step: 'What if? · the Moon', title: 'How far is the Moon, really?',
+        html: '<p>This lesson needs Earth — and it\'s gone.</p>',
+        btns: [{ label: 'Restore the system', cls: 'primary', fn: () => { reset(); startMoonLesson(); } }, { label: 'Not now', fn: endLesson }] });
+      return;
+    }
+    lesson = { id: 'moon', step: 'intro', tick: moonTick, fx: null, restore: () => { if (moonView) exitMoon(); } };
+    track('lesson_start', 'moon');
+    deselect(); if (follow) resetView(); killHint();
+    showCoach({ step: 'What if? · 1 of 3', title: 'How far is the Moon, really?',
+      html: `<p>Shrink Earth to the size of a basketball — about ${BALL_CM} cm across. On that scale, where is the Moon?</p><p>Predict:</p>`,
+      btns: [{ label: 'Almost touching', fn: () => moonRun('touch') }, { label: 'An arm\'s length', fn: () => moonRun('arm') },
+             { label: 'Across a big room', fn: () => moonRun('room') }, { label: 'Down the street', fn: () => moonRun('street') }] });
+  }
+  function moonRun(guess){
+    if (!lesson || lesson.id !== 'moon' || lesson.step !== 'intro') return;
+    lesson.guess = guess;
+    enterMoon();
+    if (!moonView){ endLesson(); return; }
+    lesson.step = 'run';
+    showCoach({ step: 'What if? · 2 of 3 · to scale', title: 'Earth and the Moon, honestly drawn',
+      html: `<p>You said: <b>${GUESS_MOON[guess]}</b>.</p>
+             <p>This is their true relative size and distance — the Moon is <b>${Math.round(EM_D/EARTH_DIAM_KM)} Earth-diameters</b> away. The probe left at <b>10.8 km/s</b>, Apollo's departure speed. Hour <b class="lv-h">0</b> · <b class="lv-km">—</b> km to go.</p>
+             <p>The faint ring around Earth is the geostationary orbit, where TV satellites sit — 36,000 km up.</p>`,
+      btns: [] });
+  }
+  function moonTick(){
+    if (!lesson || lesson.id !== 'moon' || lesson.step !== 'run') return;
+    if (!moonView || !moonMission){ endLesson(); return; }        // the view was left (any click on the canvas does that)
+    const m = moonMission, [mx, my] = moonPosKm(m.t);
+    coachLive('.lv-h', String(Math.round(m.t/3600)));
+    coachLive('.lv-km', Math.round(Math.hypot(m.probe.x-mx, m.probe.y-my)).toLocaleString('en-US'));
+    if (m.arrived || m.t >= EM_T) moonResult(m);
+  }
+  function moonResult(m){
+    lesson.step = 'result';
+    const g = lesson.guess, right = g === 'room', diam = EM_D/EARTH_DIAM_KM, metres = diam*BALL_CM/100;
+    markLesson('moon', { hours: Math.round(m.t/3600) }); track('lesson_complete', 'moon');
+    showCoach({ step: 'What if? · result', title: right ? 'You called it — across the room' : `${metres.toFixed(0)} metres away`,
+      html: `<p>The Moon is <b>${EM_D.toLocaleString('en-US')} km</b> from Earth — <b>${diam.toFixed(0)} Earth-diameters</b>. A basketball Earth puts it <b>${metres.toFixed(0)} m</b> away: across a big room. You said <b>${GUESS_MOON[g]}</b>.</p>
+             <p>The probe took <b>${Math.round(m.t/3600)} hours</b> at Apollo's 10.8 km/s${m.arrived ? '' : ' and passed ' + Math.round(m.closest).toLocaleString('en-US') + ' km from the Moon'}; light makes the trip in <b>1.3 seconds</b>. The geostationary ring, 36,000 km up, isn't even a tenth of the way.</p>
+             <p class="note">Apollo 11 took just over three days from leaving Earth orbit to arriving at the Moon. Every picture that shows Earth and the Moon side by side, big and close, is cheating.</p>`,
+      btns: [{ label: 'Fly it again', fn: () => { exitMoon(); lesson.step = 'intro'; moonRun(g); } }, { label: 'Done ✓', cls: 'primary', fn: endLesson }] });
+  }
+
+  // ---- Lesson: does the Sun move? ----
+  // Predict, then watch from close in with the system's centre of mass marked:
+  // the Sun loops around it at a cyclist's pace, dragged mostly by Jupiter —
+  // and that loop, read as a rhythm in a star's light, is how exoplanets are found.
+  const GUESS_WOB = { still: 'it stays perfectly still', wobble: 'it wobbles slightly', orbit: 'it orbits, like a planet' };
+  const SUN_R_AU = 0.00465, WOB_RUN_YR = 12;                  // the Sun's radius; one Jupiter orbit
+  const sunMs = () => Math.hypot(SUN.vx, SUN.vy)*KMS*1000;    // m/s in the barycentric frame
+  const sunOffKkm = () => Math.hypot(SUN.x-baryX, SUN.y-baryY)*MKM*1000;   // thousand km from the centre of mass
+  function startWobbleLesson(){
+    if (lesson) endLesson();
+    if (msg || probePlan){ announce('🎓 Finish the current mission first', 'escape'); return; }
+    if (SUN.deleted || JUPITER.deleted){
+      lesson = { id: 'wobble', step: 'blocked' };
+      showCoach({ step: 'What if? · the Sun', title: 'Does the Sun move?',
+        html: '<p>This lesson needs the Sun and Jupiter — and one of them is gone.</p>',
+        btns: [{ label: 'Restore the system', cls: 'primary', fn: () => { reset(); startWobbleLesson(); } }, { label: 'Not now', fn: endLesson }] });
+      return;
+    }
+    lesson = { id: 'wobble', step: 'intro', tick: wobTick, draw: wobDraw, fx: null, savedRate: timeRate };
+    track('lesson_start', 'wobble');
+    deselect(); if (follow) resetView(); killHint();
+    showCoach({ step: 'What if? · 1 of 3', title: 'Does the Sun move?',
+      html: '<p>The planets orbit the Sun. Does the Sun itself go anywhere?</p><p>Predict:</p>',
+      btns: [{ label: 'It stays perfectly still', cls: 'wide', fn: () => wobRun('still') }, { label: 'It wobbles slightly', cls: 'wide', fn: () => wobRun('wobble') }, { label: 'It orbits, like a planet', cls: 'wide', fn: () => wobRun('orbit') }] });
+  }
+  function wobRun(guess){
+    if (!lesson || lesson.id !== 'wobble' || lesson.step !== 'intro') return;
+    lesson.guess = guess; lesson.step = 'run'; lesson.t0 = t; lesson.trail = []; lesson.jm0 = JUPITER.m;
+    const saved = { scale: viewOpts.scale };
+    lesson.restore = () => { viewOpts.scale = saved.scale; refit(); syncViewPanel(); resetView(); };
+    viewOpts.scale = true; refit(); syncViewPanel(); follow = null; zoom = 2000;   // the view centres on the centre of mass; the Sun loops around it
+    lesson.fx = { wobble: true, calmSun: true };
+    setRate(32);
+    showCoach({ step: 'What if? · 2 of 3 · close in', title: 'The Sun, from very close',
+      html: `<p>You said: <b>${GUESS_WOB[guess]}</b>.</p>
+             <p>The ✕ is the whole system's centre of mass. Time runs at ×32, so Jupiter's 12-year orbit takes about half a minute. The Sun's speed: <b class="lv-ms">—</b> m/s · <b class="lv-off">—</b> thousand km from the ✕ (its own radius is 696 thousand km).</p>`,
+      btns: [{ label: 'Skip to the debrief', fn: wobResult }] });
+  }
+  function wobTick(){
+    if (!lesson || lesson.id !== 'wobble' || (lesson.step !== 'run' && lesson.step !== 'heavy')) return;
+    if (SUN.deleted){ endLesson(); return; }
+    lesson.trail.push([SUN.x, SUN.y]); if (lesson.trail.length > 1500) lesson.trail.shift();
+    coachLive('.lv-ms', sunMs().toFixed(1)); coachLive('.lv-off', sunOffKkm().toFixed(0));
+    if (lesson.step === 'run' && t - lesson.t0 >= WOB_RUN_YR) wobResult();
+  }
+  function wobResult(){
+    if (!lesson || lesson.id !== 'wobble' || lesson.step !== 'run') return;
+    lesson.step = 'result';
+    const g = lesson.guess, right = g === 'wobble';
+    markLesson('wobble', { guess: g }); track('lesson_complete', 'wobble');
+    showCoach({ step: 'What if? · result', title: right ? 'You called it — it wobbles' : 'It wobbles',
+      html: `<p>The Sun is moving at <b>${sunMs().toFixed(1)} m/s</b> — a cyclist's pace — in a loop around the centre of mass, <b>${sunOffKkm().toFixed(0)} thousand km</b> from its own centre, once every 12 years. Jupiter pulls on the Sun exactly as hard as the Sun pulls on Jupiter; the Sun just has a thousand times more mass to move. You said <b>${GUESS_WOB[g]}</b>.</p>
+             <p>That loop is how we find planets around other stars. A star's light shifts slightly bluer as it swings toward us and redder as it swings away, and the rhythm of the shift gives away the unseen planet. 51 Pegasi b, the first planet found around a Sun-like star, makes its star swing at 56 m/s every 4.2 days.</p>
+             <p class="note">Make Jupiter heavier and the Sun has to move more — try it.</p>`,
+      btns: [{ label: 'Make Jupiter 10× heavier', fn: wobHeavy }, { label: 'Done ✓', cls: 'primary', fn: endLesson }] });
+  }
+  function wobHeavy(){
+    if (!lesson || lesson.id !== 'wobble' || lesson.step !== 'result') return;
+    lesson.step = 'heavy'; lesson.trail = [];
+    JUPITER.m = lesson.jm0*10; E0 = energy();                 // the same thing the inspector's mass slider does
+    zoom = 250;                                                // the loop is now ~10× wider — zoom out so the Sun stays on screen
+    showCoach({ step: 'What if? · Jupiter ×10', title: 'Jupiter, ten times heavier',
+      html: `<p>The centre of mass jumped outward (the view zoomed out to keep up) and the Sun is being hauled harder. Speed: <b class="lv-ms">—</b> m/s · <b class="lv-off">—</b> thousand km from the ✕ — now far outside its own edge.</p>
+             <p>A swing this size is roughly what the first exoplanet hunters could detect in a star's light.</p>`,
+      btns: [{ label: 'Restore the system', cls: 'primary', fn: () => { endLesson(); reset(); } }, { label: 'Leave it like this', fn: endLesson }] });
+  }
+  function wobDraw(){
+    if (!lesson || !lesson.fx || !lesson.fx.wobble || SUN.deleted) return;
+    const [bx, by] = scr(baryX, baryY), [sx, sy] = scr(SUN.x, SUN.y), rS = SUN_R_AU*S();
+    ctx.save();
+    if (lesson.trail.length > 1) fadedTrail(lesson.trail, q => scr(q[0], q[1]), 'rgba(255,255,255,0.9)', 1.6, 0.85);   // white: it crosses the yellow disc
+    ctx.setLineDash([4,5]); ctx.strokeStyle = 'rgba(255,224,138,0.75)'; ctx.lineWidth = 1.2;       // the Sun's true edge
+    ctx.beginPath(); ctx.arc(sx, sy, rS, 0, 2*Math.PI); ctx.stroke(); ctx.setLineDash([]);
+    ctx.strokeStyle = '#bff5da'; ctx.lineWidth = 1.5;                                                // the centre of mass
+    ctx.beginPath(); ctx.moveTo(bx-6,by-6); ctx.lineTo(bx+6,by+6); ctx.moveTo(bx-6,by+6); ctx.lineTo(bx+6,by-6); ctx.stroke();
+    ctx.font = '600 10.5px system-ui,sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    ctx.fillStyle = '#bff5da'; ctx.fillText('centre of mass', bx+10, by);
+    ctx.fillStyle = 'rgba(255,224,138,0.9)'; ctx.fillText("Sun's true edge", sx + rS*0.71 + 6, sy - rS*0.71 - 6);
+    ctx.restore();
+  }
+
   // ---- Earth → Moon: a to-scale Earth–Moon view ----
   // The Moon is 60 Earth-radii away and sub-pixel in the system view, so this is
   // its own frame — Earth and Moon drawn at TRUE relative size and distance so the
@@ -2611,8 +2828,8 @@
       while (ctx.measureText(s).width > max && fs > 8){ fs--; ctx.font = `600 ${fs}px system-ui, sans-serif`; }
       ctx.fillStyle = col; ctx.fillText(s, margin, y);
     };
-    capFit('Earth and Moon shown to scale — a real translunar trajectory', H*0.13, '#7c869c', W-margin*2);
-    capFit('The Moon orbits once a month — it creeps only ~40° while Earth spins 3× over the 3-day trip', H*0.13+18, '#5f6a80', W-margin*2);
+    if (!(lesson && lesson.id === 'moon')) capFit('Earth and Moon shown to scale — a real translunar trajectory', H*0.13, '#7c869c', W-margin*2);
+    if (!(lesson && lesson.id === 'moon')) capFit('The Moon orbits once a month — it creeps only ~40° while Earth spins 3× over the 3-day trip', H*0.13+18, '#5f6a80', W-margin*2);
 
     // the probe — real integrated translunar trajectory
     if (moonMission){
@@ -2631,7 +2848,7 @@
       const hrs = Math.round(m.t/3600), tot = Math.round(EM_T/3600);
       const kkm = Math.round(Math.hypot(m.probe.x - moonPosKm(m.t)[0], m.probe.y - moonPosKm(m.t)[1]));
       ctx.fillStyle = '#cfd6e6'; ctx.font = "600 13px system-ui, sans-serif"; ctx.textAlign = 'center';
-      ctx.fillText(m.arrived
+      if (!(lesson && lesson.id === 'moon')) ctx.fillText(m.arrived                 // during the lesson the coach carries this readout
         ? `🌙 Reached the Moon — ${(m.t/86400).toFixed(1)}-day journey, ${EM_KM.toLocaleString('en-US')} km`
         : `🌙 Transit to the Moon · hour ${hrs} / ${tot} · ${kkm.toLocaleString('en-US')} km to go`, W/2, H*0.20);
       ctx.textAlign = 'left';

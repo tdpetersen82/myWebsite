@@ -251,13 +251,24 @@ const ok = (cond, name, detail = '') => {
   const pr = { x:E.x, y:E.y, vx:S.vx+v1[0], vy:S.vy+v1[1], trail:[], closest:Infinity, arrived:false, done:false, target:null };
   api.addProbe(pr);
   const vhel = () => Math.hypot(pr.vx-S.vx, pr.vy-S.vy);
-  let jMin=Infinity, vBefore=0, vAfter=0, boosted=false;
-  const steps = Math.ceil(20/(32*api.DT));
-  for (let i=0;i<steps;i++){ const before=vhel(); api.advance(32,1);
-    const dJ=Math.hypot(pr.x-J.x,pr.y-J.y); if(dJ<jMin){jMin=dJ;vBefore=before;}
-    if(!boosted && jMin<8 && dJ>jMin+1.0){ vAfter=vhel(); boosted=true; } }
+  // Measure the assist at the SAME distance from Jupiter inbound and outbound (a
+  // 1 AU ring): Jupiter's potential is equal at both points, so the heliocentric
+  // speed difference is purely the assist. (The old check compared the periapsis
+  // speed to the outbound speed and kept updating "closest" for 20 years, so a
+  // later re-encounter could overwrite "before" — the numbers it printed were noise.)
+  // Report the assist the way the page does: the change in heliocentric orbital energy
+  // across the encounter, expressed as the speed at Jupiter's distance before vs after.
+  const eps = () => vhel()**2/2 - mu/Math.hypot(pr.x-S.x, pr.y-S.y);
+  let jMin=Infinity, eIn=null, eOut=null, rJ=0, boosted=false;
+  const steps = Math.ceil(6/(32*api.DT));
+  for (let i=0;i<steps && !boosted;i++){ api.advance(32,1);
+    const dJ=Math.hypot(pr.x-J.x,pr.y-J.y);
+    if(eIn===null && dJ<1.0) eIn=eps();                             // entering Jupiter's neighbourhood
+    if(dJ<jMin) jMin=dJ;
+    if(eIn!==null && jMin<0.5 && dJ>1.0){ eOut=eps(); rJ=Math.hypot(J.x-S.x,J.y-S.y); boosted=true; } }
+  const vAt = e => Math.sqrt(Math.max(0, 2*(e + mu/rJ)))*4.74057;
   ok(jMin < 0.1, `Voyager flies close past Jupiter (${jMin.toFixed(3)} AU)`);
-  ok(boosted && vAfter > vBefore, `gravity assist boosts speed (${(vBefore*4.74057).toFixed(1)} → ${(vAfter*4.74057).toFixed(1)} km/s)`);
+  ok(boosted && vAt(eOut) > vAt(eIn) + 1.0, `gravity assist adds heliocentric energy: ${vAt(eIn).toFixed(1)} → ${vAt(eOut).toFixed(1)} km/s at Jupiter's distance`);
 }
 
 // ── T8c: Earth→Moon translunar injection reaches the Moon ──
