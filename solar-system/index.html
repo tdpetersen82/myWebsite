@@ -1924,6 +1924,12 @@
     const at = (1+JUPITER.a)/2, tT = Math.PI*Math.sqrt(at*at*at/mu), omJ = Math.sqrt(mu/(JUPITER.a**3));
     const thE = 88*Math.PI/180 - (Math.PI - omJ*tT), ve = Math.sqrt(mu);
     EARTH.x = Math.cos(thE); EARTH.y = Math.sin(thE); EARTH.vx = -ve*Math.sin(thE); EARTH.vy = ve*Math.cos(thE);
+    // carry the Moon along to Earth's new longitude — otherwise it's left at reset's
+    // position, ~1 AU from Earth, and gets flung off (the "torn from Earth" bug)
+    const vM = 2*Math.PI * Math.sqrt((EARTH.m + MOON.m) * (1 + MOON.eM) / (MOON.aM * (1 - MOON.eM)));
+    MOON.x = EARTH.x + MOON.aM*(1 - MOON.eM); MOON.y = EARTH.y;
+    MOON.vx = EARTH.vx; MOON.vy = EARTH.vy + vM;
+    MOON.rel = []; MOON._torn = false; MOON._ubE = 0;
     let px=0, py=0, M=0;                                       // re-zero total momentum so the barycentre holds still
     for (const b of bodies){ if (b.deleted) continue; px += b.m*b.vx; py += b.m*b.vy; M += b.m; }
     const vcx = px/M, vcy = py/M;
