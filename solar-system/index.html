@@ -12,6 +12,7 @@
   {"@type":"Question","name":"Is this a real simulation or a looping animation?","acceptedAnswer":{"@type":"Answer","text":"A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press R to rebuild the solar system from scratch."}},
   {"@type":"Question","name":"Are the sizes and distances to scale?","acceptedAnswer":{"@type":"Answer","text":"The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on true-scale distances in the dock's view options to see the honest spacing. Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click."}},
   {"@type":"Question","name":"Why does the Sun wobble?","acceptedAnswer":{"@type":"Answer","text":"Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it. The real Sun does the same — detecting that wobble in other stars is one of the main ways exoplanets are discovered."}},
+  {"@type":"Question","name":"Why do Mars missions only launch every 26 months?","acceptedAnswer":{"@type":"Answer","text":"Because the rocket is the fixed part and the timing is the free part. A launcher can add only so much speed beyond Earth's own orbital motion, and the cheapest path to Mars — a transfer orbit that just reaches Mars's distance — only works if Mars will be at the far end of it when the probe arrives. Mars keeps moving during the roughly eight-month trip, so it has to be a specific angle ahead of Earth at launch. Earth catches up to that geometry once every synodic period, about 780 days. The What if? lesson lets you test it: launch whenever you like and see where Mars actually is when you get there."}},
   {"@type":"Question","name":"Can planets collide or be destroyed?","acceptedAnswer":{"@type":"Answer","text":"Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape."}},
   {"@type":"Question","name":"What are the controls?","acceptedAnswer":{"@type":"Answer","text":"Scroll or pinch to zoom, click or tap any body to inspect it. Keyboard: Space pause, up/down arrows time rate, E Earth view, C comet, D data table, 0 reset view, R reset the system."}},
   {"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes — free, in the browser, no download and no signup."}}
@@ -112,6 +113,37 @@
   #probe-cancel{width:22px;height:22px;border-radius:50%;border:1px solid var(--pnl-line);
     background:rgba(42,54,78,0.72);color:var(--ink);font:600 13px/1 system-ui,sans-serif;cursor:pointer;}
   #probe-cancel:hover{background:rgba(70,88,124,0.9);}
+  /* ---- "What if?" lessons: the menu (beside Actions) and the coach card that runs a lesson ---- */
+  #top-btns{display:flex;gap:8px;justify-content:flex-end;}
+  #learn-toggle{background:rgba(74,108,190,0.45);border-color:rgba(150,180,255,0.5);}
+  #learn-toggle:hover{background:rgba(92,130,225,0.7);}
+  #learn-menu{width:276px;padding:11px 12px 10px;text-align:left;}
+  #learn-title{font-weight:700;color:#fff;margin:0 0 3px;}
+  #learn-sub{font:500 10.5px/1.35 system-ui,sans-serif;color:var(--dim);margin:0 0 9px;}
+  .lcard{display:block;width:100%;text-align:left;white-space:normal;padding:9px 11px;margin-top:6px;}
+  .lcard:first-of-type{margin-top:0;}
+  .lcard .q{display:block;color:#fff;font-weight:700;}
+  .lcard .s{display:block;margin-top:3px;font:500 10.5px/1.35 system-ui,sans-serif;color:var(--soft);}
+  .lcard .done{float:right;color:#6ee787;font-weight:700;margin-left:8px;}
+  #coach{position:absolute;top:96px;left:16px;width:302px;padding:12px 14px 12px;z-index:9;font-weight:500;}
+  #coach-eyebrow{display:flex;justify-content:space-between;align-items:center;margin:0 0 7px;
+    font:700 9.5px/1 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--acc);}
+  #coach-close{background:none;border:none;color:var(--soft);font-size:17px;line-height:1;cursor:pointer;padding:0 2px;margin:-4px -4px 0 0;}
+  #coach-close:hover{color:#fff;}
+  #coach-title{font:700 13.5px/1.3 system-ui,sans-serif;color:#fff;margin:0 0 7px;}
+  #coach-body{font:500 12px/1.5 system-ui,sans-serif;color:var(--soft);}
+  #coach-body b{color:var(--ink);font-weight:700;font-variant-numeric:tabular-nums;}
+  #coach-body p{margin:0 0 8px;}
+  #coach-body p:last-child{margin-bottom:0;}
+  #coach-body .ok{color:#6ee787;}
+  #coach-body .warn{color:#ffcf5a;}
+  #coach-body .bad{color:#ff9d9d;}
+  #coach-body .note{font-size:11px;color:var(--dim);border-top:1px solid rgba(150,170,210,0.16);padding-top:8px;margin-top:9px;}
+  #coach-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:11px;}
+  #coach-btns:empty{display:none;}
+  #coach-btns .btn{flex:1 1 auto;text-align:center;padding:8px 10px;}
+  #coach-btns .btn.wide{flex-basis:100%;}
+  #app.moon-mode #coach{display:none !important;}
   /* Earth–Moon view: hide the system chrome, show a back button */
   #app.moon-mode #dock, #app.moon-mode #comet-ui, #app.moon-mode #hud, #app.moon-mode #ss-nav,
   #app.moon-mode #view-panel, #app.moon-mode #data-drawer, #app.moon-mode #microhint{display:none !important;}
@@ -280,7 +312,12 @@
     #events{bottom:122px;}
     #events .ev{font-size:11px;white-space:normal;text-align:center;}
     #fb-pill{bottom:122px !important;}
-    #microhint{max-width:88vw;text-align:center;}
+    #microhint{max-width:88vw;text-align:center;top:100px;}
+    #learn-menu{width:236px;}
+    /* two top buttons don't fit beside the nav on a phone: stack them */
+    #top-btns{flex-direction:column;align-items:flex-end;gap:6px;}
+    /* the coach becomes a top sheet on phones, below the stacked buttons */
+    #coach{top:104px;left:12px;right:12px;width:auto;max-height:calc(100vh - 340px);overflow-y:auto;}
   }
   /* Accessibility: honor prefers-reduced-motion — calm decorative CSS
      animation for motion-sensitive users. Canvas/JS gameplay is unaffected. */
@@ -303,7 +340,15 @@
   <a id="ab-link" href="#about">About this simulator ▾</a>
 </nav>
 <div id="comet-ui">
-  <button id="comet-toggle" class="btn" type="button">⚡ Actions ▾</button>
+  <div id="top-btns">
+    <button id="learn-toggle" class="btn" type="button" title="Guided experiments — a question, your prediction, and the real physics answering it">🎓 What if?</button>
+    <button id="comet-toggle" class="btn" type="button">⚡ Actions ▾</button>
+  </div>
+  <div id="learn-menu" class="panel" hidden>
+    <div id="learn-title">🎓 What if?</div>
+    <div id="learn-sub">Guided experiments — make a prediction, run it on real gravity, see the number that answers it.</div>
+    <div id="learn-list"></div>
+  </div>
   <div id="action-menu" class="panel" hidden>
     <button id="act-comet" class="btn act" type="button" title="Open the comet designer — set mass, speed, direction and aim, then fire [C]">☄ Launch a comet…</button>
     <button id="act-random" class="btn act" type="button" title="A random comet from a random direction — click repeatedly">🎲 Random comet</button>
@@ -409,6 +454,12 @@
 <button id="moon-exit" type="button" hidden>← Back to the system</button>
 <div id="msg-status" hidden><span id="msg-text"></span><button id="msg-cancel" type="button" aria-label="Cancel transmission">×</button></div>
 <div id="probe-status" hidden><span id="probe-text"></span><button id="probe-cancel" type="button" aria-label="Abort mission">×</button></div>
+<div id="coach" class="panel" hidden>
+  <div id="coach-eyebrow"><span id="coach-step"></span><button id="coach-close" type="button" aria-label="End lesson">×</button></div>
+  <div id="coach-title"></div>
+  <div id="coach-body"></div>
+  <div id="coach-btns"></div>
+</div>
 </div>
 
 <article id="about" aria-label="About this simulator">
@@ -443,7 +494,7 @@
     <li><b>Put a comet into Jupiter.</b> Open ⚡ Actions → ☄ Launch a comet, aim with the direction and aim sliders, and fire. A hit flashes on impact and lands in the event feed.</li>
     <li><b>Fire the comet storm.</b> ~100 random specks at once — then watch the feed report captures, ejections, and impacts as gravity sorts them out.</li>
     <li><b>Invite a rogue star.</b> A quarter-solar-mass intruder crosses the system: orbits bend as it passes, and anything it sweeps too close to is consumed — the event feed keeps score of the damage.</li>
-    <li><b>Fly a probe to Mars, Jupiter, or Saturn.</b> ⚡ Actions → Probe to Mars: the spacecraft waits for the launch window (Mars has to lead Earth by about 44°), then coasts along a real Hohmann transfer orbit for roughly eight months while the planets keep moving — arriving where Mars will be, not where it is now. <b>Jupiter</b> and <b>Saturn</b> are the same idea at grand scale: bigger launch windows and multi-year cruises out past the asteroid belt.</li>
+    <li><b>Fly a probe to Mars, Jupiter, or Saturn.</b> ⚡ Actions → Probe to Mars: the spacecraft waits for the launch window (Mars has to lead Earth by about 44°), then coasts along a real Hohmann transfer orbit for roughly eight months while the planets keep moving — arriving where Mars will be, not where it is now. <b>Jupiter</b> and <b>Saturn</b> are the same idea at grand scale: bigger launch windows and multi-year cruises out past the asteroid belt. Or open 🎓 <b>What if?</b> and take the Mars launch controls yourself — the rocket's push is fixed, and only the timing is yours.</li>
     <li><b>Recreate Voyager's 1977 Grand Tour.</b> ⚡ Actions → Voyager first arranges the four giant planets in the rare arc they actually formed in 1977 — an alignment that comes around once every ~176 years — then sends a probe swinging close past Jupiter for a real gravity assist. The sim's own gravity flings it faster on the way out, and the event feed reports the actual speed it stole from Jupiter's motion. It's the trick that let two small spacecraft tour the outer planets and, eventually, leave the solar system.</li>
     <li><b>Fly a probe to the Moon.</b> ⚡ Actions → Probe to the Moon opens a to-scale Earth–Moon view — Earth and the Moon at their true relative size and distance, with the geostationary-satellite ring drawn in for contrast. The probe rides a real translunar trajectory: injected at about 10.8 km/s (the actual Apollo departure speed) and coasting three days on Earth's and the Moon's gravity.</li>
     <li><b>Send a lightspeed message.</b> ⚡ Actions → Lightspeed message: a radio pulse leaves Earth for Mars (3 to 22 light-minutes away, depending on where the orbits stand) or Jupiter (33 to 54). The planets hold still while it crawls — because at any speed where you can see planets move, light is effectively instantaneous.</li>
@@ -454,6 +505,10 @@
     <li><b>Run time backwards.</b> The ⏪ button reverses the integration — orbits retrace themselves.</li>
     <li><b>Zoom all the way out.</b> Find the asteroid belt, push the speed to ×32, and watch Mercury lap the outer planets.</li>
   </ol>
+
+  <h2>What if? — guided experiments</h2>
+  <p>The 🎓 <b>What if?</b> menu turns the sandbox into a lab. Each lesson poses a question, asks for your prediction, runs the experiment on the real physics, and shows the number that answers it. The first one is the question every Mars mission is built around:</p>
+  <p><b>Why can't we fly straight to Mars?</b> You take the launch controls. The rocket is fixed — it can leave Earth about 3.7 km/s faster than Earth is already moving, a realistic figure for a Mars launcher — and the only thing you choose is <i>when</i>. Leave with Mars in the wrong place and the probe coasts out to Mars's distance from the Sun and finds empty space: over an eight-month transfer Mars travels well over a hundred degrees further around its orbit, so it has to be tens of degrees ahead of Earth at the moment you go. From whatever moment you pick, the simulator prices the cheapest real transfer (one row of the "porkchop plot" mission planners draw) and flies it if the rocket can afford it. The brief stretch when it can is the launch window — and because Earth laps Mars only every 26 months, that's how often it comes around.</p>
 
   <h2>Using it in a classroom</h2>
   <p>The simulator runs free in any browser with no account, no install, and nothing to set up — it projects well and works on student laptops, tablets, and phones. A few demonstrations it makes concrete:</p>
@@ -468,6 +523,7 @@
   <details><summary>Is this a real simulation or a looping animation?</summary><p>A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press <b>R</b> to rebuild the solar system from scratch.</p></details>
   <details><summary>Are the sizes and distances to scale?</summary><p>The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on <b>true-scale distances</b> in the dock's view options to see the honest spacing (mostly emptiness; zoom in to find the inner planets). Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click.</p></details>
   <details><summary>Why does the Sun wobble?</summary><p>Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it. The real Sun does the same — detecting that wobble in other stars is one of the main ways exoplanets are discovered.</p></details>
+  <details><summary>Why do Mars missions only launch every 26 months?</summary><p>Because the rocket is the fixed part and the timing is the free part. A launcher can add only so much speed beyond Earth's own orbital motion, and the cheapest path to Mars — a transfer orbit that just reaches Mars's distance — only works if Mars will be at the far end of it when the probe arrives. Mars keeps moving during the roughly eight-month trip, so it has to be a specific angle ahead of Earth at launch. Earth catches up to that geometry once every synodic period, about 780 days. The 🎓 <b>What if?</b> lesson lets you test it: launch whenever you like and see where Mars actually is when you get there.</p></details>
   <details><summary>Can planets collide or be destroyed?</summary><p>Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape.</p></details>
   <details><summary>What are the controls?</summary><p>Scroll or pinch to zoom, click or tap any body to inspect it. Keyboard: <b>Space</b> pause, <b>↑↓</b> time rate, <b>E</b> Earth view, <b>C</b> comet, <b>D</b> data table, <b>0</b> reset view, <b>R</b> reset the system.</p></details>
   <details><summary>Is it free?</summary><p>Yes — free, in the browser, no download and no signup, like <a href="../">everything on this site</a>.</p></details>
@@ -683,25 +739,70 @@
     const Cf = z => z > 1e-6 ? (1-Math.cos(Math.sqrt(z)))/z : z < -1e-6 ? (Math.cosh(Math.sqrt(-z))-1)/(-z) : 0.5;
     const Sf = z => z > 1e-6 ? (Math.sqrt(z)-Math.sin(Math.sqrt(z)))/Math.sqrt(z*z*z)
                   : z < -1e-6 ? (Math.sinh(Math.sqrt(-z))-Math.sqrt(-z))/Math.sqrt(-z*-z*-z) : 1/6;
-    let z = 0;
-    for (let it=0; it<60; it++){
-      const c = Cf(z), s = Sf(z);
-      let y = r1 + r2 + A*(z*s-1)/Math.sqrt(c);
-      if (A > 0 && y < 0){ z += 0.1; continue; }
-      const chi = Math.sqrt(y/c), tt = (chi*chi*chi*s + A*Math.sqrt(y))/Math.sqrt(mu);
-      const dz = 1e-4, c2 = Cf(z+dz), s2 = Sf(z+dz);
-      const y2 = r1 + r2 + A*((z+dz)*s2-1)/Math.sqrt(c2), chi2 = Math.sqrt(y2/c2);
-      const t2 = (chi2*chi2*chi2*s2 + A*Math.sqrt(y2))/Math.sqrt(mu);
-      const dtdz = (t2-tt)/dz;
-      if (!isFinite(dtdz) || dtdz === 0) break;
-      const zn = z - (tt-dt)/dtdz;
-      if (Math.abs(zn-z) < 1e-9){ z = zn; break; }
-      z = zn;
+    const yOf = z => r1 + r2 + A*(z*Sf(z)-1)/Math.sqrt(Cf(z));
+    // time of flight for a given z — NaN where y<0 (no physical arc there)
+    const tof = z => { const y = yOf(z); if (!(y > 0)) return NaN; const c = Cf(z), chi = Math.sqrt(y/c); return (chi*chi*chi*Sf(z) + A*Math.sqrt(y))/Math.sqrt(mu); };
+    // Bracketed bisection on z (Vallado's robust form) instead of an unguarded
+    // Newton step: tof(z) rises monotonically across the single-revolution
+    // range, so scan for the sign change then bisect. Newton from z=0 could
+    // wander into y<0, lose its derivative and hand back a NON-converged z as
+    // if it were a solution — a spurious velocity that misses by an AU.
+    const ZMAX = 4*Math.PI*Math.PI;                           // beyond this the arc is a multi-revolution transfer
+    let lo = NaN, hi = NaN, prevZ = NaN, prevT = NaN;
+    for (let i=0; i<=160; i++){
+      const z = -ZMAX + 2*ZMAX*i/160, tt = tof(z);
+      if (isFinite(tt)){
+        if (isFinite(prevT) && (prevT-dt)*(tt-dt) <= 0){ lo = prevZ; hi = z; break; }
+        prevZ = z; prevT = tt;
+      } else { prevZ = NaN; prevT = NaN; }
     }
-    const c = Cf(z), y = r1 + r2 + A*(z*Sf(z)-1)/Math.sqrt(c);
-    const f = 1 - y/r1, g = A*Math.sqrt(y/mu);
+    if (!isFinite(lo)) return null;                            // no single-rev prograde arc fits this time of flight
+    for (let it=0; it<80; it++){
+      const mid = 0.5*(lo+hi), tm = tof(mid);
+      if (!isFinite(tm)) return null;
+      if ((tof(lo)-dt)*(tm-dt) <= 0) hi = mid; else lo = mid;
+      if (hi-lo < 1e-12) break;
+    }
+    const z = 0.5*(lo+hi), tz = tof(z);
+    if (!isFinite(tz) || Math.abs(tz-dt) > 1e-6*dt) return null;   // insist on a genuinely converged root
+    const y = yOf(z), f = 1 - y/r1, g = A*Math.sqrt(y/mu);
     if (!isFinite(g) || g === 0) return null;
     return [ (r2v[0]-f*r1v[0])/g, (r2v[1]-f*r1v[1])/g ];
+  }
+  // bestTransfer: the cheapest direct transfer from Earth to `target` launching
+  // NOW — one row of a real porkchop plot. Scans times of flight from 0.6× to
+  // 1.3× the Hohmann time, solves Lambert for each, and trusts a root only after
+  // re-flying it two-body to the aim point (a root that doesn't go there is
+  // discarded). Returns { dv, dt, v1, aim, tT } — dv in AU/yr relative to Earth,
+  // v1 the heliocentric departure velocity — or null if nothing fits.
+  const TOF_SPAN = [0.6, 1.3], TOF_N = 16;
+  function twoBodyStep(st, h, mu){                             // Verlet step of a [x,y,vx,vy] state about a fixed Sun
+    let r = Math.hypot(st[0],st[1]), a = -mu/(r*r*r), ax = a*st[0], ay = a*st[1];
+    st[0] += st[2]*h + 0.5*ax*h*h; st[1] += st[3]*h + 0.5*ay*h*h;
+    const r2 = Math.hypot(st[0],st[1]), a2 = -mu/(r2*r2*r2);
+    st[2] += 0.5*(ax + a2*st[0])*h; st[3] += 0.5*(ay + a2*st[1])*h;
+  }
+  function bestTransfer(target){
+    const mu = G*SUN.m;
+    const rE = [EARTH.x-SUN.x, EARTH.y-SUN.y], vex = EARTH.vx-SUN.vx, vey = EARTH.vy-SUN.vy;
+    const r1 = Math.hypot(rE[0], rE[1]), r2 = Math.hypot(target.x-SUN.x, target.y-SUN.y);
+    const at = (r1+r2)/2, tT = Math.PI*Math.sqrt(at*at*at/mu);
+    const st = [target.x-SUN.x, target.y-SUN.y, target.vx-SUN.vx, target.vy-SUN.vy];   // the target, coasted once across the span
+    const h = DT*4; let tp = 0, best = null;
+    for (let k=0; k<=TOF_N; k++){
+      const dt = tT*(TOF_SPAN[0] + (TOF_SPAN[1]-TOF_SPAN[0])*k/TOF_N);
+      while (tp + h <= dt){ twoBodyStep(st, h, mu); tp += h; }
+      if (dt - tp > 1e-12){ twoBodyStep(st, dt-tp, mu); tp = dt; }
+      const v1 = lambertV(rE, [st[0], st[1]], dt, mu);
+      if (!v1) continue;
+      const dv = Math.hypot(v1[0]-vex, v1[1]-vey);
+      if (best && dv >= best.dv) continue;
+      const chk = [rE[0], rE[1], v1[0], v1[1]], n = 400, hc = dt/n;   // verify: does this root actually fly to the aim point?
+      for (let i=0; i<n; i++) twoBodyStep(chk, hc, mu);
+      if (Math.hypot(chk[0]-st[0], chk[1]-st[1]) > 0.015*r2) continue;
+      best = { dv, dt, v1, aim: [st[0]+SUN.x, st[1]+SUN.y], tT };
+    }
+    return best;
   }
 
   // semi-major axis of o's two-body orbit about pref (negative ⇒ unbound) — same math the HUD table uses
@@ -1258,6 +1359,7 @@
       ctx.fill(); ctx.stroke(); ctx.restore();
       pr._sx = hx; pr._sy = hy;
     }
+    if (!earthView) drawLessonFx();                                  // What-if overlays (lead wedge, arrival markers)
 
     // labels (reset the per-frame declutter tracker first)
     placedLabels.length = 0;
@@ -1650,6 +1752,7 @@
     }
     if (!msgPanel.hidden) updMsgRows();                              // live light-minute readouts while picking
     stepProbe();                                                    // spacecraft: wait for the window, then cruise
+    lessonTick();                                                   // live numbers on the What-if coach card
     let stepped = 0;
     if (timeRate !== 0){
       warping = warpFactor();
@@ -1809,11 +1912,16 @@
     if (probePlan) return;                                     // one mission at a time
     if (follow === EARTH) resetView();
     actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; setActCaret();
-    probePlan = { phase: 'wait', savedRate: timeRate, waitStart: t, target, voyager: !!opts.voyager };
-    setRate(timeRate <= 0 ? 16 : Math.max(timeRate, 16));       // fast-forward to the launch window
-    probeStatus.hidden = false;
+    probePlan = { phase: opts.arm ? 'arm' : 'wait', savedRate: timeRate, waitStart: t, target, voyager: !!opts.voyager,
+                  budget: opts.budget || 0,                     // AU/yr: wait for a transfer that costs ≤ this (a real window), not for a fixed angle
+                  onLaunch: opts.onLaunch || null, onEnd: opts.onEnd || null };   // lessons listen for the launch and for how it ended
+    if (probePlan.phase === 'wait'){                           // 'arm' = a lesson launches it by hand, on its own clock
+      setRate(timeRate <= 0 ? 16 : Math.max(timeRate, 16));     // fast-forward to the launch window
+      probeStatus.hidden = false;
+    }
+    return true;
   }
-  function injectProbe(tT){
+  function injectProbe(tT, vel, info){
     const mu = G*SUN.m, target = probePlan.target;
     // Aim at where the target WILL be after the transfer. For a rendezvous, aim
     // at its centre; for Voyager, aim a bit to the side so the probe SWINGS PAST
@@ -1825,9 +1933,12 @@
       ax += -(mFut[1]-SUN.y)/jr * -0.20; ay += (mFut[0]-SUN.x)/jr * -0.20;
     }
     let vx, vy;
-    const v1 = lambertV([EARTH.x-SUN.x, EARTH.y-SUN.y], [ax-SUN.x, ay-SUN.y], tT, mu);
+    // vel: an explicit heliocentric departure velocity (a lesson's own choice), 'hohmann' for the
+    // plain prograde transfer-orbit kick, or nothing → aim with Lambert at the target's future position
+    const v1 = Array.isArray(vel) ? vel : vel === 'hohmann' ? null
+             : lambertV([EARTH.x-SUN.x, EARTH.y-SUN.y], [ax-SUN.x, ay-SUN.y], tT, mu);
     if (v1){ vx = SUN.vx+v1[0]; vy = SUN.vy+v1[1]; }
-    else {                                                      // fallback: plain prograde Hohmann kick
+    else {                                                      // plain prograde Hohmann kick (also the fallback)
       const r1 = distSun(EARTH), at = (r1+distSun(target))/2, vp = Math.sqrt(mu*(2/r1 - 1/at));
       let dvx = EARTH.vx-SUN.vx, dvy = EARTH.vy-SUN.vy; const vl = Math.hypot(dvx,dvy)||1;
       vx = SUN.vx + dvx/vl*vp; vy = SUN.vy + dvy/vl*vp;
@@ -1841,18 +1952,31 @@
                    target: probePlan.voyager ? null : target,  // voyager never "arrives" — it flies by and coasts on
                    jMin: Infinity, vBefore: 0, boosted: false, passed: {} };
     probes.push(probeCraft);
-    probePlan.phase = 'cruise'; probePlan.tTransfer = tT;
+    probePlan.phase = 'cruise'; probePlan.tTransfer = tT; probeStatus.hidden = false;
     setRate(Math.max(6, Math.min(24, Math.round(tT*5))));       // pace the cruise to the distance (far targets run faster)
     msgFx.push({ x: EARTH.x, y: EARTH.y, born: performance.now() });
     sfx('launch');
+    if (probePlan.onLaunch) probePlan.onLaunch(info || {});
   }
-  function finishProbe(){ probeStatus.hidden = true; if (probeCraft) probeCraft.done = true; const r = probePlan ? probePlan.savedRate : 0; probeCraft = null; probePlan = null; setRate(r); }
-  function abortProbe(note){ if (note) announce(note, 'escape'); finishProbe(); }
+  function finishProbe(result){
+    probeStatus.hidden = true; if (probeCraft) probeCraft.done = true;
+    const r = probePlan ? probePlan.savedRate : 0, cb = probePlan ? probePlan.onEnd : null;
+    probeCraft = null; probePlan = null; setRate(r);
+    if (cb) cb(result || { aborted: true });                     // lessons hear how the mission ended
+  }
+  function abortProbe(note){ if (note) announce(note, 'escape'); finishProbe({ aborted: true }); }
   function stepProbe(){
     if (!probePlan) return;
     const target = probePlan.target, name = target.name;
     if (EARTH.deleted || target.deleted){ abortProbe('🚀 Mission scrubbed — a body was lost'); return; }
-    if (probePlan.phase === 'wait'){
+    if (probeCraft && !probes.includes(probeCraft)){ finishProbe({ aborted: true }); return; }   // a reset wiped the craft mid-cruise
+    if (probePlan.phase === 'arm') return;                     // a lesson fires it by hand
+    if (probePlan.phase === 'wait' && probePlan.budget > 0){    // a real window: the cheapest transfer fits the rocket's budget
+      const bt = bestTransfer(target); probePlan.cost = bt ? bt.dv : Infinity;
+      probeText.textContent = `🛰 Waiting for the ${name} window · transfer costs ${bt ? (bt.dv*KMS).toFixed(1) : '—'} km/s · rocket has ${(probePlan.budget*KMS).toFixed(1)}`;
+      if (bt && bt.dv <= probePlan.budget) injectProbe(bt.dt, bt.v1, { dv: bt.dv, aim: bt.aim, inBudget: true });
+      else if (t - probePlan.waitStart > 13) injectProbe(transferTime(target));   // safety: never wait past a synodic period
+    } else if (probePlan.phase === 'wait'){
       const r2 = distSun(target), mu = G*SUN.m, tT = transferTime(target);
       const omM = Math.sqrt(mu/(r2*r2*r2));                     // target mean motion
       let alpha = Math.PI - omM*tT;                             // required lead of the target ahead of Earth
@@ -1897,10 +2021,10 @@
       if (pr.arrived){
         msgFx.push({ x: pr.x, y: pr.y, born: performance.now() });
         announce(`🚀 Probe reached ${name} — ${yrs >= 1 ? yrs.toFixed(1)+' years' : Math.round(days)+' days'} in transit`, 'capture'); sfx('capture');
-        finishProbe();
+        finishProbe({ hit: true, days, closest: pr.closest });
       } else if (t - pr.t0 > probePlan.tTransfer*1.7){
         announce(`🚀 Probe missed ${name} — closest ${pr.closest.toFixed(2)} AU (off the launch window)`, 'escape');
-        finishProbe();
+        finishProbe({ hit: false, days, closest: pr.closest });
       } else {
         const dM = Math.hypot(pr.x-target.x, pr.y-target.y);
         probeText.textContent = `🚀 → ${name} · ${elapsed} · ${dM.toFixed(2)} AU to ${name}`;
@@ -1949,6 +2073,231 @@
   document.getElementById('act-saturn').addEventListener('click', () => startProbe(SATURN));
   document.getElementById('act-voyager').addEventListener('click', startVoyager);
   document.getElementById('probe-cancel').addEventListener('click', () => abortProbe());
+
+  // ---- "What if?" — guided lessons ----
+  // Each lesson is a question, a prediction, an experiment run on the real
+  // physics, and the number that answers it. The coach card only ever states
+  // what is on screen right now or what was just measured.
+  const learnToggle = document.getElementById('learn-toggle'), learnMenu = document.getElementById('learn-menu'),
+        learnList = document.getElementById('learn-list');
+  const coach = document.getElementById('coach'), coachStep = document.getElementById('coach-step'),
+        coachTitle = document.getElementById('coach-title'), coachBody = document.getElementById('coach-body'),
+        coachBtns = document.getElementById('coach-btns');
+  let lesson = null;                                           // the running lesson's state
+  let lessonsDone = {};
+  try { lessonsDone = JSON.parse(localStorage.getItem('ssLessons') || '{}'); } catch(e){}
+  function markLesson(id, data){
+    lessonsDone[id] = Object.assign({}, lessonsDone[id], data, { done: true });
+    try { localStorage.setItem('ssLessons', JSON.stringify(lessonsDone)); } catch(e){}
+    renderLearnMenu();
+  }
+  const track = (name, id) => { if (typeof gtag === 'function') gtag('event', name, { lesson: id }); };
+  const LESSONS = [
+    { id: 'mars', q: 'Why can\'t we fly straight to Mars?', s: 'You pick the launch moment. Same rocket every time — only the timing changes.', run: () => startMarsLesson() },
+  ];
+  function renderLearnMenu(){
+    learnList.innerHTML = '';
+    for (const L of LESSONS){
+      const b = document.createElement('button'); b.type = 'button'; b.className = 'btn lcard';
+      b.innerHTML = `<span class="q">${lessonsDone[L.id] ? '<span class="done">✓</span>' : ''}${L.q}</span><span class="s">${L.s}</span>`;
+      b.addEventListener('click', () => { closeTopPanels(); L.run(); });
+      learnList.appendChild(b);
+    }
+  }
+  function closeTopPanels(){ learnMenu.hidden = true; actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; setActCaret(); }
+  learnToggle.addEventListener('click', () => { const open = learnMenu.hidden; closeTopPanels(); learnMenu.hidden = !open; });
+  cToggle.addEventListener('click', () => { learnMenu.hidden = true; });   // the two top menus never stack
+  renderLearnMenu();
+
+  // the coach card: one render helper, buttons wired inline
+  function showCoach(v){
+    coachStep.textContent = v.step; coachTitle.textContent = v.title; coachBody.innerHTML = v.html;
+    coachBtns.innerHTML = '';
+    for (const b of v.btns || []){
+      const el = document.createElement('button'); el.type = 'button'; el.className = 'btn ' + (b.cls || ''); el.textContent = b.label;
+      el.addEventListener('click', b.fn); coachBtns.appendChild(el);
+    }
+    coach.hidden = false;
+  }
+  const coachLive = (sel, text) => { const el = coachBody.querySelector(sel); if (el && el.textContent !== text) el.textContent = text; };
+  function endLesson(){
+    if (!lesson) return;
+    const L = lesson; lesson = null; coach.hidden = true;
+    if (probePlan && probePlan.lesson === L.id){ probePlan.onEnd = null; abortProbe(); }   // quiet abort: the card closing is the feedback
+  }
+  document.getElementById('coach-close').addEventListener('click', endLesson);
+  let ltFrame = 0;
+  function lessonTick(){
+    if (!lesson || lesson.id !== 'mars') return;
+    if (lesson.step === 'arm' && probePlan){
+      coachLive('.lv-lead', marsLead().toFixed(0) + '°');
+      if (lesson.reveal || probePlan.phase === 'wait'){
+        if (probePlan.phase === 'wait') lesson.cost = probePlan.cost;                 // the wait loop already priced it this frame
+        else if ((ltFrame++ & 3) === 0){ const bt = bestTransfer(MARS); lesson.cost = bt ? bt.dv : Infinity; }   // ~15 Hz is plenty for a readout
+        const c = lesson.cost;
+        coachLive('.lv-cost', isFinite(c) ? (c*KMS).toFixed(1) + ' km/s' : '—');
+        const v = coachBody.querySelector('.lv-verdict');
+        if (v){
+          const ok = isFinite(c) && c <= MARS_BUDGET, txt = ok ? '✓ Inside the budget — the window is open.' : 'Over budget — not yet.';
+          if (v.textContent !== txt){ v.textContent = txt; v.className = 'lv-verdict ' + (ok ? 'ok' : 'warn'); }
+        }
+      }
+    } else if (lesson.step === 'cruise' && probeCraft){
+      coachLive('.lv-day', String(Math.round((t - probeCraft.t0)*365.25)));
+      coachLive('.lv-dist', (Math.hypot(probeCraft.x-MARS.x, probeCraft.y-MARS.y)*MKM).toFixed(0));
+    }
+  }
+
+  // ---- Lesson: why can't we fly straight to Mars? ----
+  // The rocket is fixed — it can leave Earth up to MARS_BUDGET faster than
+  // Earth already moves, a realistic Mars-launcher figure. The player chooses
+  // WHEN. If the cheapest real transfer from that moment fits the budget, the
+  // probe flies it (Lambert-aimed and verified); otherwise it flies the
+  // transfer-orbit kick and reaches Mars's distance — where Mars isn't.
+  const MARS_BUDGET = 3.7/KMS, BUDGET_TXT = '3.7 km/s';      // AU/yr
+  const MKM = 149.6;                                          // million km per AU
+  const marsLead = () => { const a = Math.atan2(MARS.y-SUN.y, MARS.x-SUN.x) - Math.atan2(EARTH.y-SUN.y, EARTH.x-SUN.x); return ((a*180/Math.PI) % 360 + 360) % 360; };
+  function startMarsLesson(){
+    if (lesson) endLesson();
+    if (msg || probePlan){ announce('🎓 Finish the current mission first', 'escape'); return; }
+    if (SUN.deleted || EARTH.deleted || MARS.deleted){
+      lesson = { id: 'mars', step: 'blocked' };
+      showCoach({ step: 'What if? · Mars', title: 'Why can\'t we fly straight to Mars?',
+        html: '<p>This lesson needs the Sun, Earth, and Mars — and at least one of them is gone.</p>',
+        btns: [{ label: 'Restore the system', cls: 'primary', fn: () => { reset(); startMarsLesson(); } }, { label: 'Not now', fn: endLesson }] });
+      return;
+    }
+    lesson = { id: 'mars', step: 'intro', attempts: 0, reveal: false, fx: null, launch: null };
+    track('lesson_start', 'mars');
+    deselect(); if (follow) resetView(); killHint();
+    showCoach({ step: 'What if? · 1 of 3', title: 'Why can\'t we fly straight to Mars?',
+      html: `<p>Mars is sometimes only <b>3 light-minutes</b> away — yet every mission spends about <b>7 months</b> getting there, and can only leave every <b>26 months</b>.</p>
+             <p>You're the launch director. The rocket can push the probe up to <b>${BUDGET_TXT}</b> faster than Earth is already moving — never more. The only thing you control is <b>when</b>.</p>
+             <p class="note">Predict first: when should you go? Watch how far ahead Mars is, then launch.</p>`,
+      btns: [{ label: 'Take the controls →', cls: 'primary wide', fn: marsArm }] });
+  }
+  function marsArm(){
+    if (!lesson || lesson.id !== 'mars') return;
+    if (!probePlan){
+      if (!startProbe(MARS, { arm: true, budget: MARS_BUDGET, onLaunch: marsLaunched, onEnd: marsEnded })){ endLesson(); return; }
+      probePlan.lesson = 'mars';
+    }
+    probePlan.phase = 'arm'; probeStatus.hidden = true;
+    lesson.step = 'arm'; lesson.launch = null; lesson.fx = { wedge: true };
+    setRate(4);                                                // slow enough to aim by eye
+    showCoach({ step: `What if? · 2 of 3 · attempt ${lesson.attempts + 1}`, title: 'Pick the launch moment',
+      html: `<p>Mars leads Earth by <b class="lv-lead">—</b>.</p>` +
+            (lesson.reveal
+              ? `<p>Reaching Mars from here would cost <b class="lv-cost">—</b> — the rocket has <b>${BUDGET_TXT}</b>. <span class="lv-verdict"></span></p>`
+              : `<p>Time runs at ×4 — tap ⏸ (or press <b>Space</b>) to pause and think. The rocket fires the moment you say.</p>`),
+      btns: [{ label: '🚀 Launch now', cls: 'primary', fn: marsLaunchNow },
+             { label: lesson.reveal ? 'Wait for the window' : 'Just show me the window', fn: marsAutoWait }] });
+  }
+  function marsLaunchNow(){
+    if (!lesson || !probePlan || probePlan.phase !== 'arm') return;
+    const bt = bestTransfer(MARS), inBudget = !!bt && bt.dv <= MARS_BUDGET;
+    if (inBudget) injectProbe(bt.dt, bt.v1, { dv: bt.dv, aim: bt.aim, inBudget: true });
+    else injectProbe(transferTime(MARS), 'hohmann', { dv: bt ? bt.dv : Infinity, inBudget: false });
+  }
+  function marsAutoWait(){
+    if (!lesson || !probePlan || probePlan.phase !== 'arm') return;
+    lesson.reveal = true;
+    probePlan.phase = 'wait'; probePlan.waitStart = t; probeStatus.hidden = false;
+    setRate(16);
+    showCoach({ step: 'What if? · 2 of 3 · fast-forward', title: 'Waiting for the window',
+      html: `<p>Mars leads Earth by <b class="lv-lead">—</b>. Reaching it from here would cost <b class="lv-cost">—</b> — the rocket has <b>${BUDGET_TXT}</b>.</p>
+             <p>The moment the cost falls inside the budget, the rocket fires. That moment <i>is</i> the launch window.</p>`,
+      btns: [{ label: 'Back to manual', fn: marsArm }] });
+  }
+  function marsLaunched(info){
+    if (!lesson || lesson.id !== 'mars' || !probePlan) return;
+    lesson.attempts++;
+    const tT = probePlan.tTransfer, mu = G*SUN.m, lead = marsLead();
+    // where Mars will be when the probe reaches its far point — the same two-body coast the aim used
+    const a0 = Math.atan2(MARS.y-SUN.y, MARS.x-SUN.x);
+    const st = [MARS.x-SUN.x, MARS.y-SUN.y, MARS.vx-SUN.vx, MARS.vy-SUN.vy], n = 600, h = tT/n;
+    for (let i=0; i<n; i++) twoBodyStep(st, h, mu);
+    const marsAt = [st[0]+SUN.x, st[1]+SUN.y];
+    const marsMove = ((Math.atan2(st[1], st[0]) - a0)*180/Math.PI % 360 + 360) % 360;   // how far Mars travels meanwhile
+    // the probe's own far point: the aim point of a real transfer, or the transfer orbit's far end for the kick
+    let arrive = info.aim;
+    if (!info.inBudget){ const r1 = distSun(EARTH), r2 = distSun(MARS); arrive = [SUN.x - (EARTH.x-SUN.x)/r1*r2, SUN.y - (EARTH.y-SUN.y)/r1*r2]; }
+    lesson.launch = { lead, dv: info.dv, inBudget: !!info.inBudget, tT, marsAt, arrive, marsMove };
+    lesson.step = 'cruise'; lesson.fx = { markers: true };
+    const cost = isFinite(info.dv) ? (info.dv*KMS).toFixed(1) + ' km/s' : 'more than any rocket has';
+    showCoach({ step: 'What if? · 3 of 3 · in flight', title: info.inBudget ? 'Launched — inside the window' : 'Launched — outside the window',
+      html: `<p>Mars was <b>${lead.toFixed(0)}°</b> ahead at launch. The cheapest real transfer from there cost <b>${cost}</b>` +
+            (info.inBudget
+              ? ` — <span class="ok">within the rocket's ${BUDGET_TXT}</span>. The probe is on it, aimed at where Mars <i>will</i> be.</p>`
+              : ` — <span class="bad">over the rocket's ${BUDGET_TXT}</span>. The rocket did what it could: a transfer orbit out to Mars's distance.</p>`) +
+            `<p>Day <b class="lv-day">0</b> · <b class="lv-dist">—</b> million km to Mars.` +
+            (info.inBudget ? '' : ' Watch the two markers: the probe\'s far point, and where Mars will actually be.') + `</p>`,
+      btns: [] });
+  }
+  function marsEnded(res){
+    if (!lesson || lesson.id !== 'mars') return;
+    if (res.aborted || !lesson.launch){ endLesson(); return; }
+    const L = lesson.launch; lesson.step = 'result'; lesson.fx = null;
+    const cost = isFinite(L.dv) ? (L.dv*KMS).toFixed(1) + ' km/s' : 'more than any rocket has';
+    const coastDays = Math.round(L.tT*365.25);
+    if (res.hit){
+      markLesson('mars', { attempts: lesson.attempts, days: Math.round(res.days) }); track('lesson_complete', 'mars');
+      showCoach({ step: 'What if? · result', title: '🎯 Rendezvous with Mars',
+        html: `<p>The probe entered Mars's neighbourhood — within 0.05 AU, about <b>${(0.05*MKM).toFixed(1)} million km</b> — on day <b>${Math.round(res.days)}</b>.</p>
+               <p>Mars was <b>${L.lead.toFixed(0)}°</b> ahead when you left, and the transfer cost <b>${cost}</b> of the rocket's ${BUDGET_TXT}. Over the planned ${coastDays}-day coast Mars moved another <b>${L.marsMove.toFixed(0)}°</b> — you aimed at where it was going to be.</p>
+               <p class="note">Perseverance did the same: launched 30 July 2020, landed 18 February 2021 — 203 days. Earth laps Mars only once every 26 months, so that's how often this geometry comes around.</p>`,
+        btns: [{ label: 'Try another moment', fn: marsArm }, { label: 'Done ✓', cls: 'primary', fn: endLesson }] });
+    } else if (L.inBudget){
+      showCoach({ step: 'What if? · result', title: 'A near miss',
+        html: `<p>Closest approach: <b>${(res.closest*MKM).toFixed(0)} million km</b> (${res.closest.toFixed(2)} AU).</p>
+               <p>The transfer was inside the budget, but the probe still slipped past. The aim assumes only the Sun's pull; the other planets' tugs over the ${coastDays}-day coast were enough to nudge it off. Real missions fix this with small course corrections en route.</p>`,
+        btns: [{ label: 'Try again', cls: 'primary', fn: marsArm }, { label: 'Stop', fn: endLesson }] });
+    } else {
+      lesson.reveal = true;
+      showCoach({ step: 'What if? · result', title: 'Missed — Mars wasn\'t there',
+        html: `<p>Closest approach: <b>${(res.closest*MKM).toFixed(0)} million km</b> (${res.closest.toFixed(2)} AU).</p>
+               <p>Mars was <b>${L.lead.toFixed(0)}°</b> ahead when you left. Hitting it from there would have cost <b>${cost}</b> — the rocket has <b>${BUDGET_TXT}</b>. So the probe flew the transfer orbit out to Mars's distance, and over that ${coastDays}-day coast Mars moved <b>${L.marsMove.toFixed(0)}°</b> and simply wasn't at the far point.</p>
+               <p class="note">Next time the cost readout stays on. Launch when it drops inside the budget — that moment is the launch window, and it comes around once every 26 months.</p>`,
+        btns: [{ label: 'Try again', cls: 'primary', fn: marsArm }, { label: 'Show me the window', fn: () => { marsArm(); marsAutoWait(); } }, { label: 'Stop', fn: endLesson }] });
+    }
+  }
+  // lesson overlays: the Earth→Mars lead-angle wedge while aiming; once launched,
+  // the probe's far point against where Mars will actually be
+  function drawLessonFx(){
+    if (!lesson || !lesson.fx || SUN.deleted) return;
+    const [sx, sy] = scr(SUN.x, SUN.y);
+    if (lesson.fx.wedge && !EARTH.deleted && !MARS.deleted){
+      const [ex, ey] = scr(EARTH.x, EARTH.y), [mx, my] = scr(MARS.x, MARS.y);
+      const aE = Math.atan2(ey-sy, ex-sx), lead = marsLead()*Math.PI/180;
+      const rr = Math.hypot(ex-sx, ey-sy)*0.62;
+      ctx.save();
+      ctx.setLineDash([4,5]); ctx.strokeStyle = 'rgba(191,245,218,0.55)'; ctx.lineWidth = 1.2;
+      ctx.beginPath(); ctx.moveTo(sx,sy); ctx.lineTo(ex,ey); ctx.moveTo(sx,sy); ctx.lineTo(mx,my); ctx.stroke();
+      ctx.setLineDash([]);
+      // prograde is counter-clockwise in the world; screen y points down, so it sweeps toward decreasing canvas angle
+      ctx.strokeStyle = 'rgba(255,207,90,0.9)'; ctx.lineWidth = 2;
+      ctx.beginPath(); ctx.arc(sx, sy, rr, aE, aE - lead, true); ctx.stroke();
+      const am = aE - lead/2, lx = sx + Math.cos(am)*(rr+16), ly = sy + Math.sin(am)*(rr+16);
+      ctx.fillStyle = '#ffcf5a'; ctx.font = '600 11px system-ui,sans-serif'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+      ctx.fillText(`${(lead*180/Math.PI).toFixed(0)}° ahead`, lx, ly);
+      ctx.restore();
+    }
+    if (lesson.fx.markers && lesson.launch){
+      const L = lesson.launch;
+      const [ax, ay] = scr(L.arrive[0], L.arrive[1]), [qx, qy] = scr(L.marsAt[0], L.marsAt[1]);
+      ctx.save();
+      ctx.setLineDash([3,4]); ctx.strokeStyle = MARS.color; ctx.lineWidth = 1.5;   // where Mars will be
+      ctx.beginPath(); ctx.arc(qx, qy, 7, 0, 2*Math.PI); ctx.stroke();
+      ctx.strokeStyle = 'rgba(191,245,218,0.95)';                                    // the probe's far point
+      ctx.beginPath(); ctx.moveTo(ax-6,ay-6); ctx.lineTo(ax+6,ay+6); ctx.moveTo(ax-6,ay+6); ctx.lineTo(ax+6,ay-6); ctx.stroke();
+      if (!L.inBudget){ ctx.strokeStyle = 'rgba(255,157,157,0.7)'; ctx.beginPath(); ctx.moveTo(ax,ay); ctx.lineTo(qx,qy); ctx.stroke(); }
+      ctx.setLineDash([]);
+      ctx.font = '600 10.5px system-ui,sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+      ctx.fillStyle = MARS.color; ctx.fillText(`Mars on day ${Math.round(L.tT*365.25)}`, qx+10, qy);
+      ctx.fillStyle = '#bff5da'; ctx.fillText(L.inBudget ? 'aim point' : 'probe\'s far point', ax+10, ay + (L.inBudget ? 13 : 0));
+      ctx.restore();
+    }
+  }
 
   // ---- Earth → Moon: a to-scale Earth–Moon view ----
   // The Moon is 60 Earth-radii away and sub-pixel in the system view, so this is
@@ -2154,6 +2503,7 @@
     // has scrolled to the article, Space/arrows must scroll the page again.
     if (window.scrollY > window.innerHeight/2) return;
     if (moonView){ if (e.key === 'Escape' || e.key === '0'){ exitMoon(); e.preventDefault(); } return; }   // sim hotkeys are inert in the Earth–Moon view
+    if (e.key === 'Escape' && lesson){ endLesson(); e.preventDefault(); return; }
     if (e.code === 'Space'){ togglePause(); e.preventDefault(); }
     else if (e.code === 'ArrowUp')   setRate(timeRate + 1);
     else if (e.code === 'ArrowDown') setRate(timeRate - 1);

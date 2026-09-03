@@ -15,7 +15,7 @@ function boot(){
   const api = new Function(core + `;
     return {
       G, DT, SUN, planets, EARTH, MOON, bodies,
-      reset, advance, warpFactor, aOf, mergeInto, energy, detectPass, seedBelt, keplerProp, lambertV,
+      reset, advance, warpFactor, aOf, mergeInto, energy, detectPass, seedBelt, keplerProp, lambertV, bestTransfer, KMS,
       state: () => ({ t, comets, belt, storm, probes, E0 }),
       onEmit: f => { EMIT = f; },
       setRate: r => { timeRate = r; },
@@ -303,6 +303,35 @@ const ok = (cond, name, detail = '') => {
   for (let i = 0; i < 4; i++) api.advance(32, 1);   // 40 AU/yr × 4 frames ≈ 1 AU — crosses the 80 AU line
   ok(emits.filter(e => e[0] === 'escape').length === 1, 'comet crossing 80 AU → one escape event', JSON.stringify(emits));
   ok(api.state().comets.length === 0, 'escaped comet removed');
+}
+
+// ── T9: bestTransfer — the What-if lesson's window search. Scanning live geometry,
+//        every launch it prices inside the rocket's budget must rendezvous, and the
+//        transfer-orbit kick from outside the window must miss. ──
+{
+  const api = boot(), B = 3.7/api.KMS;
+  const stepD = 8, sub = Math.round(stepD/365.25/api.DT);
+  const fly = (vx, vy, yrs) => {
+    const { SUN, EARTH, MARS } = api; let ux = EARTH.vx-SUN.vx, uy = EARTH.vy-SUN.vy; const ul = Math.hypot(ux, uy);
+    const pr = { x: EARTH.x+ux/ul*0.012, y: EARTH.y+uy/ul*0.012, vx, vy, trail: [], t0: api.state().t, closest: Infinity, arrived: false, done: false, arrR: 0.05, target: MARS };
+    api.addProbe(pr); const n = Math.ceil(yrs/(32*api.DT)); for (let i = 0; i < n; i++){ api.advance(32, 1); if (pr.arrived) break; } pr.done = true; return pr;
+  };
+  let hits = 0, launches = 0, kicked = false, kickMiss = null, nulls = 0, samples = 0;
+  while (api.state().t < 5 && launches < 2){
+    const bt = api.bestTransfer(api.MARS); samples++;
+    if (!bt) nulls++;
+    if (bt && bt.dv <= B){ const pr = fly(api.SUN.vx+bt.v1[0], api.SUN.vy+bt.v1[1], bt.dt*1.7); launches++; if (pr.arrived) hits++; }
+    else if (bt && !kicked && bt.dv > 1.5*B){
+      const { SUN, EARTH, MARS, G } = api, mu = G*SUN.m, r1 = Math.hypot(EARTH.x-SUN.x, EARTH.y-SUN.y), r2 = Math.hypot(MARS.x-SUN.x, MARS.y-SUN.y), at = (r1+r2)/2, vp = Math.sqrt(mu*(2/r1-1/at));
+      let dvx = EARTH.vx-SUN.vx, dvy = EARTH.vy-SUN.vy; const vl = Math.hypot(dvx, dvy);
+      kicked = true; kickMiss = fly(SUN.vx+dvx/vl*vp, SUN.vy+dvy/vl*vp, bt.tT*1.7).closest;
+    }
+    else api.advance(sub, 1);
+  }
+  ok(nulls === 0, 'bestTransfer always finds a verified transfer', `${nulls}/${samples} null`);
+  ok(launches === 2, 'two launch windows opened within 5 yr', `${launches}`);
+  ok(hits === launches, `every budgeted launch rendezvoused (${hits}/${launches})`);
+  ok(kicked && kickMiss > 0.05, `transfer-orbit kick from outside the window misses (closest ${kickMiss ? kickMiss.toFixed(2) : '?'} AU)`);
 }
 
 console.log(fails ? `\n${fails} FAILURE(S)` : '\nall green');
