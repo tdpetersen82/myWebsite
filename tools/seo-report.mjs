@@ -108,6 +108,8 @@ async function api(token, url, payload) {
 
 // ---------------------------------------------------------------- dates
 
+const isoDate = (d) => d.toISOString().slice(0, 10);
+
 function dateRange(days) {
     // GSC data lags ~2 days; starting "today" would return empty tail rows.
     const end = new Date(Date.now() - 2 * 86400000);
@@ -123,11 +125,11 @@ async function listSites(token) {
     return body.siteEntry || [];
 }
 
-async function gscQuery(token, siteUrl, range, dimensions, rowLimit = 1000) {
+async function gscQuery(token, siteUrl, range, dimensions, rowLimit = 1000, dataState = 'final') {
     const body = await api(
         token,
         `https://searchconsole.googleapis.com/webmasters/v3/sites/${encodeURIComponent(siteUrl)}/searchAnalytics/query`,
-        { ...range, dimensions, rowLimit, dataState: 'final' },
+        { ...range, dimensions, rowLimit, dataState },
     );
     return (body.rows || []).map((r) => {
         const out = { clicks: r.clicks, impressions: r.impressions, ctr: r.ctr, position: r.position };
@@ -268,6 +270,30 @@ async function main() {
 
     if (site) {
         console.log(`=== SEARCH CONSOLE: ${site} ===\n`);
+
+        // ---- Last 14 days, day by day, INCLUDING fresh (not-yet-final) data ----
+        // The 90-day tables below use final data, which lags 2–3 days, and a sliding
+        // 90-day total hides a single record day completely. This is the view that
+        // matches what the Search Console UI shows the owner — lead with it.
+        {
+            const today = new Date(), fresh = { startDate: isoDate(new Date(today.getTime() - 14 * 86400000)), endDate: isoDate(today) };
+            const daily = await gscQuery(token, site, fresh, ['date'], 100, 'all');
+            const prior = await gscQuery(token, site, { startDate: isoDate(new Date(today.getTime() - 120 * 86400000)), endDate: fresh.startDate }, ['date'], 500, 'all');
+            const priorBest = prior.reduce((m, r) => Math.max(m, r.clicks), 0);
+            const best = daily.reduce((b, r) => (!b || r.clicks > b.clicks ? r : b), null);
+            console.log(`Last 14 days by day (fresh data — the last 2–3 days are provisional):`);
+            console.log(table(daily, GSC_COLS('date'), 20));
+            if (best) {
+                const tag = best.clicks > priorBest ? `NEW ALL-TIME HIGH (previous best in the prior 120 days: ${priorBest})`
+                          : best.clicks === priorBest ? `ties the prior 120-day best (${priorBest})` : `prior 120-day best was ${priorBest}`;
+                console.log(`Best day: ${best.date} — ${best.clicks} clicks / ${best.impressions} impressions — ${tag}`);
+                const bestPages = (await gscQuery(token, site, { startDate: best.date, endDate: best.date }, ['page'], 50, 'all')).filter((r) => r.clicks > 0).sort((a, b) => b.clicks - a.clicks);
+                console.log('  what drove it:');
+                for (const r of bestPages.slice(0, 8)) console.log(`    ${r.page.replace(/^https:\/\/limestonegames\.com/, '').padEnd(42)} ${String(r.clicks).padStart(2)} clicks / ${String(r.impressions).padStart(4)} impr / pos ${r.position.toFixed(1)}`);
+            }
+            console.log();
+        }
+
         const [queries, pages, dates, countries, devices] = await Promise.all([
             gscQuery(token, site, range, ['query']),
             gscQuery(token, site, range, ['page']),
@@ -276,8 +302,12 @@ async function main() {
             gscQuery(token, site, range, ['device']),
         ]);
 
-        const totals = queries.reduce((a, r) => ({ clicks: a.clicks + r.clicks, impressions: a.impressions + r.impressions }), { clicks: 0, impressions: 0 });
-        console.log(`Totals: ${totals.clicks} clicks, ${totals.impressions} impressions across ${queries.length} queries\n`);
+        // Totals come from the DATE rows: the query dimension omits privacy-filtered
+        // ("anonymized") queries, so summing query rows undercounts clicks badly.
+        const totals = dates.reduce((a, r) => ({ clicks: a.clicks + r.clicks, impressions: a.impressions + r.impressions }), { clicks: 0, impressions: 0 });
+        const qTot = queries.reduce((a, r) => a + r.clicks, 0);
+        console.log(`Totals (final data, ${range.startDate} → ${range.endDate}): ${totals.clicks} clicks, ${totals.impressions} impressions`);
+        console.log(`  (the ${queries.length} query rows below account for ${qTot} of those clicks — Google hides the queries behind the rest)\n`);
 
         console.log('Top queries by impressions:');
         console.log(table([...queries].sort((a, b) => b.impressions - a.impressions), GSC_COLS('query')));
