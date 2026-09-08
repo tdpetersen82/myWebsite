@@ -18,7 +18,7 @@
   {"@type":"Question","name":"How long does it take a radio signal to reach Mars?","acceptedAnswer":{"@type":"Answer","text":"Between about 3 and 22 minutes one way, depending on where Earth and Mars are in their orbits — the gap between them swings from roughly 55 to 400 million km, and radio travels at the speed of light, 300,000 km per second. A reply takes just as long coming back, so a round trip is 6 to 44 minutes, which is why rovers are driven by pre-planned commands rather than live. The What if? lesson sends a real pulse across today's gap and times it."}},
   {"@type":"Question","name":"Why do Mars missions only launch every 26 months?","acceptedAnswer":{"@type":"Answer","text":"Because the rocket is the fixed part and the timing is the free part. A launcher can add only so much speed beyond Earth's own orbital motion, and the cheapest path to Mars — a transfer orbit that just reaches Mars's distance — only works if Mars will be at the far end of it when the probe arrives. Mars keeps moving during the roughly eight-month trip, so it has to be a specific angle ahead of Earth at launch. Earth catches up to that geometry once every synodic period, about 780 days. The What if? lesson lets you test it: launch whenever you like and see where Mars actually is when you get there."}},
   {"@type":"Question","name":"Can planets collide or be destroyed?","acceptedAnswer":{"@type":"Answer","text":"Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape."}},
-  {"@type":"Question","name":"What are the controls?","acceptedAnswer":{"@type":"Answer","text":"Scroll or pinch to zoom, click or tap any body to inspect it. Keyboard: Space pause, up/down arrows time rate, E Earth view, C comet, D data table, 0 reset view, R reset the system."}},
+  {"@type":"Question","name":"What are the controls?","acceptedAnswer":{"@type":"Answer","text":"Scroll or pinch to zoom, click or tap any body to inspect it, drag a planet to move it to a new orbit. Keyboard: Space pause, up/down arrows time rate, E Earth view, C comet, D data table, 0 reset view, R reset the system."}},
   {"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes — free, in the browser, no download and no signup."}}
 ]}</script>
 <meta property="og:title" content="Solar System Simulator — Interactive N-Body Gravity Sandbox | Limestone Games">
@@ -403,6 +403,10 @@
     <div class="st"><span class="v" id="st-spd"></span><span class="l">speed</span></div>
     <div class="st"><span class="v" id="st-per"></span><span class="l">period</span></div>
     <div class="st"><span class="v" id="st-mass"></span><span class="l">mass</span></div>
+    <div class="st"><span class="v" id="st-peri"></span><span class="l" id="st-peri-l">perihelion</span></div>
+    <div class="st"><span class="v" id="st-apo"></span><span class="l" id="st-apo-l">aphelion</span></div>
+    <div class="st"><span class="v" id="st-ecc"></span><span class="l">eccentricity</span></div>
+    <div class="st"><span class="v" id="st-esc"></span><span class="l" id="st-esc-l">escape speed here</span></div>
   </div>
   <button id="sel-adjust" class="btn" type="button">⚙ Adjust this body</button>
   <div id="sel-edit" hidden>
@@ -453,8 +457,9 @@
   <button id="vo-guides" class="btn vo" type="button" title="Faint ellipses tracing each planet's current orbit — they follow nudges and close encounters"></button>
   <button id="vo-labels" class="btn vo" type="button" title="Name tags on the bodies"></button>
   <button id="vo-trails" class="btn vo" type="button" title="Fading path history behind each planet"></button>
+  <button id="vo-vectors" class="btn vo" type="button" title="Green: which way each planet is moving and how fast. Orange: which way gravity is pulling it and how hard. Lengths are compressed so the outer planets stay visible — select a body to see its numbers."></button>
 </div>
-<div id="microhint" hidden>Scroll to zoom · click any body to inspect it</div>
+<div id="microhint" hidden>Scroll to zoom · click a body to inspect it · drag a planet to move it</div>
 <button id="moon-exit" type="button" hidden>← Back to the system</button>
 <div id="msg-status" hidden><span id="msg-text"></span><button id="msg-cancel" type="button" aria-label="Cancel transmission">×</button></div>
 <div id="probe-status" hidden><span id="probe-text"></span><button id="probe-cancel" type="button" aria-label="Abort mission">×</button></div>
@@ -504,6 +509,7 @@
     <li><b>Send a lightspeed message.</b> ⚡ Actions → Lightspeed message: a radio pulse leaves Earth for Mars (3 to 22 light-minutes away, depending on where the orbits stand) or Jupiter (33 to 54). The planets hold still while it crawls — because at any speed where you can see planets move, light is effectively instantaneous.</li>
     <li><b>Delete the Sun.</b> Click it, open <i>Adjust this body</i>, delete. The planets fly off along near-straight lines — the leash made visible.</li>
     <li><b>Make Jupiter heavier.</b> Drag its mass slider upward and watch the rest of the system start to wobble.</li>
+    <li><b>Drag Earth out to Mars's distance.</b> Grab any planet and pull: time pauses, the orbit guide previews the circle it will settle onto, and the inspector's year, perihelion and escape speed change under your hand. Let go and it orbits there — the Moon comes along. Switch on the <b>velocity &amp; gravity arrows</b> in the view options first and watch both arrows shrink as you move it outward.</li>
     <li><b>Nudge Earth.</b> A small thruster burn permanently changes its orbit — there's no script pulling it back.</li>
     <li><b>Launch satellites.</b> Press <b>E</b> for Earth view, then launch at 200&nbsp;km and again at 35,786&nbsp;km and compare the orbits.</li>
     <li><b>Run time backwards.</b> The ⏪ button reverses the integration — orbits retrace themselves.</li>
@@ -538,7 +544,7 @@
   <details><summary>How long does it take a radio signal to reach Mars?</summary><p>Between about 3 and 22 minutes one way, depending on where Earth and Mars are in their orbits — the gap between them swings from roughly 55 to 400 million km, and radio travels at the speed of light, 300,000 km per second. A reply takes just as long coming back, so a round trip is 6 to 44 minutes, which is why rovers are driven by pre-planned commands rather than live. The 🎓 <b>What if?</b> lesson sends a real pulse across today's gap and times it.</p></details>
   <details><summary>Why do Mars missions only launch every 26 months?</summary><p>Because the rocket is the fixed part and the timing is the free part. A launcher can add only so much speed beyond Earth's own orbital motion, and the cheapest path to Mars — a transfer orbit that just reaches Mars's distance — only works if Mars will be at the far end of it when the probe arrives. Mars keeps moving during the roughly eight-month trip, so it has to be a specific angle ahead of Earth at launch. Earth catches up to that geometry once every synodic period, about 780 days. The 🎓 <b>What if?</b> lesson lets you test it: launch whenever you like and see where Mars actually is when you get there.</p></details>
   <details><summary>Can planets collide or be destroyed?</summary><p>Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape.</p></details>
-  <details><summary>What are the controls?</summary><p>Scroll or pinch to zoom, click or tap any body to inspect it. Keyboard: <b>Space</b> pause, <b>↑↓</b> time rate, <b>E</b> Earth view, <b>C</b> comet, <b>D</b> data table, <b>0</b> reset view, <b>R</b> reset the system.</p></details>
+  <details><summary>What are the controls?</summary><p>Scroll or pinch to zoom, click or tap any body to inspect it, drag a planet to move it to a new orbit. Keyboard: <b>Space</b> pause, <b>↑↓</b> time rate, <b>E</b> Earth view, <b>C</b> comet, <b>D</b> data table, <b>0</b> reset view, <b>R</b> reset the system.</p></details>
   <details><summary>Is it free?</summary><p>Yes — free, in the browser, no download and no signup, like <a href="../">everything on this site</a>.</p></details>
 
   <h2>More space games</h2>
@@ -1034,7 +1040,7 @@
 
   // ---- view options (persisted) ----
   // scale: true = honest radial distances (mostly emptiness), false = asinh-compressed
-  const viewOpts = { scale:false, guides:true, labels:true, trails:true };
+  const viewOpts = { scale:false, guides:true, labels:true, trails:true, vectors:false };
   try { Object.assign(viewOpts, JSON.parse(localStorage.getItem('ssViewOpts') || '{}')); } catch(e){}
 
   function disp(x, y){
@@ -1376,6 +1382,8 @@
       pr._sx = hx; pr._sy = hy;
     }
     if (!earthView) drawLessonFx();                                  // What-if overlays (lead wedge, arrival markers)
+    if (viewOpts.vectors && !earthView) drawVectors();               // velocity (green) + gravity (orange) arrows
+    if (drag && drag.moved) drawDragReadout();                       // "Earth → 1.52 AU · 1.9-yr orbit" beside the cursor
 
     // labels (reset the per-frame declutter tracker first)
     placedLabels.length = 0;
@@ -1598,7 +1606,16 @@
     const per = o===SUN ? '—' : a>0
       ? (() => { const T=2*Math.PI*Math.sqrt(a*a*a/mu); return T<0.5 ? Math.round(T*365.25)+' d' : T.toFixed(2)+' yr'; })()
       : 'unbound';
-    return { dist, spd: spd.toFixed(1)+' km/s', per, mass: fmtMass(o.m||0) };
+    // orbit shape + escape speed, from the same live state (eccentricity vector about pref)
+    const rv = dx*vx + dy*vy, ex = ((v2 - mu/r)*dx - rv*vx)/mu, ey = ((v2 - mu/r)*dy - rv*vy)/mu, e = Math.hypot(ex, ey);
+    const km = o.moon;                                                       // the Moon's numbers read better in km
+    const fd = d => km ? Math.round(d*149.6e6).toLocaleString('en-US')+' km' : (d>=100 ? d.toFixed(0) : d.toFixed(3))+' AU';
+    const peri = o===SUN ? '—' : fd(a>0 ? a*(1-e) : -a*(e-1));
+    const apo  = o===SUN ? '—' : a>0 ? fd(a*(1+e)) : '∞ — unbound';
+    const ecc  = o===SUN ? '—' : e.toFixed(3);
+    const esc  = o===SUN ? (Math.sqrt(2*G*SUN.m/0.00465)*KMS).toFixed(0)+' km/s'   // from the Sun's own surface
+                         : (Math.sqrt(2*mu/r)*KMS).toFixed(1)+' km/s';           // from where the body is right now
+    return { dist, spd: spd.toFixed(1)+' km/s', per, mass: fmtMass(o.m||0), peri, apo, ecc, esc, km };
   }
   function rowText(o){
     const s = statParts(o);
@@ -1606,7 +1623,10 @@
   }
 
   const stDist = document.getElementById('st-dist'), stSpd = document.getElementById('st-spd'),
-        stPer = document.getElementById('st-per'), stMass = document.getElementById('st-mass');
+        stPer = document.getElementById('st-per'), stMass = document.getElementById('st-mass'),
+        stPeri = document.getElementById('st-peri'), stApo = document.getElementById('st-apo'),
+        stEcc = document.getElementById('st-ecc'), stEsc = document.getElementById('st-esc'),
+        stPeriL = document.getElementById('st-peri-l'), stApoL = document.getElementById('st-apo-l'), stEscL = document.getElementById('st-esc-l');
 
   function updHud(){
     if (selected && (selected.deleted || selected.dead)) deselect();        // selected object went away
@@ -1629,6 +1649,9 @@
       const s = statParts(selected);
       stDist.textContent = s.dist; stSpd.textContent = s.spd;
       stPer.textContent = s.per; stMass.textContent = s.mass;
+      stPeri.textContent = s.peri; stApo.textContent = s.apo; stEcc.textContent = s.ecc; stEsc.textContent = s.esc;
+      stPeriL.textContent = s.km ? 'perigee' : 'perihelion'; stApoL.textContent = s.km ? 'apogee' : 'aphelion';
+      stEscL.textContent = selected === SUN ? 'escape speed at surface' : 'escape speed here';
       const cd = CHIP_DATA[selected.name];
       if (cd && !selHero.hidden){
         drawBody(selPlanet.getContext('2d'), cd, selPlanet.width, selPlanet.height, 26 * chipDpr, 1.4 * chipDpr, spinPhase(cd));
@@ -1650,7 +1673,7 @@
     }
     // hover affordance (hit-test against last drawn positions; ring drawn next frame)
     hoverBody = mouseX < 0 ? null : hitTest(mouseX, mouseY);
-    canvas.style.cursor = hoverBody ? 'pointer' : 'crosshair';
+    canvas.style.cursor = (drag && drag.moved) ? 'grabbing' : hoverBody ? (draggable(hoverBody) && !moonView && follow !== EARTH ? 'grab' : 'pointer') : 'crosshair';
   }
 
   // ---- Effects layer (render-side): sparks, shake, slow-mo, sun flare ----
@@ -1796,6 +1819,114 @@
     }
     return best;
   }
+  // ---- drag a planet to a new orbit ----
+  // Press on a planet and pull: time pauses, the body follows the cursor, and it
+  // is given the circular orbital speed for wherever it currently is (prograde,
+  // riding the Sun's own motion) — so the orbit guide previews the orbit you'd
+  // get and the inspector's numbers change under your hand. Release and time
+  // runs again. A press without movement is still an ordinary click.
+  let drag = null, suppressClick = false;
+  const draggable = b => !!b && planets.includes(b) && !b.deleted;
+  function unscr(sx, sy){                                    // screen → world: the inverse of scr()
+    const [cX, cY] = camD(), s = S();
+    let X = (sx - cx)/s + cX, Y = (cy - sy)/s + cY;         // display-space offset from the barycentre
+    if (!viewOpts.scale){                                    // undo the asinh radial compression
+      const rd = Math.hypot(X, Y);
+      if (rd > 1e-9){ const k = RSCALE*Math.sinh(rd/RSCALE)/rd; X *= k; Y *= k; }
+    }
+    return [X + baryX, Y + baryY];
+  }
+  function placeBody(b, sx, sy){
+    const [x, y] = unscr(sx, sy);
+    const rx = x-SUN.x, ry = y-SUN.y, r = Math.hypot(rx, ry);
+    let vx = b.vx, vy = b.vy;
+    if (!SUN.deleted && r > 0.02){                           // circular speed at this distance, prograde (counter-clockwise)
+      const v = Math.sqrt(G*(SUN.m + b.m)/r);
+      vx = SUN.vx - v*ry/r; vy = SUN.vy + v*rx/r;
+    }
+    if (b === EARTH && !MOON.deleted){                       // the Moon comes along, keeping its motion about Earth
+      const mdx = MOON.x-EARTH.x, mdy = MOON.y-EARTH.y, mvx = MOON.vx-EARTH.vx, mvy = MOON.vy-EARTH.vy;
+      MOON.x = x+mdx; MOON.y = y+mdy; MOON.vx = vx+mvx; MOON.vy = vy+mvy; MOON.rel = []; MOON._torn = false; MOON._ubE = 0;
+    }
+    b.x = x; b.y = y; b.vx = vx; b.vy = vy;
+    b.trail = []; b._ub = 0; b._ejected = false; b._reb = 0;  // a fresh start: no ghost trail, no stale eject verdict
+    E0 = energy();
+  }
+  function dragStart(mx, my){
+    if (moonView || follow === EARTH) return;               // not in the Earth–Moon or planet views
+    const b = hitTest(mx, my);
+    if (draggable(b)) drag = { body: b, x0: mx, y0: my, moved: false, savedRate: timeRate };
+  }
+  function dragMove(mx, my){
+    if (!drag) return;
+    if (!drag.moved){
+      if (Math.hypot(mx-drag.x0, my-drag.y0) < 5) return;    // a wobble on click isn't a drag
+      drag.moved = true; setRate(0); killHint();
+      if (follow === drag.body) follow = null;
+      if (selected !== drag.body) selectBody(drag.body);     // open the inspector so the numbers move with the hand
+    }
+    placeBody(drag.body, mx, my);
+  }
+  function dragEnd(){
+    if (!drag) return;
+    const d = drag; drag = null;
+    if (!d.moved) return;
+    suppressClick = true; setTimeout(() => { suppressClick = false; }, 0);   // the click that follows this release must not re-select
+    setRate(d.savedRate);
+    if (!SUN.deleted){
+      const r = Math.hypot(d.body.x-SUN.x, d.body.y-SUN.y), T = 2*Math.PI*Math.sqrt(r*r*r/(G*(SUN.m+d.body.m)));
+      announce(`${d.body.name} moved to ${r.toFixed(2)} AU — a ${fmtOrbit(T)} orbit`, 'capture');
+    }
+  }
+  canvas.addEventListener('mousedown', e => { if (e.button !== 0) return; const rc = canvas.getBoundingClientRect(); dragStart(e.clientX-rc.left, e.clientY-rc.top); });
+  window.addEventListener('mousemove', e => { if (!drag) return; const rc = canvas.getBoundingClientRect(); mouseX = e.clientX-rc.left; mouseY = e.clientY-rc.top; dragMove(mouseX, mouseY); });
+  window.addEventListener('mouseup', dragEnd);
+  function drawDragReadout(){
+    const b = drag.body, r = Math.hypot(b.x-SUN.x, b.y-SUN.y), T = 2*Math.PI*Math.sqrt(r*r*r/(G*(SUN.m+b.m)));
+    const txt = SUN.deleted ? `${b.name} — no Sun to orbit` : `${b.name} → ${r.toFixed(2)} AU · ${fmtOrbit(T)} orbit`;
+    ctx.save(); ctx.font = '600 12px system-ui,sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    const w = ctx.measureText(txt).width + 16, x = Math.max(8, Math.min(W - w - 8, mouseX + 16)), y = Math.max(20, mouseY - 22);
+    ctx.fillStyle = 'rgba(15,21,34,0.92)'; ctx.strokeStyle = 'rgba(150,170,210,0.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(x, y-13, w, 26, 8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#e6edf8'; ctx.fillText(txt, x+8, y);
+    ctx.restore();
+  }
+
+  // ---- velocity + gravity arrows (view option) ----
+  // Green: the body's velocity. Orange: the net gravitational pull on it from
+  // everything else. Directions are found by projecting a tiny step through
+  // scr(), so they stay honest in the compressed view; lengths are compressed
+  // so Neptune's arrows are still visible next to Mercury's.
+  const MMS2 = 0.1502;                                       // 1 AU/yr² in mm/s²
+  function accelOn(b){
+    let ax = 0, ay = 0;
+    const pull = o => { const dx = o.x-b.x, dy = o.y-b.y, r2 = dx*dx + dy*dy + 1e-6, f = G*o.m/(r2*Math.sqrt(r2)); ax += f*dx; ay += f*dy; };
+    for (const o of bodies){ if (o !== b && !o.deleted) pull(o); }
+    for (const c of comets){ if (c !== b && !c.dead && c.m > 1e-6) pull(c); }
+    return [ax, ay];
+  }
+  function drawVectors(){
+    const list = planets.filter(p => !p.deleted && p._drawn);
+    if (selected && comets.includes(selected) && !selected.dead && selected._drawn) list.push(selected);
+    ctx.save(); ctx.font = '600 10.5px system-ui,sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    for (const b of list){
+      const hx = b._sx, hy = b._sy;
+      const rvx = SUN.deleted ? b.vx : b.vx-SUN.vx, rvy = SUN.deleted ? b.vy : b.vy-SUN.vy, vk = Math.hypot(rvx, rvy)*KMS;
+      const [ax, ay] = accelOn(b), a = Math.hypot(ax, ay);
+      const dirOf = (dx, dy) => { const [tx, ty] = scr(b.x + dx*1e-3, b.y + dy*1e-3); return Math.atan2(ty-hy, tx-hx); };
+      const vLen = Math.max(10, Math.min(60, 12 + 48*(vk-5)/42));
+      const aLen = Math.max(8, Math.min(60, 10 + 14*Math.log10(Math.max(1, a/(39.48/900)))));   // Neptune ≈ 10 px, Earth ≈ 51
+      const va = dirOf(rvx, rvy), aa = dirOf(ax, ay);
+      if (vk > 0) drawArrow(hx, hy, va, vLen, 'rgba(126,224,160,0.95)', 7);
+      if (a > 0)  drawArrow(hx, hy, aa, aLen, 'rgba(255,176,96,0.95)', 7);
+      if (b === selected){                                   // numbers for the body you're inspecting
+        ctx.fillStyle = '#7ee0a0'; ctx.fillText(`${vk.toFixed(1)} km/s`, hx + Math.cos(va)*(vLen+9) + 3, hy + Math.sin(va)*(vLen+9));
+        // the gravity number sits beside the arrow's midpoint, not its tip — the tip points at the Sun's own label
+        ctx.fillStyle = '#ffb060'; ctx.fillText(`${(a*MMS2).toFixed(2)} mm/s²`, hx + Math.cos(aa)*aLen*0.5 - Math.sin(aa)*10 + 3, hy + Math.sin(aa)*aLen*0.5 + Math.cos(aa)*10);
+      }
+    }
+    ctx.restore();
+  }
   canvas.addEventListener('wheel', e => {
     e.preventDefault();
     zoom *= e.deltaY < 0 ? 1.15 : 1/1.15;
@@ -1808,6 +1939,7 @@
   });
   canvas.addEventListener('mouseleave', () => { mouseX = mouseY = -1; });
   canvas.addEventListener('click', e => {
+    if (suppressClick){ suppressClick = false; return; } // the release at the end of a drag
     if (moonView){ exitMoon(); return; }                 // any click leaves the Earth–Moon view
     const rect = canvas.getBoundingClientRect();
     const best = hitTest(e.clientX-rect.left, e.clientY-rect.top);
@@ -3115,7 +3247,8 @@
     scale:  v => 'Distances · ' + (v ? 'true scale' : 'compressed'),
     guides: v => (v ? '✓ ' : '') + 'Orbit guides',
     labels: v => (v ? '✓ ' : '') + 'Labels',
-    trails: v => (v ? '✓ ' : '') + 'Planet trails'
+    trails: v => (v ? '✓ ' : '') + 'Planet trails',
+    vectors: v => (v ? '✓ ' : '') + 'Velocity & gravity arrows'
   };
   function syncViewPanel(){
     for (const k of Object.keys(VO_TEXT)){
@@ -3150,7 +3283,10 @@
   // Pinch-to-zoom on touch devices (the wheel handler is desktop-only).
   let pinchD = 0;
   function touchDist(t){ return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
-  canvas.addEventListener('touchstart', e => { if (e.touches.length === 2) pinchD = touchDist(e.touches); }, {passive:true});
+  canvas.addEventListener('touchstart', e => {
+    if (e.touches.length === 2){ pinchD = touchDist(e.touches); drag = null; }
+    else if (e.touches.length === 1){ const rc = canvas.getBoundingClientRect(); dragStart(e.touches[0].clientX-rc.left, e.touches[0].clientY-rc.top); }
+  }, {passive:true});
   canvas.addEventListener('touchmove', e => {
     if (e.touches.length === 2 && pinchD){
       e.preventDefault();
@@ -3158,9 +3294,13 @@
       zoom = Math.max(0.2, Math.min(4000, zoom * (d / pinchD)));
       pinchD = d;
       killHint();
+    } else if (e.touches.length === 1 && drag){         // one finger on a planet: drag it (the page still scrolls elsewhere)
+      const rc = canvas.getBoundingClientRect(); mouseX = e.touches[0].clientX-rc.left; mouseY = e.touches[0].clientY-rc.top;
+      dragMove(mouseX, mouseY);
+      if (drag && drag.moved) e.preventDefault();
     }
   }, {passive:false});
-  canvas.addEventListener('touchend', e => { if (e.touches.length < 2) pinchD = 0; }, {passive:true});
+  canvas.addEventListener('touchend', e => { if (e.touches.length < 2) pinchD = 0; if (e.touches.length === 0){ dragEnd(); mouseX = mouseY = -1; } }, {passive:true});
 
   resize(); reset(); frame();
 })();
