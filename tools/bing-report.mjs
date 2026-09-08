@@ -148,7 +148,7 @@ async function main() {
             months[k].clicks += r.clicks;
             months[k].impressions += r.impressions;
         }
-        console.log('=== BING TRAFFIC BY MONTH ===');
+        console.log('=== BING TRAFFIC — the API's rolling ~13-day window, grouped by month (NOT full months) ===');
         console.log(table(Object.entries(months).map(([month, v]) => ({ month, ...v })), [
             { label: 'month', get: (r) => r.month },
             { label: 'clicks', get: (r) => r.clicks },
