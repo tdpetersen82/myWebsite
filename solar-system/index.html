@@ -161,7 +161,8 @@
   #msg-cancel:hover{background:rgba(70,88,124,0.9);}
 
   /* Selection card: the one place a body's stats + controls live. */
-  #edit-panel{position:absolute;left:16px;bottom:72px;width:226px;padding:13px 14px 11px;}
+  #edit-panel{position:absolute;left:16px;bottom:72px;width:226px;padding:13px 14px 11px;
+    max-height:calc(100vh - 110px);overflow-y:auto;}   /* the inspector grew; on a short window it scrolls instead of covering the title */
   #edit-head{display:flex;justify-content:space-between;align-items:center;margin:0 0 10px;font-weight:700;}
   #edit-head b{color:#fff;font-size:13px;}
   #edit-close{background:none;border:none;color:var(--soft);font-size:17px;line-height:1;cursor:pointer;padding:0 2px;}
@@ -179,6 +180,12 @@
     font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
   #sel-stats .l{display:block;font:500 9.5px/1 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;
     color:var(--dim);margin-top:4px;}
+  #orbit-box{margin:1px 0 11px;padding:10px 0 2px;border-top:1px solid rgba(150,170,210,0.16);}
+  #orbit-title{color:var(--soft);font-weight:600;font-size:11px;margin:0 0 9px;}
+  #oe-read{font:500 10.5px/1.45 system-ui,sans-serif;color:var(--dim);margin:-4px 0 8px;}
+  #oe-read b{color:var(--ink);font-variant-numeric:tabular-nums;}
+  #oe-read .warn{color:#ffcf5a;}
+  #oe-apsis{width:100%;padding:7px 8px;text-align:center;font-size:11px;white-space:normal;}
   #nudge-box{margin:1px 0 11px;padding:10px 0 2px;border-top:1px solid rgba(150,170,210,0.16);}
   #nudge-title{color:var(--soft);font-weight:600;font-size:11px;margin:0 0 9px;}
   #nudge-dial{display:block;margin:0 auto 11px;}
@@ -411,6 +418,12 @@
   <button id="sel-adjust" class="btn" type="button">⚙ Adjust this body</button>
   <div id="sel-edit" hidden>
   <label>Mass <span id="em-val"></span><input id="em-slider" type="range" min="0" max="1000" value="500"></label>
+  <div id="orbit-box" hidden>
+    <div id="orbit-title">Orbit shape — reshapes the orbit through where the body is now</div>
+    <label>Eccentricity <span id="oe-val"></span><input id="oe-slider" type="range" min="0" max="950" value="0"></label>
+    <div id="oe-read"></div>
+    <button id="oe-apsis" class="btn" type="button" title="Which end of the new orbit the body's current position becomes"></button>
+  </div>
   <div id="nudge-box" hidden>
     <div id="nudge-title">Nudge — fire an external thruster</div>
     <svg id="nudge-dial" width="78" height="78" viewBox="-39 -39 78 78" aria-hidden="true">
@@ -510,6 +523,7 @@
     <li><b>Delete the Sun.</b> Click it, open <i>Adjust this body</i>, delete. The planets fly off along near-straight lines — the leash made visible.</li>
     <li><b>Make Jupiter heavier.</b> Drag its mass slider upward and watch the rest of the system start to wobble.</li>
     <li><b>Drag Earth out to Mars's distance.</b> Grab any planet and pull: time pauses, the orbit guide previews the circle it will settle onto, and the inspector's year, perihelion and escape speed change under your hand. Let go and it orbits there — the Moon comes along. Switch on the <b>velocity &amp; gravity arrows</b> in the view options first and watch both arrows shrink as you move it outward.</li>
+    <li><b>Stretch Earth's orbit into an ellipse.</b> Click Earth, open <i>Adjust this body</i>, and slide the <b>eccentricity</b>: the orbit guide stretches through Earth's current position, the perihelion and aphelion tiles follow, and the readout warns if the new orbit dives into the Sun. Let time run and watch Earth race through perihelion and crawl at aphelion — Kepler's second law, live. The toggle underneath decides whether the point you're at becomes the closest or the farthest end.</li>
     <li><b>Nudge Earth.</b> A small thruster burn permanently changes its orbit — there's no script pulling it back.</li>
     <li><b>Launch satellites.</b> Press <b>E</b> for Earth view, then launch at 200&nbsp;km and again at 35,786&nbsp;km and compare the orbits.</li>
     <li><b>Run time backwards.</b> The ⏪ button reverses the integration — orbits retrace themselves.</li>
@@ -1528,6 +1542,7 @@
     emEl.value = massToSlider(o.m);
     emV.textContent = fmtEditMass(o.m);              // resting label = the body's true mass, not the quantised slider step
     nudgeBox.hidden = (o === SUN);                   // the Sun is the anchor; everything else can be nudged
+    orbitBox.hidden = (o === SUN); syncOrbitBox();   // orbit-shape slider reads the body's real eccentricity
     // hero render: the body itself, spinning at its real tilt (planets/Sun/Moon
     // only — comets and interlopers have no CHIP_DATA entry)
     const cd = CHIP_DATA[o.name];
@@ -1557,6 +1572,50 @@
   nfEl.addEventListener('input', editLabels);
   ndEl.addEventListener('input', editLabels);
   document.getElementById('edit-nudge').addEventListener('click', applyNudge);
+  // ---- orbit shape: an eccentricity you can slide ----
+  // The body's CURRENT position becomes one end of the new orbit (perihelion by
+  // default, aphelion on toggle) and its speed is set to the two-body value for
+  // that eccentricity there, prograde and tangential. Applied live on every slider
+  // move, so the orbit guide stretches and the inspector's numbers follow.
+  const orbitBox = document.getElementById('orbit-box'), oeEl = document.getElementById('oe-slider'),
+        oeV = document.getElementById('oe-val'), oeRead = document.getElementById('oe-read'), oeApsis = document.getElementById('oe-apsis');
+  let oeAtPeri = true;
+  const orbitRef = () => (selected && selected.moon) ? EARTH : SUN;
+  function orbitAbout(o, pref){                                             // live two-body elements of o about pref
+    const dx = o.x-pref.x, dy = o.y-pref.y, r = Math.hypot(dx, dy), vx = o.vx-pref.vx, vy = o.vy-pref.vy, v2 = vx*vx+vy*vy, mu = G*(pref.m+o.m);
+    const a = 1/(2/r - v2/mu), rv = dx*vx+dy*vy, ex = ((v2-mu/r)*dx - rv*vx)/mu, ey = ((v2-mu/r)*dy - rv*vy)/mu;
+    return { r, a, e: Math.hypot(ex, ey) };
+  }
+  function oeLabel(){
+    if (!selected || selected === SUN) return;
+    const pref = orbitRef(), r = Math.hypot(selected.x-pref.x, selected.y-pref.y), e = oeEl.value/1000, km = !!selected.moon;
+    const peri = oeAtPeri ? r : r*(1-e)/(1+e), apo = oeAtPeri ? r*(1+e)/(1-e) : r;
+    const fd = d => km ? Math.round(d*149.6e6).toLocaleString('en-US')+' km' : (d >= 100 ? d.toFixed(0) : d.toFixed(2))+' AU';
+    const dive = km ? peri*149.6e6 < 6371+200 : peri < 0.05;                  // inside Earth / inside the Sun's impact radius
+    oeV.textContent = e.toFixed(2);
+    oeRead.innerHTML = `${km ? 'perigee' : 'perihelion'} <b>${fd(peri)}</b> · ${km ? 'apogee' : 'aphelion'} <b>${fd(apo)}</b>` +
+                       (dive ? ` <span class="warn">⚠ hits ${km ? 'Earth' : 'the Sun'}</span>` : '');
+    oeApsis.textContent = oeAtPeri ? `↻ This point is ${km ? 'perigee' : 'perihelion'} (closest)` : `↻ This point is ${km ? 'apogee' : 'aphelion'} (farthest)`;
+  }
+  function syncOrbitBox(){                                                  // slider ← the body's real orbit, so opening changes nothing
+    if (!selected || selected === SUN) return;
+    const { r, a, e } = orbitAbout(selected, orbitRef());
+    oeEl.value = Math.round(Math.min(0.95, Math.max(0, isFinite(e) ? e : 0))*1000);
+    oeAtPeri = !(a > 0) || r <= a;                                          // nearer perihelion than aphelion → anchor there
+    oeLabel();
+  }
+  function applyOrbitShape(){
+    if (!selected || selected === SUN || selected.deleted || selected.dead) return;
+    const pref = orbitRef(), e = oeEl.value/1000;
+    const rx = selected.x-pref.x, ry = selected.y-pref.y, r = Math.hypot(rx, ry); if (r < 1e-6) return;
+    const v = Math.sqrt(G*(pref.m+selected.m)*(oeAtPeri ? 1+e : 1-e)/r);   // vis-viva at an apsis
+    const ovx = selected.vx, ovy = selected.vy;
+    selected.vx = pref.vx - v*ry/r; selected.vy = pref.vy + v*rx/r;        // prograde, tangential
+    if (selected === EARTH && !MOON.deleted){ MOON.vx += selected.vx-ovx; MOON.vy += selected.vy-ovy; }   // the Moon keeps its motion about Earth
+    E0 = energy(); oeLabel();
+  }
+  oeEl.addEventListener('input', applyOrbitShape);
+  oeApsis.addEventListener('click', () => { oeAtPeri = !oeAtPeri; applyOrbitShape(); });
   document.getElementById('edit-close').addEventListener('click', deselect);
   function removeBody(b){                                                    // the inspector's Delete — lessons use it too
     if (comets.includes(b)) b.dead = true;                                  // a comet / interloper
@@ -1851,6 +1910,7 @@
     b.x = x; b.y = y; b.vx = vx; b.vy = vy;
     b.trail = []; b._ub = 0; b._ejected = false; b._reb = 0;  // a fresh start: no ghost trail, no stale eject verdict
     E0 = energy();
+    if (selected === b) syncOrbitBox();                        // a drop is circular: the shape slider follows
   }
   function dragStart(mx, my){
     if (moonView || follow === EARTH) return;               // not in the Earth–Moon or planet views
