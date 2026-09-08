@@ -19,7 +19,8 @@
   {"@type":"Question","name":"Why do Mars missions only launch every 26 months?","acceptedAnswer":{"@type":"Answer","text":"Because the rocket is the fixed part and the timing is the free part. A launcher can add only so much speed beyond Earth's own orbital motion, and the cheapest path to Mars — a transfer orbit that just reaches Mars's distance — only works if Mars will be at the far end of it when the probe arrives. Mars keeps moving during the roughly eight-month trip, so it has to be a specific angle ahead of Earth at launch. Earth catches up to that geometry once every synodic period, about 780 days. The What if? lesson lets you test it: launch whenever you like and see where Mars actually is when you get there."}},
   {"@type":"Question","name":"Can planets collide or be destroyed?","acceptedAnswer":{"@type":"Answer","text":"Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape."}},
   {"@type":"Question","name":"What are the controls?","acceptedAnswer":{"@type":"Answer","text":"Scroll or pinch to zoom, click or tap any body to inspect it, drag a planet to move it to a new orbit. Keyboard: Space pause, up/down arrows time rate, E Earth view, C comet, D data table, 0 reset view, R reset the system."}},
-  {"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes — free, in the browser, no download and no signup."}}
+  {"@type":"Question","name":"Why does Voyager keep getting farther away instead of orbiting the Sun?","acceptedAnswer":{"@type":"Answer","text":"Because nothing needs to push it — a force is needed to stop it, and the Sun's gravity is the only thing trying. Gravity weakens with the square of distance, so the total slowing the Sun can ever apply from any point outward is finite: that total is the escape speed there (42 km/s at Earth's distance, 18.5 at Jupiter's, about 3 where Voyager 1 is now). Below it the Sun eventually turns you around into an ordinary orbit; above it the Sun runs out of pull before you run out of speed, and you coast away forever. Voyager 1 crossed that line at Jupiter and Saturn, has not fired an engine since 1977, and is still slowing toward about 16.6 km/s — never zero."}},
+{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes — free, in the browser, no download and no signup."}}
 ]}</script>
 <meta property="og:title" content="Solar System Simulator — Interactive N-Body Gravity Sandbox | Limestone Games">
 <meta property="og:description" content="A real-time N-body solar system simulator. All eight planets and the Moon orbit a free-moving Sun — zoom, edit any body, and launch comets. Free, no downloads.">
@@ -535,7 +536,7 @@
     <li><b>Fire the comet storm.</b> ~100 random specks at once — then watch the feed report captures, ejections, and impacts as gravity sorts them out.</li>
     <li><b>Invite a rogue star.</b> A quarter-solar-mass intruder crosses the system: orbits bend as it passes, and anything it sweeps too close to is consumed — the event feed keeps score of the damage.</li>
     <li><b>Fly a probe to Mars, Jupiter, or Saturn.</b> ⚡ Actions → Probe to Mars: the spacecraft waits for the launch window (Mars has to lead Earth by about 44°), then coasts along a real Hohmann transfer orbit for roughly eight months while the planets keep moving — arriving where Mars will be, not where it is now. <b>Jupiter</b> and <b>Saturn</b> are the same idea at grand scale: bigger launch windows and multi-year cruises out past the asteroid belt. Or open 🎓 <b>What if?</b> and take the Mars launch controls yourself — the rocket's push is fixed, and only the timing is yours.</li>
-    <li><b>Recreate Voyager's 1977 Grand Tour.</b> ⚡ Actions → Voyager first arranges the four giant planets in the rare arc they actually formed in 1977 — an alignment that comes around once every ~176 years — then sends a probe swinging close past Jupiter for a real gravity assist. The sim's own gravity flings it faster on the way out, and the event feed reports the actual speed it stole from Jupiter's motion. It's the trick that let two small spacecraft tour the outer planets and, eventually, leave the solar system.</li>
+    <li><b>Fly Voyager 1 from 1977 to today.</b> ⚡ Actions → Voyager arranges the four giant planets in the rare arc they formed in 1977 — an alignment that comes around once every ~176 years — and launches on 5 September 1977. The probe coasts to Jupiter, swings a few planet radii past it in a slow-motion close-up (the real one passed 349,000 km out in March 1979), is bent onto Saturn for a second assist (November 1980), and comes out above the Sun's escape speed. No engine fires after launch: the speed it stole from the two planets' orbital motion is what carries it out. The clock then runs to today past the real mission's milestones — the Pale Blue Dot, the heliopause in 2012 — and a debrief sets this flight's distance and speed beside the real Voyager 1's. Every number is the simulator's own; the flyby distances and the escape fall out of gravity, not a script.</li>
     <li><b>Fly a probe to the Moon.</b> ⚡ Actions → Probe to the Moon opens a to-scale Earth–Moon view — Earth and the Moon at their true relative size and distance, with the geostationary-satellite ring drawn in for contrast. The probe rides a real translunar trajectory: injected at about 10.8 km/s (the actual Apollo departure speed) and coasting three days on Earth's and the Moon's gravity.</li>
     <li><b>Send a lightspeed message.</b> ⚡ Actions → Lightspeed message: a radio pulse leaves Earth for Mars (3 to 22 light-minutes away, depending on where the orbits stand) or Jupiter (33 to 54). The planets hold still while it crawls — because at any speed where you can see planets move, light is effectively instantaneous.</li>
     <li><b>Delete the Sun.</b> Click it, open <i>Adjust this body</i>, delete. The planets fly off along near-straight lines — the leash made visible.</li>
@@ -556,7 +557,7 @@
   <p><b>Why can't we fly straight to Mars?</b> You take the launch controls. The rocket is fixed — it can leave Earth about 3.7 km/s faster than Earth is already moving, a realistic figure for a Mars launcher — and the only thing you choose is <i>when</i>. Leave with Mars in the wrong place and the probe coasts out to Mars's distance from the Sun and finds empty space: over an eight-month transfer Mars travels well over a hundred degrees further around its orbit, so it has to be tens of degrees ahead of Earth at the moment you go. From whatever moment you pick, the simulator prices the cheapest real transfer (one row of the "porkchop plot" mission planners draw) and flies it if the rocket can afford it. The brief stretch when it can is the launch window — and because Earth laps Mars only every 26 months, that's how often it comes around.</p>
   <p><b>How far is the Moon, really?</b> Shrink Earth to a basketball and guess where the Moon goes — then fly there in a view drawn to true relative size and distance. The answer is 30 Earth-diameters, about 7 m on the basketball scale, with the geostationary satellite ring not even a tenth of the way out. The probe rides the real three-day Apollo-speed trajectory, and the debrief notes that light makes the same trip in 1.3 seconds.</p>
   <p><b>Does the Sun move?</b> Predict, then watch from close in with the system's centre of mass marked. The Sun loops around it at about 12 m/s — a cyclist's pace — once every 12 years, dragged mostly by Jupiter, with the loop a little larger than the Sun itself. That wobble, read as a rhythm in a star's light, is how the first exoplanets were found; the lesson lets you make Jupiter ten times heavier and watch the Sun's speed jump.</p>
-  <p><b>Where does Voyager's speed come from?</b> Predict whether a spacecraft swinging past Jupiter with its engines off leaves faster, slower, or at the same speed — then fly the real 1977 launch and read the speedometer before and after the flyby. Relative to Jupiter the speed is unchanged; relative to the Sun the probe gains several km/s, paid for by Jupiter's own orbital motion, which slows by an amount far too small to ever measure.</p>
+  <p><b>Where does Voyager's speed come from?</b> Predict whether a spacecraft swinging past Jupiter with its engines off leaves faster, slower, or at the same speed — then fly the real 1977 launch and read the speedometer before and after the flyby. Relative to Jupiter the speed is unchanged; relative to the Sun the probe gains several km/s, paid for by Jupiter's own orbital motion, which slows by an amount far too small to ever measure. The same flight then carries on: past Saturn for a second assist, above the Sun's escape speed — the point past which gravity can slow it but never stop it — and out to today, 49 years and well over a hundred AU later.</p>
 
   <h2>Using it in a classroom</h2>
   <p>The simulator runs free in any browser with no account, no install, and nothing to set up — it projects well and works on student laptops, tablets, and phones. A few demonstrations it makes concrete:</p>
@@ -572,7 +573,8 @@
   <details><summary>Are the sizes and distances to scale?</summary><p>The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on <b>true-scale distances</b> in the dock's view options to see the honest spacing (mostly emptiness; zoom in to find the inner planets). Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click.</p></details>
   <details><summary>Why does the Sun wobble?</summary><p>Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it — about 12 m/s, once every 12 years, in a loop slightly larger than the Sun itself. The real Sun does the same, and detecting that wobble in other stars is one of the main ways exoplanets are discovered: 51 Pegasi b, the first planet found around a Sun-like star, showed up in 1995 as a 56 m/s swing repeating every 4.2 days. The 🎓 <b>What if?</b> lesson zooms in to show the loop.</p></details>
   <details><summary>How far away is the Moon?</summary><p>About 384,000 km — 30 Earth-diameters. Shrink Earth to a basketball and the Moon is a tennis ball about 7 metres away, much farther than most pictures suggest. Light takes 1.3 seconds to cross the gap; Apollo took about three days. The simulator's Earth–Moon view draws both at true relative size and distance, and the 🎓 <b>What if?</b> lesson flies a probe across it.</p></details>
-  <details><summary>How does a gravity assist make a spacecraft go faster?</summary><p>Relative to the planet, it doesn't: a spacecraft leaves a flyby at the same speed it arrived, because gravity gives back on the way out what it took on the way in. But the planet is moving around the Sun — Jupiter at about 13 km/s — and the flyby bends the spacecraft's path to travel more along the planet's direction, so relative to the Sun it gains speed. Momentum is conserved: the planet slows by an immeasurably tiny amount. Voyager used this at Jupiter, Saturn, Uranus and Neptune; the 🎓 <b>What if?</b> lesson measures the gain in the simulator.</p></details>
+  <details><summary>How does a gravity assist make a spacecraft go faster?</summary><p>Relative to the planet, it doesn't: a spacecraft leaves a flyby at the same speed it arrived, because gravity gives back on the way out what it took on the way in. But the planet is moving around the Sun — Jupiter at about 13 km/s — and the flyby bends the spacecraft's path to travel more along the planet's direction, so relative to the Sun it gains speed. Momentum is conserved: the planet slows by an immeasurably tiny amount. Voyager used this at Jupiter, Saturn, Uranus and Neptune; the 🎓 <b>What if?</b> lesson measures the gain in the simulator, and ⚡ Actions → Voyager flies the whole 1977 mission to today.</p></details>
+  <details><summary>Why does Voyager keep getting farther away instead of orbiting the Sun?</summary><p>Because nothing needs to push it — a force is needed to <i>stop</i> it, and the Sun's gravity is the only thing trying. Gravity weakens with the square of distance, so the total slowing the Sun can ever apply from any point outward is finite; that total is the escape speed there (42 km/s at Earth's distance, 18.5 at Jupiter's, about 3 where Voyager 1 is now). Below it the Sun eventually turns you around: an ellipse, an ordinary orbit. Above it the Sun runs out of pull before you run out of speed, and you coast away forever. Voyager 1 crossed that line at Jupiter and Saturn, has not fired an engine since 1977, and is still slowing — toward about 16.6 km/s, never zero. The simulator's Voyager does the same, and the inspector's "escape speed here" tile makes the comparison for any body you click.</p></details>
   <details><summary>What would happen if the Sun suddenly disappeared?</summary><p>The planets would fly off in straight lines at whatever speed and heading they had at that instant — about 30 km/s for Earth — because nothing would be pulling them into a curve any more. That is Newton's first law. The Moon would stay with Earth, since Earth's own gravity is unaffected. One subtlety the simulator can't show: gravity travels at the speed of light, so the real Earth would keep orbiting the vanished Sun for 8 minutes 20 seconds before it noticed. The 🎓 <b>What if?</b> lesson runs the experiment for real.</p></details>
   <details><summary>How long does it take a radio signal to reach Mars?</summary><p>Between about 3 and 22 minutes one way, depending on where Earth and Mars are in their orbits — the gap between them swings from roughly 55 to 400 million km, and radio travels at the speed of light, 300,000 km per second. A reply takes just as long coming back, so a round trip is 6 to 44 minutes, which is why rovers are driven by pre-planned commands rather than live. The 🎓 <b>What if?</b> lesson sends a real pulse across today's gap and times it.</p></details>
   <details><summary>Why do Mars missions only launch every 26 months?</summary><p>Because the rocket is the fixed part and the timing is the free part. A launcher can add only so much speed beyond Earth's own orbital motion, and the cheapest path to Mars — a transfer orbit that just reaches Mars's distance — only works if Mars will be at the far end of it when the probe arrives. Mars keeps moving during the roughly eight-month trip, so it has to be a specific angle ahead of Earth at launch. Earth catches up to that geometry once every synodic period, about 780 days. The 🎓 <b>What if?</b> lesson lets you test it: launch whenever you like and see where Mars actually is when you get there.</p></details>
@@ -620,21 +622,23 @@
   // after the UI exists; the node harness stubs them.
   let EMIT = function(){}, FX = function(){};
 
-  const SUN = { name:'Sun', color:'#ffd35a', size:0, m:1, sun:true };
-  // Real orbital elements (semi-major axis AU, eccentricity) + masses (solar masses)
+  const SUN = { name:'Sun', color:'#ffd35a', size:0, m:1, sun:true, R:4.6505e-3 };
+  // Real orbital elements (semi-major axis AU, eccentricity), masses (solar masses)
+  // and physical radii R (AU) — a spacecraft that dips below R has crashed
   const planets = [
-    { name:'Mercury', color:'#b9b0a3', size:2.2, m:1.6601e-7, a:0.387,  e:0.2056 },
-    { name:'Venus',   color:'#e6c87a', size:3.9, m:2.4478e-6, a:0.723,  e:0.0068 },
-    { name:'Earth',   color:'#5aa2ff', size:4.1, m:3.0035e-6, a:1.000,  e:0.0167 },
-    { name:'Mars',    color:'#d9603b', size:2.7, m:3.2263e-7, a:1.524,  e:0.0934 },
-    { name:'Jupiter', color:'#d2a679', size:7.5, m:9.5425e-4, a:5.203,  e:0.0489 },
-    { name:'Saturn',  color:'#e0cd96', size:6.6, m:2.8576e-4, a:9.537,  e:0.0565 },
-    { name:'Uranus',  color:'#a6dde6', size:5.0, m:4.3645e-5, a:19.191, e:0.0457 },
-    { name:'Neptune', color:'#5572d6', size:4.9, m:5.1490e-5, a:30.07,  e:0.0113 },
+    { name:'Mercury', color:'#b9b0a3', size:2.2, m:1.6601e-7, a:0.387,  e:0.2056, R:1.631e-5 },
+    { name:'Venus',   color:'#e6c87a', size:3.9, m:2.4478e-6, a:0.723,  e:0.0068, R:4.045e-5 },
+    { name:'Earth',   color:'#5aa2ff', size:4.1, m:3.0035e-6, a:1.000,  e:0.0167, R:4.259e-5 },
+    { name:'Mars',    color:'#d9603b', size:2.7, m:3.2263e-7, a:1.524,  e:0.0934, R:2.266e-5 },
+    { name:'Jupiter', color:'#d2a679', size:7.5, m:9.5425e-4, a:5.203,  e:0.0489, R:4.673e-4 },
+    { name:'Saturn',  color:'#e0cd96', size:6.6, m:2.8576e-4, a:9.537,  e:0.0565, R:3.893e-4 },
+    { name:'Uranus',  color:'#a6dde6', size:5.0, m:4.3645e-5, a:19.191, e:0.0457, R:1.695e-4 },
+    { name:'Neptune', color:'#5572d6', size:4.9, m:5.1490e-5, a:30.07,  e:0.0113, R:1.646e-4 },
   ];
   const EARTH = planets[2];
-  const MOON  = { name:'Moon', color:'#cfd3da', size:2.0, m:3.694e-8, aM:0.00257, eM:0.0549, moon:true };
+  const MOON  = { name:'Moon', color:'#cfd3da', size:2.0, m:3.694e-8, aM:0.00257, eM:0.0549, moon:true, R:1.161e-5 };
   const bodies = [SUN, ...planets, MOON];
+  for (const b of bodies) b.m0 = b.m;          // birth masses: reset() puts an edited mass back (a 10× Jupiter used to survive R)
   const MOON_EXAG = 10;    // Moon's true 0.00257 AU is sub-pixel — orbit drawn ×this so it's visible (HUD shows the factor)
   // Earth "planet view" orbiters at their TRUE orbit radii (km), shown through a log-of-altitude scale (so the thin LEO
   // shell spreads and the Earth→Moon gap compresses, with Earth drawn big). Real altitudes/ordering; SPEEDS are still
@@ -695,7 +699,7 @@
     for (const b of bodies){ px += b.m*b.vx; py += b.m*b.vy; M += b.m; }
     const vcx = px/M, vcy = py/M;
     for (const b of bodies){ b.vx -= vcx; b.vy -= vcy; }
-    for (const b of bodies){ b.trail = []; b.deleted = false; b._ub = 0; b._glow = 0; b._ejected = false; b._reb = 0; }
+    for (const b of bodies){ b.trail = []; b.deleted = false; b._ub = 0; b._glow = 0; b._ejected = false; b._reb = 0; if (b.m0 !== undefined) b.m = b.m0; }
     MOON.rel = []; MOON._torn = false; MOON._ubE = 0;
     const wasRun = t > 0.05;                       // suppress the toast on initial page load
     comets = []; flashes = []; cometSeq = 0; storm = []; launches = []; probes = []; detAcc = 0;
@@ -745,6 +749,7 @@
     const [ax, ay] = accels();
     for (let i=0;i<bodies.length;i++){
       const b = bodies[i]; if (b.deleted) continue;
+      b._px = b.x; b._py = b.y;                      // pre-step position: spacecraft sub-steps interpolate the planets across the step
       b.x += b.vx*dt + 0.5*ax[i]*dt*dt; b.y += b.vy*dt + 0.5*ay[i]*dt*dt;
       b._ax = ax[i]; b._ay = ay[i];
     }
@@ -771,6 +776,23 @@
     for (const b of bodies){
       if (b.deleted) continue;
       const dx = b.x-x, dy = b.y-y, r2 = dx*dx + dy*dy + 1e-4;   // softened to avoid close-pass blowups
+      const inv = G*b.m / (r2*Math.sqrt(r2));
+      ax += inv*dx; ay += inv*dy;
+    }
+    return [ax, ay];
+  }
+
+  // Spacecraft feel the same bodies as comets but with a far sharper softening —
+  // 1e-4 AU (15,000 km), below any planet's radius — so a flyby a few planet radii
+  // out is real gravity, not a blur. k ∈ [0,1] interpolates each planet between its
+  // pre- and post-step positions (set by stepAll), for sub-steps inside one DT.
+  const PROBE_SOFT = 1e-8;
+  function probeAccel(x, y, k){
+    let ax = 0, ay = 0;
+    for (const b of bodies){
+      if (b.deleted) continue;
+      const bx = b._px === undefined ? b.x : b._px + (b.x-b._px)*k, by = b._py === undefined ? b.y : b._py + (b.y-b._py)*k;
+      const dx = bx-x, dy = by-y, r2 = dx*dx + dy*dy + PROBE_SOFT;
       const inv = G*b.m / (r2*Math.sqrt(r2));
       ax += inv*dx; ay += inv*dy;
     }
@@ -991,12 +1013,31 @@
       // per-substep closest-approach so a fast probe can't tunnel past its target.
       for (const pr of probes){
         if (pr.done) continue;
-        let [ax, ay] = cometAccel(pr.x, pr.y);
-        pr.x += pr.vx*dt + 0.5*ax*dt*dt; pr.y += pr.vy*dt + 0.5*ay*dt*dt;
-        const [ax2, ay2] = cometAccel(pr.x, pr.y);
-        pr.vx += 0.5*(ax+ax2)*dt; pr.vy += 0.5*(ay+ay2)*dt;
-        const tb = pr.target;
-        if (tb && !tb.deleted){
+        // A Voyager-class flyby passes a few planet radii out at ~40 km/s — one
+        // 1.75-hour step would jump straight through it. Near the closest massive
+        // body the step is split so each piece moves the probe at most 2% of its
+        // distance to that body (≈40 pieces at Voyager's Jupiter periapsis, 1 on
+        // the cruise), with the planets interpolated across the pieces.
+        let near = null, nd2 = Infinity;
+        for (const b of bodies){ if (b.deleted || b.m < 1e-7) continue; const ex = b.x-pr.x, ey = b.y-pr.y, d2 = ex*ex + ey*ey; if (d2 < nd2){ nd2 = d2; near = b; } }
+        let n = 1;
+        if (near){ const d = Math.sqrt(nd2), vr = Math.hypot(pr.vx-near.vx, pr.vy-near.vy) + 1e-9; n = Math.min(512, Math.max(1, Math.ceil(Math.abs(dt)*vr/(0.02*d)))); }
+        const h = dt/n, tb = pr.target;
+        if (!pr.minD) pr.minD = {};                     // closest approach to every planet passed — flyby narration reads it
+        for (let s = 0; s < n; s++){
+          const [ax, ay] = probeAccel(pr.x, pr.y, s/n);
+          pr.x += pr.vx*h + 0.5*ax*h*h; pr.y += pr.vy*h + 0.5*ay*h*h;
+          const [ax2, ay2] = probeAccel(pr.x, pr.y, (s+1)/n);
+          pr.vx += 0.5*(ax+ax2)*h; pr.vy += 0.5*(ay+ay2)*h;
+          if (near){
+            const k = (s+1)/n, bx = near._px + (near.x-near._px)*k, by = near._py + (near.y-near._py)*k, d = Math.hypot(pr.x-bx, pr.y-by);
+            if (!(d >= pr.minD[near.name])) pr.minD[near.name] = d;
+            if (near === tb){ if (d < pr.closest) pr.closest = d; if (d < (pr.arrR || 0.05)) pr.arrived = true; }
+            if (d < (near.R || 0)){ pr.crashed = near.name; pr.done = true; EMIT('probelost', { target: near.name }); break; }
+          }
+        }
+        if (pr.done) continue;
+        if (tb && !tb.deleted && tb !== near){
           const d = Math.hypot(pr.x-tb.x, pr.y-tb.y);
           if (d < pr.closest) pr.closest = d;
           if (d < (pr.arrR || 0.05)) pr.arrived = true;   // arrival radius scales with the target's sphere of influence
@@ -1316,7 +1357,7 @@
           ctx.strokeStyle = 'rgba(224,205,150,0.22)'; ctx.lineWidth = 1;
           ctx.beginPath(); ctx.ellipse(bx, by, p.size*2.6, p.size*1.05, -0.45, 0, 2*Math.PI); ctx.stroke();
         }
-        ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(bx, by, p.size, 0, 2*Math.PI); ctx.fill();
+        ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(bx, by, Math.max(p.size, (p.R || 0)*S()), 0, 2*Math.PI); ctx.fill();   // true disc once the zoom resolves it (Voyager's flyby cam)
       }
     }
 
@@ -1433,6 +1474,7 @@
       pr._sx = hx; pr._sy = hy;
     }
     if (!earthView) drawLessonFx();                                  // What-if overlays (lead wedge, arrival markers)
+    if (probePlan && probePlan.draw && !earthView) probePlan.draw();  // mission overlays (Voyager's heliopause ring)
     if (viewOpts.vectors && !earthView) drawVectors();               // velocity (green) + gravity (orange) arrows
     if (drag && drag.moved) drawDragReadout();                       // "Earth → 1.52 AU · 1.9-yr orbit" beside the cursor
     if (placeMode && !earthView) drawPlaceGhost();                   // the planet you're about to add
@@ -1443,7 +1485,7 @@
       if (!earthView && !SUN.deleted) label('Sun', SUN.color, sxp, syp, 15);
       for (const p of shown){ const [bx, by] = scr(p.x, p.y); label(p.name, p.color, bx, by, (earthView && p===EARTH ? 14*zoom+6 : p.size+5)); }
       if (!earthView && !MOON.deleted && !EARTH.deleted && Math.hypot(mX-eix, mY-eiy) > 11) label('Moon', MOON.color, mX, mY, MOON.size+5);   // earth view labels its own Moon
-      if (!earthView) for (const pr of probes) label('Probe', '#bff5da', pr._sx, pr._sy, 8);
+      if (!earthView) for (const pr of probes) label(pr.label || 'Probe', '#bff5da', pr._sx, pr._sy, 8);
     }
 
     // comets / interlopers — size & colour scale with mass — + impact flashes
@@ -1870,6 +1912,7 @@
       if (d.sun){ announce('The Sun is gone — nothing holds the planets now', 'eject'); sfx('eject'); }
       else announce(`${d.name} removed from the simulation`, 'escape');
     }
+    else if (type === 'probelost') announce(`🛰 Probe lost — it flew into ${d.target}`, 'impact');
     else if (type === 'reset') announce('System restored', 'escape');
   };
   FX = onFx;
@@ -1901,11 +1944,15 @@
     stepProbe();                                                    // spacecraft: wait for the window, then cruise
     lessonTick();                                                   // live numbers on the What-if coach card
     let stepped = 0;
-    if (timeRate !== 0){
-      warping = warpFactor();
+    // a mission may ask for slow motion (advance only every slow-th frame — Voyager's flybys)
+    // or a warp beyond the comet auto-warp (its 46-year coast, with a higher substep cap)
+    const mWarp = (probePlan && probePlan.warp) || 1, mSlow = (probePlan && probePlan.slow) || 0;
+    const skip = mSlow > 1 && ((probePlan.slowK = ((probePlan.slowK || 0) + 1) % mSlow) !== 0);
+    if (timeRate !== 0 && !skip){
+      warping = Math.max(warpFactor(), mWarp);
       let sub = Math.abs(timeRate) * warping;
       if (slowmo > 0){ sub = Math.max(1, Math.round(sub/4)); slowmo--; }   // impact slow-mo: brief ¼-speed dip
-      stepped = Math.min(sub, 128) * (timeRate < 0 ? -1 : 1);
+      stepped = Math.min(sub, mWarp > 1 ? 256 : 128) * (timeRate < 0 ? -1 : 1);
       advance(Math.abs(stepped), timeRate < 0 ? -1 : 1);
       dashFlow += timeRate * 0.6;
     } else warping = 1;
@@ -2230,8 +2277,32 @@
   const MARS = planets.find(p => p.name === 'Mars');
   const JUPITER = planets.find(p => p.name === 'Jupiter');
   const SATURN = planets.find(p => p.name === 'Saturn');
-  const OUTER = ['Saturn','Uranus','Neptune'].map(n => planets.find(p => p.name === n));
   // (KMS — 1 AU/yr in km/s — is defined in the physics core)
+
+  // ---- Voyager 1, 1977 → today ----
+  // The flight both the ⚡ Voyager action and the What-if lesson fly. Launch
+  // geometry: the 1977 arrangement (arrangeGrandTour) plus a VOY.tT-year Lambert
+  // transfer to Jupiter aimed VOY.off AU to the side of Jupiter's predicted
+  // position. The pair was found by scanning the real N-body flight with this
+  // exact core (score: Jupiter periapsis, Saturn miss, escape) so the probe passes
+  // Jupiter a few radii out, is bent onto Saturn, and leaves above solar escape
+  // speed. Real-mission figures beside the sim's are for comparison only; nothing
+  // on the chip is scripted — the sim flies it and reports what happens.
+  const VOY = { tT: 1.50, off: 0.054530, wait: 0 };
+  const VOY_EPOCH = 1977 + 247/365.25;                        // launch: 5 September 1977
+  const VOY_REAL = { Jupiter: { date: 'Mar 1979', km: 349000 }, Saturn: { date: 'Nov 1980', km: 124000 } };
+  const VOY_TODAY = (d => d.getFullYear() + (d - new Date(d.getFullYear(), 0, 1))/(365.25*864e5))(new Date());
+  const voyRealAU = date => 121.6 + 3.57*(date - 2012.65);   // the real probe: 121.6 AU at the heliopause (25 Aug 2012), 3.57 AU/yr since
+  const VOY_MILESTONES = [
+    { key: 'pbd', date: 1990.12, text: r => `Feb 1990 · Pale Blue Dot — the real Voyager 1 turned its camera home from 40 AU · this one: ${r.toFixed(0)} AU` },
+    { key: 'pio', date: 1998.13, text: r => `Feb 1998 · passed Pioneer 10 to become the most distant human-made object (real: 69 AU · sim: ${r.toFixed(0)})` },
+    { key: 'ts',  date: 2004.96, text: r => `Dec 2004 · termination shock, where the solar wind stalls (real: 94 AU · sim: ${r.toFixed(0)})` },
+    { key: 'hp',  date: 2012.65, text: r => `Aug 2012 · heliopause — out of the Sun's bubble, into interstellar space (real: 122 AU · sim: ${r.toFixed(0)})` },
+    { key: 'today', date: VOY_TODAY },
+  ];
+  const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+  const fmtVoyDate = d => { const y = Math.floor(d); return MONTHS[Math.min(11, Math.floor((d-y)*12))] + ' ' + y; };
+  const fmtKm = km => km >= 1e6 ? (km/1e6).toFixed(1) + ' million' : Math.max(1, Math.round(km/1000)).toLocaleString('en-US') + ',000';
   const probeStatus = document.getElementById('probe-status'), probeText = document.getElementById('probe-text');
   let probePlan = null, probeCraft = null;
   const distSun = b => Math.hypot(b.x-SUN.x, b.y-SUN.y);
@@ -2260,9 +2331,9 @@
     // (a gravity assist) instead of arriving.
     const mFut = keplerProp(target, tT);
     let ax = mFut[0], ay = mFut[1];
-    if (probePlan.voyager){                                    // offset perpendicular to the Sun→Jupiter line (trailing side → speed boost)
+    if (probePlan.voyager){                                    // aim to the side of Jupiter: the scanned offset that bends the path onto Saturn
       const jr = Math.hypot(mFut[0]-SUN.x, mFut[1]-SUN.y);
-      ax += -(mFut[1]-SUN.y)/jr * -0.20; ay += (mFut[0]-SUN.x)/jr * -0.20;
+      ax += -(mFut[1]-SUN.y)/jr * VOY.off; ay += (mFut[0]-SUN.x)/jr * VOY.off;
     }
     let vx, vy;
     // vel: an explicit heliocentric departure velocity (a lesson's own choice), 'hohmann' for the
@@ -2282,18 +2353,19 @@
     probeCraft = { x: EARTH.x+ux/ul*0.012, y: EARTH.y+uy/ul*0.012, vx, vy,
                    trail: [], t0: t, closest: Infinity, arrived: false, done: false, arrR,
                    target: probePlan.voyager ? null : target,  // voyager never "arrives" — it flies by and coasts on
-                   jMin: Infinity, boosted: false, passed: {} };
+                   jMin: Infinity, boosted: false, flyby: {}, hit: {}, label: probePlan.voyager ? 'Voyager 1' : null,
+                   dvE: Math.hypot(vx-EARTH.vx, vy-EARTH.vy)*KMS };   // launch speed over Earth's own, km/s (the rocket's share)
     probes.push(probeCraft);
     probePlan.phase = 'cruise'; probePlan.tTransfer = tT; probeStatus.hidden = false;
-    setRate(Math.max(6, Math.min(24, Math.round(tT*5))));       // pace the cruise to the distance (far targets run faster)
+    setRate(probePlan.voyager ? 24 : Math.max(6, Math.min(24, Math.round(tT*5))));   // pace the cruise to the distance (far targets run faster)
     msgFx.push({ x: EARTH.x, y: EARTH.y, born: performance.now() });
     sfx('launch');
     if (probePlan.onLaunch) probePlan.onLaunch(info || {});
   }
   function finishProbe(result){
     probeStatus.hidden = true; if (probeCraft) probeCraft.done = true;
-    const r = probePlan ? probePlan.savedRate : 0, cb = probePlan ? probePlan.onEnd : null;
-    probeCraft = null; probePlan = null; setRate(r);
+    const r = probePlan ? probePlan.savedRate : 0, cb = probePlan ? probePlan.onEnd : null, rs = probePlan ? probePlan.restore : null;
+    probeCraft = null; probePlan = null; if (rs) rs(); setRate(r);   // a mission that drove the camera (Voyager) puts the view back
     if (cb) cb(result || { aborted: true });                     // lessons hear how the mission ended
   }
   function abortProbe(note){ if (note) announce(note, 'escape'); finishProbe({ aborted: true }); }
@@ -2303,6 +2375,11 @@
     if (EARTH.deleted || target.deleted){ abortProbe('🚀 Mission scrubbed — a body was lost'); return; }
     if (probeCraft && !probes.includes(probeCraft)){ finishProbe({ aborted: true }); return; }   // a reset wiped the craft mid-cruise
     if (probePlan.phase === 'arm') return;                     // a lesson fires it by hand
+    if (probePlan.voyager && probePlan.phase === 'wait'){       // Voyager launches on its own date, not on an alignment
+      probeText.textContent = `🛰 Voyager 1 · countdown · launch ${fmtVoyDate(VOY_EPOCH)}`;
+      if (t >= probePlan.voyLaunchAt - 1e-9) injectProbe(VOY.tT);
+      return;
+    }
     if (probePlan.phase === 'wait' && probePlan.budget > 0){    // a real window: the cheapest transfer fits the rocket's budget
       const bt = bestTransfer(target); probePlan.cost = bt ? bt.dv : Infinity;
       probeText.textContent = `🛰 Waiting for the ${name} window · transfer costs ${bt ? (bt.dv*KMS).toFixed(1) : '—'} km/s · rocket has ${(probePlan.budget*KMS).toFixed(1)}`;
@@ -2319,42 +2396,52 @@
       probeText.textContent = `🛰 Waiting for the ${name} launch window · ${(diff*180/Math.PI).toFixed(0)}° to alignment`;
       if (diff < 0.10 || t - probePlan.waitStart > 13) injectProbe(tT);   // safety > one synodic period (13 yr covers Jupiter)
     } else if (probePlan.voyager){
-      // Voyager: a real Jupiter gravity assist — swing past, measure the boost,
-      // coast onward. No rendezvous stop.
+      // Voyager 1, 1977 → today. Two real gravity assists — Jupiter, then Saturn — each
+      // measured as the change in the probe's HELIOCENTRIC ORBITAL ENERGY across the
+      // encounter, quoted as its speed at that planet's distance from the Sun before vs
+      // after (same solar potential both times, so the difference is purely what the
+      // planet gave). Then the long coast, read against the Sun's escape speed and the
+      // real mission's milestones. Every number on the chip is the sim's own.
       const pr = probeCraft; if (!pr){ finishProbe(); return; }
-      const yrs = t - pr.t0, dJ = Math.hypot(pr.x-JUPITER.x, pr.y-JUPITER.y), rSun = distSun(pr);
-      const vhel = Math.hypot(pr.vx-SUN.vx, pr.vy-SUN.vy);
-      // The assist is the change in the probe's HELIOCENTRIC ORBITAL ENERGY across the
-      // encounter, reported as its speed at Jupiter's distance from the Sun before vs
-      // after — the same solar potential both times, so the difference is purely what
-      // Jupiter gave. (Comparing the periapsis speed to the outbound speed only shows the
-      // fall into and climb out of Jupiter's well; comparing raw speeds at a ring around
-      // Jupiter is masked by the Sun's well, since the outbound point sits farther out.)
-      const muS = G*SUN.m, eps = vhel*vhel/2 - muS/rSun;          // orbital energy per unit mass, about the Sun
-      if (pr.eIn === undefined && dJ < 1.0) pr.eIn = eps;          // entering Jupiter's neighbourhood
-      if (dJ < pr.jMin) pr.jMin = dJ;
-      if (!pr.boosted && pr.eIn !== undefined && pr.jMin < 0.5 && dJ > 1.0){   // back out again → flyby done
-        pr.boosted = true;
-        const rJ = distSun(JUPITER), vAt = e => { const v2 = 2*(e + muS/rJ); return v2 > 0 ? Math.sqrt(v2)*KMS : 0; };
-        const b0 = vAt(pr.eIn), b1 = vAt(eps), g = b1 - b0;
-        msgFx.push({ x: pr.x, y: pr.y, born: performance.now() });
-        announce(`🛰 Jupiter gravity assist — ${b0.toFixed(1)} → ${b1.toFixed(1)} km/s at Jupiter's distance (${g>=0?'+':''}${g.toFixed(1)} km/s, stolen from Jupiter)`, 'capture'); sfx('capture');
-        if (probePlan.onBoost) probePlan.onBoost({ b0, b1, g, jMin: pr.jMin, escaped: eps >= 0 });   // the Voyager lesson debriefs on the measured boost
+      const yrs = t - pr.t0, date = VOY_EPOCH + yrs, rSun = distSun(pr);
+      const vhel = Math.hypot(pr.vx-SUN.vx, pr.vy-SUN.vy), muS = G*SUN.m, eps = vhel*vhel/2 - muS/rSun;
+      const vk = vhel*KMS, vEsc = Math.sqrt(2*muS/rSun)*KMS;
+      let nearGiant = false;
+      for (const p of [JUPITER, SATURN]){
+        if (p.deleted) continue;
+        const f = pr.flyby[p.name] || (pr.flyby[p.name] = {}), d = Math.hypot(pr.x-p.x, pr.y-p.y);
+        if (d < 1.0){ nearGiant = true; if (f.eIn === undefined) f.eIn = eps; }   // entering the planet's neighbourhood
+        const m = pr.minD ? pr.minD[p.name] : undefined;
+        if (m !== undefined && m !== f.lastMin){ f.lastMin = m; f.periDate = date; }   // when closest approach happened — the report is dated to it, not to when it's read
+        if (!f.done && f.eIn !== undefined && m < 0.5 && d > 1.0){          // back out again → the flyby is behind us
+          f.done = true;
+          const rP = distSun(p), vAt = e => { const v2 = 2*(e + muS/rP); return v2 > 0 ? Math.sqrt(v2)*KMS : 0; };
+          f.b0 = vAt(f.eIn); f.b1 = vAt(eps); f.g = f.b1 - f.b0; f.km = m*AU_KM; f.radii = m/p.R; f.date = f.periDate;
+          const real = VOY_REAL[p.name];
+          msgFx.push({ x: pr.x, y: pr.y, born: performance.now() });
+          announce(`🛰 ${fmtVoyDate(f.date)} · ${p.name} flyby at ${fmtKm(f.km)} km, ${f.radii.toFixed(1)} radii (real Voyager 1: ${real.date}, ${fmtKm(real.km)} km) — ${f.b0.toFixed(1)} → ${f.b1.toFixed(1)} km/s at ${p.name}'s distance, ${f.g>=0?'+':''}${f.g.toFixed(1)} km/s stolen from ${p.name}`, 'capture'); sfx('capture');
+          if (p === JUPITER){ pr.boosted = true; pr.jMin = m; if (probePlan.onBoost) probePlan.onBoost({ b0: f.b0, b1: f.b1, g: f.g, jMin: m, escaped: eps >= 0 }); }   // the lesson debriefs on Jupiter's
+        }
       }
-      for (const p of OUTER){                                  // opportunistic outer-planet flybys
-        if (p.deleted || pr.passed[p.name]) continue;
-        if (Math.hypot(pr.x-p.x, pr.y-p.y) < 0.6){ pr.passed[p.name] = 1; msgFx.push({ x: pr.x, y: pr.y, born: performance.now() }); announce(`🛰 ${p.name} flyby!`, 'capture'); sfx('capture'); }
+      if (!pr.escaped && eps >= 0 && !nearGiant){                          // (inside a giant's well the heliocentric speed spikes — judge it clear of them)
+        pr.escaped = true;
+        announce(`🛰 ${fmtVoyDate(date)} · clear of the planet and above escape speed — ${vk.toFixed(1)} km/s where the Sun would need ${vEsc.toFixed(1)} to hold it. It is never coming back.`, 'capture'); sfx('capture');
       }
-      if (pr.boosted && rSun > (pr.maxR || 0)) pr.maxR = rSun;   // track how far the boost carried it
-      probeText.textContent = pr.boosted
-        ? `🛰 Voyager · ${yrs.toFixed(1)} yr · outbound · ${rSun.toFixed(1)} AU from the Sun`
-        : `🛰 Voyager · ${yrs.toFixed(1)} yr · approaching Jupiter · ${dJ.toFixed(2)} AU`;
-      // end when it passes apoapsis and falls back, or after a long coast (it's bound —
-      // one Jupiter assist can't reach escape; the real four-giant tour needed a perfect launch)
-      if (pr.boosted && ((pr.maxR && rSun < pr.maxR - 0.4) || yrs > 18)){
-        announce(`🛰 Jupiter's slingshot carried Voyager out to ${(pr.maxR||rSun).toFixed(1)} AU`, 'escape');
-        finishProbe();
+      for (const ms of VOY_MILESTONES){
+        if (pr.hit[ms.key] || date < ms.date) continue;
+        pr.hit[ms.key] = 1;
+        if (ms.key === 'today') voyToday(pr, date, rSun, vk, vEsc); else announce(`🛰 ${ms.text(rSun)}`, 'capture');
       }
+      voyCamera(pr, rSun);
+      const lm = rSun*LM_PER_AU, cam = pr.cam;
+      probeText.textContent = cam
+        ? `🛰 Voyager 1 · ${fmtVoyDate(date)} · ${cam.name} flyby · ${fmtKm(Math.hypot(pr.x-cam.x, pr.y-cam.y)*AU_KM)} km · ${vk.toFixed(1)} km/s · slow motion`
+        : `🛰 Voyager 1 · ${fmtVoyDate(date)} · ${rSun < 100 ? rSun.toFixed(1) : rSun.toFixed(0)} AU · ${vk.toFixed(1)} km/s (escape here ${vEsc.toFixed(1)}${pr.escaped ? ' ✓' : ''}) · light ${lm < 100 ? lm.toFixed(0) + ' min' : (lm/60).toFixed(1) + ' h'}`;
+      if (rSun > (pr.maxR || 0)) pr.maxR = rSun;
+      if (!pr.escaped && pr.boosted && rSun < pr.maxR - 0.4){                 // the honest fallback if a flight ever ends up bound
+        announce(`🛰 Bound after all — the slingshot carried it out to ${pr.maxR.toFixed(1)} AU and the Sun pulled it back`, 'escape'); finishProbe(); return;
+      }
+      if (date > 2100) finishProbe();
     } else {
       const pr = probeCraft;
       if (!pr){ finishProbe(); return; }
@@ -2372,6 +2459,61 @@
         probeText.textContent = `🚀 → ${name} · ${elapsed} · ${dM.toFixed(2)} AU to ${name}`;
       }
     }
+  }
+  // Voyager's camera and pacing: ×24 on the legs; a true-scale close-up at ×1 (one
+  // step every third frame inside 0.05 AU) through each flyby; ×32 with a ×8 warp
+  // for the long coast, zooming out only as far as needed to keep the probe on
+  // screen. Everything it touches is put back by the plan's restore() on finish/abort.
+  function voyCamera(pr, rSun){
+    const near = [JUPITER, SATURN].find(p => !p.deleted && !(pr.flyby[p.name] && pr.flyby[p.name].done) && Math.hypot(pr.x-p.x, pr.y-p.y) < 0.1);
+    if (near && pr.cam !== near){
+      pr.cam = near;
+      if (!probePlan.camSaved) probePlan.camSaved = { scale: viewOpts.scale };
+      viewOpts.scale = true; refit(); syncViewPanel(); follow = near; zoom = 1000; setRate(1);
+    } else if (!near && pr.cam){
+      pr.cam = null; probePlan.slow = 0;
+      viewOpts.scale = probePlan.camSaved.scale; refit(); syncViewPanel(); follow = null; zoom = 1; setRate(24);
+    }
+    if (pr.cam){ probePlan.slow = Math.hypot(pr.x-pr.cam.x, pr.y-pr.cam.y) < 0.05 ? 3 : 0; return; }
+    const coast = (pr.flyby.Saturn && pr.flyby.Saturn.done) || (pr.boosted && (SATURN.deleted || rSun > 12));
+    if (coast && !probePlan.warp){ probePlan.warp = 8; setRate(32); }
+    if (probePlan.warp && !follow){                                           // keep the receding probe in frame: shrink, never grow
+      const [dx, dy] = disp(pr.x, pr.y), need = 0.44*Math.min(W, H)/(Math.hypot(dx, dy)*baseScale + 1e-9);
+      if (zoom > need) zoom = Math.max(0.2, need);
+    }
+  }
+  function voyToday(pr, date, rSun, vk, vEsc){                             // the debrief card: this flight against the real one, today
+    setRate(0);
+    const J = pr.flyby.Jupiter || {}, S = pr.flyby.Saturn || {}, realAU = voyRealAU(date);
+    const gain = f => f.done ? `${f.g >= 0 ? '+' : ''}${f.g.toFixed(1)} km/s` : 'no close pass';
+    showCoach({ step: 'Voyager 1 · 1977 → today', title: `${fmtVoyDate(date)} — ${Math.round(date - VOY_EPOCH)} years out`,
+      html: `<p>This probe is <b>${rSun.toFixed(0)} AU</b> from the Sun, moving at <b>${vk.toFixed(1)} km/s</b> where the Sun's escape speed is only <b>${vEsc.toFixed(1)}</b>. Its radio takes <b>${(rSun*LM_PER_AU/60).toFixed(1)} hours</b> to reach Earth.</p>
+             <p>The real Voyager 1 today: about <b>${realAU.toFixed(0)} AU</b>, <b>17 km/s</b>, <b>${(realAU*LM_PER_AU/60).toFixed(1)} hours</b> of light-time.</p>
+             <p>Where the speed came from: it left Earth <b>${pr.dvE.toFixed(1)} km/s</b> faster than Earth itself moves (the real Titan-Centaur managed about 10). Jupiter then gave <b>${gain(J)}</b> and Saturn <b>${gain(S)}</b>, each measured at that planet's own distance from the Sun so the comparison is like for like. No engine has fired since launch: the Sun has been slowing it the whole way, and can never take the rest.</p>
+             <p class="note">Same physics, slightly different numbers: everything here stays in one plane (Saturn bent the real Voyager 1 35° north, out of the planets' disc), and the 1977 planet positions are approximate.</p>`,
+      btns: [{ label: 'Keep flying', fn: () => { coach.hidden = true; if (probePlan) setRate(32); } },
+             { label: 'Done ✓', cls: 'primary', fn: () => { coach.hidden = true; if (lesson && lesson.id === 'voyager') endLesson(); finishProbe(); } }] });
+  }
+  function voyDraw(){                                                      // the coast: the heliopause ring, where the Sun's bubble ends
+    if (!probePlan || !probePlan.warp || SUN.deleted) return;
+    ctx.save(); ctx.setLineDash([5,7]); ctx.strokeStyle = 'rgba(191,245,218,0.45)'; ctx.lineWidth = 1.2; ctx.beginPath();
+    for (let k=0;k<=160;k++){ const a = k/160*2*Math.PI, [X,Y] = scr(SUN.x + 121.6*Math.cos(a), SUN.y + 121.6*Math.sin(a)); k ? ctx.lineTo(X,Y) : ctx.moveTo(X,Y); }
+    ctx.stroke(); ctx.setLineDash([]);
+    const [lx, ly] = scr(SUN.x + 121.6*Math.cos(0.9), SUN.y + 121.6*Math.sin(0.9));   // upper right: clear of the toasts along the bottom
+    ctx.fillStyle = 'rgba(191,245,218,0.85)'; ctx.font = '600 10.5px system-ui,sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    ctx.fillText('heliopause · 122 AU · the edge of the Sun\'s bubble', lx + 6, ly);
+    ctx.restore();
+  }
+  // the launcher both the action and the lesson use: 1977 arrangement, then the flight
+  function launchVoyager(opts){
+    arrangeGrandTour(); resetView();
+    if (VOY.wait > 0){ const n = Math.round(VOY.wait/DT/32); for (let i=0;i<n;i++) advance(32, 1); }   // launch date offset from the arrangement, if the scan wanted one
+    announce('🛰 5 Sep 1977 — the giants in their Grand Tour arc; Voyager 1 leaves Earth', 'capture'); sfx('capture');
+    if (!startProbe(JUPITER, Object.assign({ voyager: true }, opts || {}))) return false;
+    const plan = probePlan;
+    plan.voyLaunchAt = t; plan.draw = voyDraw;
+    plan.restore = () => { if (plan.camSaved){ viewOpts.scale = plan.camSaved.scale; refit(); syncViewPanel(); } follow = null; zoom = 1; };
+    return true;
   }
   // Arrange the four giant planets in the real 1977 Grand Tour alignment — the
   // rare arc (once in ~176 years) that let Voyager chain gravity assists across
@@ -2406,9 +2548,7 @@
     if (msg || probePlan){ announce('🛰 Finish the current mission first', 'escape'); return; }
     if (EARTH.deleted || JUPITER.deleted){ announce('🛰 Need Earth and Jupiter for a Grand Tour', 'escape'); return; }
     actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; setActCaret();
-    arrangeGrandTour(); resetView();
-    announce('🛰 The giant planets — arranged in the 1977 Grand Tour alignment', 'capture'); sfx('capture');
-    startProbe(JUPITER, { voyager: true });
+    launchVoyager();
   }
   document.getElementById('act-probe').addEventListener('click', () => startProbe(MARS));
   document.getElementById('act-jupiter').addEventListener('click', () => startProbe(JUPITER));
@@ -2468,7 +2608,7 @@
   }
   const coachLive = (sel, text) => { const el = coachBody.querySelector(sel); if (el && el.textContent !== text) el.textContent = text; };
   function endLesson(){
-    if (!lesson) return;
+    if (!lesson){ coach.hidden = true; return; }              // a mission debrief (no lesson) closes the same way
     const L = lesson; lesson = null; coach.hidden = true;
     if (probePlan && probePlan.lesson === L.id){ probePlan.onEnd = null; abortProbe(); }   // quiet abort: the card closing is the feedback
     if (msg && msg.lesson === L.id){ msg.onEnd = null; const r = msg.prevRate; endMessage(); setRate(r); }
@@ -2837,14 +2977,12 @@
   function voyRun(guess){
     if (!lesson || lesson.id !== 'voyager' || lesson.step !== 'intro') return;
     lesson.guess = guess;
-    arrangeGrandTour(); resetView();
-    announce('🛰 The giant planets — arranged in the 1977 Grand Tour alignment', 'capture'); sfx('capture');
-    if (!startProbe(JUPITER, { voyager: true, onBoost: voyBoost, onEnd: voyEnded })){ endLesson(); return; }
+    if (!launchVoyager({ onBoost: voyBoost, onEnd: voyEnded })){ endLesson(); return; }
     probePlan.lesson = 'voyager';
     lesson.step = 'run';
     showCoach({ step: 'What if? · 2 of 3 · outbound', title: 'Coasting to Jupiter',
       html: `<p>You said: <b>${GUESS_VOY[guess]}</b>.</p>
-             <p>The probe leaves Earth now and coasts about 2½ years to Jupiter on gravity alone. Speed relative to the Sun: <b class="lv-v">—</b> km/s · <b class="lv-rs">—</b> AU from the Sun · <b class="lv-dj">—</b> AU to Jupiter.</p>
+             <p>The probe leaves Earth now — 5 September 1977 — and coasts ${Math.round(VOY.tT*12)} months to Jupiter on gravity alone. Speed relative to the Sun: <b class="lv-v">—</b> km/s · <b class="lv-rs">—</b> AU from the Sun · <b class="lv-dj">—</b> AU to Jupiter.</p>
              <p>Watch the speed fall as it climbs away from the Sun — then watch what Jupiter does to it.</p>`,
       btns: [] });
   }
@@ -2867,8 +3005,8 @@
     showCoach({ step: 'What if? · result', title: right ? 'You called it — faster' : 'Faster, with no rocket',
       html: `<p>Before the flyby, the probe's path had it doing <b>${b.b0.toFixed(1)} km/s</b> relative to the Sun at Jupiter's distance. After it: <b>${b.b1.toFixed(1)} km/s</b> — <b>${b.g >= 0 ? '+' : ''}${b.g.toFixed(1)} km/s</b> for free. You said <b>${GUESS_VOY[g]}</b>.</p>
              <p>Relative to <i>Jupiter</i>, the speed in and out really is the same — gravity gives back on the way out exactly what it took on the way in. But Jupiter is itself moving at <b>${vJ.toFixed(1)} km/s</b> around the Sun, and the swing bent the probe's path to run more along Jupiter's direction. Relative to the Sun, that's the gain. It isn't free for Jupiter: momentum is conserved, and Jupiter slowed by about <b>${sm}×10${sup(se)} mm/s</b> — a billionth of a billionth of a millimetre per second.</p>
-             <p>Both numbers are the probe's speed at the <i>same</i> distance from the Sun, so they compare like with like. The live readout shot past 20 km/s at closest approach — that was Jupiter's own pull, and Jupiter took it back on the way out.</p>
-             <p class="note">The real Voyagers used the trick at Jupiter, then Saturn, and Voyager 2 again at Uranus and Neptune — which is why they had to fly in 1977: the giants line up for it once every 176 years. Both are now leaving the solar system. The probe here is still flying; the mission chip follows it.</p>`,
+             <p>Both numbers are the probe's speed at the <i>same</i> distance from the Sun, so they compare like with like. The live readout shot up at closest approach — that was Jupiter's own pull, and Jupiter took it back on the way out.</p>
+             <p class="note">${b.escaped ? 'It is now above the Sun\'s escape speed: the Sun can slow it, but never stop it. ' : ''}Next comes Saturn for a second assist, then the long coast — the flight plays on to today, and the mission chip follows it. The real Voyagers used the trick at Jupiter, then Saturn, and Voyager 2 again at Uranus and Neptune — which is why they had to fly in 1977: the giants line up for it once every 176 years.</p>`,
       btns: [{ label: 'Done ✓', cls: 'primary', fn: endLesson }] });
   }
   function voyEnded(){ if (lesson && lesson.id === 'voyager' && lesson.step !== 'result') endLesson(); }

@@ -26,6 +26,9 @@ function boot(){
   api.reset();
   return api;
 }
+// launch point: 0.012 AU off Earth along its velocity, as the page's injectProbe does — a probe
+// spawned AT Earth's centre is inside the planet's radius and now (correctly) counts as crashed
+const launchPt = (E, S) => { let ux = E.vx-S.vx, uy = E.vy-S.vy; const ul = Math.hypot(ux, uy) || 1; return [E.x + ux/ul*0.012, E.y + uy/ul*0.012]; };
 const mkComet = (o) => Object.assign({ m: 1e-12, trail: [], name: 'T', _bd: 0, _ubC: 0, _cap: false }, o);
 const years = (api, yr, sub = 32) => { const n = Math.ceil(yr / (sub * api.DT)); for (let i = 0; i < n; i++) api.advance(sub, 1); };
 const momentum = (api) => {
@@ -195,7 +198,7 @@ const ok = (cond, name, detail = '') => {
     const mFut = api.keplerProp(M, tT);
     const v1 = api.lambertV([E.x-S.x, E.y-S.y], [mFut[0]-S.x, mFut[1]-S.y], tT, mu);
     ok(!!v1, `lambert solves at ${stageDeg}°`);
-    const pr = { x:E.x, y:E.y, vx:S.vx+v1[0], vy:S.vy+v1[1], trail:[], closest:Infinity, arrived:false, done:false, target:M };
+    const pr = { x:launchPt(E,S)[0], y:launchPt(E,S)[1], vx:S.vx+v1[0], vy:S.vy+v1[1], trail:[], closest:Infinity, arrived:false, done:false, target:M };
     api.addProbe(pr);
     const steps = Math.ceil((tT*1.05)/(32*api.DT));
     for (let i=0;i<steps;i++) api.advance(32,1);
@@ -209,7 +212,7 @@ const ok = (cond, name, detail = '') => {
     const jFut = api.keplerProp(J, tT);
     const v1 = api.lambertV([E.x-S.x, E.y-S.y], [jFut[0]-S.x, jFut[1]-S.y], tT, mu);
     ok(!!v1, 'Jupiter Lambert solves');
-    const pr = { x:E.x, y:E.y, vx:S.vx+v1[0], vy:S.vy+v1[1], trail:[], closest:Infinity, arrived:false, done:false, target:J };
+    const pr = { x:launchPt(E,S)[0], y:launchPt(E,S)[1], vx:S.vx+v1[0], vy:S.vy+v1[1], trail:[], closest:Infinity, arrived:false, done:false, target:J };
     api.addProbe(pr);
     const steps = Math.ceil((tT*1.05)/(32*api.DT));
     for (let i=0;i<steps;i++) api.advance(32,1);
@@ -223,7 +226,7 @@ const ok = (cond, name, detail = '') => {
     const sFut = api.keplerProp(SAT, tT);
     const v1 = api.lambertV([E.x-S.x, E.y-S.y], [sFut[0]-S.x, sFut[1]-S.y], tT, mu);
     ok(!!v1, 'Saturn Lambert solves');
-    const pr = { x:E.x, y:E.y, vx:S.vx+v1[0], vy:S.vy+v1[1], trail:[], closest:Infinity, arrived:false, done:false, target:SAT };
+    const pr = { x:launchPt(E,S)[0], y:launchPt(E,S)[1], vx:S.vx+v1[0], vy:S.vy+v1[1], trail:[], closest:Infinity, arrived:false, done:false, target:SAT };
     api.addProbe(pr);
     const steps = Math.ceil((tT*1.05)/(32*api.DT));
     for (let i=0;i<steps;i++) api.advance(32,1);
@@ -232,43 +235,52 @@ const ok = (cond, name, detail = '') => {
   }
 }
 
-// ── T8d: Voyager — a close Jupiter flyby really boosts the probe's speed ──
-// A trailing-side flyby (aim offset −0.2 AU perpendicular) must raise the
-// heliocentric speed: a genuine gravity assist, not a scripted number.
+// ── T8d: Voyager 1, 1977 → today — flies the SHIPPED launch constants (parsed from the page) ──
+// The mission must pass Jupiter a few radii out, be bent onto Saturn, leave above
+// solar escape speed, and still be climbing 49 years later. Nothing here is
+// scripted: it is the same N-body core the page runs, from the same arrangement.
 {
-  const api = boot();
-  const E = api.EARTH, S = api.SUN, J = api.planets.find(p => p.name === 'Jupiter'), mu = api.G*S.m;
-  const at = (1+J.a)/2, tT = Math.PI*Math.sqrt(at*at*at/mu), omJ = Math.sqrt(mu/(J.a**3));
-  let alpha = Math.PI - omJ*tT; alpha = ((alpha%(2*Math.PI))+2*Math.PI)%(2*Math.PI);
-  for (let g=0; g<40000; g++){
-    const thE=Math.atan2(E.y-S.y,E.x-S.x), thJ=Math.atan2(J.y-S.y,J.x-S.x);
-    let lead=((thJ-thE)%(2*Math.PI)+2*Math.PI)%(2*Math.PI); let d=Math.abs(lead-alpha); if(d>Math.PI)d=2*Math.PI-d;
-    if (d<0.05) break; api.advance(32,1);
-  }
-  const jFut = api.keplerProp(J, tT), jr = Math.hypot(jFut[0]-S.x, jFut[1]-S.y);
-  const aim = [jFut[0] - (jFut[1]-S.y)/jr*-0.2, jFut[1] + (jFut[0]-S.x)/jr*-0.2];
-  const v1 = api.lambertV([E.x-S.x, E.y-S.y], [aim[0]-S.x, aim[1]-S.y], tT, mu);
-  const pr = { x:E.x, y:E.y, vx:S.vx+v1[0], vy:S.vy+v1[1], trail:[], closest:Infinity, arrived:false, done:false, target:null };
+  const voyM = html.match(/const VOY = \{ tT: ([\d.]+), off: ([-\d.]+), wait: ([\d.]+) \}/);
+  ok(!!voyM, 'page declares VOY launch constants');
+  const VOY = { tT: +voyM[1], off: +voyM[2], wait: +voyM[3] };
+  const api = boot(), { G, SUN: S, EARTH: E, planets, bodies, MOON } = api, mu = G*S.m;
+  const J = planets.find(p => p.name === 'Jupiter'), SAT = planets.find(p => p.name === 'Saturn');
+  // arrangeGrandTour(), as the page does it
+  const L = { Jupiter: 88, Saturn: 147, Uranus: 217, Neptune: 253 };
+  for (const p of planets){ if (L[p.name] === undefined) continue; const th = L[p.name]*Math.PI/180, v = Math.sqrt(mu/p.a); p.x = p.a*Math.cos(th); p.y = p.a*Math.sin(th); p.vx = -v*Math.sin(th); p.vy = v*Math.cos(th); }
+  { const at = (1+J.a)/2, tH = Math.PI*Math.sqrt(at*at*at/mu), omJ = Math.sqrt(mu/(J.a**3)), thE = 88*Math.PI/180 - (Math.PI - omJ*tH), ve = Math.sqrt(mu);
+    E.x = Math.cos(thE); E.y = Math.sin(thE); E.vx = -ve*Math.sin(thE); E.vy = ve*Math.cos(thE);
+    const vM = 2*Math.PI*Math.sqrt((E.m+MOON.m)*(1+MOON.eM)/(MOON.aM*(1-MOON.eM)));
+    MOON.x = E.x + MOON.aM*(1-MOON.eM); MOON.y = E.y; MOON.vx = E.vx; MOON.vy = E.vy + vM;
+    let px=0, py=0, M=0; for (const b of bodies){ px += b.m*b.vx; py += b.m*b.vy; M += b.m; } for (const b of bodies){ b.vx -= px/M; b.vy -= py/M; } }
+  if (VOY.wait > 0){ const n = Math.round(VOY.wait/api.DT/32); for (let i=0;i<n;i++) api.advance(32,1); }
+  // injectProbe(): Lambert over VOY.tT to Jupiter's predicted position, VOY.off to the side
+  const jFut = api.keplerProp(J, VOY.tT), jr = Math.hypot(jFut[0]-S.x, jFut[1]-S.y);
+  const aim = [jFut[0] + (-(jFut[1]-S.y)/jr)*VOY.off, jFut[1] + ((jFut[0]-S.x)/jr)*VOY.off];
+  const v1 = api.lambertV([E.x-S.x, E.y-S.y], [aim[0]-S.x, aim[1]-S.y], VOY.tT, mu);
+  ok(!!v1, 'Voyager Lambert solves');
+  const lp = launchPt(E, S), pr = { x: lp[0], y: lp[1], vx: S.vx+v1[0], vy: S.vy+v1[1], trail: [], closest: Infinity, arrived: false, done: false, target: null };
   api.addProbe(pr);
-  const vhel = () => Math.hypot(pr.vx-S.vx, pr.vy-S.vy);
-  // Measure the assist at the SAME distance from Jupiter inbound and outbound (a
-  // 1 AU ring): Jupiter's potential is equal at both points, so the heliocentric
-  // speed difference is purely the assist. (The old check compared the periapsis
-  // speed to the outbound speed and kept updating "closest" for 20 years, so a
-  // later re-encounter could overwrite "before" — the numbers it printed were noise.)
-  // Report the assist the way the page does: the change in heliocentric orbital energy
-  // across the encounter, expressed as the speed at Jupiter's distance before vs after.
-  const eps = () => vhel()**2/2 - mu/Math.hypot(pr.x-S.x, pr.y-S.y);
-  let jMin=Infinity, eIn=null, eOut=null, rJ=0, boosted=false;
-  const steps = Math.ceil(6/(32*api.DT));
-  for (let i=0;i<steps && !boosted;i++){ api.advance(32,1);
-    const dJ=Math.hypot(pr.x-J.x,pr.y-J.y);
-    if(eIn===null && dJ<1.0) eIn=eps();                             // entering Jupiter's neighbourhood
-    if(dJ<jMin) jMin=dJ;
-    if(eIn!==null && jMin<0.5 && dJ>1.0){ eOut=eps(); rJ=Math.hypot(J.x-S.x,J.y-S.y); boosted=true; } }
-  const vAt = e => Math.sqrt(Math.max(0, 2*(e + mu/rJ)))*4.74057;
-  ok(jMin < 0.1, `Voyager flies close past Jupiter (${jMin.toFixed(3)} AU)`);
-  ok(boosted && vAt(eOut) > vAt(eIn) + 1.0, `gravity assist adds heliocentric energy: ${vAt(eIn).toFixed(1)} → ${vAt(eOut).toFixed(1)} km/s at Jupiter's distance`);
+  const dvE = Math.hypot(pr.vx-E.vx, pr.vy-E.vy)*api.KMS;
+  ok(dvE > 8 && dvE < 13, `launch is a real rocket's worth: ${dvE.toFixed(1)} km/s over Earth (Titan-Centaur ≈ 10)`);
+  const eps = () => { const v = Math.hypot(pr.vx-S.vx, pr.vy-S.vy), r = Math.hypot(pr.x-S.x, pr.y-S.y); return v*v/2 - mu/r; };
+  let t = 0, epsJ = null, epsS = null, sub = 8;
+  while (t < 49 && !pr.done){
+    api.advance(sub, 1); t += sub*api.DT;
+    const dJ = Math.hypot(pr.x-J.x, pr.y-J.y), dS = Math.hypot(pr.x-SAT.x, pr.y-SAT.y);
+    if (epsJ === null && pr.minD && pr.minD.Jupiter < 0.3 && dJ > 1.5) epsJ = eps();
+    if (epsS === null && pr.minD && pr.minD.Saturn < 0.3 && dS > 1.5) epsS = eps();
+    if (t > 5) sub = 32;
+  }
+  const rj = pr.minD.Jupiter*1.495979e8/71492, rs = pr.minD.Saturn*1.495979e8/60268;
+  ok(!pr.crashed, 'Voyager never hits a planet' + (pr.crashed ? ' — crashed into ' + pr.crashed : ''));
+  ok(rj > 1.5 && rj < 15, `Jupiter flyby a few radii out (${rj.toFixed(1)} Rj; real 4.9)`);
+  ok(epsJ !== null && epsJ > 0, `above solar escape speed after Jupiter (v∞ ${epsJ === null ? '—' : (Math.sqrt(2*Math.abs(epsJ))*api.KMS).toFixed(1)} km/s)`);
+  ok(rs > 1.5 && rs < 60, `Saturn flyby (${rs.toFixed(1)} Rs; real 2.1)`);
+  ok(epsS !== null && epsS > 0, 'still escaping after Saturn');
+  const rEnd = Math.hypot(pr.x-S.x, pr.y-S.y), vEnd = Math.hypot(pr.vx-S.vx, pr.vy-S.vy)*api.KMS, vesc = Math.sqrt(2*mu/rEnd)*api.KMS;
+  ok(rEnd > 100 && rEnd < 250, `49 years on: ${rEnd.toFixed(0)} AU out (real Voyager 1 ≈ 171)`);
+  ok(vEnd > vesc, `still faster than escape speed there (${vEnd.toFixed(1)} vs ${vesc.toFixed(1)} km/s)`);
 }
 
 // ── T8c: Earth→Moon translunar injection reaches the Moon ──
