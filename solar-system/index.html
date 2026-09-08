@@ -118,7 +118,7 @@
     color:var(--ink);background:var(--pnl);border:1px solid var(--pnl-line);
     border-radius:999px;padding:7px 9px 7px 16px;white-space:nowrap;font-variant-numeric:tabular-nums;}
   #probe-status[hidden], #place-status[hidden]{display:none;}
-  #probe-cancel, #place-cancel{width:22px;height:22px;border-radius:50%;border:1px solid var(--pnl-line);
+  #probe-cancel, #place-cancel{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--pnl-line);
     background:rgba(42,54,78,0.72);color:var(--ink);font:600 13px/1 system-ui,sans-serif;cursor:pointer;}
   #probe-cancel:hover, #place-cancel:hover{background:rgba(70,88,124,0.9);}
   /* ---- "What if?" lessons: the menu (beside Actions) and the coach card that runs a lesson ---- */
@@ -160,7 +160,7 @@
     border:1px solid rgba(150,170,210,0.35);border-radius:999px;padding:8px 14px;cursor:pointer;}
   #moon-exit:hover{color:#fff;background:rgba(70,88,124,0.9);}
   #moon-exit[hidden]{display:none;}
-  #msg-cancel{width:22px;height:22px;border-radius:50%;border:1px solid var(--pnl-line);
+  #msg-cancel{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--pnl-line);
     background:rgba(42,54,78,0.72);color:var(--ink);font:600 13px/1 system-ui,sans-serif;cursor:pointer;}
   #msg-cancel:hover{background:rgba(70,88,124,0.9);}
 
@@ -324,9 +324,15 @@
     /* the wrapped dock owns the bottom on phones — the card becomes a top sheet */
     #edit-panel{bottom:auto;top:78px;left:12px;right:12px;width:auto;max-height:calc(100vh - 350px);overflow-y:auto;}
     #launch-panel{right:12px;}
-    #events{bottom:122px;}
+    /* the wrapped dock is 1–3 rows tall here (--dock-h is measured by the script):
+       toasts, mission chips and the pill all stack above its real top edge */
+    #events{bottom:calc(var(--dock-h, 150px) + 70px);}
     #events .ev{font-size:11px;white-space:normal;text-align:center;}
-    #fb-pill{bottom:122px !important;}
+    #fb-pill{bottom:calc(var(--dock-h, 150px) + 24px) !important;}
+    /* mission / placement chips: the top edge is taken by the stacked buttons, so they
+       sit bottom-right above the dock, wrapping instead of overflowing, clear of the pill */
+    #probe-status, #msg-status, #place-status{top:auto;bottom:calc(var(--dock-h, 150px) + 24px);left:auto;right:12px;transform:none;
+      max-width:calc(100vw - 122px);white-space:normal;text-align:left;font-size:11.5px;border-radius:16px;}
     #microhint{max-width:88vw;text-align:center;top:100px;}
     #learn-menu{width:236px;}
     /* two top buttons don't fit beside the nav on a phone: stack them */
@@ -669,7 +675,9 @@
     return p;
   }
   function reset(){
-    for (let i = planets.length-1; i >= 0; i--) if (planets[i].added) planets.splice(i, 1);
+    // discarded added planets are flagged deleted too, so anything still holding one
+    // (the camera follow, a drag in progress) lets go the same way it does for a swallowed body
+    for (let i = planets.length-1; i >= 0; i--) if (planets[i].added){ planets[i].deleted = true; planets.splice(i, 1); }
     for (let i = bodies.length-1;  i >= 0; i--) if (bodies[i].added)  bodies.splice(i, 1);
     SUN.x = 0; SUN.y = 0; SUN.vx = 0; SUN.vy = 0;
     for (const p of planets){
@@ -1097,7 +1105,10 @@
   const S = () => baseScale * zoom;
   const scr = (x, y) => { const [X, Y] = disp(x, y), [cX, cY] = camD(); return [cx + (X - cX)*S(), cy - (Y - cY)*S()]; };
 
-  let W, H, cx, cy, dpr, stars = [];
+  let W, H, cx, cy, dpr, stars = [], dockH = 0;
+  // The dock wraps to 1–3 rows by width; on phones the toasts, mission chips and
+  // the feedback pill all sit relative to its measured top (CSS var --dock-h).
+  function measureDock(){ dockH = document.getElementById('dock').offsetHeight; document.documentElement.style.setProperty('--dock-h', dockH + 'px'); }
   // fit Neptune's aphelion (compressed or true, per the view option), with margin for labels
   function refit(){ baseScale = Math.min(W,H) * 0.40 / (viewOpts.scale ? maxTrueR : maxDispR); }
   function resize(){
@@ -1109,6 +1120,7 @@
     canvas.style.width = W+'px'; canvas.style.height = H+'px';
     ctx.setTransform(dpr,0,0,dpr,0,0);
     cx = W/2; cy = H/2;
+    measureDock();
     refit();
     stars = [];
     const n = Math.round(W*H/9000);
@@ -1117,6 +1129,7 @@
                   l:i%3, ph:Math.random()*6.28});
   }
   window.addEventListener('resize', resize);
+  window.addEventListener('load', measureDock);              // fonts can shift the dock's height after first layout
 
   const fadedTrail = (pts, project, color, w, maxA) => {
     ctx.strokeStyle = color;
@@ -1567,7 +1580,7 @@
     emEl.value = massToSlider(o.m);
     emV.textContent = fmtEditMass(o.m);              // resting label = the body's true mass, not the quantised slider step
     nudgeBox.hidden = (o === SUN);                   // the Sun is the anchor; everything else can be nudged
-    orbitBox.hidden = (o === SUN); syncOrbitBox();   // orbit-shape slider reads the body's real eccentricity
+    orbitBox.hidden = (o === SUN) || orbitRef().deleted; syncOrbitBox();   // orbit-shape slider reads the body's real eccentricity (nothing to shape without a Sun)
     // hero render: the body itself, spinning at its real tilt (planets/Sun/Moon
     // only — comets and interlopers have no CHIP_DATA entry)
     const cd = CHIP_DATA[o.name];
@@ -1623,7 +1636,7 @@
     oeApsis.textContent = oeAtPeri ? `↻ This point is ${km ? 'perigee' : 'perihelion'} (closest)` : `↻ This point is ${km ? 'apogee' : 'aphelion'} (farthest)`;
   }
   function syncOrbitBox(){                                                  // slider ← the body's real orbit, so opening changes nothing
-    if (!selected || selected === SUN) return;
+    if (!selected || selected === SUN || orbitRef().deleted) return;
     const { r, a, e } = orbitAbout(selected, orbitRef());
     oeEl.value = Math.round(Math.min(0.95, Math.max(0, isFinite(e) ? e : 0))*1000);
     oeAtPeri = !(a > 0) || r <= a;                                          // nearer perihelion than aphelion → anchor there
@@ -1631,7 +1644,7 @@
   }
   function applyOrbitShape(){
     if (!selected || selected === SUN || selected.deleted || selected.dead) return;
-    const pref = orbitRef(), e = oeEl.value/1000;
+    const pref = orbitRef(), e = oeEl.value/1000; if (pref.deleted) return;   // no Sun → nothing to orbit
     const rx = selected.x-pref.x, ry = selected.y-pref.y, r = Math.hypot(rx, ry); if (r < 1e-6) return;
     const v = Math.sqrt(G*(pref.m+selected.m)*(oeAtPeri ? 1+e : 1-e)/r);   // vis-viva at an apsis
     const ovx = selected.vx, ovy = selected.vy;
@@ -1653,7 +1666,7 @@
   function pick(o){
     selectBody(o); if (!selected) return;
     if (o === SUN || o.moon) follow = null;                                 // Sun + Moon: edit in the system view
-    else if (o === EARTH){ follow = EARTH; if (zoom < 5) zoom = 5; }         // Earth → planet view
+    else if (o === EARTH) earthView();                                        // Earth → planet view
     else follow = o;
   }
 
@@ -1684,6 +1697,8 @@
     const dist = o===SUN ? '—' : (rs>=100 ? rs.toFixed(0) : rs.toFixed(2))+' AU';
     const spd = (o===SUN ? Math.hypot(SUN.vx,SUN.vy) : Math.hypot(o.vx-SUN.vx, o.vy-SUN.vy)) * KMS;
     const pref = o.moon ? EARTH : SUN;
+    if (pref.deleted && o !== SUN)                                           // no Sun (no Earth, for the Moon): nothing to be "from", no orbit to describe
+      return { dist: '—', spd: (Math.hypot(o.vx, o.vy)*KMS).toFixed(1)+' km/s', per: '—', mass: fmtMass(o.m||0), peri: '—', apo: '—', ecc: '—', esc: '—', km: !!o.moon };
     const dx=o.x-pref.x, dy=o.y-pref.y, r=Math.hypot(dx,dy);
     const vx=o.vx-pref.vx, vy=o.vy-pref.vy, v2=vx*vx+vy*vy, mu=G*pref.m;   // heliocentric: a body's own mass doesn't shorten its "year"
     const a = 1/(2/r - v2/mu);
@@ -1717,6 +1732,15 @@
     if (follow && (follow.deleted || follow.dead)){ follow = null; zoom = 1; }
     launchPanel.hidden = follow !== EARTH;                                   // satellite-launch panel only in the planet view
     if (!launchPanel.hidden && !viewPanel.hidden) viewPanel.hidden = true;   // the two share the corner — launch wins
+    // the coach and the inspector share the left edge: while a lesson runs, the card keeps clear of the coach —
+    // on phones (both top sheets) it slides under it; on desktop (bottom-anchored) it caps its height so its
+    // header stays below the coach on short windows
+    if (!ePanel.hidden && !coach.hidden){
+      const cb = coach.getBoundingClientRect().bottom, cs = getComputedStyle(ePanel);
+      const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);   // max-height is the content box
+      if (innerWidth <= 760){ ePanel.style.top = (cb + 8) + 'px'; ePanel.style.maxHeight = Math.max(140, innerHeight - dockH - 24 - cb - 16 - pad) + 'px'; }
+      else { ePanel.style.top = ''; ePanel.style.maxHeight = Math.max(140, innerHeight - 72 - cb - 8 - pad) + 'px'; }
+    } else if (ePanel.style.top || ePanel.style.maxHeight){ ePanel.style.top = ''; ePanel.style.maxHeight = ''; }
     timeT.textContent = `t = ${t.toFixed(2)} yr`;
     rateEl.textContent = (timeRate===0 ? 'paused' : (timeRate<0 ? '◀×'+(-timeRate) : '×'+timeRate)) + (warping>1 ? ' ▸▸' : '');
     rateEl.title = warping>1 ? 'fast-forwarding the empty approach' : 'time speed';
@@ -1736,6 +1760,7 @@
       stPeri.textContent = s.peri; stApo.textContent = s.apo; stEcc.textContent = s.ecc; stEsc.textContent = s.esc;
       stPeriL.textContent = s.km ? 'perigee' : 'perihelion'; stApoL.textContent = s.km ? 'apogee' : 'aphelion';
       stEscL.textContent = selected === SUN ? 'escape speed at surface' : 'escape speed here';
+      orbitBox.hidden = selected === SUN || orbitRef().deleted;              // the Sun can vanish while the card is open
       const cd = CHIP_DATA[selected.name];
       if (cd && !selHero.hidden){
         drawBody(selPlanet.getContext('2d'), cd, selPlanet.width, selPlanet.height, 26 * chipDpr, 1.4 * chipDpr, spinPhase(cd));
@@ -1743,7 +1768,7 @@
     }
     // the data drawer only pays its DOM cost while open
     if (!drawer.hidden){
-      const objs = [SUN, ...planets.filter(p=>!p.deleted), ...(MOON.deleted?[]:[MOON]), ...comets];
+      const objs = [...(SUN.deleted?[]:[SUN]), ...planets.filter(p=>!p.deleted), ...(MOON.deleted?[]:[MOON]), ...comets];
       if (tableRows.length !== objs.length || tableRows.some((tr,i)=> tr.obj !== objs[i])) rebuildTable(objs);
       tableRows.forEach(tr => { const html = rowText(tr.obj);   // only rewrite when the text actually changes (less DOM churn)
         if (tr._html !== html){ tr.el.innerHTML = html; tr._html = html; }
@@ -1757,7 +1782,7 @@
     }
     // hover affordance (hit-test against last drawn positions; ring drawn next frame)
     hoverBody = mouseX < 0 ? null : hitTest(mouseX, mouseY);
-    canvas.style.cursor = (drag && drag.moved) ? 'grabbing' : hoverBody ? (draggable(hoverBody) && !moonView && follow !== EARTH ? 'grab' : 'pointer') : 'crosshair';
+    canvas.style.cursor = (drag && drag.moved) ? 'grabbing' : placeMode ? 'crosshair' : hoverBody ? (draggable(hoverBody) && !moonView && follow !== EARTH ? 'grab' : 'pointer') : 'crosshair';
   }
 
   // ---- Effects layer (render-side): sparks, shake, slow-mo, sun flare ----
@@ -1944,6 +1969,7 @@
   }
   function dragMove(mx, my){
     if (!drag) return;
+    if (drag.body.deleted){ const d = drag; drag = null; if (d.moved) setRate(d.savedRate); return; }   // reset (R) or a swallow mid-drag: nothing left to move
     if (!drag.moved){
       if (Math.hypot(mx-drag.x0, my-drag.y0) < 5) return;    // a wobble on click isn't a drag
       drag.moved = true; setRate(0); killHint();
@@ -2037,8 +2063,10 @@
     if (follow === EARTH) resetView();
     actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; learnMenu.hidden = true; addPanel.hidden = false; setActCaret();
     placeMode = true; placeStatus.hidden = false;
-    placeStatus.style.top = (probePlan || msg) ? '92px' : '';                 // don't sit on a mission chip
-    placeText.textContent = '➕ Click to place it · Esc cancels';          // short: the chip shares the top edge with the Actions button
+    const stacked = !!(probePlan || msg), phone = innerWidth <= 760;         // don't sit on a mission chip: below it on desktop, above it on phones
+    placeStatus.style.top = (stacked && !phone) ? '92px' : '';
+    placeStatus.style.bottom = (stacked && phone) ? 'calc(var(--dock-h) + 70px)' : '';
+    placeText.textContent = matchMedia('(hover: none)').matches ? '➕ Tap where it should orbit' : '➕ Click to place it · Esc cancels';   // short: the chip shares the top edge with the Actions button
     killHint();
   }
   function exitPlace(){ placeMode = false; placeStatus.hidden = true; addPanel.hidden = true; setActCaret(); }
@@ -2051,7 +2079,7 @@
     const n = planets.filter(p => p.added).length + 1;
     const p = addPlanet({ name: `Planet ${n}`, color: look.color, size: look.size, m, a: r, e: 0, x, y, vx, vy });
     exitPlace();
-    selectBody(p); follow = null;
+    selectBody(p);                                                            // the camera stays put (a followed Jupiter keeps its new neighbour in view)
     const T = 2*Math.PI*Math.sqrt(r*r*r/(G*(SUN.m+m)));
     announce(SUN.deleted ? `➕ ${p.name} placed at rest — no Sun to orbit` : `➕ ${p.name} — ${apMassText()} ${look.kind} at ${r.toFixed(2)} AU, a ${fmtOrbit(T)} orbit`, 'capture');
     sfx('capture');
@@ -2423,7 +2451,7 @@
       learnList.appendChild(b);
     }
   }
-  function closeTopPanels(){ learnMenu.hidden = true; actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; setActCaret(); }
+  function closeTopPanels(){ if (placeMode) exitPlace(); learnMenu.hidden = true; actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; setActCaret(); }   // a lesson or the other menu abandons placement, like reopening ⚡ does
   learnToggle.addEventListener('click', () => { const open = learnMenu.hidden; closeTopPanels(); learnMenu.hidden = !open; });
   cToggle.addEventListener('click', () => { learnMenu.hidden = true; });   // the two top menus never stack
   renderLearnMenu();
@@ -3001,6 +3029,7 @@
   function enterMoon(){
     if (EARTH.deleted){ announce('🌙 No Earth to launch from', 'escape'); return; }
     if (msg || probePlan){ announce('🌙 A mission is already under way', 'escape'); return; }
+    if (placeMode) exitPlace();
     actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; setActCaret();
     moonView = true; appEl.classList.add('moon-mode'); moonExit.hidden = false;
     // Lambert translunar injection: from a parking-orbit point on Earth's far side
@@ -3171,7 +3200,7 @@
   function syncPause(){ const b = document.querySelector('#dock [data-act="pause"]'); if (b) b.innerHTML = (timeRate === 0 ? SVG_PLAY : SVG_PAUSE); }
   function faster(){ setRate(timeRate <= 0 ? (timeRate >= -1 ? 1 : Math.round(timeRate/2)) : Math.min(32, timeRate*2)); }
   function slower(){ setRate(timeRate >= 0 ? (timeRate <= 1 ? -1 : Math.round(timeRate/2)) : Math.max(-32, timeRate*2)); }
-  function earthView(){ follow = EARTH; if (zoom < 5) zoom = 5; }
+  function earthView(){ if (placeMode) exitPlace(); follow = EARTH; if (zoom < 5) zoom = 5; }   // the planet view can't host placement (no ghost, no drag)
   function resetView(){ follow = null; zoom = 1; }
   function togglePause(){ setRate(timeRate !== 0 ? 0 : lastRate); }
   // the data drawer (the old always-on table) — open state persists
@@ -3438,7 +3467,7 @@
   let pinchD = 0;
   function touchDist(t){ return Math.hypot(t[0].clientX - t[1].clientX, t[0].clientY - t[1].clientY); }
   canvas.addEventListener('touchstart', e => {
-    if (e.touches.length === 2){ pinchD = touchDist(e.touches); drag = null; }
+    if (e.touches.length === 2){ pinchD = touchDist(e.touches); if (drag) dragEnd(); }   // dragEnd, not drag = null: a moved drag has time paused
     else if (e.touches.length === 1){ const rc = canvas.getBoundingClientRect(); dragStart(e.touches[0].clientX-rc.left, e.touches[0].clientY-rc.top); }
   }, {passive:true});
   canvas.addEventListener('touchmove', e => {
@@ -3448,10 +3477,10 @@
       zoom = Math.max(0.2, Math.min(4000, zoom * (d / pinchD)));
       pinchD = d;
       killHint();
-    } else if (e.touches.length === 1 && drag){         // one finger on a planet: drag it (the page still scrolls elsewhere)
+    } else if (e.touches.length === 1 && drag){         // one finger that landed on a planet: claim the gesture at once —
+      e.preventDefault();                                // once the browser has begun scrolling, a later preventDefault is ignored
       const rc = canvas.getBoundingClientRect(); mouseX = e.touches[0].clientX-rc.left; mouseY = e.touches[0].clientY-rc.top;
       dragMove(mouseX, mouseY);
-      if (drag && drag.moved) e.preventDefault();
     }
   }, {passive:false});
   canvas.addEventListener('touchend', e => { if (e.touches.length < 2) pinchD = 0; if (e.touches.length === 0){ dragEnd(); mouseX = mouseY = -1; } }, {passive:true});

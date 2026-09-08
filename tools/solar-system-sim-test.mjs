@@ -358,6 +358,7 @@ const ok = (cond, name, detail = '') => {
   ok(Math.abs((api.energy() - E0)/E0) < 1e-3, 'energy still conserved with the extra body');
   api.reset();
   ok(api.planets.length === 8 && api.bodies.length === 10, 'reset() discards the added planet');
+  ok(p.deleted === true, 'a discarded added planet is flagged deleted (so a camera follow or drag lets go)');
 }
 
 console.log(fails ? `\n${fails} FAILURE(S)` : '\nall green');
