@@ -109,14 +109,18 @@
     color:var(--ink);background:var(--pnl);border:1px solid var(--pnl-line);
     border-radius:999px;padding:7px 9px 7px 16px;white-space:nowrap;font-variant-numeric:tabular-nums;}
   #msg-status[hidden]{display:none;}   /* the explicit display:flex above would otherwise defeat the hidden attr */
-  #probe-status{position:absolute;left:50%;transform:translateX(-50%);top:52px;z-index:7;
+  #add-panel{margin-top:8px;padding:13px 14px 11px;width:214px;text-align:left;}
+  #add-title{font-weight:700;color:#fff;margin:0 0 8px;}
+  #add-note{margin-top:8px;font:500 10.5px/1.35 system-ui,sans-serif;color:var(--dim);}
+  #add-cancel{width:100%;margin-top:9px;padding:8px;text-align:center;}
+  #probe-status, #place-status{position:absolute;left:50%;transform:translateX(-50%);top:52px;z-index:7;
     display:flex;align-items:center;gap:10px;font:600 12px/1.3 system-ui,sans-serif;
     color:var(--ink);background:var(--pnl);border:1px solid var(--pnl-line);
     border-radius:999px;padding:7px 9px 7px 16px;white-space:nowrap;font-variant-numeric:tabular-nums;}
-  #probe-status[hidden]{display:none;}
-  #probe-cancel{width:22px;height:22px;border-radius:50%;border:1px solid var(--pnl-line);
+  #probe-status[hidden], #place-status[hidden]{display:none;}
+  #probe-cancel, #place-cancel{width:22px;height:22px;border-radius:50%;border:1px solid var(--pnl-line);
     background:rgba(42,54,78,0.72);color:var(--ink);font:600 13px/1 system-ui,sans-serif;cursor:pointer;}
-  #probe-cancel:hover{background:rgba(70,88,124,0.9);}
+  #probe-cancel:hover, #place-cancel:hover{background:rgba(70,88,124,0.9);}
   /* ---- "What if?" lessons: the menu (beside Actions) and the coach card that runs a lesson ---- */
   #top-btns{display:flex;gap:8px;justify-content:flex-end;}
   #learn-toggle{background:rgba(74,108,190,0.45);border-color:rgba(150,180,255,0.5);}
@@ -361,6 +365,7 @@
     <div id="learn-list"></div>
   </div>
   <div id="action-menu" class="panel" hidden>
+    <button id="act-add" class="btn act" type="button" title="Place a new planet anywhere: pick its mass, then click where it should orbit. It gets a circular orbit at that distance and joins the physics for real.">➕ Add a planet…</button>
     <button id="act-comet" class="btn act" type="button" title="Open the comet designer — set mass, speed, direction and aim, then fire [C]">☄ Launch a comet…</button>
     <button id="act-random" class="btn act" type="button" title="A random comet from a random direction — click repeatedly">🎲 Random comet</button>
     <button id="act-storm" class="btn act" type="button" title="~100 icy specks from every direction. Massless — they never disturb the planets.">🌩 Comet storm</button>
@@ -377,6 +382,12 @@
     <button id="msg-mars" class="btn act" type="button" title="Send a pulse from Earth to Mars at the speed of light">→ Mars <span class="lm" id="lm-mars"></span></button>
     <button id="msg-jupiter" class="btn act" type="button" title="Send a pulse from Earth to Jupiter at the speed of light">→ Jupiter <span class="lm" id="lm-jupiter"></span></button>
     <div id="msg-note">Time holds still while light crosses — 1&nbsp;s here = 3 light-minutes</div>
+  </div>
+  <div id="add-panel" class="panel" hidden>
+    <div id="add-title">➕ New planet</div>
+    <label>Mass <span id="ap-val"></span><input id="ap-slider" type="range" min="0" max="1000" value="455"></label>
+    <div id="add-note">Click anywhere in the system to place it. It starts on a circular orbit there — open <i>Adjust</i> afterwards to stretch it.</div>
+    <button id="add-cancel" class="btn" type="button">Cancel</button>
   </div>
   <div id="comet-panel" class="panel" hidden>
     <label>Mass <span id="m-val"></span><input id="m-slider" type="range" min="0" max="1000" value="90"></label>
@@ -476,6 +487,7 @@
 <button id="moon-exit" type="button" hidden>← Back to the system</button>
 <div id="msg-status" hidden><span id="msg-text"></span><button id="msg-cancel" type="button" aria-label="Cancel transmission">×</button></div>
 <div id="probe-status" hidden><span id="probe-text"></span><button id="probe-cancel" type="button" aria-label="Abort mission">×</button></div>
+<div id="place-status" hidden><span id="place-text"></span><button id="place-cancel" type="button" aria-label="Cancel placing">×</button></div>
 <div id="coach" class="panel" hidden>
   <div id="coach-eyebrow"><span id="coach-step"></span><button id="coach-close" type="button" aria-label="End lesson">×</button></div>
   <div id="coach-title"></div>
@@ -523,6 +535,7 @@
     <li><b>Delete the Sun.</b> Click it, open <i>Adjust this body</i>, delete. The planets fly off along near-straight lines — the leash made visible.</li>
     <li><b>Make Jupiter heavier.</b> Drag its mass slider upward and watch the rest of the system start to wobble.</li>
     <li><b>Drag Earth out to Mars's distance.</b> Grab any planet and pull: time pauses, the orbit guide previews the circle it will settle onto, and the inspector's year, perihelion and escape speed change under your hand. Let go and it orbits there — the Moon comes along. Switch on the <b>velocity &amp; gravity arrows</b> in the view options first and watch both arrows shrink as you move it outward.</li>
+    <li><b>Add a planet where you click.</b> ⚡ Actions → Add a planet: pick a mass anywhere from a dwarf planet to a dozen Jupiters, then click a spot in the system. A ghost shows the orbit it would get as you move; the placed world starts on a circular orbit there and joins the physics for real — it pulls, gets pulled, and can be flung out like anything else. Drop a second Jupiter beside the first and see how long the neighbours last. Reset clears whatever you added.</li>
     <li><b>Stretch Earth's orbit into an ellipse.</b> Click Earth, open <i>Adjust this body</i>, and slide the <b>eccentricity</b>: the orbit guide stretches through Earth's current position, the perihelion and aphelion tiles follow, and the readout warns if the new orbit dives into the Sun. Let time run and watch Earth race through perihelion and crawl at aphelion — Kepler's second law, live. The toggle underneath decides whether the point you're at becomes the closest or the farthest end.</li>
     <li><b>Nudge Earth.</b> A small thruster burn permanently changes its orbit — there's no script pulling it back.</li>
     <li><b>Launch satellites.</b> Press <b>E</b> for Earth view, then launch at 200&nbsp;km and again at 35,786&nbsp;km and compare the orbits.</li>
@@ -646,7 +659,18 @@
     return [mx/M, my/M];
   }
 
+  // ---- runtime-added planets (the "add a planet" tool) ----
+  // An added body is a full member of the N-body system: it pulls, gets pulled,
+  // leaves a trail, can be ejected or swallowed. reset() discards them.
+  function addPlanet(p){
+    p.added = true; p.trail = p.trail || []; p.deleted = false; p._ub = 0; p._glow = 0; p._ejected = false; p._reb = 0;
+    planets.push(p); bodies.push(p);
+    E0 = energy();
+    return p;
+  }
   function reset(){
+    for (let i = planets.length-1; i >= 0; i--) if (planets[i].added) planets.splice(i, 1);
+    for (let i = bodies.length-1;  i >= 0; i--) if (bodies[i].added)  bodies.splice(i, 1);
     SUN.x = 0; SUN.y = 0; SUN.vx = 0; SUN.vy = 0;
     for (const p of planets){
       p.x = p.a * (1 - p.e); p.y = 0;
@@ -1398,6 +1422,7 @@
     if (!earthView) drawLessonFx();                                  // What-if overlays (lead wedge, arrival markers)
     if (viewOpts.vectors && !earthView) drawVectors();               // velocity (green) + gravity (orange) arrows
     if (drag && drag.moved) drawDragReadout();                       // "Earth → 1.52 AU · 1.9-yr orbit" beside the cursor
+    if (placeMode && !earthView) drawPlaceGhost();                   // the planet you're about to add
 
     // labels (reset the per-frame declutter tracker first)
     placedLabels.length = 0;
@@ -1913,7 +1938,7 @@
     if (selected === b) syncOrbitBox();                        // a drop is circular: the shape slider follows
   }
   function dragStart(mx, my){
-    if (moonView || follow === EARTH) return;               // not in the Earth–Moon or planet views
+    if (moonView || follow === EARTH || placeMode) return;  // not in the Earth–Moon or planet views, nor while placing
     const b = hitTest(mx, my);
     if (draggable(b)) drag = { body: b, x0: mx, y0: my, moved: false, savedRate: timeRate };
   }
@@ -1987,6 +2012,73 @@
     }
     ctx.restore();
   }
+  // ---- add a planet where you click ----
+  // ⚡ Actions → Add a planet: pick a mass, and a ghost of the new world follows
+  // the cursor with the circular orbit it would get. Click to place it — it joins
+  // the physics for real (mass, pull, trail, ejection) and is selected at once so
+  // the orbit-shape slider can stretch it. Esc cancels; reset() clears added ones.
+  const addPanel = document.getElementById('add-panel'), apEl = document.getElementById('ap-slider'), apV = document.getElementById('ap-val');
+  const placeStatus = document.getElementById('place-status'), placeText = document.getElementById('place-text');
+  let placeMode = false;
+  const M_EARTH = 3.0035e-6, MJ_IN_ME = 317.8;                                // solar masses per Earth mass; Earth masses per Jupiter
+  const apMassE = () => Math.pow(10, -3 + 6.6*(apEl.value/1000));            // 0.001 M⊕ (a dwarf) → ~4,000 M⊕ (≈12.6 Mⱼ)
+  function planetLook(me){                                                    // drawn size + colour by mass class — deterministic
+    return me < 0.1 ? { size: 1.8, color: '#c9b8a0', kind: 'dwarf planet' }
+         : me < 2   ? { size: 2.6, color: '#d8b98a', kind: 'rocky' }
+         : me < 10  ? { size: 3.2, color: '#9fd3c7', kind: 'super-Earth' }
+         : me < 50  ? { size: 4.2, color: '#7fd0ff', kind: 'ice giant' }
+         :            { size: 5.6, color: '#f0b070', kind: 'gas giant' };
+  }
+  const apMassText = () => { const me = apMassE(); return me >= MJ_IN_ME ? (me/MJ_IN_ME).toFixed(1)+' Mⱼ' : me >= 10 ? me.toFixed(0)+' M⊕' : me >= 1 ? me.toFixed(1)+' M⊕' : me.toFixed(3)+' M⊕'; };
+  function apLabel(){ apV.textContent = apMassText() + ' · ' + planetLook(apMassE()).kind; }
+  apEl.addEventListener('input', apLabel); apLabel();
+  function enterPlace(){
+    if (moonView) exitMoon();
+    if (follow === EARTH) resetView();
+    actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; learnMenu.hidden = true; addPanel.hidden = false; setActCaret();
+    placeMode = true; placeStatus.hidden = false;
+    placeStatus.style.top = (probePlan || msg) ? '92px' : '';                 // don't sit on a mission chip
+    placeText.textContent = '➕ Click to place it · Esc cancels';          // short: the chip shares the top edge with the Actions button
+    killHint();
+  }
+  function exitPlace(){ placeMode = false; placeStatus.hidden = true; addPanel.hidden = true; setActCaret(); }
+  function placeAt(sx, sy){
+    const [x, y] = unscr(sx, sy), r = Math.hypot(x-SUN.x, y-SUN.y);
+    if (!SUN.deleted && r < 0.05){ announce('➕ Too close to the Sun — it would fall straight in', 'escape'); return; }
+    const me = apMassE(), look = planetLook(me), m = me*M_EARTH;
+    let vx = 0, vy = 0;
+    if (!SUN.deleted){ const v = Math.sqrt(G*(SUN.m+m)/r); vx = SUN.vx - v*(y-SUN.y)/r; vy = SUN.vy + v*(x-SUN.x)/r; }   // circular, prograde
+    const n = planets.filter(p => p.added).length + 1;
+    const p = addPlanet({ name: `Planet ${n}`, color: look.color, size: look.size, m, a: r, e: 0, x, y, vx, vy });
+    exitPlace();
+    selectBody(p); follow = null;
+    const T = 2*Math.PI*Math.sqrt(r*r*r/(G*(SUN.m+m)));
+    announce(SUN.deleted ? `➕ ${p.name} placed at rest — no Sun to orbit` : `➕ ${p.name} — ${apMassText()} ${look.kind} at ${r.toFixed(2)} AU, a ${fmtOrbit(T)} orbit`, 'capture');
+    sfx('capture');
+  }
+  document.getElementById('act-add').addEventListener('click', enterPlace);
+  document.getElementById('add-cancel').addEventListener('click', exitPlace);
+  document.getElementById('place-cancel').addEventListener('click', exitPlace);
+  document.getElementById('comet-toggle').addEventListener('click', () => { if (placeMode) exitPlace(); });   // opening ⚡ again abandons placement (looked up directly: cToggle is declared further down)
+  function drawPlaceGhost(){                                                  // the new world and its would-be orbit, under the cursor
+    if (mouseX < 0) return;
+    const [x, y] = unscr(mouseX, mouseY), r = Math.hypot(x-SUN.x, y-SUN.y), look = planetLook(apMassE());
+    ctx.save();
+    if (!SUN.deleted && r >= 0.05){                                           // sampled in world space: honest in the compressed view
+      ctx.setLineDash([4,5]); ctx.strokeStyle = 'rgba(191,245,218,0.6)'; ctx.lineWidth = 1.2; ctx.beginPath();
+      for (let k=0;k<=120;k++){ const a = k/120*2*Math.PI, [X,Y] = scr(SUN.x + r*Math.cos(a), SUN.y + r*Math.sin(a)); k ? ctx.lineTo(X,Y) : ctx.moveTo(X,Y); }
+      ctx.stroke(); ctx.setLineDash([]);
+    }
+    ctx.globalAlpha = 0.8; ctx.fillStyle = look.color; ctx.beginPath(); ctx.arc(mouseX, mouseY, look.size + 1, 0, 2*Math.PI); ctx.fill(); ctx.globalAlpha = 1;
+    const T = 2*Math.PI*Math.sqrt(r*r*r/(G*SUN.m));
+    const txt = SUN.deleted ? `${apMassText()} — no Sun, it will sit at rest` : r < 0.05 ? 'too close to the Sun' : `${apMassText()} · ${r.toFixed(2)} AU · ${fmtOrbit(T)} orbit`;
+    ctx.font = '600 12px system-ui,sans-serif'; ctx.textBaseline = 'middle'; ctx.textAlign = 'left';
+    const w = ctx.measureText(txt).width + 16, bx = Math.max(8, Math.min(W - w - 8, mouseX + 16)), by = Math.max(20, mouseY - 22);
+    ctx.fillStyle = 'rgba(15,21,34,0.92)'; ctx.strokeStyle = 'rgba(150,170,210,0.35)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.roundRect(bx, by-13, w, 26, 8); ctx.fill(); ctx.stroke();
+    ctx.fillStyle = '#e6edf8'; ctx.fillText(txt, bx+8, by);
+    ctx.restore();
+  }
   canvas.addEventListener('wheel', e => {
     e.preventDefault();
     zoom *= e.deltaY < 0 ? 1.15 : 1/1.15;
@@ -2000,6 +2092,7 @@
   canvas.addEventListener('mouseleave', () => { mouseX = mouseY = -1; });
   canvas.addEventListener('click', e => {
     if (suppressClick){ suppressClick = false; return; } // the release at the end of a drag
+    if (placeMode){ const rc = canvas.getBoundingClientRect(); placeAt(e.clientX-rc.left, e.clientY-rc.top); return; }
     if (moonView){ exitMoon(); return; }                 // any click leaves the Earth–Moon view
     const rect = canvas.getBoundingClientRect();
     const best = hitTest(e.clientX-rect.left, e.clientY-rect.top);
@@ -3092,6 +3185,7 @@
     // has scrolled to the article, Space/arrows must scroll the page again.
     if (window.scrollY > window.innerHeight/2) return;
     if (moonView){ if (e.key === 'Escape' || e.key === '0'){ exitMoon(); e.preventDefault(); } return; }   // sim hotkeys are inert in the Earth–Moon view
+    if (e.key === 'Escape' && placeMode){ exitPlace(); e.preventDefault(); return; }
     if (e.key === 'Escape' && lesson){ endLesson(); e.preventDefault(); return; }
     if (e.code === 'Space'){ togglePause(); e.preventDefault(); }
     else if (e.code === 'ArrowUp')   setRate(timeRate + 1);

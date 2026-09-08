@@ -15,7 +15,7 @@ function boot(){
   const api = new Function(core + `;
     return {
       G, DT, SUN, planets, EARTH, MOON, bodies,
-      reset, advance, warpFactor, aOf, mergeInto, energy, detectPass, seedBelt, keplerProp, lambertV, bestTransfer, KMS,
+      reset, advance, warpFactor, aOf, mergeInto, energy, detectPass, seedBelt, keplerProp, lambertV, bestTransfer, KMS, addPlanet,
       state: () => ({ t, comets, belt, storm, probes, E0 }),
       onEmit: f => { EMIT = f; },
       setRate: r => { timeRate = r; },
@@ -343,6 +343,21 @@ const ok = (cond, name, detail = '') => {
   ok(launches === 2, 'two launch windows opened within 5 yr', `${launches}`);
   ok(hits === launches, `every budgeted launch rendezvoused (${hits}/${launches})`);
   ok(kicked && kickMiss > 0.05, `transfer-orbit kick from outside the window misses (closest ${kickMiss ? kickMiss.toFixed(2) : '?'} AU)`);
+}
+
+// ── T10: addPlanet — a runtime-added world is a real member of the system, and reset() forgets it ──
+{
+  const api = boot(), mu = api.G*api.SUN.m, m = 3.0035e-6;                   // one Earth mass at 2 AU, circular
+  const v = Math.sqrt(api.G*(api.SUN.m + m)/2);
+  const p = api.addPlanet({ name:'Test', color:'#fff', size:2, m, a:2, e:0, x:api.SUN.x+2, y:api.SUN.y, vx:api.SUN.vx, vy:api.SUN.vy+v });
+  ok(api.planets.length === 9 && api.bodies.length === 11, 'added planet joins planets and bodies');
+  const E0 = api.state().E0;
+  years(api, 3);
+  const a = api.aOf(p, api.SUN);
+  ok(Math.abs(a - 2) < 0.02, `added planet stays on its 2 AU orbit (a = ${a.toFixed(3)})`);
+  ok(Math.abs((api.energy() - E0)/E0) < 1e-3, 'energy still conserved with the extra body');
+  api.reset();
+  ok(api.planets.length === 8 && api.bodies.length === 10, 'reset() discards the added planet');
 }
 
 console.log(fails ? `\n${fails} FAILURE(S)` : '\nall green');
