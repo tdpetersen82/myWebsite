@@ -182,8 +182,14 @@ async function discoverGa4Property(token) {
     return props[0].id;
 }
 
+// Only hits from the real host count. Local previews and the Claude browser pane
+// carried the tag until 2026-09-09 (about 4% of sessions but a third of page views,
+// because test runs reload constantly) — those rows stay in GA4 forever, so every
+// report filters them out here. The pages themselves now send nothing off-host.
+const GA4_HOST_FILTER = { filter: { fieldName: 'hostName', stringFilter: { matchType: 'ENDS_WITH', value: 'limestonegames.com' } } };
 async function ga4Report(token, propertyId, range, dimensions, metrics, limit = 500) {
     const body = await api(token, `https://analyticsdata.googleapis.com/v1beta/properties/${propertyId}:runReport`, {
+        dimensionFilter: GA4_HOST_FILTER,
         dateRanges: [{ startDate: range.startDate, endDate: range.endDate }],
         dimensions: dimensions.map((name) => ({ name })),
         metrics: metrics.map((name) => ({ name })),
