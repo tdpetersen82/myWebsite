@@ -296,8 +296,9 @@ async function main() {
             const today = new Date(), fresh = { startDate: isoDate(new Date(today.getTime() - 14 * 86400000)), endDate: isoDate(today) };
             const daily = await gscQuery(token, site, fresh, ['date'], 100, 'all');
             const prior = await gscQuery(token, site, { startDate: isoDate(new Date(today.getTime() - 120 * 86400000)), endDate: fresh.startDate }, ['date'], 500, 'all');
-            const priorBest = prior.reduce((m, r) => Math.max(m, r.clicks), 0);
             const best = daily.reduce((b, r) => (!b || r.clicks > b.clicks ? r : b), null);
+            // "previous best" = every day before the best one, including earlier days inside this 14-day window
+            const priorBest = Math.max(prior.reduce((m, r) => Math.max(m, r.clicks), 0), ...daily.filter((r) => best && r.date < best.date).map((r) => r.clicks), 0);
             console.log(`Last 14 days by day (fresh data — the last 2–3 days are provisional):`);
             console.log(table(daily, GSC_COLS('date'), 20));
             if (best) {
