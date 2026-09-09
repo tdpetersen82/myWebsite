@@ -39,8 +39,8 @@
     ['counting-critters', 'png'],
   ]);
 
-  // Shared artwork for Kids tiles, featured cards, and sidebar icons.
-  const KIDS_ART = new Map([
+  // Shared illustrated artwork for game tiles, featured cards, and sidebar icons.
+  const GAME_ART = new Map([
     ['snake', 'snake-kids-20260909.png'],
     ['bubble-pop', 'bubble-pop-kids-20260909.png'],
     ['memory-match', 'memory-match-kids-20260909.png'],
@@ -51,8 +51,27 @@
     ['crazy-eights', 'crazy-eights-kids-20260909.png'],
     ['dogs', 'pup-quiz-20260909.jpg'],
     ['counting-critters', 'counting-critters.png'],
+    ['connect-4', 'connect-4-strategy-20260909.png'],
+    ['connect-dots', 'connect-dots-strategy-20260909.png'],
+    ['2048', '2048-strategy-20260909.png'],
+    ['chess', 'chess-strategy-20260909.png'],
+    ['checkers', 'checkers-strategy-20260909.png'],
+    ['backgammon', 'backgammon-strategy-20260909.png'],
+    ['othello', 'othello-strategy-20260909.png'],
+    ['chinese-checkers', 'chinese-checkers-strategy-20260909.png'],
+    ['ultimate-tic-tac-toe', 'ultimate-tic-tac-toe-strategy-20260909.png'],
+    ['sudoku', 'sudoku-strategy-20260909.png'],
+    ['minesweeper', 'minesweeper-strategy-20260909.png'],
+    ['mahjong', 'mahjong-strategy-20260909.png'],
+    ['mancala', 'mancala-strategy-20260909.png'],
+    ['word-search', 'word-search-strategy-20260909.png'],
+    ['crossword-maker', 'crossword-maker-strategy-20260909.png'],
+    ['hangman', 'hangman-strategy-20260909.png'],
+    ['yahtzee', 'yahtzee-strategy-20260909.png'],
+    ['farkle', 'farkle-strategy-20260909.png'],
+    ['dog-breed-finder', 'dog-breed-finder-strategy-20260909.png'],
   ]);
-  for (const [id, file] of KIDS_ART) THUMBS.set(id, file.split('.').pop());
+  for (const [id, file] of GAME_ART) THUMBS.set(id, file.split('.').pop());
 
   // Map of game id → localStorage key for personal best. If a key isn't here
   // (or has no stored value), the tile renders without the ★ badge — better
@@ -145,8 +164,8 @@
   };
 
   function glyph(game, size) {
-    if (KIDS_ART.has(game.id)) {
-      return `<img src="assets/thumbs/${KIDS_ART.get(game.id)}?v=20260909e" alt="" width="${size}" height="${size}" style="display:block;object-fit:contain;border-radius:4px" decoding="async">`;
+    if (GAME_ART.has(game.id)) {
+      return `<img src="assets/thumbs/${GAME_ART.get(game.id)}?v=20260909f" alt="" width="${size}" height="${size}" style="display:block;object-fit:contain;border-radius:4px" decoding="async">`;
     }
     const tpl = GLYPH_PATHS[game.id] || '<rect x="12" y="12" width="40" height="40" rx="8" fill="C"/>';
     const inner = tpl.replace(/"C"/g, `"${game.color}"`);
@@ -192,10 +211,10 @@
     const cat = CAT_LABEL[game.cat] || '';
     const ext = THUMBS.get(game.id);
     const hasShot = !!ext;
-    const isRasterArt = KIDS_ART.has(game.id);
+    const isRasterArt = GAME_ART.has(game.id);
     const isArt = ext === 'svg' || isRasterArt;
-    const imageVersion = isRasterArt ? '?v=20260909e' : '';
-    const imageSrc = `assets/thumbs/${KIDS_ART.get(game.id) || `${game.id}.${ext}`}${imageVersion}`;
+    const imageVersion = isRasterArt ? '?v=20260909f' : '';
+    const imageSrc = `assets/thumbs/${GAME_ART.get(game.id) || `${game.id}.${ext}`}${imageVersion}`;
     const top = hasShot
       ? `<img class="shot-img${isArt ? ' is-art' : ''}" src="${imageSrc}" alt="${game.id === 'dogs' ? 'Three curious dogs beneath a question mark — Pup Quiz' : game.name + (isArt ? ' artwork' : ' screenshot')}" loading="lazy" decoding="async" width="600" height="600">`
       : `<div class="shot-ph" style="background:${game.color}22">${glyph(game, size === 's-tall' ? 84 : 56)}</div>`;

@@ -82,32 +82,7 @@
       .strat-disc.d3 { left: 142px; }
       .strat-disc.d4 { left: 196px; bottom: 50px; background: radial-gradient(circle at 35% 30%, #2A2826, #0E0C0A); }
 
-      /* Featured-art piece: 8x8 chess board with a few starting pieces */
-      .strat-feat-board {
-        background: #5C3A1F;
-        border-radius: 12px;
-        padding: 12px;
-        display: grid;
-        grid-template-columns: repeat(8, 1fr);
-        grid-template-rows: repeat(8, 1fr);
-        gap: 0;
-        aspect-ratio: 1;
-        max-width: 260px;
-        margin: 0 auto;
-        box-shadow: 0 12px 30px -10px rgba(31, 58, 42, 0.4);
-        overflow: hidden;
-      }
-      .strat-feat-board .sq {
-        display: flex; align-items: center; justify-content: center;
-        font-size: 22px; line-height: 1;
-        font-family: 'Bricolage Grotesque', serif;
-      }
-      .strat-feat-board .sq.l { background: #E8D2A1; }
-      .strat-feat-board .sq.d { background: #A07B4F; }
-      .strat-feat-board .sq.w { color: #FFFEF6; text-shadow: 0 1px 2px rgba(0, 0, 0, 0.4); }
-      .strat-feat-board .sq.b { color: #1A1310; }
-
-      /* Game-tile thumbnails — real game screenshots in place of glyph icons */
+      /* Illustrated game tiles: preserve the full composition at every size. */
       .cat-card-shot {
         width: 124px; height: 124px;
         border-radius: 14px;
@@ -116,9 +91,12 @@
         background: var(--cat-bg);
         box-shadow: inset 0 0 0 1px var(--cat-line);
       }
-      .cat-card-shot img { width: 100%; height: 100%; object-fit: cover; display: block; }
+      .cat-card-shot img { width: 100%; height: 100%; object-fit: contain; display: block; padding: 4px; }
       @media (max-width: 520px) {
         .cat-card-shot { width: 96px; height: 96px; }
+        .cat-card-head { padding-top: 16px; }
+        .cat-card-head > div:last-child { min-width: 0; }
+        .cat-card-head h3 { overflow-wrap: anywhere; }
       }
     </style>
 </head>
@@ -199,24 +177,7 @@
         </div>
         <div class="cat-featured">
             <div class="cat-featured-art">
-                <div class="strat-feat-board" aria-hidden="true">
-                    <!-- row 8 (black back rank) -->
-                    <div class="sq l b">♜</div><div class="sq d b">♞</div><div class="sq l b">♝</div><div class="sq d b">♛</div><div class="sq l b">♚</div><div class="sq d b">♝</div><div class="sq l b">♞</div><div class="sq d b">♜</div>
-                    <!-- row 7 (black pawns) -->
-                    <div class="sq d b">♟</div><div class="sq l b">♟</div><div class="sq d b">♟</div><div class="sq l b">♟</div><div class="sq d b">♟</div><div class="sq l b">♟</div><div class="sq d b">♟</div><div class="sq l b">♟</div>
-                    <!-- row 6 -->
-                    <div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div>
-                    <!-- row 5 -->
-                    <div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div>
-                    <!-- row 4 -->
-                    <div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l w">♙</div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div>
-                    <!-- row 3 -->
-                    <div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div><div class="sq d"></div><div class="sq l"></div>
-                    <!-- row 2 (white pawns) -->
-                    <div class="sq l w">♙</div><div class="sq d w">♙</div><div class="sq l w">♙</div><div class="sq d w">♙</div><div class="sq l"></div><div class="sq d w">♙</div><div class="sq l w">♙</div><div class="sq d w">♙</div>
-                    <!-- row 1 -->
-                    <div class="sq d w">♖</div><div class="sq l w">♘</div><div class="sq d w">♗</div><div class="sq l w">♕</div><div class="sq d w">♔</div><div class="sq l w">♗</div><div class="sq d w">♘</div><div class="sq l w">♖</div>
-                </div>
+                <img src="../assets/thumbs/chess-strategy-20260909.png?v=20260909f" alt="A cream knight and teal king on a wooden chessboard" width="300" height="300" style="width:min(85%,300px);height:auto;border-radius:20px" decoding="async">
             </div>
             <div class="cat-featured-body">
                 <div class="cat-featured-tag">★ New flagship</div>
@@ -244,7 +205,7 @@
             <a class="cat-card" href="../dogs/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/dogs.jpg" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/dog-breed-finder-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Dog Breed Finder</h3>
                         <div class="desc">Eight questions about your home and week, and 120 breeds ranked to fit — with the reasons shown.</div>
@@ -265,7 +226,7 @@
             <a class="cat-card" href="../yahtzee/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/yahtzee.svg" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/yahtzee-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Yahtzee</h3>
                         <div class="desc">Roll, hold, fill the card. Play solo or against the computer.</div>
@@ -286,7 +247,7 @@
             <a class="cat-card" href="../farkle/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/farkle.svg" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/farkle-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Farkle</h3>
                         <div class="desc">Push your luck to 10,000 against the computer. Bank or bust.</div>
@@ -307,7 +268,7 @@
             <a class="cat-card" href="../word-search/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/word-search.svg" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/word-search-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Word Search</h3>
                         <div class="desc">Find hidden words in themed letter grids. Drag to select. Solo play.</div>
@@ -328,7 +289,7 @@
             <a class="cat-card" href="../crossword-maker/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/crossword-maker.svg" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/crossword-maker-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Crossword Maker</h3>
                         <div class="desc">Type your own words and clues — get a playable, printable crossword.</div>
@@ -349,7 +310,7 @@
             <a class="cat-card" href="../hangman/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/hangman.svg" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/hangman-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Hangman</h3>
                         <div class="desc">Guess the hidden word by theme before the figure is drawn. Solo play.</div>
@@ -370,7 +331,7 @@
             <a class="cat-card featured" href="../chess/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/chess.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/chess-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Chess</h3>
                         <div class="desc">Full rules. Three difficulties.</div>
@@ -391,7 +352,7 @@
             <a class="cat-card" href="../checkers/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/checkers.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/checkers-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Checkers</h3>
                         <div class="desc">Mandatory captures. Multi-jumps.</div>
@@ -412,7 +373,7 @@
             <a class="cat-card" href="../backgammon/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/backgammon.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/backgammon-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Backgammon</h3>
                         <div class="desc">Roll, race, bear off.</div>
@@ -433,7 +394,7 @@
             <a class="cat-card" href="../connect-4/">
                 <span class="cat-card-tag">Strategy</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/connect-4.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/connect-4-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Connect 4</h3>
                         <div class="desc">Four in a row beats the computer.</div>
@@ -454,7 +415,7 @@
             <a class="cat-card" href="../connect-dots/">
                 <span class="cat-card-tag">Strategy</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/connect-dots.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/connect-dots-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Dots &amp; Boxes</h3>
                         <div class="desc">Lines, boxes, strategy.</div>
@@ -475,7 +436,7 @@
             <a class="cat-card" href="../sudoku/">
                 <span class="cat-card-tag">Puzzle</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/sudoku.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/sudoku-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Sudoku</h3>
                         <div class="desc">Fill the grid so every row, column, and box holds 1–9. Solo play.</div>
@@ -496,7 +457,7 @@
             <a class="cat-card" href="../minesweeper/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/minesweeper.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/minesweeper-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Minesweeper</h3>
                         <div class="desc">Read the numbers, deduce the mines, clear every safe square. Solo play.</div>
@@ -517,7 +478,7 @@
             <a class="cat-card" href="../2048/">
                 <span class="cat-card-tag">Puzzle</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/2048.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/2048-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>2048</h3>
                         <div class="desc">Merge tiles. Reach 2048.</div>
@@ -538,7 +499,7 @@
             <a class="cat-card" href="../othello/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/othello.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/othello-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Othello</h3>
                         <div class="desc">Flip flanked discs. Hold the corners.</div>
@@ -559,7 +520,7 @@
             <a class="cat-card" href="../chinese-checkers/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/chinese-checkers.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/chinese-checkers-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Chinese Checkers</h3>
                         <div class="desc">Hop chains across the star. 2, 3, or 6 players.</div>
@@ -580,7 +541,7 @@
             <a class="cat-card" href="../ultimate-tic-tac-toe/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/ultimate-tic-tac-toe.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/ultimate-tic-tac-toe-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Ultimate Tic-Tac-Toe</h3>
                         <div class="desc">Nine boards in one. Your move picks the next.</div>
@@ -601,7 +562,7 @@
             <a class="cat-card" href="../mancala/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/mancala.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/mancala-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Mancala</h3>
                         <div class="desc">Sow seeds. Capture across. Claim the store.</div>
@@ -622,7 +583,7 @@
             <a class="cat-card" href="../mahjong/">
                 <span class="cat-card-tag">New</span>
                 <div class="cat-card-head">
-                    <div class="cat-card-shot"><img src="../assets/thumbs/mahjong.webp" alt="" width="600" height="600" loading="lazy"></div>
+                    <div class="cat-card-shot"><img src="../assets/thumbs/mahjong-strategy-20260909.png?v=20260909f" alt="" width="600" height="600" loading="lazy" decoding="async"></div>
                     <div>
                         <h3>Mahjong Solitaire</h3>
                         <div class="desc">Match free tiles. Clear the 144-tile mound. Solo play.</div>
