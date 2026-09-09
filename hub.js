@@ -11,7 +11,7 @@
   const CAT_LABEL = window.LG_CAT_LABEL;
 
   // Tile art in assets/thumbs/. Map id -> file extension, because not every
-  // tile is a screenshot: some are illustrated SVGs and one is a photo. The
+  // tile is a screenshot: some are illustrated SVGs and one is raster art. The
   // extension used to be hard-coded to .webp, which quietly hid the six
   // non-webp tiles the category pages were already showing. Tiles for ids
   // listed here show the art; everything else falls back to the icon medallion.
@@ -173,8 +173,10 @@
     const cat = CAT_LABEL[game.cat] || '';
     const ext = THUMBS.get(game.id);
     const hasShot = !!ext;
+    const isArt = ext === 'svg' || game.id === 'dogs';
+    const imageVersion = game.id === 'dogs' ? '?v=20260909' : '';
     const top = hasShot
-      ? `<img class="shot-img${ext === 'svg' ? ' is-art' : ''}" src="assets/thumbs/${game.id}.${ext}" alt="${game.name} ${ext === 'svg' ? 'artwork' : 'screenshot'}" loading="lazy" decoding="async" width="600" height="600">`
+      ? `<img class="shot-img${isArt ? ' is-art' : ''}" src="assets/thumbs/${game.id}.${ext}${imageVersion}" alt="${game.id === 'dogs' ? 'Three curious dogs beneath a question mark — Pup Quiz' : game.name + (isArt ? ' artwork' : ' screenshot')}" loading="lazy" decoding="async" width="600" height="600">`
       : `<div class="shot-ph" style="background:${game.color}22">${glyph(game, size === 's-tall' ? 84 : 56)}</div>`;
 
     return el(`
