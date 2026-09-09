@@ -70,6 +70,18 @@
     ['yahtzee', 'yahtzee-strategy-20260909.png'],
     ['farkle', 'farkle-strategy-20260909.png'],
     ['dog-breed-finder', 'dog-breed-finder-strategy-20260909.png'],
+    ['block-puzzle', 'block-puzzle-arcade-20260909.png'],
+    ['pong', 'pong-arcade-20260909.png'],
+    ['breakout', 'breakout-arcade-20260909.png'],
+    ['space-invaders', 'space-invaders-arcade-20260909.png'],
+    ['asteroids', 'asteroids-arcade-20260909.png'],
+    ['simon', 'simon-arcade-20260909.png'],
+    ['spacex-lander', 'spacex-lander-arcade-20260909.png'],
+    ['frogger', 'frogger-arcade-20260909.png'],
+    ['lunar-lander', 'lunar-lander-arcade-20260909.png'],
+    ['missile-command', 'missile-command-arcade-20260909.png'],
+    ['defender', 'defender-arcade-20260909.png'],
+    ['solar-system', 'solar-system-arcade-20260909.png'],
   ]);
   for (const [id, file] of GAME_ART) THUMBS.set(id, file.split('.').pop());
 
@@ -165,7 +177,7 @@
 
   function glyph(game, size) {
     if (GAME_ART.has(game.id)) {
-      return `<img src="assets/thumbs/${GAME_ART.get(game.id)}?v=20260909f" alt="" width="${size}" height="${size}" style="display:block;object-fit:contain;border-radius:4px" decoding="async">`;
+      return `<img src="assets/thumbs/${GAME_ART.get(game.id)}?v=20260909g" alt="" width="${size}" height="${size}" style="display:block;object-fit:contain;border-radius:4px" decoding="async">`;
     }
     const tpl = GLYPH_PATHS[game.id] || '<rect x="12" y="12" width="40" height="40" rx="8" fill="C"/>';
     const inner = tpl.replace(/"C"/g, `"${game.color}"`);
@@ -213,10 +225,11 @@
     const hasShot = !!ext;
     const isRasterArt = GAME_ART.has(game.id);
     const isArt = ext === 'svg' || isRasterArt;
-    const imageVersion = isRasterArt ? '?v=20260909f' : '';
+    const imageVersion = isRasterArt ? '?v=20260909g' : '';
     const imageSrc = `assets/thumbs/${GAME_ART.get(game.id) || `${game.id}.${ext}`}${imageVersion}`;
+    const imageStyle = isRasterArt && game.cat === 'classic' ? ' style="background:#151923"' : '';
     const top = hasShot
-      ? `<img class="shot-img${isArt ? ' is-art' : ''}" src="${imageSrc}" alt="${game.id === 'dogs' ? 'Three curious dogs beneath a question mark — Pup Quiz' : game.name + (isArt ? ' artwork' : ' screenshot')}" loading="lazy" decoding="async" width="600" height="600">`
+      ? `<img class="shot-img${isArt ? ' is-art' : ''}"${imageStyle} src="${imageSrc}" alt="${game.id === 'dogs' ? 'Three curious dogs beneath a question mark — Pup Quiz' : game.name + (isArt ? ' artwork' : ' screenshot')}" loading="lazy" decoding="async" width="600" height="600">`
       : `<div class="shot-ph" style="background:${game.color}22">${glyph(game, size === 's-tall' ? 84 : 56)}</div>`;
 
     return el(`
