@@ -37,7 +37,7 @@
 <link rel="apple-touch-icon" href="/apple-touch-icon.png">
 <link rel="manifest" href="/manifest.json">
 <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
-<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");</script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());gtag("config","G-DP6FGVETMV");addEventListener("error",function(e){try{gtag("event","js_error",{message:String(e.message||"").slice(0,150),source:(String(e.filename||"").split("/").pop().split("?")[0]||location.pathname)+":"+(e.lineno||0),page_path:location.pathname})}catch(_){}});addEventListener("unhandledrejection",function(e){try{var r=e.reason;gtag("event","js_error",{message:String(r&&r.message||r||"").slice(0,150),source:"promise",page_path:location.pathname})}catch(_){}});</script>
 <style>
   :root{
     --pnl:rgba(15,21,34,0.9); --pnl-line:rgba(150,170,210,0.26);
@@ -665,6 +665,11 @@
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d');
   let lesson = null;   // the running "What if?" lesson — declared up top because draw() reads it every frame
+  // Usage events (GA4): sandbox_action{action}, mission_start/mission_end/mission_today{mission,outcome},
+  // plus the lessons' lesson_start/lesson_complete{lesson}. The params only show up in GA4
+  // reports once registered there as event-scoped custom dimensions: action, mission, outcome, lesson.
+  function trackEv(name, params){ try { if (typeof gtag === 'function') gtag('event', name, params); } catch(e){} }
+  function sandbox(action){ trackEv('sandbox_action', { action }); }
 
   // ---- Earth texture (real Blue Marble), mapped onto the spinning globe in the planet view ----
   let earthTex = null, earthReady = false;
@@ -1219,7 +1224,7 @@
       color: me<0.3 ? '#bfe0ff' : '#ffd98a' });
     if (comets.length > 30) comets.shift();   // cap; comets self-remove on escape (>80 AU) or impact
     E0 = energy();                            // re-baseline: a massive arrival changes the system's total energy
-    sfx('launch');
+    sfx('launch'); sandbox(m >= 0.04 ? 'rogue_star' : 'comet');
   }
   function launchStorm(){   // ~100 massless specks from random angles/speeds — chaos, untracked, never perturb
     for (let i=0;i<100;i++){
@@ -1231,6 +1236,7 @@
       storm.push({ x, y, vx:dx*v, vy:dy*v, trail:[] });
     }
     if (storm.length > 600) storm.splice(0, storm.length - 600);                    // bound it if spam-clicked
+    sandbox('storm');
   }
 
   // ---- Camera + compressed radial scale ----
@@ -1760,9 +1766,10 @@
     if (!selected || selected === SUN) return;
     const dv = nudgeDv()/KMS, ang = ndEl.value*Math.PI/180;                 // km/s → AU/yr; 0°=→, 90°=↑ on screen
     selected.vx += dv*Math.cos(ang); selected.vy += dv*Math.sin(ang);
-    E0 = energy();
+    E0 = energy(); sandbox('nudge');
   }
   emEl.addEventListener('input', applyMass);
+  emEl.addEventListener('change', () => sandbox('mass'));
   nfEl.addEventListener('input', editLabels);
   ndEl.addEventListener('input', editLabels);
   document.getElementById('edit-nudge').addEventListener('click', applyNudge);
@@ -1809,7 +1816,8 @@
     E0 = energy(); oeLabel();
   }
   oeEl.addEventListener('input', applyOrbitShape);
-  oeApsis.addEventListener('click', () => { oeAtPeri = !oeAtPeri; applyOrbitShape(); });
+  oeEl.addEventListener('change', () => sandbox('orbit_shape'));                 // once per slider release, not per pixel
+  oeApsis.addEventListener('click', () => { oeAtPeri = !oeAtPeri; applyOrbitShape(); sandbox('orbit_shape'); });
   document.getElementById('edit-close').addEventListener('click', deselect);
   function removeBody(b){                                                    // the inspector's Delete — lessons use it too
     if (comets.includes(b)) b.dead = true;                                  // a comet / interloper
@@ -1818,9 +1826,10 @@
     EMIT('removed', { name: b.name, sun: b === SUN });
     E0 = energy(); deselect();
   }
-  document.getElementById('edit-delete').addEventListener('click', () => { if (selected) removeBody(selected); });
+  document.getElementById('edit-delete').addEventListener('click', () => { if (selected){ sandbox(selected === SUN ? 'delete_sun' : 'delete'); removeBody(selected); } });
   function pick(o){
     selectBody(o); if (!selected) return;
+    sandbox(o === EARTH ? 'earth_view' : 'inspect');
     if (o === SUN || o.moon) follow = null;                                 // Sun + Moon: edit in the system view
     else if (o === EARTH) earthView();                                        // Earth → planet view
     else follow = o;
@@ -2144,6 +2153,7 @@
     if (!drag) return;
     const d = drag; drag = null;
     if (!d.moved) return;
+    sandbox('drag');
     suppressClick = true; setTimeout(() => { suppressClick = false; }, 0);   // the click that follows this release must not re-select
     setRate(d.savedRate);
     if (!SUN.deleted){
@@ -2240,7 +2250,7 @@
     if (!SUN.deleted){ const v = Math.sqrt(G*(SUN.m+m)/r); vx = SUN.vx - v*(y-SUN.y)/r; vy = SUN.vy + v*(x-SUN.x)/r; }   // circular, prograde
     const n = planets.filter(p => p.added).length + 1;
     const p = addPlanet({ name: `Planet ${n}`, color: look.color, size: look.size, m, a: r, e: 0, x, y, vx, vy });
-    exitPlace();
+    exitPlace(); sandbox('add_planet');
     selectBody(p);                                                            // the camera stays put (a followed Jupiter keeps its new neighbour in view)
     const T = 2*Math.PI*Math.sqrt(r*r*r/(G*(SUN.m+m)));
     announce(SUN.deleted ? `➕ ${p.name} placed at rest — no Sun to orbit` : `➕ ${p.name} — ${apMassText()} ${look.kind} at ${r.toFixed(2)} AU, a ${fmtOrbit(T)} orbit`, 'capture');
@@ -2366,7 +2376,7 @@
     setRate(0);
     actMenu.hidden = true; msgPanel.hidden = true; cPanel.hidden = true; setActCaret();
     msgStatus.hidden = false;
-    sfx('launch');
+    sfx('launch'); trackEv('mission_start', { mission: 'message_' + t.name.toLowerCase() });
     return true;
   }
   function endMessage(note){
@@ -2374,6 +2384,7 @@
     const m = msg; msg = null;
     if (note) announce(note, 'escape');
     msgStatus.hidden = true;
+    trackEv('mission_end', { mission: 'message_' + m.to.name.toLowerCase(), outcome: m.doneLm >= m.totalLm ? 'arrived' : note ? 'lost' : 'cancelled' });
     if (m.onEnd) m.onEnd({ arrived: m.doneLm >= m.totalLm, lost: !!note, totalLm: m.totalLm });
   }
   document.getElementById('act-msg').addEventListener('click', () => { actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = false; setActCaret(); updMsgRows(); });
@@ -2451,13 +2462,14 @@
     if (probePlan) return;                                     // one mission at a time
     if (follow === EARTH) resetView();
     actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; setActCaret();
-    probePlan = { phase: opts.arm ? 'arm' : 'wait', savedRate: timeRate, waitStart: t, target, voyager: !!opts.voyager,
+    probePlan = { phase: opts.arm ? 'arm' : 'wait', savedRate: timeRate, waitStart: t, target, voyager: !!opts.voyager, mname: opts.voyager ? 'voyager' : 'probe_' + target.name.toLowerCase(),
                   budget: opts.budget || 0,                     // AU/yr: wait for a transfer that costs ≤ this (a real window), not for a fixed angle
                   onLaunch: opts.onLaunch || null, onEnd: opts.onEnd || null, onBoost: opts.onBoost || null };   // lessons listen for the launch, the flyby, and how it ended
     if (probePlan.phase === 'wait'){                           // 'arm' = a lesson launches it by hand, on its own clock
       setRate(timeRate <= 0 ? 16 : Math.max(timeRate, 16));     // fast-forward to the launch window
       probeStatus.hidden = false;
     }
+    if (!opts.voyager) trackEv('mission_start', { mission: probePlan.mname });   // Voyager reports itself once it knows which one it is
     return true;
   }
   function injectProbe(tT, vel, info){
@@ -2501,6 +2513,7 @@
   function finishProbe(result){
     probeStatus.hidden = true; if (probeCraft) probeCraft.done = true;
     const r = probePlan ? probePlan.savedRate : 0, cb = probePlan ? probePlan.onEnd : null, rs = probePlan ? probePlan.restore : null;
+    if (probePlan){ const res = result || {}; trackEv('mission_end', { mission: probePlan.mname, outcome: res.crashed ? 'crashed' : res.aborted ? 'aborted' : res.hit === true ? 'arrived' : res.hit === false ? 'missed' : 'ended' }); }
     probeCraft = null; probePlan = null; if (rs) rs(); setRate(r);   // a mission that drove the camera (Voyager) puts the view back
     if (cb) cb(result || { aborted: true });                     // lessons hear how the mission ended
   }
@@ -2509,6 +2522,7 @@
     if (!probePlan) return;
     const target = probePlan.target, name = target.name;
     if (EARTH.deleted || target.deleted){ abortProbe('🚀 Mission scrubbed — a body was lost'); return; }
+    if (probeCraft && probeCraft.crashed){ finishProbe({ crashed: probeCraft.crashed }); return; }   // flew into a planet (the feed already said so)
     if (probeCraft && !probes.includes(probeCraft)){ finishProbe({ aborted: true }); return; }   // a reset wiped the craft mid-cruise
     if (probePlan.phase === 'arm') return;                     // a lesson fires it by hand
     if (probePlan.voyager && probePlan.phase === 'wait'){       // Voyager launches on its own date, not on an alignment
@@ -2634,7 +2648,7 @@
     }
   }
   function voyTodayCard(pr, date, rSun, vk, vEsc){                         // today: this flight beside the real one, in the inlay; time pauses
-    setRate(0);
+    setRate(0); trackEv('mission_today', { mission: probePlan.mname });
     const voy = probePlan.voy, realAU = voy.realAU(date);
     document.getElementById('voy-today-title').textContent = `${fmtVoyDate(date)} · ${Math.round(date - voy.epoch)} years out`;
     document.getElementById('vc-au-s').textContent = rSun.toFixed(0) + ' AU';   document.getElementById('vc-au-r').textContent = realAU.toFixed(0) + ' AU';
@@ -2664,6 +2678,7 @@
     arrangeGrandTour(); resetView(); sfx('capture');
     if (!startProbe(JUPITER, Object.assign({ voyager: true }, opts || {}))) return false;
     const plan = probePlan;
+    plan.mname = 'voyager' + n; trackEv('mission_start', { mission: plan.mname });
     plan.voy = voy; plan.traj = traj; plan.route = traj.route.map(l => ({ p: planets.find(q => q.name === l.p), off: l.off }));
     plan.voyLaunchAt = t; plan.draw = voyDraw;
     plan.restore = () => { if (plan.camSaved){ viewOpts.scale = plan.camSaved.scale; refit(); syncViewPanel(); } follow = null; zoom = 1; voyPanel.hidden = true; };
@@ -3336,10 +3351,14 @@
     if (!v){ const vc = Math.sqrt(MU_E/PARK_R)*1.4; v = [0, vc]; }   // degenerate fallback
     moonMission = { t: 0, done: false, arrived: false, closest: Infinity, lastTs: performance.now(),
                     probe: { x: p0[0], y: p0[1], vx: v[0], vy: v[1] }, trail: [] };
+    trackEv('mission_start', { mission: 'moon' });
     msgFx = [];                                                  // rings here are screen-space; don't mix with world-space ones
     sfx('launch');
   }
-  function exitMoon(){ moonView = false; moonMission = null; appEl.classList.remove('moon-mode'); moonExit.hidden = true; msgFx = []; }
+  function exitMoon(){
+    if (moonMission) trackEv('mission_end', { mission: 'moon', outcome: moonMission.arrived ? 'arrived' : moonMission.t >= EM_T ? 'missed' : 'left' });
+    moonView = false; moonMission = null; appEl.classList.remove('moon-mode'); moonExit.hidden = true; msgFx = [];
+  }
   // integrate the probe forward by `dtSim` seconds under Earth + Moon gravity
   function stepMoonProbe(dtSim){
     const m = moonMission, pr = m.probe, h = 40;                 // 40 s internal step
@@ -3496,12 +3515,12 @@
   function syncPause(){ const b = document.querySelector('#dock [data-act="pause"]'); if (b) b.innerHTML = (timeRate === 0 ? SVG_PLAY : SVG_PAUSE); }
   function faster(){ setRate(timeRate <= 0 ? (timeRate >= -1 ? 1 : Math.round(timeRate/2)) : Math.min(32, timeRate*2)); }
   function slower(){ setRate(timeRate >= 0 ? (timeRate <= 1 ? -1 : Math.round(timeRate/2)) : Math.max(-32, timeRate*2)); }
-  function earthView(){ if (placeMode) exitPlace(); follow = EARTH; if (zoom < 5) zoom = 5; }   // the planet view can't host placement (no ghost, no drag)
+  function earthView(){ if (placeMode) exitPlace(); follow = EARTH; if (zoom < 5) zoom = 5; sandbox('earth_view'); }   // the planet view can't host placement (no ghost, no drag)
   function resetView(){ follow = null; zoom = 1; }
   function togglePause(){ setRate(timeRate !== 0 ? 0 : lastRate); }
   // the data drawer (the old always-on table) — open state persists
   function setDrawer(open){
-    drawer.hidden = !open;
+    drawer.hidden = !open; if (open) sandbox('data_table');
     try { localStorage.setItem('ssDataOpen', open ? '1' : '0'); } catch(e){}
   }
   try { if (localStorage.getItem('ssDataOpen') === '1') drawer.hidden = false; } catch(e){}
@@ -3520,7 +3539,7 @@
     else if (e.key === 'm' || e.key === 'M') toggleMute();
     else if (e.key === 'd' || e.key === 'D') setDrawer(drawer.hidden);
     else if (e.key === '0') resetView();
-    else if (e.key === 'r' || e.key === 'R') reset();
+    else if (e.key === 'r' || e.key === 'R'){ sandbox('reset'); reset(); }
   });
 
   // ---- the dock: mini-planet chips + action buttons ----
@@ -3707,7 +3726,7 @@
     else if (act === 'slower') slower();
     else if (act === 'faster') faster();
     else if (act === 'resetview') resetView();
-    else if (act === 'reset') reset();
+    else if (act === 'reset'){ sandbox('reset'); reset(); }
     else if (act === 'data') setDrawer(drawer.hidden);
     else if (act === 'view'){ viewPanel.hidden = !viewPanel.hidden; if (!viewPanel.hidden) placeViewPanel(); }
   });
@@ -3737,7 +3756,7 @@
     }
   }
   function setViewOpt(k){
-    viewOpts[k] = !viewOpts[k];
+    viewOpts[k] = !viewOpts[k]; sandbox('view_' + k + (viewOpts[k] ? '_on' : '_off'));
     try { localStorage.setItem('ssViewOpts', JSON.stringify(viewOpts)); } catch(e){}
     if (k === 'scale') refit();
     syncViewPanel();

@@ -125,6 +125,23 @@ async function listSites(token) {
     return body.siteEntry || [];
 }
 
+// Google's URL Inspection verdict for one page — the difference between "not ranking"
+// and "never crawled", which on this domain is usually the answer.
+async function inspectUrl(token, siteUrl, url) {
+    const r = await fetch('https://searchconsole.googleapis.com/v1/urlInspection/index:inspect', {
+        method: 'POST', headers: { Authorization: `Bearer ${token}`, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inspectionUrl: url, siteUrl, languageCode: 'en-US' }),
+    });
+    const b = await r.json();
+    if (!r.ok) throw new Error(`${r.status} ${(b.error && b.error.message) || ''}`.slice(0, 160));
+    return b.inspectionResult.indexStatusResult || {};
+}
+// The pages whose index status decides whether the site can grow: the hub, the
+// pages built for a query, and the ones Search Console listed as never indexed.
+// Edit freely; each costs one inspection call (quota 2,000/day).
+const INDEX_CANARIES = ['/', '/solar-system/', '/solitaire/', '/mahjong/', '/roulette/', '/connect-dots/', '/chess/', '/blackjack/',
+    '/printables/', '/printables/dots-and-boxes-grid/', '/printables/football-squares/', '/utilities/', '/utilities/tournament-generator/', '/feedback/'];
+
 async function gscQuery(token, siteUrl, range, dimensions, rowLimit = 1000, dataState = 'final') {
     const body = await api(
         token,
@@ -292,6 +309,24 @@ async function main() {
                 for (const r of bestPages.slice(0, 8)) console.log(`    ${r.page.replace(/^https:\/\/limestonegames\.com/, '').padEnd(42)} ${String(r.clicks).padStart(2)} clicks / ${String(r.impressions).padStart(4)} impr / pos ${r.position.toFixed(1)}`);
             }
             console.log();
+        }
+
+        // ---- Index canaries: is Google even crawling the pages that matter? ----
+        {
+            console.log('Index canaries (URL Inspection):');
+            console.log(`  ${'page'.padEnd(38)} ${'verdict'.padEnd(8)} ${'coverage'.padEnd(40)} ${'last crawl'.padEnd(12)} sitemap refs`);
+            let indexed = 0;
+            for (const p of INDEX_CANARIES) {
+                try {
+                    const i = await inspectUrl(token, site, 'https://limestonegames.com' + p);
+                    const ok = i.verdict === 'PASS'; if (ok) indexed++;
+                    const age = i.lastCrawlTime ? Math.round((Date.now() - Date.parse(i.lastCrawlTime)) / 86400000) + ' d ago' : 'never';
+                    console.log(`  ${p.padEnd(38)} ${(ok ? 'indexed' : (i.verdict || '?').toLowerCase()).padEnd(8)} ${String(i.coverageState || '').slice(0, 40).padEnd(40)} ${age.padEnd(12)} ${(i.sitemap || []).length ? 'yes' : 'NO '}     ${(i.referringUrls || []).length}`);
+                } catch (err) {
+                    console.log(`  ${p.padEnd(38)} inspection failed: ${err.message}`);
+                }
+            }
+            console.log(`  ${indexed}/${INDEX_CANARIES.length} canaries indexed. "never" under last crawl means Google has not fetched the page at all — request indexing for it in Search Console.\n`);
         }
 
         const [queries, pages, dates, countries, devices] = await Promise.all([
