@@ -226,26 +226,45 @@ class GameScene extends Phaser.Scene {
         const ey = vfx.EARTH_Y;
         const r = vfx.EARTH_RADIUS;
 
-        // Earth body
-        this._earth = this.add.circle(ex, ey, r, CONFIG.COLORS.EARTH, 0.8);
-        this._earth.setDepth(0);
+        // Bake the globe once at high resolution: ocean, continents, clouds and night side.
+        const key = 'lunar-earth-detailed';
+        if (!this.textures.exists(key)) {
+            const texture = this.textures.createCanvas(key, 256, 256);
+            const ctx = texture.context;
+            const glow = ctx.createRadialGradient(128,128,94,128,128,126);
+            glow.addColorStop(0,'rgba(91,185,255,0.45)');
+            glow.addColorStop(1,'rgba(51,141,255,0)');
+            ctx.fillStyle=glow; ctx.fillRect(0,0,256,256);
+            ctx.save(); ctx.beginPath(); ctx.arc(128,128,96,0,Math.PI*2); ctx.clip();
+            const ocean=ctx.createRadialGradient(88,78,5,140,140,130);
+            ocean.addColorStop(0,'#68bddd'); ocean.addColorStop(.5,'#21668e'); ocean.addColorStop(1,'#071a37');
+            ctx.fillStyle=ocean;ctx.fillRect(0,0,256,256);
+            const continents = [
+                [[52,70],[76,49],[110,51],[124,68],[111,82],[117,95],[97,107],[86,126],[71,106],[65,86]],
+                [[96,125],[117,129],[133,149],[122,170],[113,182],[108,200],[96,178],[99,156],[87,139]],
+                [[156,55],[185,63],[213,89],[203,106],[182,103],[175,120],[154,112],[140,92]],
+                [[163,130],[184,143],[182,167],[168,183],[153,160]]
+            ];
+            ctx.fillStyle='#719989';
+            continents.forEach(points=>{ctx.beginPath();points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fill();});
+            ctx.lineCap='round';
+            for(let i=0;i<34;i++) {
+                ctx.strokeStyle=`rgba(231,248,255,${0.12+(i%4)*0.08})`;
+                ctx.lineWidth=2+i%4;
+                ctx.beginPath();
+                ctx.ellipse(95+(i*31)%75,55+(i*23)%145,18+i%22,4+i%8,-.35,0.1,2.7);
+                ctx.stroke();
+            }
+            const night=ctx.createLinearGradient(68,65,204,155);
+            night.addColorStop(0,'rgba(0,5,18,0)');night.addColorStop(.45,'rgba(0,5,18,0.08)');
+            night.addColorStop(.75,'rgba(0,5,18,0.75)');night.addColorStop(1,'rgba(0,5,18,0.98)');
+            ctx.fillStyle=night;ctx.fillRect(0,0,256,256);ctx.restore();
+            ctx.strokeStyle='rgba(145,219,255,.55)';ctx.lineWidth=1.5;
+            ctx.beginPath();ctx.arc(128,128,96,0,Math.PI*2);ctx.stroke();
+            texture.refresh();
+        }
+        this._earth = this.add.image(ex, ey, key).setDisplaySize(r * 3, r * 3).setDepth(0);
 
-        // Simple land mass overlay
-        const earthDetail = this.add.graphics();
-        earthDetail.setDepth(0);
-        earthDetail.fillStyle(CONFIG.COLORS.EARTH_LAND, 0.3);
-        // A few irregular "continent" patches
-        earthDetail.fillEllipse(ex - 8, ey - 5, 18, 14);
-        earthDetail.fillEllipse(ex + 12, ey + 8, 14, 10);
-        earthDetail.fillEllipse(ex - 2, ey + 14, 10, 8);
-
-        // Atmospheric glow (soft circle behind earth)
-        const earthGlow = this.add.circle(vfx.EARTH_X, vfx.EARTH_Y, r + 8, CONFIG.COLORS.EARTH_GLOW, 0.15);
-        earthGlow.setDepth(0);
-
-        // Crescent shadow (dark circle offset to simulate lighting)
-        const shadow = this.add.circle(ex + r * 0.35, ey - r * 0.1, r * 0.95, 0x000011, 0.6);
-        shadow.setDepth(0);
     }
 
     // --- DUST MOTES ---

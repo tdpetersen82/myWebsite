@@ -102,110 +102,44 @@ class Lander {
         const w = this.width;
         const h = this.height;
 
-        // Body points
-        const top = rotate(0, -h / 2);
-        const topLeft = rotate(-w * 0.3, -h / 3);
-        const topRight = rotate(w * 0.3, -h / 3);
-        const midLeft = rotate(-w / 2, 0);
-        const midRight = rotate(w / 2, 0);
-        const botLeft = rotate(-w / 2, h / 3);
-        const botRight = rotate(w / 2, h / 3);
-        const nozzle = rotate(0, h / 2);
-
-        // Main body fill
-        graphics.fillStyle(CONFIG.COLORS.LANDER_BODY, 1);
-        graphics.beginPath();
-        graphics.moveTo(top.x, top.y);
-        graphics.lineTo(topRight.x, topRight.y);
-        graphics.lineTo(midRight.x, midRight.y);
-        graphics.lineTo(botRight.x, botRight.y);
-        graphics.lineTo(nozzle.x, nozzle.y);
-        graphics.lineTo(botLeft.x, botLeft.y);
-        graphics.lineTo(midLeft.x, midLeft.y);
-        graphics.lineTo(topLeft.x, topLeft.y);
-        graphics.closePath();
-        graphics.fillPath();
-
-        // Specular highlight — thin bright line along top-left edge
-        graphics.lineStyle(1, 0xffffff, 0.35);
-        graphics.beginPath();
-        graphics.moveTo(top.x, top.y);
-        graphics.lineTo(topLeft.x, topLeft.y);
-        graphics.lineTo(midLeft.x, midLeft.y);
-        graphics.strokePath();
-
-        // Body outline
-        graphics.lineStyle(1.5, CONFIG.COLORS.LANDER_STROKE, 1);
-        graphics.beginPath();
-        graphics.moveTo(top.x, top.y);
-        graphics.lineTo(topRight.x, topRight.y);
-        graphics.lineTo(midRight.x, midRight.y);
-        graphics.lineTo(botRight.x, botRight.y);
-        graphics.lineTo(nozzle.x, nozzle.y);
-        graphics.lineTo(botLeft.x, botLeft.y);
-        graphics.lineTo(midLeft.x, midLeft.y);
-        graphics.lineTo(topLeft.x, topLeft.y);
-        graphics.closePath();
-        graphics.strokePath();
-
-        // Landing legs
-        const legL1 = rotate(-w / 2, h / 3);
-        const legL2 = rotate(-w * 0.7, h / 2 + 4);
-        const legR1 = rotate(w / 2, h / 3);
-        const legR2 = rotate(w * 0.7, h / 2 + 4);
-
-        graphics.lineStyle(1.5, CONFIG.COLORS.LANDER_STROKE, 0.8);
-        graphics.beginPath();
-        graphics.moveTo(legL1.x, legL1.y);
-        graphics.lineTo(legL2.x, legL2.y);
-        graphics.moveTo(legR1.x, legR1.y);
-        graphics.lineTo(legR2.x, legR2.y);
-        graphics.strokePath();
-
-        // Leg feet
-        const footSize = 3;
-        const footLL = rotate(-w * 0.7 - footSize, h / 2 + 4);
-        const footLR = rotate(-w * 0.7 + footSize, h / 2 + 4);
-        const footRL = rotate(w * 0.7 - footSize, h / 2 + 4);
-        const footRR = rotate(w * 0.7 + footSize, h / 2 + 4);
-
-        graphics.beginPath();
-        graphics.moveTo(footLL.x, footLL.y);
-        graphics.lineTo(footLR.x, footLR.y);
-        graphics.moveTo(footRL.x, footRL.y);
-        graphics.lineTo(footRR.x, footRR.y);
-        graphics.strokePath();
-
-        // Window with glow effect — concentric circles
-        const windowPos = rotate(0, -h / 5);
-
-        // Outer glow layers
-        graphics.fillStyle(CONFIG.COLORS.LANDER_WINDOW_GLOW, 0.06);
-        graphics.fillCircle(windowPos.x, windowPos.y, 9);
-        graphics.fillStyle(CONFIG.COLORS.LANDER_WINDOW_GLOW, 0.1);
-        graphics.fillCircle(windowPos.x, windowPos.y, 7);
-        graphics.fillStyle(CONFIG.COLORS.LANDER_WINDOW_GLOW, 0.15);
-        graphics.fillCircle(windowPos.x, windowPos.y, 5);
-
-        // Window core
-        graphics.fillStyle(0x4488cc, 0.8);
-        graphics.fillCircle(windowPos.x, windowPos.y, 3);
-        graphics.lineStyle(1, 0x88ccff, 0.9);
-        graphics.strokeCircle(windowPos.x, windowPos.y, 3);
-
-        // Bright specular dot on window
-        const specDot = rotate(1, -h / 5 - 1);
-        graphics.fillStyle(0xffffff, 0.7);
-        graphics.fillCircle(specDot.x, specDot.y, 0.8);
-
-        // Nozzle glow when thrusting
-        if (this.thrusting) {
-            const glowAlpha = 0.15 + Math.sin(Date.now() / 50) * 0.1;
-            graphics.fillStyle(0xff6600, glowAlpha);
-            graphics.fillCircle(nozzle.x, nozzle.y, 8);
-            graphics.fillStyle(0xffaa00, glowAlpha * 0.7);
-            graphics.fillCircle(nozzle.x, nozzle.y, 12);
+        // Faceted ascent cabin and gold-foil descent stage, within the original hull.
+        const polygon = (points, color, stroke = 0xadc2d1) => {
+            graphics.fillStyle(color, 1);
+            graphics.lineStyle(0.7, stroke, 0.9);
+            graphics.beginPath();
+            points.forEach(([x, y], i) => {
+                const p = rotate(x, y);
+                if (i) graphics.lineTo(p.x, p.y); else graphics.moveTo(p.x, p.y);
+            });
+            graphics.closePath(); graphics.fillPath(); graphics.strokePath();
+        };
+        const line = (x1, y1, x2, y2, color, thickness = 1) => {
+            const a = rotate(x1, y1), b = rotate(x2, y2);
+            graphics.lineStyle(thickness, color, 1);
+            graphics.lineBetween(a.x, a.y, b.x, b.y);
+        };
+        polygon([[-w*.3,-h/3],[0,-h/2],[w*.3,-h/3],[w/2,0],[-w/2,0]], 0xc9d6dd);
+        polygon([[0,-h/2],[w*.3,-h/3],[w/2,0],[0,0]], 0x667d90);
+        polygon([[-w/2,0],[w/2,0],[w/2,h/3],[-w/2,h/3]], 0xb98a38, 0xf2cc79);
+        polygon([[-w/2,0],[-2,2],[-w/2,h/3]], 0xf4d282, 0xc79b4e);
+        polygon([[2,1],[w/2,h/3],[-3,h/3]], 0x765126, 0xc79b4e);
+        polygon([[-3,h/3],[3,h/3],[5,h/2],[-5,h/2]], 0x34404f);
+        polygon([[-6,-7],[-1,-9],[-1,-2],[-6,-2]], 0x153e59, 0x89e4f1);
+        polygon([[2,-9],[6,-6],[6,-2],[2,-2]], 0x102a40, 0x6dbdcd);
+        line(-5,-6,-2,-7,0xe1ffff,0.8);
+        for (const side of [-1, 1]) {
+            line(side*w*.4, 1, side*w*.7, h/2+4, 0xe0d8b9, 1.4);
+            line(side*2,h/3,side*w*.7,h/2+4,0x8197a5,0.8);
+            line(side*w*.7-3,h/2+4,side*w*.7+3,h/2+4,0xf0cf8d,2);
+            line(side*w*.45,-2,side*w*.62,-2,0xd5e7ed,2);
         }
+        line(0,-h/2,0,-h/2-3,0xc1d9e3,0.8);
+        if (this.thrusting) {
+            const nozzle = rotate(0,h/2);
+            graphics.fillStyle(0x73dfff,0.18);
+            graphics.fillCircle(nozzle.x,nozzle.y,7);
+        }
+
     }
 
     // RCS position helpers — returns world positions for puff emitters

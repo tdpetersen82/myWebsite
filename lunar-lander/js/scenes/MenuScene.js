@@ -43,7 +43,7 @@ class MenuScene extends Phaser.Scene {
         }).setOrigin(0.5);
 
         // Subtitle
-        this.add.text(w / 2, 120, 'A Classic Arcade Game', {
+        this.add.text(w / 2, 120, 'PRECISION DESCENT / LUNAR OPERATIONS', {
             fontSize: '16px',
             fontFamily: 'Courier New, monospace',
             color: '#99bbdd'
@@ -155,56 +155,14 @@ class MenuScene extends Phaser.Scene {
         const g = this.add.graphics();
         g.setDepth(2);
 
-        // Body
-        g.fillStyle(CONFIG.COLORS.LANDER_BODY, 1);
-        g.lineStyle(2, CONFIG.COLORS.LANDER_STROKE, 1);
-        g.beginPath();
-        g.moveTo(cx, cy - 25);
-        g.lineTo(cx + 15, cy - 5);
-        g.lineTo(cx + 18, cy + 8);
-        g.lineTo(cx, cy + 18);
-        g.lineTo(cx - 18, cy + 8);
-        g.lineTo(cx - 15, cy - 5);
-        g.closePath();
-        g.fillPath();
-        g.strokePath();
-
-        // Specular highlight
-        g.lineStyle(1, 0xffffff, 0.4);
-        g.beginPath();
-        g.moveTo(cx, cy - 25);
-        g.lineTo(cx - 15, cy - 5);
-        g.strokePath();
-
-        // Legs
-        g.lineStyle(2, CONFIG.COLORS.LANDER_STROKE, 0.8);
-        g.beginPath();
-        g.moveTo(cx - 18, cy + 8);
-        g.lineTo(cx - 25, cy + 22);
-        g.moveTo(cx + 18, cy + 8);
-        g.lineTo(cx + 25, cy + 22);
-        g.strokePath();
-
-        // Feet
-        g.beginPath();
-        g.moveTo(cx - 30, cy + 22);
-        g.lineTo(cx - 20, cy + 22);
-        g.moveTo(cx + 20, cy + 22);
-        g.lineTo(cx + 30, cy + 22);
-        g.strokePath();
-
-        // Window
-        g.fillStyle(0x66bbff, 0.3);
-        g.fillCircle(cx, cy - 3, 8);
-        g.fillStyle(0x88ccff, 0.6);
-        g.fillCircle(cx, cy - 3, 5);
-        g.lineStyle(1, 0xaaddff, 1);
-        g.strokeCircle(cx, cy - 3, 5);
+        const preview = new Lander(this, 0, 0);
+        preview.draw(g);
+        g.setPosition(cx, cy).setScale(2.2);
 
         // Hover animation
         this.tweens.add({
             targets: g,
-            y: { from: -5, to: 5 },
+            y: { from: cy - 5, to: cy + 5 },
             duration: 2200,
             yoyo: true,
             repeat: -1,
@@ -224,7 +182,7 @@ class MenuScene extends Phaser.Scene {
             pg.destroy();
         }
 
-        const flameEmitter = this.add.particles(cx, cy + 18, 'vfx_circle', {
+        const flameEmitter = this.add.particles(cx, cy + 27, 'vfx_circle', {
             speed: { min: 40, max: 100 },
             lifespan: 350,
             scale: { start: 0.8, end: 0 },

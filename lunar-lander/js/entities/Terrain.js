@@ -208,6 +208,24 @@ class Terrain {
             graphics.fillPath();
         }
 
+        // Directional rock faces follow the actual collision silhouette.
+        for (let i = 0; i < this.points.length - 1; i++) {
+            const a = this.points[i], b = this.points[i + 1];
+            const lit = b.y > a.y;
+            graphics.fillStyle(lit ? 0xc1ced5 : 0x101c2d, lit ? 0.12 : 0.22);
+            graphics.fillTriangle(a.x, a.y + 2, b.x, b.y + 2,
+                (a.x + b.x) / 2, Math.min(h, Math.max(a.y,b.y) + 75 + i % 4 * 19));
+        }
+        // Small, stable mineral flecks; drawn once, never regenerated per frame.
+        for (let i = 0; i < 2400; i++) {
+            const x = (i * 137.508) % w;
+            const surface = this.getHeightAt(x);
+            const y = surface + 5 + ((i * 73.17) % Math.max(1, h - surface));
+            if (y > h) continue;
+            graphics.fillStyle(i % 3 ? 0x101925 : 0xd2dae0, 0.12);
+            graphics.fillRect(x, y, i % 4 === 0 ? 2 : 1, 1);
+        }
+
         // --- Subsurface strata lines ---
         const vfx = CONFIG.VFX;
         for (let s = 0; s < vfx.STRATA_LINES; s++) {

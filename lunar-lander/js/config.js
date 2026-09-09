@@ -59,11 +59,11 @@ const CONFIG = {
 
     // Colors
     COLORS: {
-        SKY: 0x0a0a2e,
-        TERRAIN: 0x8888aa,
-        TERRAIN_DARK: 0x555577,
+        SKY: 0x030913,
+        TERRAIN: 0x596977,
+        TERRAIN_DARK: 0x202b3b,
         TERRAIN_LIGHT: 0xaaaacc,
-        TERRAIN_STROKE: 0xccccdd,
+        TERRAIN_STROKE: 0xa4b7c5,
         TERRAIN_EDGE_GLOW: 0xaaaacc,
         LANDER_BODY: 0xdddddd,
         LANDER_STROKE: 0xffffff,
