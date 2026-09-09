@@ -400,34 +400,64 @@
             drawBackground() {
                 const g = this.add.graphics();
 
-                // Row colours (from bottom row 0 up to row 12)
+                // A cool river, charcoal asphalt and warm grassy refuges.
                 for (let r = 0; r < ROWS; r++) {
                     const y = GAME_H - (r + 1) * CELL_H;
-                    let color;
-                    if (r === 0)       color = 0x2e7d32; // safe start
-                    else if (r <= 5)   color = 0x37474f; // road
-                    else if (r === 6)  color = 0x2e7d32; // median
-                    else if (r <= 11)  color = 0x1565c0; // river
-                    else               color = 0x1b5e20; // home row
-                    g.fillStyle(color, 1);
-                    g.fillRect(0, y, GAME_W, CELL_H);
-                }
-
-                // Road lane lines
-                g.lineStyle(1, 0xffffff, 0.25);
-                for (let r = 1; r <= 5; r++) {
-                    const y = GAME_H - r * CELL_H;
-                    for (let x = 0; x < GAME_W; x += 40) {
-                        g.strokeLineShape(new Phaser.Geom.Line(x, y, x + 20, y));
+                    const grass = r === 0 || r === 6 || r === 12;
+                    const water = r >= 7 && r <= 11;
+                    g.fillStyle(grass ? 0x527b3c : water ? 0x176978 : 0x303c4b, 1);
+                    g.fillRect(0, y, GAME_W, CELL_H + 1);
+                    if (water) {
+                        for(let band=0;band<8;band++) {
+                            g.fillStyle(0x092f4c, .025 + band*.009);
+                            g.fillRect(0,y+band*CELL_H/8,GAME_W,CELL_H/8+1);
+                        }
+                        for(let i=0;i<28;i++) {
+                            const x=(i*113+r*37)%GAME_W, ry=y+9+(i*17)%35;
+                            g.lineStyle(1.3,0x8addd7,.17);
+                            g.lineBetween(x,ry,x+12+i%16,ry);
+                            g.lineStyle(1,0x092e47,.2);
+                            g.lineBetween(x+5,ry+4,x+25,ry+4);
+                        }
+                    } else if (grass) {
+                        g.fillStyle(0x71964d,1);g.fillRect(0,y,GAME_W,4);
+                        g.fillStyle(0x284b37,1);g.fillRect(0,y+CELL_H-5,GAME_W,5);
+                        for(let i=0;i<100;i++) {
+                            const x=(i*97+r*31)%GAME_W, gy=y+10+(i*13)%32;
+                            g.lineStyle(1.5,i%2?0x88a959:0x395f37,.65);
+                            g.lineBetween(x-2,gy,x,gy+4);g.lineBetween(x,gy+4,x+3,gy-2);
+                            if(i%13===0) {
+                                g.fillStyle(0xf4d18b,.85);g.fillCircle(x,gy,1.8);
+                            }
+                        }
+                    } else {
+                        // Fine aggregate and inset dashed lane dividers.
+                        for(let i=0;i<90;i++) {
+                            g.fillStyle(i%2?0x81929b:0x172331,.12);
+                            g.fillRect((i*83+r*19)%GAME_W,y+5+(i*11)%44,2,1);
+                        }
+                        if(r>1) for(let x=12;x<GAME_W;x+=48) {
+                            g.fillStyle(0x142431,.5);g.fillRoundedRect(x,y+CELL_H-2,24,4,1);
+                            g.fillStyle(0xc6d2c8,.45);g.fillRoundedRect(x,y+CELL_H-2,24,2,1);
+                        }
                     }
                 }
+                // Curbs clearly separate traffic from the two safe banks.
+                for(const y of [GAME_H-CELL_H,GAME_H-6*CELL_H]) {
+                    g.fillStyle(0x172b32,.5);g.fillRect(0,y-1,GAME_W,6);
+                    for(let x=0;x<GAME_W;x+=25) {
+                        g.fillStyle(x%50?0xb2b6a3:0x84958e,1);
+                        g.fillRect(x,y,24,3);
+                    }
+                }
+                this.waterShimmer = this.add.graphics().setDepth(0);
+                for(let i=0;i<42;i++) {
+                    const x=(i*137)%GAME_W, y=CELL_H+12+(i*47)%(CELL_H*5-24);
+                    this.waterShimmer.lineStyle(1.5,0xb4eee0,.18);
+                    this.waterShimmer.lineBetween(x,y,x+10+i%15,y);
+                }
+                this.tweens.add({targets:this.waterShimmer,alpha:.25,duration:1800,yoyo:true,repeat:-1,ease:'Sine.easeInOut'});
 
-                // River-bank edges
-                g.lineStyle(2, 0x4e342e, 0.6);
-                const riverBottom = GAME_H - 7 * CELL_H;
-                const riverTop = GAME_H - 12 * CELL_H;
-                g.strokeLineShape(new Phaser.Geom.Line(0, riverBottom, GAME_W, riverBottom));
-                g.strokeLineShape(new Phaser.Geom.Line(0, riverTop, GAME_W, riverTop));
             }
 
             // ─── Home Slots ───
@@ -439,8 +469,12 @@
                 for (let i = 0; i < HOME_SLOTS; i++) {
                     const g = this.add.graphics();
                     const sx = slotPositions[i];
-                    g.lineStyle(2, 0x81c784, 0.8);
-                    g.strokeRoundedRect(sx - CELL_W * 0.45, y - CELL_H * 0.4, CELL_W * 0.9, CELL_H * 0.8, 6);
+                    g.fillStyle(0x153f45,1);g.fillEllipse(sx,y+3,49,43);
+                    g.lineStyle(2,0x8bc9a0,.65);g.strokeEllipse(sx,y+2,46,40);
+                    g.fillStyle(0x8ab94f,1);g.fillEllipse(sx,y,39,34);
+                    g.fillStyle(0xb3d96b,.65);g.fillEllipse(sx-4,y-4,27,21);
+                    g.fillStyle(0x153f45,1);g.fillTriangle(sx,y,sx+20,y+6,sx+13,y+15);
+                    g.lineStyle(1,0x527e39,.6);g.lineBetween(sx-14,y-1,sx,y);
                     if (this.homeFilled[i]) {
                         this.drawMiniFrog(g, sx, y, 0.55);
                     }
@@ -485,12 +519,12 @@
                     cfg.types.forEach((type, i) => {
                         const w = type === 'truck' ? CELL_W * 2.5 : CELL_W * 1.5;
                         const x = i * cfg.gap + Math.random() * 40;
-                        const color = type === 'truck'
-                            ? Phaser.Display.Color.RandomRGB(100, 200).color
-                            : Phaser.Display.Color.RandomRGB(150, 255).color;
+                        const palette = [0xf2be55,0xe97768,0x67c8c7,0x9e9cdb,0xe6e9df];
+                        const color = palette[(cfg.row + i) % palette.length];
                         const g = this.add.graphics();
                         g.setDepth(2);
                         this.drawVehicle(g, type, w, color);
+                        g.scaleX = cfg.dir < 0 ? 1 : -1;
                         g.x = x;
                         g.y = baseY;
                         this.vehicles.push({
@@ -547,55 +581,87 @@
 
             drawVehicle(g, type, w, color) {
                 const h = CELL_H * 0.7;
-                g.fillStyle(color, 1);
-                g.fillRoundedRect(-w / 2, -h / 2, w, h, 5);
-                // Windshield
-                g.fillStyle(0xbbdefb, 0.7);
-                if (type === 'car') {
-                    g.fillRoundedRect(-w / 2 + 6, -h / 2 + 4, w * 0.3, h - 8, 3);
-                } else {
-                    g.fillRoundedRect(-w / 2 + 6, -h / 2 + 4, w * 0.15, h - 8, 3);
+                // Top-down vehicles: tires below body, glass, paint highlights and lamps.
+                g.fillStyle(0x101c29,.35);g.fillRoundedRect(-w/2+2,-h/2+5,w,h,8);
+                for(const x of [-w/2+13,w/2-13]) for(const y of [-h/2,h/2-5]) {
+                    g.fillStyle(0x111c27,1);g.fillRoundedRect(x-6,y,12,6,2);
+                    g.fillStyle(0x5f717e,1);g.fillRect(x-3,y+2,6,2);
                 }
-                // Wheels
-                g.fillStyle(0x212121, 1);
-                g.fillCircle(-w / 2 + 8, -h / 2 - 1, 4);
-                g.fillCircle(w / 2 - 8, -h / 2 - 1, 4);
-                g.fillCircle(-w / 2 + 8, h / 2 + 1, 4);
-                g.fillCircle(w / 2 - 8, h / 2 + 1, 4);
+                g.fillStyle(0x172633,1);g.fillRoundedRect(-w/2,-h/2+2,w,h-4,7);
+                g.fillStyle(color,1);g.fillRoundedRect(-w/2+1,-h/2+3,w-2,h-7,7);
+                g.fillStyle(0xffffff,.25);g.fillRoundedRect(-w/2+7,-h/2+4,w-14,3,1);
+                g.fillStyle(0x102b3c,.25);g.fillRoundedRect(-w/2+6,h/2-9,w-12,4,2);
+                if(type==='truck') {
+                    g.fillStyle(0x263d4c,1);g.fillRect(-w/2+29,-h/2+3,4,h-7);
+                    g.fillStyle(0xe2e7dd,1);g.fillRoundedRect(-w/2+35,-h/2+3,w-39,h-7,3);
+                    for(let x=-w/2+42;x<w/2-7;x+=9) {
+                        g.lineStyle(1,0x7c979e,.45);g.lineBetween(x,-h/2+7,x,h/2-8);
+                    }
+                    g.fillStyle(0x193f53,1);g.fillRoundedRect(-w/2+10,-h/2+7,11,h-16,2);
+                    g.fillStyle(0x90d5df,.8);g.fillRect(-w/2+11,-h/2+8,3,h-19);
+                } else {
+                    g.fillStyle(0x193f53,1);g.fillRoundedRect(-w*.26,-h/2+7,w*.49,h-16,5);
+                    g.fillStyle(0xa5e5e9,.75);g.fillRoundedRect(-w*.25,-h/2+8,6,h-18,2);
+                    g.fillStyle(color,1);g.fillRoundedRect(-w*.12,-h/2+7,w*.23,h-16,3);
+                    g.fillStyle(0xffffff,.24);g.fillRect(-w*.1,-h/2+8,w*.17,2);
+                    g.lineStyle(1,0x244252,.35);g.lineBetween(-w/2+6,-h/2+10,-w*.3,-h/2+10);
+                }
+                for(const y of [-h/2+7,h/2-12]) {
+                    g.fillStyle(0xfff0bc,1);g.fillRoundedRect(-w/2+1,y,4,6,1);
+                    g.fillStyle(0x9e3343,1);g.fillRoundedRect(w/2-5,y,3,6,1);
+                }
+                g.fillStyle(0xd4e0dc,.8);g.fillRect(-w/2,-5,2,10);
             }
 
             drawRiverObject(g, obj) {
                 g.clear();
-                const w = obj.w;
-                const h = obj.h;
-                if (obj.type === 'log') {
-                    g.fillStyle(0x6d4c41, 1);
-                    g.fillRoundedRect(-w / 2, -h / 2, w, h, 8);
-                    // Bark lines
-                    g.lineStyle(1, 0x4e342e, 0.5);
-                    for (let lx = -w / 2 + 15; lx < w / 2 - 10; lx += 18) {
-                        g.strokeLineShape(new Phaser.Geom.Line(lx, -h / 2 + 4, lx + 5, h / 2 - 4));
+                const w=obj.w,h=obj.h;
+                g.lineStyle(1.5,0xa0e4df,obj.submerged?.2:.32);
+                g.strokeEllipse(0,3,w+8,h+7);
+                if(obj.type==='log') {
+                    g.fillStyle(0x082f3b,.35);g.fillRoundedRect(-w/2,-h/2+5,w,h,10);
+                    g.fillStyle(0x5c382d,1);g.fillRoundedRect(-w/2,-h/2,w,h,9);
+                    g.fillStyle(0xa56d3f,1);g.fillRoundedRect(-w/2+2,-h/2+2,w-4,h-7,7);
+                    g.fillStyle(0xd19a57,.65);g.fillRoundedRect(-w/2+7,-h/2+3,w-14,4,2);
+                    for(let i=0;i<4;i++) {
+                        const y=-h/2+10+i*5;
+                        g.lineStyle(1.4,i%2?0xd19956:0x67432e,.7);
+                        for(let x=-w/2+15;x<w/2-12;x+=29) g.lineBetween(x,y,x+19,y+(i%2?1:-1));
                     }
-                    // Highlight
-                    g.fillStyle(0x8d6e63, 0.4);
-                    g.fillRoundedRect(-w / 2 + 3, -h / 2 + 3, w - 6, h * 0.3, 4);
+                    for(const x of [-w/2+6,w/2-6]) {
+                        g.fillStyle(0xd7ac6e,1);g.fillEllipse(x,0,10,h-5);
+                        g.lineStyle(1,0x875a36,.8);g.strokeEllipse(x,0,6,h-11);
+                        g.strokeEllipse(x,0,2,h-19);
+                    }
+                    g.fillStyle(0x617847,.85);g.fillEllipse(-w*.22,-h/2+5,20,5);
                 } else {
-                    // Turtles
-                    const alpha = obj.submerged ? 0.3 : 1;
-                    const count = Math.round(obj.len);
-                    const turtleSpacing = w / count;
-                    for (let t = 0; t < count; t++) {
-                        const tx = -w / 2 + turtleSpacing * (t + 0.5);
-                        const tr = Math.min(turtleSpacing * 0.38, h * 0.42);
-                        // Shell
-                        g.fillStyle(0x2e7d32, alpha);
-                        g.fillCircle(tx, 0, tr);
-                        // Shell pattern
-                        g.lineStyle(1, 0x1b5e20, alpha * 0.6);
-                        g.strokeCircle(tx, 0, tr * 0.6);
-                        // Head
-                        g.fillStyle(0x388e3c, alpha);
-                        g.fillCircle(tx + tr * 0.7, 0, tr * 0.35);
+                    const alpha=obj.submerged?.22:1;
+                    const count=Math.round(obj.len),spacing=w/count;
+                    for(let t=0;t<count;t++) {
+                        const tx=-w/2+spacing*(t+.5),tr=Math.min(spacing*.38,h*.42);
+                        const headX=tx+obj.dir*tr;
+                        for(const side of [-1,1]) for(const end of [-1,1]) {
+                            g.fillStyle(0x93b96a,alpha);g.fillEllipse(tx+end*tr*.65,side*tr*.8,10,7);
+                        }
+                        g.fillStyle(0xa6c977,alpha);g.fillEllipse(headX,0,12,10);
+                        g.fillStyle(0x213c36,alpha);g.fillEllipse(tx,2,tr*1.9,tr*1.95);
+                        g.fillStyle(0x537d4c,alpha);g.fillEllipse(tx,-1,tr*1.85,tr*1.75);
+                        g.lineStyle(1.2,0xa0bd6d,alpha*.85);
+                        g.strokeEllipse(tx,-1,tr*1.55,tr*1.45);
+                        g.beginPath();
+                        for(let i=0;i<=6;i++) {
+                            const angle=i*Math.PI/3, x=tx+Math.cos(angle)*tr*.48,y=-1+Math.sin(angle)*tr*.48;
+                            if(i)g.lineTo(x,y);else g.moveTo(x,y);
+                        }
+                        g.strokePath();
+                        for(let i=0;i<6;i++) {
+                            const angle=i*Math.PI/3;
+                            g.lineBetween(tx+Math.cos(angle)*tr*.48,-1+Math.sin(angle)*tr*.48,tx+Math.cos(angle)*tr*.78,-1+Math.sin(angle)*tr*.72);
+                        }
+                        g.fillStyle(0x172f32,alpha);g.fillCircle(headX+obj.dir*2,-2.5,1.2);
+                        if(obj.submerged) {
+                            g.lineStyle(1,0xb2efea,.5);g.strokeCircle(tx+4,-5,3);g.strokeCircle(tx-5,4,2);
+                        }
                     }
                 }
             }
@@ -616,40 +682,37 @@
 
             drawFrog(g, scale) {
                 g.clear();
-                const s = scale || 1;
-                const w = CELL_W * 0.75 * s;
-                const h = CELL_H * 0.7 * s;
-                // Body
-                g.fillStyle(0x4caf50, 1);
-                g.fillRoundedRect(-w / 2, -h / 2, w, h, 8 * s);
-                // Belly
-                g.fillStyle(0xa5d6a7, 0.6);
-                g.fillEllipse(0, h * 0.05, w * 0.55, h * 0.55);
-                // Eyes
-                g.fillStyle(0xffffff, 1);
-                g.fillCircle(-w * 0.28, -h * 0.3, 6 * s);
-                g.fillCircle(w * 0.28, -h * 0.3, 6 * s);
-                g.fillStyle(0x212121, 1);
-                g.fillCircle(-w * 0.28, -h * 0.3, 3 * s);
-                g.fillCircle(w * 0.28, -h * 0.3, 3 * s);
-                // Legs
-                g.fillStyle(0x388e3c, 1);
-                g.fillEllipse(-w * 0.45, h * 0.3, w * 0.25, h * 0.35);
-                g.fillEllipse(w * 0.45, h * 0.3, w * 0.25, h * 0.35);
+                this.paintFrog(g,0,0,scale || 1);
             }
 
-            drawMiniFrog(g, cx, cy, scale) {
-                const s = scale || 0.5;
-                const w = CELL_W * 0.75 * s;
-                const h = CELL_H * 0.7 * s;
-                g.fillStyle(0x4caf50, 1);
-                g.fillRoundedRect(cx - w / 2, cy - h / 2, w, h, 6 * s);
-                g.fillStyle(0xffffff, 1);
-                g.fillCircle(cx - w * 0.28, cy - h * 0.3, 4 * s);
-                g.fillCircle(cx + w * 0.28, cy - h * 0.3, 4 * s);
-                g.fillStyle(0x212121, 1);
-                g.fillCircle(cx - w * 0.28, cy - h * 0.3, 2 * s);
-                g.fillCircle(cx + w * 0.28, cy - h * 0.3, 2 * s);
+            paintFrog(g,cx,cy,s) {
+                const ellipse=(x,y,w,h,color,alpha=1)=>{g.fillStyle(color,alpha);g.fillEllipse(cx+x*s,cy+y*s,w*s,h*s);};
+                const circle=(x,y,r,color)=>{g.fillStyle(color,1);g.fillCircle(cx+x*s,cy+y*s,r*s);};
+                ellipse(0,5,37,30,0x122d31,.35);
+                for(const side of [-1,1]) {
+                    ellipse(side*13,9,13,17,0x397e43);
+                    ellipse(side*15,6,9,12,0x86c84f);
+                    ellipse(side*13,-5,10,8,0x62b747);
+                    for(let toe=0;toe<3;toe++) circle(side*(13+toe*2),14-toe*2,2,0xa5df66);
+                    circle(side*17,-7,2.5,0xa5df66);
+                }
+                ellipse(0,2,27,32,0x285e3c);
+                ellipse(0,0,26,31,0x7acb49);
+                ellipse(-3,-2,17,24,0xa1df5e);
+                ellipse(0,9,16,9,0xd3ed87);
+                for(const side of [-1,1]) {
+                    circle(side*9,-12,7,0x397f40);
+                    circle(side*9,-13,5.8,0xe6efaf);
+                    circle(side*9,-14,3.4,0x18333a);
+                    circle(side*9-1,-15.5,1.2,0xffffff);
+                }
+                g.lineStyle(1.2*s,0x3d783b,.9);
+                g.beginPath();g.moveTo(cx-6*s,cy-4*s);g.lineTo(cx,cy-2*s);g.lineTo(cx+6*s,cy-4*s);g.strokePath();
+                for(const [x,y] of [[-7,2],[6,3],[-4,6]])circle(x,y,1.5,0x61a93e);
+            }
+
+            drawMiniFrog(g,cx,cy,scale) {
+                this.paintFrog(g,cx,cy,scale || .5);
             }
 
             positionFrog(animate) {
