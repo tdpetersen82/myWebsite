@@ -36,7 +36,7 @@
     ['crossword-maker', 'svg'], ['farkle', 'svg'], ['hangman', 'svg'],
     ['missile-command', 'svg'],
     ['word-search', 'svg'], ['yahtzee', 'svg'], ['dogs', 'jpg'],
-    ['counting-critters', 'jpg'],
+    ['counting-critters', 'png'],
   ]);
 
   // Map of game id → localStorage key for personal best. If a key isn't here
@@ -176,7 +176,7 @@
     const hasShot = !!ext;
     const isRasterArt = game.id === 'dogs' || game.id === 'counting-critters';
     const isArt = ext === 'svg' || isRasterArt;
-    const imageVersion = isRasterArt ? '?v=20260909b' : '';
+    const imageVersion = isRasterArt ? '?v=20260909c' : '';
     const top = hasShot
       ? `<img class="shot-img${isArt ? ' is-art' : ''}" src="assets/thumbs/${game.id}.${ext}${imageVersion}" alt="${game.id === 'dogs' ? 'Three curious dogs beneath a question mark — Pup Quiz' : game.name + (isArt ? ' artwork' : ' screenshot')}" loading="lazy" decoding="async" width="600" height="600">`
       : `<div class="shot-ph" style="background:${game.color}22">${glyph(game, size === 's-tall' ? 84 : 56)}</div>`;
