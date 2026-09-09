@@ -15,6 +15,13 @@ class GameOverScene extends Phaser.Scene {
     }
 
     create() {
+        // Wait until the scene finishes recording its score, then show the shared panel.
+        this.time.delayedCall(0, () => window.ArcadeGameOver.show({
+            score: this.finalScore,
+            best: Number(localStorage.getItem(SIMON_CONFIG.HIGH_SCORE_KEY) || 0),
+            restart: () => this.scene.start('GameScene', { difficulty: this.difficultyKey })
+        }));
+        this.events.once('shutdown', () => window.ArcadeGameOver.hide());
         const { WIDTH, HEIGHT } = SIMON_CONFIG;
         const highScore = parseInt(localStorage.getItem(SIMON_CONFIG.HIGH_SCORE_KEY) || 0);
         const isNewBest = this.finalScore >= highScore && this.finalScore > 0;

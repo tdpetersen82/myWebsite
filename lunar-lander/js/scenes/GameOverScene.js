@@ -16,6 +16,19 @@ class GameOverScene extends Phaser.Scene {
     }
 
     create() {
+        // Successful landings and crashes with lives left still use the level report.
+        if (!this.result.success && this.lives <= 0) {
+            this.time.delayedCall(0, () => window.ArcadeGameOver.show({
+                score: this.score,
+                best: Number(localStorage.getItem('lunarLanderHighScore') || 0),
+                restart: () => this.scene.start('GameScene', {
+                    gravityMod: this.gravityMod, fuelMod: this.fuelMod,
+                    difficultyKey: this.difficultyKey, level: 1, score: 0,
+                    lives: CONFIG.STARTING_LIVES
+                })
+            }));
+            this.events.once('shutdown', () => window.ArcadeGameOver.hide());
+        }
         const w = CONFIG.WIDTH;
         const h = CONFIG.HEIGHT;
         const result = this.result;

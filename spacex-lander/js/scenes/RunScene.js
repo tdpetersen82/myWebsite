@@ -483,6 +483,10 @@ class RunScene extends Phaser.Scene {
         }
 
         this._showSummaryCard(newHi);
+        window.ArcadeGameOver.show({
+            score: this.runScore, best: Math.max(prevHi, this.runScore),
+            restart: () => this._restartRun()
+        });
     }
 
     // Confirm = restart a fresh run (from crash summary or anytime mid-air it's ignored)
@@ -491,6 +495,7 @@ class RunScene extends Phaser.Scene {
     }
 
     _restartRun() {
+        window.ArcadeGameOver.hide();
         if (this._leaving) return;   // guard against double restart in one step
         this._leaving = true;
         if (this.audio) {

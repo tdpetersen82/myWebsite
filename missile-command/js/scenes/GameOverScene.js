@@ -21,6 +21,13 @@ class GameOverScene extends Phaser.Scene {
     }
 
     create() {
+        // Wait until the scene finishes recording its score, then show the shared panel.
+        this.time.delayedCall(0, () => window.ArcadeGameOver.show({
+            score: this.finalScore,
+            best: Number(localStorage.getItem('missileCommandHighScore') || 0),
+            restart: () => this.scene.start('GameScene', { difficulty: this.difficulty })
+        }));
+        this.events.once('shutdown', () => window.ArcadeGameOver.hide());
         this.cameras.main.fadeIn(500, 0, 0, 0);
 
         const cx = CONFIG.WIDTH / 2;

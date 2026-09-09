@@ -1,0 +1,18 @@
+.arcade-end{position:fixed;inset:0;margin:auto;width:min(520px,calc(100vw - 24px));max-height:calc(100dvh - 24px);overflow:auto;box-sizing:border-box;padding:28px;border:1px solid #778bc05c;border-radius:20px;background:linear-gradient(145deg,#202a40,#101723);color:#edf2ff;box-shadow:0 24px 90px #0009;text-align:center;font-family:Inter,system-ui,sans-serif;}
+.arcade-end::backdrop{background:#030712b8;backdrop-filter:blur(4px);}
+.arcade-end .arcade-end-close{position:absolute;right:12px;top:8px;width:36px;height:36px;border:0;background:transparent;color:#b9c6df;font-size:26px;cursor:pointer;}
+.arcade-end .arcade-end-eyebrow{margin:0 0 8px;color:#9cadcc;font-size:10px;font-weight:700;letter-spacing:.2em;}
+.arcade-end h2{margin:0 0 12px;font-size:32px;color:#fff;}
+.arcade-end .arcade-end-score{margin:0;font-size:24px;font-weight:700;font-variant-numeric:tabular-nums;}
+.arcade-end .arcade-end-best{margin:6px 0 20px;font-size:13px;color:#aabbd7;}
+.arcade-end .arcade-end-again{display:block;width:100%;padding:14px;border:1px solid #d5e4ff66;border-radius:11px;background:linear-gradient(#9bb9ff,#7398ee);color:#0d1c39;font:700 16px Inter,system-ui,sans-serif;cursor:pointer;}
+.arcade-end h3{margin:24px 0 12px;color:#c1cce0;font-size:12px;text-transform:uppercase;letter-spacing:.14em;}
+.arcade-end-games{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:12px;}
+.arcade-end-games a{display:flex;flex-direction:column;overflow:hidden;border:1px solid #a6c0f333;border-radius:12px;background:#0b1320;text-decoration:none;color:#e6eeff;transition:transform .15s,border-color .15s;}
+.arcade-end-games img{display:block;width:100%;height:auto;aspect-ratio:1;object-fit:cover;}
+.arcade-end-games span{padding:10px 4px;font-size:12px;font-weight:600;}
+.arcade-end-games a:hover{transform:translateY(-2px);border-color:#a6c0f3;}
+.arcade-end .arcade-end-all{display:inline-block;margin-top:20px;color:#b9ceff;font-size:13px;text-decoration:none;}
+.arcade-end :focus-visible{outline:3px solid #f3d58e;outline-offset:3px;}
+@media(max-height:540px){.arcade-end{padding:18px 24px;}.arcade-end h2{font-size:24px;margin-bottom:6px;}.arcade-end .arcade-end-best{margin-bottom:12px;}.arcade-end h3{margin-top:14px;}.arcade-end-games img{max-height:80px;object-fit:cover;}.arcade-end .arcade-end-all{margin-top:12px;}}
+@media(prefers-reduced-motion:reduce){.arcade-end-games a{transition:none;}}
