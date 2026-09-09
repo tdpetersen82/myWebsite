@@ -76,8 +76,10 @@ try {
 
 // ---- top HTML paths, last 7 days (adaptive groups are sampled, so treat counts as proportions).
 // The free plan caps each adaptive query at a one-day range, so ask day by day and merge.
+// Status 200 only: scanners probing /wp-login.php and .env files over plain http show up
+// as 301 redirect hops and 403 blocks, not as pages we served.
 const pathsQ = `query($zone:String!,$since:Time!,$until:Time!){ viewer { zones(filter:{zoneTag:$zone}) {
-  paths: httpRequestsAdaptiveGroups(limit:60, filter:{datetime_geq:$since, datetime_lt:$until, requestSource:"eyeball", edgeResponseStatus_lt:400, edgeResponseContentTypeName:"html"}, orderBy:[count_DESC]) {
+  paths: httpRequestsAdaptiveGroups(limit:60, filter:{datetime_geq:$since, datetime_lt:$until, requestSource:"eyeball", edgeResponseStatus:200, edgeResponseContentTypeName:"html"}, orderBy:[count_DESC]) {
     count dimensions { clientRequestPath } } } } }`;
 let paths = [];
 try {
