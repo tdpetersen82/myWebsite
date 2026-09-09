@@ -244,20 +244,26 @@ class Rocket {
         graphics.closePath();
         graphics.fillPath();
 
-        // Body shadow (right 30% for cylindrical 3D look)
-        const shR = w * 0.2;
-        const shtl = rotate(w / 2 - shR, bodyTop);
-        const shtr = rotate(w / 2, bodyTop);
-        const shbr = rotate(w / 2, bodyBot);
-        const shbl = rotate(w / 2 - shR, bodyBot);
-        graphics.fillStyle(0x000000, 0.12);
-        graphics.beginPath();
-        graphics.moveTo(shtl.x, shtl.y);
-        graphics.lineTo(shtr.x, shtr.y);
-        graphics.lineTo(shbr.x, shbr.y);
-        graphics.lineTo(shbl.x, shbl.y);
-        graphics.closePath();
-        graphics.fillPath();
+        // Narrow facets describe a sunlit cylinder without allocating textures per frame.
+        const panel = (x1, y1, x2, y2, color, alpha = 1) => {
+            const pts = [rotate(x1,y1),rotate(x2,y1),rotate(x2,y2),rotate(x1,y2)];
+            graphics.fillStyle(color,alpha); graphics.beginPath();
+            pts.forEach((p,i)=>i ? graphics.lineTo(p.x,p.y) : graphics.moveTo(p.x,p.y));
+            graphics.closePath(); graphics.fillPath();
+        };
+        const shades = [0x728896,0xb3c6d1,0xe4edf0,0xffffff,0xe7edf0,0xc5d2db,0x95a8b8,0x526779];
+        shades.forEach((color,i)=>panel(-w/2+i*w/8,bodyTop,-w/2+(i+1)*w/8,bodyBot,color));
+        // Interstage ribs, tank seams, service raceway and re-entry soot.
+        for (let i=0;i<5;i++) panel(-w/2+i*w/5,-h/2+1,-w/2+i*w/5+.45,bodyTop-1,0x78909f,.5);
+        panel(w*.24,bodyTop,w*.31,bodyBot,0x536675,.7);
+        for (let i=0;i<18;i++) {
+            const x=-w/2+(i*3.71)%w;
+            panel(x,bodyBot-h*(.05+(i%5)*.023),Math.min(w/2,x+.6),bodyBot,0x292d34,.2);
+        }
+        panel(-w*.2,bodyTop+h*.18,w*.18,bodyTop+h*.22,0x143854);
+        // Small flag marking on the upper tank.
+        for(let i=0;i<5;i++) panel(-w*.25,bodyTop+3+i*.65,w*.2,bodyTop+3.3+i*.65,i%2?0xffffff:0xb64f4f);
+        panel(-w*.25,bodyTop+3,-w*.04,bodyTop+4.8,0x243e66);
 
         // Panel lines
         graphics.lineStyle(0.5, 0xcccccc, 0.25);
@@ -270,18 +276,6 @@ class Rocket {
             graphics.lineTo(pr.x, pr.y);
             graphics.strokePath();
         }
-
-        // SpaceX-inspired chevron
-        const chevY = bodyTop + (bodyBot - bodyTop) * 0.4;
-        const cv1 = rotate(-w / 2, chevY - 3);
-        const cv2 = rotate(0, chevY + 3);
-        const cv3 = rotate(w / 2, chevY - 3);
-        graphics.lineStyle(1.5, 0xcc2222, 0.5);
-        graphics.beginPath();
-        graphics.moveTo(cv1.x, cv1.y);
-        graphics.lineTo(cv2.x, cv2.y);
-        graphics.lineTo(cv3.x, cv3.y);
-        graphics.strokePath();
 
         // Specular highlight (left edge)
         graphics.lineStyle(1, 0xffffff, 0.3);
@@ -390,6 +384,16 @@ class Rocket {
             }
             graphics.closePath();
             graphics.fillPath();
+
+            // Titanium lattice follows the fin's steering angle.
+            const finPoint = (x,y) => rotate(fx+x*fcos-y*fsin,finY+x*fsin+y*fcos);
+            graphics.lineStyle(.45,0xbacbd3,.85);
+            for(let i=1;i<5;i++) {
+                const a=finPoint(-finW/2+i*finW/5,-finH/2),b=finPoint(-finW/2+i*finW/5,finH/2);
+                graphics.lineBetween(a.x,a.y,b.x,b.y);
+            }
+            const fa=finPoint(-finW/2,0),fb=finPoint(finW/2,0);
+            graphics.lineBetween(fa.x,fa.y,fb.x,fb.y);
 
             graphics.lineStyle(0.5, 0x666666, 0.5);
             graphics.beginPath();

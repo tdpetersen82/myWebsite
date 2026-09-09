@@ -202,14 +202,23 @@ class Sky {
                 const t = i / steps;
                 const y = oy + t * h;
 
-                const r = Math.floor(this._lerp(10, 106, t));
-                const g = Math.floor(this._lerp(40, 170, t));
-                const b = Math.floor(this._lerp(80, 232, t));
+                const r = Math.floor(this._lerp(8, 172, t));
+                const g = Math.floor(this._lerp(31, 196, t));
+                const b = Math.floor(this._lerp(66, 211, t));
                 const color = Phaser.Display.Color.GetColor(r, g, b);
 
                 graphics.fillStyle(color, blend * 0.85);
                 graphics.fillRect(ox - 100, y, w + 200, segH);
             }
+
+            // Sun and soft halo use screen-relative placement like the distant horizon.
+            const sunX=ox+w*.78, sunY=oy+h*.35;
+            for(let ring=12;ring>0;ring--) {
+                graphics.fillStyle(0xffdca5,blend*.012);
+                graphics.fillCircle(sunX,sunY,(14+ring*5)/cam.zoom);
+            }
+            graphics.fillStyle(0xffefce,blend*.85);
+            graphics.fillCircle(sunX,sunY,12/cam.zoom);
 
             // Clouds — drawn at world positions near the ocean
             if (blend > 0.3) {
@@ -218,7 +227,9 @@ class Sky {
                     // Only draw clouds visible in the camera view
                     if (cloud.y >= oy - 50 && cloud.y <= oy + h + 50) {
                         for (const blob of cloud.blobs) {
-                            graphics.fillStyle(0xffffff, cloudAlpha * 0.6);
+                            graphics.fillStyle(0x7194b0, cloudAlpha * 0.5);
+                            graphics.fillEllipse(cloud.x + blob.ox, cloud.y + blob.oy + 5, blob.rx * 2.3, blob.ry * 1.5);
+                            graphics.fillStyle(0xfff1df, cloudAlpha * 0.8);
                             graphics.fillEllipse(
                                 cloud.x + blob.ox,
                                 cloud.y + blob.oy,

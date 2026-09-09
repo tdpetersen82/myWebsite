@@ -37,42 +37,31 @@ class Ocean {
         const bottom = wv.y + wv.height + 100;
         const step = 4;
 
-        // Deep water base fill (covers entire ocean area, no seams)
-        graphics.fillStyle(CONFIG.COLORS.OCEAN_DEEP, 1.0);
-        graphics.fillRect(left, this.waterLevel - 20, right - left, bottom - this.waterLevel + 20);
-
-        // Mid-depth layer (wave-relative polyline, no flat edges)
-        graphics.fillStyle(CONFIG.COLORS.OCEAN_MID, 0.6);
-        graphics.beginPath();
-        graphics.moveTo(left, bottom);
-        for (let x = left; x <= right; x += step) {
-            graphics.lineTo(x, this.getHeightAt(x) + 40);
+        // Draw only below the real wave silhouette, keeping troughs free of flat seams.
+        if (bottom < this.waterLevel - 50) return;
+        graphics.fillStyle(0x123b50, 1);
+        graphics.beginPath(); graphics.moveTo(left,bottom);
+        for(let x=left;x<=right;x+=step) graphics.lineTo(x,this.getHeightAt(x));
+        graphics.lineTo(right,bottom);graphics.closePath();graphics.fillPath();
+        // Depth bands follow the surface, with darker water below.
+        for(let band=0;band<20;band++) {
+            graphics.fillStyle(0x031321,.045);
+            graphics.beginPath();graphics.moveTo(left,bottom);
+            for(let x=left;x<=right;x+=8) graphics.lineTo(x,this.getHeightAt(x)+5+band*6);
+            graphics.lineTo(right,bottom);graphics.closePath();graphics.fillPath();
         }
-        graphics.lineTo(right, bottom);
-        graphics.closePath();
-        graphics.fillPath();
-
-        // Surface-depth layer (wave-relative)
-        graphics.fillStyle(CONFIG.COLORS.OCEAN_MID, 0.4);
-        graphics.beginPath();
-        graphics.moveTo(left, bottom);
-        for (let x = left; x <= right; x += step) {
-            graphics.lineTo(x, this.getHeightAt(x) + 15);
+        // Broken, gently moving reflections, distributed in world coordinates.
+        for(let row=0;row<18;row++) {
+            const depth=7+row*9;
+            for(let x=Math.floor(left/42)*42;x<right;x+=42) {
+                const drift=Math.sin(this.waveOffset*.7+row+x*.013)*7;
+                const px=x+drift;
+                const y=this.getHeightAt(px)+depth;
+                const shimmer=.04+.09*(.5+.5*Math.sin(x*.08+row+this.waveOffset));
+                graphics.lineStyle(row<4?1:.6,0x92cbd7,shimmer);
+                graphics.lineBetween(px,y,px+8+row*.7,y-1);
+            }
         }
-        graphics.lineTo(right, bottom);
-        graphics.closePath();
-        graphics.fillPath();
-
-        // Surface layer (wave-relative)
-        graphics.fillStyle(CONFIG.COLORS.OCEAN_SURFACE, 0.95);
-        graphics.beginPath();
-        graphics.moveTo(left, bottom);
-        for (let x = left; x <= right; x += step) {
-            graphics.lineTo(x, this.getHeightAt(x));
-        }
-        graphics.lineTo(right, bottom);
-        graphics.closePath();
-        graphics.fillPath();
 
         // Wave highlights / foam
         if (this.waveAmplitude > CONFIG.OCEAN.FOAM_THRESHOLD) {

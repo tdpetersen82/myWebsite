@@ -132,6 +132,20 @@ class DroneShip {
         graphics.closePath();
         graphics.fillPath();
 
+        const hullLine = (x1,y1,x2,y2,color,width=1,alpha=1) => {
+            const a=rotate(x1,y1),b=rotate(x2,y2);
+            graphics.lineStyle(width,color,alpha);graphics.lineBetween(a.x,a.y,b.x,b.y);
+        };
+        // Painted waterline, welded hull plates and rubber fenders.
+        hullLine(-hw,hh-2,hw,hh-2,0x9b4b36,3,.9);
+        hullLine(-hw,-hh+6,hw,-hh+6,0x8295a0,1,.7);
+        for(let x=-hw+6;x<hw-3;x+=12) {
+            hullLine(x,-hh+7,x,hh-3,0x0b1520,1,.7);
+            const bolt=rotate(x+2,-hh+8);
+            graphics.fillStyle(0xa8b8c0,.6);graphics.fillCircle(bolt.x,bolt.y,.65);
+            hullLine(x,hh-4,x+4,hh-4,0x08121b,3);
+        }
+
         // --- DECK SURFACE ---
         const deckInset = 2;
         const dtl = rotate(-hw + deckInset, -hh);
@@ -205,47 +219,28 @@ class DroneShip {
         graphics.closePath();
         graphics.strokePath();
 
-        // --- LANDING TARGET: concentric circles + X ---
-        const targetR = this.targetZoneWidth * 0.4;
-        const markCenter = rotate(0, -hh + 2.5);
-
-        // Outer circle
-        graphics.lineStyle(1.5, CONFIG.COLORS.SHIP_MARKING, 0.5);
-        graphics.strokeCircle(markCenter.x, markCenter.y, targetR);
-        // Inner circle
-        graphics.lineStyle(1, CONFIG.COLORS.SHIP_MARKING, 0.7);
-        graphics.strokeCircle(markCenter.x, markCenter.y, targetR * 0.5);
-        // Center dot
-        graphics.fillStyle(CONFIG.COLORS.SHIP_MARKING, 0.6);
-        graphics.fillCircle(markCenter.x, markCenter.y, 2);
-
-        // X over circles
-        const xSize = targetR * 0.85;
-        const x1a = rotate(-xSize, -hh + 2.5 - xSize * 0.5);
-        const x1b = rotate(xSize, -hh + 2.5 + xSize * 0.5);
-        const x2a = rotate(xSize, -hh + 2.5 - xSize * 0.5);
-        const x2b = rotate(-xSize, -hh + 2.5 + xSize * 0.5);
-
-        graphics.lineStyle(2, CONFIG.COLORS.SHIP_MARKING, 0.8);
-        graphics.beginPath();
-        graphics.moveTo(x1a.x, x1a.y);
-        graphics.lineTo(x1b.x, x1b.y);
-        graphics.moveTo(x2a.x, x2a.y);
-        graphics.lineTo(x2b.x, x2b.y);
-        graphics.strokePath();
-
-        // --- "OCISLY" TEXT on deck ---
-        const textY = -hh + 2.5 + targetR + 3;
-        const letterSpacing = 3.5;
-        const letters = 'OCISLY';
-        const textStartX = -(letters.length - 1) * letterSpacing / 2;
-        graphics.lineStyle(0.8, 0xffffff, 0.35);
-        for (let i = 0; i < letters.length; i++) {
-            const lp = rotate(textStartX + i * letterSpacing, textY);
-            // Tiny dot per letter — at this scale text isn't legible, so use dashes
-            graphics.fillStyle(0xffffff, 0.3);
-            graphics.fillRect(lp.x - 1, lp.y, 2.5, 0.8);
+        // A foreshortened deck marking stays on the deck rather than floating above it.
+        const targetR = this.targetZoneWidth * .4;
+        for(const scale of [1,.5]) {
+            graphics.lineStyle(.8,CONFIG.COLORS.SHIP_MARKING,.85);
+            graphics.beginPath();
+            for(let i=0;i<=32;i++) {
+                const t=i/32*Math.PI*2;
+                const p=rotate(Math.cos(t)*targetR*scale,-hh+2.5+Math.sin(t)*2*scale);
+                if(i) graphics.lineTo(p.x,p.y);else graphics.moveTo(p.x,p.y);
+            }
+            graphics.strokePath();
         }
+        hullLine(-targetR,-hh+1,targetR,-hh+4,0xf3d783,1);
+        hullLine(targetR,-hh+1,-targetR,-hh+4,0xf3d783,1);
+        // Deck perimeter lamps and communications mast.
+        for(let x=-hw+12;x<hw-8;x+=16) {
+            const lamp=rotate(x,-hh);
+            graphics.fillStyle(0xa2edff,.18);graphics.fillCircle(lamp.x,lamp.y,3);
+            graphics.fillStyle(0xd5f8ff,.95);graphics.fillCircle(lamp.x,lamp.y,.8);
+        }
+        hullLine(hw-5,-hh-8,hw-5,-hh-18,0xb4c5cd,.8);
+        hullLine(hw-9,-hh-14,hw-1,-hh-14,0xb4c5cd,.8);
 
         // --- DIAGONAL WARNING STRIPES near deck edges ---
         graphics.lineStyle(0.5, CONFIG.COLORS.SHIP_BARRIER, 0.25);
@@ -284,7 +279,7 @@ class DroneShip {
         graphics.fillCircle(navRight.x, navRight.y, 1.5);
 
         // --- BEACONS (larger, with strong glow) ---
-        const beaconAlpha = 0.3 + 0.7 * Math.sin(this.beaconPhase / CONFIG.DRONE_SHIP.BEACON_PULSE_DURATION * Math.PI * 2);
+        const beaconAlpha = 0.65 + 0.35 * Math.sin(this.beaconPhase / CONFIG.DRONE_SHIP.BEACON_PULSE_DURATION * Math.PI * 2);
         const bLeft = rotate(-hw, -hh - 5);
         const bRight = rotate(hw, -hh - 5);
 
