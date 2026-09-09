@@ -20,7 +20,8 @@ import { join } from 'node:path';
 const ZONE_NAME = 'limestonegames.com';
 const TOKEN_PATH = join(homedir(), '.config', 'limestone', 'cloudflare-token.txt');
 const OUT = join(homedir(), '.config', 'limestone', 'seo-data');
-const days = Math.max(1, Math.min(90, +(process.argv[process.argv.indexOf('--days') + 1] || 14)));
+const dIdx = process.argv.indexOf('--days');
+const days = Math.max(1, Math.min(90, (dIdx > 0 && +process.argv[dIdx + 1]) || 14));
 
 if (!existsSync(TOKEN_PATH)) {
     console.log(`Cloudflare analytics: no token at ${TOKEN_PATH}`);
@@ -73,17 +74,22 @@ try {
     console.log(`daily totals failed: ${err.message}\n`);
 }
 
-// ---- top HTML paths, last 7 days (adaptive groups are sampled, so treat counts as proportions) ----
+// ---- top HTML paths, last 7 days (adaptive groups are sampled, so treat counts as proportions).
+// The free plan caps each adaptive query at a one-day range, so ask day by day and merge.
 const pathsQ = `query($zone:String!,$since:Time!,$until:Time!){ viewer { zones(filter:{zoneTag:$zone}) {
-  paths: httpRequestsAdaptiveGroups(limit:40, filter:{datetime_geq:$since, datetime_leq:$until, requestSource:"eyeball", edgeResponseStatus_lt:400, edgeResponseContentTypeName:"html"}, orderBy:[count_DESC]) {
+  paths: httpRequestsAdaptiveGroups(limit:60, filter:{datetime_geq:$since, datetime_lt:$until, requestSource:"eyeball", edgeResponseStatus_lt:400, edgeResponseContentTypeName:"html"}, orderBy:[count_DESC]) {
     count dimensions { clientRequestPath } } } } }`;
 let paths = [];
 try {
-    const since7 = new Date(now.getTime() - 7 * 86400000);
-    const d = await gql(pathsQ, { zone, since: since7.toISOString(), until: now.toISOString() });
-    paths = (d.viewer.zones[0] || {}).paths || [];
-    console.log('Top HTML paths, last 7 days (edge requests from browsers, sampled — proportions, not exact counts):');
-    for (const p of paths.slice(0, 30)) console.log(`  ${pad(p.count, 7)}  ${p.dimensions.clientRequestPath}`);
+    const byPath = new Map();
+    for (let k = 7; k >= 1; k--) {
+        const a = new Date(now.getTime() - k * 86400000), b = new Date(now.getTime() - (k - 1) * 86400000);
+        const d = await gql(pathsQ, { zone, since: a.toISOString(), until: b.toISOString() });
+        for (const p of (d.viewer.zones[0] || {}).paths || []) byPath.set(p.dimensions.clientRequestPath, (byPath.get(p.dimensions.clientRequestPath) || 0) + p.count);
+    }
+    paths = [...byPath.entries()].map(([path, count]) => ({ path, count })).sort((x, y) => y.count - x.count);
+    console.log('Top HTML paths, last 7 days (browser requests at the edge, sampled — read as proportions):');
+    for (const p of paths.slice(0, 30)) console.log(`  ${pad(p.count, 7)}  ${p.path}`);
     console.log();
 } catch (err) {
     console.log(`top paths failed: ${err.message}\n`);
