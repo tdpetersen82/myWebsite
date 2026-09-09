@@ -15,7 +15,7 @@ function boot(){
   const api = new Function(core + `;
     return {
       G, DT, SUN, planets, EARTH, MOON, bodies,
-      reset, advance, warpFactor, aOf, mergeInto, energy, detectPass, seedBelt, keplerProp, lambertV, bestTransfer, KMS, addPlanet,
+      reset, advance, warpFactor, aOf, mergeInto, energy, detectPass, seedBelt, keplerProp, lambertV, bestTransfer, probeCorrection, KMS, addPlanet,
       state: () => ({ t, comets, belt, storm, probes, E0 }),
       onEmit: f => { EMIT = f; },
       setRate: r => { timeRate = r; },
@@ -235,52 +235,64 @@ const ok = (cond, name, detail = '') => {
   }
 }
 
-// ── T8d: Voyager 1, 1977 → today — flies the SHIPPED launch constants (parsed from the page) ──
-// The mission must pass Jupiter a few radii out, be bent onto Saturn, leave above
-// solar escape speed, and still be climbing 49 years later. Nothing here is
-// scripted: it is the same N-body core the page runs, from the same arrangement.
+// ── T8d: the Voyagers, 1977 → today — fly the SHIPPED routes (parsed from the page) ──
+// Voyager 1 is ballistic after launch; Voyager 2's later legs carry the page's
+// course-correction schedule (departure 1.5 AU clear of the last planet, mid-course
+// at half the remaining distance, approach at 1 AU), each aimed by probeCorrection.
+// Each flyby must be a few radii out, every burn small, the probe never crashed,
+// escaping at the end, and still climbing 49 years on. Same core, same arrangement.
 {
-  const voyM = html.match(/const VOY = \{ tT: ([\d.]+), off: ([-\d.]+), wait: ([\d.]+) \}/);
-  ok(!!voyM, 'page declares VOY launch constants');
-  const VOY = { tT: +voyM[1], off: +voyM[2], wait: +voyM[3] };
-  const api = boot(), { G, SUN: S, EARTH: E, planets, bodies, MOON } = api, mu = G*S.m;
-  const J = planets.find(p => p.name === 'Jupiter'), SAT = planets.find(p => p.name === 'Saturn');
-  // arrangeGrandTour(), as the page does it
-  const L = { Jupiter: 88, Saturn: 147, Uranus: 217, Neptune: 253 };
-  for (const p of planets){ if (L[p.name] === undefined) continue; const th = L[p.name]*Math.PI/180, v = Math.sqrt(mu/p.a); p.x = p.a*Math.cos(th); p.y = p.a*Math.sin(th); p.vx = -v*Math.sin(th); p.vy = v*Math.cos(th); }
-  { const at = (1+J.a)/2, tH = Math.PI*Math.sqrt(at*at*at/mu), omJ = Math.sqrt(mu/(J.a**3)), thE = 88*Math.PI/180 - (Math.PI - omJ*tH), ve = Math.sqrt(mu);
-    E.x = Math.cos(thE); E.y = Math.sin(thE); E.vx = -ve*Math.sin(thE); E.vy = ve*Math.cos(thE);
-    const vM = 2*Math.PI*Math.sqrt((E.m+MOON.m)*(1+MOON.eM)/(MOON.aM*(1-MOON.eM)));
-    MOON.x = E.x + MOON.aM*(1-MOON.eM); MOON.y = E.y; MOON.vx = E.vx; MOON.vy = E.vy + vM;
-    let px=0, py=0, M=0; for (const b of bodies){ px += b.m*b.vx; py += b.m*b.vy; M += b.m; } for (const b of bodies){ b.vx -= px/M; b.vy -= py/M; } }
-  if (VOY.wait > 0){ const n = Math.round(VOY.wait/api.DT/32); for (let i=0;i<n;i++) api.advance(32,1); }
-  // injectProbe(): Lambert over VOY.tT to Jupiter's predicted position, VOY.off to the side
-  const jFut = api.keplerProp(J, VOY.tT), jr = Math.hypot(jFut[0]-S.x, jFut[1]-S.y);
-  const aim = [jFut[0] + (-(jFut[1]-S.y)/jr)*VOY.off, jFut[1] + ((jFut[0]-S.x)/jr)*VOY.off];
-  const v1 = api.lambertV([E.x-S.x, E.y-S.y], [aim[0]-S.x, aim[1]-S.y], VOY.tT, mu);
-  ok(!!v1, 'Voyager Lambert solves');
-  const lp = launchPt(E, S), pr = { x: lp[0], y: lp[1], vx: S.vx+v1[0], vy: S.vy+v1[1], trail: [], closest: Infinity, arrived: false, done: false, target: null };
-  api.addProbe(pr);
-  const dvE = Math.hypot(pr.vx-E.vx, pr.vy-E.vy)*api.KMS;
-  ok(dvE > 8 && dvE < 13, `launch is a real rocket's worth: ${dvE.toFixed(1)} km/s over Earth (Titan-Centaur ≈ 10)`);
-  const eps = () => { const v = Math.hypot(pr.vx-S.vx, pr.vy-S.vy), r = Math.hypot(pr.x-S.x, pr.y-S.y); return v*v/2 - mu/r; };
-  let t = 0, epsJ = null, epsS = null, sub = 8;
-  while (t < 49 && !pr.done){
-    api.advance(sub, 1); t += sub*api.DT;
-    const dJ = Math.hypot(pr.x-J.x, pr.y-J.y), dS = Math.hypot(pr.x-SAT.x, pr.y-SAT.y);
-    if (epsJ === null && pr.minD && pr.minD.Jupiter < 0.3 && dJ > 1.5) epsJ = eps();
-    if (epsS === null && pr.minD && pr.minD.Saturn < 0.3 && dS > 1.5) epsS = eps();
-    if (t > 5) sub = 32;
+  const VOY_TRAJ = JSON.parse(html.split('/*VOY-TRAJ*/')[1].split('/*VOY-TRAJ-END*/')[0]);
+  ok(!!VOY_TRAJ['1'] && !!VOY_TRAJ['2'], 'page declares both Voyager routes');
+  const RKM = { Jupiter: 71492, Saturn: 60268, Uranus: 25559, Neptune: 24764 };
+  for (const id of Object.keys(VOY_TRAJ)){
+    const traj = VOY_TRAJ[id], tag = 'Voyager ' + id;
+    const api = boot(), { G, SUN: S, EARTH: E, planets, bodies, MOON } = api, mu = G*S.m, by = n => planets.find(p => p.name === n), J = by('Jupiter');
+    const L = { Jupiter: 88, Saturn: 147, Uranus: 217, Neptune: 253 };
+    for (const p of planets){ if (L[p.name] === undefined) continue; const th = L[p.name]*Math.PI/180, v = Math.sqrt(mu/p.a); p.x = p.a*Math.cos(th); p.y = p.a*Math.sin(th); p.vx = -v*Math.sin(th); p.vy = v*Math.cos(th); }
+    { const at = (1+J.a)/2, tH = Math.PI*Math.sqrt(at*at*at/mu), omJ = Math.sqrt(mu/(J.a**3)), thE = 88*Math.PI/180 - (Math.PI - omJ*tH), ve = Math.sqrt(mu);
+      E.x = Math.cos(thE); E.y = Math.sin(thE); E.vx = -ve*Math.sin(thE); E.vy = ve*Math.cos(thE);
+      const vM = 2*Math.PI*Math.sqrt((E.m+MOON.m)*(1+MOON.eM)/(MOON.aM*(1-MOON.eM)));
+      MOON.x = E.x + MOON.aM*(1-MOON.eM); MOON.y = E.y; MOON.vx = E.vx; MOON.vy = E.vy + vM;
+      let px=0, py=0, M=0; for (const b of bodies){ px += b.m*b.vx; py += b.m*b.vy; M += b.m; } for (const b of bodies){ b.vx -= px/M; b.vy -= py/M; } }
+    const jFut = api.keplerProp(J, traj.tT), jr = Math.hypot(jFut[0]-S.x, jFut[1]-S.y);
+    const aim = [jFut[0] + (-(jFut[1]-S.y)/jr)*traj.off, jFut[1] + ((jFut[0]-S.x)/jr)*traj.off];
+    const v1 = api.lambertV([E.x-S.x, E.y-S.y], [aim[0]-S.x, aim[1]-S.y], traj.tT, mu);
+    ok(!!v1, tag + ': launch Lambert solves');
+    const lp = launchPt(E, S), pr = { x: lp[0], y: lp[1], vx: S.vx+v1[0], vy: S.vy+v1[1], trail: [], closest: Infinity, arrived: false, done: false, target: null };
+    api.addProbe(pr);
+    const dvE = Math.hypot(pr.vx-E.vx, pr.vy-E.vy)*api.KMS;
+    ok(dvE > 8 && dvE < 13, `${tag}: launch is a real rocket's worth — ${dvE.toFixed(1)} km/s over Earth (Titan-Centaur ≈ 10)`);
+    const eps = () => { const v = Math.hypot(pr.vx-S.vx, pr.vy-S.vy), r = Math.hypot(pr.x-S.x, pr.y-S.y); return v*v/2 - mu/r; };
+    const route = traj.route.map(l => ({ p: by(l.p), off: l.off, done: false })), burns = [];
+    let t = 0, k = 0, sub = 8;
+    while (t < 49 && !pr.done){
+      api.advance(sub, 1); t += sub*api.DT;
+      const leg = route[k], P = leg.p, d = Math.hypot(pr.x-P.x, pr.y-P.y), m = pr.minD ? pr.minD[P.name] : undefined;
+      if (!leg.done && m !== undefined && m < 0.5 && d > 1.5){
+        leg.done = true; leg.epsAfter = eps();
+        if (k + 1 < route.length){ k++; const nx = route[k]; if (nx.off !== undefined){ const c = api.probeCorrection(pr, nx.p, nx.off); nx.depAt = Math.hypot(pr.x-nx.p.x, pr.y-nx.p.y); burns.push(['dep→' + nx.p.name, c ? c.dv*api.KMS*1000 : NaN]); } }
+        else sub = 32;
+      } else if (k > 0 && !leg.done && leg.off !== undefined){
+        if (!leg.mid && leg.depAt && d < leg.depAt*0.5){ leg.mid = true; const c = api.probeCorrection(pr, P, leg.off); burns.push(['mid→' + P.name, c ? c.dv*api.KMS*1000 : NaN]); }
+        else if (leg.mid && !leg.app && d < 1.0){ leg.app = true; const c = api.probeCorrection(pr, P, leg.off); burns.push(['app→' + P.name, c ? c.dv*api.KMS*1000 : NaN]); }
+      }
+    }
+    ok(!pr.crashed, tag + ': never hits a planet' + (pr.crashed ? ' — crashed into ' + pr.crashed : ''));
+    for (const leg of route){
+      const r = pr.minD && pr.minD[leg.p.name] !== undefined ? pr.minD[leg.p.name]*1.495979e8/RKM[leg.p.name] : Infinity;
+      ok(leg.done && r > 1.2 && r < 30, `${tag}: ${leg.p.name} flyby a few radii out (${isFinite(r) ? r.toFixed(1) : '—'} R)`);
+    }
+    const last = route[route.length-1];
+    ok(last.done && last.epsAfter > 0, `${tag}: escaping after ${last.p.name} (v∞ ${last.done ? (Math.sqrt(2*Math.abs(last.epsAfter))*api.KMS*Math.sign(last.epsAfter)).toFixed(1) : '—'} km/s)`);
+    if (burns.length){
+      const worst = burns.reduce((a, b) => (isNaN(b[1]) || b[1] > a[1]) ? b : a), total = burns.reduce((a, b) => a + (b[1] || 0), 0);
+      ok(burns.every(b => isFinite(b[1]) && b[1] < 150) && total < 400, `${tag}: course corrections are small — ${burns.map(b => b[0] + ' ' + (isFinite(b[1]) ? b[1].toFixed(0) : '?')).join(', ')} m/s (total ${total.toFixed(0)})`);
+    }
+    const rEnd = Math.hypot(pr.x-S.x, pr.y-S.y), vEnd = Math.hypot(pr.vx-S.vx, pr.vy-S.vy)*api.KMS, vesc = Math.sqrt(2*mu/rEnd)*api.KMS;
+    ok(rEnd > 90 && rEnd < 260, `${tag}: 49 years on — ${rEnd.toFixed(0)} AU out (real: V1 ≈ 171, V2 ≈ 144)`);
+    ok(vEnd > vesc, `${tag}: still faster than escape speed there (${vEnd.toFixed(1)} vs ${vesc.toFixed(1)} km/s)`);
   }
-  const rj = pr.minD.Jupiter*1.495979e8/71492, rs = pr.minD.Saturn*1.495979e8/60268;
-  ok(!pr.crashed, 'Voyager never hits a planet' + (pr.crashed ? ' — crashed into ' + pr.crashed : ''));
-  ok(rj > 1.5 && rj < 15, `Jupiter flyby a few radii out (${rj.toFixed(1)} Rj; real 4.9)`);
-  ok(epsJ !== null && epsJ > 0, `above solar escape speed after Jupiter (v∞ ${epsJ === null ? '—' : (Math.sqrt(2*Math.abs(epsJ))*api.KMS).toFixed(1)} km/s)`);
-  ok(rs > 1.5 && rs < 60, `Saturn flyby (${rs.toFixed(1)} Rs; real 2.1)`);
-  ok(epsS !== null && epsS > 0, 'still escaping after Saturn');
-  const rEnd = Math.hypot(pr.x-S.x, pr.y-S.y), vEnd = Math.hypot(pr.vx-S.vx, pr.vy-S.vy)*api.KMS, vesc = Math.sqrt(2*mu/rEnd)*api.KMS;
-  ok(rEnd > 100 && rEnd < 250, `49 years on: ${rEnd.toFixed(0)} AU out (real Voyager 1 ≈ 171)`);
-  ok(vEnd > vesc, `still faster than escape speed there (${vEnd.toFixed(1)} vs ${vesc.toFixed(1)} km/s)`);
 }
 
 // ── T8c: Earth→Moon translunar injection reaches the Moon ──

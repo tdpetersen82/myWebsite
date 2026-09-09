@@ -122,6 +122,36 @@
   #probe-cancel, #place-cancel{flex:none;width:22px;height:22px;border-radius:50%;border:1px solid var(--pnl-line);
     background:rgba(42,54,78,0.72);color:var(--ink);font:600 13px/1 system-ui,sans-serif;cursor:pointer;}
   #probe-cancel:hover, #place-cancel:hover{background:rgba(70,88,124,0.9);}
+  /* Voyager mission inlay: a small card bottom-right, above the dock, in place of the mission chip —
+     live numbers, a running log, and the today-vs-real comparison, none of it over the action */
+  #voy-panel{position:absolute;right:16px;bottom:76px;width:236px;padding:10px 12px 10px;z-index:8;font-weight:500;max-height:calc(100vh - 110px);overflow-y:auto;}
+  #voy-head{display:flex;align-items:center;gap:9px;margin:0 0 8px;}
+  #voy-icon{width:46px;height:32px;flex:none;color:#bff5da;}
+  #voy-title{flex:1;min-width:0;}
+  #voy-name{display:block;font:700 13px/1.2 system-ui,sans-serif;color:#fff;}
+  #voy-phase{font:500 10.5px/1.3 system-ui,sans-serif;color:var(--soft);white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #voy-cancel{background:none;border:none;color:var(--soft);font-size:17px;line-height:1;cursor:pointer;padding:0 2px;margin:-4px -4px 0 0;}
+  #voy-cancel:hover{color:#fff;}
+  #voy-stats{display:grid;grid-template-columns:1fr 1fr;gap:5px;}
+  #voy-stats .vs{background:rgba(150,170,210,0.08);border-radius:8px;padding:5px 8px 4px;min-width:0;}
+  #voy-stats .v{display:block;font:600 12.5px/1.25 ui-monospace,Menlo,monospace;color:#fff;font-variant-numeric:tabular-nums;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #voy-stats .l{display:block;font:600 8.5px/1.3 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);margin-top:1px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+  #voy-log{margin-top:8px;border-top:1px solid rgba(150,170,210,0.16);padding-top:6px;font:500 10.5px/1.35 system-ui,sans-serif;color:var(--soft);}
+  #voy-log:empty{display:none;}
+  #voy-log .vl{display:flex;gap:7px;padding:2px 0;}
+  #voy-log .vl .d{flex:none;width:58px;color:var(--dim);font-variant-numeric:tabular-nums;}
+  #voy-log .vl.hi{color:#e6edf8;}
+  #voy-log .vl .r{display:block;color:var(--dim);font-size:9.5px;}
+  #voy-today{margin-top:8px;border-top:1px solid rgba(150,170,210,0.16);padding-top:7px;}
+  #voy-today-title{font:700 11px/1.3 system-ui,sans-serif;color:#fff;margin:0 0 5px;}
+  #voy-cmp{width:100%;border-collapse:collapse;font:500 10.5px/1.3 system-ui,sans-serif;color:var(--soft);}
+  #voy-cmp th{font:600 8.5px/1.3 system-ui,sans-serif;letter-spacing:.06em;text-transform:uppercase;color:var(--dim);text-align:right;padding:0 0 3px;font-weight:600;}
+  #voy-cmp th:first-child,#voy-cmp td:first-child{text-align:left;}
+  #voy-cmp td{text-align:right;padding:1px 0;font-variant-numeric:tabular-nums;}
+  #voy-cmp td:nth-child(2){color:#fff;font-weight:600;}
+  #voy-today-note{margin-top:6px;font:500 9.5px/1.35 system-ui,sans-serif;color:var(--dim);}
+  #voy-today-btns{display:flex;gap:6px;margin-top:8px;}
+  #voy-today-btns .btn{flex:1;text-align:center;padding:7px 8px;font-size:11.5px;}
   /* ---- "What if?" lessons: the menu (beside Actions) and the coach card that runs a lesson ---- */
   #top-btns{display:flex;gap:8px;justify-content:flex-end;}
   #learn-toggle{background:rgba(74,108,190,0.45);border-color:rgba(150,180,255,0.5);}
@@ -332,6 +362,11 @@
     #fb-pill{bottom:calc(var(--dock-h, 150px) + 24px) !important;}
     /* mission / placement chips: the top edge is taken by the stacked buttons, so they
        sit bottom-right above the dock, wrapping instead of overflowing, clear of the pill */
+    #voy-panel{right:12px;bottom:calc(var(--dock-h, 150px) + 24px);width:206px;padding:7px 9px 7px;}
+    #voy-icon{width:36px;height:25px;}
+    #voy-stats .vs{padding:4px 7px 3px;}
+    #voy-log{margin-top:6px;padding-top:4px;}
+    #voy-log .vl .r{display:none;}   /* the "real:" sub-lines wrap to two rows each on a phone — the desktop card keeps them */
     #probe-status, #msg-status, #place-status{top:auto;bottom:calc(var(--dock-h, 150px) + 24px);left:auto;right:12px;transform:none;
       max-width:calc(100vw - 122px);white-space:normal;text-align:left;font-size:11.5px;border-radius:16px;}
     #microhint{max-width:88vw;text-align:center;top:100px;}
@@ -380,7 +415,8 @@
     <button id="act-probe" class="btn act" type="button" title="Launch a spacecraft from Earth to Mars on a real Hohmann transfer orbit — it waits for the launch window, then coasts on gravity for months while the planets keep moving">🚀 Probe to Mars</button>
     <button id="act-jupiter" class="btn act" type="button" title="Launch a spacecraft from Earth to Jupiter on a real Hohmann transfer — a ~2.7-year cruise out past the asteroid belt, waiting for the launch window first">🪐 Probe to Jupiter</button>
     <button id="act-saturn" class="btn act" type="button" title="Launch a spacecraft from Earth to Saturn on a real Hohmann transfer — a ~6-year direct cruise to the ringed planet">🪐 Probe to Saturn</button>
-    <button id="act-voyager" class="btn act" type="button" title="Recreate Voyager: arranges the four giant planets in the rare 1977 Grand Tour alignment, then swings a probe close past Jupiter for a real gravity assist — a free speed boost stolen from Jupiter's motion">🛰 Voyager — 1977 Grand Tour</button>
+    <button id="act-voyager" class="btn act" type="button" title="Fly Voyager 1 from its 5 September 1977 launch to today: Jupiter and Saturn flybys, escape from the Sun, then the long coast against the real mission's milestones">🛰 Voyager 1 — 1977 → today</button>
+    <button id="act-voyager2" class="btn act" type="button" title="Fly Voyager 2 from 20 August 1977 to today: Jupiter, Saturn and Uranus, with the small course-correction burns the route needs, then out past the heliopause (Neptune doesn't close from this approximate 1977 arrangement — the card says so)">🛰 Voyager 2 — three giants → today</button>
     <button id="act-moon" class="btn act" type="button" title="Fly a probe from Earth to the Moon in a to-scale Earth–Moon view — see how far and how small the Moon really is">🌙 Probe to the Moon</button>
     <button id="act-msg" class="btn act" type="button" title="Send a radio pulse from Earth at the true speed of light — time holds still while it crosses">📡 Lightspeed message…</button>
   </div>
@@ -494,6 +530,37 @@
 <button id="moon-exit" type="button" hidden>← Back to the system</button>
 <div id="msg-status" hidden><span id="msg-text"></span><button id="msg-cancel" type="button" aria-label="Cancel transmission">×</button></div>
 <div id="probe-status" hidden><span id="probe-text"></span><button id="probe-cancel" type="button" aria-label="Abort mission">×</button></div>
+<div id="voy-panel" class="panel" hidden>
+  <div id="voy-head">
+    <svg id="voy-icon" viewBox="0 0 52 36" aria-hidden="true">
+      <line x1="2" y1="19" x2="20" y2="19" stroke="currentColor" stroke-width="1.2"/>
+      <circle cx="5" cy="19" r="1.7" fill="currentColor"/><circle cx="9.5" cy="19" r="1.7" fill="currentColor"/><circle cx="14" cy="19" r="1.7" fill="currentColor"/>
+      <rect x="20" y="15.5" width="7" height="7" rx="1" fill="currentColor" opacity="0.9"/>
+      <path d="M27 8.5 Q43 19 27 29.5 Q31.5 19 27 8.5 Z" fill="currentColor" opacity="0.85"/>
+      <line x1="27" y1="19" x2="37" y2="19" stroke="currentColor" stroke-width="1"/><circle cx="37.5" cy="19" r="1.3" fill="currentColor"/>
+      <line x1="24" y1="15.5" x2="50" y2="3" stroke="currentColor" stroke-width="0.8" opacity="0.8"/>
+      <line x1="22" y1="22.5" x2="12" y2="33" stroke="currentColor" stroke-width="0.9" opacity="0.8"/>
+    </svg>
+    <div id="voy-title"><b id="voy-name">Voyager 1</b><div id="voy-phase"></div></div>
+    <button id="voy-cancel" type="button" aria-label="End the mission">×</button>
+  </div>
+  <div id="voy-stats">
+    <div class="vs"><span class="v" id="voy-date"></span><span class="l">mission clock</span></div>
+    <div class="vs"><span class="v" id="voy-au"></span><span class="l">from the Sun</span></div>
+    <div class="vs"><span class="v" id="voy-v"></span><span class="l" id="voy-v-l">speed · esc</span></div>
+    <div class="vs"><span class="v" id="voy-light"></span><span class="l">light to Earth</span></div>
+  </div>
+  <div id="voy-log"></div>
+  <div id="voy-today" hidden>
+    <div id="voy-today-title"></div>
+    <table id="voy-cmp"><tr><th></th><th>this flight</th><th>real</th></tr>
+      <tr><td>distance</td><td id="vc-au-s"></td><td id="vc-au-r"></td></tr>
+      <tr><td>speed</td><td id="vc-v-s"></td><td id="vc-v-r"></td></tr>
+      <tr><td>light-time</td><td id="vc-l-s"></td><td id="vc-l-r"></td></tr></table>
+    <div id="voy-today-note"></div>
+    <div id="voy-today-btns"><button id="voy-keep" class="btn" type="button">Keep flying</button><button id="voy-done" class="btn primary" type="button">Done ✓</button></div>
+  </div>
+</div>
 <div id="place-status" hidden><span id="place-text"></span><button id="place-cancel" type="button" aria-label="Cancel placing">×</button></div>
 <div id="coach" class="panel" hidden>
   <div id="coach-eyebrow"><span id="coach-step"></span><button id="coach-close" type="button" aria-label="End lesson">×</button></div>
@@ -536,7 +603,7 @@
     <li><b>Fire the comet storm.</b> ~100 random specks at once — then watch the feed report captures, ejections, and impacts as gravity sorts them out.</li>
     <li><b>Invite a rogue star.</b> A quarter-solar-mass intruder crosses the system: orbits bend as it passes, and anything it sweeps too close to is consumed — the event feed keeps score of the damage.</li>
     <li><b>Fly a probe to Mars, Jupiter, or Saturn.</b> ⚡ Actions → Probe to Mars: the spacecraft waits for the launch window (Mars has to lead Earth by about 44°), then coasts along a real Hohmann transfer orbit for roughly eight months while the planets keep moving — arriving where Mars will be, not where it is now. <b>Jupiter</b> and <b>Saturn</b> are the same idea at grand scale: bigger launch windows and multi-year cruises out past the asteroid belt. Or open 🎓 <b>What if?</b> and take the Mars launch controls yourself — the rocket's push is fixed, and only the timing is yours.</li>
-    <li><b>Fly Voyager 1 from 1977 to today.</b> ⚡ Actions → Voyager arranges the four giant planets in the rare arc they formed in 1977 — an alignment that comes around once every ~176 years — and launches on 5 September 1977. The probe coasts to Jupiter, swings a few planet radii past it in a slow-motion close-up (the real one passed 349,000 km out in March 1979), is bent onto Saturn for a second assist (November 1980), and comes out above the Sun's escape speed. No engine fires after launch: the speed it stole from the two planets' orbital motion is what carries it out. The clock then runs to today past the real mission's milestones — the Pale Blue Dot, the heliopause in 2012 — and a debrief sets this flight's distance and speed beside the real Voyager 1's. Every number is the simulator's own; the flyby distances and the escape fall out of gravity, not a script.</li>
+    <li><b>Fly the Voyagers from 1977 to today.</b> ⚡ Actions → Voyager 1 arranges the four giant planets in the rare arc they formed in 1977 — an alignment that comes around once every ~176 years — and launches on 5 September 1977. The probe coasts to Jupiter, swings a few planet radii past it in a slow-motion close-up (the real one passed 349,000 km out in March 1979), is bent onto Saturn for a second assist (November 1980), and comes out above the Sun's escape speed. No engine fires after launch: the speed it stole from the two planets' orbital motion is what carries it out. <b>Voyager 2</b> flies Jupiter, Saturn and Uranus and, like the real one, needs small course-correction burns between planets to thread each flyby; the inlay logs every burn in metres per second. Its fourth target, Neptune, does not close from this approximate 1977 arrangement — the planets here sit on circular orbits at rounded 1977 longitudes, and a fourth flyby needs the true ephemerides — so the card says so rather than pretending. A small mission card keeps the clock, distance, speed against the local escape speed, light-time and a running log out of the way of the view, and at today's date it sets this flight beside the real spacecraft's. Every number is the simulator's own; the flyby distances and the escape fall out of gravity, not a script.</li>
     <li><b>Fly a probe to the Moon.</b> ⚡ Actions → Probe to the Moon opens a to-scale Earth–Moon view — Earth and the Moon at their true relative size and distance, with the geostationary-satellite ring drawn in for contrast. The probe rides a real translunar trajectory: injected at about 10.8 km/s (the actual Apollo departure speed) and coasting three days on Earth's and the Moon's gravity.</li>
     <li><b>Send a lightspeed message.</b> ⚡ Actions → Lightspeed message: a radio pulse leaves Earth for Mars (3 to 22 light-minutes away, depending on where the orbits stand) or Jupiter (33 to 54). The planets hold still while it crawls — because at any speed where you can see planets move, light is effectively instantaneous.</li>
     <li><b>Delete the Sun.</b> Click it, open <i>Adjust this body</i>, delete. The planets fly off along near-straight lines — the leash made visible.</li>
@@ -817,9 +884,13 @@
   // lambertV: prograde single-revolution Lambert (universal variables). Given two
   // heliocentric position vectors and a time of flight, returns the departure
   // velocity (heliocentric). Null if degenerate.
-  function lambertV(r1v, r2v, dt, mu){
+  function lambertV(r1v, r2v, dt, mu, anyDir){
     const r1 = Math.hypot(r1v[0], r1v[1]), r2 = Math.hypot(r2v[0], r2v[1]);
     const cross = r1v[0]*r2v[1] - r1v[1]*r2v[0];
+    // anyDir: take the short way round even when it sweeps clockwise (a course
+    // correction from a probe already ahead of its target in longitude) — solve the
+    // mirrored problem and mirror the velocity back
+    if (anyDir && cross < 0){ const v = lambertV([r1v[0], -r1v[1]], [r2v[0], -r2v[1]], dt, mu, false); return v && [v[0], -v[1]]; }
     let dnu = Math.acos(Math.max(-1, Math.min(1, (r1v[0]*r2v[0]+r1v[1]*r2v[1])/(r1*r2))));
     if (cross < 0) dnu = 2*Math.PI - dnu;                        // enforce prograde (counter-clockwise) sweep
     const A = Math.sin(dnu)*Math.sqrt(r1*r2/(1-Math.cos(dnu)));
@@ -830,26 +901,28 @@
     const yOf = z => r1 + r2 + A*(z*Sf(z)-1)/Math.sqrt(Cf(z));
     // time of flight for a given z — NaN where y<0 (no physical arc there)
     const tof = z => { const y = yOf(z); if (!(y > 0)) return NaN; const c = Cf(z), chi = Math.sqrt(y/c); return (chi*chi*chi*Sf(z) + A*Math.sqrt(y))/Math.sqrt(mu); };
-    // Bracketed bisection on z (Vallado's robust form) instead of an unguarded
-    // Newton step: tof(z) rises monotonically across the single-revolution
-    // range, so scan for the sign change then bisect. Newton from z=0 could
-    // wander into y<0, lose its derivative and hand back a NON-converged z as
-    // if it were a solution — a spurious velocity that misses by an AU.
+    // Time of flight rises monotonically with z across the single-revolution
+    // domain (where y > 0), from 0 at the domain's lower edge to ∞ at z = 4π² — so
+    // instead of scanning a grid for a sign change (which can step clean over the
+    // domain when it is a sliver, e.g. a short, strongly hyperbolic hop between two
+    // course corrections at 14 AU), find the lower edge by bisection on y, then
+    // bisect for the time of flight. An unguarded Newton step from z = 0 used to
+    // wander into y < 0 and hand back a NON-converged z as if it were a solution.
     const ZMAX = 4*Math.PI*Math.PI;                           // beyond this the arc is a multi-revolution transfer
-    let lo = NaN, hi = NaN, prevZ = NaN, prevT = NaN;
-    for (let i=0; i<=160; i++){
-      const z = -ZMAX + 2*ZMAX*i/160, tt = tof(z);
-      if (isFinite(tt)){
-        if (isFinite(prevT) && (prevT-dt)*(tt-dt) <= 0){ lo = prevZ; hi = z; break; }
-        prevZ = z; prevT = tt;
-      } else { prevZ = NaN; prevT = NaN; }
+    let lo = -ZMAX, hi = ZMAX*(1 - 1e-7);
+    if (!(yOf(0) > 0)) return null;                            // no physical arc at all for this geometry
+    if (!(yOf(lo) > 0)){                                       // the domain starts somewhere in (−4π², 0]: bisect y = 0
+      let a = lo, b = 0;
+      for (let i=0; i<200; i++){ const m = 0.5*(a+b); if (yOf(m) > 0) b = m; else a = m; }
+      lo = b;
     }
-    if (!isFinite(lo)) return null;                            // no single-rev prograde arc fits this time of flight
-    for (let it=0; it<80; it++){
+    const tLo = tof(lo), tHi = tof(hi);
+    if (!(isFinite(tLo)) || !(isFinite(tHi)) || dt < tLo || dt > tHi) return null;   // outside what a single-rev arc can do
+    for (let it=0; it<200; it++){
       const mid = 0.5*(lo+hi), tm = tof(mid);
-      if (!isFinite(tm)) return null;
-      if ((tof(lo)-dt)*(tm-dt) <= 0) hi = mid; else lo = mid;
-      if (hi-lo < 1e-12) break;
+      if (!isFinite(tm)){ lo = mid; continue; }                // numerical edge of the domain: move in
+      if (tm < dt) lo = mid; else hi = mid;
+      if (hi-lo < 1e-14) break;
     }
     const z = 0.5*(lo+hi), tz = tof(z);
     if (!isFinite(tz) || Math.abs(tz-dt) > 1e-6*dt) return null;   // insist on a genuinely converged root
@@ -890,6 +963,47 @@
       if (Math.hypot(chk[0]-st[0], chk[1]-st[1]) > 0.015*r2) continue;
       best = { dv, dt, v1, aim: [st[0]+SUN.x, st[1]+SUN.y], tT };
     }
+    return best;
+  }
+
+  // A course correction (what Voyager's small TCM burns did): the cheapest burn
+  // that puts a spacecraft on a two-body arc from where it is to `target`'s
+  // predicted position, `off` AU to the side of it (⟂ to the Sun–target line, +
+  // = leading side). Times of flight are scanned around a straight-line guess and
+  // each Lambert root is trusted only after re-flying it. Applies the burn and
+  // returns { dv (AU/yr), tof, aim }, or null if nothing fits.
+  function probeCorrection(pr, target, off){
+    const mu = G*SUN.m;
+    const rP = [pr.x-SUN.x, pr.y-SUN.y], vP = [pr.vx-SUN.vx, pr.vy-SUN.vy];
+    const guess = Math.hypot(target.x-pr.x, target.y-pr.y)/(Math.hypot(vP[0], vP[1]) || 1e-9);
+    const st = [target.x-SUN.x, target.y-SUN.y, target.vx-SUN.vx, target.vy-SUN.vy];
+    // the burn for a given time of flight (target coasted two-body to that moment, aim
+    // offset to the side, Lambert, re-fly check); null if no verified arc
+    const at = tof => {
+      const st = [target.x-SUN.x, target.y-SUN.y, target.vx-SUN.vx, target.vy-SUN.vy], h = DT*4; let tp = 0;
+      while (tp + h <= tof){ twoBodyStep(st, h, mu); tp += h; }
+      if (tof - tp > 1e-12) twoBodyStep(st, tof-tp, mu);
+      const r2 = Math.hypot(st[0], st[1]), aim = [st[0] - st[1]/r2*off, st[1] + st[0]/r2*off];
+      const v1 = lambertV(rP, aim, tof, mu, true); if (!v1) return null;
+      const chk = [rP[0], rP[1], v1[0], v1[1]], n = 400, hc = tof/n;
+      for (let i=0; i<n; i++) twoBodyStep(chk, hc, mu);
+      if (Math.hypot(chk[0]-aim[0], chk[1]-aim[1]) > 0.01*r2) return null;
+      return { dv: Math.hypot(v1[0]-vP[0], v1[1]-vP[1]), tof, v1, aim: [aim[0]+SUN.x, aim[1]+SUN.y] };
+    };
+    // coarse scan of times of flight, then a golden-section refinement around the
+    // cheapest — the burn is exquisitely sensitive to matching the natural arrival
+    // time (a grid alone left 150 m/s "corrections" that were really grid error)
+    let best = null, kb = -1;
+    for (let k=0; k<=30; k++){ const c = at(guess*(0.55 + 1.2*k/30)); if (c && (!best || c.dv < best.dv)){ best = c; kb = k; } }
+    if (!best) return null;
+    let a = guess*(0.55 + 1.2*Math.max(0, kb-1)/30), b = guess*(0.55 + 1.2*Math.min(30, kb+1)/30);
+    const gr = (Math.sqrt(5)-1)/2; let x1 = b - gr*(b-a), x2 = a + gr*(b-a), f1 = at(x1), f2 = at(x2);
+    for (let i=0; i<40; i++){
+      const d1 = f1 ? f1.dv : Infinity, d2 = f2 ? f2.dv : Infinity;
+      if (d1 < d2){ b = x2; x2 = x1; f2 = f1; x1 = b - gr*(b-a); f1 = at(x1); } else { a = x1; x1 = x2; f1 = f2; x2 = a + gr*(b-a); f2 = at(x2); }
+      const c = d1 < d2 ? f1 : f2; if (c && c.dv < best.dv) best = c;
+    }
+    pr.vx = SUN.vx + best.v1[0]; pr.vy = SUN.vy + best.v1[1];
     return best;
   }
 
@@ -1774,6 +1888,7 @@
     if (follow && (follow.deleted || follow.dead)){ follow = null; zoom = 1; }
     launchPanel.hidden = follow !== EARTH;                                   // satellite-launch panel only in the planet view
     if (!launchPanel.hidden && !viewPanel.hidden) viewPanel.hidden = true;   // the two share the corner — launch wins
+    if (!voyPanel.hidden && !viewPanel.hidden) viewPanel.hidden = true;      // so does the Voyager inlay
     // the coach and the inspector share the left edge: while a lesson runs, the card keeps clear of the coach —
     // on phones (both top sheets) it slides under it; on desktop (bottom-anchored) it caps its height so its
     // header stays below the coach on short windows
@@ -2279,30 +2394,51 @@
   const SATURN = planets.find(p => p.name === 'Saturn');
   // (KMS — 1 AU/yr in km/s — is defined in the physics core)
 
-  // ---- Voyager 1, 1977 → today ----
-  // The flight both the ⚡ Voyager action and the What-if lesson fly. Launch
-  // geometry: the 1977 arrangement (arrangeGrandTour) plus a VOY.tT-year Lambert
-  // transfer to Jupiter aimed VOY.off AU to the side of Jupiter's predicted
-  // position. The pair was found by scanning the real N-body flight with this
-  // exact core (score: Jupiter periapsis, Saturn miss, escape) so the probe passes
-  // Jupiter a few radii out, is bent onto Saturn, and leaves above solar escape
-  // speed. Real-mission figures beside the sim's are for comparison only; nothing
-  // on the chip is scripted — the sim flies it and reports what happens.
-  const VOY = { tT: 1.50, off: 0.054530, wait: 0 };
-  const VOY_EPOCH = 1977 + 247/365.25;                        // launch: 5 September 1977
-  const VOY_REAL = { Jupiter: { date: 'Mar 1979', km: 349000 }, Saturn: { date: 'Nov 1980', km: 124000 } };
+  // ---- Voyager 1 & 2, 1977 → today ----
+  // Launch geometry per craft: the 1977 arrangement (arrangeGrandTour) plus a
+  // tT-year Lambert transfer to Jupiter aimed `off` AU to the side of Jupiter's
+  // predicted position. Voyager 1 is ballistic after that; Voyager 2's Saturn →
+  // Uranus → Neptune legs are flown with small course-correction burns
+  // (probeCorrection: departure, mid-course, approach), each aimed at the next
+  // planet `off` AU to the side, the way the real TCMs were. Every number was found
+  // by scanning the real N-body flight with this exact core (Jupiter periapsis,
+  // next-planet miss, burn sizes, escape). The trajectory literal is JSON on one
+  // line so the headless test can parse and fly the very same numbers. Real-mission
+  // figures beside the sim's are for comparison only; nothing here is scripted.
+  const VOY_TRAJ = /*VOY-TRAJ*/{"1":{"tT":1.5,"off":0.05453,"route":[{"p":"Jupiter"},{"p":"Saturn"}]},"2":{"tT":2,"off":0.0436,"route":[{"p":"Jupiter"},{"p":"Saturn","off":-0.0051},{"p":"Uranus","off":-0.001}]}}/*VOY-TRAJ-END*/;
+  const VOYAGERS = {
+    1: { name: 'Voyager 1', epoch: 1977 + 247/365.25,                       // launched 5 September 1977
+         real: { Jupiter: { date: 'Mar 1979', km: 349000 }, Saturn: { date: 'Nov 1980', km: 184000 } },   // km from the planet's centre
+         realAU: d => 121.6 + 3.57*(d - 2012.65), realKms: 17.0,              // 121.6 AU at the heliopause (25 Aug 2012), 3.57 AU/yr since
+         note: 'One plane here — Saturn bent the real Voyager 1 35° north out of the planets\' disc — and the 1977 positions are approximate.',
+         milestones: [
+           { key: 'pbd', date: 1990.12, text: r => `Pale Blue Dot · ${r.toFixed(0)} AU`, real: 'real: 40 AU — the camera turned home' },
+           { key: 'pio', date: 1998.13, text: r => `passes Pioneer 10 · ${r.toFixed(0)} AU`, real: 'real: 69 AU — most distant human object' },
+           { key: 'ts',  date: 2004.96, text: r => `termination shock · ${r.toFixed(0)} AU`, real: 'real: 94 AU — the solar wind stalls' },
+           { key: 'hp',  date: 2012.65, text: r => `heliopause · ${r.toFixed(0)} AU`, real: 'real: 122 AU — interstellar space' } ] },
+    2: { name: 'Voyager 2', epoch: 1977 + 231/365.25,                       // launched 20 August 1977 — it left first
+         real: { Jupiter: { date: 'Jul 1979', km: 641000 }, Saturn: { date: 'Aug 1981', km: 161000 }, Uranus: { date: 'Jan 1986', km: 107000 }, Neptune: { date: 'Aug 1989', km: 29000 } },
+         realAU: d => 119.0 + 3.24*(d - 2018.84), realKms: 15.4,              // 119 AU at the heliopause (5 Nov 2018), 3.24 AU/yr since
+         note: 'Three of the four flybys: Neptune does not close from this approximate 1977 arrangement (the real Voyager 2 passed it on 25 Aug 1989 and was thrown 48° south). One plane here, and the burns are the sim\'s own.',
+         afterLast: { text: 'Neptune · no route from here', real: 'real: 25 Aug 1989, 29,000 km — the fourth flyby needs the true 1977 ephemerides; this arrangement is approximate' },
+         milestones: [
+           { key: 'ts', date: 2007.66, text: r => `termination shock · ${r.toFixed(0)} AU`, real: 'real: 84 AU — the solar wind stalls' },
+           { key: 'hp', date: 2018.84, text: r => `heliopause · ${r.toFixed(0)} AU`, real: 'real: 119 AU — interstellar space' } ] },
+  };
   const VOY_TODAY = (d => d.getFullYear() + (d - new Date(d.getFullYear(), 0, 1))/(365.25*864e5))(new Date());
-  const voyRealAU = date => 121.6 + 3.57*(date - 2012.65);   // the real probe: 121.6 AU at the heliopause (25 Aug 2012), 3.57 AU/yr since
-  const VOY_MILESTONES = [
-    { key: 'pbd', date: 1990.12, text: r => `Feb 1990 · Pale Blue Dot — the real Voyager 1 turned its camera home from 40 AU · this one: ${r.toFixed(0)} AU` },
-    { key: 'pio', date: 1998.13, text: r => `Feb 1998 · passed Pioneer 10 to become the most distant human-made object (real: 69 AU · sim: ${r.toFixed(0)})` },
-    { key: 'ts',  date: 2004.96, text: r => `Dec 2004 · termination shock, where the solar wind stalls (real: 94 AU · sim: ${r.toFixed(0)})` },
-    { key: 'hp',  date: 2012.65, text: r => `Aug 2012 · heliopause — out of the Sun's bubble, into interstellar space (real: 122 AU · sim: ${r.toFixed(0)})` },
-    { key: 'today', date: VOY_TODAY },
-  ];
   const MONTHS = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
   const fmtVoyDate = d => { const y = Math.floor(d); return MONTHS[Math.min(11, Math.floor((d-y)*12))] + ' ' + y; };
   const fmtKm = km => km >= 1e6 ? (km/1e6).toFixed(1) + ' million' : Math.max(1, Math.round(km/1000)).toLocaleString('en-US') + ',000';
+  // the inlay
+  const voyPanel = document.getElementById('voy-panel'), voyName = document.getElementById('voy-name'), voyPhase = document.getElementById('voy-phase'),
+        voyDate = document.getElementById('voy-date'), voyAU = document.getElementById('voy-au'), voyV = document.getElementById('voy-v'), voyVL = document.getElementById('voy-v-l'),
+        voyLight = document.getElementById('voy-light'), voyLog = document.getElementById('voy-log'), voyToday = document.getElementById('voy-today');
+  function voyLogLine(date, text, real, hi){                                  // one short line in the inlay's log (newest at the bottom, seven kept)
+    const d = document.createElement('div'); d.className = 'vl' + (hi ? ' hi' : '');
+    d.innerHTML = `<span class="d">${fmtVoyDate(date)}</span><span>${text}${real ? `<span class="r">${real}</span>` : ''}</span>`;
+    const keep = window.innerWidth <= 760 ? 2 : (voyToday.hidden ? 5 : 3);   // a phone has no room for a long log
+    voyLog.appendChild(d); while (voyLog.children.length > keep) voyLog.firstChild.remove();
+  }
   const probeStatus = document.getElementById('probe-status'), probeText = document.getElementById('probe-text');
   let probePlan = null, probeCraft = null;
   const distSun = b => Math.hypot(b.x-SUN.x, b.y-SUN.y);
@@ -2331,9 +2467,9 @@
     // (a gravity assist) instead of arriving.
     const mFut = keplerProp(target, tT);
     let ax = mFut[0], ay = mFut[1];
-    if (probePlan.voyager){                                    // aim to the side of Jupiter: the scanned offset that bends the path onto Saturn
-      const jr = Math.hypot(mFut[0]-SUN.x, mFut[1]-SUN.y);
-      ax += -(mFut[1]-SUN.y)/jr * VOY.off; ay += (mFut[0]-SUN.x)/jr * VOY.off;
+    if (probePlan.voyager){                                    // aim to the side of Jupiter: the scanned offset that bends the path onto the next planet
+      const jr = Math.hypot(mFut[0]-SUN.x, mFut[1]-SUN.y), off = probePlan.traj.off;
+      ax += -(mFut[1]-SUN.y)/jr * off; ay += (mFut[0]-SUN.x)/jr * off;
     }
     let vx, vy;
     // vel: an explicit heliocentric departure velocity (a lesson's own choice), 'hohmann' for the
@@ -2353,10 +2489,10 @@
     probeCraft = { x: EARTH.x+ux/ul*0.012, y: EARTH.y+uy/ul*0.012, vx, vy,
                    trail: [], t0: t, closest: Infinity, arrived: false, done: false, arrR,
                    target: probePlan.voyager ? null : target,  // voyager never "arrives" — it flies by and coasts on
-                   jMin: Infinity, boosted: false, flyby: {}, hit: {}, label: probePlan.voyager ? 'Voyager 1' : null,
+                   jMin: Infinity, boosted: false, flyby: {}, hit: {}, k: 0, label: probePlan.voyager ? probePlan.voy.name : null,
                    dvE: Math.hypot(vx-EARTH.vx, vy-EARTH.vy)*KMS };   // launch speed over Earth's own, km/s (the rocket's share)
     probes.push(probeCraft);
-    probePlan.phase = 'cruise'; probePlan.tTransfer = tT; probeStatus.hidden = false;
+    probePlan.phase = 'cruise'; probePlan.tTransfer = tT; probeStatus.hidden = !!probePlan.voyager;   // Voyager reports in its inlay, not the chip
     setRate(probePlan.voyager ? 24 : Math.max(6, Math.min(24, Math.round(tT*5))));   // pace the cruise to the distance (far targets run faster)
     msgFx.push({ x: EARTH.x, y: EARTH.y, born: performance.now() });
     sfx('launch');
@@ -2376,8 +2512,8 @@
     if (probeCraft && !probes.includes(probeCraft)){ finishProbe({ aborted: true }); return; }   // a reset wiped the craft mid-cruise
     if (probePlan.phase === 'arm') return;                     // a lesson fires it by hand
     if (probePlan.voyager && probePlan.phase === 'wait'){       // Voyager launches on its own date, not on an alignment
-      probeText.textContent = `🛰 Voyager 1 · countdown · launch ${fmtVoyDate(VOY_EPOCH)}`;
-      if (t >= probePlan.voyLaunchAt - 1e-9) injectProbe(VOY.tT);
+      probeStatus.hidden = true; voyPhase.textContent = 'countdown';
+      if (t >= probePlan.voyLaunchAt - 1e-9){ injectProbe(probePlan.traj.tT); voyLogLine(probePlan.voy.epoch, `launch · ${probeCraft.dvE.toFixed(1)} km/s over Earth`, 'real: Titan-Centaur, about 10 km/s'); }
       return;
     }
     if (probePlan.phase === 'wait' && probePlan.budget > 0){    // a real window: the cheapest transfer fits the rocket's budget
@@ -2396,50 +2532,64 @@
       probeText.textContent = `🛰 Waiting for the ${name} launch window · ${(diff*180/Math.PI).toFixed(0)}° to alignment`;
       if (diff < 0.10 || t - probePlan.waitStart > 13) injectProbe(tT);   // safety > one synodic period (13 yr covers Jupiter)
     } else if (probePlan.voyager){
-      // Voyager 1, 1977 → today. Two real gravity assists — Jupiter, then Saturn — each
-      // measured as the change in the probe's HELIOCENTRIC ORBITAL ENERGY across the
-      // encounter, quoted as its speed at that planet's distance from the Sun before vs
-      // after (same solar potential both times, so the difference is purely what the
-      // planet gave). Then the long coast, read against the Sun's escape speed and the
-      // real mission's milestones. Every number on the chip is the sim's own.
+      // Voyager 1 / 2, 1977 → today. Each flyby along the route is measured as the change
+      // in the probe's HELIOCENTRIC ORBITAL ENERGY across the encounter, quoted as its speed
+      // at that planet's distance from the Sun before vs after (same solar potential both
+      // times, so the difference is purely what the planet gave). Legs with an `off` are
+      // flown with course-correction burns; then the coast, read against escape speed and
+      // the real mission's milestones. Everything in the inlay is the sim's own.
       const pr = probeCraft; if (!pr){ finishProbe(); return; }
-      const yrs = t - pr.t0, date = VOY_EPOCH + yrs, rSun = distSun(pr);
+      const voy = probePlan.voy, route = probePlan.route;
+      const yrs = t - pr.t0, date = voy.epoch + yrs, rSun = distSun(pr);
       const vhel = Math.hypot(pr.vx-SUN.vx, pr.vy-SUN.vy), muS = G*SUN.m, eps = vhel*vhel/2 - muS/rSun;
       const vk = vhel*KMS, vEsc = Math.sqrt(2*muS/rSun)*KMS;
       let nearGiant = false;
-      for (const p of [JUPITER, SATURN]){
-        if (p.deleted) continue;
-        const f = pr.flyby[p.name] || (pr.flyby[p.name] = {}), d = Math.hypot(pr.x-p.x, pr.y-p.y);
-        if (d < 1.0){ nearGiant = true; if (f.eIn === undefined) f.eIn = eps; }   // entering the planet's neighbourhood
+      for (let i = 0; i < route.length; i++){
+        const p = route[i].p; if (p.deleted) continue;
+        const f = pr.flyby[p.name] || (pr.flyby[p.name] = { lastMin: Infinity }), d = Math.hypot(pr.x-p.x, pr.y-p.y);
+        if (d < 1.5){ nearGiant = true; if (f.eIn === undefined) f.eIn = eps; }   // inside the planet's neighbourhood (same 1.5 AU the flyby report waits for)
         const m = pr.minD ? pr.minD[p.name] : undefined;
-        if (m !== undefined && m !== f.lastMin){ f.lastMin = m; f.periDate = date; }   // when closest approach happened — the report is dated to it, not to when it's read
-        if (!f.done && f.eIn !== undefined && m < 0.5 && d > 1.0){          // back out again → the flyby is behind us
+        if (m !== undefined && m < f.lastMin){ f.lastMin = m; f.periDate = date; }   // when closest approach happened — the log is dated to it
+        if (i === pr.k && !f.done && f.eIn !== undefined && m < 0.5 && d > 1.5){   // 1.5 AU clear: the flyby is behind us
           f.done = true;
           const rP = distSun(p), vAt = e => { const v2 = 2*(e + muS/rP); return v2 > 0 ? Math.sqrt(v2)*KMS : 0; };
           f.b0 = vAt(f.eIn); f.b1 = vAt(eps); f.g = f.b1 - f.b0; f.km = m*AU_KM; f.radii = m/p.R; f.date = f.periDate;
-          const real = VOY_REAL[p.name];
+          const real = voy.real[p.name];
           msgFx.push({ x: pr.x, y: pr.y, born: performance.now() });
-          announce(`🛰 ${fmtVoyDate(f.date)} · ${p.name} flyby at ${fmtKm(f.km)} km, ${f.radii.toFixed(1)} radii (real Voyager 1: ${real.date}, ${fmtKm(real.km)} km) — ${f.b0.toFixed(1)} → ${f.b1.toFixed(1)} km/s at ${p.name}'s distance, ${f.g>=0?'+':''}${f.g.toFixed(1)} km/s stolen from ${p.name}`, 'capture'); sfx('capture');
+          voyLogLine(f.date, `${p.name} · ${fmtKm(f.km)} km (${f.radii.toFixed(1)} R) · ${f.g>=0?'+':''}${f.g.toFixed(1)} km/s`, real ? `real: ${real.date}, ${fmtKm(real.km)} km` : '', true); sfx('capture');
           if (p === JUPITER){ pr.boosted = true; pr.jMin = m; if (probePlan.onBoost) probePlan.onBoost({ b0: f.b0, b1: f.b1, g: f.g, jMin: m, escaped: eps >= 0 }); }   // the lesson debriefs on Jupiter's
+          if (i + 1 < route.length){                                         // on to the next planet — with a departure burn if the leg is corrected
+            pr.k = i + 1; const nx = route[pr.k];
+            if (nx.off !== undefined){ const c = probeCorrection(pr, nx.p, nx.off); nx.depAt = Math.hypot(pr.x-nx.p.x, pr.y-nx.p.y); if (c) voyLogLine(date, `course correction · ${(c.dv*KMS*1000).toFixed(0)} m/s · for ${nx.p.name}`); }
+          } else if (voy.afterLast) voyLogLine(date, voy.afterLast.text, voy.afterLast.real);   // the route ends here — say why, if there is a why
+        }
+        if (i === pr.k && i > 0 && !f.done && route[i].off !== undefined){  // the leg's mid-course and approach burns
+          const leg = route[i];
+          if (!leg.mid && leg.depAt && d < leg.depAt*0.5){ leg.mid = true; const c = probeCorrection(pr, p, leg.off); if (c) voyLogLine(date, `mid-course burn · ${(c.dv*KMS*1000).toFixed(0)} m/s`); }
+          else if (leg.mid && !leg.app && d < 1.0){ leg.app = true; const c = probeCorrection(pr, p, leg.off); if (c) voyLogLine(date, `approach burn · ${(c.dv*KMS*1000).toFixed(0)} m/s`); }
         }
       }
       if (!pr.escaped && eps >= 0 && !nearGiant){                          // (inside a giant's well the heliocentric speed spikes — judge it clear of them)
         pr.escaped = true;
-        announce(`🛰 ${fmtVoyDate(date)} · clear of the planet and above escape speed — ${vk.toFixed(1)} km/s where the Sun would need ${vEsc.toFixed(1)} to hold it. It is never coming back.`, 'capture'); sfx('capture');
+        voyLogLine(date, `above escape speed · ${vk.toFixed(1)} vs ${vEsc.toFixed(1)} km/s · never coming back`, '', true); sfx('capture');
       }
-      for (const ms of VOY_MILESTONES){
-        if (pr.hit[ms.key] || date < ms.date) continue;
-        pr.hit[ms.key] = 1;
-        if (ms.key === 'today') voyToday(pr, date, rSun, vk, vEsc); else announce(`🛰 ${ms.text(rSun)}`, 'capture');
-      }
+      for (const ms of voy.milestones){ if (pr.hit[ms.key] || date < ms.date) continue; pr.hit[ms.key] = 1; voyLogLine(ms.date, ms.text(rSun), ms.real, true); }
+      if (!pr.hit.today && date >= VOY_TODAY){ pr.hit.today = 1; voyTodayCard(pr, date, rSun, vk, vEsc); }
       voyCamera(pr, rSun);
-      const lm = rSun*LM_PER_AU, cam = pr.cam;
-      probeText.textContent = cam
-        ? `🛰 Voyager 1 · ${fmtVoyDate(date)} · ${cam.name} flyby · ${fmtKm(Math.hypot(pr.x-cam.x, pr.y-cam.y)*AU_KM)} km · ${vk.toFixed(1)} km/s · slow motion`
-        : `🛰 Voyager 1 · ${fmtVoyDate(date)} · ${rSun < 100 ? rSun.toFixed(1) : rSun.toFixed(0)} AU · ${vk.toFixed(1)} km/s (escape here ${vEsc.toFixed(1)}${pr.escaped ? ' ✓' : ''}) · light ${lm < 100 ? lm.toFixed(0) + ' min' : (lm/60).toFixed(1) + ' h'}`;
+      // the inlay
+      const lm = rSun*LM_PER_AU, cam = pr.cam, cur = route[pr.k];
+      voyDate.textContent = fmtVoyDate(date);
+      voyAU.textContent = (rSun < 100 ? rSun.toFixed(2) : rSun.toFixed(0)) + ' AU';
+      voyV.textContent = vk.toFixed(1) + ' km/s'; voyVL.textContent = `speed · esc ${vEsc.toFixed(1)}${pr.escaped ? ' ✓' : ''}`;
+      voyLight.textContent = lm < 100 ? lm.toFixed(0) + ' min' : (lm/60).toFixed(1) + ' h';
+      voyPhase.textContent = cam ? `${cam.name} flyby · ${fmtKm(Math.hypot(pr.x-cam.x, pr.y-cam.y)*AU_KM)} km · slow motion`
+        : probePlan.warp ? (pr.hit.today ? 'beyond today ▸▸' : `coast · ${Math.floor(voy.epoch)} → today ▸▸`)
+        : cur && !(pr.flyby[cur.p.name] && pr.flyby[cur.p.name].done)
+          ? (() => { const d = Math.hypot(pr.x-cur.p.x, pr.y-cur.p.y), m = pr.minD && pr.minD[cur.p.name]; return (m < 0.5 && d > m*1.5) ? `leaving ${cur.p.name} · ${d.toFixed(2)} AU` : `cruise to ${cur.p.name} · ${d.toFixed(2)} AU to go`; })()
+          : 'outbound';
       if (rSun > (pr.maxR || 0)) pr.maxR = rSun;
       if (!pr.escaped && pr.boosted && rSun < pr.maxR - 0.4){                 // the honest fallback if a flight ever ends up bound
-        announce(`🛰 Bound after all — the slingshot carried it out to ${pr.maxR.toFixed(1)} AU and the Sun pulled it back`, 'escape'); finishProbe(); return;
+        voyLogLine(date, `bound after all · fell back from ${pr.maxR.toFixed(1)} AU`, '', true); finishProbe(); return;
       }
       if (date > 2100) finishProbe();
     } else {
@@ -2465,7 +2615,8 @@
   // for the long coast, zooming out only as far as needed to keep the probe on
   // screen. Everything it touches is put back by the plan's restore() on finish/abort.
   function voyCamera(pr, rSun){
-    const near = [JUPITER, SATURN].find(p => !p.deleted && !(pr.flyby[p.name] && pr.flyby[p.name].done) && Math.hypot(pr.x-p.x, pr.y-p.y) < 0.1);
+    const route = probePlan.route, last = route[route.length-1].p;
+    const near = route.map(l => l.p).find(p => !p.deleted && !(pr.flyby[p.name] && pr.flyby[p.name].done) && Math.hypot(pr.x-p.x, pr.y-p.y) < 0.1);
     if (near && pr.cam !== near){
       pr.cam = near;
       if (!probePlan.camSaved) probePlan.camSaved = { scale: viewOpts.scale };
@@ -2475,25 +2626,28 @@
       viewOpts.scale = probePlan.camSaved.scale; refit(); syncViewPanel(); follow = null; zoom = 1; setRate(24);
     }
     if (pr.cam){ probePlan.slow = Math.hypot(pr.x-pr.cam.x, pr.y-pr.cam.y) < 0.05 ? 3 : 0; return; }
-    const coast = (pr.flyby.Saturn && pr.flyby.Saturn.done) || (pr.boosted && (SATURN.deleted || rSun > 12));
+    const coast = (pr.flyby[last.name] && pr.flyby[last.name].done) || (pr.boosted && (last.deleted || rSun > 1.3*Math.hypot(last.x-SUN.x, last.y-SUN.y)));
     if (coast && !probePlan.warp){ probePlan.warp = 8; setRate(32); }
     if (probePlan.warp && !follow){                                           // keep the receding probe in frame: shrink, never grow
       const [dx, dy] = disp(pr.x, pr.y), need = 0.44*Math.min(W, H)/(Math.hypot(dx, dy)*baseScale + 1e-9);
       if (zoom > need) zoom = Math.max(0.2, need);
     }
   }
-  function voyToday(pr, date, rSun, vk, vEsc){                             // the debrief card: this flight against the real one, today
+  function voyTodayCard(pr, date, rSun, vk, vEsc){                         // today: this flight beside the real one, in the inlay; time pauses
     setRate(0);
-    const J = pr.flyby.Jupiter || {}, S = pr.flyby.Saturn || {}, realAU = voyRealAU(date);
-    const gain = f => f.done ? `${f.g >= 0 ? '+' : ''}${f.g.toFixed(1)} km/s` : 'no close pass';
-    showCoach({ step: 'Voyager 1 · 1977 → today', title: `${fmtVoyDate(date)} — ${Math.round(date - VOY_EPOCH)} years out`,
-      html: `<p>This probe is <b>${rSun.toFixed(0)} AU</b> from the Sun, moving at <b>${vk.toFixed(1)} km/s</b> where the Sun's escape speed is only <b>${vEsc.toFixed(1)}</b>. Its radio takes <b>${(rSun*LM_PER_AU/60).toFixed(1)} hours</b> to reach Earth.</p>
-             <p>The real Voyager 1 today: about <b>${realAU.toFixed(0)} AU</b>, <b>17 km/s</b>, <b>${(realAU*LM_PER_AU/60).toFixed(1)} hours</b> of light-time.</p>
-             <p>Where the speed came from: it left Earth <b>${pr.dvE.toFixed(1)} km/s</b> faster than Earth itself moves (the real Titan-Centaur managed about 10). Jupiter then gave <b>${gain(J)}</b> and Saturn <b>${gain(S)}</b>, each measured at that planet's own distance from the Sun so the comparison is like for like. No engine has fired since launch: the Sun has been slowing it the whole way, and can never take the rest.</p>
-             <p class="note">Same physics, slightly different numbers: everything here stays in one plane (Saturn bent the real Voyager 1 35° north, out of the planets' disc), and the 1977 planet positions are approximate.</p>`,
-      btns: [{ label: 'Keep flying', fn: () => { coach.hidden = true; if (probePlan) setRate(32); } },
-             { label: 'Done ✓', cls: 'primary', fn: () => { coach.hidden = true; if (lesson && lesson.id === 'voyager') endLesson(); finishProbe(); } }] });
+    const voy = probePlan.voy, realAU = voy.realAU(date);
+    document.getElementById('voy-today-title').textContent = `${fmtVoyDate(date)} · ${Math.round(date - voy.epoch)} years out`;
+    document.getElementById('vc-au-s').textContent = rSun.toFixed(0) + ' AU';   document.getElementById('vc-au-r').textContent = realAU.toFixed(0) + ' AU';
+    document.getElementById('vc-v-s').textContent = vk.toFixed(1) + ' km/s';   document.getElementById('vc-v-r').textContent = voy.realKms.toFixed(1) + ' km/s';
+    document.getElementById('vc-l-s').textContent = (rSun*LM_PER_AU/60).toFixed(1) + ' h'; document.getElementById('vc-l-r').textContent = (realAU*LM_PER_AU/60).toFixed(1) + ' h';
+    const gains = probePlan.route.map(l => pr.flyby[l.p.name]).filter(f => f && f.done).map(f => `${probePlan.route.find(l => pr.flyby[l.p.name] === f).p.name} ${f.g >= 0 ? '+' : ''}${f.g.toFixed(1)}`).join(' · ');
+    document.getElementById('voy-today-note').textContent = `Launch ${pr.dvE.toFixed(1)} km/s over Earth · ${gains} km/s from the flybys · no engine since. ${voy.note}`;
+    while (voyLog.children.length > 3) voyLog.firstChild.remove();     // make room: the comparison is the point now
+    voyToday.hidden = false;
   }
+  document.getElementById('voy-keep').addEventListener('click', () => { voyToday.hidden = true; if (probePlan) setRate(32); });
+  document.getElementById('voy-done').addEventListener('click', () => { if (lesson && lesson.id === 'voyager') endLesson(); finishProbe(); });
+  document.getElementById('voy-cancel').addEventListener('click', () => { if (lesson && lesson.id === 'voyager') endLesson(); abortProbe(); });
   function voyDraw(){                                                      // the coast: the heliopause ring, where the Sun's bubble ends
     if (!probePlan || !probePlan.warp || SUN.deleted) return;
     ctx.save(); ctx.setLineDash([5,7]); ctx.strokeStyle = 'rgba(191,245,218,0.45)'; ctx.lineWidth = 1.2; ctx.beginPath();
@@ -2505,14 +2659,18 @@
     ctx.restore();
   }
   // the launcher both the action and the lesson use: 1977 arrangement, then the flight
-  function launchVoyager(opts){
-    arrangeGrandTour(); resetView();
-    if (VOY.wait > 0){ const n = Math.round(VOY.wait/DT/32); for (let i=0;i<n;i++) advance(32, 1); }   // launch date offset from the arrangement, if the scan wanted one
-    announce('🛰 5 Sep 1977 — the giants in their Grand Tour arc; Voyager 1 leaves Earth', 'capture'); sfx('capture');
+  function launchVoyager(n, opts){
+    const voy = VOYAGERS[n], traj = VOY_TRAJ[n];
+    arrangeGrandTour(); resetView(); sfx('capture');
     if (!startProbe(JUPITER, Object.assign({ voyager: true }, opts || {}))) return false;
     const plan = probePlan;
+    plan.voy = voy; plan.traj = traj; plan.route = traj.route.map(l => ({ p: planets.find(q => q.name === l.p), off: l.off }));
     plan.voyLaunchAt = t; plan.draw = voyDraw;
-    plan.restore = () => { if (plan.camSaved){ viewOpts.scale = plan.camSaved.scale; refit(); syncViewPanel(); } follow = null; zoom = 1; };
+    plan.restore = () => { if (plan.camSaved){ viewOpts.scale = plan.camSaved.scale; refit(); syncViewPanel(); } follow = null; zoom = 1; voyPanel.hidden = true; };
+    probeStatus.hidden = true;
+    voyName.textContent = voy.name; voyPhase.textContent = 'countdown'; voyLog.innerHTML = ''; voyToday.hidden = true;
+    voyDate.textContent = fmtVoyDate(voy.epoch); voyAU.textContent = '1.00 AU'; voyV.textContent = '—'; voyVL.textContent = 'speed'; voyLight.textContent = '8 min';
+    voyPanel.hidden = false;
     return true;
   }
   // Arrange the four giant planets in the real 1977 Grand Tour alignment — the
@@ -2544,16 +2702,16 @@
     for (const b of bodies){ b.vx -= vcx; b.vy -= vcy; }
     E0 = energy();
   }
-  function startVoyager(){
+  function startVoyager(n){
     if (msg || probePlan){ announce('🛰 Finish the current mission first', 'escape'); return; }
-    if (EARTH.deleted || JUPITER.deleted){ announce('🛰 Need Earth and Jupiter for a Grand Tour', 'escape'); return; }
     actMenu.hidden = true; cPanel.hidden = true; msgPanel.hidden = true; setActCaret();
-    launchVoyager();
+    launchVoyager(n);
   }
   document.getElementById('act-probe').addEventListener('click', () => startProbe(MARS));
   document.getElementById('act-jupiter').addEventListener('click', () => startProbe(JUPITER));
   document.getElementById('act-saturn').addEventListener('click', () => startProbe(SATURN));
-  document.getElementById('act-voyager').addEventListener('click', startVoyager);
+  document.getElementById('act-voyager').addEventListener('click', () => startVoyager(1));
+  document.getElementById('act-voyager2').addEventListener('click', () => startVoyager(2));
   document.getElementById('probe-cancel').addEventListener('click', () => abortProbe());
 
   // ---- "What if?" — guided lessons ----
@@ -2977,12 +3135,12 @@
   function voyRun(guess){
     if (!lesson || lesson.id !== 'voyager' || lesson.step !== 'intro') return;
     lesson.guess = guess;
-    if (!launchVoyager({ onBoost: voyBoost, onEnd: voyEnded })){ endLesson(); return; }
+    if (!launchVoyager(1, { onBoost: voyBoost, onEnd: voyEnded })){ endLesson(); return; }
     probePlan.lesson = 'voyager';
     lesson.step = 'run';
     showCoach({ step: 'What if? · 2 of 3 · outbound', title: 'Coasting to Jupiter',
       html: `<p>You said: <b>${GUESS_VOY[guess]}</b>.</p>
-             <p>The probe leaves Earth now — 5 September 1977 — and coasts ${Math.round(VOY.tT*12)} months to Jupiter on gravity alone. Speed relative to the Sun: <b class="lv-v">—</b> km/s · <b class="lv-rs">—</b> AU from the Sun · <b class="lv-dj">—</b> AU to Jupiter.</p>
+             <p>The probe leaves Earth now — 5 September 1977 — and coasts ${Math.round(VOY_TRAJ[1].tT*12)} months to Jupiter on gravity alone. Speed relative to the Sun: <b class="lv-v">—</b> km/s · <b class="lv-rs">—</b> AU from the Sun · <b class="lv-dj">—</b> AU to Jupiter.</p>
              <p>Watch the speed fall as it climbs away from the Sun — then watch what Jupiter does to it.</p>`,
       btns: [] });
   }
