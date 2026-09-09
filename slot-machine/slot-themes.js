@@ -1,7 +1,7 @@
 /* eslint-disable */
 // Three visual themes for the slot machine. Mechanics are identical across
 // themes — only the sprite row + accent palette differs. spriteRow is the
-// 0-indexed row in assets/sprites.png (256px per row); symbolNames are display
+// 0-indexed row in symbols.svg (256px per row); symbolNames are display
 // labels read out for accessibility and the paytable hint card.
 window.SLOT_THEMES = [
   {

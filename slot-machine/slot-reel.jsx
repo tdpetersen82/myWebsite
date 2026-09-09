@@ -82,7 +82,7 @@ function SlotReel(props) {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [isSpinning]);
 
-  // Render the long strip. Each cell shows one symbol from sprites.png.
+  // Render the long strip. Each cell shows one symbol from symbols.svg.
   const cells = [];
   for (let i = 0; i < TOTAL_CELLS; i++) {
     const symIdx = REEL_STRIP[i % STRIP_LEN];

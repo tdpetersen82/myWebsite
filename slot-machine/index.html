@@ -257,7 +257,7 @@
   .slot-history-syms{display:flex; gap:2px;}
   .slot-history-sym{
     display:inline-block; flex-shrink:0;
-    background-image:url('../assets/slot.webp');
+    background-image:url('symbols.svg');
     background-repeat:no-repeat;
     border-radius:3px;
   }
@@ -330,7 +330,7 @@
   .slot-cell{
     position:absolute;left:0;
     width:160px;height:160px;
-    background-image:url('../assets/slot.webp');
+    background-image:url('symbols.svg');
     background-repeat:no-repeat;
     background-color:rgba(255,255,255,.025);
   }
@@ -483,7 +483,7 @@
   }
   .slot-pt-sym{
     display:inline-block;
-    background-image:url('../assets/slot.webp');
+    background-image:url('symbols.svg');
     background-repeat:no-repeat;
     background-color:rgba(255,255,255,.04);
     border-radius:4px;
@@ -516,6 +516,22 @@
       scroll-behavior: auto !important;
     }
   }
+  /* Polished brass cabinet and bright enamel reels. */
+  .slot-frame{
+    background:linear-gradient(135deg,#f5dc9b 0%,#947039 12%,#382516 24%,#b98a46 50%,#382516 76%,#f2d69c 100%);
+    box-shadow:inset 0 0 0 2px #f8e6b2,inset 0 0 0 5px #3d2a1a,0 22px 45px #0009,0 0 30px #c9a26a15;
+  }
+  .slot-frame-shine{inset:5px;border:1px solid #ffe8ac80;box-shadow:inset 0 0 0 3px #20160f80;z-index:5;}
+  .slot-reels{gap:24px;padding:16px 24px;}
+  .slot-reel-window{background:linear-gradient(90deg,#c6c3b6,#fffdf1 22%,#fffdf5 70%,#c7c7bc);box-shadow:0 0 0 2px #211d17,0 0 0 4px #e9ce9290,0 8px 20px #0008;}
+  .slot-cell{background-color:transparent;}
+  .slot-reel-window::before{height:125px;background:linear-gradient(#27231abf,#56564b25 55%,transparent);}
+  .slot-reel-window::after{height:125px;background:linear-gradient(0deg,#27231abf,#56564b25 55%,transparent);}
+  .slot-payline-line{height:160px;border-top:1px solid #d79d4270;border-bottom:1px solid #d79d4270;background:transparent;box-shadow:none;opacity:1;}
+  .slot-history-sym,.slot-pt-sym{background-color:#f4efdf;border-radius:5px;}
+  .slot-tab.active{box-shadow:inset 0 1px #ffe8bb40,0 4px 14px #0005;}
+  .slot-spin{box-shadow:inset 0 2px #fff6,0 5px 0 #684521,0 8px 18px #0006;}
+  .slot-spin:active:not(:disabled){transform:translateY(2px);box-shadow:inset 0 2px #fff6,0 3px 0 #684521;}
 </style>
 </head>
 <body>
