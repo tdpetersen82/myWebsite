@@ -9,10 +9,10 @@ const SIMON_CONFIG = {
 
     // Pad colors (normal and lit states)
     PADS: {
-        GREEN:  { index: 0, key: '1', normal: 0x00a74a, lit: 0x33ff77, label: '1' },
-        RED:    { index: 1, key: '2', normal: 0xcc0000, lit: 0xff4444, label: '2' },
-        YELLOW: { index: 2, key: '3', normal: 0xcccc00, lit: 0xffff55, label: '3' },
-        BLUE:   { index: 3, key: '4', normal: 0x0044cc, lit: 0x4488ff, label: '4' },
+        GREEN:  { index: 0, key: '1', normal: 0x299d70, lit: 0x86ffb7, label: '1' },
+        RED:    { index: 1, key: '2', normal: 0xbd405a, lit: 0xff9fa6, label: '2' },
+        YELLOW: { index: 2, key: '3', normal: 0xc29b35, lit: 0xffef8e, label: '3' },
+        BLUE:   { index: 3, key: '4', normal: 0x356ebb, lit: 0x96d5ff, label: '4' },
     },
 
     // Pad layout
@@ -63,7 +63,7 @@ const SIMON_CONFIG = {
     HIGH_SCORE_KEY: 'simonHighScore',
 
     // Colors
-    BG_COLOR: 0x1a1a2e,
+    BG_COLOR: 0x0c1423,
     CENTER_COLOR: 0x222244,
     TEXT_COLOR: '#ffffff',
     ACCENT_COLOR: '#667eea',

@@ -27,6 +27,24 @@ class GameScene extends Phaser.Scene {
         this.isPaused = false;
         this.gameOver = false;
 
+        // Matte console housing with a raised rim and engraved perimeter marks.
+        const housing = this.add.graphics().setDepth(0);
+        const cx = SIMON_CONFIG.CENTER_X, cy = SIMON_CONFIG.CENTER_Y;
+        const radius = SIMON_CONFIG.PAD_RADIUS;
+        housing.fillStyle(0x030711,.45);housing.fillEllipse(cx,cy+18,(radius+28)*2,(radius+20)*2);
+        for(let r=radius+22;r>radius;r--) {
+            const t=(r-radius)/22;
+            const v=Math.round(19+32*Math.sin(t*Math.PI));
+            housing.fillStyle((v<<16)|((v+9)<<8)|(v+20),1);
+            housing.fillCircle(cx,cy,r);
+        }
+        housing.lineStyle(1,0xb1c8e0,.25);housing.strokeCircle(cx,cy,radius+20);
+        for(let i=0;i<64;i++) {
+            const a=i*Math.PI/32, r=radius+12;
+            housing.lineStyle(1,0x9ab0c6,i%4===0?.45:.16);
+            housing.lineBetween(cx+Math.cos(a)*r,cy+Math.sin(a)*r,cx+Math.cos(a)*(r+4),cy+Math.sin(a)*(r+4));
+        }
+
         // Create the 4 color pads as quadrant arcs
         const gap = SIMON_CONFIG.PAD_GAP;
         const padConfigs = [
@@ -38,16 +56,18 @@ class GameScene extends Phaser.Scene {
 
         this.pads = padConfigs.map(p => new ColorPad(this, p.config, p.start, p.end));
 
-        // Center circle
-        const centerGfx = this.add.graphics();
-        centerGfx.fillStyle(SIMON_CONFIG.CENTER_COLOR, 1);
-        centerGfx.fillCircle(SIMON_CONFIG.CENTER_X, SIMON_CONFIG.CENTER_Y, SIMON_CONFIG.PAD_INNER_RADIUS - 5);
-        centerGfx.setDepth(3);
+        // Recessed counter surrounded by a brushed metal bezel.
+        const centerGfx = this.add.graphics().setDepth(3);
+        centerGfx.fillStyle(0x637487,1);centerGfx.fillCircle(cx,cy,SIMON_CONFIG.PAD_INNER_RADIUS-2);
+        centerGfx.fillStyle(0x0a101b,1);centerGfx.fillCircle(cx,cy,SIMON_CONFIG.PAD_INNER_RADIUS-5);
+        centerGfx.lineStyle(1,0x94b2ce,.35);centerGfx.strokeCircle(cx,cy,SIMON_CONFIG.PAD_INNER_RADIUS-8);
+        centerGfx.fillStyle(0x26364c,.65);centerGfx.fillEllipse(cx,cy-21,55,16);
+        this.add.text(cx,cy-26,'ROUND',{fontFamily:'Arial, sans-serif',fontSize:'9px',color:'#9bb4cc',letterSpacing:2}).setOrigin(.5).setDepth(4);
 
         // Round display in center
-        this.roundText = this.add.text(SIMON_CONFIG.CENTER_X, SIMON_CONFIG.CENTER_Y, '0', {
+        this.roundText = this.add.text(SIMON_CONFIG.CENTER_X, SIMON_CONFIG.CENTER_Y + 5, '0', {
             fontFamily: 'Arial, sans-serif',
-            fontSize: '36px',
+            fontSize: '32px',
             fontStyle: 'bold',
             color: '#ffffff',
         }).setOrigin(0.5).setDepth(4);

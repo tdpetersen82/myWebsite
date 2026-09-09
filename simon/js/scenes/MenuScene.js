@@ -27,24 +27,27 @@ class MenuScene extends Phaser.Scene {
             fontStyle: 'bold',
             color: '#ffffff',
             stroke: '#667eea',
-            strokeThickness: 4,
+            strokeThickness: 1,
         }).setOrigin(0.5);
 
         // Subtitle
-        this.add.text(WIDTH / 2, 135, 'Memory Pattern Game', {
+        this.add.text(WIDTH / 2, 135, 'WATCH · REMEMBER · REPEAT', {
             fontFamily: 'Arial, sans-serif',
             fontSize: '20px',
             color: '#aaaacc',
         }).setOrigin(0.5);
 
         // Decorative mini pads
-        const colors = [0x00a74a, 0xcc0000, 0xcccc00, 0x0044cc];
+        const colors = Object.values(SIMON_CONFIG.PADS).map(p => p.normal);
         const miniSize = 30;
         const startX = WIDTH / 2 - (colors.length * (miniSize + 10)) / 2 + miniSize / 2;
         colors.forEach((color, i) => {
             const g = this.add.graphics();
-            g.fillStyle(color, 1);
-            g.fillRoundedRect(startX + i * (miniSize + 10), 160, miniSize, miniSize, 6);
+            const x = startX + i * (miniSize + 10);
+            g.fillStyle(0x020610,.7);g.fillRoundedRect(x-2,159,miniSize+4,miniSize+6,8);
+            g.fillStyle(color,1);g.fillRoundedRect(x,160,miniSize,miniSize,6);
+            g.fillStyle(0xffffff,.25);g.fillRoundedRect(x+3,163,miniSize-6,5,2);
+            g.lineStyle(1,0xffffff,.2);g.strokeRoundedRect(x,160,miniSize,miniSize,6);
         });
 
         // Difficulty selection

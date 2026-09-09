@@ -72,42 +72,53 @@ class ColorPad {
 
         this.label = scene.add.text(labelX, labelY, padConfig.label, {
             fontFamily: 'Arial, sans-serif',
-            fontSize: '28px',
+            fontSize: '23px',
             fontStyle: 'bold',
             color: '#ffffff',
             stroke: '#000000',
-            strokeThickness: 3,
+            strokeThickness: 2,
         }).setOrigin(0.5).setAlpha(0.6).setDepth(2);
     }
 
     draw(color) {
-        this.graphics.clear();
-        this.graphics.fillStyle(color, 1);
-        this.graphics.lineStyle(3, 0x111122, 1);
+        const g = this.graphics;
+        g.clear();
+        const cx = SIMON_CONFIG.CENTER_X, cy = SIMON_CONFIG.CENTER_Y;
+        const outer = SIMON_CONFIG.PAD_RADIUS, inner = SIMON_CONFIG.PAD_INNER_RADIUS;
+        const lit = color === this.litColor;
+        const mix = (a,b,t) => {
+            const channel = shift => Math.round(((a>>shift)&255)*(1-t)+((b>>shift)&255)*t);
+            return (channel(16)<<16)|(channel(8)<<8)|channel(0);
+        };
+        const arc = (r1,r2,fill,alpha=1) => {
+            g.fillStyle(fill,alpha);g.beginPath();
+            g.arc(cx,cy,r1,this.startAngle,this.endAngle,false);
+            g.lineTo(cx+Math.cos(this.endAngle)*r2,cy+Math.sin(this.endAngle)*r2);
+            g.arc(cx,cy,r2,this.endAngle,this.startAngle,true);
+            g.closePath();g.fillPath();
+        };
+        if(lit) {
+            arc(outer+9,inner-5,color,.08);
+            arc(outer+5,inner-3,color,.18);
+        }
+        arc(outer,inner,0x080e19);
+        // Concentric molded plastic bands: bright shoulder, saturated face, dark lip.
+        for(let i=0;i<30;i++) {
+            const t=i/30, r1=outer-3-t*(outer-inner-6),r2=r1-(outer-inner-6)/30-1;
+            const shade=t<.16 ? mix(color,0xffffff,(.16-t)*1.9) : mix(color,0x07142a,.08+t*.3);
+            arc(r1,Math.max(inner+3,r2),shade);
+        }
+        g.lineStyle(lit?3:1.5,lit?0xf5ffe6:mix(color,0xffffff,.45),lit?.95:.55);
+        g.beginPath();g.arc(cx,cy,outer-5,this.startAngle+.03,this.endAngle-.03);g.strokePath();
+        // A soft curved highlight makes the surface read as polished plastic.
+        arc(outer-12,outer-25,0xffffff,lit?.19:.09);
+        g.lineStyle(2,0x040912,.6);g.beginPath();g.arc(cx,cy,inner+4,this.startAngle,this.endAngle);g.strokePath();
+        const mid=(this.startAngle+this.endAngle)/2;
+        const ledR=outer-35, x=cx+Math.cos(mid)*ledR,y=cy+Math.sin(mid)*ledR;
+        g.fillStyle(0x0b1721,.75);g.fillCircle(x,y,5);
+        g.fillStyle(lit?0xffffff:mix(color,0xffffff,.35),lit?1:.45);g.fillCircle(x,y,2.5);
+        g.setDepth(1);
 
-        const cx = SIMON_CONFIG.CENTER_X;
-        const cy = SIMON_CONFIG.CENTER_Y;
-        const outer = SIMON_CONFIG.PAD_RADIUS;
-        const inner = SIMON_CONFIG.PAD_INNER_RADIUS;
-
-        // Draw filled arc (quadrant)
-        this.graphics.beginPath();
-
-        // Outer arc
-        this.graphics.arc(cx, cy, outer, this.startAngle, this.endAngle, false);
-        // Line to inner arc end
-        this.graphics.lineTo(
-            cx + Math.cos(this.endAngle) * inner,
-            cy + Math.sin(this.endAngle) * inner
-        );
-        // Inner arc (reverse)
-        this.graphics.arc(cx, cy, inner, this.endAngle, this.startAngle, true);
-        // Close back to outer arc start
-        this.graphics.closePath();
-        this.graphics.fillPath();
-        this.graphics.strokePath();
-
-        this.graphics.setDepth(1);
     }
 
     /**
