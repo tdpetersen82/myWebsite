@@ -41,6 +41,7 @@
 
   // Shared illustrated artwork for game tiles, featured cards, and sidebar icons.
   const GAME_ART = new Map([
+    ['mini-golf', 'mini-golf-arcade-20260909.png'],
     ['snake', 'snake-kids-20260909.png'],
     ['bubble-pop', 'bubble-pop-kids-20260909.png'],
     ['memory-match', 'memory-match-kids-20260909.png'],
@@ -190,7 +191,7 @@
 
   function glyph(game, size) {
     if (GAME_ART.has(game.id)) {
-      return `<img src="assets/thumbs/${GAME_ART.get(game.id)}?v=20260909h" alt="" width="${size}" height="${size}" style="display:block;object-fit:contain;border-radius:4px" decoding="async">`;
+      return `<img src="assets/thumbs/${GAME_ART.get(game.id)}?v=20260909i" alt="" width="${size}" height="${size}" style="display:block;object-fit:contain;border-radius:4px" decoding="async">`;
     }
     const tpl = GLYPH_PATHS[game.id] || '<rect x="12" y="12" width="40" height="40" rx="8" fill="C"/>';
     const inner = tpl.replace(/"C"/g, `"${game.color}"`);
@@ -238,7 +239,7 @@
     const hasShot = !!ext;
     const isRasterArt = GAME_ART.has(game.id);
     const isArt = ext === 'svg' || isRasterArt;
-    const imageVersion = isRasterArt ? '?v=20260909h' : '';
+    const imageVersion = isRasterArt ? '?v=20260909i' : '';
     const imageSrc = `assets/thumbs/${GAME_ART.get(game.id) || `${game.id}.${ext}`}${imageVersion}`;
     const imageStyle = isRasterArt && game.cat === 'classic' ? ' style="background:#151923"'
       : isRasterArt && game.cat === 'casino' ? ' style="background:#10231d"' : '';
