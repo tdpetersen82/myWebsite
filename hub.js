@@ -39,6 +39,21 @@
     ['counting-critters', 'png'],
   ]);
 
+  // Shared artwork for Kids tiles, featured cards, and sidebar icons.
+  const KIDS_ART = new Map([
+    ['snake', 'snake-kids-20260909.png'],
+    ['bubble-pop', 'bubble-pop-kids-20260909.png'],
+    ['memory-match', 'memory-match-kids-20260909.png'],
+    ['shape-sorter', 'shape-sorter-kids-20260909.png'],
+    ['animal-detective', 'animal-detective-kids-20260909.png'],
+    ['tic-tac-toe', 'tic-tac-toe-kids-20260909.png'],
+    ['go-fish', 'go-fish-kids-20260909.png'],
+    ['crazy-eights', 'crazy-eights-kids-20260909.png'],
+    ['dogs', 'pup-quiz-20260909.jpg'],
+    ['counting-critters', 'counting-critters.png'],
+  ]);
+  for (const [id, file] of KIDS_ART) THUMBS.set(id, file.split('.').pop());
+
   // Map of game id → localStorage key for personal best. If a key isn't here
   // (or has no stored value), the tile renders without the ★ badge — better
   // than showing fake placeholder data.
@@ -130,8 +145,8 @@
   };
 
   function glyph(game, size) {
-    if (game.id === 'dogs') {
-      return `<img src="assets/thumbs/pup-quiz-20260909.jpg" alt="" width="${size}" height="${size}" style="display:block;object-fit:contain;border-radius:4px" decoding="async">`;
+    if (KIDS_ART.has(game.id)) {
+      return `<img src="assets/thumbs/${KIDS_ART.get(game.id)}?v=20260909e" alt="" width="${size}" height="${size}" style="display:block;object-fit:contain;border-radius:4px" decoding="async">`;
     }
     const tpl = GLYPH_PATHS[game.id] || '<rect x="12" y="12" width="40" height="40" rx="8" fill="C"/>';
     const inner = tpl.replace(/"C"/g, `"${game.color}"`);
@@ -177,10 +192,10 @@
     const cat = CAT_LABEL[game.cat] || '';
     const ext = THUMBS.get(game.id);
     const hasShot = !!ext;
-    const isRasterArt = game.id === 'dogs' || game.id === 'counting-critters';
+    const isRasterArt = KIDS_ART.has(game.id);
     const isArt = ext === 'svg' || isRasterArt;
-    const imageVersion = isRasterArt ? '?v=20260909c' : '';
-    const imageSrc = game.id === 'dogs' ? 'assets/thumbs/pup-quiz-20260909.jpg' : `assets/thumbs/${game.id}.${ext}${imageVersion}`;
+    const imageVersion = isRasterArt ? '?v=20260909e' : '';
+    const imageSrc = `assets/thumbs/${KIDS_ART.get(game.id) || `${game.id}.${ext}`}${imageVersion}`;
     const top = hasShot
       ? `<img class="shot-img${isArt ? ' is-art' : ''}" src="${imageSrc}" alt="${game.id === 'dogs' ? 'Three curious dogs beneath a question mark — Pup Quiz' : game.name + (isArt ? ' artwork' : ' screenshot')}" loading="lazy" decoding="async" width="600" height="600">`
       : `<div class="shot-ph" style="background:${game.color}22">${glyph(game, size === 's-tall' ? 84 : 56)}</div>`;
