@@ -1472,13 +1472,8 @@
         pg.addColorStop(0, hexA(p.color, 0.32 + 0.55*glow)); pg.addColorStop(1, hexA(p.color, 0));
         ctx.fillStyle = pg; ctx.beginPath(); ctx.arc(bx,by,gr,0,2*Math.PI); ctx.fill();
         ctx.globalCompositeOperation = 'source-over';
-        if (p.name === 'Saturn'){
-          ctx.strokeStyle = 'rgba(224,205,150,0.55)'; ctx.lineWidth = 2;
-          ctx.beginPath(); ctx.ellipse(bx, by, p.size*2.1, p.size*0.8, -0.45, 0, 2*Math.PI); ctx.stroke();
-          ctx.strokeStyle = 'rgba(224,205,150,0.22)'; ctx.lineWidth = 1;
-          ctx.beginPath(); ctx.ellipse(bx, by, p.size*2.6, p.size*1.05, -0.45, 0, 2*Math.PI); ctx.stroke();
-        }
-        ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(bx, by, Math.max(p.size, (p.R || 0)*S()), 0, 2*Math.PI); ctx.fill();   // true disc once the zoom resolves it (Voyager's flyby cam)
+        drawPlanetSprite(p, bx, by, Math.max(p.size, (p.R || 0)*S()));
+
       }
     }
 
@@ -1588,10 +1583,7 @@
       const [hx, hy] = scr(pr.x, pr.y);
       const [ax, ay] = scr(pr.x + pr.vx*1e-3, pr.y + pr.vy*1e-3);   // heading in screen space (correct in any view scale)
       const ang = Math.atan2(ay-hy, ax-hx);
-      ctx.save(); ctx.translate(hx, hy); ctx.rotate(ang);
-      ctx.fillStyle = '#e9fff4'; ctx.strokeStyle = 'rgba(150,235,190,0.9)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(6,0); ctx.lineTo(-4,3.4); ctx.lineTo(-4,-3.4); ctx.closePath();
-      ctx.fill(); ctx.stroke(); ctx.restore();
+      drawProbe(ctx, hx, hy, ang, 1);
       pr._sx = hx; pr._sy = hy;
     }
     if (!earthView) drawLessonFx();                                  // What-if overlays (lead wedge, arrival markers)
@@ -3472,9 +3464,7 @@
       const [px, py] = sc(m.probe.x, m.probe.y);                             // inertial — matches the trail
       let heading = 0;                                                        // from the last trail segment
       if (m.trail.length > 1){ const [ax,ay] = sc(...m.trail[m.trail.length-1]), [bx,by] = sc(...m.trail[m.trail.length-2]); heading = Math.atan2(ay-by, ax-bx); }
-      ctx.save(); ctx.translate(px, py); ctx.rotate(heading);
-      ctx.fillStyle = '#e9fff4'; ctx.strokeStyle = 'rgba(150,235,190,0.9)'; ctx.lineWidth = 1;
-      ctx.beginPath(); ctx.moveTo(6,0); ctx.lineTo(-4,3.4); ctx.lineTo(-4,-3.4); ctx.closePath(); ctx.fill(); ctx.stroke(); ctx.restore();
+      drawProbe(ctx, px, py, heading, 1.15);
       const hrs = Math.round(m.t/3600), tot = Math.round(EM_T/3600);
       const kkm = Math.round(Math.hypot(m.probe.x - moonPosKm(m.t)[0], m.probe.y - moonPosKm(m.t)[1]));
       ctx.fillStyle = '#cfd6e6'; ctx.font = "600 13px system-ui, sans-serif"; ctx.textAlign = 'center';
@@ -3601,16 +3591,66 @@
   // Render one tilted, spinning body into a canvas context — shared by the
   // dock chips (small) and the selection card's hero render (large). `px` is
   // the device-pixel scale for line weights; `th` the current spin phase.
-  function drawBody(g, d, w, h, R, px, th){
+  // Cached transparent sprites keep the orbital view inexpensive even at close zoom.
+  const planetSprites = new Map();
+  const earthDiscs = new Map();
+  function drawPlanetSprite(p, x, y, radius){
+    const d = CHIP_DATA[p.name];
+    if (!d){
+      const shade = ctx.createRadialGradient(x-radius*.35,y-radius*.4,0,x,y,radius);
+      shade.addColorStop(0,p.color); shade.addColorStop(1,'#162031');
+      ctx.fillStyle=shade;ctx.beginPath();ctx.arc(x,y,radius,0,Math.PI*2);ctx.fill();return;
+    }
+    let sprite=planetSprites.get(p.name);
+    if(!sprite){sprite={canvas:document.createElement('canvas'),frame:-1};sprite.canvas.width=sprite.canvas.height=256;planetSprites.set(p.name,sprite);}
+    const frame=Math.floor(evClock*3000);
+    if(sprite.frame!==frame || sprite.ready!==earthReady){
+      drawBody(sprite.canvas.getContext('2d'),d,256,256,66,1,spinPhase(d),false);
+      sprite.frame=frame;sprite.ready=earthReady;
+    }
+    const size=radius*256/66;
+    ctx.drawImage(sprite.canvas,x-size/2,y-size/2,size,size);
+  }
+  function drawProbe(g,x,y,heading,scale){
+    g.save();g.translate(x,y);g.rotate(heading);g.scale(scale,scale);
+    g.shadowColor='rgba(0,0,0,.7)';g.shadowBlur=3;
+    g.strokeStyle='#9fb4c5';g.lineWidth=1;
+    g.beginPath();g.moveTo(-1,-11);g.lineTo(-1,11);g.stroke();
+    // Blue photovoltaic wings, separated from the gold instrument bus.
+    for(const side of [-1,1]){
+      g.fillStyle='#234f86';g.fillRect(-5,side<0?-12:5,8,7);
+      g.strokeStyle='#8ec6ec';g.lineWidth=.6;g.strokeRect(-5,side<0?-12:5,8,7);
+      g.beginPath();for(let i=1;i<4;i++){g.moveTo(-5+i*2,side<0?-12:5);g.lineTo(-5+i*2,side<0?-5:12);}g.stroke();
+    }
+    g.shadowBlur=0;
+    g.fillStyle='#c49b52';g.fillRect(-4,-4,8,8);
+    g.fillStyle='#f2d699';g.fillRect(-4,-4,3,7);
+    g.strokeStyle='#eee8d5';g.lineWidth=.8;g.strokeRect(-4,-4,8,8);
+    g.fillStyle='#dce7eb';g.beginPath();g.ellipse(5,0,2.8,5,0,0,Math.PI*2);g.fill();
+    g.strokeStyle='#7895ac';g.beginPath();g.moveTo(5,-4);g.lineTo(8,0);g.lineTo(5,4);g.stroke();
+    g.strokeStyle='#eef9ff';g.beginPath();g.moveTo(6,0);g.lineTo(11,0);g.stroke();
+    g.fillStyle='#1b2e40';g.fillRect(-6,-2,2,4);g.restore();
+  }
+  function drawBody(g, d, w, h, R, px, th, axis = true){
     g.clearRect(0, 0, w, h);
     g.save();
     g.translate(w/2, h/2);
     g.rotate(d.tilt * Math.PI/180);
+    if (axis){
     // spin axis, poking past both poles so the tilt reads at a glance
     g.strokeStyle = 'rgba(207,214,230,0.5)'; g.lineWidth = px;
     g.beginPath(); g.moveTo(0, -R-3.5*px); g.lineTo(0, R+3.5*px); g.stroke();
     g.fillStyle = 'rgba(230,237,248,0.9)';
     g.beginPath(); g.arc(0, -R-3.5*px, 1.2*px, 0, 2*Math.PI); g.fill();   // north-pole tick
+    }
+    const ringHalf = (front) => {
+      for(let i=0;i<18;i++){
+        const rr=1.24+i*.025;
+        g.strokeStyle=i===10?'#352f27':i<10?'rgba(209,192,149,.8)':'rgba(170,157,128,.65)';
+        g.lineWidth=Math.max(.5,R*.022);g.beginPath();g.ellipse(0,0,R*rr,R*rr*.29,0,front?0:Math.PI,front?Math.PI:Math.PI*2);g.stroke();
+      }
+    };
+    if(d.rings) ringHalf(false);
     if (d.glow){
       const gl = g.createRadialGradient(0, 0, R*0.5, 0, 0, R*1.75);
       gl.addColorStop(0, 'rgba(255,211,90,0.55)'); gl.addColorStop(1, 'rgba(255,211,90,0)');
@@ -3618,7 +3658,7 @@
     }
     g.save();
     g.beginPath(); g.arc(0, 0, R, 0, 2*Math.PI); g.clip();
-    const blur = Math.max(0.5, R * 0.05);
+    const blur = Math.max(0.2, R * 0.012);
     if (d.bands){
       // latitudinal bands with SPHERICAL spacing (compressed toward the poles),
       // blurred so the seams read as weather, not stripes
@@ -3637,6 +3677,19 @@
       g.fillStyle = sg; g.fillRect(-R, -R, 2*R, 2*R);
     } else {
       g.fillStyle = d.base; g.fillRect(-R, -R, 2*R, 2*R);
+    }
+    // Fine weather bands and mineral variation add detail without changing with each frame.
+    for(let i=0;i<110;i++){
+      const yy=-R+2*R*i/110;
+      g.fillStyle=i%3===0?'rgba(255,242,218,.08)':'rgba(25,30,42,.045)';
+      if(d.bands){
+        g.beginPath();g.moveTo(-R,yy);
+        for(let x=-R;x<=R;x+=R/12)g.lineTo(x,yy+Math.sin(x/R*7+i*.9+th)*R*.012);
+        g.lineTo(R,yy+R*.013);g.lineTo(-R,yy+R*.013);g.closePath();g.fill();
+      } else {
+        const xx=Math.sin(i*137.5)*R;
+        g.beginPath();g.ellipse(xx,yy,R*.025,R*.012,0,0,Math.PI*2);g.fill();
+      }
     }
     // moving surface features — soft-edged
     g.filter = 'blur(' + blur + 'px)';
@@ -3680,6 +3733,26 @@
       g.beginPath(); g.ellipse(0, R*0.9, R*0.26, R*0.13, 0, 0, 2*Math.PI); g.fill(); g.filter = 'none'; }
     if (d.pole){ g.filter = 'blur(' + blur + 'px)'; g.globalAlpha = 0.5; g.fillStyle = d.pole;   // bright pole (Uranus)
       g.beginPath(); g.ellipse(0, -R*0.8, R*0.5, R*0.3, 0, 0, 2*Math.PI); g.fill(); g.globalAlpha = 1; g.filter = 'none'; }
+    // Use the bundled Earth photograph in chips and the inspector as well as Earth view.
+    if(d === CHIP_DATA.Earth && earthReady){
+      const D=Math.max(2,Math.ceil(R*2));
+      let disk=earthDiscs.get(D);
+      if(!disk){const canvas=document.createElement('canvas');canvas.width=canvas.height=D;const gc=canvas.getContext('2d');disk={canvas,gc,pixels:gc.createImageData(D,D),phase:null};earthDiscs.set(D,disk);}
+      const phase=Math.round(th*60)/60;
+      if(disk.phase!==phase){
+        const tex=earthTex.data,tw=earthTex.width,hh=earthTex.height,out=disk.pixels.data;
+        for(let y=0;y<D;y++)for(let x=0;x<D;x++){
+          const nx=(x+.5)/D*2-1,ny=(y+.5)/D*2-1,r2=nx*nx+ny*ny,i=(y*D+x)*4;
+          if(r2>1){out[i+3]=0;continue;}
+          const lon=Math.atan2(nx,Math.sqrt(1-r2))+phase;
+          const u=((lon/(2*Math.PI)+.5)%1+1)%1,v=Math.acos(-ny)/Math.PI;
+          const ti=(Math.min(hh-1,Math.floor(v*hh))*tw+Math.floor(u*tw))*4;
+          out[i]=tex[ti];out[i+1]=tex[ti+1];out[i+2]=tex[ti+2];out[i+3]=255;
+        }
+        disk.gc.putImageData(disk.pixels,0,0);disk.phase=phase;
+      }
+      g.drawImage(disk.canvas,-R,-R,R*2,R*2);
+    }
     if (d.rings){                                            // the rings' shadow falls across the globe
       g.strokeStyle = 'rgba(25,18,6,0.30)'; g.lineWidth = 2.0*px;
       g.beginPath(); g.ellipse(0, 0, R*1.52, R*0.43, 0, 0, 2*Math.PI); g.stroke();
@@ -3692,14 +3765,7 @@
       hz.addColorStop(0, d.atmo.replace(/[\d.]+\)$/, '0.22)')); hz.addColorStop(1, 'rgba(0,0,0,0)');
       g.fillStyle = hz; g.beginPath(); g.arc(0, 0, R*1.22, 0, 2*Math.PI); g.fill();
     }
-    if (d.rings){                                            // three ring layers with a visible division
-      g.strokeStyle = 'rgba(216,198,143,0.35)'; g.lineWidth = 0.9*px;
-      g.beginPath(); g.ellipse(0, 0, R*1.28, R*0.355, 0, 0, 2*Math.PI); g.stroke();
-      g.strokeStyle = 'rgba(224,206,152,0.9)'; g.lineWidth = 2.4*px;
-      g.beginPath(); g.ellipse(0, 0, R*1.52, R*0.43, 0, 0, 2*Math.PI); g.stroke();
-      g.strokeStyle = 'rgba(216,198,143,0.55)'; g.lineWidth = 1.1*px;
-      g.beginPath(); g.ellipse(0, 0, R*1.68, R*0.475, 0, 0, 2*Math.PI); g.stroke();
-    }
+    if (d.rings) ringHalf(true);
     g.restore();                                             // untilt — lighting is fixed in space
     if (!d.glow){
       const hl = g.createRadialGradient(w/2 - R*0.5, h/2 - R*0.5, R*0.1, w/2 - R*0.35, h/2 - R*0.35, R*0.95);
