@@ -130,6 +130,9 @@
   };
 
   function glyph(game, size) {
+    if (game.id === 'dogs') {
+      return `<img src="assets/thumbs/pup-quiz-20260909.jpg" alt="" width="${size}" height="${size}" style="display:block;object-fit:contain;border-radius:4px" decoding="async">`;
+    }
     const tpl = GLYPH_PATHS[game.id] || '<rect x="12" y="12" width="40" height="40" rx="8" fill="C"/>';
     const inner = tpl.replace(/"C"/g, `"${game.color}"`);
     return `<svg width="${size}" height="${size}" viewBox="0 0 64 64" aria-hidden="true">${inner}</svg>`;
@@ -177,8 +180,9 @@
     const isRasterArt = game.id === 'dogs' || game.id === 'counting-critters';
     const isArt = ext === 'svg' || isRasterArt;
     const imageVersion = isRasterArt ? '?v=20260909c' : '';
+    const imageSrc = game.id === 'dogs' ? 'assets/thumbs/pup-quiz-20260909.jpg' : `assets/thumbs/${game.id}.${ext}${imageVersion}`;
     const top = hasShot
-      ? `<img class="shot-img${isArt ? ' is-art' : ''}" src="assets/thumbs/${game.id}.${ext}${imageVersion}" alt="${game.id === 'dogs' ? 'Three curious dogs beneath a question mark — Pup Quiz' : game.name + (isArt ? ' artwork' : ' screenshot')}" loading="lazy" decoding="async" width="600" height="600">`
+      ? `<img class="shot-img${isArt ? ' is-art' : ''}" src="${imageSrc}" alt="${game.id === 'dogs' ? 'Three curious dogs beneath a question mark — Pup Quiz' : game.name + (isArt ? ' artwork' : ' screenshot')}" loading="lazy" decoding="async" width="600" height="600">`
       : `<div class="shot-ph" style="background:${game.color}22">${glyph(game, size === 's-tall' ? 84 : 56)}</div>`;
 
     return el(`
