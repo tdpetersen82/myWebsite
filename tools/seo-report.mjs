@@ -313,15 +313,19 @@ async function main() {
 
         // ---- Index canaries: is Google even crawling the pages that matter? ----
         {
-            console.log('Index canaries (URL Inspection):');
-            console.log(`  ${'page'.padEnd(38)} ${'verdict'.padEnd(8)} ${'coverage'.padEnd(40)} ${'last crawl'.padEnd(12)} sitemap refs`);
+            const sitemapUrls = new Set((readFileSync(new URL('../sitemap.xml', import.meta.url), 'utf8').match(/<loc>([^<]+)<\/loc>/g) || []).map((m) => m.slice(5, -6)));
+            console.log(`Index canaries (URL Inspection; sitemap.xml lists ${sitemapUrls.size} URLs, last downloaded by Google per the Sitemaps report):`);
+            console.log(`  ${'page'.padEnd(38)} ${'verdict'.padEnd(8)} ${'coverage'.padEnd(40)} ${'last crawl'.padEnd(12)} sitemap refs`);   // sitemap: credited to the sitemap by Google · refs: referring URLs Google knows
             let indexed = 0;
             for (const p of INDEX_CANARIES) {
                 try {
                     const i = await inspectUrl(token, site, 'https://limestonegames.com' + p);
                     const ok = i.verdict === 'PASS'; if (ok) indexed++;
                     const age = i.lastCrawlTime ? Math.round((Date.now() - Date.parse(i.lastCrawlTime)) / 86400000) + ' d ago' : 'never';
-                    console.log(`  ${p.padEnd(38)} ${(ok ? 'indexed' : (i.verdict || '?').toLowerCase()).padEnd(8)} ${String(i.coverageState || '').slice(0, 40).padEnd(40)} ${age.padEnd(12)} ${(i.sitemap || []).length ? 'yes' : 'NO '}     ${(i.referringUrls || []).length}`);
+                    // "in sitemap" = listed in our own sitemap.xml (the file Google downloads daily). The inspection
+                    // payload's `sitemap` array comes and goes between runs for the same page, so it is not used.
+                    const inMap = sitemapUrls.has('https://limestonegames.com' + p);
+                    console.log(`  ${p.padEnd(38)} ${(ok ? 'indexed' : (i.verdict || '?').toLowerCase()).padEnd(8)} ${String(i.coverageState || '').slice(0, 40).padEnd(40)} ${age.padEnd(12)} ${inMap ? 'yes' : 'NO '}     ${(i.referringUrls || []).length}`);
                 } catch (err) {
                     console.log(`  ${p.padEnd(38)} inspection failed: ${err.message}`);
                 }
