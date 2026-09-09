@@ -27,14 +27,136 @@
             border-radius: 8px;
             transition: width 0.25s linear;
         }
-        #game-container {
+        #game-container,
+        .ch-bezel #game-container {
             margin: 10px auto;
             overflow: hidden;
-            max-width: 804px !important;
+            /* 800×700 game: keep 8/7 and let the chrome's 70vh cap set the width, not stretch the canvas. */
+            max-width: min(804px, calc(70vh * 8 / 7)) !important;
             height: auto !important;
             aspect-ratio: 8 / 7;
         }
+        .ch-bezel #game-container { margin: 0 auto; }
         #game-container canvas { display: block; }
+        #game-container { position: relative; }
+
+        /* ── Game-over panel: Play again first, then three games to try next ── */
+        .go-panel {
+            position: absolute; inset: 0; z-index: 6;
+            display: flex;
+            padding: clamp(8px, 1.5vw, 16px);
+            border-radius: 8px;
+            background: radial-gradient(ellipse at 50% 40%, rgba(8,4,2,0.62), rgba(8,4,2,0.9));
+            font-family: var(--ch-font, 'Inter', system-ui, sans-serif);
+            color: var(--ch-ink, #F4E6D2);
+            text-align: center;
+            overflow: auto;
+        }
+        .go-panel[hidden] { display: none; }
+        /* margin:auto centres when there is room and pins to the top (scrollable)
+           when there is not — flex centring alone would clip the title. */
+        .go-inner {
+            margin: auto; width: 100%;
+            display: flex; flex-direction: column; align-items: center;
+            gap: clamp(8px, 1.6vw, 14px);
+        }
+        .go-title {
+            margin: 0;
+            font-family: var(--ch-display, 'Bricolage Grotesque', system-ui, sans-serif);
+            font-size: clamp(26px, 5.5vw, 46px); font-weight: 700; letter-spacing: 0.12em;
+            color: #ff5252; text-shadow: 0 0 22px rgba(255,82,82,0.55);
+            line-height: 1;
+        }
+        .go-score {
+            margin: 0;
+            font-family: var(--ch-mono, ui-monospace, monospace);
+            font-size: clamp(12px, 2vw, 16px); letter-spacing: 0.08em;
+            color: var(--ch-ink2, #C7B196);
+        }
+        .go-score b { color: var(--ch-ink, #F4E6D2); font-weight: 600; }
+        .go-score .go-best {
+            display: inline-block; margin-left: 8px; padding: 2px 8px; border-radius: 999px;
+            background: var(--ch-amber, #FFC34D); color: #120A05;
+            font-size: 0.8em; font-weight: 700; letter-spacing: 0.12em;
+        }
+        .go-again {
+            -webkit-appearance: none; appearance: none; cursor: pointer;
+            margin: clamp(2px, 0.6vw, 6px) 0 0;
+            padding: clamp(10px, 1.6vw, 14px) clamp(22px, 4vw, 34px);
+            border: none; border-radius: 999px;
+            background: var(--ch-ember, #FF5A2C); color: #fff;
+            font-family: var(--ch-display, 'Bricolage Grotesque', system-ui, sans-serif);
+            font-size: clamp(17px, 3vw, 26px); font-weight: 700; letter-spacing: 0.03em;
+            box-shadow: 0 12px 30px -8px rgba(255,90,44,0.7), inset 0 1px 0 rgba(255,255,255,0.25);
+            transition: transform .12s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .go-again:hover, .go-again:focus-visible { transform: translateY(-2px); outline: none; }
+        .go-again:focus-visible { box-shadow: 0 0 0 3px #fff, 0 12px 30px -8px rgba(255,90,44,0.7); }
+        .go-sub {
+            margin: 0;
+            font-family: var(--ch-mono, ui-monospace, monospace);
+            font-size: clamp(9px, 1.4vw, 11px); letter-spacing: 0.18em; text-transform: uppercase;
+            color: var(--ch-ink3, #8E7A60);
+        }
+        .go-next {
+            width: 100%; max-width: 480px;
+            margin-top: clamp(4px, 1vw, 10px);
+            padding-top: clamp(8px, 1.4vw, 14px);
+            border-top: 1px solid var(--ch-line, rgba(216,156,86,0.18));
+        }
+        .go-next-label {
+            margin: 0 0 clamp(6px, 1.2vw, 10px);
+            font-family: var(--ch-mono, ui-monospace, monospace);
+            font-size: clamp(9px, 1.4vw, 11px); letter-spacing: 0.24em; text-transform: uppercase;
+            color: var(--ch-amber, #FFC34D);
+        }
+        .go-tiles {
+            display: grid; grid-template-columns: repeat(3, 1fr);
+            gap: clamp(6px, 1.4vw, 12px);
+            list-style: none; margin: 0; padding: 0;
+        }
+        .go-tile {
+            display: block; text-decoration: none; color: var(--ch-ink, #F4E6D2);
+            border-radius: 10px; overflow: hidden;
+            background: rgba(36,21,9,0.9);
+            border: 1px solid var(--ch-line, rgba(216,156,86,0.18));
+            box-shadow: 0 8px 18px -10px rgba(0,0,0,0.7);
+            transition: transform .12s, border-color .12s;
+            -webkit-tap-highlight-color: transparent;
+        }
+        .go-tile:hover, .go-tile:focus-visible { transform: translateY(-2px); border-color: var(--ch-amber, #FFC34D); outline: none; }
+        .go-tile img { display: block; width: 100%; height: auto; aspect-ratio: 1 / 1; object-fit: cover; background: #050304; }
+        .go-tile span {
+            display: block; padding: clamp(5px, 1vw, 8px) 4px;
+            font-family: var(--ch-display, 'Bricolage Grotesque', system-ui, sans-serif);
+            font-size: clamp(11px, 1.8vw, 14px); font-weight: 600; line-height: 1.1;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .go-all {
+            display: inline-block; margin-top: clamp(6px, 1.2vw, 10px);
+            font-size: clamp(11px, 1.7vw, 13px); font-weight: 600;
+            color: var(--ch-amber, #FFC34D); text-decoration: none;
+        }
+        .go-all:hover, .go-all:focus-visible { text-decoration: underline; }
+        /* Phones and short landscape screens: the screen is ~275×240 or ~310×270, so
+           drop the hint, shrink the type and use small square thumbs with the name below. */
+        @media (max-width: 480px), (max-height: 520px) {
+            .go-panel { padding: 8px 10px; }
+            .go-inner { gap: 5px; }
+            .go-title { font-size: 22px; letter-spacing: 0.1em; }
+            .go-score { font-size: 11px; }
+            .go-score .go-best { margin-left: 6px; padding: 1px 6px; }
+            .go-again { margin-top: 2px; padding: 8px 20px; font-size: 16px; }
+            .go-sub { display: none; }
+            .go-next { max-width: 340px; margin-top: 2px; padding-top: 6px; }
+            .go-next-label { margin-bottom: 5px; font-size: 9px; }
+            .go-tiles { gap: 6px; }
+            .go-tile { display: flex; flex-direction: column; align-items: center; padding: 4px 2px 3px; }
+            .go-tile img { width: 52px; height: 52px; border-radius: 8px; }
+            .go-tile span { padding: 3px 0 0; font-size: 10px; max-width: 100%; }
+            .go-all { margin-top: 3px; font-size: 11px; }
+        }
     </style>
     <meta name="description" content="Play Frogger free in your browser. Cross busy roads and rivers to reach home safely in this classic arcade game! No downloads, no installs.">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Frogger","description":"Play Frogger free in your browser. Cross busy roads and rivers to reach home safely in this classic arcade game! No downloads, no installs.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
@@ -81,7 +203,25 @@
         <div class="timer-bar-container">
             <div class="timer-bar" id="timerBar" style="width:100%"></div>
         </div>
-        <div id="game-container"></div>
+        <div id="game-container">
+            <div class="go-panel" id="goPanel" role="dialog" aria-labelledby="goTitle" hidden>
+              <div class="go-inner">
+                <p class="go-title" id="goTitle">GAME OVER</p>
+                <p class="go-score">Score <b id="goScore">0</b> · Best <b id="goBest">0</b><span class="go-best" id="goNewBest" hidden>NEW BEST</span></p>
+                <button type="button" class="go-again" id="goAgain">▶ Play again</button>
+                <p class="go-sub">or press any arrow key</p>
+                <div class="go-next">
+                    <p class="go-next-label">Play next</p>
+                    <ul class="go-tiles">
+                        <li><a class="go-tile" href="../asteroids/" data-game="asteroids"><img src="../assets/thumbs/asteroids.webp" alt="" width="600" height="600" loading="lazy" decoding="async"><span>Asteroids</span></a></li>
+                        <li><a class="go-tile" href="../space-invaders/" data-game="space-invaders"><img src="../assets/thumbs/space-invaders.webp" alt="" width="600" height="600" loading="lazy" decoding="async"><span>Space Invaders</span></a></li>
+                        <li><a class="go-tile" href="../pong/" data-game="pong"><img src="../assets/thumbs/pong.webp" alt="" width="600" height="600" loading="lazy" decoding="async"><span>Pong</span></a></li>
+                    </ul>
+                    <a class="go-all" href="../arcade/" data-game="arcade">All arcade games &rarr;</a>
+                </div>
+              </div>
+            </div>
+        </div>
         <div class="controls">
             <p>Arrow Keys to hop</p>
             <button id="restartBtn" class="play-button">Restart Game</button>
@@ -133,6 +273,27 @@
         const livesEl = document.getElementById('lives');
         const timerBarEl = document.getElementById('timerBar');
         const restartBtn = document.getElementById('restartBtn');
+
+        // ─── Game-over panel (Play again + Play next) ───
+        const goPanel = document.getElementById('goPanel');
+        const goScoreEl = document.getElementById('goScore');
+        const goBestEl = document.getElementById('goBest');
+        const goNewBestEl = document.getElementById('goNewBest');
+        const goAgainBtn = document.getElementById('goAgain');
+        function track(name, params) { try { if (typeof gtag === 'function') gtag('event', name, params || {}); } catch (e) {} }
+        function showGameOverPanel(score, best, newBest) {
+            goScoreEl.textContent = score;
+            goBestEl.textContent = best;
+            goNewBestEl.hidden = !newBest;
+            goPanel.hidden = false;
+            // Focus the primary action so Enter/Space restart; arrow keys still reach Phaser.
+            goAgainBtn.focus({ preventScroll: true });
+            track('game_over', { score: score });
+        }
+        function hideGameOverPanel() { goPanel.hidden = true; }
+        goPanel.querySelectorAll('a[data-game]').forEach((a) => {
+            a.addEventListener('click', () => track('play_next', { to_game: a.dataset.game }));
+        });
 
         let highScore = parseInt(localStorage.getItem('froggerHighScore')) || 0;
         highScoreEl.textContent = highScore;
@@ -204,6 +365,8 @@
 
             create() {
                 this.score = 0;
+                this.startBest = highScore;
+                hideGameOverPanel();
                 this.lives = MAX_LIVES;
                 this.level = 1;
                 this.gameState = 'start'; // start | playing | dead | gameover
@@ -715,13 +878,14 @@
                 this.frogGraphics.scaleY = 1;
                 this.frogGraphics.angle = 0;
                 this.createOverlay('gameover');
+                showGameOverPanel(this.score, highScore, this.score > this.startBest);
             }
 
             // ─── Overlays ───
             createOverlay(type) {
-                if (this.overlay) this.overlay.destroy();
-                if (this.overlayText) this.overlayText.destroy();
-                if (this.overlaySubText) this.overlaySubText.destroy();
+                if (this.overlay) { this.overlay.destroy(); this.overlay = null; }
+                if (this.overlayText) { this.overlayText.destroy(); this.overlayText = null; }
+                if (this.overlaySubText) { this.overlaySubText.destroy(); this.overlaySubText = null; }
 
                 this.overlay = this.add.graphics();
                 this.overlay.setDepth(100);
@@ -734,17 +898,16 @@
                 if (type === 'start') {
                     this.overlayText = this.add.text(GAME_W / 2, GAME_H / 2 - 50, 'FROGGER', style).setOrigin(0.5).setDepth(101);
                     this.overlaySubText = this.add.text(GAME_W / 2, GAME_H / 2 + 20, 'Press any arrow key to start', subStyle).setOrigin(0.5).setDepth(101);
-                } else {
-                    style.color = '#ff5252';
-                    this.overlayText = this.add.text(GAME_W / 2, GAME_H / 2 - 50, 'GAME OVER', style).setOrigin(0.5).setDepth(101);
-                    this.overlaySubText = this.add.text(GAME_W / 2, GAME_H / 2 + 20, 'Score: ' + this.score + '\nPress any arrow key to retry', subStyle).setOrigin(0.5).setDepth(101);
                 }
+                // Game over: the DOM panel (#goPanel) carries the title, score and
+                // Play again / Play next links; the canvas only dims the board.
 
                 this.gameState = type === 'start' ? 'start' : 'gameover';
             }
 
             restartGame() {
                 if (this.timerEvent) this.timerEvent.remove();
+                hideGameOverPanel();
                 this.scene.restart();
             }
 
@@ -899,6 +1062,10 @@
 
         // Restart button
         restartBtn.addEventListener('click', () => {
+            game.scene.getScene('GameScene').restartGame();
+        });
+        goAgainBtn.addEventListener('click', () => {
+            track('play_again');
             game.scene.getScene('GameScene').restartGame();
         });
     })();
