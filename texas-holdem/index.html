@@ -29,7 +29,7 @@
   {"@type":"Question","name":"How many opponents are at the table?","acceptedAnswer":{"@type":"Answer","text":"Three — a 4-handed cash game. Each opponent has a slightly different style, and difficulty tiers control how strict they play."}},
   {"@type":"Question","name":"What does \"equity\" mean?","acceptedAnswer":{"@type":"Answer","text":"Your probability of winning the hand given the known cards. The in-game hint panel shows your equity vs. each opponent so you can compare it to pot odds."}},
   {"@type":"Question","name":"What's the best starting hand?","acceptedAnswer":{"@type":"Answer","text":"Pocket aces (AA) — wins about 85% against any random hand heads-up. Other premium starters: KK, QQ, AKs, AKo, JJ, AQs."}},
-  {"@type":"Question","name":"Can I rebuy if I bust?","acceptedAnswer":{"@type":"Answer","text":"Yes. Your chip stack resets when you hit zero, so you can keep playing indefinitely."}}
+  {"@type":"Question","name":"Can I rebuy if I bust?","acceptedAnswer":{"@type":"Answer","text":"Yes. When your stack runs out, you rebuy from your bankroll automatically. If your bankroll can't cover a buy-in, the table offers a reset to $1,000 so you can keep playing."}}
 ]}</script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -222,7 +222,7 @@
     <details><summary>How many opponents?</summary><p>Three — a 4-handed cash game. Each opponent has a different style; difficulty tiers control strictness.</p></details>
     <details><summary>What's "equity"?</summary><p>Your probability of winning the hand given the known cards. The hint panel shows it so you can compare to pot odds.</p></details>
     <details><summary>Best starting hand?</summary><p>Pocket aces (AA). Wins about 85% heads-up vs. a random hand.</p></details>
-    <details><summary>Can I rebuy?</summary><p>Yes — your stack resets when you bust so you can keep playing.</p></details>
+    <details><summary>Can I rebuy?</summary><p>Yes. When your stack runs out, you rebuy from your bankroll automatically. If your bankroll can't cover a buy-in, the table offers a reset to $1,000 so you can keep playing.</p></details>
 
     <h2>Similar games</h2>
     <ul class="similar-games">
@@ -266,6 +266,7 @@
 <script src="../casino/casino-bankroll.js?v=20260507a"></script>
 <script src="../casino/casino-player.js?v=20260507a"></script>
 <script src="../casino/casino-stats.js?v=20260508b"></script>
+<script src="../casino/casino-reload.js?v=20260910d"></script>
 <script src="../casino/casino-cards.js?v=20260814a"></script>
 <script src="th-deck.js?v=20260507a"></script>
 <script src="th-hand.js?v=20260507a"></script>
@@ -277,8 +278,8 @@
 <script type="text/babel" src="tweaks-panel.jsx?v=20260508a"></script>
 <script type="text/babel" src="th-cards.jsx?v=20260507a"></script>
 <script type="text/babel" src="th-dealer.jsx?v=20260813j"></script>
-<script type="text/babel" src="th-table.jsx?v=20260508a"></script>
-<script type="text/babel" src="th-app.jsx?v=20260508a"></script>
+<script type="text/babel" src="th-table.jsx?v=20260910a"></script>
+<script type="text/babel" src="th-app.jsx?v=20260910b"></script>
 
 <script src="../casino/rotate-hint.js?v=20260617a"></script>
 <a id="fb-pill" href="/feedback/?from=texas-holdem" style="position:fixed;left:10px;bottom:10px;z-index:2147483000;font:600 11px/1 Inter,system-ui,sans-serif;color:#fff;background:rgba(16,62,60,0.5);padding:6px 11px;border-radius:999px;text-decoration:none;letter-spacing:0.02em;opacity:0.75" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.75">💬 Feedback</a>

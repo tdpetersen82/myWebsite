@@ -186,6 +186,23 @@ function SlotApp() {
     return function () { window.removeEventListener('keydown', onKey); };
   }, []);
 
+  // Out of chips → the shared reset modal (casino/casino-reload.js). Wait a
+  // beat after the reels stop so the losing spin reads before it's covered.
+  const broke = !spinning && bankroll < BET_OPTIONS[0];
+  React.useEffect(function () {
+    if (!broke || !window.CASINO_RELOAD) return;
+    const id = setTimeout(function () {
+      window.CASINO_RELOAD.open({
+        game: 'slot-machine',
+        minBet: BET_OPTIONS[0],
+        message: 'The reels took the last of it.',
+        continueLabel: 'Back to the machine',
+        onReset: function (v) { setBankroll(v); }
+      });
+    }, 900);
+    return function () { clearTimeout(id); };
+  }, [broke]);
+
   // Build the paytable rows for the current theme. Highest payout first.
   const paytableRows = [5, 4, 3, 2, 1, 0].map(function (i) {
     return {

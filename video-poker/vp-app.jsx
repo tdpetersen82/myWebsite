@@ -69,6 +69,18 @@ function App() {
     }
   }, [phase, bankroll]);
 
+  // Out of chips → the shared reset modal (casino/casino-reload.js).
+  useEffect(() => {
+    if (!showBrokeModal || !window.CASINO_RELOAD) return;
+    window.CASINO_RELOAD.open({
+      game: 'video-poker',
+      minBet: 1,
+      message: `Machine ate the last of it, ${tweaks.playerName}. Time for a fresh stake.`,
+      onReset: v => setBankroll(v),
+      onClose: () => setShowBrokeModal(false),
+    });
+  }, [showBrokeModal]);
+
   // Player name init
   useEffect(() => {
     const stored = window.CASINO_PLAYER.read();
@@ -171,7 +183,7 @@ function App() {
     if (phase !== 'betting') return;
     setIsIdle(false);
 
-    // Out of chips — let the BrokeModal handle it.
+    // Out of chips: the shared reset modal takes it from here.
     if (bankroll < 1) return;
 
     const cost = Math.min(coins, bankroll);
@@ -464,64 +476,6 @@ function App() {
           onCancel={window.CASINO_PLAYER.read() ? () => setShowNameModal(false) : null}
         />
       )}
-
-      {showBrokeModal && (
-        <BrokeModal
-          playerName={tweaks.playerName}
-          message={`Machine ate the last of it, ${tweaks.playerName}. Time for a fresh stake.`}
-          onReload={() => {
-            window.location.href = '../profile/?from=video-poker';
-          }}
-        />
-      )}
-    </div>
-  );
-}
-
-function BrokeModal({ playerName, message, onReload }) {
-  return (
-    <div style={{
-      position:'fixed', inset:0, zIndex:9000,
-      background:'rgba(8,5,2,.7)', backdropFilter:'blur(8px)',
-      display:'flex', alignItems:'center', justifyContent:'center'
-    }}>
-      <div style={{
-        background:'linear-gradient(180deg, rgba(35,22,10,.95), rgba(20,12,6,.98))',
-        border:'1px solid rgba(201,162,106,.5)',
-        borderRadius:16,
-        padding:'30px 36px 26px',
-        boxShadow:'0 30px 80px rgba(0,0,0,.7), inset 0 1px 0 rgba(230,197,144,.15)',
-        minWidth:380, maxWidth:460,
-        textAlign:'center'
-      }}>
-        <div style={{ fontSize:10, letterSpacing:'.32em', textTransform:'uppercase', color:'var(--ivory-dim)', marginBottom:6 }}>Limestone Games</div>
-        <div style={{
-          fontFamily:"'Playfair Display', serif", fontStyle:'italic',
-          fontSize:24, color:'var(--brass-2)', marginBottom:6, lineHeight:1.25
-        }}>Out of chips.</div>
-        <div style={{ fontSize:14, color:'var(--ivory-dim)', marginBottom:22, lineHeight:1.4 }}>
-          {message || `That's the last of it, ${playerName || 'friend'}.`}
-        </div>
-        <div style={{ display:'flex', gap:10, justifyContent:'center' }}>
-          <a href="../casino/" style={{
-            padding:'10px 18px',
-            background:'rgba(20,12,6,.6)',
-            border:'1px solid rgba(201,162,106,.3)',
-            borderRadius:999, color:'var(--ivory-dim)',
-            fontSize:10, fontWeight:700, letterSpacing:'.18em', textTransform:'uppercase',
-            textDecoration:'none', display:'inline-block'
-          }}>← Lobby</a>
-          <button onClick={onReload} style={{
-            padding:'10px 22px',
-            background:'linear-gradient(180deg, #e6c590, #c9a26a)',
-            border:'1px solid rgba(201,162,106,.5)',
-            borderRadius:999, color:'#1a1208',
-            fontSize:10, fontWeight:700, letterSpacing:'.18em', textTransform:'uppercase',
-            cursor:'pointer',
-            boxShadow:'0 4px 12px rgba(230,197,144,.4)'
-          }}>Cash out · profile</button>
-        </div>
-      </div>
     </div>
   );
 }

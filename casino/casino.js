@@ -79,12 +79,15 @@
     setStat('cas-stat-hands',   totalHands.toLocaleString(),
             winRate != null ? `${totalWins} W · ${winRate}%` : 'No hands yet');
 
-    // Reload link — emphasized when below MIN_PLAYABLE
+    // Reload link — emphasized when below MIN_PLAYABLE. Broke, it resets right
+    // here (see init); otherwise it's the profile page's cash-out.
     const reload = document.getElementById('cas-reload');
     if (reload) {
       const broke = bankroll < window.CASINO_BANKROLL.MIN_PLAYABLE;
       reload.classList.toggle('broke', broke);
-      reload.textContent = broke ? 'Out of chips · Cash out →' : 'Cash out · profile';
+      reload.textContent = broke
+        ? 'Out of chips · Reset to ' + fmt(window.CASINO_BANKROLL.STARTING)
+        : 'Cash out · profile';
     }
   }
 
@@ -110,6 +113,22 @@
       console.warn('[casino] casino-stats.js not loaded — using legacy fallback');
     }
     update();
+    // Broke: reset in place with the shared modal instead of detouring through
+    // the profile page.
+    const reload = document.getElementById('cas-reload');
+    if (reload && window.CASINO_RELOAD) {
+      reload.addEventListener('click', function (e) {
+        if (window.CASINO_BANKROLL.read() >= window.CASINO_BANKROLL.MIN_PLAYABLE) return;
+        e.preventDefault();
+        window.CASINO_RELOAD.open({
+          game: 'casino',
+          message: 'Not enough left for a bet at the tables.',
+          secondary: { label: 'Not now' },
+          continueLabel: 'Done',
+          onReset: update,
+        });
+      });
+    }
     // Refresh whenever another tab updates relevant storage.
     window.addEventListener('storage', function (e) {
       if (!e.key) return;

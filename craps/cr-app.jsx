@@ -174,6 +174,18 @@ function App() {
     }
   }, [phase, bankroll, bets, showBrokeModal]);
 
+  // Out of chips → the shared reset modal (casino/casino-reload.js).
+  useEffect(() => {
+    if (!showBrokeModal || !window.CASINO_RELOAD) return;
+    window.CASINO_RELOAD.open({
+      game: 'craps',
+      minBet: window.CR_RULES.MIN_BET,
+      message: `The dice cleaned you out, ${tweaks.playerName || 'friend'}.`,
+      onReset: v => setBankroll(v),
+      onClose: () => setShowBrokeModal(false),
+    });
+  }, [showBrokeModal]);
+
   // ── Bet legality ──
   function isLegal(zone, n) {
     if (phase !== 'comeOut' && phase !== 'point') return false;
@@ -722,15 +734,6 @@ function App() {
           initialName={tweaks.playerName === 'Alex' ? '' : tweaks.playerName}
           onSave={savePlayerName}
           onCancel={window.CASINO_PLAYER.read() ? () => setShowNameModal(false) : null}
-        />
-      )}
-
-      {showBrokeModal && (
-        <BrokeModal
-          playerName={tweaks.playerName}
-          onReload={() => {
-            window.location.href = '../profile/?from=craps';
-          }}
         />
       )}
     </div>

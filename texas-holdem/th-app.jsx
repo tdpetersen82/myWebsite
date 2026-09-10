@@ -175,6 +175,56 @@ function App() {
   const [chatBust, setChatBust] = useState(0); // re-render trigger for ai message expiry
   const [handCount, setHandCount] = useState(0);
 
+  // Out of chips → the shared reset modal (casino/casino-reload.js). Two ways
+  // in: the stack is gone and the bankroll can't cover a rebuy at this table,
+  // or the lobby opens with less than the smallest buy-in.
+  const minBuyin = TH_BUYIN_TIERS[0].buyin;
+  const brokeMode = showBroke ? 'table' : (showLobby && bankroll < minBuyin ? 'lobby' : null);
+  const [pendingRebuy, setPendingRebuy] = useState(false);
+  useEffect(() => {
+    if (!brokeMode || !window.CASINO_RELOAD) return;
+    // The lobby case can open on the first render, before the saved name reaches tweaks.
+    const name = tweaks.playerName || (window.CASINO_PLAYER && window.CASINO_PLAYER.read()) || 'friend';
+    const money = n => '$' + n.toLocaleString();
+    const atTable = brokeMode === 'table';
+    const need = atTable && tier ? tier.buyin : minBuyin;
+    let message;
+    if (atTable) {
+      message = bankroll > 0
+        ? `Your stack is gone, ${name}, and your ${money(bankroll)} bankroll won't cover another ${money(need)} buy-in.`
+        : `Your stack is gone, ${name}.`;
+    } else {
+      message = bankroll > 0
+        ? `Your ${money(bankroll)} bankroll won't cover the ${money(need)} minimum buy-in.`
+        : `Your bankroll is empty, ${name}.`;
+    }
+    window.CASINO_RELOAD.open({
+      game: 'texas-holdem',
+      minBet: need,
+      message,
+      // A cheaper table is still an option when the bankroll covers one.
+      secondary: atTable && bankroll >= minBuyin
+        ? { label: 'Leave table', onClick: () => { setShowBroke(false); leaveTable(true); } }
+        : { label: '← Lobby', href: '../casino/' },
+      continueLabel: atTable ? 'Back to the table' : 'Choose a table',
+      onReset: v => setBankroll(v),
+      onClose: () => {
+        if (!atTable) return;
+        setShowBroke(false);
+        setPendingRebuy(true);
+      },
+    });
+  }, [brokeMode]);
+
+  // After a reset at the table: rebuy from the fresh bankroll and deal on.
+  // Runs in a render that already holds the new bankroll, so queueNextHand's
+  // rebuy check sees it.
+  useEffect(() => {
+    if (!pendingRebuy || !tier || bankroll < tier.buyin) return;
+    setPendingRebuy(false);
+    queueNextHand(300);
+  }, [pendingRebuy, bankroll, tier]);
+
   // Cached equity for hint (avoid recomputing every keystroke).
   const equityCache = useRef({ key: '', value: null });
 
@@ -1114,16 +1164,6 @@ function App() {
           cancelLabel="Keep playing"
           onConfirm={() => leaveTable(true)}
           onCancel={() => setShowLeaveConfirm(false)}
-        />
-      )}
-
-      {showBroke && (
-        <THBrokeModal
-          playerName={tweaks.playerName}
-          onLeave={() => { setShowBroke(false); leaveTable(true); }}
-          onReload={() => {
-            window.location.href = '../profile/?from=texas-holdem';
-          }}
         />
       )}
     </div>

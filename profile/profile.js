@@ -349,9 +349,8 @@
     document.addEventListener('keydown', (e) => { if (e.key === 'Escape' && modal.classList.contains('show')) hide(); });
 
     ok.addEventListener('click', () => {
-      const final = window.CASINO_BANKROLL.read();
-      window.CASINO_STATS.bankRun(final);
-      window.CASINO_BANKROLL.reload();
+      // Same reset the tables' out-of-chips modal runs: bank the run, back to $1,000.
+      window.CASINO_RELOAD.reset('profile');
       hide();
       update();
     });
