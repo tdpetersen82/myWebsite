@@ -1,5 +1,5 @@
 import assert from 'node:assert/strict';
-import {createWorld,launch,step,DT,MAX_SPEED,destinations} from '../pinball/physics.mjs';
+import {createWorld,launch,step,DT,MAX_SPEED} from '../pinball/physics.mjs';
 
 function run(w,seconds,input={}){for(let i=0;i<Math.round(seconds/DT);i++)step(w,input);return w;}
 function ball(x,y,vx=0,vy=0){const w=createWorld();w.state='playing';w.ball={x,y,vx,vy};return w;}
@@ -22,12 +22,6 @@ for(const side of ['left','right']){
   const fast=ball(x,745,0,MAX_SPEED);run(fast,.035);assert(fast.ball.vy<0,`${side} blocks a fast falling ball`);
 }
 for(const [x,vx] of [[55,-MAX_SPEED],[510,MAX_SPEED]]){const w=ball(x,450,vx,0);run(w,.02);assert(w.ball.x>=44&&w.ball.x<=521,'rail contains fast shot');assert(Math.sign(w.ball.vx)===-Math.sign(vx));}
-// Representative flipper shots can reach each reserved machine footprint.
-for(const [label,side,x] of [['CRUSHER','left',221],['CONVEYOR','left',233],['ROCK BANK','left',248],['SIDING','right',230]]){
-  const d=destinations.find(d=>d.label===label),w=ball(side==='left'?x:600-x,760+(x-200)*Math.tan(.46)-21,0,50);let hit=false;
-  for(let i=0;i<360&&w.state==='playing';i++){step(w,{[side]:i<30});hit ||= w.ball.x>=d.x&&w.ball.x<=d.x+d.w&&w.ball.y>=d.y&&w.ball.y<=d.y+d.h;}
-  assert(hit,`${label} is reachable from a flipper`);
-}
 const paused=ball(300,400,50,100);paused.paused=true;const before=structuredClone(paused);run(paused,1,{left:true});assert.deepEqual(paused,before);
 // Same elapsed time at different outer step rates gives the same trajectory.
 const a=ball(300,400,150,-100),b=structuredClone(a);for(let i=0;i<240;i++)step(a,{},1/240);for(let i=0;i<60;i++)step(b,{},1/60);assert(Math.hypot(a.ball.x-b.ball.x,a.ball.y-b.ball.y)<.001);

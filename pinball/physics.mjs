@@ -1,4 +1,5 @@
-// Quarry gray-box table. World units are pixels; simulation is independent of rendering.
+import {resetMachines,tickMachines,collideMachines} from './machines.mjs';
+// Quarry prototype table. World units are pixels; simulation is independent of rendering.
 export const W=600,H=900,R=9,DT=1/240,MAX_SPEED=1900;
 export const walls=[
   [45,835,35,200],[35,200,55,110],[55,110,110,55],[110,55,465,55],
@@ -13,15 +14,9 @@ export const slings=[
   {points:[[110,575],[170,695],[115,660]],normal:{x:1,y:-.5}},
   {points:[[470,575],[415,695],[470,660]],normal:{x:-1,y:-.5}},
 ];
-export const destinations=[
-  {x:107,y:370,w:55,h:120,label:'ROCK BANK',n:'01'},
-  {x:205,y:160,w:150,h:100,label:'CRUSHER',n:'02'},
-  {x:395,y:305,w:65,h:120,label:'CONVEYOR',n:'03'},
-  {x:105,y:125,w:65,h:65,label:'SIDING',n:'04'},
-];
-export function createWorld(){return {ball:{x:548,y:848,vx:0,vy:0},state:'plunger',time:0,age:0,charge:0,drains:0,paused:false,flippers:[{x:200,y:760,angle:.46,omega:0,side:1},{x:400,y:760,angle:Math.PI-.46,omega:0,side:-1}],slingCooldown:[0,0],events:[]};}
+export function createWorld(){const w={ball:{x:548,y:848,vx:0,vy:0},state:'plunger',time:0,age:0,charge:0,drains:0,paused:false,flippers:[{x:200,y:760,angle:.46,omega:0,side:1},{x:400,y:760,angle:Math.PI-.46,omega:0,side:-1}],slingCooldown:[0,0],events:[]};resetMachines(w);return w;}
 export function tip(f){return {x:f.x+86*Math.cos(f.angle),y:f.y+86*Math.sin(f.angle)};}
-export function serve(w){w.ball={x:548,y:848,vx:0,vy:0};w.state='plunger';w.charge=0;w.age=0;}
+export function serve(w){w.ball={x:548,y:848,vx:0,vy:0};w.state='plunger';w.charge=0;w.age=0;resetMachines(w);}
 export function launch(w,power=w.charge){if(w.state!=='plunger'||w.paused)return false;w.ball.vy=-(1220+230*Math.max(0,Math.min(1,power)));w.state='playing';w.charge=0;return true;}
 export function closest(x,y,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1)));return {x:ax+t*dx,y:ay+t*dy};}
 // Capsule contact includes angular surface velocity, so a rising bat actually strikes the ball.
@@ -43,7 +38,9 @@ function microstep(w,input,dt){
     const step=Math.sign(delta)*Math.min(Math.abs(delta),(held?22:13)*dt);f.omega=step/dt;f.angle+=step;
   }
   if(w.state!=='playing')return;
-  const b=w.ball;w.age+=dt;b.vy+=880*dt;b.vx*=Math.exp(-.055*dt);b.vy*=Math.exp(-.055*dt);b.x+=b.vx*dt;b.y+=b.vy*dt;
+  const b=w.ball;w.age+=dt;if(tickMachines(w,dt))return;const previous={x:b.x,y:b.y};b.vy+=880*dt;b.vx*=Math.exp(-.055*dt);b.vy*=Math.exp(-.055*dt);b.x+=b.vx*dt;b.y+=b.vy*dt;
+  collideMachines(w,previous,contact);
+  if(w.transport)return;
   for(const a of walls)contact(b,...a);
   // One-way shooter gate: launched balls exit left; balls on the table cannot re-enter.
   if(b.x<530)contact(b,530,155,530,255,0,.55);

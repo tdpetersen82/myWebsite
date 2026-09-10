@@ -1,4 +1,5 @@
-import {W,H,R,DT,walls,slings,destinations,createWorld,tip,step,launch,serve} from './physics.mjs';
+import {drawMachines} from './machine-art.mjs';
+import {W,H,R,DT,walls,slings,createWorld,tip,step,launch,serve} from './physics.mjs';
 const $=id=>document.getElementById(id),canvas=$('table'),ctx=canvas.getContext('2d'),w=createWorld();
 let best=0;try{best=Math.max(0,Number(localStorage.getItem('quarryPinballBestRally'))||0);}catch{}
 const keys=new Set(),pointers=new Map();let accumulator=0,last=0,trail=[];
@@ -27,10 +28,10 @@ function draw(){
  ctx.fillStyle='#1c2b2e';ctx.fillRect(0,0,W,H);
  for(let x=20;x<W;x+=30)line([[x,0],[x,H]],'#28383a',.6);
  for(let y=0;y<H;y+=30)line([[0,y],[W,y]],'#28383a',.6);
- text('L I M E S T O N E   /   Q U A R R Y',288,108,14,'#b0b9aa');
- for(const d of destinations){ctx.fillStyle='#b2bda909';ctx.fillRect(d.x,d.y,d.w,d.h);ctx.strokeStyle='#9ba997';ctx.lineWidth=1;ctx.setLineDash([6,6]);ctx.strokeRect(d.x,d.y,d.w,d.h);ctx.setLineDash([]);text(d.n,d.x+d.w/2,d.y+d.h/2-7,18,'#dfbd72');text(d.label,d.x+d.w/2,d.y+d.h/2+14,9);}
- if($('guides').checked){line([[260,715],[423,363]],'#d9b46565',2,[8,10]);line([[350,715],[135,410]],'#d9b46565',2,[8,10]);line([[350,715],[137,155]],'#78b9b050',2,[8,10]);line([[76,480],[72,195],[125,83],[446,83],[491,132],[500,440]],'#78b9b050',2,[8,10]);}
- text('HAUL ROAD / ORBIT',285,42,10);text('PHASE 01 — GEOMETRY STUDY',295,498,11,'#688e88');
+ text('L I M E S T O N E   /   Q U A R R Y',288,81,12,'#b0b9aa');
+ drawMachines(ctx,w,line,text);
+ if($('guides').checked){line([[260,715],[432,450]],'#d9b46565',2,[8,10]);line([[350,715],[135,410]],'#d9b46565',2,[8,10]);line([[350,715],[137,155]],'#78b9b050',2,[8,10]);line([[76,480],[72,195],[125,83],[446,83],[491,132],[500,440]],'#78b9b050',2,[8,10]);}
+ text('HAUL ROAD / ORBIT',285,42,10);text('PHASE 02 — MACHINERY ONLINE',295,545,11,'#688e88');
  ctx.lineCap='round';for(const a of walls){line([[a[0],a[1]],[a[2],a[3]]],'#0c1618',12);line([[a[0],a[1]],[a[2],a[3]]],'#b1b6a4',5);}
  line([[530,155],[530,255]],'#d6b36b',2,[5,6]);
  for(let i=0;i<slings.length;i++){const s=slings[i];ctx.beginPath();s.points.forEach(([x,y],j)=>j?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.closePath();ctx.fillStyle=w.slingCooldown[i]>.02?'#d8bb76':'#596b62';ctx.fill();ctx.strokeStyle='#d0c497';ctx.lineWidth=3;ctx.stroke();}
@@ -40,7 +41,8 @@ function draw(){
  const b=w.ball;trail.forEach((p,i)=>{ctx.beginPath();ctx.arc(p.x,p.y,2,0,Math.PI*2);ctx.fillStyle=`rgba(191,220,220,${i/trail.length*.15})`;ctx.fill();});
  if(w.state!=='drained'){ctx.beginPath();ctx.arc(b.x+3,b.y+4,R+1,0,Math.PI*2);ctx.fillStyle='#0007';ctx.fill();const g=ctx.createRadialGradient(b.x-3,b.y-4,1,b.x,b.y,R);g.addColorStop(0,'#fff');g.addColorStop(.45,'#d7e4e4');g.addColorStop(1,'#5d7c82');ctx.fillStyle=g;ctx.beginPath();ctx.arc(b.x,b.y,R,0,Math.PI*2);ctx.fill();}
  if(w.paused||w.state==='drained'){ctx.fillStyle='#102025dc';ctx.fillRect(115,450,375,95);text(w.paused?'PAUSED':'BALL DRAINED',300,490,24,'#eed49a');text(w.paused?'Resume when you’re ready.':'Launch or press R for another ball.',300,518,12,'#bacdc5');}
- $('timer').textContent=w.age.toFixed(1)+'s';$('best').textContent=best.toFixed(1)+'s';const label=w.paused?'Table paused':w.state==='plunger'?'Hold launch · release to shoot':w.state==='drained'?'New ball ready when you are':'Find your next shot';if($('status').textContent!==label)$('status').textContent=label;
+ $('timer').textContent=w.age.toFixed(1)+'s';$('best').textContent=best.toFixed(1)+'s';const label=w.paused?'Table paused':w.state==='plunger'?'Hold launch · release to shoot':w.state==='drained'?'New ball ready when you are':(w.time<w.noticeUntil?w.notice:'Find your next shot');if($('status').textContent!==label)$('status').textContent=label;
+ const c=w.machines.counts;$('machine-status').textContent=`Slabs ${c.rocks} · Crusher ${c.crusher} · Conveyor ${c.conveyor} · Siding ${c.siding} · Orbits ${c.orbit}`;
  $('power').style.width=w.charge*100+'%';const holds=input();for(const el of document.querySelectorAll('[data-control]'))el.classList.toggle('active',!!holds[el.dataset.control]);
 }
 function frame(now){const elapsed=last?Math.min((now-last)/1000,.05):0;last=now;accumulator+=elapsed;while(accumulator>=DT){step(w,input());if(w.events.some(e=>e.type==='drain'))save();accumulator-=DT;}if(w.state==='playing'&&!w.paused){trail.push({x:w.ball.x,y:w.ball.y});if(trail.length>16)trail.shift();}draw();requestAnimationFrame(frame);}

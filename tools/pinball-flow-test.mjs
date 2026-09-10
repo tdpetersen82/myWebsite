@@ -7,7 +7,7 @@ const buttons=['left','right','launch'].map(k=>{const b=el(k);b.dataset.control=
 globalThis.document={getElementById:el,querySelectorAll:()=>buttons,addEventListener:(k,f)=>events[k]=f,hidden:false};
 globalThis.addEventListener=(k,f)=>events[k]=f;globalThis.innerHeight=900;globalThis.devicePixelRatio=1;globalThis.ResizeObserver=class{observe(){}};globalThis.requestAnimationFrame=f=>raf=f;
 globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
-const source=(await readFile(new URL('../pinball/game.mjs',import.meta.url),'utf8')).replace("'./physics.mjs'",JSON.stringify(new URL('../pinball/physics.mjs',import.meta.url).href))+'\nexport const inspect=()=>({w,input:input(),best});';
+const source=(await readFile(new URL('../pinball/game.mjs',import.meta.url),'utf8')).replace("'./machine-art.mjs'",JSON.stringify(new URL('../pinball/machine-art.mjs',import.meta.url).href)).replace("'./physics.mjs'",JSON.stringify(new URL('../pinball/physics.mjs',import.meta.url).href))+'\nexport const inspect=()=>({w,input:input(),best});';
 const {inspect}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const key=(type,code)=>events[type]({code,target:{tagName:'CANVAS'},preventDefault(){}});
 const pointer=(control,type,pointerId)=>el(control).handlers[type]({pointerId,preventDefault(){}});
