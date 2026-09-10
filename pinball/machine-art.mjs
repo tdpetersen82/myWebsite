@@ -14,20 +14,37 @@ export function drawFlipper(ctx,f,t,line){
   disk(ctx,f.x,f.y,8,metal(ctx,f.x,f.y,8,['#dae5dc','#687d77','#1b3033']));
   disk(ctx,f.x,f.y,3,'#233b3c');ctx.restore();
 }
+export function raisedRail(ctx,points,line,width=7){
+  ctx.save();ctx.lineCap='round';ctx.lineJoin='round';
+  line(points.map(([x,y])=>[x+4,y+8]),'#020d13a0',width+7);
+  line(points,'#111c25',width+4);line(points,'#718995',width);
+  line(points.map(([x,y])=>[x-1,y-1]),'#ecf6e9',Math.max(1.5,width*.27));
+  ctx.restore();
+}
+function offsetPath(points,d){return points.map(([x,y],i)=>{const a=points[Math.max(0,i-1)],b=points[Math.min(points.length-1,i+1)],dx=b[0]-a[0],dy=b[1]-a[1],l=Math.hypot(dx,dy)||1;return [x-dy/l*d,y+dx/l*d];});}
+function wireRamp(ctx,w,line,text,time){
+  const left=offsetPath(rampPath,19),right=offsetPath(rampPath,-19);
+  line(rampPath.map(([x,y])=>[x+9,y+13]),'#020c1490',49);
+  line(rampPath,'#1d3744c0',40);
+  // Cross braces show a real raised channel; the ball runs between its steel rails.
+  for(let i=1;i<rampPath.length;i++){
+    const a=rampPath[i-1],b=rampPath[i],dx=b[0]-a[0],dy=b[1]-a[1],len=Math.hypot(dx,dy),nx=-dy/len,ny=dx/len;
+    for(let d=8;d<len;d+=17){const x=a[0]+dx*d/len,y=a[1]+dy*d/len;line([[x-nx*18,y-ny*18],[x+nx*18,y+ny*18]],'#819797',3);}
+  }
+  for(const side of [left,right])raisedRail(ctx,side,line,6);
+  for(const [x,y] of [[432,340],[490,250],[502,545]]){
+    line([[x+19,y],[x+28,y+26]],'#4b5e64',7);disk(ctx,x+28,y+26,6,'#0d1d24');disk(ctx,x+19,y,4,'#e7dab4');
+  }
+  for(const x of [403,462]){line([[x,455],[x,420]],'#303746',12);line([[x-1,455],[x-1,420]],'#e0ac42',7);glow(ctx,x,421,20,'#ffae5955');disk(ctx,x,421,4,'#ffe4a1');}
+  const active=w.transport?.type==='ramp';
+  if(active){ctx.lineDashOffset=-time*80;line(rampPath,'#ffd274',2,[3,22]);ctx.lineDashOffset=0;}
+  text('LOAD RAMP',429,484,13,'#fff0bf');
+}
 export function drawMachines(ctx,w,line,text,time=0,reduced=false){
   const m=w.machines;ctx.save();ctx.lineCap='round';
-  ctx.shadowColor='#000b';ctx.shadowBlur=7;ctx.shadowOffsetY=4;line(orbitPath,'#101b1b',9);ctx.shadowColor='transparent';
-  line(orbitPath,'#536660',5);line(orbitPath,'#c9d0ad',1.5);
+  raisedRail(ctx,orbitPath,line,7);
   if(w.transport?.type==='launch')line(w.transport.path,'#edc776',3,[5,5]);
-  ctx.shadowColor='#000c';ctx.shadowBlur=12;ctx.shadowOffsetY=7;line(rampPath,'#172525',34);ctx.shadowColor='transparent';
-  line(rampPath,metal(ctx,460,410,75,['#dccb92','#5f7269','#182f31']),30);
-  line(rampPath,'#12272a',23);
-  ctx.lineDashOffset=-(w.transport?.type==='ramp'?time*70:0);line(rampPath,'#60746a',17,[2,8]);ctx.lineDashOffset=0;
-  line(rampPath,'#d9c27a',1.2,[2,12]);
-  for(const [x,y] of [[432,340],[490,250],[502,545]]){disk(ctx,x,y,6,metal(ctx,x,y,6));disk(ctx,x,y,2,'#253c3d');}
-  for(const x of [403,462]){line([[x,450],[x,420]],'#403826',8);line([[x-1,450],[x-1,420]],'#c5a45b',4);glow(ctx,x,420,15,'#eec26555');disk(ctx,x,420,3,'#ffe1a0');}
-  line([[405,450],[460,450]],'#e6c577',4,[5,5]);
-  text('CONVEYOR',432,479,12,'#f0dbaa');
+  wireRamp(ctx,w,line,text,time);
   for(let i=0;i<rocks.length;i++){
     const [ax,ay,bx,by]=rocks[i];line([[ax-5,ay+5],[bx+5,by+5]],'#101e21',18);
     if(m.down[i]){line([[ax,ay+6],[bx,by+6]],'#546359',3);continue;}
@@ -40,15 +57,18 @@ export function drawMachines(ctx,w,line,text,time=0,reduced=false){
   }
   text('ROCK BANK',134,499,12,'#f0dbaa');
   for(let i=0;i<bumpers.length;i++){
-    const c=bumpers[i],flash=!reduced&&m.bumperFlash[i]>0;
-    if(flash)glow(ctx,c.x,c.y,58,'#f1ba6166');
-    ctx.shadowColor='#000c';ctx.shadowBlur=9;ctx.shadowOffsetY=6;
-    disk(ctx,c.x,c.y,c.r+5,'#14282c');ctx.shadowColor='transparent';
-    disk(ctx,c.x,c.y,c.r,metal(ctx,c.x,c.y,c.r,['#e8d49d','#8d784c','#362f25']));
-    disk(ctx,c.x,c.y,c.r-4,'#263c3c');disk(ctx,c.x,c.y,c.r-7,metal(ctx,c.x,c.y,c.r,['#dce2ca','#8a9a88','#3b5351']));
-    for(let k=0;k<10;k++){const a=k*Math.PI/5+(flash?time*10:0);line([[c.x+Math.cos(a)*7,c.y+Math.sin(a)*7],[c.x+Math.cos(a)*15,c.y+Math.sin(a)*15]],'#30494a',3);}
-    disk(ctx,c.x,c.y,8,metal(ctx,c.x,c.y,8));disk(ctx,c.x,c.y,3,flash?'#fff0b9':'#c4ac6b');
-    for(let k=0;k<4;k++){const a=k*Math.PI/2;disk(ctx,c.x+Math.cos(a)*21,c.y+Math.sin(a)*21,1.6,'#fff0c4');}
+    const c=bumpers[i],flash=!reduced&&m.bumperFlash[i]>0,compression=flash?4:0,cy=c.y-7+compression;
+    if(flash)glow(ctx,c.x,c.y,76,'#ffac5777');
+    disk(ctx,c.x+4,c.y+9,c.r+8,'#000b');
+    disk(ctx,c.x,c.y+3,c.r+5,metal(ctx,c.x,c.y,c.r,['#b3c5c7','#516976','#101e2a']));
+    disk(ctx,c.x,c.y+1,c.r,'#08151d');
+    ctx.beginPath();ctx.arc(c.x,c.y,c.r-3,0,Math.PI*2);ctx.strokeStyle=flash?'#fff4bc':'#dfbd6a';ctx.lineWidth=4;ctx.stroke();
+    const cap=ctx.createRadialGradient(c.x-10,cy-12,2,c.x,cy,c.r);
+    cap.addColorStop(0,flash?'#fff6d4':'#ffdf87');cap.addColorStop(.4,'#edb545');cap.addColorStop(.8,'#b45b23');cap.addColorStop(1,'#593321');
+    disk(ctx,c.x,cy,c.r-5,cap);
+    ctx.beginPath();ctx.arc(c.x,cy,c.r-10,Math.PI*1.1,Math.PI*1.85);ctx.strokeStyle='#fff4c4b0';ctx.lineWidth=3;ctx.stroke();
+    disk(ctx,c.x,cy,14,'#1a303de6');text('100',c.x,cy+4,11,'#ffe4aa');
+    for(const side of [-1,1]){disk(ctx,c.x+side*(c.r+1),c.y+3,3,'#e4e5d0');disk(ctx,c.x+side*(c.r+1),c.y+3,1,'#21313b');}
   }
   text('CRUSHER',282,321,12,'#f0dbaa');
   glow(ctx,scoop.x,scoop.y,39,'#ebbf5140');

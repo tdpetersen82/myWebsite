@@ -42,7 +42,7 @@ for(let i=0;i<3;i++){lanes.ball={x:rollovers[i],y:150,vx:0,vy:-220};assert(run(l
 assert.equal(lanes.machines.counts.lanes,1);lanes.transport={type:'scoop',elapsed:0,duration:3};run(lanes,1.6);assert(lanes.machines.lanes.every(v=>!v));
 
 // Shots start on a resting flipper; these prove access through the actual populated table.
-for(const [type,side,x] of [['crusher','left',220],['rock','left',221.5],['ramp','left',260],['scoop','left',224.5],['orbit','right',237.5]]) {
+for(const [type,side,x] of [['crusher','left',220],['rock','left',221.5],['ramp','left',260],['scoop','left',239.5],['orbit','left',246]]) {
   const w=live(side==='left'?x:600-x,760+(x-200)*Math.tan(.46)-21,0,50);let reached=false;
   for(let i=0;i<1000&&w.state==='playing';i++){step(w,{[side]:i<30});reached ||= w.events.some(e=>e.type===type);}
   assert(reached,`${type} can be reached by a flipper shot`);

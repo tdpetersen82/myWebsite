@@ -3,7 +3,7 @@ export const rocks = [
   [120,365,155,375], [120,410,155,420], [120,455,155,465],
 ];
 export const bumpers = [
-  {x:235,y:200,r:24}, {x:320,y:190,r:24}, {x:280,y:275,r:24},
+  {x:235,y:200,r:32}, {x:320,y:190,r:32}, {x:280,y:275,r:32},
 ];
 export const scoop = {x:140,y:155,r:19};
 export const rollovers = [210,285,360];

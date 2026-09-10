@@ -40,3 +40,7 @@ The desktop layout was checked at the in-app browser's normal 1280 × 720 viewpo
 ## Next phase
 
 Phase 5 prioritizes desktop playtesting: keyboard responsiveness, shot difficulty, drain frequency and scoring balance. Mobile keeps viewport scaling and touch support, with desktop driving design decisions. Phase 6 adds the public arcade listing and release metadata. The page remains noindex until release.
+
+## Pinball hardware revision
+
+Raised steel guides replace the thin rail treatment. The load ramp has two side rails, cross braces, support posts, a shadow beneath the elevated channel and an offset ball shadow during transport. The crusher uses mushroom-style pop bumpers with 32-unit collision radii, rubber skirts, illuminated caps and short compression on impact. Scoop and orbit reachability fixtures were revalidated around the larger physical bumpers; all five suites pass.
