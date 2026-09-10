@@ -1,8 +1,8 @@
 import assert from 'node:assert/strict';
 import {readFile} from 'node:fs/promises';
 const elements=new Map(),events={},storage=new Map();let raf,clock=0;
-const context=new Proxy({}, {get:(_,k)=>k==='createRadialGradient'?()=>({addColorStop(){}}):()=>{},set:()=>true});
-function el(id){if(!elements.has(id))elements.set(id,{id,style:{},checked:true,textContent:'',clientWidth:600,handlers:{},dataset:{},classList:{toggle(){}},setAttribute(){},parentElement:{clientWidth:600},addEventListener(k,f){this.handlers[k]=f;},getContext(){return context;},setPointerCapture(){},focus(){}});return elements.get(id);}
+const context=new Proxy({}, {get:(_,k)=>(k==='createRadialGradient'||k==='createLinearGradient')?()=>({addColorStop(){}}):()=>{},set:()=>true});
+function el(id){if(!elements.has(id))elements.set(id,{id,style:{},checked:true,textContent:'',clientWidth:600,handlers:{},dataset:{},classList:{toggle(){}},setAttribute(){},parentElement:{clientWidth:600,style:{setProperty(){}}},addEventListener(k,f){this.handlers[k]=f;},getContext(){return context;},setPointerCapture(){},focus(){}});return elements.get(id);}
 const buttons=['left','right','launch'].map(k=>{const b=el(k);b.dataset.control=k;return b;});
 globalThis.document={getElementById:el,querySelectorAll:()=>buttons,addEventListener:(k,f)=>events[k]=f,hidden:false};
 globalThis.addEventListener=(k,f)=>events[k]=f;globalThis.innerHeight=900;globalThis.innerWidth=1200;globalThis.devicePixelRatio=1;globalThis.ResizeObserver=class{observe(){}};globalThis.requestAnimationFrame=f=>raf=f;

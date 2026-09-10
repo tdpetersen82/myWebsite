@@ -4,7 +4,7 @@ import {QuarrySound} from '../pinball/sound.mjs';
 
 const fx=new QuarryEffects();
 for(let i=0;i<40;i++)fx.hit('rock',100,200,false);
-assert(fx.particles.length<=80,'dust is bounded');
+assert(fx.particles.length<=80,'dust is bounded');for(let i=0;i<30;i++)fx.hit('crusher',100,200,false);assert(fx.rings.length<=12,'impact rings are bounded');
 fx.hit('shipment',0,0,false);assert(fx.departure>0);fx.tick(4,false);assert.equal(fx.departure,0);assert.equal(fx.particles.length,0);
 fx.hit('rock',0,0,true);fx.hit('shipment',0,0,true);assert.equal(fx.particles.length,0);assert.equal(fx.departure,0);
 fx.hit('rock',0,0,false);fx.tick(.01,true);assert.equal(fx.particles.length,0,'switching to reduced motion clears existing effects');
