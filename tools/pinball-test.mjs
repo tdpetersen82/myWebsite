@@ -4,10 +4,16 @@ import {createWorld,launch,step,DT,MAX_SPEED} from '../pinball/physics.mjs';
 function run(w,seconds,input={}){for(let i=0;i<Math.round(seconds/DT);i++)step(w,input);return w;}
 function ball(x,y,vx=0,vy=0){const w=createWorld();w.state='playing';w.ball={x,y,vx,vy};return w;}
 
-// Every legal plunger strength must clear the lane and eventually drain unattended.
-for(let p=0;p<=1;p+=.05){const w=createWorld();assert(launch(w,p));let reached=false;
-  for(let i=0;i<30/DT&&w.state==='playing';i++){step(w);reached ||= w.ball.x<520;}
-  assert(reached,`launch ${p} exits the shooter lane`);assert.equal(w.state,'drained',`launch ${p} does not become stuck`);
+// Every launch must enter the central playfield, not merely exit the shooter lane.
+for(let strength=0;strength<=100;strength++){
+  const w=createWorld();assert(launch(w,strength/100));let reached=false;
+  for(let i=0;i<30/DT&&w.state==='playing';i++){
+    step(w);const b=w.ball;
+    reached ||= !w.transport&&b.x>110&&b.x<475&&b.y>170&&b.y<550;
+    assert(b.x>=25&&b.x<=575&&b.y>=45,'launch stays inside table bounds');
+  }
+  assert(reached,`launch ${strength}% reaches the playable middle before draining`);
+  assert.equal(w.state,'drained',`launch ${strength}% does not become stuck`);
 }
 // The middle must remain an actual drain even with the bats down.
 assert.equal(run(ball(300,710,0,900),1).state,'drained');

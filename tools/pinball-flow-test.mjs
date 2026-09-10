@@ -7,7 +7,7 @@ const buttons=['left','right','launch'].map(k=>{const b=el(k);b.dataset.control=
 globalThis.document={getElementById:el,querySelectorAll:()=>buttons,addEventListener:(k,f)=>events[k]=f,hidden:false};
 globalThis.addEventListener=(k,f)=>events[k]=f;globalThis.innerHeight=900;globalThis.devicePixelRatio=1;globalThis.ResizeObserver=class{observe(){}};globalThis.requestAnimationFrame=f=>raf=f;
 globalThis.localStorage={getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)};
-const source=(await readFile(new URL('../pinball/game.mjs',import.meta.url),'utf8')).replace("'./machine-art.mjs'",JSON.stringify(new URL('../pinball/machine-art.mjs',import.meta.url).href)).replace("'./physics.mjs'",JSON.stringify(new URL('../pinball/physics.mjs',import.meta.url).href))+'\nexport const inspect=()=>({w,input:input(),best});';
+const source=(await readFile(new URL('../pinball/game.mjs',import.meta.url),'utf8')).replace("'./rules.mjs'",JSON.stringify(new URL('../pinball/rules.mjs',import.meta.url).href)).replace("'./machine-art.mjs'",JSON.stringify(new URL('../pinball/machine-art.mjs',import.meta.url).href)).replace("'./physics.mjs'",JSON.stringify(new URL('../pinball/physics.mjs',import.meta.url).href))+'\nexport const inspect=()=>({w,input:input(),best,shift});';
 const {inspect}=await import('data:text/javascript;base64,'+Buffer.from(source).toString('base64'));
 const key=(type,code)=>events[type]({code,target:{tagName:'CANVAS'},preventDefault(){}});
 const pointer=(control,type,pointerId)=>el(control).handlers[type]({pointerId,preventDefault(){}});
@@ -17,7 +17,18 @@ pointer('left','pointerdown',1);pointer('right','pointerdown',2);assert(inspect(
 pointer('launch','pointerdown',3);frames(60);assert(inspect().w.charge>0);pointer('launch','pointercancel',3);assert.equal(inspect().w.state,'plunger');assert.equal(inspect().w.charge,0);
 key('keydown','Space');frames(120);key('keyup','Space');assert.equal(inspect().w.state,'playing');
 events.blur();const b={...inspect().w.ball};frames(120);assert.deepEqual(inspect().w.ball,b);assert(!inspect().input.left&&!inspect().input.launch);
-el('pause').onclick();frames(2400);assert.equal(inspect().w.state,'drained');assert(Number(storage.get('quarryPinballBestRally'))>0);
-key('keydown','Space');key('keyup','Space');assert.equal(inspect().w.state,'plunger');
-await import('data:text/javascript;base64,'+Buffer.from(source+'\n// reload').toString('base64'));frames(1);assert.notEqual(el('best').textContent,'0.0s');
-console.log('Pinball controls passed: keyboard aliases, simultaneous pointers, cancellation, launch, blur/pause, re-serve and persistent rally record.');
+el('pause').onclick();
+for(let ball=1;ball<=3;ball++){
+  for(let attempt=0;attempt<3&&!['between','over'].includes(inspect().shift.status);attempt++){
+    if(inspect().shift.status==='ready'){key('keydown','Space');key('keyup','Space');}
+    frames(4800);
+  }
+  assert.equal(inspect().shift.status,ball===3?'over':'between');
+  assert.equal(inspect().shift.ball,ball);
+  if(ball<3){el('continue').onclick();assert.equal(inspect().shift.status,'ready');}
+}
+assert(inspect().shift.score>0);const record=JSON.parse(storage.get('quarryPinballRecord'));assert.equal(record.shifts,1);assert.equal(record.best,inspect().shift.score);
+frames(240);assert.equal(JSON.parse(storage.get('quarryPinballRecord')).shifts,1,'completed shift only saved once');
+el('continue').onclick();assert.equal(inspect().shift.ball,1);assert.equal(inspect().shift.score,0);
+await import('data:text/javascript;base64,'+Buffer.from(source+'\n// reload').toString('base64'));frames(1);assert.equal(el('best').textContent,record.best.toLocaleString());
+console.log('Pinball full shift passed: keyboard/touch cancellation, pause, three balls with saves, bonus transitions, restart, and high-score reload.');

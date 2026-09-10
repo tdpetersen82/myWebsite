@@ -3,6 +3,7 @@ import {rocks,bumpers,scoop,rollovers,rampPath,laneDividers,orbitPath} from './m
 export function drawMachines(ctx,w,line,text) {
   const m=w.machines;
   line(orbitPath,'#9cae98',3);
+  if(w.transport?.type==='launch')line(w.transport.path,'#edc776',3,[5,5]);
   // A raised return hugs the right rail, leaving the middle open for shots.
   line(rampPath,'#0e2025',31);
   line(rampPath,'#78867b',27);

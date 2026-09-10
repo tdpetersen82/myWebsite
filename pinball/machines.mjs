@@ -52,10 +52,13 @@ export function tickMachines(w,dt) {
   if(m.laneReset>0) {m.laneReset=Math.max(0,m.laneReset-dt);if(m.laneReset===0)m.lanes.fill(false);}
   if(!w.transport)return false;
   const t=w.transport;t.elapsed+=dt;
-  if(t.type==='ramp')Object.assign(b,alongPath(t.path,t.elapsed/t.duration),{vx:0,vy:0});
+  if(t.type==='ramp'||t.type==='launch')Object.assign(b,alongPath(t.path,t.elapsed/t.duration),{vx:0,vy:0});
   else Object.assign(b,{x:scoop.x,y:scoop.y,vx:0,vy:0});
   if(t.elapsed>=t.duration) {
-    if(t.type==='ramp') {
+    if(t.type==='launch') {
+      Object.assign(b,{x:t.lane,y:125,vx:0,vy:180});w.launchFeed=false;
+      announce(w,'launch-return','Ball in play');
+    } else if(t.type==='ramp') {
       Object.assign(b,{x:380,y:713,vx:-100,vy:130});
       announce(w,'ramp-return','Conveyor return · right flipper');
     } else {
@@ -70,6 +73,11 @@ export function tickMachines(w,dt) {
 export function collideMachines(w,previous,contact) {
   const b=w.ball,m=w.machines;
   for(const rail of laneDividers)contact(b,...rail,1.5,.55);
+  if(w.launchFeed&&previous.y>=175&&b.y<175&&b.x>530) {
+    const lane=rollovers[Math.min(2,Math.floor(w.launchPower*3))];
+    w.transport={type:'launch',elapsed:0,duration:.65,lane,path:[[b.x,b.y],[548,145],[510,95],[440,75],[lane,90],[lane,125]]};
+    b.vx=0;b.vy=0;announce(w,'launch-feed','Launch feed · survey lanes');return;
+  }
   for(let i=1;i<orbitPath.length;i++)contact(b,...orbitPath[i-1],...orbitPath[i],1.5,.8);
   // The ramp throat only accepts an upward, sufficiently strong shot.
   if(previous.y>=450&&b.y<450&&b.x>=405&&b.x<=460) {

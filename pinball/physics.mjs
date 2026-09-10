@@ -16,8 +16,8 @@ export const slings=[
 ];
 export function createWorld(){const w={ball:{x:548,y:848,vx:0,vy:0},state:'plunger',time:0,age:0,charge:0,drains:0,paused:false,flippers:[{x:200,y:760,angle:.46,omega:0,side:1},{x:400,y:760,angle:Math.PI-.46,omega:0,side:-1}],slingCooldown:[0,0],events:[]};resetMachines(w);return w;}
 export function tip(f){return {x:f.x+86*Math.cos(f.angle),y:f.y+86*Math.sin(f.angle)};}
-export function serve(w){w.ball={x:548,y:848,vx:0,vy:0};w.state='plunger';w.charge=0;w.age=0;resetMachines(w);}
-export function launch(w,power=w.charge){if(w.state!=='plunger'||w.paused)return false;w.ball.vy=-(1220+230*Math.max(0,Math.min(1,power)));w.state='playing';w.charge=0;return true;}
+export function serve(w){w.ball={x:548,y:848,vx:0,vy:0};w.state='plunger';w.launchFeed=false;w.charge=0;w.age=0;resetMachines(w);}
+export function launch(w,power=w.charge){if(w.state!=='plunger'||w.paused)return false;w.ball.vy=-(1220+230*Math.max(0,Math.min(1,power)));w.state='playing';w.launchFeed=true;w.launchPower=Math.max(0,Math.min(1,power));w.charge=0;return true;}
 export function closest(x,y,ax,ay,bx,by){const dx=bx-ax,dy=by-ay,t=Math.max(0,Math.min(1,((x-ax)*dx+(y-ay)*dy)/(dx*dx+dy*dy||1)));return {x:ax+t*dx,y:ay+t*dy};}
 // Capsule contact includes angular surface velocity, so a rising bat actually strikes the ball.
 export function contact(b,ax,ay,bx,by,radius=0,restitution=.68,motion=null){
