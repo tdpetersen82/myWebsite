@@ -3,3 +3,14 @@
 .machine-status{padding:12px;border:1px solid #52635b;border-radius:6px;font-size:12px;color:#e3c47c;font-variant-numeric:tabular-nums}
 
 #objective{font-size:20px;color:#e8c679;line-height:1.4}#shift-summary{padding:12px;background:#34433a;color:#f0dfb6}button[hidden],[hidden]{display:none!important}.stats b{font-size:15px}.display strong{max-width:290px}.stats{flex-shrink:0}@media(max-width:740px){.display strong{max-width:185px;font-size:11px}.stats b{font-size:12px}}
+
+/* Quarry cabinet: desktop table first, with tactile steel and warm stone trim. */
+body{background:radial-gradient(ellipse at 35% 0,#36413a 0,#171e1d 60%)}
+.cabinet{background:linear-gradient(135deg,#686554,#333f39 30%,#293631 80%,#605c48);border:2px solid #a29470;box-shadow:0 25px 70px #0008,inset 0 0 0 4px #202f2b;padding:14px}
+.display{background:#122623;border:1px solid #75806a;border-radius:6px;margin-bottom:10px;padding:10px 14px}.display small{color:#c8bb8c}.stats b{font-family:ui-monospace,monospace;color:#ffcf78}
+.actions{flex-wrap:wrap;gap:8px}.actions button{font-size:13px}button{border-color:#8b876b;background:linear-gradient(#45564b,#303f37)}button:hover{background:#596650}
+aside h1{color:#eee1c4}.eyebrow{color:#d7bd7f}#viewport{box-shadow:inset 0 0 15px #0005}
+@media(min-width:1000px){main{max-width:1380px;padding:14px 28px}.layout{grid-template-columns:minmax(0,770px) minmax(280px,360px);gap:38px}.touch-controls{max-width:450px;margin:10px auto 0}aside{padding-top:4px}h1{font-size:44px;margin-bottom:18px}.intro{font-size:19px}aside p,li{font-size:13px}li{padding:2px 0}}
+@media(prefers-reduced-motion:reduce){*{scroll-behavior:auto!important}}
+
+@media(min-width:1000px){.layout{grid-template-columns:minmax(0,620px) minmax(280px,360px);justify-content:center}.display{min-height:68px}.display strong{font-size:12px;max-width:230px}.cabinet{padding:12px}main{padding-top:10px}}

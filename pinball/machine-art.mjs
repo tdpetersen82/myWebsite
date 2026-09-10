@@ -1,6 +1,6 @@
 import {rocks,bumpers,scoop,rollovers,rampPath,laneDividers,orbitPath} from './machines.mjs';
 
-export function drawMachines(ctx,w,line,text) {
+export function drawMachines(ctx,w,line,text,time=0,reduced=false) {
   const m=w.machines;
   line(orbitPath,'#9cae98',3);
   if(w.transport?.type==='launch')line(w.transport.path,'#edc776',3,[5,5]);
@@ -8,7 +8,9 @@ export function drawMachines(ctx,w,line,text) {
   line(rampPath,'#0e2025',31);
   line(rampPath,'#78867b',27);
   line(rampPath,'#344f50',22);
-  line(rampPath,'#b8c8ad',2,[5,14]);
+  ctx.lineDashOffset=-(w.transport?.type==='ramp'?time*65:0);line(rampPath,'#b8c8ad',2,[5,14]);ctx.lineDashOffset=0;
+  for(const [x,y] of [[432,340],[490,250],[502,545]]){ctx.beginPath();ctx.arc(x,y,5,0,Math.PI*2);ctx.fillStyle='#c6a251';ctx.fill();}
+
   line([[405,450],[405,422]],'#e8bf68',4);
   line([[460,450],[460,422]],'#e8bf68',4);
   line([[405,450],[460,450]],'#d4b96b',3,[4,5]);
@@ -23,11 +25,12 @@ export function drawMachines(ctx,w,line,text) {
   }
   text('ROCK BANK',133,500,10,'#e3c47c');
   for(let i=0;i<bumpers.length;i++) {
-    const c=bumpers[i],flash=m.bumperFlash[i]>0;
+    const c=bumpers[i],flash=!reduced&&m.bumperFlash[i]>0;
     ctx.beginPath();ctx.arc(c.x,c.y,c.r+5,0,Math.PI*2);ctx.fillStyle='#0e191b';ctx.fill();
     ctx.beginPath();ctx.arc(c.x,c.y,c.r,0,Math.PI*2);ctx.fillStyle=flash?'#f0d58b':'#b9bba5';ctx.fill();
     ctx.beginPath();ctx.arc(c.x,c.y,c.r-8,0,Math.PI*2);ctx.strokeStyle=flash?'#fff2c9':'#536c66';ctx.lineWidth=4;ctx.stroke();
-    text('⚙',c.x,c.y+5,17,'#344d4d');
+    const angle=flash?time*12:0;for(let k=0;k<6;k++){const a=angle+k*Math.PI/3;line([[c.x+Math.cos(a)*7,c.y+Math.sin(a)*7],[c.x+Math.cos(a)*16,c.y+Math.sin(a)*16]],'#455c55',3);}
+    ctx.beginPath();ctx.arc(c.x,c.y,5,0,Math.PI*2);ctx.fillStyle='#b1975e';ctx.fill();
   }
   text('CRUSHER',282,322,10,'#e3c47c');
   ctx.beginPath();ctx.arc(scoop.x,scoop.y,scoop.r+6,0,Math.PI*2);ctx.fillStyle='#c5a968';ctx.fill();

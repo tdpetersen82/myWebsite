@@ -1,4 +1,4 @@
-# Limestone Quarry Pinball — Phase 3
+# Limestone Quarry Pinball — Phase 4
 
 Playable three-ball shifts at `/pinball/`. Hold and release Space or Launch to shoot. A/D or arrow keys control the flippers, P pauses, R starts a new shift. Scores and completed-shift records persist locally.
 
@@ -16,6 +16,7 @@ node tools/pinball-test.mjs
 node tools/pinball-flow-test.mjs
 node tools/pinball-machines-test.mjs
 node tools/pinball-rules-test.mjs
+node tools/pinball-presentation-test.mjs
 ```
 
 Open `http://localhost:8765/pinball/`.
@@ -28,6 +29,14 @@ Each ball has one seven-second save; the replacement cannot renew it. The first 
 
 The upper launch feed uses a guided channel into the survey lanes. The former uncontrolled collision with the inner orbit rail often returned the ball down the right outlane. Regression checks now require every sampled launch strength to reach the playable middle before draining, not just leave the shooter lane. Normal orbit shots retain their physical rail collisions.
 
+## Phase 4 presentation
+
+The desktop cabinet uses warm limestone trim, terraced quarry benches, yellow loader details, a settling pond, freight wagons, active conveyor treads and crusher spokes. Successful shipments animate a loaded wagon leaving the siding; parked wagons and the dispatch count record progress. Particle counts are capped at 80 and expire quickly. These layers never change collisions or scoring.
+
+Web Audio synthesizes flipper clicks, stone impacts, crusher chatter, launch, scoop, conveyor, orbit, rollover and shipment cues after a user gesture. Audio gracefully falls back to silence when unsupported. M or the Sound button toggles mute. Reduced motion defaults to the system preference and can be overridden; it disables particles, trails, wagon travel, conveyor movement and impact flashes. Both preferences persist locally. Pause freezes decoration and suspends audio.
+
+The desktop layout was checked at the in-app browser's normal 1280 × 720 viewport, including full table/control fit, keyboard launch, mute toggle and console errors. Presentation tests cover effect bounds, motion reduction, audio scheduling/throttling, mute, pause and fallback; the full-shift harness checks preference persistence. Subjective sound balance and long desktop play sessions remain tuning work.
+
 ## Next phase
 
-Phase 4 adds quarry artwork, machinery animations and sound. Phase 5 expands real-device playtesting and tuning; Phase 6 adds the public arcade listing and release metadata. The page remains noindex until release.
+Phase 5 prioritizes desktop playtesting: keyboard responsiveness, shot difficulty, drain frequency and scoring balance. Mobile keeps viewport scaling and touch support, with desktop driving design decisions. Phase 6 adds the public arcade listing and release metadata. The page remains noindex until release.
