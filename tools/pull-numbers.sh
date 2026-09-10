@@ -13,4 +13,4 @@ node tools/bing-report.mjs || echo "bing-report failed"
 echo; echo "################ CLOUDFLARE ################"
 node tools/cf-report.mjs || true
 echo; echo "################ FEEDBACK ################"
-node tools/feedback-read.mjs --count || echo "feedback-read failed"
+node tools/feedback-read.mjs --count || { sleep 5; node tools/feedback-read.mjs --count; } || echo "feedback-read failed"   # the KV read fails transiently (auth 10000) about once a day; one retry clears it
