@@ -44,3 +44,7 @@ Phase 5 prioritizes desktop playtesting: keyboard responsiveness, shot difficult
 ## Pinball hardware revision
 
 Raised steel guides replace the thin rail treatment. The load ramp has two side rails, cross braces, support posts, a shadow beneath the elevated channel and an offset ball shadow during transport. The crusher uses mushroom-style pop bumpers with 32-unit collision radii, rubber skirts, illuminated caps and short compression on impact. Scoop and orbit reachability fixtures were revalidated around the larger physical bumpers; all five suites pass.
+
+## Desktop arcade interface
+
+The interface now separates the table from a compact score/mission console. The console shows ball number, personal best, shipment stages, objective progress, dispatched loads and bonus multiplier. Instructions and preferences are collapsed by default. The score and stage controls update from the existing shift state; canvas scaling measures the actual viewport position so the table and launch controls remain on screen. The previous accumulated prototype CSS was replaced.

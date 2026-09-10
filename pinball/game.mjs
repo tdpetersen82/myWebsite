@@ -9,7 +9,7 @@ let prefs={muted:false,reduced:globalThis.matchMedia?.('(prefers-reduced-motion:
 try{const p=JSON.parse(localStorage.getItem('quarryPinballPreferences'));if(p){if(typeof p.muted==='boolean')prefs.muted=p.muted;if(typeof p.reduced==='boolean')prefs.reduced=p.reduced;}}catch{}
 const sound=new QuarrySound(prefs.muted),fx=new QuarryEffects();
 $('motion').checked=prefs.reduced;
-function preference(){try{localStorage.setItem('quarryPinballPreferences',JSON.stringify(prefs));}catch{}$('mute').textContent=prefs.muted?'Sound off':'Sound on';$('mute').setAttribute('aria-pressed',String(prefs.muted));}
+function preference(){$('mission-fill').style.transition=prefs.reduced?'none':'';try{localStorage.setItem('quarryPinballPreferences',JSON.stringify(prefs));}catch{}$('mute').textContent=prefs.muted?'Sound off':'Sound on';$('mute').setAttribute('aria-pressed',String(prefs.muted));}
 $('mute').onclick=()=>{prefs.muted=!prefs.muted;sound.mute(prefs.muted);if(w.paused)sound.pause(true);preference();};
 $('motion').onchange=()=>{prefs.reduced=$('motion').checked;trail=[];fx.reset();preference();};preference();
 const keys=new Set(),pointers=new Map();let accumulator=0,last=0,trail=[];
@@ -30,7 +30,7 @@ for(const b of document.querySelectorAll('[data-control]')){
 $('continue').onclick=()=>{releaseLaunch();canvas.focus({preventScroll:true});};
 $('pause').onclick=()=>{pause();canvas.focus({preventScroll:true});};$('reset').onclick=()=>{reset();canvas.focus({preventScroll:true});};
 addEventListener('blur',()=>pause(true));document.addEventListener('visibilitychange',()=>{if(document.hidden)pause(true);});
-function resize(){const width=$('viewport').parentElement.clientWidth-24,available=Math.max(230,innerHeight-($('viewport').offsetTop??150)-70),scale=Math.min(width/W,available/H,1.2);$('viewport').style.width=W*scale+'px';$('viewport').style.height=H*scale+'px';$('stage').style.transform=`scale(${scale})`;$('viewport').parentElement.style.setProperty('--table-width',(W*scale)+'px');const dpr=Math.min(devicePixelRatio||1,2);canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);}
+function resize(){const width=innerWidth>760?Math.min(700,innerWidth-420):innerWidth-46,available=Math.max(230,innerHeight-(($('viewport').getBoundingClientRect?.().top??100)+(globalThis.scrollY||0))-58),scale=Math.min(width/W,available/H,1.2);$('viewport').style.width=W*scale+'px';$('viewport').style.height=H*scale+'px';$('stage').style.transform=`scale(${scale})`;$('viewport').parentElement.style.setProperty('--table-width',(W*scale)+'px');const dpr=Math.min(devicePixelRatio||1,2);canvas.width=W*dpr;canvas.height=H*dpr;canvas.style.width=W+'px';canvas.style.height=H+'px';ctx.setTransform(dpr,0,0,dpr,0,0);}
 new ResizeObserver(resize).observe($('viewport').parentElement);addEventListener('resize',resize);resize();
 function line(points,color,width=2,dash=[]){ctx.beginPath();ctx.strokeStyle=color;ctx.lineWidth=width;ctx.setLineDash(dash);points.forEach(([x,y],i)=>i?ctx.lineTo(x,y):ctx.moveTo(x,y));ctx.stroke();ctx.setLineDash([]);}
 function text(s,x,y,size=12,color='#8dada9',align='center'){ctx.fillStyle=color;ctx.font=`${size}px system-ui`;ctx.textAlign=align;ctx.fillText(s,x,y);}
@@ -61,6 +61,9 @@ function draw(){
  const label=w.paused?'Table paused':shift.messageRemaining>0?shift.message:shift.status==='ready'?'Hold launch · release to shoot':shift.status==='playing'&&shift.saveRemaining>0?'BALL SAVE · '+Math.ceil(shift.saveRemaining)+'s':objective(shift);
  if($('status').textContent!==label)$('status').textContent=label;
  $('objective').textContent=objective(shift);
+ $('ball-number').textContent='BALL 0'+shift.ball+' / 03';$('shipment-number').textContent=String(shift.shipments+1).padStart(2,'0');$('jackpot').textContent=(10000+shift.shipments*5000).toLocaleString()+' PTS';$('ship-count').textContent=shift.shipments;$('bonus-multiplier').textContent=shift.multiplier+'×';
+ for(let i=0;i<4;i++){const el=$('step-'+i);el.classList.toggle('current',i===shift.stage);el.classList.toggle('done',i<shift.stage);el.setAttribute('aria-current',i===shift.stage?'step':'false');}
+ const progress=shift.stage===0?shift.rocks.filter(Boolean).length/3:shift.stage===1?shift.crushed/5:0;$('mission-fill').style.width=((shift.stage+progress)/4*100)+'%';
  $('machine-status').textContent=`Ball ${shift.ball} / 3 · Shipments ${shift.shipments} · Bonus ${shift.multiplier}× · Next shipment ${(10000+shift.shipments*5000).toLocaleString()}`;
  $('shift-summary').hidden=!['bonus','between','over'].includes(shift.status);
  $('shift-summary').textContent=shift.status==='over'?`Shift complete: ${shift.score.toLocaleString()} points, ${shift.shipments} shipments. Best: ${best.toLocaleString()}.`:`Ball ${shift.ball} bonus: ${shift.bonusBase.toLocaleString()} × ${shift.multiplier} = ${shift.bonusTotal.toLocaleString()}. Counted: ${shift.bonusPaid.toLocaleString()}.`;
