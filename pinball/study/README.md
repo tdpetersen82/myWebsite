@@ -18,3 +18,19 @@ crusher with animated rollers, tunnel, settling pool, apron and backboard displa
 Use A/D or left/right arrows to exercise the flipper pivots. Ball motion remains a
 scripted visual demonstration, and the display is a preview, not a live score.
 The existing playable game and its high scores remain separate.
+
+## Playable prototype (checkpoint 03)
+
+Three.js renders the table; `physics.mjs` supplies a custom fixed-step 240 Hz
+planar simulation with circle/capsule contacts and moving flipper surfaces.
+Visible ground rails are sampled into collision segments. Space launches;
+A/D or arrows operate flippers; P pauses. Bumpers, targets, slings and the
+wire ramp award points. Three balls per game, one early save per ball, and
+localStorage key `limestone-quarry-3d-best` stores this version's best score.
+The covered launch feed and elevated ramp use constrained paths; free play
+uses velocity, gravity and collisions. This is an initial playable prototype:
+full quarry mission rules, sound and final physics tuning are still pending.
+
+Plaque labels fit their texture width. The rendering viewport reserves room
+for the controls, keeping the cabinet apron clear in the player-view preset.
+Run `node tools/pinball-3d-test.mjs` for physics regression checks.

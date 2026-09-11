@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import {QuarryPhysics} from './physics.mjs';
+const collisionSegments=[];
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {RoundedBoxGeometry} from './vendor/RoundedBoxGeometry.js';
 const canvas=document.querySelector('#scene'),status=document.querySelector('#status');
@@ -8,7 +10,7 @@ renderer.setPixelRatio(Math.min(devicePixelRatio,1.75));renderer.setSize(innerWi
 renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;
 renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=.9;
 const scene=new THREE.Scene();scene.background=new THREE.Color('#0b131a');scene.fog=new THREE.FogExp2('#0b131a',.018);
-const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,100);camera.position.set(16,23,31);
+const camera=new THREE.PerspectiveCamera(38,innerWidth/innerHeight,.1,100);camera.position.set(0,25,29);
 const controls=new OrbitControls(camera,canvas);controls.target.set(0,.8,3.5);controls.enableDamping=true;controls.minDistance=8;controls.maxDistance=48;controls.maxPolarAngle=Math.PI*.46;controls.minPolarAngle=.18;controls.update();
 // Softbox environment gives the metal true reflected highlights, not painted streaks.
 const env=new THREE.Scene();env.background=new THREE.Color('#39434b');
@@ -27,7 +29,7 @@ function cyl(rt,rb,h,material,x,y,z,parent=scene){return mesh(new THREE.Cylinder
 function ring(r,t,material,x,y,z,parent=scene){const m=mesh(new THREE.TorusGeometry(r,t,12,96),material,x,y,z,parent);m.rotation.x=Math.PI/2;return m;}
 function rod(a,b,r,material,parent=scene){const av=new THREE.Vector3(...a),bv=new THREE.Vector3(...b),m=mesh(new THREE.CylinderGeometry(r,r,av.distanceTo(bv),10),material,0,0,0,parent);m.position.copy(av).add(bv).multiplyScalar(.5);m.quaternion.setFromUnitVectors(new THREE.Vector3(0,1,0),bv.sub(av).normalize());return m;}
 function label(text,w=512,h=128,color='#eedcb0',background='#162d35'){
- const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle=background;x.fillRect(0,0,w,h);x.strokeStyle='#b99b52';x.lineWidth=5;x.strokeRect(5,5,w-10,h-10);x.fillStyle=color;x.textAlign='center';x.textBaseline='middle';x.font=`600 ${Math.floor(h*.33)}px Georgia`;x.fillText(text,w/2,h/2);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;
+ const c=document.createElement('canvas');c.width=w;c.height=h;const x=c.getContext('2d');x.fillStyle=background;x.fillRect(0,0,w,h);x.strokeStyle='#b99b52';x.lineWidth=5;x.strokeRect(5,5,w-10,h-10);x.fillStyle=color;x.textAlign='center';x.textBaseline='middle';x.font=`600 ${Math.floor(h*.33)}px Georgia`;x.fillText(text,w/2,h/2,w-36);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t;
 }
 const floorMap=await new THREE.TextureLoader().loadAsync('../assets/quarry-playfield-v2.jpg');floorMap.colorSpace=THREE.SRGBColorSpace;floorMap.anisotropy=renderer.capabilities.getMaxAnisotropy();
 box(15,1.4,21.2,wood,0,-.85,4);const bed=mesh(new THREE.PlaneGeometry(14.6,20.8),new THREE.MeshStandardMaterial({map:floorMap,roughness:.45,metalness:.12}),0,-.12,4);bed.rotation.x=-Math.PI/2;
@@ -100,7 +102,10 @@ for(const [x,z] of [[-2.4,3.1],[0,2.6],[2.3,3.2]]){
  const lit=mesh(new THREE.ShapeGeometry(shape),new THREE.MeshStandardMaterial({color:'#ffe7a1',emissive:'#ff9e12',emissiveIntensity:1.3}),x,.09,z);lit.rotation.x=-Math.PI/2;lit.scale.setScalar(.68);
 }
 // Full-table hardware: rails, inlanes, slingshots and articulated flippers.
-function rail(points,material=chrome,r=.065){const c=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));return mesh(new THREE.TubeGeometry(c,80,r,10,false),material);}
+function rail(points,material=chrome,r=.065){const c=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));
+ if(points.every(p=>p[1]<=.5)&&points.every(p=>Math.abs(p[0])<6.8)){
+ const samples=c.getPoints(80);for(let i=1;i<samples.length;i++)collisionSegments.push({a:[samples[i-1].x,samples[i-1].z],b:[samples[i].x,samples[i].z],r,kick:material===rubber?4:0,key:'sling'+Math.sign(points[0][0])});}
+ return mesh(new THREE.TubeGeometry(c,80,r,10,false),material);}
 function deckSign(text,x,z,w=2.1,h=.45){const m=mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({map:label(text),roughness:.5}),x,.035,z);m.rotation.x=-Math.PI/2;return m;}
 for(const side of [-1,1]){
  const outer=[[side*6.4,.45,-3],[side*6.5,.45,4],[side*6.15,.45,8.5],[side*5.25,.45,11],[side*3,.45,12.3]];
@@ -115,6 +120,7 @@ for(const side of [-1,1]){
  rail([[side*2.8,.62,9.6],[side*3.55,.62,8.25],[side*4.35,.62,6.95]],brass,.045);
  deckSign('RETURN',side*5.5,8.5,1.1,.28);
 }
+for(const side of [-1,1]){collisionSegments.push({a:[side*4.5,6.6],b:[side*4.65,9.6],r:.08},{a:[side*4.65,9.6],b:[side*2.7,9.8],r:.08});}
 const flippers=[];
 for(const side of [-1,1]){
  const pivot=new THREE.Group();pivot.position.set(side*3.05,.3,10.8);scene.add(pivot);pivot.rotation.y=side*.34;
@@ -166,32 +172,50 @@ box(14.5,.12,1.7,darkSteel,0,.02,13.45);
 box(13.8,2.5,.45,wood,0,4.7,-6.55);box(13.3,2.1,.1,brass,0,4.7,-6.28);
 const screenCanvas=document.createElement('canvas');screenCanvas.width=1536;screenCanvas.height=240;const screenContext=screenCanvas.getContext('2d');const screenTexture=new THREE.CanvasTexture(screenCanvas);screenTexture.colorSpace=THREE.SRGBColorSpace;
 const display=mesh(new THREE.PlaneGeometry(12.9,1.85),new THREE.MeshBasicMaterial({map:screenTexture}),0,4.75,-6.2);
-function drawDisplay(){const ctx=screenContext;ctx.fillStyle='#071716';ctx.fillRect(0,0,1536,240);ctx.textAlign='center';ctx.fillStyle='#d8c18b';ctx.font='26px Georgia';ctx.fillText('L I M E S T O N E   /   T H E   Q U A R R Y',768,46);ctx.fillStyle='#ffc15d';ctx.font='bold 90px monospace';ctx.fillText('000,000',768,146);ctx.font='20px monospace';ctx.fillStyle='#94bbb0';ctx.fillText('TABLE PREVIEW     •     QUARRY OPERATIONS     •     DEMO',768,202);screenTexture.needsUpdate=true;}
+function drawDisplay(){const ctx=screenContext;ctx.fillStyle='#071716';ctx.fillRect(0,0,1536,240);ctx.textAlign='center';ctx.fillStyle='#d8c18b';ctx.font='26px Georgia';ctx.fillText('L I M E S T O N E   /   T H E   Q U A R R Y',768,46);ctx.fillStyle='#ffc15d';ctx.font='bold 90px monospace';ctx.fillText(game.score.toLocaleString('en-US',{minimumIntegerDigits:6}),768,146);ctx.font='20px monospace';ctx.fillStyle='#94bbb0';ctx.fillText(`BALL ${game.ballNumber} / 3    •    BEST ${best.toLocaleString('en-US')}    •    ${game.mode==='over'?'SHIFT COMPLETE':game.mode==='ready'?'SPACE TO LAUNCH':'QUARRY OPERATIONS'}`,768,202);screenTexture.needsUpdate=true;}
+const game=new QuarryPhysics(collisionSegments);
+let best=0;try{best=Number(localStorage.getItem('limestone-quarry-3d-best'))||0;}catch{}
 drawDisplay();
-// Flippers can be exercised during the visual review without implying physics.
-const pressed=new Set();function setFlippers(){for(const f of flippers)f.active=pressed.has(f.side<0?'ArrowLeft':'ArrowRight')||pressed.has(f.side<0?'KeyA':'KeyD');}
-addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','KeyA','KeyD'].includes(e.code)){e.preventDefault();pressed.add(e.code);setFlippers();}});
-addEventListener('keyup',e=>{pressed.delete(e.code);setFlippers();});addEventListener('blur',()=>{pressed.clear();setFlippers();});
+const pressed=new Set();
+let paused=false,time=0,last=0,accumulator=0;
+const pauseButton=document.querySelector('#pause');
+const launchButton=document.querySelector('#launch');
+function launch(){if(paused)return;game.launch();drawDisplay();}
+launchButton.onclick=launch;
+function pause(){paused=!paused;pauseButton.textContent=paused?'Resume':'Pause';accumulator=0;}
+pauseButton.onclick=pause;
+addEventListener('keydown',e=>{
+ if(['ArrowLeft','ArrowRight','KeyA','KeyD','Space','KeyP'].includes(e.code)){e.preventDefault();pressed.add(e.code);if(!e.repeat&&e.code==='Space')launch();if(!e.repeat&&e.code==='KeyP')pause();}
+});
+addEventListener('keyup',e=>pressed.delete(e.code));
+addEventListener('blur',()=>{pressed.clear();if(game.mode==='live'||game.mode==='ramp'||game.mode==='launch'){paused=true;pauseButton.textContent='Resume';}});
+document.addEventListener('visibilitychange',()=>{last=0;accumulator=0;pressed.clear();if(document.hidden&&game.mode!=='ready'){paused=true;pauseButton.textContent='Resume';}});
 const ball=mesh(new THREE.SphereGeometry(.19,40,28),new THREE.MeshStandardMaterial({color:'#ffffff',metalness:1,roughness:.08}));
-let paused=matchMedia('(prefers-reduced-motion: reduce)').matches,time=0,last=0,lastZone=-1,hiddenPause=false;
-const pauseButton=document.querySelector('#pause');pauseButton.textContent=paused?'Play motion':'Pause motion';
-function pulse(i){bumperGroups[i].pulse=1;}
-document.querySelector('#strike').onclick=()=>{bumperGroups.forEach((_,i)=>pulse(i));status.textContent='Bumper compression & amber light';};
-pauseButton.onclick=()=>{paused=!paused;pauseButton.textContent=paused?'Play motion':'Pause motion';};
-document.querySelector('#view').onclick=()=>{camera.position.set(0,29,34);controls.target.set(0,.7,3.7);controls.update();};
+// A constrained shooter feed is separate from free play, like a physical covered lane.
+const launchPath=new THREE.CatmullRomCurve3([[7.13,.22,12],[7.13,.22,4],[7.05,.25,-2.6],[6.2,3.7,-4.4],[4.8,3.7,-4],[3.7,.22,-2.7]].map(p=>new THREE.Vector3(...p)));
+for(const offset of [-.25,.25]){const path=new THREE.CatmullRomCurve3(launchPath.getPoints(100).map(p=>p.add(new THREE.Vector3(offset,.05,0))));mesh(new THREE.TubeGeometry(path,140,.04,8,false),chrome);}
+function playerView(){camera.position.set(0,25,29);controls.target.set(0,.7,3.7);controls.update();}
+document.querySelector('#view').onclick=playerView;
 document.querySelector('#close').onclick=()=>{camera.position.set(7,7,10);controls.target.set(0,.8,-.1);controls.update();};
-function resize(){camera.aspect=innerWidth/innerHeight;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);}
-addEventListener('resize',resize);document.addEventListener('visibilitychange',()=>{hiddenPause=document.hidden;last=0;});
-const freePath=new THREE.CatmullRomCurve3([new THREE.Vector3(-4.3,.2,3.7),new THREE.Vector3(-2.4,.2,1.43),new THREE.Vector3(-.4,.2,1.7),new THREE.Vector3(.1,.2,-.77),new THREE.Vector3(1.2,.2,1.8),new THREE.Vector3(2.3,.2,1.58),new THREE.Vector3(4.8,.2,5.5),new THREE.Vector3(5,.2,8.7),new THREE.Vector3(2,.2,11),new THREE.Vector3(-1.5,.2,7),new THREE.Vector3(-3.2,.2,5.2),new THREE.Vector3(-2,.2,10.9),new THREE.Vector3(2.3,.2,6),new THREE.Vector3(4.5,.65,4.6)]);
-function frame(now){requestAnimationFrame(frame);const dt=last?Math.min((now-last)/1000,.04):0;last=now;
- if(!paused&&!hiddenPause)time+=dt;
- const phase=time%20;
- if(phase<8){ball.position.copy(point(phase/8,0,.15));lastZone=-1;if(!paused)status.textContent='Steel ball · elevated wire ramp';}
- else{const t=(phase-8)/12;ball.position.copy(freePath.getPointAt(t));let zone=t<.12?0:t<.23?1:t<.34?2:-1;if(zone>=0&&zone!==lastZone&&!paused){pulse(zone);lastZone=zone;}if(!paused)status.textContent='Steel ball · lower playfield demonstration';}
- ball.rotation.x=time*3;
- for(const b of bumperGroups){if(!paused&&!hiddenPause)b.pulse=Math.max(0,b.pulse-dt*4);b.cap.position.y=.86-b.pulse*.12;b.light.intensity=6+b.pulse*13;b.amber.emissiveIntensity=.24+b.pulse*.8;}
- for(const f of flippers){const target=f.side*(f.active?-.38:.34);f.pivot.rotation.y+=(target-f.pivot.rotation.y)*Math.min(1,dt*22);}
- if(!paused&&!hiddenPause){rollers.forEach((r,i)=>r.rotation.z=time*(i?1:-1));inserts.forEach((m,i)=>m.emissiveIntensity=.35+Math.max(0,Math.sin(time*2-i*.9))*.9);}
+function resize(){const h=Math.max(240,innerHeight-document.querySelector('.panel').offsetHeight-38);camera.aspect=innerWidth/h;camera.updateProjectionMatrix();renderer.setSize(innerWidth,h);}
+addEventListener('resize',resize);resize();playerView();
+let lastScore=-1,lastMode='',lastNumber=0;
+function frame(now){requestAnimationFrame(frame);const dt=last?Math.min((now-last)/1000,.05):0;last=now;
+ if(!paused&&!document.hidden){time+=dt;accumulator+=dt;
+ while(accumulator>=1/240){game.step(1/240,pressed.has('KeyA')||pressed.has('ArrowLeft'),pressed.has('KeyD')||pressed.has('ArrowRight'));accumulator-=1/240;}
+ }
+ for(const event of game.events.splice(0)){if(event.kind==='bumper')bumperGroups[event.index].pulse=1;}
+ if(game.score>best){best=game.score;try{localStorage.setItem('limestone-quarry-3d-best',String(best));}catch{}}
+ if(game.score!==lastScore||game.mode!==lastMode||game.ballNumber!==lastNumber){drawDisplay();lastScore=game.score;lastMode=game.mode;lastNumber=game.ballNumber;}
+ status.textContent=paused?'Paused · P to resume':game.mode==='ready'?`Ball ${game.ballNumber} · Space to launch`:game.mode==='over'?`Shift complete · ${game.score.toLocaleString()} points`:game.mode==='ramp'?'Wire ramp · delivery run':`Ball ${game.ballNumber} · ${game.score.toLocaleString()} points`;
+ launchButton.textContent=game.mode==='over'?'New game':'Launch · Space';launchButton.disabled=!['ready','over'].includes(game.mode)||paused;
+ if(game.mode==='launch')ball.position.copy(launchPath.getPointAt(Math.min(1,game.route)));
+ else if(game.mode==='ramp')ball.position.copy(point(Math.min(1,game.route),0,.15));
+ else ball.position.set(game.x,.22,game.z);
+ ball.visible=game.mode!=='over';ball.rotation.x+=paused?0:game.vz*dt/.19;ball.rotation.z-=paused?0:game.vx*dt/.19;
+ for(const b of bumperGroups){if(!paused)b.pulse=Math.max(0,b.pulse-dt*4);b.cap.position.y=.86-b.pulse*.12;b.light.intensity=6+b.pulse*13;b.amber.emissiveIntensity=.24+b.pulse*.8;}
+ for(let i=0;i<flippers.length;i++)flippers[i].pivot.rotation.y=game.flippers[i].angle;
+ if(!paused){rollers.forEach((r,i)=>r.rotation.z=time*(i?1:-1));inserts.forEach((m,i)=>m.emissiveIntensity=.35+Math.max(0,Math.sin(time*2-i*.9))*.9);}
  controls.update();renderer.render(scene,camera);
 }
-status.textContent=paused?'Motion paused · drag to inspect':'Ready · drag to inspect';requestAnimationFrame(frame);
+requestAnimationFrame(frame);
