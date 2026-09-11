@@ -1,0 +1,21 @@
+/* A felt dice tray and ivory score sheets on the shared strategy wood table. */
+:root{--accent:#176d58;--ink:#283d32;--paper:#fffaf0;--die:64px;}
+body{padding:32px 20px 48px;}
+.game-shell{width:1080px;max-width:100%;gap:28px;}
+.console{width:100%;padding:26px;gap:20px;border-radius:28px;}
+.top-bar{background:none;backdrop-filter:none;border:0;border-bottom:1px solid #f4dbb044;border-radius:0;box-shadow:none;padding:0 0 20px;color:#fff0d4;}
+.top-bar::after{display:none;}.tb-title h1{font-family:Georgia,serif;font-size:42px;letter-spacing:-1.5px;}.tb-eyebrow,.stats .l{color:#efdab8;}.tb-back{background:#fff5df;color:#49321c;border-color:#d3b080;}.stats{gap:24px;}.stats .v{font-size:24px;}.stats .v.accent{color:#ffe0a0;}
+.setup{justify-content:space-between;}.setup select,.setup button,.controls button{background:#fff5df;border-color:#d3b080;}
+.play{display:flex;flex-direction:column;gap:22px;align-items:stretch;}
+.dice-panel{position:relative;top:auto;flex:none;width:100%;display:grid;grid-template-columns:1fr 250px;gap:14px 30px;padding:22px 26px;background:radial-gradient(ellipse at 30% 0,#2e7b61,#123f34);border:6px solid #244f3c;border-radius:20px;box-shadow:inset 0 0 0 1px #a5cd9766,inset 0 0 30px #05282166,0 4px 0 #302917;}
+.tray-turn{color:#e6ecd6;text-align:center;grid-column:1;font-size:12px;letter-spacing:.15em;}.tray-turn.cpu{color:#dfd8ae;}
+.dice-row{grid-column:1;grid-row:2/4;gap:14px;padding:12px 8px 29px;align-self:center;}
+.die{flex-shrink:0;padding:7px;border:1px solid #d6cbb2;border-radius:13px;background:linear-gradient(145deg,#fffff8,#e6dfcc);box-shadow:0 5px 0 #b4aa91,0 9px 12px #001a2266,inset 0 2px 2px #fff,inset 0 -3px 5px #c8bfad66;}.die .pip{fill:#253c32;filter:drop-shadow(0 1px 0 #fff);}
+.die.held{background:linear-gradient(145deg,#fff3b5,#e7c778);border-color:#ffe395;box-shadow:0 0 0 3px #ffe39c66,0 4px 0 #ad8b42,0 7px 10px #001c2655;}.die.held .pip{fill:#58451b;}.die.held::after{color:#ffe4a5;bottom:-23px;}.die.dim .pip{opacity:.35;}
+.roll-btn{grid-column:2;grid-row:2;min-height:54px;background:linear-gradient(#f4de9e,#dcb970);border-color:#dabb78;color:#493916;box-shadow:0 3px 0 #9e7e42;font-size:16px;}.roll-pips .rp{background:#60471940;}.roll-pips .rp.on{background:#654a20;}.tray-status{grid-column:2;grid-row:3;color:#dfe9d8;font-size:12px;}.tray-status b{color:#ffe0a0;}
+.card-wrap{flex:none;width:100%;}.card-cols{flex-direction:row;gap:18px;}.card-cols .card-frame{flex:1 1 0;width:auto;border-color:#d4ba93;border-radius:16px;box-shadow:0 6px 18px #29180730;}
+.scard thead th{padding:14px 10px;background:#f0e5d0;}.scard tr.sec th{padding:10px 12px;background:#faf2e3;color:#7d7159;}.scard .lbl{padding:8px 12px;font-size:13px;}.scard .lbl .sub{margin-top:4px;color:#807862;}.scard .valcol{width:76px;}.cell{min-height:48px;}.cell.avail{background:#eaf2e3;}.cell.avail .val{opacity:1;color:#247252;}.cell.avail.zero{background:#f9f3e7;}.cell.avail.zero .val{opacity:.5;color:#7a6e58;}.cell.avail:hover{background:#d4e8c8;}.cell.locked{background:#eee7d7;}.scard tr.derived td,.scard tr.derived th{padding:9px 10px;}.scard tr.total td,.scard tr.total th{padding:14px 10px;background:#e3ead6;}.scard td.cpuv{background:#f8f0df;}
+.controls{gap:12px;}.hint{line-height:1.65;font-size:12px;}.game-over.show{background:#092c2980;backdrop-filter:blur(4px);border-radius:18px;}.over-card{background:#fffaf0;border-radius:18px;}
+button:focus-visible,select:focus-visible,a:focus-visible{outline:3px solid #e1b956;outline-offset:3px;}
+@media(max-width:900px){body{padding:12px 10px 30px;}.console{padding:16px;gap:16px;border-radius:20px;}.top-bar{gap:12px;padding-bottom:16px;}.tb-title h1{font-size:34px;}.stats{width:100%;justify-content:space-between;gap:12px;}.stats .v{font-size:22px;}.dice-panel{grid-template-columns:1fr;padding:16px 10px;gap:10px;}.tray-turn,.dice-row,.roll-btn,.tray-status{grid-column:1;grid-row:auto;}.dice-row{gap:8px;padding:10px 0 28px;}.tray-status{min-height:32px;}.card-cols{flex-direction:column;gap:16px;}.card-cols .card-frame{flex:none;width:100%;}:root{--die:clamp(36px,calc((100vw - 114px)/5),64px);}.scard .valcol{width:68px;}.setup{gap:8px;}.setup select{min-width:0;flex:1;padding:10px 8px;font-size:12px;}.setup button{font-size:12px;padding:10px;}}
+@media(prefers-reduced-motion:reduce){.die.rolling{animation:none;}.die{transition:none;}}
