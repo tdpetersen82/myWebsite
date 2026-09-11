@@ -9,3 +9,12 @@ Implemented materials and geometry: multi-part bumper housings, transmissive amb
 Verification: module syntax check, local asset HTTP checks, desktop WebGL rendering, camera preset buttons, pause/resume, and browser console inspection. The existing game is unchanged. Visual fidelity still requires review against the selected Option A image before expanding to the entire table.
 
 Implementation reference: https://threejs.org/docs/pages/MeshPhysicalMaterial.html
+
+## Full table assembly (checkpoint 02)
+
+Expanded the model with lower return rails, slingshot assemblies, ivory flippers,
+a separated shooter lane and plunger spring, mission inserts, drop targets, a
+crusher with animated rollers, tunnel, settling pool, apron and backboard display.
+Use A/D or left/right arrows to exercise the flipper pivots. Ball motion remains a
+scripted visual demonstration, and the display is a preview, not a live score.
+The existing playable game and its high scores remain separate.
