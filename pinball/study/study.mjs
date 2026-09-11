@@ -1,4 +1,6 @@
 import * as THREE from 'three';
+import {QuarryAudio} from './audio.mjs';
+const audio=new QuarryAudio();
 import {QuarryPhysics} from './physics.mjs';
 import {GROUND_RAILS,makeCollisions,SLINGS,railCurve} from './layout.mjs';
 const collisionSegments=makeCollisions();
@@ -172,6 +174,16 @@ box(13.8,2.5,.45,wood,0,4.7,-6.55);box(13.3,2.1,.1,brass,0,4.7,-6.28);
 const screenCanvas=document.createElement('canvas');screenCanvas.width=1536;screenCanvas.height=240;const screenContext=screenCanvas.getContext('2d');const screenTexture=new THREE.CanvasTexture(screenCanvas);screenTexture.colorSpace=THREE.SRGBColorSpace;
 const display=mesh(new THREE.PlaneGeometry(12.9,1.85),new THREE.MeshBasicMaterial({map:screenTexture}),0,4.75,-6.2);
 function drawDisplay(){const ctx=screenContext;ctx.fillStyle='#071716';ctx.fillRect(0,0,1536,240);ctx.textAlign='center';ctx.fillStyle='#d8c18b';ctx.font='26px Georgia';ctx.fillText('L I M E S T O N E   /   T H E   Q U A R R Y',768,46);ctx.fillStyle='#ffc15d';ctx.font='bold 90px monospace';ctx.fillText(game.score.toLocaleString('en-US',{minimumIntegerDigits:6}),768,146);ctx.font='20px monospace';ctx.fillStyle='#94bbb0';ctx.fillText(`BALL ${game.ballNumber} / 3    •    BEST ${best.toLocaleString('en-US')}    •    ${game.mode==='over'?'SHIFT COMPLETE':game.mode==='ready'?'SPACE TO LAUNCH':'QUARRY OPERATIONS'}`,768,202);screenTexture.needsUpdate=true;}
+// Wide, illuminated crusher intake gives the lower flippers a readable shot.
+const crusherGlow=new THREE.MeshStandardMaterial({color:'#ffc263',emissive:'#ff950a',emissiveIntensity:1.4,metalness:.25,roughness:.25});
+for(const x of [-1,1]){box(.16,.85,.4,brass,x,.35,5.8);box(.06,.65,.08,crusherGlow,x,.45,6.04);}
+box(2.2,.16,.4,brass,0,.83,5.8);deckSign('CRUSHER  •  5,000',0,6.45,2.5,.4);
+const deliveryPath=new THREE.CatmullRomCurve3([[0,.22,5.8],[0,1.8,3.7],[.3,4.5,-4.5],[-3.6,3,-1],[-3.8,1,5],[-1.7,.22,9.4]].map(p=>new THREE.Vector3(...p)));
+for(const side of [-1,1]){const p=new THREE.CatmullRomCurve3(deliveryPath.getPoints(80).map(p=>p.add(new THREE.Vector3(side*.25,0,0))));mesh(new THREE.TubeGeometry(p,120,.035,8,false),darkSteel);}
+for(let i=0;i<=50;i++){const p=deliveryPath.getPointAt(i/50);rod([p.x-.25,p.y,p.z],[p.x+.25,p.y,p.z],.022,brass);}
+const flash=new THREE.PointLight('#ffb340',0,15,2);flash.position.set(0,3,4);scene.add(flash);
+let payoff=0,notice='',noticeTime=0;
+const feedback=document.createElement('div');feedback.className='feedback';feedback.setAttribute('role','status');document.body.append(feedback);
 const game=new QuarryPhysics(collisionSegments,SLINGS);
 let best=0;try{best=Number(localStorage.getItem('limestone-quarry-3d-best'))||0;}catch{}
 drawDisplay();
@@ -179,17 +191,18 @@ const pressed=new Set();
 let paused=false,time=0,last=0,accumulator=0;
 const pauseButton=document.querySelector('#pause');
 const launchButton=document.querySelector('#launch');
-function launch(){if(paused)return;game.launch();drawDisplay();}
+const soundButton=document.querySelector('#sound');soundButton.onclick=()=>{audio.unlock();audio.enabled=!audio.enabled;soundButton.textContent=audio.enabled?'Sound on':'Sound off';};
+function launch(){if(paused)return;audio.unlock();audio.play('launch');game.launch();drawDisplay();}
 launchButton.onclick=launch;
 function pause(){paused=!paused;pauseButton.textContent=paused?'Resume':'Pause';accumulator=0;}
 pauseButton.onclick=pause;
 addEventListener('keydown',e=>{
- if(['ArrowLeft','ArrowRight','KeyA','KeyD','Space','KeyP'].includes(e.code)){e.preventDefault();pressed.add(e.code);if(!e.repeat&&e.code==='Space')launch();if(!e.repeat&&e.code==='KeyP')pause();}
+ if(['ArrowLeft','ArrowRight','KeyA','KeyD','Space','KeyP'].includes(e.code)){e.preventDefault();audio.unlock();pressed.add(e.code);if(!e.repeat&&e.code==='Space')launch();if(!e.repeat&&e.code==='KeyP')pause();}
 });
 addEventListener('keyup',e=>pressed.delete(e.code));
-addEventListener('blur',()=>{pressed.clear();if(game.mode==='live'||game.mode==='ramp'||game.mode==='launch'){paused=true;pauseButton.textContent='Resume';}});
+addEventListener('blur',()=>{pressed.clear();if(game.mode==='live'||game.mode==='ramp'||game.mode==='launch'||game.mode==='crusher'||game.mode==='cradle'){paused=true;pauseButton.textContent='Resume';}});
 document.addEventListener('visibilitychange',()=>{last=0;accumulator=0;pressed.clear();if(document.hidden&&game.mode!=='ready'){paused=true;pauseButton.textContent='Resume';}});
-const ball=mesh(new THREE.SphereGeometry(.19,40,28),new THREE.MeshStandardMaterial({color:'#ffffff',metalness:1,roughness:.08}));
+const ball=mesh(new THREE.SphereGeometry(.19,40,28),new THREE.MeshStandardMaterial({color:'#ffffff',metalness:.8,roughness:.08,emissive:'#9bbbc9',emissiveIntensity:.25}));
 // A constrained shooter feed is separate from free play, like a physical covered lane.
 const launchPath=new THREE.CatmullRomCurve3([[7.13,.22,12],[7.13,.22,4],[7.05,.25,-2.6],[6.2,3.7,-4.4],[4.8,3.7,-4],[3.7,.22,-2.7]].map(p=>new THREE.Vector3(...p)));
 for(const offset of [-.25,.25]){const path=new THREE.CatmullRomCurve3(launchPath.getPoints(100).map(p=>p.add(new THREE.Vector3(offset,.05,0))));mesh(new THREE.TubeGeometry(path,140,.04,8,false),chrome);}
@@ -203,12 +216,22 @@ function frame(now){requestAnimationFrame(frame);const dt=last?Math.min((now-las
  if(!paused&&!document.hidden){time+=dt;accumulator+=dt;
  while(accumulator>=1/240){game.step(1/240,pressed.has('KeyA')||pressed.has('ArrowLeft'),pressed.has('KeyD')||pressed.has('ArrowRight'));accumulator-=1/240;}
  }
- for(const event of game.events.splice(0)){if(event.kind==='bumper')bumperGroups[event.index].pulse=1;}
+ for(const event of game.events.splice(0)){
+ audio.play(event.kind);if(event.kind==='bumper')bumperGroups[event.index].pulse=1;
+ if(event.kind==='crusher'){payoff=1;notice=`CRUSHED! +${event.points.toLocaleString()} · ${game.combo}×`;noticeTime=2.4;}
+ if(event.kind==='catch'){notice='CAUGHT · Release, then tap to shoot';noticeTime=2;}
+ }
+ if(!paused){payoff=Math.max(0,payoff-dt*.6);noticeTime=Math.max(0,noticeTime-dt);}
+ flash.intensity=payoff*28;crusherGlow.emissiveIntensity=1.4+payoff*4;
+ feedback.textContent=noticeTime>0?notice:game.mode==='cradle'?'Release, then tap to shoot':`CRUSHER SHOT · ${game.combo?`${game.combo}× · ${Math.ceil(game.comboTime)}s to chain`:'5,000 points'}`;
+ feedback.classList.toggle('hit',payoff>0);
+
  if(game.score>best){best=game.score;try{localStorage.setItem('limestone-quarry-3d-best',String(best));}catch{}}
  if(game.score!==lastScore||game.mode!==lastMode||game.ballNumber!==lastNumber){drawDisplay();lastScore=game.score;lastMode=game.mode;lastNumber=game.ballNumber;}
  status.textContent=paused?'Paused · P to resume':game.mode==='ready'?`Ball ${game.ballNumber} · Space to launch`:game.mode==='over'?`Shift complete · ${game.score.toLocaleString()} points`:game.mode==='ramp'?'Wire ramp · delivery run':`Ball ${game.ballNumber} · ${game.score.toLocaleString()} points`;
  launchButton.textContent=game.mode==='over'?'New game':'Launch · Space';launchButton.disabled=!['ready','over'].includes(game.mode)||paused;
  if(game.mode==='launch')ball.position.copy(launchPath.getPointAt(Math.min(1,game.route)));
+ else if(game.mode==='crusher')ball.position.copy(deliveryPath.getPointAt(Math.min(1,game.route)));
  else if(game.mode==='ramp')ball.position.copy(point(Math.min(1,game.route),0,.15));
  else ball.position.set(game.x,.22,game.z);
  ball.visible=game.mode!=='over';ball.rotation.x+=paused?0:game.vz*dt/.19;ball.rotation.z-=paused?0:game.vx*dt/.19;

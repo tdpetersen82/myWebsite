@@ -45,3 +45,14 @@ Zero-tension rail interpolation prevents curves from narrowing the designed gaps
 The regression suite exercises eight 90-second runs on the actual table layout,
 including the initial launch, housing containment, stationary wedges, passive
 three-ball drains, and scoring under timed flipper input.
+
+### Crusher skill loop
+
+Hold A/D or the arrow keys to catch a gentle flipper return. Release and tap to
+shoot; the ball's position along the flipper changes the shot angle. The glowing
+center gate starts a guided crusher run worth 5,000 points. Its return feeds the
+left flipper for another catch. Repeat within 18 seconds to raise the multiplier
+(up to 5x); drains reset it. The crusher route is an arcade mechanism, not a
+free-body ramp simulation. Hit callouts and warm lighting accompany synthesized
+audio, which starts after user input and can be muted with the Sound button.
+The regression suite now covers the complete loop starting from a normal launch.

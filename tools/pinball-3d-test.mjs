@@ -30,3 +30,13 @@ for(let run=0;run<8;run++){
 }
 assert.ok(activeBest>10000,'flipper input can sustain play and reach scoring features');
 console.log('Full table: solid sling containment, return-lane clearance, passive drains and active flipper play passed.');
+// The intended skill loop must work on the shipped geometry from a normal launch.
+const loop=new QuarryPhysics(makeCollisions(),SLINGS);loop.launch();
+for(let i=0;i<240*15&&loop.mode!=='cradle';i++)loop.step(1/240,true,true);
+assert.equal(loop.mode,'cradle','holding flippers catches a launch return');
+const shoot=()=>{loop.step(1/240,false,false);loop.step(1/240,true,true);for(let i=0;i<240&&loop.mode!=='crusher';i++)loop.step(1/240,true,true);assert.equal(loop.mode,'crusher','release-and-tap reaches the crusher gate');};
+const before=loop.score;shoot();assert.equal(loop.score-before,5000);
+for(let i=0;i<240*5&&loop.mode!=='cradle';i++)loop.step(1/240,true,true);
+assert.equal(loop.mode,'cradle','crusher returns a catchable ball');shoot();assert.equal(loop.score-before,15000,'repeat shot pays 2x');
+for(let i=0;i<240*20;i++)loop.step(1/240,true,true);assert.equal(loop.combo,0,'combo expires instead of persisting indefinitely');
+console.log('Crusher loop: launch catch, aimed shot, return catch, repeat reward and combo timeout passed.');
