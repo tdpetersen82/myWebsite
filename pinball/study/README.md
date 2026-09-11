@@ -34,3 +34,14 @@ full quarry mission rules, sound and final physics tuning are still pending.
 Plaque labels fit their texture width. The rendering viewport reserves room
 for the controls, keeping the cabinet apron clear in the player-view preset.
 Run `node tools/pinball-3d-test.mjs` for physics regression checks.
+
+### Collision geometry repair
+
+Slingshots are solid polygons, not independent edge capsules; an interior ball
+is projected to the nearest exterior boundary. `layout.mjs` supplies both the
+visible ground rails and their sampled collision geometry. Return guides have
+clearance around the sling backs and flipper pivots and slope toward their exits.
+Zero-tension rail interpolation prevents curves from narrowing the designed gaps.
+The regression suite exercises eight 90-second runs on the actual table layout,
+including the initial launch, housing containment, stationary wedges, passive
+three-ball drains, and scoring under timed flipper input.

@@ -1,7 +1,7 @@
 // Fixed-step planar pinball simulation. Coordinates match the Three.js playfield.
 export const BUMPERS=[[-2.4,.4],[.1,-1.8],[2.3,.55]];
 export class QuarryPhysics {
- constructor(segments=[]){this.segments=segments;this.flippers=[{side:-1,angle:-.34},{side:1,angle:.34}];this.reset();}
+ constructor(segments=[],slings=[]){this.segments=segments;this.slings=slings;this.flippers=[{side:-1,angle:-.34},{side:1,angle:.34}];this.reset();}
  reset(){this.score=0;this.ballNumber=1;this.saveAvailable=true;this.events=[];this.cooldowns={};this.serve();}
  serve(){this.x=7.13;this.z=12;this.vx=0;this.vz=0;this.mode='ready';this.route=0;this.age=0;}
  launch(){if(this.mode==='over')this.reset();if(this.mode!=='ready')return;this.mode='launch';this.route=0;}
@@ -16,6 +16,23 @@ export class QuarryPhysics {
  if(kick&&!(this.cooldowns[key]>0)){this.vx+=nx*kick;this.vz+=nz*kick;this.cooldowns[key]=.2;return true;}}
  return false;
  }
+ solidSling({points,key}){
+ let inside=false,best=null;
+ for(let i=0,j=points.length-1;i<points.length;j=i++){
+ const [ax,az]=points[j],[bx,bz]=points[i];
+ if((az>this.z)!==(bz>this.z)&&this.x<(bx-ax)*(this.z-az)/(bz-az)+ax)inside=!inside;
+ const dx=bx-ax,dz=bz-az,t=Math.max(0,Math.min(1,((this.x-ax)*dx+(this.z-az)*dz)/(dx*dx+dz*dz)));
+ const x=ax+t*dx,z=az+t*dz,d=Math.hypot(this.x-x,this.z-z);
+ if(!best||d<best.d)best={x,z,d,front:j<points.length-2};
+ }
+ if(!inside&&best.d>=.291)return;
+ let nx=(this.x-best.x)/(best.d||1),nz=(this.z-best.z)/(best.d||1);
+ if(inside){nx=-nx;nz=-nz;}if(best.d<1e-8){nx=key.endsWith('-1')?1:-1;nz=0;}
+ this.x=best.x+nx*.292;this.z=best.z+nz*.292;
+ const incoming=this.vx*nx+this.vz*nz;
+ if(incoming<0){this.vx-=1.8*incoming*nx;this.vz-=1.8*incoming*nz;
+ if(best.front&&!this.cooldowns[key]){this.vx+=nx*4;this.vz+=nz*4;this.cooldowns[key]=.2;this.award(100,'sling');}}
+ }
  step(dt,left=false,right=false){
  for(const key in this.cooldowns)this.cooldowns[key]=Math.max(0,this.cooldowns[key]-dt);
  for(const f of this.flippers){const active=f.side<0?left:right,old=f.angle,target=f.side*(active?-.38:.34);f.angle+=(target-f.angle)*Math.min(1,dt*28);f.omega=(f.angle-old)/dt;f.active=active;}
@@ -26,6 +43,7 @@ export class QuarryPhysics {
  // Closed upper wall and side walls; the only exit is the bottom drain.
  this.contact(-6.45,-3.1,6.45,-3.1,.07);this.contact(-6.6,-3.1,-6.6,12.8,.07);this.contact(6.6,-3.1,6.6,12.8,.07);
  for(const s of this.segments){if(this.contact(...s.a,...s.b,s.r,s.kick||0,s.key)&&s.kick)this.award(100,'sling');}
+ for(const sling of this.slings)this.solidSling(sling);
  BUMPERS.forEach(([x,z],i)=>{if(this.contact(x,z,x,z,1.02,6,'bumper'+i))this.award(500,'bumper',i);});
  for(let i=0;i<3;i++)if(this.contact(-3.7+i*.6,4.9,-3.3+i*.6,4.9,.1,1,'target'+i))this.award(250,'target',i);
  for(const f of this.flippers){const ax=f.side*3.05,az=10.8,dx=-f.side*2.3*Math.cos(f.angle),dz=f.side*2.3*Math.sin(f.angle);

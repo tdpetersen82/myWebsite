@@ -1,6 +1,7 @@
 import * as THREE from 'three';
 import {QuarryPhysics} from './physics.mjs';
-const collisionSegments=[];
+import {GROUND_RAILS,makeCollisions,SLINGS,railCurve} from './layout.mjs';
+const collisionSegments=makeCollisions();
 import {OrbitControls} from './vendor/OrbitControls.js';
 import {RoundedBoxGeometry} from './vendor/RoundedBoxGeometry.js';
 const canvas=document.querySelector('#scene'),status=document.querySelector('#status');
@@ -102,25 +103,23 @@ for(const [x,z] of [[-2.4,3.1],[0,2.6],[2.3,3.2]]){
  const lit=mesh(new THREE.ShapeGeometry(shape),new THREE.MeshStandardMaterial({color:'#ffe7a1',emissive:'#ff9e12',emissiveIntensity:1.3}),x,.09,z);lit.rotation.x=-Math.PI/2;lit.scale.setScalar(.68);
 }
 // Full-table hardware: rails, inlanes, slingshots and articulated flippers.
-function rail(points,material=chrome,r=.065){const c=new THREE.CatmullRomCurve3(points.map(p=>new THREE.Vector3(...p)));
- if(points.every(p=>p[1]<=.5)&&points.every(p=>Math.abs(p[0])<6.8)){
- const samples=c.getPoints(80);for(let i=1;i<samples.length;i++)collisionSegments.push({a:[samples[i-1].x,samples[i-1].z],b:[samples[i].x,samples[i].z],r,kick:material===rubber?4:0,key:'sling'+Math.sign(points[0][0])});}
+function rail(points,material=chrome,r=.065){const c=railCurve(points);
  return mesh(new THREE.TubeGeometry(c,80,r,10,false),material);}
 function deckSign(text,x,z,w=2.1,h=.45){const m=mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshStandardMaterial({map:label(text),roughness:.5}),x,.035,z);m.rotation.x=-Math.PI/2;return m;}
 for(const side of [-1,1]){
  const outer=[[side*6.4,.45,-3],[side*6.5,.45,4],[side*6.15,.45,8.5],[side*5.25,.45,11],[side*3,.45,12.3]];
- rail(outer);rail(outer.map(([x,y,z])=>[x,y+.28,z]),brass,.035);
- rail([[side*5.25,.4,4.5],[side*5.35,.4,7.3],[side*4.9,.4,9.2],[side*3.05,.4,10.65]]);
- rail([[side*5.9,.4,6],[side*5.9,.4,8.7],[side*5,.4,10.1],[side*3.45,.4,11.2]]);
- for(const [x,z] of [[5.25,4.5],[5.35,7.3],[4.9,9.2],[3.05,10.65],[5.9,6]]){cyl(.15,.2,.5,chrome,side*x,.2,z);ring(.17,.055,rubber,side*x,.3,z);cyl(.09,.09,.06,brass,side*x,.49,z);}
- const sh=new THREE.Shape();sh.moveTo(side*2.7,9.8);sh.lineTo(side*4.5,6.6);sh.lineTo(side*4.65,9.6);sh.closePath();
+ rail(outer.map(([x,y,z])=>[x,y+.28,z]),brass,.035);
+
+
+ for(const [x,z] of [[5.25,4.5],[5.5,7.3],[5.5,9.8],[2.1,10.35]]){cyl(.15,.2,.5,chrome,side*x,.2,z);ring(.17,.055,rubber,side*x,.3,z);cyl(.09,.09,.06,brass,side*x,.49,z);}
+ const sh=new THREE.Shape();sh.moveTo(side*2.9,9.2);sh.lineTo(side*4.5,6.6);sh.lineTo(side*4.65,9.3);sh.closePath();
  const geo=new THREE.ExtrudeGeometry(sh,{depth:.24,bevelEnabled:true,bevelSize:.08,bevelThickness:.07,bevelSegments:3});geo.rotateX(Math.PI/2);
  mesh(geo,darkSteel,0,.45,0);
- rail([[side*2.7,.5,9.8],[side*3.5,.5,8.1],[side*4.5,.5,6.6]],rubber,.10);
- rail([[side*2.8,.62,9.6],[side*3.55,.62,8.25],[side*4.35,.62,6.95]],brass,.045);
+
+ rail([[side*3,.62,9.05],[side*3.55,.62,8.25],[side*4.35,.62,6.95]],brass,.045);
  deckSign('RETURN',side*5.5,8.5,1.1,.28);
 }
-for(const side of [-1,1]){collisionSegments.push({a:[side*4.5,6.6],b:[side*4.65,9.6],r:.08},{a:[side*4.65,9.6],b:[side*2.7,9.8],r:.08});}
+for(const r of GROUND_RAILS)rail(r.points,r.kick?rubber:chrome,r.r);
 const flippers=[];
 for(const side of [-1,1]){
  const pivot=new THREE.Group();pivot.position.set(side*3.05,.3,10.8);scene.add(pivot);pivot.rotation.y=side*.34;
@@ -173,7 +172,7 @@ box(13.8,2.5,.45,wood,0,4.7,-6.55);box(13.3,2.1,.1,brass,0,4.7,-6.28);
 const screenCanvas=document.createElement('canvas');screenCanvas.width=1536;screenCanvas.height=240;const screenContext=screenCanvas.getContext('2d');const screenTexture=new THREE.CanvasTexture(screenCanvas);screenTexture.colorSpace=THREE.SRGBColorSpace;
 const display=mesh(new THREE.PlaneGeometry(12.9,1.85),new THREE.MeshBasicMaterial({map:screenTexture}),0,4.75,-6.2);
 function drawDisplay(){const ctx=screenContext;ctx.fillStyle='#071716';ctx.fillRect(0,0,1536,240);ctx.textAlign='center';ctx.fillStyle='#d8c18b';ctx.font='26px Georgia';ctx.fillText('L I M E S T O N E   /   T H E   Q U A R R Y',768,46);ctx.fillStyle='#ffc15d';ctx.font='bold 90px monospace';ctx.fillText(game.score.toLocaleString('en-US',{minimumIntegerDigits:6}),768,146);ctx.font='20px monospace';ctx.fillStyle='#94bbb0';ctx.fillText(`BALL ${game.ballNumber} / 3    •    BEST ${best.toLocaleString('en-US')}    •    ${game.mode==='over'?'SHIFT COMPLETE':game.mode==='ready'?'SPACE TO LAUNCH':'QUARRY OPERATIONS'}`,768,202);screenTexture.needsUpdate=true;}
-const game=new QuarryPhysics(collisionSegments);
+const game=new QuarryPhysics(collisionSegments,SLINGS);
 let best=0;try{best=Number(localStorage.getItem('limestone-quarry-3d-best'))||0;}catch{}
 drawDisplay();
 const pressed=new Set();
