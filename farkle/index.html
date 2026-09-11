@@ -225,6 +225,7 @@
       }
     </style>
     <link rel="stylesheet" href="../strategy/strategy-chrome.css?v=20260810c">
+    <link rel="stylesheet" href="farkle.css?v=20260911a">
 </head>
 <body>
     <div class="game-shell">
@@ -269,6 +270,8 @@
             </div>
         </div>
 
+        <aside class="decision-panel" aria-label="Turn actions and scoring">
+        <p class="panel-eyebrow">Make your move</p>
         <div class="controls">
             <button id="rollBtn" aria-label="Roll the dice">Roll 6 dice</button>
             <button id="bankBtn" aria-label="Bank your turn total">Bank</button>
@@ -280,6 +283,16 @@
 
         <div class="turn" id="status">Your turn — roll all six dice.</div>
         <p class="hint">Tap dice from your roll to set them aside, then roll the rest or bank. Keys: <b>R</b> roll · <b>B</b> bank · <b>P</b> best pick · <b>1–6</b> pick dice.</p>
+        <details class="quick-score" open>
+            <summary>Scoring at a glance</summary>
+            <dl><div><dt>Single 1 / single 5</dt><dd>100 / 50</dd></div>
+            <div><dt>Three 1s</dt><dd>1,000</dd></div>
+            <div><dt>Three of a kind</dt><dd>face × 100</dd></div>
+            <div><dt>Four / five / six alike</dt><dd>1k / 2k / 3k</dd></div>
+            <div><dt>Straight / three pairs</dt><dd>1,500</dd></div></dl>
+            <p>Combinations come from one roll. The highest-scoring interpretation counts.</p>
+        </details>
+        </aside>
         </div>
 
         <div class="sr-only" aria-live="polite" id="live"></div>
@@ -980,7 +993,7 @@
         let gap = 5;
         let d = Math.floor((w - 5 * gap) / 6);
         if (d < 46) { gap = 3; d = Math.floor((w - 5 * gap) / 6); }
-        d = Math.max(44, Math.min(58, d));
+        d = Math.max(44, Math.min(72, d));
         document.documentElement.style.setProperty('--die', d + 'px');
         document.documentElement.style.setProperty('--dgap', gap + 'px');
     }
