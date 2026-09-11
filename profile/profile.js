@@ -71,6 +71,8 @@
     { name: 'Simon',          href: '../simon/',          best: () => readBest('simonHighScore') },
     { name: 'Space Invaders', href: '../space-invaders/', best: () => readBest('spaceInvadersHighScore') },
     { name: 'Block Puzzle',   href: '../block-puzzle/',   best: () => readBest('blockPuzzleHighScore') },
+    // Mini Golf banks {best, rounds}; best is the fewest strokes over nine holes (lower is better).
+    { name: 'Mini Golf',      href: '../mini-golf/',      best: () => readStatsKey('miniGolfRecord', o => o && Number.isInteger(o.best) ? o.best + ' shots' : null) },
     // Daily Orbit banks a JSON record — best daily streak of arrivals.
     { name: 'Daily Orbit',    href: '../daily-orbit/',    best: () => readStatsKey('dailyOrbit', o => o && o.best ? o.best : null) },
   ];
@@ -390,7 +392,7 @@
       if (e.key === window.CASINO_STATS.KEY ||
           e.key === window.CASINO_BANKROLL.KEY ||
           e.key === window.CASINO_PLAYER.KEY ||
-          /HighScore|Stats|Games(Won|Lost)|Best|Wins|kids-|pupQuiz|dailyOrbit/.test(e.key)) {
+          /HighScore|Stats|Games(Won|Lost)|Best|Wins|kids-|pupQuiz|dailyOrbit|miniGolfRecord/.test(e.key)) {
         update();
       }
     });
