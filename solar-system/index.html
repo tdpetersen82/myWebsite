@@ -782,6 +782,62 @@
     if (wasRun) EMIT('reset', {});
   }
 
+  // ---- Calendar placement: mean orbital elements → where each planet is on a date ----
+  // Mean longitude L and longitude of perihelion ϖ at J2000 with per-century rates
+  // (Standish's "Keplerian elements for approximate positions", valid 1800–2050).
+  // The sim's own a/e stay authoritative so every orbit keeps its stated shape; the
+  // orbits are flattened into one plane (dropping Mercury's 7° tilt shifts its
+  // projected longitude by well under a degree), so positions land within about a
+  // degree of the real sky for the inner planets and better than that further out.
+  const J2000 = { Mercury: [252.25032350, 149472.67411175,  77.45779628,  0.16047689],
+                  Venus:   [181.97909950,  58517.81538729, 131.60246718,  0.00268329],
+                  Earth:   [100.46457166,  35999.37244981, 102.93768193,  0.32327364],
+                  Mars:    [ -4.55343205,  19140.30268499, -23.94362959,  0.44441088],
+                  Jupiter: [ 34.39644051,   3034.74612775,  14.72847983,  0.21252668],
+                  Saturn:  [ 49.95424423,   1222.49362201,  92.59887831, -0.41897216],
+                  Uranus:  [313.23810451,    428.48202785, 170.95427630,  0.40805281],
+                  Neptune: [-55.12002969,    218.45945325,  44.96476227, -0.32241464] };
+  const JD_J2000 = 2451545.0;
+  // Julian Day at 0h UTC of a Gregorian calendar date.
+  function julianDay(y, m, d){
+    const a = Math.floor((14-m)/12), yy = y + 4800 - a, mm = m + 12*a - 3;
+    return d + Math.floor((153*mm+2)/5) + 365*yy + Math.floor(yy/4) - Math.floor(yy/100) + Math.floor(yy/400) - 32045 - 0.5;
+  }
+  // Heliocentric state of a planet on Julian Day jd: {x, y, vx, vy} in AU and AU/yr, plus
+  // its true longitude lon (rad) and perihelion longitude w (rad). Null for added bodies.
+  function elementsAt(p, jd){
+    const el = J2000[p.name]; if (!el) return null;
+    const T = (jd - JD_J2000)/36525, rad = Math.PI/180;
+    const L = (el[0] + el[1]*T)*rad, w = (el[2] + el[3]*T)*rad, e = p.e, a = p.a;
+    let M = L - w; M = ((M % (2*Math.PI)) + 3*Math.PI) % (2*Math.PI) - Math.PI;
+    let E = M + e*Math.sin(M);                                   // Kepler's equation by Newton's method
+    for (let i = 0; i < 20; i++){ const f = E - e*Math.sin(E) - M; E -= f/(1 - e*Math.cos(E)); if (Math.abs(f) < 1e-13) break; }
+    const mu = G*(SUN.m + p.m), se = Math.sqrt(1-e*e), r = a*(1 - e*Math.cos(E));
+    const xp = a*(Math.cos(E) - e), yp = a*se*Math.sin(E), k = Math.sqrt(mu*a)/r, vxp = -k*Math.sin(E), vyp = k*se*Math.cos(E);
+    const cw = Math.cos(w), sw = Math.sin(w);
+    const x = xp*cw - yp*sw, y = xp*sw + yp*cw;
+    return { x, y, vx: vxp*cw - vyp*sw, vy: vxp*sw + vyp*cw, lon: Math.atan2(y, x), w, r };
+  }
+  // Rebuild the solar system as it stands on Julian Day jd (a fresh reset, then every
+  // planet moved to its dated position; the Moon rides along with Earth).
+  function arrangeForDate(jd){
+    reset();
+    for (const p of planets){
+      const s = elementsAt(p, jd); if (!s) continue;
+      p.x = SUN.x + s.x; p.y = SUN.y + s.y; p.vx = SUN.vx + s.vx; p.vy = SUN.vy + s.vy;
+    }
+    const vM = 2*Math.PI * Math.sqrt((EARTH.m + MOON.m) * (1 + MOON.eM) / (MOON.aM * (1 - MOON.eM)));
+    MOON.x = EARTH.x + MOON.aM * (1 - MOON.eM); MOON.y = EARTH.y;
+    MOON.vx = EARTH.vx; MOON.vy = EARTH.vy + vM;
+    MOON.rel = []; MOON._torn = false; MOON._ubE = 0;
+    let px = 0, py = 0, M = 0;                                   // barycentric frame again: momentum zero, relative velocities intact
+    for (const b of bodies){ if (b.deleted) continue; px += b.m*b.vx; py += b.m*b.vy; M += b.m; }
+    const vcx = px/M, vcy = py/M;
+    for (const b of bodies){ b.vx -= vcx; b.vy -= vcy; b.trail = []; }
+    E0 = energy();
+    return jd;
+  }
+
   // ---- Ambient asteroid belt — ~240 test particles on mildly eccentric prograde orbits ----
   function seedBelt(){
     belt = [];
@@ -972,16 +1028,45 @@
     return best;
   }
 
+  // transferScan: like bestTransfer, but returns EVERY verified candidate across a
+  // time-of-flight span (multiples of the Hohmann time), cheapest first. Daily Orbit
+  // reads the whole curve (the "porkchop" strip) and re-flies the best few in the
+  // N-body sim to find a par that the real physics can actually achieve.
+  function transferScan(target, span, n){
+    span = span || TOF_SPAN; n = n || TOF_N;
+    const mu = G*SUN.m;
+    const rE = [EARTH.x-SUN.x, EARTH.y-SUN.y], vex = EARTH.vx-SUN.vx, vey = EARTH.vy-SUN.vy;
+    const r1 = Math.hypot(rE[0], rE[1]), r2 = Math.hypot(target.x-SUN.x, target.y-SUN.y);
+    const at = (r1+r2)/2, tT = Math.PI*Math.sqrt(at*at*at/mu);
+    const st = [target.x-SUN.x, target.y-SUN.y, target.vx-SUN.vx, target.vy-SUN.vy];
+    const h = DT*4; let tp = 0; const out = [];
+    for (let k=0; k<=n; k++){
+      const dt = tT*(span[0] + (span[1]-span[0])*k/n);
+      while (tp + h <= dt){ twoBodyStep(st, h, mu); tp += h; }
+      if (dt - tp > 1e-12){ twoBodyStep(st, dt-tp, mu); tp = dt; }
+      const v1 = lambertV(rE, [st[0], st[1]], dt, mu);
+      if (!v1) continue;
+      const chk = [rE[0], rE[1], v1[0], v1[1]], nn = 400, hc = dt/nn;
+      for (let i=0; i<nn; i++) twoBodyStep(chk, hc, mu);
+      if (Math.hypot(chk[0]-st[0], chk[1]-st[1]) > 0.015*r2) continue;
+      const dv = Math.hypot(v1[0]-vex, v1[1]-vey), vArr = Math.hypot(chk[2]-st[2], chk[3]-st[3]);   // departure burn, two-body capture burn
+      out.push({ dv, vArr, dt, v1, aim: [st[0]+SUN.x, st[1]+SUN.y], tT });
+    }
+    out.sort((a, b) => (a.dv + a.vArr) - (b.dv + b.vArr));
+    return out;
+  }
+
   // A course correction (what Voyager's small TCM burns did): the cheapest burn
   // that puts a spacecraft on a two-body arc from where it is to `target`'s
   // predicted position, `off` AU to the side of it (⟂ to the Sun–target line, +
   // = leading side). Times of flight are scanned around a straight-line guess and
   // each Lambert root is trusted only after re-flying it. Applies the burn and
-  // returns { dv (AU/yr), tof, aim }, or null if nothing fits.
-  function probeCorrection(pr, target, off){
+  // returns { dv (AU/yr), tof, aim }, or null if nothing fits. tofGuess (years)
+  // centres the scan on a known natural arrival time instead of the straight-line guess.
+  function probeCorrection(pr, target, off, tofGuess){
     const mu = G*SUN.m;
     const rP = [pr.x-SUN.x, pr.y-SUN.y], vP = [pr.vx-SUN.vx, pr.vy-SUN.vy];
-    const guess = Math.hypot(target.x-pr.x, target.y-pr.y)/(Math.hypot(vP[0], vP[1]) || 1e-9);
+    const guess = tofGuess > 0 ? tofGuess : Math.hypot(target.x-pr.x, target.y-pr.y)/(Math.hypot(vP[0], vP[1]) || 1e-9);
     const st = [target.x-SUN.x, target.y-SUN.y, target.vx-SUN.vx, target.vy-SUN.vy];
     // the burn for a given time of flight (target coasted two-body to that moment, aim
     // offset to the side, Lambert, re-fly check); null if no verified arc
@@ -1152,15 +1237,15 @@
           if (near){
             const k = (s+1)/n, bx = near._px + (near.x-near._px)*k, by = near._py + (near.y-near._py)*k, d = Math.hypot(pr.x-bx, pr.y-by);
             if (!(d >= pr.minD[near.name])) pr.minD[near.name] = d;
-            if (near === tb){ if (d < pr.closest) pr.closest = d; if (d < (pr.arrR || 0.05)) pr.arrived = true; }
+            if (near === tb){ if (d < pr.closest){ pr.closest = d; pr.tClose = t; pr.vRel = Math.hypot(pr.vx-near.vx, pr.vy-near.vy); } if (d < (pr.arrR || 0.05) && !pr.arrived){ pr.arrived = true; pr.tArr = t; pr.vArr = Math.hypot(pr.vx-near.vx, pr.vy-near.vy); } }
             if (d < (near.R || 0)){ pr.crashed = near.name; pr.done = true; EMIT('probelost', { target: near.name }); break; }
           }
         }
         if (pr.done) continue;
         if (tb && !tb.deleted && tb !== near){
           const d = Math.hypot(pr.x-tb.x, pr.y-tb.y);
-          if (d < pr.closest) pr.closest = d;
-          if (d < (pr.arrR || 0.05)) pr.arrived = true;   // arrival radius scales with the target's sphere of influence
+          if (d < pr.closest){ pr.closest = d; pr.tClose = t; pr.vRel = Math.hypot(pr.vx-tb.vx, pr.vy-tb.vy); }
+          if (d < (pr.arrR || 0.05) && !pr.arrived){ pr.arrived = true; pr.tArr = t; pr.vArr = Math.hypot(pr.vx-tb.vx, pr.vy-tb.vy); }   // arrival radius scales with the target's sphere of influence
         }
       }
     }

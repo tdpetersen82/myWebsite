@@ -6,6 +6,7 @@
 
   window.LG_GAMES = [
     { id: 'mini-golf', name: 'Mini Golf', cat: 'classic', desc: 'Nine neon holes. Bank, putt, beat par.', color: '#64EADB', added: '2026-09-09' },
+    { id: 'daily-orbit', name: 'Daily Orbit', cat: 'classic', desc: "Today's sky, one probe, six launches.", color: '#6F9DFF', added: '2026-09-11' },
     { id: 'snake',             name: 'Snake',             cat: 'kids',    desc: "Eat, grow, don't crash.",         color: '#7BC97B', added: '2026-03-12' },
     { id: 'bubble-pop',        name: 'Bubble Pop',        cat: 'kids',    desc: 'Tap bubbles before they float away.', color: '#FF8FA3', added: '2026-05-06' },
     { id: 'memory-match',      name: 'Memory Match',      cat: 'kids',    desc: 'Flip cards. Find the pairs.',      color: '#FFD93D', added: '2026-05-06' },

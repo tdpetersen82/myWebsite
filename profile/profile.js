@@ -71,6 +71,8 @@
     { name: 'Simon',          href: '../simon/',          best: () => readBest('simonHighScore') },
     { name: 'Space Invaders', href: '../space-invaders/', best: () => readBest('spaceInvadersHighScore') },
     { name: 'Block Puzzle',   href: '../block-puzzle/',   best: () => readBest('blockPuzzleHighScore') },
+    // Daily Orbit banks a JSON record — best daily streak of arrivals.
+    { name: 'Daily Orbit',    href: '../daily-orbit/',    best: () => readStatsKey('dailyOrbit', o => o && o.best ? o.best : null) },
   ];
 
   const KIDS_ROWS = [
@@ -388,7 +390,7 @@
       if (e.key === window.CASINO_STATS.KEY ||
           e.key === window.CASINO_BANKROLL.KEY ||
           e.key === window.CASINO_PLAYER.KEY ||
-          /HighScore|Stats|Games(Won|Lost)|Best|Wins|kids-|pupQuiz/.test(e.key)) {
+          /HighScore|Stats|Games(Won|Lost)|Best|Wins|kids-|pupQuiz|dailyOrbit/.test(e.key)) {
         update();
       }
     });

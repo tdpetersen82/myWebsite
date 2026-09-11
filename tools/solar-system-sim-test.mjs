@@ -16,6 +16,7 @@ function boot(){
     return {
       G, DT, SUN, planets, EARTH, MOON, bodies,
       reset, advance, warpFactor, aOf, mergeInto, energy, detectPass, seedBelt, keplerProp, lambertV, bestTransfer, probeCorrection, KMS, addPlanet,
+      transferScan, arrangeForDate, elementsAt, julianDay,
       state: () => ({ t, comets, belt, storm, probes, E0 }),
       onEmit: f => { EMIT = f; },
       setRate: r => { timeRate = r; },
@@ -383,6 +384,38 @@ const ok = (cond, name, detail = '') => {
   api.reset();
   ok(api.planets.length === 8 && api.bodies.length === 10, 'reset() discards the added planet');
   ok(p.deleted === true, 'a discarded added planet is flagged deleted (so a camera follow or drag lets go)');
+}
+
+// ── T11: calendar placement + ss-core.js sync (Daily Orbit stands on both) ──
+{
+  const { renderCore } = await import('./sync-core.mjs');
+  const onDisk = readFileSync(new URL('../solar-system/ss-core.js', import.meta.url), 'utf8');
+  ok(onDisk === renderCore(), 'solar-system/ss-core.js matches the page core (else run tools/sync-core.mjs)');
+  const api = boot(), lon = b => Math.atan2(b.y-api.SUN.y, b.x-api.SUN.x)*180/Math.PI, wrap = d => ((d % 360) + 540) % 360 - 180;
+  const P = n => api.planets.find(p => p.name === n);
+  // Independent checks: at opposition (or Venus's inferior conjunction) the planet and Earth share a heliocentric longitude.
+  const cases = [['Mars opposition', 2025, 1, 16, 'Mars'], ['Jupiter opposition', 2024, 12, 7, 'Jupiter'], ['Saturn opposition', 2025, 9, 21, 'Saturn'],
+                 ['Venus inferior conjunction', 2025, 3, 23, 'Venus'], ['Uranus opposition', 2024, 11, 17, 'Uranus'], ['Neptune opposition', 2024, 9, 21, 'Neptune']];
+  for (const [label, y, m, d, name] of cases){
+    api.arrangeForDate(api.julianDay(y, m, d));
+    const diff = wrap(lon(P(name)) - lon(api.EARTH));
+    ok(Math.abs(diff) < 2.5, `${label} ${y}-${m}-${d}: Earth and ${name} share a heliocentric longitude (Δ ${diff.toFixed(1)}°)`);
+  }
+  // Earth's heliocentric longitude at the equinoxes and solstices is 180°, 270°, 0°, 90°.
+  for (const [y, m, d, exp] of [[2025, 3, 20, 180], [2025, 6, 21, 270], [2025, 9, 22, 0], [2025, 12, 21, 90]]){
+    api.arrangeForDate(api.julianDay(y, m, d));
+    const diff = wrap(lon(api.EARTH) - exp);
+    ok(Math.abs(diff) < 1.2, `Earth at ${exp}° on ${y}-${m}-${d} (Δ ${diff.toFixed(1)}°)`);
+  }
+  api.arrangeForDate(api.julianDay(2026, 9, 9)); const snap = api.planets.map(p => [p.x, p.y, p.vx, p.vy].join(','));
+  api.arrangeForDate(api.julianDay(2026, 9, 9)); ok(api.planets.every((p, i) => [p.x, p.y, p.vx, p.vy].join(',') === snap[i]), 'arrangeForDate is deterministic');
+  const E0 = api.state().E0; years(api, 2);
+  ok(Math.abs((api.energy() - E0)/E0) < 1e-3, 'a dated arrangement conserves energy like any other start');
+  const M = P('Mars'), marsA = api.aOf(M, api.SUN);
+  ok(Math.abs(marsA - 1.524) < 0.01, `Mars keeps a = 1.524 AU two years after a dated start (${marsA.toFixed(3)})`);
+  api.arrangeForDate(api.julianDay(2026, 9, 9));
+  const sc = api.transferScan(M, [0.35, 2.2], 56);
+  ok(sc.length >= 20 && sc.every((c, i) => i === 0 || (sc[i-1].dv + sc[i-1].vArr) <= (c.dv + c.vArr) + 1e-12), `transferScan returns verified candidates cheapest-first (${sc.length} of 57)`);
 }
 
 console.log(fails ? `\n${fails} FAILURE(S)` : '\nall green');

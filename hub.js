@@ -42,6 +42,7 @@
   // Shared illustrated artwork for game tiles, featured cards, and sidebar icons.
   const GAME_ART = new Map([
     ['mini-golf', 'mini-golf-arcade-20260909.png'],
+    ['daily-orbit', 'daily-orbit-arcade-20260911.png'],
     ['snake', 'snake-kids-20260909.png'],
     ['bubble-pop', 'bubble-pop-kids-20260909.png'],
     ['memory-match', 'memory-match-kids-20260909.png'],
@@ -181,6 +182,7 @@
     'slot-machine': '<rect x="8" y="16" width="14" height="32" rx="2" fill="C" opacity="0.22"/><rect x="25" y="16" width="14" height="32" rx="2" fill="C" opacity="0.22"/><rect x="42" y="16" width="14" height="32" rx="2" fill="C" opacity="0.22"/><text x="15" y="37" font-size="13" font-weight="800" text-anchor="middle" fill="C">7</text><text x="32" y="37" font-size="13" font-weight="800" text-anchor="middle" fill="C">7</text><text x="49" y="37" font-size="13" font-weight="800" text-anchor="middle" fill="C">7</text>',
     sudoku: '<rect x="8" y="8" width="48" height="48" rx="3" fill="C" opacity="0.12"/><line x1="24" y1="8" x2="24" y2="56" stroke="C" stroke-width="2"/><line x1="40" y1="8" x2="40" y2="56" stroke="C" stroke-width="2"/><line x1="8" y1="24" x2="56" y2="24" stroke="C" stroke-width="2"/><line x1="8" y1="40" x2="56" y2="40" stroke="C" stroke-width="2"/><rect x="8" y="8" width="48" height="48" rx="3" fill="none" stroke="C" stroke-width="2.5"/><text x="16" y="20" font-size="12" font-weight="800" text-anchor="middle" fill="C">5</text><text x="48" y="20" font-size="12" font-weight="800" text-anchor="middle" fill="C">3</text><text x="32" y="36" font-size="12" font-weight="800" text-anchor="middle" fill="C">8</text><text x="16" y="52" font-size="12" font-weight="800" text-anchor="middle" fill="C">7</text><text x="48" y="52" font-size="12" font-weight="800" text-anchor="middle" fill="C">2</text>',
     mahjong: '<rect x="20" y="8" width="24" height="48" rx="4" fill="C" opacity="0.18"/><rect x="20" y="8" width="24" height="48" rx="4" fill="none" stroke="C" stroke-width="2.5"/><circle cx="32" cy="22" r="4" fill="C"/><circle cx="32" cy="34" r="4" fill="C"/><circle cx="32" cy="46" r="3" fill="C" opacity="0.6"/>',
+    'daily-orbit': '<circle cx="32" cy="32" r="6" fill="C"/><ellipse cx="32" cy="32" rx="25" ry="14" fill="none" stroke="C" stroke-width="2" opacity="0.35" transform="rotate(-25 32 32)"/><path d="M14 44 C18 30 30 18 50 16" fill="none" stroke="C" stroke-width="2.5" stroke-dasharray="3 3"/><circle cx="50" cy="16" r="4" fill="C"/><circle cx="14" cy="44" r="3" fill="C" opacity="0.7"/>',
     'solar-system': '<circle cx="32" cy="32" r="7" fill="C"/><circle cx="32" cy="32" r="15" fill="none" stroke="C" stroke-width="2" opacity="0.45"/><circle cx="32" cy="32" r="24" fill="none" stroke="C" stroke-width="2" opacity="0.3"/><circle cx="47" cy="32" r="3.5" fill="C"/><circle cx="32" cy="8" r="3" fill="C" opacity="0.7"/>',
     'tic-tac-toe': '<path d="M24 8v48M40 8v48M8 24h48M8 40h48" stroke="C" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M11 11l10 10M21 11l-10 10M43 43l10 10M53 43l-10 10" stroke="C" stroke-width="4" stroke-linecap="round" fill="none"/><circle cx="32" cy="32" r="6" stroke="C" stroke-width="4" fill="none"/>',
     'go-fish': '<path d="M8 34 C16 22 32 18 42 24 C46 27 49 30 50 34 C49 38 46 41 42 44 C32 50 16 46 8 34 Z" fill="none" stroke="C" stroke-width="4" stroke-linejoin="round"/><path d="M50 34 L60 25 L60 43 Z" fill="none" stroke="C" stroke-width="4" stroke-linejoin="round"/><circle cx="19" cy="32" r="2.5" fill="C"/><circle cx="52" cy="13" r="3" fill="none" stroke="C" stroke-width="3"/><circle cx="45" cy="6.5" r="2" fill="none" stroke="C" stroke-width="2.5"/>',
@@ -191,7 +193,7 @@
 
   function glyph(game, size) {
     if (GAME_ART.has(game.id)) {
-      return `<img src="assets/thumbs/${GAME_ART.get(game.id)}?v=20260909i" alt="" width="${size}" height="${size}" style="display:block;object-fit:contain;border-radius:4px" decoding="async">`;
+      return `<img src="assets/thumbs/${GAME_ART.get(game.id)}?v=20260911a" alt="" width="${size}" height="${size}" style="display:block;object-fit:contain;border-radius:4px" decoding="async">`;
     }
     const tpl = GLYPH_PATHS[game.id] || '<rect x="12" y="12" width="40" height="40" rx="8" fill="C"/>';
     const inner = tpl.replace(/"C"/g, `"${game.color}"`);
@@ -239,7 +241,7 @@
     const hasShot = !!ext;
     const isRasterArt = GAME_ART.has(game.id);
     const isArt = ext === 'svg' || isRasterArt;
-    const imageVersion = isRasterArt ? '?v=20260909i' : '';
+    const imageVersion = isRasterArt ? '?v=20260911a' : '';
     const imageSrc = `assets/thumbs/${GAME_ART.get(game.id) || `${game.id}.${ext}`}${imageVersion}`;
     const imageStyle = isRasterArt && game.cat === 'classic' ? ' style="background:#151923"'
       : isRasterArt && game.cat === 'casino' ? ' style="background:#10231d"' : '';

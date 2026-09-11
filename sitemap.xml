@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
-  <url><loc>https://limestonegames.com/</loc><lastmod>2026-08-15</lastmod><priority>1.0</priority><changefreq>weekly</changefreq></url>
-  <url><loc>https://limestonegames.com/arcade/</loc><lastmod>2026-08-15</lastmod><priority>0.9</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://limestonegames.com/</loc><lastmod>2026-09-11</lastmod><priority>1.0</priority><changefreq>weekly</changefreq></url>
+  <url><loc>https://limestonegames.com/arcade/</loc><lastmod>2026-09-11</lastmod><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://limestonegames.com/casino/</loc><lastmod>2026-09-02</lastmod><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://limestonegames.com/kids/</loc><lastmod>2026-08-15</lastmod><priority>0.9</priority><changefreq>weekly</changefreq></url>
   <url><loc>https://limestonegames.com/strategy/</loc><lastmod>2026-08-15</lastmod><priority>0.9</priority><changefreq>weekly</changefreq></url>
@@ -170,4 +170,5 @@
   <url><loc>https://limestonegames.com/printables/kings-in-the-corner-rules/</loc><lastmod>2026-09-01</lastmod></url>
   <url><loc>https://limestonegames.com/printables/tripoley-layout/</loc><lastmod>2026-09-01</lastmod></url>
   <url><loc>https://limestonegames.com/mini-golf/</loc></url>
+  <url><loc>https://limestonegames.com/daily-orbit/</loc><lastmod>2026-09-11</lastmod><priority>0.8</priority><changefreq>daily</changefreq></url>
 </urlset>
