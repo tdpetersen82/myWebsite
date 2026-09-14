@@ -386,6 +386,7 @@
   #mode-exit{margin-left:10px;padding:0 0 0 10px;border:0;border-left:1px solid var(--pnl-line);background:none;color:var(--acc);font:600 12px/1 system-ui,sans-serif;cursor:pointer;}
   #mode-exit:hover{color:#fff;}
   #mode-exit[hidden]{display:none;}
+  #moon-exit{display:none !important;}                     /* the mode pill is the way back now */
   /* the canvas chrome makes room for the rail */
   #ss-nav{left:336px;}
   #hud{left:336px;}
@@ -1560,6 +1561,8 @@
   function refit(){ baseScale = Math.min(W,H) * 0.40 / (viewOpts.scale ? maxTrueR : maxDispR); }
   const railEl = document.getElementById('rail');
   const railSide = () => W > 760;                                   // desktop: a side rail; phones: a bottom sheet
+  // the part of the canvas the rail leaves free — for scenes that lay themselves out in screen space (the Earth–Moon view)
+  const freeL = () => railSide() ? 320 : 0, freeW = () => W - freeL(), freeH = () => railSide() ? H : Math.max(240, H - railEl.offsetHeight);
   function resize(){
     dpr = window.devicePixelRatio || 1;
     // clientWidth, not innerWidth: the page scrolls now, and innerWidth
@@ -3676,10 +3679,12 @@
     placedLabels.length = 0;
     // Earth sits lower-left; the Moon starts on the right and orbits ~40° up over
     // the 3-day transit. R is sized so that arc always stays on screen.
-    const margin = Math.max(40, W*0.09), ey = H*0.70;
-    const R = Math.max(120, Math.min(W - 2*margin, (ey - 70)/Math.sin(42*Math.PI/180)));
+    const L = freeL(), Wf = freeW(), Hf = freeH();
+    const capY = railSide() ? Hf*0.13 : 96;                        // on a phone the mode pill owns the top-right corner: captions start under it
+    const margin = Math.max(40, Wf*0.09), ey = Hf*0.70;
+    const R = Math.max(120, Math.min(Wf - 2*margin, (ey - 70)/Math.sin(42*Math.PI/180)));
     const erE = Math.max(3, R/EM_DIST_RE), mrE = Math.max(1.2, erE*EM_SIZE);
-    const ex = margin, k = R/EM_D;                                // px per km; Earth at (ex,ey)
+    const ex = L + margin, k = R/EM_D;                            // px per km; Earth at (ex,ey), clear of the rail
     const sc = (x,y) => [ex + x*k, ey - y*k];                     // inertial Earth-centred km → screen
 
     // advance the mission on the wall clock (a 3-day transit plays over EM_DUR ms)
@@ -3704,8 +3709,8 @@
     const dimTxt = `${EM_KM.toLocaleString('en-US')} km  ·  ${Math.round(EM_DIST_RE/2)} Earth-diameters apart  ·  1.28 light-seconds`;
     ctx.textAlign = 'center'; ctx.textBaseline = 'alphabetic';
     let dimFs = 12; ctx.font = `600 ${dimFs}px system-ui, sans-serif`;
-    while (ctx.measureText(dimTxt).width > W-24 && dimFs > 8){ dimFs--; ctx.font = `600 ${dimFs}px system-ui, sans-serif`; }
-    ctx.fillStyle = '#cfd6e6'; ctx.fillText(dimTxt, W/2, H-24);
+    while (ctx.measureText(dimTxt).width > Wf-24 && dimFs > 8){ dimFs--; ctx.font = `600 ${dimFs}px system-ui, sans-serif`; }
+    ctx.fillStyle = '#cfd6e6'; ctx.fillText(dimTxt, L + Wf/2, Hf-24);
     ctx.textAlign = 'left';
     // Earth (real texture if loaded) + atmosphere
     // Earth's spin runs at the REAL once-a-day rate over the mission, so across the
@@ -3729,10 +3734,10 @@
     const capFit = (s, y, col, max) => {                          // shrink to fit narrow screens
       let fs = 11; ctx.font = `600 ${fs}px system-ui, sans-serif`;
       while (ctx.measureText(s).width > max && fs > 8){ fs--; ctx.font = `600 ${fs}px system-ui, sans-serif`; }
-      ctx.fillStyle = col; ctx.fillText(s, margin, y);
+      ctx.fillStyle = col; ctx.fillText(s, ex, y);   // the caption column starts under Earth, clear of the rail
     };
-    if (!(lesson && lesson.id === 'moon')) capFit('Earth and Moon shown to scale — a real translunar trajectory', H*0.13, '#7c869c', W-margin*2);
-    if (!(lesson && lesson.id === 'moon')) capFit('The Moon orbits once a month — it creeps only ~40° while Earth spins 3× over the 3-day trip', H*0.13+18, '#5f6a80', W-margin*2);
+    if (!(lesson && lesson.id === 'moon')) capFit('Earth and Moon shown to scale — a real translunar trajectory', capY, '#7c869c', Wf-margin*2);
+    if (!(lesson && lesson.id === 'moon')) capFit('The Moon orbits once a month — it creeps only ~40° while Earth spins 3× over the 3-day trip', capY+18, '#5f6a80', Wf-margin*2);
 
     // the probe — real integrated translunar trajectory
     if (moonMission){
@@ -3751,7 +3756,7 @@
       ctx.fillStyle = '#cfd6e6'; ctx.font = "600 13px system-ui, sans-serif"; ctx.textAlign = 'center';
       if (!(lesson && lesson.id === 'moon')) ctx.fillText(m.arrived                 // during the lesson the coach carries this readout
         ? `🌙 Reached the Moon — ${(m.t/86400).toFixed(1)}-day journey, ${EM_KM.toLocaleString('en-US')} km`
-        : `🌙 Transit to the Moon · hour ${hrs} / ${tot} · ${kkm.toLocaleString('en-US')} km to go`, W/2, H*0.20);
+        : `🌙 Transit to the Moon · hour ${hrs} / ${tot} · ${kkm.toLocaleString('en-US')} km to go`, freeL() + freeW()/2, railSide() ? freeH()*0.20 : 140);
       ctx.textAlign = 'left';
       if ((m.arrived || m.t >= EM_T) && !m.done){
         m.done = true;
