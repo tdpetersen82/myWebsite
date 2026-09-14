@@ -366,7 +366,7 @@
     max-height:none !important;transform:none !important;margin:0 !important;left:auto !important;right:auto !important;top:auto !important;bottom:auto !important;}
   #rail .panel[hidden]{display:none !important;}
   #rail #coach{padding:12px 13px 12px;}
-  #rail #coach:not([hidden]) ~ #play-list, #rail #voy-panel:not([hidden]) ~ #play-list{display:none;}   /* while a lesson, the daily or Voyager runs, the card has the tab */
+  #rail #coach:not([hidden]) ~ #play-doors, #rail #voy-panel:not([hidden]) ~ #play-doors{display:none;}   /* while a lesson, the daily or Voyager runs, the card has the tab */
   #daily-card{display:flex;flex-direction:column;gap:7px;padding:13px 14px;border-radius:12px;border:1px solid rgba(255,211,90,0.55);background:rgba(255,196,60,0.10);}
   #daily-card-eyebrow{display:flex;justify-content:space-between;align-items:center;font:700 9.5px/1 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#ffd35a;}
   #daily-card-streak{font:600 10.5px/1 system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--soft);}
@@ -378,11 +378,8 @@
   #app.daily-mode #daily-card, #rail #coach:not([hidden]) ~ #daily-card, #rail #voy-panel:not([hidden]) ~ #daily-card{display:none;}
   /* lessons and missions: one list, one row style */
   #learn-list .lcard{margin-top:0;}
-  #learn-list .lcard .q::before, #mission-list .act::before{content:'Lesson';display:inline-block;margin-right:8px;padding:3px 7px;border-radius:999px;
-    border:1px solid var(--pnl-line);font:700 9px/1 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);vertical-align:1px;}
-  #mission-list .act::before{content:'Mission';}
-  #learn-list, #mission-list, #tool-list{display:flex;flex-direction:column;gap:6px;}
-  #mission-list .act, #tool-list .act{display:block;width:100%;text-align:left;white-space:normal;padding:9px 11px;font-weight:700;color:#fff;}
+  #tool-list{display:flex;flex-direction:column;}
+  #tool-list .act{display:block;width:100%;text-align:left;white-space:normal;}
   #view-acts{display:flex;flex-direction:column;gap:6px;}
   #view-acts .btn{display:flex;justify-content:space-between;align-items:center;text-align:left;}
   #view-acts kbd{font:500 10.5px/1 ui-monospace,Menlo,monospace;color:var(--dim);}
@@ -427,6 +424,66 @@
     #events,#microhint,#probe-status,#place-status,#msg-status{left:50%;}
     body>#fb-pill{left:10px !important;}
   }
+
+
+  /* ---- Rail, second pass: bigger type, hairline rows instead of nested boxes, one obvious start ---- */
+  #rail{font-size:13px;}
+  #rail-tabs button{font-size:13px;padding:11px 0;}
+  #rail-tabs button svg{width:16px;height:16px;}
+  #rail-body section{gap:10px;padding:14px;}
+  #daily-card{gap:8px;padding:16px 16px 15px;}
+  #daily-card-title{font-size:17px;}
+  #daily-card-sub{font-size:12.5px;}
+  #daily-card-btns .btn{font-size:13px;padding:11px 12px;}
+  #play-doors{display:flex;flex-direction:column;}
+  .door{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:left;width:100%;
+    padding:13px 4px;border:0;border-bottom:1px solid var(--pnl-line);background:none;color:var(--ink);cursor:pointer;font:inherit;}
+  .door:first-child{border-top:1px solid var(--pnl-line);}
+  .door:hover .door-t{color:#fff;}
+  .door-t{font:700 14.5px/1.2 system-ui,sans-serif;color:var(--ink);grid-column:1;}
+  .door-s{font:500 12px/1.4 system-ui,sans-serif;color:var(--dim);grid-column:1;margin-top:3px;}
+  .door-c{grid-column:2;grid-row:1 / span 2;width:8px;height:8px;border-right:2px solid var(--dim);border-bottom:2px solid var(--dim);transform:rotate(-45deg);transition:transform .15s;margin-right:4px;}
+  .door.open .door-c{transform:rotate(45deg);}
+  .door-list{display:flex;flex-direction:column;padding:2px 0 6px 14px;border-bottom:1px solid var(--pnl-line);}
+  .door-list[hidden], #learn-list[hidden], #mission-list[hidden]{display:none !important;}
+  .door-list .lcard, .door-list .act{display:block;width:100%;text-align:left;white-space:normal;background:none;border:0;border-radius:0;padding:10px 4px;
+    margin:0;font:600 13.5px/1.3 system-ui,sans-serif;color:var(--ink);-webkit-backdrop-filter:none;backdrop-filter:none;}
+  .door-list .lcard:hover, .door-list .act:hover{background:rgba(120,150,210,0.10);border-radius:8px;}
+  .door-list .lcard .q{font-weight:600;color:var(--ink);}
+  .door-list .lcard .s{display:none;}
+  .door-list .lcard .q::before, .door-list .act::before{content:none;}
+  .door-list .lcard .done{float:none;margin:0 6px 0 0;}
+  /* Build */
+  #tool-list{gap:0;}
+  #tool-list .act{background:none;border:0;border-bottom:1px solid var(--pnl-line);border-radius:0;padding:12px 4px;font:600 13.5px/1.3 system-ui,sans-serif;color:var(--ink);-webkit-backdrop-filter:none;backdrop-filter:none;}
+  #tool-list .act:first-child{border-top:1px solid var(--pnl-line);}
+  #tool-list .act:hover{background:rgba(120,150,210,0.10);}
+  #rail #comet-panel, #rail #add-panel{padding:12px 12px 10px !important;}
+  /* Inspect */
+  #rail #edit-panel{padding:0 !important;background:none !important;border:0 !important;-webkit-backdrop-filter:none;backdrop-filter:none;}
+  #rail #edit-head b{font-size:16px;}
+  #rail #sel-stats .v{font-size:13.5px;}
+  #rail #sel-stats .l{font-size:10px;}
+  #rail #sel-caption{font-size:12px;}
+  #rail .btn{font-size:13px;}
+  /* View */
+  #rail #view-panel{padding:0 !important;background:none !important;border:0 !important;-webkit-backdrop-filter:none;backdrop-filter:none;}
+  #rail .vo{background:none;border:0;border-bottom:1px solid var(--pnl-line);border-radius:0;padding:12px 4px;font:600 13.5px/1.3 system-ui,sans-serif;color:var(--ink);-webkit-backdrop-filter:none;backdrop-filter:none;}
+  #rail .vo:first-child{border-top:1px solid var(--pnl-line);}
+  #rail .vo.off{opacity:.55;}
+  #rail .vo:hover{background:rgba(120,150,210,0.10);}
+  #view-acts{gap:0;}
+  #view-acts .btn{background:none;border:0;border-bottom:1px solid var(--pnl-line);border-radius:0;padding:12px 4px;font:600 13.5px/1.3 system-ui,sans-serif;-webkit-backdrop-filter:none;backdrop-filter:none;}
+  #view-acts .btn:hover{background:rgba(120,150,210,0.10);}
+  #keys div{font-size:12px;}
+  .rail-h{font-size:10px;padding-top:10px;}
+  /* the top of the canvas: one line, and a pill only when you are somewhere */
+  #hud{display:flex;align-items:baseline;gap:12px;}
+  #hud h1{font-size:14px;margin:0;}
+  #mode-pill.quiet{display:none;}
+  #mode-pill{font-size:13px;padding:8px 14px;}
+  #mode-exit{font-size:13px;}
+  @media(max-width:760px){ #hud{display:block;} }
 
   /* ---- the article below the sim ---- */
   #about{max-width:720px;margin:0 auto;padding:70px 20px 90px;
@@ -561,8 +618,8 @@
       <div id="daily-card">
         <div id="daily-card-eyebrow"><span>Daily Orbit</span><span id="daily-card-streak"></span></div>
         <div id="daily-card-title">Today's sky, one probe, six launches</div>
-        <div id="daily-card-sub">The planets where they really are today. The same board for everyone, a new target at 00:00 UTC.</div>
-        <div id="daily-card-btns"><button id="daily-go" class="btn primary" type="button">Launch today's probe</button><a class="btn" href="#daily">How to play</a></div>
+        <div id="daily-card-sub">The planets where they really are today. Same board for everyone.</div>
+        <div id="daily-card-btns"><button id="daily-go" class="btn primary" type="button">Play today's puzzle</button></div>
       </div>
   <div id="msg-panel" class="panel" hidden>
     <div id="msg-title">📡 Lightspeed message</div>
@@ -570,18 +627,20 @@
     <button id="msg-jupiter" class="btn act" type="button" title="Send a pulse from Earth to Jupiter at the speed of light">→ Jupiter <span class="lm" id="lm-jupiter"></span></button>
     <div id="msg-note">Time holds still while light crosses — 1&nbsp;s here = 3 light-minutes</div>
   </div>
-      <div id="play-list">
-        <div class="rail-h">Lessons and missions</div>
-        <div id="learn-list"></div>
-        <div id="mission-list">
-          <button id="act-probe" class="btn act" type="button" title="Launch a spacecraft from Earth to Mars on a real Hohmann transfer orbit — it waits for the launch window, then coasts on gravity for months while the planets keep moving">🚀 Probe to Mars</button>
-          <button id="act-jupiter" class="btn act" type="button" title="Launch a spacecraft from Earth to Jupiter on a real Hohmann transfer — a ~2.7-year cruise out past the asteroid belt, waiting for the launch window first">🪐 Probe to Jupiter</button>
-          <button id="act-saturn" class="btn act" type="button" title="Launch a spacecraft from Earth to Saturn on a real Hohmann transfer — a ~6-year direct cruise to the ringed planet">🪐 Probe to Saturn</button>
-          <button id="act-voyager" class="btn act" type="button" title="Fly Voyager 1 from its 5 September 1977 launch to today: Jupiter and Saturn flybys, escape from the Sun, then the long coast against the real mission's milestones">🛰 Voyager 1 — 1977 → today</button>
-          <button id="act-voyager2" class="btn act" type="button" title="Fly Voyager 2 from 20 August 1977 to today: Jupiter, Saturn and Uranus, with the small course-correction burns the route needs, then out past the heliopause (Neptune doesn't close from this approximate 1977 arrangement — the card says so)">🛰 Voyager 2 — three giants → today</button>
-          <button id="act-moon" class="btn act" type="button" title="Fly a probe from Earth to the Moon in a to-scale Earth–Moon view — see how far and how small the Moon really is">🌙 Probe to the Moon</button>
-          <button id="act-msg" class="btn act" type="button" title="Send a radio pulse from Earth at the true speed of light — time holds still while it crosses">📡 Lightspeed message…</button>
+      <div id="play-doors">
+        <button class="door" type="button" data-door="learn"><span class="door-t">Learn</span><span class="door-s">Six what-if questions, answered by the real physics</span><span class="door-c"></span></button>
+        <div id="learn-list" class="door-list" hidden></div>
+        <button class="door" type="button" data-door="missions"><span class="door-t">Missions</span><span class="door-s">Probes to the planets, the Voyagers, a message at lightspeed</span><span class="door-c"></span></button>
+        <div id="mission-list" class="door-list" hidden>
+          <button id="act-probe" class="btn act" type="button" title="Launch a spacecraft from Earth to Mars on a real Hohmann transfer orbit — it waits for the launch window, then coasts on gravity for months while the planets keep moving">Probe to Mars</button>
+          <button id="act-jupiter" class="btn act" type="button" title="Launch a spacecraft from Earth to Jupiter on a real Hohmann transfer — a ~2.7-year cruise out past the asteroid belt, waiting for the launch window first">Probe to Jupiter</button>
+          <button id="act-saturn" class="btn act" type="button" title="Launch a spacecraft from Earth to Saturn on a real Hohmann transfer — a ~6-year direct cruise to the ringed planet">Probe to Saturn</button>
+          <button id="act-voyager" class="btn act" type="button" title="Fly Voyager 1 from its 5 September 1977 launch to today: Jupiter and Saturn flybys, escape from the Sun, then the long coast against the real mission's milestones">Voyager 1 — 1977 → today</button>
+          <button id="act-voyager2" class="btn act" type="button" title="Fly Voyager 2 from 20 August 1977 to today: Jupiter, Saturn and Uranus, with the small course-correction burns the route needs, then out past the heliopause (Neptune doesn't close from this approximate 1977 arrangement — the card says so)">Voyager 2 — three giants → today</button>
+          <button id="act-moon" class="btn act" type="button" title="Fly a probe from Earth to the Moon in a to-scale Earth–Moon view — see how far and how small the Moon really is">Probe to the Moon</button>
+          <button id="act-msg" class="btn act" type="button" title="Send a radio pulse from Earth at the true speed of light — time holds still while it crosses">Lightspeed message…</button>
         </div>
+        <button class="door" type="button" data-go="build"><span class="door-t">Sandbox</span><span class="door-s">Comets, storms, a rogue star, a planet of your own</span><span class="door-c"></span></button>
       </div>
     </section>
     <section id="tab-build" hidden>
@@ -601,13 +660,12 @@
     <div id="add-note">Click anywhere in the system to place it. It starts on a circular orbit there — open <i>Adjust</i> afterwards to stretch it.</div>
     <button id="add-cancel" class="btn" type="button">Cancel</button>
   </div>
-      <div class="rail-h">Sandbox tools</div>
       <div id="tool-list">
-        <button id="act-add" class="btn act" type="button" title="Place a new planet anywhere: pick its mass, then click where it should orbit. It gets a circular orbit at that distance and joins the physics for real.">➕ Add a planet…</button>
-        <button id="act-comet" class="btn act" type="button" title="Open the comet designer — set mass, speed, direction and aim, then fire [C]">☄ Launch a comet…</button>
-        <button id="act-random" class="btn act" type="button" title="A random comet from a random direction — click repeatedly">🎲 Random comet</button>
-        <button id="act-storm" class="btn act" type="button" title="~100 icy specks from every direction. Massless — they never disturb the planets.">🌩 Comet storm</button>
-        <button id="act-star" class="btn act" type="button" title="A quarter-solar-mass intruder crosses the system — orbits bend as it passes, and anything it sweeps too close to is consumed">⭐ Rogue star flyby</button>
+        <button id="act-add" class="btn act" type="button" title="Place a new planet anywhere: pick its mass, then click where it should orbit. It gets a circular orbit at that distance and joins the physics for real.">Add a planet…</button>
+        <button id="act-comet" class="btn act" type="button" title="Open the comet designer — set mass, speed, direction and aim, then fire [C]">Launch a comet…</button>
+        <button id="act-random" class="btn act" type="button" title="A random comet from a random direction — click repeatedly">Random comet</button>
+        <button id="act-storm" class="btn act" type="button" title="~100 icy specks from every direction. Massless — they never disturb the planets.">Comet storm</button>
+        <button id="act-star" class="btn act" type="button" title="A quarter-solar-mass intruder crosses the system — orbits bend as it passes, and anything it sweeps too close to is consumed">Rogue star flyby</button>
       </div>
     </section>
     <section id="tab-inspect" hidden>
@@ -3793,12 +3851,21 @@
   document.getElementById('rail-body').addEventListener('keydown', e => { if (e.target.matches('input, textarea, select')) e.stopPropagation(); });   // typing in a panel never fires sim hotkeys
   new ResizeObserver(() => { measureDock(); if (!railSide()) resize(); }).observe(railEl);
   try { const t0 = localStorage.getItem('ssTab'); if (t0 && document.getElementById('tab-' + t0)) setTab(t0); } catch(e){}
+  // the Play doors: Learn and Missions open in place, Sandbox is the Build tab
+  let doorsOpen = {}; try { doorsOpen = JSON.parse(localStorage.getItem('ssDoors') || '{}'); } catch(e){}
+  function syncDoors(){ for (const d of document.querySelectorAll('.door[data-door]')){ const list = document.getElementById(d.dataset.door === 'learn' ? 'learn-list' : 'mission-list'); const open = !!doorsOpen[d.dataset.door]; d.classList.toggle('open', open); list.hidden = !open; } }
+  document.getElementById('play-doors').addEventListener('click', e => {
+    const d = e.target.closest('.door'); if (!d) return;
+    if (d.dataset.go){ setTab(d.dataset.go); return; }
+    doorsOpen[d.dataset.door] = !doorsOpen[d.dataset.door]; try { localStorage.setItem('ssDoors', JSON.stringify(doorsOpen)); } catch(e){} syncDoors();
+  });
+  syncDoors();
   const modeName = document.getElementById('mode-name'), modeExit = document.getElementById('mode-exit');
   let modeShown = '';
   function updModePill(){
     const m = moonView ? 'Earth–Moon' : daily ? 'Daily Orbit' : (follow === EARTH && zoom >= 5) ? 'Earth orbit' : lesson ? 'Lesson' : probePlan ? 'Mission' : msg ? 'Message' : 'System';
     if (m === modeShown) return; modeShown = m;
-    modeName.textContent = m;
+    modeName.textContent = m; document.getElementById('mode-pill').classList.toggle('quiet', m === 'System');
     modeExit.hidden = m === 'System'; modeExit.textContent = m === 'Daily Orbit' ? 'Leave the puzzle' : m === 'Lesson' ? 'End the lesson' : m === 'Mission' ? 'End the mission' : m === 'Message' ? 'Cancel' : '← Back to the system';
   }
   modeExit.addEventListener('click', () => { if (moonView) exitMoon(); else if (daily || lesson) endLesson(); else if (probePlan) abortProbe('🚀 Mission ended'); else if (msg) endMessage('📡 Transmission cancelled'); else resetView(); });
