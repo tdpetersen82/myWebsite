@@ -9,12 +9,13 @@ class RideScene extends Phaser.Scene {
         this.started = false;
         this.runOver = false;
         this.paused = false;
-        this.muted = false;
+        this.muted = this.muted || false;
         this._leaving = false;
     }
 
     create() {
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
+        this.time.paused = false;
 
         // sky backdrop (fixed to the camera)
         this.bg = this.add.graphics().setScrollFactor(0).setDepth(0);
@@ -46,24 +47,39 @@ class RideScene extends Phaser.Scene {
         this.input.keyboard.on('keydown-SPACE', () => this._onConfirm());
         this.input.keyboard.on('keydown-ENTER', () => this._onConfirm());
 
-        // Single pointer handler: a tap starts/restarts; once running, holding a
-        // finger pumps. The start tap itself does NOT pump (it just drops in).
-        this._touchPump = false;
-        this.input.on('pointerdown', () => {
+        // Each finger owns a control; releasing one never cancels another.
+        this.input.addPointer(2);
+        this._touchControls = new Map();
+        const setTouch = pointer => {
+            const action = pointer.y < CONFIG.HEIGHT - 100 ? 'pump'
+                : pointer.x < 140 ? 'left' : pointer.x < 280 ? 'right' : 'pump';
+            this._touchControls.set(pointer.id, action);
+        };
+        this.input.on('pointerdown', pointer => {
             if (!this.started) { this._dropIn(); return; }
             if (this.runOver) { this._restart(); return; }
-            this._touchPump = true;
+            if (this.paused) { this._togglePause(); return; }
+            setTouch(pointer);
         });
-        // Clear the pump latch on EVERY release/exit path — not just 'pointerup'.
-        // A finger that slides off the canvas fires 'pointerupoutside'/'gameout'
-        // (not 'pointerup'), which would otherwise leave the bike auto-pumping.
-        const releaseTouch = () => { this._touchPump = false; };
+        this.input.on('pointermove', pointer => {
+            if (pointer.isDown && this._touchControls.has(pointer.id)) setTouch(pointer);
+        });
+        const releaseTouch = pointer => this._touchControls.delete(pointer.id);
         this.input.on('pointerup', releaseTouch);
         this.input.on('pointerupoutside', releaseTouch);
-        this.input.on('gameout', releaseTouch);
+        this.input.on('gameout', () => this._touchControls.clear());
+        const onBlur = () => {
+            this._touchControls.clear();
+            if (this.started && !this.runOver && !this.paused) this._togglePause();
+        };
+        this.game.events.on('blur', onBlur);
+        this.events.once('shutdown', () => this.game.events.off('blur', onBlur));
+        try { this.best = Number(localStorage.getItem(CONFIG.BEST_KEY)) || 0; }
+        catch (_) { this.best = 0; }
 
         this._initAudio();
         this._buildHUD();
+        this._updateMute();
 
         // camera
         this.cam = this.cameras.main;
@@ -116,9 +132,9 @@ class RideScene extends Phaser.Scene {
     _readInput() {
         const c = this.cursors, k = this.keys;
         return {
-            pump: c.down.isDown || k.s.isDown || this._touchPump,
-            left: c.left.isDown || k.a.isDown,
-            right: c.right.isDown || k.d.isDown
+            pump: c.down.isDown || k.s.isDown || [...this._touchControls.values()].includes('pump'),
+            left: c.left.isDown || k.a.isDown || [...this._touchControls.values()].includes('left'),
+            right: c.right.isDown || k.d.isDown || [...this._touchControls.values()].includes('right')
         };
     }
 
@@ -176,11 +192,14 @@ class RideScene extends Phaser.Scene {
 
     _endRun() {
         this.runOver = true;
-        this._touchPump = false;       // a finger held at the crash can't pump into the summary
+        this._touchControls.clear();       // a finger held at the crash can't pump into the summary
         const score = this.bike.scoreValue();
-        const prev = parseInt(localStorage.getItem(CONFIG.BEST_KEY) || '0', 10) || 0;
+        const prev = this.best;
         const isBest = score > prev;
-        if (isBest) localStorage.setItem(CONFIG.BEST_KEY, String(score));
+        if (isBest) {
+            this.best = score;
+            try { localStorage.setItem(CONFIG.BEST_KEY, String(score)); } catch (_) {}
+        }
         this._showSummary(score, Math.max(prev, score), isBest);
     }
 
@@ -193,7 +212,7 @@ class RideScene extends Phaser.Scene {
 
     _togglePause() {
         if (!this.started || this.runOver) return;
-        this._touchPump = false;       // don't carry a held-finger pump across a pause toggle
+        this._touchControls.clear();       // don't carry a held-finger pump across a pause toggle
         this.paused = !this.paused;
         if (this.paused) { this.time.paused = true; this.tweens.pauseAll(); }
         else { this.time.paused = false; this.tweens.resumeAll(); }
@@ -215,11 +234,19 @@ class RideScene extends Phaser.Scene {
         this.hud.best = mk(W - 14, 36, 'BEST 0', 12, CONFIG.COLORS.HUD_DIM, [1, 0]);
         this.hud.flow = mk(W / 2, 12, '', 15, CONFIG.COLORS.ACCENT, [0.5, 0]);
 
+        this.hud.coach = mk(W / 2, 48, '', 13, CONFIG.COLORS.HUD, [0.5, 0]);
+        this.touchLabels = [];
+        for (const [x, width, label] of [[14, 118, '← LEAN'], [146, 118, 'LEAN →'], [W - 184, 170, 'PUMP ↓']]) {
+            this.add.rectangle(x, H - 78, width, 62, 0x101e29, 0.65)
+                .setOrigin(0).setScrollFactor(0).setDepth(19).setStrokeStyle(1, 0x8097a1, 0.5);
+            this.touchLabels.push(mk(x + width / 2, H - 47, label, 15, CONFIG.COLORS.HUD, [0.5, 0.5]));
+        }
+
         // speed-lines layer (fixed)
         this.speedLines = this.add.graphics().setScrollFactor(0).setDepth(18);
 
         // pause text
-        this.pauseText = this.add.text(W / 2, H / 2, 'PAUSED\nP / ESC resume   •   R restart', {
+        this.pauseText = this.add.text(W / 2, H / 2, 'PAUSED\nTAP / P / ESC resume   •   R restart', {
             fontFamily: mono, fontSize: '22px', color: '#ffffff', align: 'center', fontStyle: 'bold'
         }).setScrollFactor(0).setDepth(40).setOrigin(0.5).setVisible(false);
 
@@ -237,7 +264,7 @@ class RideScene extends Phaser.Scene {
             fontFamily: mono, fontSize: '18px', color: CONFIG.COLORS.ACCENT, fontStyle: 'bold'
         }).setScrollFactor(0).setDepth(31).setOrigin(0.5);
         const help = this.add.text(W / 2, H * 0.62,
-            'hold ↓ / S  pump  (release at a lip to pop)\n←  →  rotate in the air to match your landing', {
+            'Hold ↓ / S on downslopes · release on climbs\n← / A  → / D lean in air · match the landing slope\nTouch: hold PUMP · hold lean buttons in the air', {
             fontFamily: mono, fontSize: '13px', color: CONFIG.COLORS.HUD_DIM, align: 'center'
         }).setScrollFactor(0).setDepth(31).setOrigin(0.5);
         this.tweens.add({ targets: prompt, alpha: { from: 1, to: 0.4 }, duration: 700, yoyo: true, repeat: -1 });
@@ -249,13 +276,24 @@ class RideScene extends Phaser.Scene {
         const kmh = Math.round(b.speed * 0.12);     // arbitrary readable scale
         this.hud.speed.setText('SPEED ' + kmh);
         this.hud.score.setText('SCORE ' + b.scoreValue());
-        const best = parseInt(localStorage.getItem(CONFIG.BEST_KEY) || '0', 10) || 0;
+        const best = this.best;
         this.hud.best.setText('BEST ' + Math.max(best, b.scoreValue()));
 
         if (b.flow >= 1) {
             const lvl = b.flow.toFixed(1);
             this.hud.flow.setText('FLOW x' + (1 + b.flow * CONFIG.FLOW_SCORE_MULT).toFixed(2));
         } else this.hud.flow.setText('');
+
+        const input = this._readInput();
+        this.touchLabels.forEach((label, i) => label.setColor(
+            input[['left', 'right', 'pump'][i]] ? CONFIG.COLORS.PERFECT : CONFIG.COLORS.HUD));
+        const slope = this.terrain.slopeAt(b.x);
+        this.hud.coach.setText(!this.started || this.runOver ? '' : b.airborne
+            ? 'AIR · LEAN TO MATCH THE LANDING'
+            : slope > 0.025 ? 'DOWNSLOPE · HOLD PUMP'
+            : slope < -0.025 ? 'CLIMB · RELEASE PUMP' : 'KEEP YOUR FLOW');
+        this.hud.coach.setColor(b.airborne ? CONFIG.COLORS.HUD : slope > 0.025
+            ? CONFIG.COLORS.PERFECT : CONFIG.COLORS.ACCENT);
 
         // speed lines at high speed
         this.speedLines.clear();
@@ -303,7 +341,7 @@ class RideScene extends Phaser.Scene {
         add(H * 0.30, 'RUN OVER', 13, '#ff8a6a');
         add(H * 0.42, String(score), 52, '#ffffff');
         add(H * 0.50, 'SCORE', 11, CONFIG.COLORS.HUD_DIM);
-        add(H * 0.58, 'DISTANCE ' + Math.floor(this.bike.distance) + 'm   •   BEST ' + best, 14, CONFIG.COLORS.HUD);
+        add(H * 0.58, 'DISTANCE ' + Math.floor(this.bike.distance / 10) + 'm   •   BEST ' + best, 14, CONFIG.COLORS.HUD);
         if (isBest) {
             const nb = add(H * 0.65, '★ NEW BEST ★', 14, CONFIG.COLORS.PERFECT);
             this.tweens.add({ targets: nb, alpha: { from: 1, to: 0.4 }, duration: 600, yoyo: true, repeat: -1 });
@@ -341,7 +379,9 @@ class RideScene extends Phaser.Scene {
         try { this.actx = new (window.AudioContext || window.webkitAudioContext)(); }
         catch (e) { this.actx = null; }
     }
-    _teardownAudio() { /* short one-shots; nothing persistent to stop */ }
+    _teardownAudio() {
+        if (this.actx) { this.actx.close().catch(() => {}); this.actx = null; }
+    }
     _updateMute() { this.muteText.setText(this.muted ? 'MUTED' : ''); }
 
     _blip(freq, freq2, dur, type, vol) {

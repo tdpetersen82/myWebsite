@@ -18,7 +18,7 @@
         #wrap { display: flex; align-items: center; justify-content: center; height: 100vh; }
         #game-container {
             width: 100%;
-            max-width: 1100px;
+            max-width: min(1100px, 177.7778vh);
             aspect-ratio: 16 / 9;        /* drives height from width for the 960x540 design */
             margin: 0 auto;
         }
@@ -28,11 +28,11 @@
 <body>
     <div id="wrap"><div id="game-container"></div></div>
 
-    <script src="js/config.js?v=20260914a"></script>
-    <script src="js/Terrain.js?v=20260914a"></script>
-    <script src="js/Bike.js?v=20260914a"></script>
-    <script src="js/Particle.js?v=20260914a"></script>
-    <script src="js/RideScene.js?v=20260914a"></script>
+    <script src="js/config.js?v=20260914b"></script>
+    <script src="js/Terrain.js?v=20260914b"></script>
+    <script src="js/Bike.js?v=20260914b"></script>
+    <script src="js/Particle.js?v=20260914b"></script>
+    <script src="js/RideScene.js?v=20260914b"></script>
     <script>
         const phaserConfig = {
             type: Phaser.AUTO,

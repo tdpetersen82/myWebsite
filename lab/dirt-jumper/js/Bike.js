@@ -270,48 +270,47 @@ class Bike {
         const r = 11;                   // wheel radius
         const squash = this.compress;   // + squashed, - stretched
         const bodyH = -24 * (1 - squash * 0.28);   // frame height above contact (up = -)
-        const lift = squash < 0 ? squash * 6 : 0;  // wheels splay slightly when extended
 
-        const wheelR = tx(wb, -r);
-        const wheelF = tx(-wb, -r);
+        const rear = tx(-wb, -r), front = tx(wb, -r);
+        for (const wheel of [rear, front]) {
+            g.fillStyle(CONFIG.COLORS.WHEEL, 1);
+            g.fillCircle(wheel.x, wheel.y, r);
+            g.lineStyle(2, 0x9caab0, 1);
+            g.strokeCircle(wheel.x, wheel.y, r - 3);
+            const spin = this.distance / r;
+            g.lineStyle(1, 0x71838c, 0.8);
+            for (let i = 0; i < 3; i++) {
+                const a = spin + i * Math.PI / 3;
+                g.lineBetween(wheel.x + Math.cos(a) * 8, wheel.y + Math.sin(a) * 8,
+                    wheel.x - Math.cos(a) * 8, wheel.y - Math.sin(a) * 8);
+            }
+        }
+        const line = (points, width, color) => {
+            g.lineStyle(width, color, 1);
+            g.beginPath();
+            points.forEach(([x, y], i) => {
+                const p = tx(x, y);
+                if (i === 0) g.moveTo(p.x, p.y); else g.lineTo(p.x, p.y);
+            });
+            g.strokePath();
+        };
+        // Diamond frame, fork, saddle and bars face the direction of travel.
+        line([[-30, -11], [-10, bodyH], [2, -12], [-30, -11]], 3, CONFIG.COLORS.BIKE_ACCENT);
+        line([[-10, bodyH], [20, bodyH - 1], [2, -12]], 3, CONFIG.COLORS.BIKE_ACCENT);
+        line([[30, -11], [20, bodyH - 1], [18, bodyH - 8], [26, bodyH - 8]], 3, 0xc8d5d6);
+        line([[-17, bodyH - 3], [-5, bodyH - 3]], 4, CONFIG.COLORS.BIKE);
+        const hipY = bodyH - 15 + squash * 9;
+        const shoulderY = hipY - 16 + squash * 4;
+        line([[-7, hipY], [7, bodyH - 5], [2, -12], [10, -12]], 5, 0x203044);
+        line([[-7, hipY], [5, shoulderY]], 8, 0xef8046);
+        line([[5, shoulderY], [17, shoulderY + 12], [23, bodyH - 8]], 4, 0xf0c8a1);
+        const head = tx(10, shoulderY - 8);
+        g.fillStyle(0xf0c8a1, 1);
+        g.fillCircle(head.x, head.y, 6);
+        g.fillStyle(0xf5ece0, 1);
+        g.fillCircle(head.x, head.y - 3, 7);
+        line([[10, shoulderY - 10], [21, shoulderY - 10]], 3, CONFIG.COLORS.BIKE_ACCENT);
 
-        // wheels
-        g.fillStyle(CONFIG.COLORS.WHEEL, 1);
-        g.fillCircle(wheelR.x, wheelR.y, r);
-        g.fillCircle(wheelF.x, wheelF.y, r);
-        g.lineStyle(2.5, 0x2a2f3a, 1);
-        g.strokeCircle(wheelR.x, wheelR.y, r);
-        g.strokeCircle(wheelF.x, wheelF.y, r);
-        // hubs
-        g.fillStyle(0x70787f, 1);
-        g.fillCircle(wheelR.x, wheelR.y, 2.4);
-        g.fillCircle(wheelF.x, wheelF.y, 2.4);
-
-        // frame (triangle from hubs up to a seat/bar node)
-        const node = tx(0, bodyH);
-        const hubR = tx(wb, -r), hubF = tx(-wb, -r);
-        g.lineStyle(4, CONFIG.COLORS.BIKE, 1);
-        g.beginPath();
-        g.moveTo(hubR.x, hubR.y); g.lineTo(node.x, node.y); g.lineTo(hubF.x, hubF.y);
-        g.moveTo(node.x, node.y); g.lineTo((hubR.x + hubF.x) / 2, (hubR.y + hubF.y) / 2);
-        g.strokePath();
-
-        // bars / fork accent
-        const bar = tx(-wb - 2, bodyH + 4);
-        g.lineStyle(3, CONFIG.COLORS.BIKE_ACCENT, 1);
-        g.beginPath();
-        g.moveTo(node.x, node.y); g.lineTo(bar.x, bar.y);
-        g.strokePath();
-
-        // rider blob
-        const hip = tx(2, bodyH - 2 + lift);
-        const head = tx(-4, bodyH - 16 + lift);
-        g.lineStyle(7, CONFIG.COLORS.RIDER, 1);
-        g.beginPath();
-        g.moveTo(hip.x, hip.y); g.lineTo(head.x, head.y);
-        g.strokePath();
-        g.fillStyle(CONFIG.COLORS.RIDER, 1);
-        g.fillCircle(head.x, head.y, 5);
     }
 
     // contact + body points for camera framing
