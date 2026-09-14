@@ -16,7 +16,7 @@ class RideScene extends Phaser.Scene {
 
     preload() {
         this.load.image('rider-art', 'assets/rider-atlas-v1.png');
-        this.load.json('rider-atlas', 'assets/rider-atlas.json');
+        this.load.json('rider-atlas', 'assets/rider-atlas.json?v=20260914g');
     }
 
     create() {

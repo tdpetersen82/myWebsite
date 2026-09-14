@@ -85,7 +85,7 @@ class CrashRig {
         for(const [id,{body,length,p}] of Object.entries(this.links)) {
             this.art.bone(id,p.partName,this.local(body,0,-length/2),this.local(body,0,length/2),p.width);
         }
-        this.art.anchored('head','head',this.local(this.head,0,7),17,this.head.angle);
+        this.art.anchored('head','head',this.local(this.head,0,7),this.pose.head.width,this.head.angle);
         for (const [id,parent] of [['shoe','shin'],['farShoe','farShin']]) {
             const link=this.links[parent];
             this.art.anchored(id,'shoe',this.local(link.body,0,link.length/2),this.pose[id].width,link.body.angle);
@@ -93,12 +93,17 @@ class CrashRig {
         this.art.anchored('rearWheel','wheel',this.rearWheel.position,32,this.rearWheel.angle);
         this.art.anchored('frontWheel','wheel',this.frontWheel.position,32,this.frontWheel.angle);
         this.art.anchored('frame','frame',this.local(this.frame,-32,10),this.art.parts.frame.displayWidth,this.frame.angle);
-        const crown=this.local(this.frame,19,-12),axle=this.frontWheel.position;
+        const framePart=this.art.parts.frame;
+        const framePoint=([x,y])=>this.local(this.frame,
+            -32+(x-framePart.origin[0]*framePart.rect[2])*framePart.displayWidth/framePart.rect[2],
+            10+(y-framePart.origin[1]*framePart.rect[3])*framePart.displayWidth/framePart.rect[2]);
+        const crown=framePoint(framePart.crown),axle=this.frontWheel.position;
         const d=Math.max(1,Math.hypot(crown.x-axle.x,crown.y-axle.y));
         const seal={x:axle.x+(crown.x-axle.x)*14/d,y:axle.y+(crown.y-axle.y)*14/d};
-        this.art.bone('forkUpper','forkUpper',crown,seal,5);
+        const upperTip={x:crown.x+(axle.x-crown.x)*12/d,y:crown.y+(axle.y-crown.y)*12/d};
+        this.art.bone('forkUpper','forkUpper',crown,upperTip,5);
         this.art.bone('forkLower','forkLower',seal,axle,5.8);
-        this.art.anchored('bars','bars',this.local(this.frame,17,-16),15,this.frame.angle);
+        this.art.anchored('bars','bars',framePoint(framePart.stem),this.pose.bars.width,this.frame.angle);
     }
 
     focus() { return this.links.torso.body.position; }

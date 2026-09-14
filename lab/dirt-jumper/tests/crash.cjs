@@ -22,6 +22,27 @@ vm.runInContext(`
 const scene={cache:{json:{get:()=>parts}},textures:{get:()=>({has:()=>true})},add:{image:()=>{
     const sprite={};for(const method of ['setDepth','setTint','setOrigin','setPosition','setScale','setRotation'])sprite[method]=()=>sprite;return sprite;
 }}};
+// Validate rendered texture joints, not only the skeleton's intended endpoints.
+for(const squat of [-0.3,0,0.85,1.15]) for(const fork of [0,2.2,5.2]) for(const angle of [-75,0,75]) {
+    const bike=new Bike(null,CONFIG.STATS,0);bike.compress=squat;bike.forkCompression=fork;bike.angle=angle;
+    const art=new BikeArt(scene);art.update(bike);
+    for(const [id,pose] of Object.entries(art.pose)) {
+        if(!pose.a)continue;
+        const [ax,ay,bx,by]=parts[pose.partName].joints;
+        const start=art.texturePoint(id,ax,ay),end=art.texturePoint(id,bx,by);
+        assert(Math.hypot(start.x-pose.a.x,start.y-pose.a.y)<1e-7,'upper texture joint is attached');
+        assert(Math.hypot(end.x-pose.b.x,end.y-pose.b.y)<1e-7,'lower texture joint is attached');
+    }
+    const collar=art.texturePoint('torso',...parts.torso.neck);
+    assert(Math.hypot(collar.x-art.pose.head.anchor.x,collar.y-art.pose.head.anchor.y)<1e-7,'helmet follows actual collar');
+    const grip=art.texturePoint('bars',...parts.bars.grip);
+    assert(Math.hypot(grip.x-art.pose.forearm.b.x,grip.y-art.pose.forearm.b.y)<1e-7,'hands reach rendered handlebar grips');
+    const upper=art.pose.forkUpper;
+    assert(Math.abs(Math.hypot(upper.b.x-upper.a.x,upper.b.y-upper.a.y)-12)<1e-7,'fork upper stays rigid through travel');
+    const crown=art.texturePoint('frame',...parts.frame.crown);
+    assert(Math.hypot(crown.x-art.pose.forkUpper.a.x,crown.y-art.pose.forkUpper.a.y)<1e-7,'fork joins rendered headtube');
+}
+console.log('PASS: 36 sprite poses; exact joint endpoints, collar, grips and fork attachment.');
 for(const velocity of [200,500,820]) for(const slope of [0,0.15,-0.1]) for(const angle of [-75,0,75,160]) {
     const terrain={heightAt:x=>slope*x};
     const bike=new Bike(null,CONFIG.STATS,0);bike.y=0;bike.angle=angle;bike.vx=velocity;bike.vy=350;
