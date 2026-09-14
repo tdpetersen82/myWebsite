@@ -104,6 +104,7 @@ class RideScene extends Phaser.Scene {
 
             // reactions to one-frame events
             if (b.justGoodPump) { this._whoomp(); this._tick('PUMP +', CONFIG.COLORS.CLEAN); }
+            if (b.justGoodRelease) { this._blip(230, 380, 0.12, 'sine', 0.08); this._tick('LIGHT +', CONFIG.COLORS.PERFECT); }
             if (b.justPop) { this._whoomp(1.25); }
             if (b.lastLanding) this._onLanding(b.lastLanding);
 
@@ -274,7 +275,7 @@ class RideScene extends Phaser.Scene {
         const tag = mk(537, 141, 'LIMESTONE TRAILS / 01', 11, '#aac4b7').setDepth(31);
         const title = mk(487, 166, 'DIRT JUMPER', 46, '#fff0d2').setDepth(31);
         const subtitle = mk(490, 225, 'Find the rhythm. Send the next jump.', 16, '#d9ddc9').setDepth(31);
-        const help = mk(490, 267, '01   Hold pump down the back of each roller.\n02   Release on the climb to keep your speed.\n03   Feather lean in the air. Land with the slope.', 12, '#b6cbbd').setDepth(31).setLineSpacing(10);
+        const help = mk(490, 267, '01   Hold pump down the back of each roller.\n02   Release uphill: carry speed + boost your pop.\n03   Feather lean in the air. Land with the slope.', 12, '#b6cbbd').setDepth(31).setLineSpacing(10);
         card.fillStyle(0xeea15b, 1); card.fillRoundedRect(488, 367, 404, 53, 8);
         const prompt = mk(690, 394, 'DROP IN    /    TAP OR SPACE', 15, '#193b38', [0.5, 0.5]).setDepth(31);
         this._startOverlay = [card, tag, title, subtitle, help, prompt];
@@ -304,7 +305,7 @@ class RideScene extends Phaser.Scene {
         this.hud.coach.setText(!this.started || this.runOver ? '' : b.airborne
             ? 'AIR  /  FEATHER YOUR LEAN'
             : slope > 0.025 ? '↓  PUMP'
-            : slope < -0.025 ? '↑  RELEASE' : 'FIND YOUR FLOW');
+            : slope < -0.025 ? (b.releasePower > 0 ? '↑  LIGHT / CARRY SPEED' : '↑  RELEASE') : 'FIND YOUR FLOW');
         this.hud.coach.setColor('#23483f');
 
         // speed lines at high speed

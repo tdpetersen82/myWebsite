@@ -39,8 +39,16 @@ class Bike {
         this.score = 0;             // banked distance*flow score (monotonic)
         this.flow = 0;              // consecutive-good-pumps + clean-landings feel hook
 
+        this.forkCompression = 0.5;
+        this.forkVelocity = 0;
+        this.bodyVelocity = 0;
+        this.bodyShift = 0;
         this.compress = 0;          // -1 extended .. +1 squashed (pump visual)
         this._pumpedThisDown = false;
+        this.pumpCharge = 0;
+        this.releasePower = 0;
+        this._releasedThisUp = false;
+        this.justGoodRelease = false;
 
         // one-frame event flags the scene reads & clears (SFX / shake / stamps)
         this.justGoodPump = false;
@@ -60,15 +68,42 @@ class Bike {
         input = input || {};
 
         this.justGoodPump = false;
+        this.justGoodRelease = false;
         this.justPop = false;
         this.lastLanding = null;
 
+        const previousSpeed = this.speed;
         if (this.airborne) this._updateAir(dt, terrain, input, false);
         else this._updateGround(dt, terrain, input);
 
-        // ease the squash/stretch visual toward its target every frame
-        const target = this.airborne ? -0.35 : (input.pump ? 0.6 : 0);
-        this.compress += (target - this.compress) * Math.min(1, dt * 12);
+        this._updateBody(dt, terrain, input, previousSpeed);
+    }
+
+    _updateBody(dt, terrain, input, previousSpeed = this.speed) {
+        const s = this.stats;
+        const curve = terrain.curvatureAt ? terrain.curvatureAt(this.x) : 0;
+        const load = this.airborne ? 0 : Phaser.Math.Clamp(-curve * this.speed * this.speed / s.gravity, 0, 1.5);
+        const squatTarget = this.airborne ? -0.18 : input.pump ? 0.85 : this.releasePower > 0 ? -0.2 : load * 0.15;
+        const forkTarget = this.airborne ? 0 : Math.min(s.forkTravel, 0.5 + load * 2.2 + (input.pump ? 1.7 : 0));
+        if (this.lastLanding) {
+            const impact = Math.min(1, this.lastLanding.hardness / 650);
+            this.forkVelocity += impact * 38;
+            this.bodyVelocity += impact * 9;
+        }
+        // Small spring substeps prevent a long display frame from producing jitter.
+        const steps = Math.ceil(dt * 120), h = dt / steps;
+        for (let i = 0; i < steps; i++) {
+            this.forkVelocity += ((forkTarget - this.forkCompression) * s.forkSpring - this.forkVelocity * s.forkDamping) * h;
+            this.forkCompression += this.forkVelocity * h;
+            if (this.forkCompression < 0 || this.forkCompression > s.forkTravel) {
+                this.forkCompression = Phaser.Math.Clamp(this.forkCompression, 0, s.forkTravel);
+                this.forkVelocity = 0;
+            }
+            this.bodyVelocity += ((squatTarget - this.compress) * s.riderSpring - this.bodyVelocity * s.riderDamping) * h;
+            this.compress = Phaser.Math.Clamp(this.compress + this.bodyVelocity * h, -0.3, 1.15);
+        }
+        const shiftTarget = Phaser.Math.Clamp((previousSpeed - this.speed) / Math.max(dt,0.001) / 1100, -1, 1);
+        this.bodyShift += (shiftTarget - this.bodyShift) * (1 - Math.exp(-dt * 6));
     }
 
     _topSpeed() {
@@ -93,21 +128,44 @@ class Bike {
         // --- PUMP work ---
         const down = sinT > s.pumpDownThresh;       // descending face (crest->trough)
         const up = sinT < -s.pumpDownThresh;        // climbing face
-        if (pump) {
-            if (down) {
-                const sf = Phaser.Math.Clamp(1 - this.speed / this._topSpeed(), 0, 1);
-                a += s.kPump * sinT * sf;
-                // register ONE good pump per descending face (not per frame)
-                if (!this._pumpedThisDown && sf > 0.05) {
-                    this._pumpedThisDown = true;
+        const sf = Phaser.Math.Clamp(1 - this.speed / this._topSpeed(), 0, 1);
+        if (down) {
+            this._releasedThisUp = false;
+            this.releasePower = 0;
+        }
+        if (pump && down) {
+            a += s.kPump * sinT * sf;
+            this.pumpCharge = Math.min(1, this.pumpCharge + dt * s.pumpChargeRate);
+            if (!this._pumpedThisDown && sf > 0.05) {
+                this._pumpedThisDown = true;
+                this.flow = Math.min(CONFIG.FLOW_MAX, this.flow + CONFIG.FLOW_PER_GOODPUMP);
+                this.justGoodPump = true;
+            }
+        } else {
+            // A short neutral trough does not eat the charge. Holding uphill does.
+            const drain = pump && up ? s.pumpHeldUpDecay : s.pumpChargeDecay;
+            this.pumpCharge = Math.max(0, this.pumpCharge - dt * drain);
+        }
+        if (up) {
+            if (pump) {
+                a -= s.kPumpBleed;
+                this.releasePower = 0;
+            } else {
+                // Extend once per climb using effort stored on the previous descent.
+                // This works when released just before the trough, not only on one frame.
+                if (!this._releasedThisUp && this.pumpCharge >= s.pumpChargeMin) {
+                    this.releasePower = this.pumpCharge;
+                    this.pumpCharge = 0;
+                    this._releasedThisUp = true;
+                    this.justGoodRelease = true;
                     this.flow = Math.min(CONFIG.FLOW_MAX, this.flow + CONFIG.FLOW_PER_GOODPUMP);
-                    this.justGoodPump = true;
                 }
-            } else if (up) {
-                a -= s.kPumpBleed;                  // pumping the up-phase pays nothing + bleeds
+                // Unweighting lets the bike climb beneath you without losing as much speed.
+                a += -g * sinT * s.releaseGravityRelief * this.releasePower;
+                this.releasePower = Math.max(0, this.releasePower - dt * s.releaseDrain);
             }
         }
-        if (!down) this._pumpedThisDown = false;    // re-arm for the next roller
+        if (!down) this._pumpedThisDown = false;
 
         // integrate speed
         this.speed += a * dt;
@@ -132,7 +190,9 @@ class Bike {
             this.airborne = true;
             this.airTime = 0;
             this.vx = vx0;
-            this.vy = vy0 - boost;          // up = -y
+            this.vy = vy0 - boost - (!pump ? s.releasePop * this.releasePower : 0);          // up = -y
+            this.pumpCharge = 0;
+            this.releasePower = 0;
             this.justPop = true;
             this.y = yNow;
             this._updateAir(dt, terrain, input, true);
@@ -234,7 +294,9 @@ class Bike {
 
         this.airborne = false;
         this.leanVelocity = 0;
-        this.compress = Math.min(1, Math.max(0, intoSurface) / 500);
+        this.pumpCharge = 0;
+        this.releasePower = 0;
+        this._releasedThisUp = false;
         this.lastLanding = { grade, hardness: Math.max(0, intoSurface), x: sx, y: gy, airTime: this.airTime };
 
         if (grade === 'bail') {
@@ -276,7 +338,19 @@ class Bike {
     draw(g) {
         const rad = this.angle * Math.PI / 180;
         const cos = Math.cos(rad), sin = Math.sin(rad);
-        const point = ([x, y]) => ({ x: this.x + x * cos - y * sin, y: this.y + x * sin + y * cos });
+        // Fork travel pitches the single rigid frame about the rear axle.
+        // Wheel centers remain on their contact line; no rear suspension is invented.
+        const pitch = this.forkCompression / 64;
+        const pc = Math.cos(pitch), ps = Math.sin(pitch);
+        let chassis = true;
+        const point = ([x, y]) => {
+            if (chassis) {
+                const px = x + 32, py = y + 16;
+                x = -32 + px * pc - py * ps;
+                y = -16 + px * ps + py * pc;
+            }
+            return { x: this.x + x * cos - y * sin, y: this.y + x * sin + y * cos };
+        };
         const circle = (p, r, color, alpha = 1) => {
             const q = point(p); g.fillStyle(color, alpha); g.fillCircle(q.x, q.y, r);
         };
@@ -290,6 +364,20 @@ class Bike {
             points.forEach((p, i) => { const q = point(p); if (i) g.lineTo(q.x, q.y); else g.moveTo(q.x, q.y); });
             g.closePath(); g.fillPath();
         };
+        const softShape = (points, color) => {
+            const outline = [];
+            for (let i = 0; i < points.length; i++) {
+                const prev = points[(i + points.length - 1) % points.length];
+                const p = points[i], next = points[(i + 1) % points.length];
+                const a = [(prev[0]+p[0])/2,(prev[1]+p[1])/2];
+                const b = [(next[0]+p[0])/2,(next[1]+p[1])/2];
+                for (let j = 0; j <= 5; j++) {
+                    const t = j/5, u = 1-t;
+                    outline.push([u*u*a[0]+2*u*t*p[0]+t*t*b[0],u*u*a[1]+2*u*t*p[1]+t*t*b[1]]);
+                }
+            }
+            shape(outline,color);
+        };
         const limb = (a, b, width, color) => {
             line([a, b], width, color); circle(a, width / 2, color); circle(b, width / 2, color);
         };
@@ -301,25 +389,28 @@ class Bike {
             return [(a[0] + b[0]) / 2 - dy / d * h * bend,
                 (a[1] + b[1]) / 2 + dx / d * h * bend];
         };
-        const crouch = Math.max(-0.35, Math.min(1, this.compress));
-        const hip = [-13 - crouch * 6, -49 + crouch * 11];
-        const shoulder = [4 + crouch * 3, -69 + crouch * 13];
+        const crouch = Math.max(-0.3, Math.min(1.15, this.compress));
+        const hip = [-14 - crouch * 5 + this.bodyShift * 4, -50 + crouch * 11];
+        const shoulder = [3 + crouch * 5 + this.bodyShift * 3, -70 + crouch * 14];
         const grip = [22, -45];
         const foot = [-2, -17], farFoot = [-10, -21];
         const knee = joint(hip, foot, 21, -1);
-        const elbow = joint(shoulder, grip, 16, -1);
+        const elbow = joint(shoulder, grip, 17, 1);
         const farHip = [hip[0] - 3, hip[1]];
         const farKnee = joint(farHip, farFoot, 20, -1);
         // Far limbs sit behind the frame; they do not merge into one stick leg.
         limb(farHip, farKnee, 7, 0x203038);
         limb(farKnee, farFoot, 5, 0x17272e);
-        limb([shoulder[0] - 3, shoulder[1] + 2], [12, -47], 5, 0xa95638);
-        limb([12, -47], grip, 4, 0x26373b);
+        const farShoulder = [shoulder[0]-3, shoulder[1]+2];
+        const farElbow = joint(farShoulder, grip, 17, 1);
+        limb(farShoulder, farElbow, 5, 0xa95638);
+        limb(farElbow, grip, 4, 0x26373b);
         shape([[-15,-24],[-8,-24],[-4,-20],[-4,-18],[-15,-18]], 0x18272d);
 
         // Hardtail dirt-jump geometry: short rear triangle, low standover, low saddle.
         // Only the front fork has suspension; the rear has no linkage or shock. Pumping moves the rider,
         // not the frame tubes or wheelbase.
+        chassis = false;
         for (const wx of [-32, 32]) {
             const center = point([wx, -16]);
             g.lineStyle(4, 0x14262a, 1); g.strokeCircle(center.x, center.y, 14);
@@ -338,6 +429,7 @@ class Bike {
             }
             circle([wx, -16], 2.2, 0xe6dcc5);
         }
+        chassis = true;
         // Chain, rear triangle, sloping top tube and oversized down tube.
         line([[-32,-15],[-4,-21],[-4,-15],[-32,-15]], 1, 0x9baba2);
         line([[-32,-16],[-12,-29],[-4,-19],[-32,-16]], 3, 0x147f81);
@@ -350,9 +442,14 @@ class Bike {
         circle([-4,-19], 1.5, 0xbed2c9);
         // Front suspension fork: exposed stanchion, dust seal and chunky lower.
         // A rigid rear triangle stays connected to the back axle.
-        line([[19,-38],[24,-28]], 3.2, 0xe4d0a0);
-        line([[24,-28],[32,-16]], 4.6, 0x263e44);
-        line([[22,-29],[26,-28]], 2, 0x10282d);
+        const frontAxle = [-32 + 64 * pc, -16 - 64 * ps];
+        const crown = [19,-38];
+        const forkLength = Math.hypot(crown[0]-frontAxle[0], crown[1]-frontAxle[1]);
+        const seal = [frontAxle[0] + (crown[0]-frontAxle[0]) * 14 / forkLength,
+            frontAxle[1] + (crown[1]-frontAxle[1]) * 14 / forkLength];
+        line([crown,seal], 3, 0xe4d0a0);
+        line([seal,frontAxle], 4.8, 0x263e44);
+        circle(seal, 2.8, 0x10282d);
         line([[18,-37],[22,-36]], 3, 0x234048);
         line([[19,-36],[16,-44],[22,-46],[27,-46]], 2.6, 0x193137);
         line([[22,-46],[28,-46]], 3.4, 0x0f242a);
@@ -371,10 +468,10 @@ class Bike {
             [foot[0]+7,foot[1]+2],[foot[0]-4,foot[1]+2]], 0xd8e3d5);
         line([[foot[0]-4,foot[1]+2],[foot[0]+7,foot[1]+2]], 1.6, 0x182e34);
         // Fitted jersey silhouette with hem, shoulder panel and shaded back.
-        shape([[hip[0]-5,hip[1]+2],[hip[0]-7,hip[1]-7],
+        softShape([[hip[0]-5,hip[1]+2],[hip[0]-7,hip[1]-7],
             [shoulder[0]-5,shoulder[1]-4],[shoulder[0]+3,shoulder[1]-4],
             [shoulder[0]+7,shoulder[1]+3],[hip[0]+5,hip[1]+4]], 0xe98942);
-        shape([[hip[0]-5,hip[1]+2],[hip[0]-7,hip[1]-7],
+        softShape([[hip[0]-5,hip[1]+2],[hip[0]-7,hip[1]-7],
             [shoulder[0]-5,shoulder[1]-4],[shoulder[0]-2,shoulder[1]+1],
             [hip[0]-1,hip[1]+2]], 0xb95735);
         line([[hip[0]-5,hip[1]+2],[hip[0]+4,hip[1]+4]], 2, 0x713e31);
@@ -383,7 +480,7 @@ class Bike {
         circle(grip, 3.1, 0x142b32);
         line([[shoulder[0]-2,shoulder[1]-2],[shoulder[0]+4,shoulder[1]+2]], 2, 0xffd18b);
         // Full-face helmet: shell, dark goggle opening, peak and chin guard.
-        const hx = shoulder[0] + 7, hy = shoulder[1] - 10;
+        const hx = shoulder[0] + 7 - this.bodyShift * 2, hy = shoulder[1] - 10 - crouch;
         limb([shoulder[0]+1,shoulder[1]], [hx-2,hy+3], 5, 0xc99268);
         const helmet = pts => pts.map(([x,y]) => [hx+x,hy+y]);
         shape(helmet([[-7,-3],[-5,-8],[1,-9],[6,-6],[7,-1],[5,4],[1,7],[-5,4],[-7,0]]), 0x173139);

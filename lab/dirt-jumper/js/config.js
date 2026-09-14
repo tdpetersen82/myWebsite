@@ -24,9 +24,23 @@ const CONFIG = {
         speedFloor: 26,             // never fully stall on the descent
 
         // Pump (the signature mechanic)
-        kPump: 1650,                // down-phase work scale (x downhillSteepness x speedFactor)
+        kPump: 2100,                // down-phase work scale (x downhillSteepness x speedFactor)
         kPumpBleed: 100,            // up-phase penalty while still holding pump (px/s^2)
+        pumpChargeRate: 1.8,        // charge per second on a useful downslope
+        pumpChargeMin: 0.12,        // ignore accidental single-frame taps
+        pumpChargeDecay: 0.45,      // early release is forgiving, but charge expires
+        pumpHeldUpDecay: 1.2,       // staying compressed uphill wastes stored effort
+        releaseGravityRelief: 0.75, // charged extension reduces uphill speed loss
+        releaseDrain: 0.45,         // charge spent per second of climbing
+        releasePop: 75,             // extra upward speed from an extended jump takeoff
         pumpDownThresh: 0.025,      // |sin(slope)| above this counts as a real down/up face
+
+        // Front fork and rider springs (visual response; rear triangle stays rigid).
+        forkTravel: 5.2,
+        forkSpring: 170,
+        forkDamping: 19,
+        riderSpring: 105,
+        riderDamping: 15,
 
         // Air
         flipRate: 115,              // deg/sec rotation — gentle, just for setting landing angle
