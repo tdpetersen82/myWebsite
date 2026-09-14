@@ -14,6 +14,11 @@ class RideScene extends Phaser.Scene {
         this._leaving = false;
     }
 
+    preload() {
+        this.load.image('rider-art', 'assets/rider-atlas-v1.png');
+        this.load.json('rider-atlas', 'assets/rider-atlas.json');
+    }
+
     create() {
         const W = CONFIG.WIDTH, H = CONFIG.HEIGHT;
         this.time.paused = false;
@@ -34,6 +39,9 @@ class RideScene extends Phaser.Scene {
         this.bike = new Bike(this, CONFIG.STATS, CONFIG.TERRAIN.startFlat * 0.5);
         this.bike.y = this.terrain.heightAt(this.bike.x);
         this.particles = new ParticleField();
+        this.bikeArt = new BikeArt(this);
+        this.bikeArt.update(this.bike);
+        this.crash = null;
 
         // input
         this.cursors = this.input.keyboard.createCursorKeys();
@@ -89,7 +97,7 @@ class RideScene extends Phaser.Scene {
         this._snapCamera();
         if (this.autoStart) this._dropIn();
 
-        this.events.on('shutdown', () => this._teardownAudio());
+        this.events.on('shutdown', () => { this._teardownAudio(); if (this.crash) this.crash.destroy(); });
     }
 
     // ============ update ============
@@ -133,7 +141,8 @@ class RideScene extends Phaser.Scene {
         const altitude = Math.max(0, groundY - this.bike.y);
         this.bikeG.fillStyle(0x282c24, 0.22 * Math.max(0.2, 1 - altitude / 220));
         this.bikeG.fillEllipse(this.bike.x, groundY + 3, Math.max(20, 68 - altitude * 0.16), 7);
-        this.bike.draw(this.bikeG);
+        if (this.crash) this.crash.update(dtMs);
+        else this.bikeArt.update(this.bike);
 
         this._updateHUD();
     }
@@ -149,7 +158,7 @@ class RideScene extends Phaser.Scene {
 
     // ============ camera ============
     _camTarget() {
-        const bp = this.bike.bodyPoint();
+        const bp = this.crash ? this.crash.focus() : this.bike.bodyPoint();
         return {
             x: bp.x + 190 + Math.min(65, this.bike.speed * 0.08) - CONFIG.WIDTH / 2,        // look ahead (downhill is to the right)
             y: bp.y - CONFIG.HEIGHT * 0.61
@@ -182,7 +191,7 @@ class RideScene extends Phaser.Scene {
 
     _onLanding(info) {
         if (info.grade === 'bail') {
-            this.particles.burst(info.x, info.y, 26, CONFIG.COLORS.BAIL, 1.4);
+            this.particles.burst(info.x, info.y, 26, CONFIG.COLORS.DUST, 1.4);
             this.cam.shake(360, 0.014);
             this._crashSfx();
             this._stamp('BAIL', CONFIG.COLORS.BAIL);
@@ -209,7 +218,9 @@ class RideScene extends Phaser.Scene {
             this.best = score;
             try { localStorage.setItem(CONFIG.BEST_KEY, String(score)); } catch (_) {}
         }
-        this._showSummary(score, Math.max(prev, score), isBest);
+        this.bikeArt.update(this.bike);
+        this.crash = new CrashRig(this.bikeArt, this.bike, this.terrain);
+        this.time.delayedCall(2300, () => this._showSummary(score, Math.max(prev, score), isBest));
     }
 
     _restart() {
@@ -242,7 +253,7 @@ class RideScene extends Phaser.Scene {
         panel.fillRoundedRect(22, 20, 146, 66, 10);
         panel.fillRoundedRect(W - 191, 20, 169, 66, 10);
         this.hud.speed = mk(37, 27, '26', 31, '#fff1d7');
-        mk(92, 47, 'KM/H', 10, '#baccc0');
+        mk(92, 47, 'MPH', 10, '#baccc0');
         this.hud.distance = mk(37, 66, '0 m', 10, '#baccc0');
         this.hud.score = mk(W - 37, 27, '0', 31, '#fff1d7', [1, 0]);
         this.hud.best = mk(W - 37, 66, 'BEST 0', 10, '#baccc0', [1, 0]);
@@ -283,8 +294,8 @@ class RideScene extends Phaser.Scene {
 
     _updateHUD() {
         const b = this.bike;
-        const kmh = Math.round(b.speed * 0.12);     // arbitrary readable scale
-        this.hud.speed.setText(String(kmh));
+        const mph = Math.round(b.speed * 0.12 / 1.609344); // convert the existing speed scale to miles/hour
+        this.hud.speed.setText(String(mph));
         this.hud.distance.setText(Math.floor(b.distance / 10) + ' m');
         this.hud.score.setText(String(b.scoreValue()));
         const best = this.best;
