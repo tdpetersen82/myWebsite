@@ -1,5 +1,5 @@
 // Daily Orbit worker: runs the real sim core off the main thread. One instance per page.
-importScripts('ss-core.js?v=20260914', 'orbit-engine.js?v=20260914');
+importScripts('ss-core.js?v=20260914b', 'orbit-engine.js?v=20260914b');
 const api = createSolarCore();
 api.onEmit(function () {});
 const eng = OrbitEngine(api);

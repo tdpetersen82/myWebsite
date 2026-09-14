@@ -39,6 +39,7 @@
     const distSun = b => Math.hypot(b.x - SUN.x, b.y - SUN.y);
     const mu = G * SUN.m;
     const hohmannT = (r1, r2) => { const at = (r1 + r2) / 2; return Math.PI * Math.sqrt(at * at * at / mu); };
+    const hohmannDepKms = (r1, r2) => Math.sqrt(mu / r1) * Math.abs(Math.sqrt(2 * r2 / (r1 + r2)) - 1) * KMS;   // the launch burn alone
     const hohmannKms = (r1, r2) => (Math.sqrt(mu / r1) * Math.abs(Math.sqrt(2 * r2 / (r1 + r2)) - 1) + Math.sqrt(mu / r2) * Math.abs(1 - Math.sqrt(2 * r1 / (r1 + r2)))) * KMS;
     const arrRadius = tgt => Math.max(0.05, 0.4 * distSun(tgt) * Math.pow(tgt.m, 0.4));   // the sim page's rule: a slice of the sphere of influence
     const lonOf = (x, y) => Math.atan2(y - SUN.y, x - SUN.x);
@@ -207,6 +208,21 @@
                        ownKms: win.ownKms, totalKms: win.totalKms, tofDays: r.arrDays, closestAU: r.closestAU, flybys: r.flybys, path: r.path, times: r.times }, strip, tried, candidates: cands.length };
     }
 
+    // Where the dials start: a textbook first guess — straight along Earth's motion (or straight against
+    // it for an inward target) at 70% of the ideal launch burn, rounded to a half km/s — so the first
+    // launch reaches toward the target and falls short with a readable hint, never a lucky arrival.
+    // Verified: if the physics somehow captures it anyway, the speed steps down until it doesn't.
+    function startDials(day, target) {
+      arrange(day);
+      const inward = distSun(target) < distSun(EARTH), aim = inward ? 180 : 0;
+      let speed = Math.max(1, Math.round(0.7 * hohmannDepKms(distSun(EARTH), distSun(target)) * 2) / 2);
+      for (let i = 0; i < 6; i++) {
+        const r = flyDials(day, target, speed, aim);
+        if (!r.arrived && !(r.closestAU < 3 * r.arrR)) break;   // a near miss would be a gimme too
+        speed = Math.max(0.5, speed - 0.5);
+      }
+      return { speed, aim };
+    }
     let last = null;   // the board the worker is currently serving
     function setup(day, force) {                                  // force: a target name, for tools that survey every planet
       const w = windows(day), rE = (arrange(day), distSun(EARTH));
@@ -225,7 +241,7 @@
                       planets: planets.map(p => { const el = api.elementsAt(p, jd); return { name: p.name, x: p.x - SUN.x, y: p.y - SUN.y, vx: p.vx - SUN.vx, vy: p.vy - SUN.vy, a: p.a, e: p.e, w: el ? el.w : 0, R: p.R, color: p.color, size: p.size }; }),
                       target: target.name, kind: kindOf(target), arrR: arrRadius(target), envelope: ENVELOPE[kindOf(target)], hohmannDays: H * 365.25, maxDays: MAXT[kindOf(target)] * H * 365.25,
                       windows: w.map(x => ({ name: x.name, total: isFinite(x.total) ? x.total : null, ideal: x.ideal, ratio: isFinite(x.ratio) ? x.ratio : null, open: x.ratio <= OPEN, eligible: x.eligible, tofH: x.tofH })),
-                      par: res.best, fair: !!(res.best && res.best.fair), strip: res.strip, fallbacks, step: STEP };
+                      par: res.best, fair: !!(res.best && res.best.fair), strip: res.strip, fallbacks, step: STEP, start: startDials(day, target) };
       last = board;
       return board;
     }

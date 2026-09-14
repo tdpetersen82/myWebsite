@@ -4035,7 +4035,7 @@
   // along the computed path, so the flight you watch is the flight that was judged. The
   // mode rides the lesson machinery (coach card, tick/draw hooks, Escape) and hides the
   // sandbox chrome while it runs.
-  const DAILY_V = '20260914', DAILY_K = 'dailyOrbit', DAILY_MAX = 6, DAILY_EMO = { hit: '🟩', near: '🟨', miss: '🟥' };
+  const DAILY_V = '20260914b', DAILY_K = 'dailyOrbit', DAILY_MAX = 6, DAILY_EMO = { hit: '🟩', near: '🟨', miss: '🟥' };
   const dailyToggle = document.getElementById('daily-toggle');
   let dailyWorker = null, dailySeq = 0; const dailyPending = {};
   function dailyRpc(m){
@@ -4143,7 +4143,8 @@
     arrangeForDate(board.jd); setRate(0);                        // today's sky, held still
     dailyFit(); daily.refit = true;                                  // and once more after the first frame has measured the barycentre
     const tp = dP(board.target), inward = board.target === 'Venus' || board.target === 'Mercury';
-    daily.dials.speed = board.kind === 'outer' ? 9 : board.target === 'Mars' ? 3 : 4; daily.dials.aim = inward ? 180 : 0;
+    const st = board.start || { speed: board.kind === 'outer' ? 9 : 3, aim: inward ? 180 : 0 };   // the engine's verified first guess (a board cached before it existed falls back)
+    daily.dials.speed = st.speed; daily.dials.aim = st.aim;
     dailyRenderCard();
     // pick up where this browser left off today (finished or mid-way) by re-flying the same launches — it's deterministic
     const rec = daily.override ? null : dailyStore.done[daily.key];
@@ -4337,7 +4338,7 @@
       if (f.corr.applied) out.push('A <b>' + dFmt(f.corr.kms) + ' km/s</b> mid-course burn tried to pull it in' + (f.uncorrected ? ' (it would have missed by ' + dDist(f.uncorrected.closestAU) + ' on its own)' : '') + ' — not enough.');
       else out.push('Fixing it in flight would have taken <b>' + (f.corr.kms === null ? 'more than the tank holds' : dFmt(f.corr.kms, 1) + ' km/s') + '</b> — over the 1.5 km/s correction tank.');
     }
-    const fb = Object.entries(f.flybys || {});
+    const fb = Object.entries(f.flybys || {}).filter(([n, d]) => d < (n === 'Jupiter' || n === 'Saturn' ? 0.5 : 0.12));   // a pass worth a word: inside a giant's reach, or genuinely close to a small planet
     if (fb.length) out.push('Passed ' + fb.map(([n, d]) => n + ' at ' + dDist(d)).join(', ') + '.');
     let hint;
     const cr = f.cross || (f.uncorrected && f.uncorrected.cross);

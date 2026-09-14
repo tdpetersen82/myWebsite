@@ -46,6 +46,8 @@ for (let d = 0; d < 420; d += stride) {
     const line = c ? `${c.applied ? 'saved by a ' + c.kms.toFixed(2) + ' km/s correction, fuel ' + (r.ratio * 100).toFixed(0) + '% of par' : 'needs ' + (c.kms === null ? 'an impossible' : c.kms.toFixed(1) + ' km/s') + ' correction — over the ' + eng.TANK + ' km/s tank, so it misses'} (uncorrected miss ${r.uncorrected.closestAU.toFixed(3)} AU)` : `misses outright (closest ${r.closestAU.toFixed(3)} AU, envelope ${bd.envelope})`;
     ok(first.dg > 1 || (c && c.applied && r.arrived), `${tag}: aim off by ${first.dg}° → ${line}`);
   }
+  const opener = eng.fly(d, bd.start.speed, bd.start.aim);
+  ok(!opener.arrived && !opener.nearMiss, `${tag}: the starting dials (${bd.start.speed} km/s @ ${bd.start.aim}°) are not a gimme — ${opener.crashed ? 'hit ' + opener.crashed : 'miss by ' + opener.closestAU.toFixed(2) + ' AU'}`);
   const wild = eng.fly(d, p.speed, p.aim + 40);
   ok(true, `${tag}: aim off by 40° → ${wild.arrived ? 'still arrives, at ' + (wild.ratio * 100).toFixed(0) + '% of par (a forgiving day)' : 'misses (closest ' + wild.closestAU.toFixed(2) + ' AU)'}`);
 }
