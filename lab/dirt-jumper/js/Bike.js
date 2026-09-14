@@ -276,57 +276,123 @@ class Bike {
     draw(g) {
         const rad = this.angle * Math.PI / 180;
         const cos = Math.cos(rad), sin = Math.sin(rad);
-        // local -> world (origin = contact point, +localX forward, -localY up)
-        const tx = (px, py) => ({ x: this.x + px * cos - py * sin, y: this.y + px * sin + py * cos });
-
-        const wb = 27;                  // wheelbase / 2
-        const r = 14;                   // wheel radius
-        const squash = this.compress;   // + squashed, - stretched
-        const bodyH = -31 * (1 - squash * 0.16);   // frame height above contact (up = -)
-
-        const rear = tx(-wb, -r), front = tx(wb, -r);
-        for (const wheel of [rear, front]) {
-            g.fillStyle(CONFIG.COLORS.WHEEL, 1);
-            g.fillCircle(wheel.x, wheel.y, r);
-            g.lineStyle(2, 0x9caab0, 1);
-            g.strokeCircle(wheel.x, wheel.y, r - 3);
-            const spin = this.distance / r;
-            g.lineStyle(1, 0x71838c, 0.8);
-            for (let i = 0; i < 3; i++) {
-                const a = spin + i * Math.PI / 3;
-                g.lineBetween(wheel.x + Math.cos(a) * 8, wheel.y + Math.sin(a) * 8,
-                    wheel.x - Math.cos(a) * 8, wheel.y - Math.sin(a) * 8);
-            }
-        }
-        const line = (points, width, color) => {
-            g.lineStyle(width, color, 1);
-            g.beginPath();
-            points.forEach(([x, y], i) => {
-                const p = tx(x, y);
-                if (i === 0) g.moveTo(p.x, p.y); else g.lineTo(p.x, p.y);
-            });
+        const point = ([x, y]) => ({ x: this.x + x * cos - y * sin, y: this.y + x * sin + y * cos });
+        const circle = (p, r, color, alpha = 1) => {
+            const q = point(p); g.fillStyle(color, alpha); g.fillCircle(q.x, q.y, r);
+        };
+        const line = (points, width, color, alpha = 1) => {
+            g.lineStyle(width, color, alpha); g.beginPath();
+            points.forEach((p, i) => { const q = point(p); if (i) g.lineTo(q.x, q.y); else g.moveTo(q.x, q.y); });
             g.strokePath();
         };
-        // Diamond frame, fork, saddle and bars face the direction of travel.
-        line([[-27, -14], [-10, bodyH], [0, -15], [-27, -14]], 3, CONFIG.COLORS.BIKE_ACCENT);
-        line([[-10, bodyH], [20, bodyH - 1], [0, -15]], 3, CONFIG.COLORS.BIKE_ACCENT);
-        line([[27, -14], [20, bodyH - 1], [18, bodyH - 8], [26, bodyH - 8]], 3, 0xc8d5d6);
-        line([[-17, bodyH - 3], [-5, bodyH - 3]], 4, CONFIG.COLORS.BIKE);
-        const hipY = bodyH - 13 + squash * 9;
-        const shoulderY = hipY - 14 + squash * 4;
-        line([[-9, hipY], [-15, bodyH - 1], [-6, -15]], 5, 0x192e32);
-        line([[-7, hipY], [7, bodyH - 5], [0, -15], [9, -15]], 6, 0x2b4147);
-        line([[-7, hipY], [5, shoulderY]], 8, 0xef8046);
-        line([[5, shoulderY], [17, shoulderY + 12], [23, bodyH - 8]], 4, 0xf0c8a1);
-        line([[5, shoulderY], [11, shoulderY + 6]], 6, 0xf4a34d);
-        const head = tx(10, shoulderY - 8);
-        g.fillStyle(0xf0c8a1, 1);
-        g.fillCircle(head.x, head.y, 6);
-        g.fillStyle(0xf5ece0, 1);
-        g.fillCircle(head.x, head.y - 3, 7);
-        line([[10, shoulderY - 10], [21, shoulderY - 10]], 3, 0x142d34);
-        line([[13, shoulderY - 6], [19, shoulderY - 4], [18, shoulderY]], 3, 0xf5ece0);
+        const shape = (points, color) => {
+            g.fillStyle(color, 1); g.beginPath();
+            points.forEach((p, i) => { const q = point(p); if (i) g.lineTo(q.x, q.y); else g.moveTo(q.x, q.y); });
+            g.closePath(); g.fillPath();
+        };
+        const limb = (a, b, width, color) => {
+            line([a, b], width, color); circle(a, width / 2, color); circle(b, width / 2, color);
+        };
+        // Two-bone IK keeps hands on grips and shoes on pedals in every pose.
+        const joint = (a, b, length, bend) => {
+            const dx = b[0] - a[0], dy = b[1] - a[1];
+            const d = Math.max(0.001, Math.hypot(dx, dy));
+            const h = Math.sqrt(Math.max(0, length * length - d * d / 4));
+            return [(a[0] + b[0]) / 2 - dy / d * h * bend,
+                (a[1] + b[1]) / 2 + dx / d * h * bend];
+        };
+        const crouch = Math.max(-0.35, Math.min(1, this.compress));
+        const hip = [-13 - crouch * 6, -49 + crouch * 11];
+        const shoulder = [4 + crouch * 3, -69 + crouch * 13];
+        const grip = [22, -45];
+        const foot = [-2, -17], farFoot = [-10, -21];
+        const knee = joint(hip, foot, 21, -1);
+        const elbow = joint(shoulder, grip, 16, -1);
+        const farHip = [hip[0] - 3, hip[1]];
+        const farKnee = joint(farHip, farFoot, 20, -1);
+        // Far limbs sit behind the frame; they do not merge into one stick leg.
+        limb(farHip, farKnee, 7, 0x203038);
+        limb(farKnee, farFoot, 5, 0x17272e);
+        limb([shoulder[0] - 3, shoulder[1] + 2], [12, -47], 5, 0xa95638);
+        limb([12, -47], grip, 4, 0x26373b);
+        shape([[-15,-24],[-8,-24],[-4,-20],[-4,-18],[-15,-18]], 0x18272d);
 
+        // Hardtail dirt-jump geometry: short rear triangle, low standover, low saddle.
+        // Only the front fork has suspension; the rear has no linkage or shock. Pumping moves the rider,
+        // not the frame tubes or wheelbase.
+        for (const wx of [-32, 32]) {
+            const center = point([wx, -16]);
+            g.lineStyle(4, 0x14262a, 1); g.strokeCircle(center.x, center.y, 14);
+            g.lineStyle(1.3, 0x748b8d, 1); g.strokeCircle(center.x, center.y, 11.6);
+            g.lineStyle(0.65, 0xb5c5be, 0.75);
+            const spin = this.distance / 16;
+            for (let i = 0; i < 12; i++) {
+                const a = spin + i * Math.PI / 6;
+                const end = point([wx + Math.cos(a) * 11, -16 + Math.sin(a) * 11]);
+                g.lineBetween(center.x, center.y, end.x, end.y);
+            }
+            for (let i = 0; i < 16; i++) {
+                const a = spin + i * Math.PI / 8;
+                line([[wx + Math.cos(a) * 15, -16 + Math.sin(a) * 15],
+                    [wx + Math.cos(a + 0.07) * 15.8, -16 + Math.sin(a + 0.07) * 15.8]], 1, 0x44595b);
+            }
+            circle([wx, -16], 2.2, 0xe6dcc5);
+        }
+        // Chain, rear triangle, sloping top tube and oversized down tube.
+        line([[-32,-15],[-4,-21],[-4,-15],[-32,-15]], 1, 0x9baba2);
+        line([[-32,-16],[-12,-29],[-4,-19],[-32,-16]], 3, 0x147f81);
+        line([[-12,-29],[19,-36]], 4, 0x39b7b4);
+        line([[19,-36],[-4,-19]], 4.8, 0x269d9f);
+        line([[-12,-29],[-4,-19]], 3.4, 0x46bfba);
+        line([[-10,-28],[15,-35]], 0.9, 0xa5e0d0);
+        line([[14,-31],[2,-24]], 1.2, 0xe3efe1);
+        circle([-4,-19], 4, 0x243d41);
+        circle([-4,-19], 1.5, 0xbed2c9);
+        // Front suspension fork: exposed stanchion, dust seal and chunky lower.
+        // A rigid rear triangle stays connected to the back axle.
+        line([[19,-38],[24,-28]], 3.2, 0xe4d0a0);
+        line([[24,-28],[32,-16]], 4.6, 0x263e44);
+        line([[22,-29],[26,-28]], 2, 0x10282d);
+        line([[18,-37],[22,-36]], 3, 0x234048);
+        line([[19,-36],[16,-44],[22,-46],[27,-46]], 2.6, 0x193137);
+        line([[22,-46],[28,-46]], 3.4, 0x0f242a);
+        line([[-12,-29],[-14,-34]], 2.4, 0x203c40);
+        shape([[-22,-36],[-12,-37],[-8,-35],[-9,-33],[-20,-33]], 0x183137);
+        line([[-4,-19],foot], 2.4, 0xb6c9c3);
+        line([[-7,-16],[4,-16]], 2.4, 0x142a30);
+
+        // Near leg: riding shorts, knee pad, trouser/shin and flat pedal shoe.
+        limb(hip, knee, 8, 0x253c49);
+        limb(knee, foot, 5.8, 0x3a5057);
+        limb(hip, [hip[0] + (knee[0]-hip[0])*0.68, hip[1] + (knee[1]-hip[1])*0.68], 9, 0x2d4552);
+        circle(knee, 4.2, 0x172c36);
+        line([[knee[0]+1,knee[1]+4],[foot[0]+1,foot[1]-3]], 1.2, 0x738784);
+        shape([[foot[0]-4,foot[1]-4],[foot[0]+2,foot[1]-4],[foot[0]+7,foot[1]-1],
+            [foot[0]+7,foot[1]+2],[foot[0]-4,foot[1]+2]], 0xd8e3d5);
+        line([[foot[0]-4,foot[1]+2],[foot[0]+7,foot[1]+2]], 1.6, 0x182e34);
+        // Fitted jersey silhouette with hem, shoulder panel and shaded back.
+        shape([[hip[0]-5,hip[1]+2],[hip[0]-7,hip[1]-7],
+            [shoulder[0]-5,shoulder[1]-4],[shoulder[0]+3,shoulder[1]-4],
+            [shoulder[0]+7,shoulder[1]+3],[hip[0]+5,hip[1]+4]], 0xe98942);
+        shape([[hip[0]-5,hip[1]+2],[hip[0]-7,hip[1]-7],
+            [shoulder[0]-5,shoulder[1]-4],[shoulder[0]-2,shoulder[1]+1],
+            [hip[0]-1,hip[1]+2]], 0xb95735);
+        line([[hip[0]-5,hip[1]+2],[hip[0]+4,hip[1]+4]], 2, 0x713e31);
+        limb(shoulder, elbow, 6.5, 0xf1a458);
+        limb(elbow, grip, 4.4, 0x2a434a);
+        circle(grip, 3.1, 0x142b32);
+        line([[shoulder[0]-2,shoulder[1]-2],[shoulder[0]+4,shoulder[1]+2]], 2, 0xffd18b);
+        // Full-face helmet: shell, dark goggle opening, peak and chin guard.
+        const hx = shoulder[0] + 7, hy = shoulder[1] - 10;
+        limb([shoulder[0]+1,shoulder[1]], [hx-2,hy+3], 5, 0xc99268);
+        const helmet = pts => pts.map(([x,y]) => [hx+x,hy+y]);
+        shape(helmet([[-7,-3],[-5,-8],[1,-9],[6,-6],[7,-1],[5,4],[1,7],[-5,4],[-7,0]]), 0x173139);
+        shape(helmet([[-6,-3],[-4,-7],[1,-8],[5,-5],[6,-2],[0,-1],[-2,4],[-5,2]]), 0xf2eee0);
+        shape(helmet([[0,-2],[7,-2],[8,1],[3,3],[0,2]]), 0x192e36);
+        line(helmet([[1,-1],[6,-1]]), 1.3, 0x91bfbd);
+        shape(helmet([[2,3],[7,2],[8,5],[2,7],[-1,5]]), 0xe0e6d9);
+        shape(helmet([[-1,-5],[9,-4],[11,-2],[4,-2]]), 0xf4a454);
+        line(helmet([[-5,-4],[-2,-5]]), 1.5, 0x4d6463);
     }
 
     // contact + body points for camera framing
