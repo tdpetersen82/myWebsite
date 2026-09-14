@@ -61,8 +61,9 @@
     }
     function launchState(speedKms, aimDeg) {
       const f = frame(), s = speedKms / KMS, a = aimDeg * Math.PI / 180;
-      return { x: EARTH.x + f.ux * 0.012, y: EARTH.y + f.uy * 0.012,               // just off Earth, like the sim's own launches
-               vx: EARTH.vx + s * (Math.cos(a) * f.ux + Math.sin(a) * f.rx), vy: EARTH.vy + s * (Math.cos(a) * f.uy + Math.sin(a) * f.ry) };
+      const dx = Math.cos(a) * f.ux + Math.sin(a) * f.rx, dy = Math.cos(a) * f.uy + Math.sin(a) * f.ry;   // the push direction
+      return { x: EARTH.x + dx * 0.012, y: EARTH.y + dy * 0.012,                 // just off Earth ON THE SIDE IT'S PUSHED TOWARD — a braking burn must not fly back through Earth
+               vx: EARTH.vx + s * dx, vy: EARTH.vy + s * dy };
     }
 
     // One pass through the N-body sim from launch state st (board already arranged).
@@ -96,9 +97,15 @@
       }
       // The facts describe the OUTBOUND LEG only — up to the first turn of the probe's distance from the
       // Sun — so a probe that loops round and meets the orbit years later isn't credited with a "crossing".
+      // (Earth itself drifts in or out along its slightly eccentric orbit, so the turn has to be a real
+      // one: an extreme over a window of samples, clear of the launch radius — not the first wiggle.)
       const outward = rT[0] > rC[0];
       let iExt = rC.length - 1;
-      for (let i = 1; i < rC.length - 1; i++) { if (outward ? rC[i + 1] < rC[i] : rC[i + 1] > rC[i]) { iExt = i; break; } }
+      for (let i = 3; i < rC.length - 3; i++) {
+        let ext = Math.abs(rC[i] - rC[0]) > 0.01;
+        for (let j = i - 3; ext && j <= i + 3; j++) if (j !== i && (outward ? rC[j] > rC[i] : rC[j] < rC[i])) ext = false;
+        if (ext) { iExt = i; break; }
+      }
       let cross = null; const s0 = Math.sign(rC[0] - rT[0]);
       for (let i = 1; i <= iExt; i++) {
         const si = Math.sign(rC[i] - rT[i]);

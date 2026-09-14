@@ -284,7 +284,7 @@
 (function(){
 'use strict';
 const $ = id => document.getElementById(id);
-const V = '20260911';
+const V = '20260914';
 const KMS = 4.74057, MU = 4*Math.PI*Math.PI, AU_KM = 149597870.7, MAX_LAUNCH = 6;
 const EMO = { hit:'🟩', near:'🟨', miss:'🟥' };
 
@@ -304,8 +304,9 @@ function rpc(msg){
 
 // ---- storage (the Pup Quiz daily-loop shape) ----
 const K = 'dailyOrbit';
+const DAY_OVERRIDE = (location.search.match(/[?&]day=(-?\d+)/) || [])[0] ? '#' + location.search.match(/[?&]day=(-?\d+)/)[1] : null;   // ?day=N: play board N+1 for checking; nothing is saved
 function load(){ try { return JSON.parse(localStorage.getItem(K)) || {}; } catch (e){ return {}; } }
-function save(){ try { localStorage.setItem(K, JSON.stringify(store)); } catch (e){} }
+function save(){ if (DAY_OVERRIDE) return; try { localStorage.setItem(K, JSON.stringify(store)); } catch (e){} }
 const store = Object.assign({ lastKey: null, streak: 0, best: 0, played: 0, solved: 0, done: {}, live: null }, load());
 function track(action, extra){ try { gtag('event', 'daily_orbit', Object.assign({ action }, extra || {})); } catch (e){} }
 
@@ -335,14 +336,18 @@ function map(x, y){
   const k = RS * Math.asinh(r / RS) / r;
   return [W / 2 + x * k * S, H / 2 - y * k * S];
 }
+function shownPlanetList(){                                  // Earth and the target always; everything inside the larger of their orbits; Jupiter on Saturn days
+  const t = P[board.target], outer = board.kind === 'outer', lim = Math.max(t.a, P.Earth.a) * 1.05;
+  return board.planets.filter(p => p.a <= lim || (outer && p.name === 'Jupiter'));
+}
 function fit(){
   if (!board) return;
-  const t = P[board.target], outer = board.kind === 'outer';
+  const outer = board.kind === 'outer';
   RS = outer ? 1.0 : 3.0;
-  const shownPlanets = board.planets.filter(p => p.a <= t.a * 1.05 || (outer && p.name === 'Jupiter'));
+  const shownPlanets = shownPlanetList();
   let rMax = 0;
   for (const p of shownPlanets){ const ap = p.a * (1 + p.e); rMax = Math.max(rMax, RS * Math.asinh(ap / RS)); }
-  const pad = W < 520 ? 0.44 : 0.46;
+  const pad = W < 520 ? 0.42 : 0.44;                       // room for a label on whichever planet sits at the rim
   S = Math.min(W, H) * pad / rMax;
 }
 function resize(){
@@ -388,8 +393,7 @@ function draw(){
   for (const s of stars){ ctx.globalAlpha = 0.25 + s[2] * 0.4; ctx.beginPath(); ctx.arc(s[0], s[1], s[2] * 0.7, 0, 7); ctx.fill(); }
   ctx.globalAlpha = 1;
   if (!board) return;
-  const t = P[board.target], outer = board.kind === 'outer';
-  const shownPlanets = board.planets.filter(p => p.a <= t.a * 1.05 || (outer && p.name === 'Jupiter'));
+  const t = P[board.target], shownPlanets = shownPlanetList();
   // orbits
   for (const p of shownPlanets){
     ctx.beginPath();
@@ -440,7 +444,8 @@ function draw(){
     ctx.fillStyle = p.color; ctx.beginPath(); ctx.arc(X, Y, R, 0, 7); ctx.fill();
     if (p.name === 'Earth'){ ctx.strokeStyle = 'rgba(111,157,255,0.6)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.arc(X, Y, R + 3, 0, 7); ctx.stroke(); }
     ctx.fillStyle = p.name === board.target ? '#ffd35a' : 'rgba(159,171,194,0.9)'; ctx.font = (p.name === board.target ? '700 ' : '600 ') + '11px system-ui,sans-serif';
-    ctx.fillText(p.name, X + R + 4, Y + 4);
+    const lw = ctx.measureText(p.name).width;                                  // labels flip to the left near the right edge
+    ctx.fillText(p.name, X + R + 4 + lw > W - 6 ? X - R - 4 - lw : X + R + 4, Y + 4);
   }
   // aim arrow at Earth while aiming
   if (phase === 'aim' && !replay){
@@ -647,8 +652,8 @@ async function init(){
   try {
     const cached = (() => { try { return JSON.parse(sessionStorage.getItem(K + 'Board')); } catch (e){ return null; } })();
     const utcMs = Date.now(), todayISO = new Date(utcMs).toISOString().slice(0, 10);
-    let m = cached && cached.dateISO === todayISO ? { board: cached } : null;
-    if (!m){ m = await rpc({ type: 'setup', utcMs }); try { sessionStorage.setItem(K + 'Board', JSON.stringify(m.board)); } catch (e){} }
+    let m = cached && cached.dateISO === todayISO && !DAY_OVERRIDE ? { board: cached } : null;
+    if (!m){ m = await rpc(DAY_OVERRIDE ? { type: 'setup', day: +DAY_OVERRIDE.slice(1) } : { type: 'setup', utcMs }); if (!DAY_OVERRIDE) try { sessionStorage.setItem(K + 'Board', JSON.stringify(m.board)); } catch (e){} }
     board = m.board; key = board.dateISO;
     for (const p of board.planets) P[p.name] = p;
     if (!board.par) throw new Error('no par for today');
@@ -668,7 +673,7 @@ async function init(){
   dials.speed = guess; dials.aim = inward ? 180 : 0; $('speed').value = guess; $('aim').value = dials.aim; $('speed-num').value = guess.toFixed(2); $('aim-num').value = dials.aim.toFixed(1);
   renderStats(); fit(); computePreview();
   // pick up where this browser left off today (finished or mid-way) by re-flying the same launches — it's deterministic
-  const rec = store.done[key], live = !rec && store.live && store.live.key === key ? store.live : null;
+  const rec = DAY_OVERRIDE ? null : store.done[key], live = !rec && !DAY_OVERRIDE && store.live && store.live.key === key ? store.live : null;
   const again = rec ? rec.launches : live ? live.launches : [];
   if (again.length){
     $('loading-msg').textContent = 'Replaying your launches…';
