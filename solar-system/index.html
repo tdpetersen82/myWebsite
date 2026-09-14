@@ -10,7 +10,7 @@
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Arcade","item":"https://limestonegames.com/arcade/"},{"@type":"ListItem","position":3,"name":"Solar System"}]}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[
   {"@type":"Question","name":"Is this a real simulation or a looping animation?","acceptedAnswer":{"@type":"Answer","text":"A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press R to rebuild the solar system from scratch."}},
-  {"@type":"Question","name":"Are the sizes and distances to scale?","acceptedAnswer":{"@type":"Answer","text":"The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on true-scale distances in the dock's view options to see the honest spacing. Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click."}},
+  {"@type":"Question","name":"Are the sizes and distances to scale?","acceptedAnswer":{"@type":"Answer","text":"The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on true-scale distances in the View tab to see the honest spacing. Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click."}},
   {"@type":"Question","name":"Why does the Sun wobble?","acceptedAnswer":{"@type":"Answer","text":"Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it — about 12 m/s, once every 12 years, in a loop slightly larger than the Sun itself. The real Sun does the same, and detecting that wobble in other stars is one of the main ways exoplanets are discovered: 51 Pegasi b, the first planet found around a Sun-like star, showed up in 1995 as a 56 m/s swing repeating every 4.2 days. The What if? lesson zooms in to show the loop."}},
   {"@type":"Question","name":"How far away is the Moon?","acceptedAnswer":{"@type":"Answer","text":"About 384,000 km — 30 Earth-diameters. Shrink Earth to a basketball and the Moon is a tennis ball about 7 metres away, much farther than most pictures suggest. Light takes 1.3 seconds to cross the gap; Apollo took about three days. The simulator's Earth–Moon view draws both at true relative size and distance, and the What if? lesson flies a probe across it."}},
   {"@type":"Question","name":"How does a gravity assist make a spacecraft go faster?","acceptedAnswer":{"@type":"Answer","text":"Relative to the planet, it doesn't: a spacecraft leaves a flyby at the same speed it arrived, because gravity gives back on the way out what it took on the way in. But the planet is moving around the Sun — Jupiter at about 13 km/s — and the flyby bends the spacecraft's path to travel more along the planet's direction, so relative to the Sun it gains speed. Momentum is conserved: the planet slows by an immeasurably tiny amount. Voyager used this at Jupiter, Saturn, Uranus and Neptune; the What if? lesson measures the gain in the simulator."}},
@@ -18,7 +18,7 @@
   {"@type":"Question","name":"How long does it take a radio signal to reach Mars?","acceptedAnswer":{"@type":"Answer","text":"Between about 3 and 22 minutes one way, depending on where Earth and Mars are in their orbits — the gap between them swings from roughly 55 to 400 million km, and radio travels at the speed of light, 300,000 km per second. A reply takes just as long coming back, so a round trip is 6 to 44 minutes, which is why rovers are driven by pre-planned commands rather than live. The What if? lesson sends a real pulse across today's gap and times it."}},
   {"@type":"Question","name":"Why do Mars missions only launch every 26 months?","acceptedAnswer":{"@type":"Answer","text":"Because the rocket is the fixed part and the timing is the free part. A launcher can add only so much speed beyond Earth's own orbital motion, and the cheapest path to Mars — a transfer orbit that just reaches Mars's distance — only works if Mars will be at the far end of it when the probe arrives. Mars keeps moving during the roughly eight-month trip, so it has to be a specific angle ahead of Earth at launch. Earth catches up to that geometry once every synodic period, about 780 days. The What if? lesson lets you test it: launch whenever you like and see where Mars actually is when you get there."}},
   {"@type":"Question","name":"Can planets collide or be destroyed?","acceptedAnswer":{"@type":"Answer","text":"Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape."}},
-  {"@type":"Question","name":"What are the controls?","acceptedAnswer":{"@type":"Answer","text":"Scroll or pinch to zoom, click or tap any body to inspect it, drag a planet to move it to a new orbit. Keyboard: Space pause, up/down arrows time rate, E Earth view, C comet, D data table, 0 reset view, R reset the system."}},
+  {"@type":"Question","name":"What are the controls?","acceptedAnswer":{"@type":"Answer","text":"Scroll or pinch to zoom, click or tap any body to inspect it, drag a planet to move it to a new orbit. The panel on the left (a sheet at the bottom on phones) has four tabs: Play for the daily puzzle, lessons and missions; Build for comets, storms and new planets; Inspect for the selected body; View for scale, guides and the data table. Keyboard: Space pause, up/down arrows time rate, E Earth orbit, C comet, D data table, 0 whole system, R reset the system."}},
   {"@type":"Question","name":"Why does Voyager keep getting farther away instead of orbiting the Sun?","acceptedAnswer":{"@type":"Answer","text":"Because nothing needs to push it — a force is needed to stop it, and the Sun's gravity is the only thing trying. Gravity weakens with the square of distance, so the total slowing the Sun can ever apply from any point outward is finite: that total is the escape speed there (42 km/s at Earth's distance, 18.5 at Jupiter's, about 3 where Voyager 1 is now). Below it the Sun eventually turns you around into an ordinary orbit; above it the Sun runs out of pull before you run out of speed, and you coast away forever. Voyager 1 crossed that line at Jupiter and Saturn, has not fired an engine since 1977, and is still slowing toward about 16.6 km/s — never zero."}},
 {"@type":"Question","name":"What is Daily Orbit?","acceptedAnswer":{"@type":"Answer","text":"A daily launch puzzle inside the simulator. Each day the planets are placed where they really are on that UTC date and one of them is the target. You set a launch speed and heading, and the probe flies under the simulator's full gravity — six launches to get captured, scored on fuel against a par the physics finds for that day, with a shareable emoji result and a streak. Everyone in the world gets the same board."}},
   {"@type":"Question","name":"What do the Daily Orbit dials mean?","acceptedAnswer":{"@type":"Answer","text":"Speed is how fast the probe leaves Earth, in kilometres per second over Earth's own orbital motion. Aim is the heading of that push: 0° is straight along Earth's direction of travel, positive angles swing it outward from the Sun, and 180° is a braking burn against Earth's motion, which is how you fall inward to Venus or Mercury. Reaching the target's orbit is the easy half; arriving when the planet is there is the puzzle."}},
@@ -96,8 +96,6 @@
   #comet-btns{display:flex;flex-wrap:wrap;gap:6px;margin-top:3px;}
   #comet-launch{flex:1 1 100%;text-align:center;}
   #comet-random{flex:1;white-space:nowrap;padding:9px 8px;}
-  /* the Actions menu — comet designing, storms, rogue stars */
-  #action-menu{width:196px;padding:11px 12px 10px;}
   .act{display:block;width:100%;margin-top:6px;text-align:left;white-space:nowrap;}
   .act:first-child{margin-top:0;}
   #act-storm{background:rgba(96,64,134,0.6);border-color:rgba(170,140,220,0.55);}
@@ -157,12 +155,6 @@
   #voy-today-btns{display:flex;gap:6px;margin-top:8px;}
   #voy-today-btns .btn{flex:1;text-align:center;padding:7px 8px;font-size:11.5px;}
   /* ---- "What if?" lessons: the menu (beside Actions) and the coach card that runs a lesson ---- */
-  #top-btns{display:flex;gap:8px;justify-content:flex-end;}
-  #learn-toggle{background:rgba(74,108,190,0.45);border-color:rgba(150,180,255,0.5);}
-  #learn-toggle:hover{background:rgba(92,130,225,0.7);}
-  #learn-menu{width:276px;padding:11px 12px 10px;text-align:left;max-height:calc(100vh - 80px);overflow-y:auto;}
-  #learn-title{font-weight:700;color:#fff;margin:0 0 3px;}
-  #learn-sub{font:500 10.5px/1.35 system-ui,sans-serif;color:var(--dim);margin:0 0 9px;}
   .lcard{display:block;width:100%;text-align:left;white-space:normal;padding:9px 11px;margin-top:6px;}
   .lcard:first-of-type{margin-top:0;}
   .lcard .q{display:block;color:#fff;font-weight:700;}
@@ -188,8 +180,7 @@
   #coach-btns .btn.wide{flex-basis:100%;}
   /* (the coach stays visible in the Earth–Moon view — the Moon lesson runs there) */
   /* Earth–Moon view: hide the system chrome, show a back button */
-  #app.moon-mode #dock, #app.moon-mode #comet-ui, #app.moon-mode #hud, #app.moon-mode #ss-nav,
-  #app.moon-mode #view-panel, #app.moon-mode #data-drawer, #app.moon-mode #microhint{display:none !important;}
+  #app.moon-mode #dock, #app.moon-mode #comet-ui, #app.moon-mode #hud, #app.moon-mode #ss-nav, #app.moon-mode #microhint{display:none !important;}
   #moon-exit{position:absolute;top:14px;left:16px;z-index:9;
     font:600 12px/1 system-ui,sans-serif;color:#9fb2d6;background:rgba(42,54,78,0.72);
     border:1px solid rgba(150,170,210,0.35);border-radius:999px;padding:8px 14px;cursor:pointer;}
@@ -298,11 +289,7 @@
   .vo.off{opacity:.55;}
 
   /* ---- Daily Orbit: the entry button, the chrome it hides, and its controls inside the coach card ---- */
-  #daily-toggle{background:rgba(255,196,60,0.16);border-color:rgba(255,211,90,0.55);color:#ffe08a;}
-  #daily-toggle:hover{background:rgba(255,196,60,0.32);}
-  #app.daily-mode #dock,#app.daily-mode #comet-ui,#app.daily-mode #microhint,#app.daily-mode #view-panel,
-  #app.daily-mode #data-drawer,#app.daily-mode #edit-panel,#app.daily-mode #probe-status,#app.daily-mode #msg-status{display:none !important;}
-  #app.daily-mode #coach{top:84px;width:318px;max-height:calc(100vh - 100px);overflow-y:auto;}   /* under the HUD title */
+  #app.daily-mode #dock,#app.daily-mode #microhint,#app.daily-mode #probe-status,#app.daily-mode #msg-status{display:none !important;}
   body.daily-on #fb-pill{left:auto !important;right:10px !important;}
   .dd-chips{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 9px;}
   .dd-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--pnl-line);border-radius:999px;padding:3px 9px;font:600 11px/1 system-ui,sans-serif;color:var(--soft);background:rgba(20,26,40,0.6);}
@@ -355,6 +342,92 @@
   .dd-btns .btn{flex:1;text-align:center;padding:8px 6px;}
   .dd-count{font:500 11px/1.5 ui-monospace,Menlo,monospace;color:var(--dim);text-align:center;margin:7px 0 0 !important;}
 
+
+  /* ---- The rail: one panel, four tabs, instead of a dozen floating cards ---- */
+  #rail{position:absolute;top:0;left:0;bottom:0;width:320px;z-index:9;display:flex;flex-direction:column;
+    background:rgba(15,21,34,0.94);border-right:1px solid var(--pnl-line);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);
+    font:500 12px/1.4 system-ui,sans-serif;color:var(--ink);}
+  #rail-handle{display:none;}
+  #rail-tabs{display:flex;gap:4px;padding:10px 12px;border-bottom:1px solid var(--pnl-line);flex:none;}
+  #rail-tabs button{flex:1;display:flex;align-items:center;justify-content:center;gap:6px;padding:10px 0;border-radius:9px;
+    border:1px solid transparent;background:transparent;color:var(--soft);font:600 12px/1 system-ui,sans-serif;cursor:pointer;}
+  #rail-tabs button svg{width:15px;height:15px;}
+  #rail-tabs button:hover{color:#fff;background:rgba(120,150,210,0.12);}
+  #rail-tabs button.on{color:var(--ink);background:rgba(111,157,255,0.18);border-color:rgba(150,180,255,0.5);}
+  #rail-body{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;}
+  #rail-body section{display:flex;flex-direction:column;gap:8px;padding:12px;}
+  #rail-body section[hidden]{display:none;}
+  .rail-h{font:700 9.5px/1 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:var(--dim);padding:6px 2px 0;}
+  .rail-note{font:500 11.5px/1.5 system-ui,sans-serif;color:var(--soft);padding:10px 11px;border:1px dashed var(--pnl-line);border-radius:10px;}
+  .rail-note[hidden]{display:none;}
+  /* panels that used to float now sit in the flow of their tab */
+  #rail #coach,#rail #edit-panel,#rail #launch-panel,#rail #view-panel,#rail #voy-panel,#rail #data-drawer,
+  #rail #msg-panel,#rail #add-panel,#rail #comet-panel{position:static !important;width:auto !important;max-width:none !important;
+    max-height:none !important;transform:none !important;margin:0 !important;left:auto !important;right:auto !important;top:auto !important;bottom:auto !important;}
+  #rail .panel[hidden]{display:none !important;}
+  #rail #coach{padding:12px 13px 12px;}
+  #rail #coach:not([hidden]) ~ #play-list, #rail #voy-panel:not([hidden]) ~ #play-list{display:none;}   /* while a lesson, the daily or Voyager runs, the card has the tab */
+  #daily-card{display:flex;flex-direction:column;gap:7px;padding:13px 14px;border-radius:12px;border:1px solid rgba(255,211,90,0.55);background:rgba(255,196,60,0.10);}
+  #daily-card-eyebrow{display:flex;justify-content:space-between;align-items:center;font:700 9.5px/1 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#ffd35a;}
+  #daily-card-streak{font:600 10.5px/1 system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--soft);}
+  #daily-card-title{font:700 15px/1.25 system-ui,sans-serif;color:#fff;}
+  #daily-card-sub{font:500 11.5px/1.45 system-ui,sans-serif;color:var(--soft);}
+  #daily-card-btns{display:flex;gap:6px;margin-top:3px;}
+  #daily-card-btns .btn{text-align:center;text-decoration:none;}
+  #daily-card-btns #daily-go{flex:1;}
+  #app.daily-mode #daily-card, #rail #coach:not([hidden]) ~ #daily-card, #rail #voy-panel:not([hidden]) ~ #daily-card{display:none;}
+  /* lessons and missions: one list, one row style */
+  #learn-list .lcard{margin-top:0;}
+  #learn-list .lcard .q::before, #mission-list .act::before{content:'Lesson';display:inline-block;margin-right:8px;padding:3px 7px;border-radius:999px;
+    border:1px solid var(--pnl-line);font:700 9px/1 system-ui,sans-serif;letter-spacing:.12em;text-transform:uppercase;color:var(--dim);vertical-align:1px;}
+  #mission-list .act::before{content:'Mission';}
+  #learn-list, #mission-list, #tool-list{display:flex;flex-direction:column;gap:6px;}
+  #mission-list .act, #tool-list .act{display:block;width:100%;text-align:left;white-space:normal;padding:9px 11px;font-weight:700;color:#fff;}
+  #view-acts{display:flex;flex-direction:column;gap:6px;}
+  #view-acts .btn{display:flex;justify-content:space-between;align-items:center;text-align:left;}
+  #view-acts kbd{font:500 10.5px/1 ui-monospace,Menlo,monospace;color:var(--dim);}
+  #keys{display:flex;flex-direction:column;gap:5px;padding:0 4px;}
+  #keys div{display:flex;justify-content:space-between;font:500 11px/1.4 ui-monospace,Menlo,monospace;color:var(--soft);}
+  #keys div span:last-child{color:var(--dim);}
+  #rail #data-drawer{font-size:10.5px;overflow-x:auto;}
+  #rail .vo{margin-top:0;}
+  /* the mode pill: where you are, and the way out */
+  #mode-pill{position:absolute;top:14px;right:16px;z-index:8;display:inline-flex;align-items:center;
+    padding:7px 13px;border-radius:999px;background:var(--pnl);border:1px solid var(--pnl-line);font:600 12px/1 system-ui,sans-serif;color:var(--ink);
+    -webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);white-space:nowrap;}
+  #mode-exit{margin-left:10px;padding:0 0 0 10px;border:0;border-left:1px solid var(--pnl-line);background:none;color:var(--acc);font:600 12px/1 system-ui,sans-serif;cursor:pointer;}
+  #mode-exit:hover{color:#fff;}
+  #mode-exit[hidden]{display:none;}
+  /* the canvas chrome makes room for the rail */
+  #ss-nav{left:336px;}
+  #hud{left:336px;}
+  #moon-exit{left:336px;}
+  #comet-ui{display:none !important;}
+  #dock{left:calc(50% + 160px);}
+  #events,#microhint,#probe-status,#place-status,#msg-status{left:calc(50% + 160px);}
+  #dock .chip{flex-direction:column;gap:3px;padding:3px 5px 4px;}
+  .chip .nm{display:block !important;position:static;transform:none;margin:0;background:none;border:0;padding:0;font:600 9.5px/1 system-ui,sans-serif;color:var(--soft);}
+  .chip.on .nm{color:#fff;}
+  body>#fb-pill{left:332px !important;}
+  @media(max-width:760px){
+    /* the rail is a bottom sheet with three heights; the sky lives in the space above it */
+    #rail{top:auto;right:0;bottom:0;width:auto;height:50vh;border-right:0;border-top:1px solid var(--pnl-line);border-radius:16px 16px 0 0;transition:height .18s ease;}
+    #rail.peek{height:58px;} #rail.half{height:50vh;} #rail.full{height:88vh;}
+    #rail-handle{display:flex;justify-content:center;align-items:center;height:16px;flex:none;border:0;background:none;cursor:pointer;padding:0;}
+    #rail-handle span{width:36px;height:4px;border-radius:2px;background:rgba(150,170,210,0.35);}
+    #rail-tabs{padding:4px 10px 8px;}
+    #rail.peek #rail-body{display:none;}
+    #rail.full ~ #dock{display:none;}                     /* a full sheet is for reading; the dock comes back at half */
+    #ss-nav{left:16px;} #hud{left:16px;} #moon-exit{left:16px;}
+    #mode-pill{top:50px;right:12px;}
+    #dock{left:50%;bottom:calc(var(--sheet-h, 50vh) + 8px);flex-wrap:nowrap;max-width:96vw;overflow-x:auto;justify-content:flex-start;}
+    #dock-bodies{flex-basis:auto;flex-wrap:nowrap;}
+    #dock .dgroup + .dgroup{border-left:1px solid rgba(150,170,210,0.18);padding-left:10px;}
+    .chip .pc{width:28px;height:24px;}
+    #events,#microhint,#probe-status,#place-status,#msg-status{left:50%;}
+    body>#fb-pill{left:10px !important;}
+  }
+
   /* ---- the article below the sim ---- */
   #about{max-width:720px;margin:0 auto;padding:70px 20px 90px;
     font:400 15px/1.7 system-ui,sans-serif;color:var(--soft);}
@@ -402,21 +475,11 @@
     /* touch scrolls straight past the sim, so the About link is a
        desktop-only affordance — it collides with the comet button here */
     #ab-link{display:none;}
-    #view-panel{right:12px;}
     #hud{top:40px;}
     #hud h1{font-size:13px;}
     #time{font-size:10.5px;}
     #comet-ui{font-size:11px;}
-    #comet-panel{width:188px;}
-    #data-drawer{top:80px;font-size:10px;}
-    #dock{flex-wrap:wrap;justify-content:center;max-width:94vw;row-gap:2px;padding:6px 8px;}
-    #dock .dgroup + .dgroup{border-left:none;padding-left:0;}
-    #dock-bodies{flex-basis:100%;flex-wrap:wrap;justify-content:center;}
-    .chip .nm{display:none !important;}  /* wrapped dock: the card title names the selection */
-    .chip .pc{width:25px;height:22px;}
     /* the wrapped dock owns the bottom on phones — the card becomes a top sheet */
-    #edit-panel{bottom:auto;top:78px;left:12px;right:12px;width:auto;max-height:calc(100vh - 350px);overflow-y:auto;}
-    #launch-panel{right:12px;}
     /* the wrapped dock is 1–3 rows tall here (--dock-h is measured by the script):
        toasts, mission chips and the pill all stack above its real top edge */
     #events{bottom:calc(var(--dock-h, 150px) + 70px);}
@@ -424,7 +487,6 @@
     #fb-pill{bottom:calc(var(--dock-h, 150px) + 24px) !important;}
     /* mission / placement chips: the top edge is taken by the stacked buttons, so they
        sit bottom-right above the dock, wrapping instead of overflowing, clear of the pill */
-    #voy-panel{right:12px;bottom:calc(var(--dock-h, 150px) + 24px);width:206px;padding:7px 9px 7px;}
     #voy-icon{width:36px;height:25px;}
     #voy-stats .vs{padding:4px 7px 3px;}
     #voy-log{margin-top:6px;padding-top:4px;}
@@ -432,14 +494,6 @@
     #probe-status, #msg-status, #place-status{top:auto;bottom:calc(var(--dock-h, 150px) + 24px);left:auto;right:12px;transform:none;
       max-width:calc(100vw - 122px);white-space:normal;text-align:left;font-size:11.5px;border-radius:16px;}
     #microhint{max-width:88vw;text-align:center;top:100px;}
-    #learn-menu{width:236px;}
-    /* two top buttons don't fit beside the nav on a phone: stack them */
-    #top-btns{flex-direction:column;align-items:flex-end;gap:6px;}
-    /* the coach becomes a top sheet on phones, below the stacked buttons */
-    #coach{top:104px;left:12px;right:12px;width:auto;max-height:calc(100vh - 340px);overflow-y:auto;}
-    /* Daily Orbit: the sandbox chrome is gone, so the card is a bottom sheet and the board sits in the top half */
-    #app.daily-mode #coach{top:auto;bottom:10px;width:auto;max-height:48vh;}
-    #app.daily-mode #events{bottom:calc(48vh + 22px);}
     body.daily-on #fb-pill{display:none !important;}   /* (the pill sits outside #app) */
   }
   /* Accessibility: honor prefers-reduced-motion — calm decorative CSS
@@ -457,48 +511,80 @@
 <body>
 <div id="app">
 <canvas id="c"></canvas>
-<nav id="ss-nav">
-  <a href="../">← Limestone Games</a>
-  <a href="../arcade/">All arcade games</a>
-  <a id="ab-link" href="#about">About this simulator ▾</a>
-</nav>
-<div id="comet-ui">
-  <div id="top-btns">
-    <button id="daily-toggle" class="btn" type="button" title="Today's sky, one probe, six launches — the daily launch puzzle, same board for everyone">🚀 Daily Orbit</button>
-    <button id="learn-toggle" class="btn" type="button" title="Guided experiments — a question, your prediction, and the real physics answering it">🎓 What if?</button>
-    <button id="comet-toggle" class="btn" type="button">⚡ Actions ▾</button>
+<aside id="rail" class="half" aria-label="Simulator panel">
+  <button id="rail-handle" type="button" aria-label="Expand or collapse the panel"><span></span></button>
+  <nav id="rail-tabs" aria-label="Panel tabs">
+    <button type="button" data-tab="play" class="on"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M5 3.5 L15.5 10 L5 16.5 Z" fill="currentColor"/></svg><span>Play</span></button>
+    <button type="button" data-tab="build"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><path d="M10 3v14M3 10h14"/><circle cx="10" cy="10" r="7"/></svg><span>Build</span></button>
+    <button type="button" data-tab="inspect"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"><circle cx="9" cy="9" r="5.5"/><path d="M13 13l4 4"/></svg><span>Inspect</span></button>
+    <button type="button" data-tab="view"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M3 10s3-5 7-5 7 5 7 5-3 5-7 5-7-5-7-5z"/><circle cx="10" cy="10" r="2.2"/></svg><span>View</span></button>
+  </nav>
+  <div id="rail-body">
+    <section id="tab-play">
+<div id="coach" class="panel" hidden>
+  <div id="coach-eyebrow"><span id="coach-step"></span><button id="coach-close" type="button" aria-label="End lesson">×</button></div>
+  <div id="coach-title"></div>
+  <div id="coach-body"></div>
+  <div id="coach-btns"></div>
+</div>
+<div id="voy-panel" class="panel" hidden>
+  <div id="voy-head">
+    <svg id="voy-icon" viewBox="0 0 52 36" aria-hidden="true">
+      <line x1="2" y1="19" x2="20" y2="19" stroke="currentColor" stroke-width="1.2"/>
+      <circle cx="5" cy="19" r="1.7" fill="currentColor"/><circle cx="9.5" cy="19" r="1.7" fill="currentColor"/><circle cx="14" cy="19" r="1.7" fill="currentColor"/>
+      <rect x="20" y="15.5" width="7" height="7" rx="1" fill="currentColor" opacity="0.9"/>
+      <path d="M27 8.5 Q43 19 27 29.5 Q31.5 19 27 8.5 Z" fill="currentColor" opacity="0.85"/>
+      <line x1="27" y1="19" x2="37" y2="19" stroke="currentColor" stroke-width="1"/><circle cx="37.5" cy="19" r="1.3" fill="currentColor"/>
+      <line x1="24" y1="15.5" x2="50" y2="3" stroke="currentColor" stroke-width="0.8" opacity="0.8"/>
+      <line x1="22" y1="22.5" x2="12" y2="33" stroke="currentColor" stroke-width="0.9" opacity="0.8"/>
+    </svg>
+    <div id="voy-title"><b id="voy-name">Voyager 1</b><div id="voy-phase"></div></div>
+    <button id="voy-cancel" type="button" aria-label="End the mission">×</button>
   </div>
-  <div id="learn-menu" class="panel" hidden>
-    <div id="learn-title">🎓 What if?</div>
-    <div id="learn-sub">Guided experiments — make a prediction, run it on real gravity, see the number that answers it.</div>
-    <div id="learn-list"></div>
+  <div id="voy-stats">
+    <div class="vs"><span class="v" id="voy-date"></span><span class="l">mission clock</span></div>
+    <div class="vs"><span class="v" id="voy-au"></span><span class="l">from the Sun</span></div>
+    <div class="vs"><span class="v" id="voy-v"></span><span class="l" id="voy-v-l">speed · esc</span></div>
+    <div class="vs"><span class="v" id="voy-light"></span><span class="l">light to Earth</span></div>
   </div>
-  <div id="action-menu" class="panel" hidden>
-    <button id="act-add" class="btn act" type="button" title="Place a new planet anywhere: pick its mass, then click where it should orbit. It gets a circular orbit at that distance and joins the physics for real.">➕ Add a planet…</button>
-    <button id="act-comet" class="btn act" type="button" title="Open the comet designer — set mass, speed, direction and aim, then fire [C]">☄ Launch a comet…</button>
-    <button id="act-random" class="btn act" type="button" title="A random comet from a random direction — click repeatedly">🎲 Random comet</button>
-    <button id="act-storm" class="btn act" type="button" title="~100 icy specks from every direction. Massless — they never disturb the planets.">🌩 Comet storm</button>
-    <button id="act-star" class="btn act" type="button" title="A quarter-solar-mass intruder crosses the system — orbits bend as it passes, and anything it sweeps too close to is consumed">⭐ Rogue star flyby</button>
-    <button id="act-probe" class="btn act" type="button" title="Launch a spacecraft from Earth to Mars on a real Hohmann transfer orbit — it waits for the launch window, then coasts on gravity for months while the planets keep moving">🚀 Probe to Mars</button>
-    <button id="act-jupiter" class="btn act" type="button" title="Launch a spacecraft from Earth to Jupiter on a real Hohmann transfer — a ~2.7-year cruise out past the asteroid belt, waiting for the launch window first">🪐 Probe to Jupiter</button>
-    <button id="act-saturn" class="btn act" type="button" title="Launch a spacecraft from Earth to Saturn on a real Hohmann transfer — a ~6-year direct cruise to the ringed planet">🪐 Probe to Saturn</button>
-    <button id="act-voyager" class="btn act" type="button" title="Fly Voyager 1 from its 5 September 1977 launch to today: Jupiter and Saturn flybys, escape from the Sun, then the long coast against the real mission's milestones">🛰 Voyager 1 — 1977 → today</button>
-    <button id="act-voyager2" class="btn act" type="button" title="Fly Voyager 2 from 20 August 1977 to today: Jupiter, Saturn and Uranus, with the small course-correction burns the route needs, then out past the heliopause (Neptune doesn't close from this approximate 1977 arrangement — the card says so)">🛰 Voyager 2 — three giants → today</button>
-    <button id="act-moon" class="btn act" type="button" title="Fly a probe from Earth to the Moon in a to-scale Earth–Moon view — see how far and how small the Moon really is">🌙 Probe to the Moon</button>
-    <button id="act-msg" class="btn act" type="button" title="Send a radio pulse from Earth at the true speed of light — time holds still while it crosses">📡 Lightspeed message…</button>
+  <div id="voy-log"></div>
+  <div id="voy-today" hidden>
+    <div id="voy-today-title"></div>
+    <table id="voy-cmp"><tr><th></th><th>this flight</th><th>real</th></tr>
+      <tr><td>distance</td><td id="vc-au-s"></td><td id="vc-au-r"></td></tr>
+      <tr><td>speed</td><td id="vc-v-s"></td><td id="vc-v-r"></td></tr>
+      <tr><td>light-time</td><td id="vc-l-s"></td><td id="vc-l-r"></td></tr></table>
+    <div id="voy-today-note"></div>
+    <div id="voy-today-btns"><button id="voy-keep" class="btn" type="button">Keep flying</button><button id="voy-done" class="btn primary" type="button">Done ✓</button></div>
   </div>
+</div>
+      <div id="daily-card">
+        <div id="daily-card-eyebrow"><span>Daily Orbit</span><span id="daily-card-streak"></span></div>
+        <div id="daily-card-title">Today's sky, one probe, six launches</div>
+        <div id="daily-card-sub">The planets where they really are today. The same board for everyone, a new target at 00:00 UTC.</div>
+        <div id="daily-card-btns"><button id="daily-go" class="btn primary" type="button">Launch today's probe</button><a class="btn" href="#daily">How to play</a></div>
+      </div>
   <div id="msg-panel" class="panel" hidden>
     <div id="msg-title">📡 Lightspeed message</div>
     <button id="msg-mars" class="btn act" type="button" title="Send a pulse from Earth to Mars at the speed of light">→ Mars <span class="lm" id="lm-mars"></span></button>
     <button id="msg-jupiter" class="btn act" type="button" title="Send a pulse from Earth to Jupiter at the speed of light">→ Jupiter <span class="lm" id="lm-jupiter"></span></button>
     <div id="msg-note">Time holds still while light crosses — 1&nbsp;s here = 3 light-minutes</div>
   </div>
-  <div id="add-panel" class="panel" hidden>
-    <div id="add-title">➕ New planet</div>
-    <label>Mass <span id="ap-val"></span><input id="ap-slider" type="range" min="0" max="1000" value="455"></label>
-    <div id="add-note">Click anywhere in the system to place it. It starts on a circular orbit there — open <i>Adjust</i> afterwards to stretch it.</div>
-    <button id="add-cancel" class="btn" type="button">Cancel</button>
-  </div>
+      <div id="play-list">
+        <div class="rail-h">Lessons and missions</div>
+        <div id="learn-list"></div>
+        <div id="mission-list">
+          <button id="act-probe" class="btn act" type="button" title="Launch a spacecraft from Earth to Mars on a real Hohmann transfer orbit — it waits for the launch window, then coasts on gravity for months while the planets keep moving">🚀 Probe to Mars</button>
+          <button id="act-jupiter" class="btn act" type="button" title="Launch a spacecraft from Earth to Jupiter on a real Hohmann transfer — a ~2.7-year cruise out past the asteroid belt, waiting for the launch window first">🪐 Probe to Jupiter</button>
+          <button id="act-saturn" class="btn act" type="button" title="Launch a spacecraft from Earth to Saturn on a real Hohmann transfer — a ~6-year direct cruise to the ringed planet">🪐 Probe to Saturn</button>
+          <button id="act-voyager" class="btn act" type="button" title="Fly Voyager 1 from its 5 September 1977 launch to today: Jupiter and Saturn flybys, escape from the Sun, then the long coast against the real mission's milestones">🛰 Voyager 1 — 1977 → today</button>
+          <button id="act-voyager2" class="btn act" type="button" title="Fly Voyager 2 from 20 August 1977 to today: Jupiter, Saturn and Uranus, with the small course-correction burns the route needs, then out past the heliopause (Neptune doesn't close from this approximate 1977 arrangement — the card says so)">🛰 Voyager 2 — three giants → today</button>
+          <button id="act-moon" class="btn act" type="button" title="Fly a probe from Earth to the Moon in a to-scale Earth–Moon view — see how far and how small the Moon really is">🌙 Probe to the Moon</button>
+          <button id="act-msg" class="btn act" type="button" title="Send a radio pulse from Earth at the true speed of light — time holds still while it crosses">📡 Lightspeed message…</button>
+        </div>
+      </div>
+    </section>
+    <section id="tab-build" hidden>
   <div id="comet-panel" class="panel" hidden>
     <label>Mass <span id="m-val"></span><input id="m-slider" type="range" min="0" max="1000" value="90"></label>
     <label>Speed <span id="s-val"></span><input id="s-slider" type="range" min="0" max="1000" value="320"></label>
@@ -509,17 +595,23 @@
       <button id="comet-random" class="btn" type="button" title="Random direction &amp; aim — click repeatedly">🎲 Random</button>
     </div>
   </div>
-</div>
-<div id="hud">
-  <h1>Solar System Simulator</h1>
-  <div id="time"><span id="time-t">t = 0.00 yr</span><span id="drift" title="total energy drift"></span></div>
-</div>
-<div id="data-drawer" class="panel" hidden>
-  <div id="rows"></div>
-  <div class="row dim" id="health"></div>
-  <div class="row dim" id="view"></div>
-  <div class="row dim">[Space] pause · [↑↓] speed · [E] Earth · [C] comet · [D] data · [M] mute · [0] view · [R] reset</div>
-</div>
+  <div id="add-panel" class="panel" hidden>
+    <div id="add-title">➕ New planet</div>
+    <label>Mass <span id="ap-val"></span><input id="ap-slider" type="range" min="0" max="1000" value="455"></label>
+    <div id="add-note">Click anywhere in the system to place it. It starts on a circular orbit there — open <i>Adjust</i> afterwards to stretch it.</div>
+    <button id="add-cancel" class="btn" type="button">Cancel</button>
+  </div>
+      <div class="rail-h">Sandbox tools</div>
+      <div id="tool-list">
+        <button id="act-add" class="btn act" type="button" title="Place a new planet anywhere: pick its mass, then click where it should orbit. It gets a circular orbit at that distance and joins the physics for real.">➕ Add a planet…</button>
+        <button id="act-comet" class="btn act" type="button" title="Open the comet designer — set mass, speed, direction and aim, then fire [C]">☄ Launch a comet…</button>
+        <button id="act-random" class="btn act" type="button" title="A random comet from a random direction — click repeatedly">🎲 Random comet</button>
+        <button id="act-storm" class="btn act" type="button" title="~100 icy specks from every direction. Massless — they never disturb the planets.">🌩 Comet storm</button>
+        <button id="act-star" class="btn act" type="button" title="A quarter-solar-mass intruder crosses the system — orbits bend as it passes, and anything it sweeps too close to is consumed">⭐ Rogue star flyby</button>
+      </div>
+    </section>
+    <section id="tab-inspect" hidden>
+      <div id="inspect-empty" class="rail-note">Tap a body on the canvas or in the strip below to inspect it — its numbers, its orbit, and the controls to change them.</div>
 <div id="edit-panel" class="panel" hidden>
   <div id="edit-head"><b id="edit-name"></b><button id="edit-close" type="button" aria-label="Close">×</button></div>
   <div id="sel-hero" hidden>
@@ -536,6 +628,7 @@
     <div class="st"><span class="v" id="st-ecc"></span><span class="l">eccentricity</span></div>
     <div class="st"><span class="v" id="st-esc"></span><span class="l" id="st-esc-l">escape speed here</span></div>
   </div>
+  <button id="sel-visit" class="btn primary" type="button" hidden>Visit Earth orbit — satellites and launches</button>
   <button id="sel-adjust" class="btn" type="button">⚙ Adjust this body</button>
   <div id="sel-edit" hidden>
   <label>Mass <span id="em-val"></span><input id="em-slider" type="range" min="0" max="1000" value="500"></label>
@@ -569,6 +662,47 @@
   <button id="launch-go" class="btn primary" type="button">Launch 🚀</button>
   <div id="ev-note">orbit altitudes real · speeds illustrative</div>
 </div>
+    </section>
+    <section id="tab-view" hidden>
+<div id="view-panel" class="panel">
+    <button id="vo-scale" class="btn vo" type="button" title="Compressed squeezes the outer orbits so all eight planets fit on screen. True scale spaces the orbits honestly — mostly emptiness; zoom in to find the inner planets."></button>
+  <button id="vo-guides" class="btn vo" type="button" title="Faint ellipses tracing each planet's current orbit — they follow nudges and close encounters"></button>
+  <button id="vo-labels" class="btn vo" type="button" title="Name tags on the bodies"></button>
+  <button id="vo-trails" class="btn vo" type="button" title="Fading path history behind each planet"></button>
+  <button id="vo-vectors" class="btn vo" type="button" title="Green: which way each planet is moving and how fast. Orange: which way gravity is pulling it and how hard. Lengths are compressed so the outer planets stay visible — select a body to see its numbers."></button>
+</div>
+      <div id="view-acts">
+        <button class="btn" type="button" data-act="resetview"><span>Whole system</span><kbd>0</kbd></button>
+        <button class="btn" type="button" data-act="data"><span>Data table</span><kbd>D</kbd></button>
+        <button class="btn" type="button" data-act="reset"><span>Reset the system</span><kbd>R</kbd></button>
+      </div>
+<div id="data-drawer" class="panel" hidden>
+  <div id="rows"></div>
+  <div class="row dim" id="health"></div>
+  <div class="row dim" id="view"></div>
+</div>
+      <div class="rail-h">Keys</div>
+      <div id="keys">
+        <div><span>Space</span><span>pause</span></div><div><span>↑ ↓</span><span>faster · slower</span></div><div><span>E</span><span>Earth orbit</span></div><div><span>0</span><span>whole system</span></div><div><span>C</span><span>launch a comet</span></div><div><span>M</span><span>mute</span></div><div><span>Esc</span><span>leave a lesson or a mode</span></div>
+      </div>
+    </section>
+  </div>
+</aside>
+<div id="mode-pill"><span id="mode-name">System</span><button id="mode-exit" type="button" hidden>← Back to the system</button></div>
+<div id="comet-ui" hidden>
+  <div id="top-btns"><button id="daily-toggle" class="btn" type="button" title="Today's sky, one probe, six launches — the daily launch puzzle, same board for everyone">🚀 Daily Orbit</button><button id="learn-toggle" class="btn" type="button" title="Guided experiments — a question, your prediction, and the real physics answering it">🎓 What if?</button><button id="comet-toggle" class="btn" type="button">Actions</button></div>
+  <div id="learn-menu" class="panel" hidden></div>
+  <div id="action-menu" class="panel" hidden></div>
+</div>
+<nav id="ss-nav">
+  <a href="../">← Limestone Games</a>
+  <a href="../arcade/">All arcade games</a>
+  <a id="ab-link" href="#about">About this simulator ▾</a>
+</nav>
+<div id="hud">
+  <h1>Solar System Simulator</h1>
+  <div id="time"><span id="time-t">t = 0.00 yr</span><span id="drift" title="total energy drift"></span></div>
+</div>
 <div id="events"></div>
 <div id="dock">
   <div class="dgroup">
@@ -578,63 +712,12 @@
     <span id="rate">×6</span>
   </div>
   <div class="dgroup" id="dock-bodies"></div>
-  <div class="dgroup">
-    <button type="button" data-act="resetview" title="Whole system [0]"><svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="8" fill="none" stroke="currentColor" stroke-width="2.1"/><circle cx="12" cy="12" r="2.7"/></svg></button>
-    <button type="button" data-act="reset" title="Reset the system [R]"><svg viewBox="0 0 24 24"><path d="M18.9 15.4a7.6 7.6 0 1 1 .7-6.4" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/><polygon points="20.9,4.4 20.3,10.5 15.1,7.3"/></svg></button>
-    <button type="button" data-act="data" title="Data table [D]"><svg viewBox="0 0 24 24"><rect x="4" y="4" width="7.2" height="7.2" rx="1.6"/><rect x="12.8" y="4" width="7.2" height="7.2" rx="1.6"/><rect x="4" y="12.8" width="7.2" height="7.2" rx="1.6"/><rect x="12.8" y="12.8" width="7.2" height="7.2" rx="1.6"/></svg></button>
-    <button type="button" data-act="view" title="View options"><svg viewBox="0 0 24 24"><path d="M4 7h16M4 12h16M4 17h16" stroke="currentColor" stroke-width="2.1" stroke-linecap="round" fill="none"/><circle cx="9.5" cy="7" r="2.5"/><circle cx="15" cy="12" r="2.5"/><circle cx="8" cy="17" r="2.5"/></svg></button>
-  </div>
-</div>
-<div id="view-panel" class="panel" hidden>
-  <div id="view-title">View</div>
-  <button id="vo-scale" class="btn vo" type="button" title="Compressed squeezes the outer orbits so all eight planets fit on screen. True scale spaces the orbits honestly — mostly emptiness; zoom in to find the inner planets."></button>
-  <button id="vo-guides" class="btn vo" type="button" title="Faint ellipses tracing each planet's current orbit — they follow nudges and close encounters"></button>
-  <button id="vo-labels" class="btn vo" type="button" title="Name tags on the bodies"></button>
-  <button id="vo-trails" class="btn vo" type="button" title="Fading path history behind each planet"></button>
-  <button id="vo-vectors" class="btn vo" type="button" title="Green: which way each planet is moving and how fast. Orange: which way gravity is pulling it and how hard. Lengths are compressed so the outer planets stay visible — select a body to see its numbers."></button>
 </div>
 <div id="microhint" hidden>Scroll to zoom · click a body to inspect it · drag a planet to move it</div>
 <button id="moon-exit" type="button" hidden>← Back to the system</button>
 <div id="msg-status" hidden><span id="msg-text"></span><button id="msg-cancel" type="button" aria-label="Cancel transmission">×</button></div>
 <div id="probe-status" hidden><span id="probe-text"></span><button id="probe-cancel" type="button" aria-label="Abort mission">×</button></div>
-<div id="voy-panel" class="panel" hidden>
-  <div id="voy-head">
-    <svg id="voy-icon" viewBox="0 0 52 36" aria-hidden="true">
-      <line x1="2" y1="19" x2="20" y2="19" stroke="currentColor" stroke-width="1.2"/>
-      <circle cx="5" cy="19" r="1.7" fill="currentColor"/><circle cx="9.5" cy="19" r="1.7" fill="currentColor"/><circle cx="14" cy="19" r="1.7" fill="currentColor"/>
-      <rect x="20" y="15.5" width="7" height="7" rx="1" fill="currentColor" opacity="0.9"/>
-      <path d="M27 8.5 Q43 19 27 29.5 Q31.5 19 27 8.5 Z" fill="currentColor" opacity="0.85"/>
-      <line x1="27" y1="19" x2="37" y2="19" stroke="currentColor" stroke-width="1"/><circle cx="37.5" cy="19" r="1.3" fill="currentColor"/>
-      <line x1="24" y1="15.5" x2="50" y2="3" stroke="currentColor" stroke-width="0.8" opacity="0.8"/>
-      <line x1="22" y1="22.5" x2="12" y2="33" stroke="currentColor" stroke-width="0.9" opacity="0.8"/>
-    </svg>
-    <div id="voy-title"><b id="voy-name">Voyager 1</b><div id="voy-phase"></div></div>
-    <button id="voy-cancel" type="button" aria-label="End the mission">×</button>
-  </div>
-  <div id="voy-stats">
-    <div class="vs"><span class="v" id="voy-date"></span><span class="l">mission clock</span></div>
-    <div class="vs"><span class="v" id="voy-au"></span><span class="l">from the Sun</span></div>
-    <div class="vs"><span class="v" id="voy-v"></span><span class="l" id="voy-v-l">speed · esc</span></div>
-    <div class="vs"><span class="v" id="voy-light"></span><span class="l">light to Earth</span></div>
-  </div>
-  <div id="voy-log"></div>
-  <div id="voy-today" hidden>
-    <div id="voy-today-title"></div>
-    <table id="voy-cmp"><tr><th></th><th>this flight</th><th>real</th></tr>
-      <tr><td>distance</td><td id="vc-au-s"></td><td id="vc-au-r"></td></tr>
-      <tr><td>speed</td><td id="vc-v-s"></td><td id="vc-v-r"></td></tr>
-      <tr><td>light-time</td><td id="vc-l-s"></td><td id="vc-l-r"></td></tr></table>
-    <div id="voy-today-note"></div>
-    <div id="voy-today-btns"><button id="voy-keep" class="btn" type="button">Keep flying</button><button id="voy-done" class="btn primary" type="button">Done ✓</button></div>
-  </div>
-</div>
 <div id="place-status" hidden><span id="place-text"></span><button id="place-cancel" type="button" aria-label="Cancel placing">×</button></div>
-<div id="coach" class="panel" hidden>
-  <div id="coach-eyebrow"><span id="coach-step"></span><button id="coach-close" type="button" aria-label="End lesson">×</button></div>
-  <div id="coach-title"></div>
-  <div id="coach-body"></div>
-  <div id="coach-btns"></div>
-</div>
 </div>
 
 <article id="about" aria-label="About this simulator">
@@ -656,7 +739,7 @@
     <div class="ab-col"><h3>Stretched to be visible</h3>
       <ul>
         <li><b>Drawn sizes</b> — at true scale Earth would be far thinner than a pixel</li>
-        <li><b>Orbit spacing</b> is gently compressed so all eight planets fit on screen — the dock's view options can switch to true-scale distances</li>
+        <li><b>Orbit spacing</b> is gently compressed so all eight planets fit on screen — the View tab can switch to true-scale distances</li>
         <li>Everything orbits in <b>one flat plane</b></li>
         <li>Satellite <b>speeds</b> in Earth view are sped up to stay watchable</li>
         <li><b>Time</b> — a year passes in seconds, faster at higher rates</li>
@@ -666,13 +749,13 @@
 
   <h2>A dozen-plus experiments worth running</h2>
   <ol>
-    <li><b>Put a comet into Jupiter.</b> Open ⚡ Actions → ☄ Launch a comet, aim with the direction and aim sliders, and fire. A hit flashes on impact and lands in the event feed.</li>
+    <li><b>Put a comet into Jupiter.</b> Open Build → Launch a comet, aim with the direction and aim sliders, and fire. A hit flashes on impact and lands in the event feed.</li>
     <li><b>Fire the comet storm.</b> ~100 random specks at once — then watch the feed report captures, ejections, and impacts as gravity sorts them out.</li>
     <li><b>Invite a rogue star.</b> A quarter-solar-mass intruder crosses the system: orbits bend as it passes, and anything it sweeps too close to is consumed — the event feed keeps score of the damage.</li>
-    <li><b>Fly a probe to Mars, Jupiter, or Saturn.</b> ⚡ Actions → Probe to Mars: the spacecraft waits for the launch window (Mars has to lead Earth by about 44°), then coasts along a real Hohmann transfer orbit for roughly eight months while the planets keep moving — arriving where Mars will be, not where it is now. <b>Jupiter</b> and <b>Saturn</b> are the same idea at grand scale: bigger launch windows and multi-year cruises out past the asteroid belt. Or open 🎓 <b>What if?</b> and take the Mars launch controls yourself — the rocket's push is fixed, and only the timing is yours.</li>
-    <li><b>Fly the Voyagers from 1977 to today.</b> ⚡ Actions → Voyager 1 arranges the four giant planets in the rare arc they formed in 1977 — an alignment that comes around once every ~176 years — and launches on 5 September 1977. The probe coasts to Jupiter, swings a few planet radii past it in a slow-motion close-up (the real one passed 349,000 km out in March 1979), is bent onto Saturn for a second assist (November 1980), and comes out above the Sun's escape speed. No engine fires after launch: the speed it stole from the two planets' orbital motion is what carries it out. <b>Voyager 2</b> flies Jupiter, Saturn and Uranus and, like the real one, needs small course-correction burns between planets to thread each flyby; the inlay logs every burn in metres per second. Its fourth target, Neptune, does not close from this approximate 1977 arrangement — the planets here sit on circular orbits at rounded 1977 longitudes, and a fourth flyby needs the true ephemerides — so the card says so rather than pretending. A small mission card keeps the clock, distance, speed against the local escape speed, light-time and a running log out of the way of the view, and at today's date it sets this flight beside the real spacecraft's. Every number is the simulator's own; the flyby distances and the escape fall out of gravity, not a script.</li>
-    <li><b>Fly a probe to the Moon.</b> ⚡ Actions → Probe to the Moon opens a to-scale Earth–Moon view — Earth and the Moon at their true relative size and distance, with the geostationary-satellite ring drawn in for contrast. The probe rides a real translunar trajectory: injected at about 10.8 km/s (the actual Apollo departure speed) and coasting three days on Earth's and the Moon's gravity.</li>
-    <li><b>Send a lightspeed message.</b> ⚡ Actions → Lightspeed message: a radio pulse leaves Earth for Mars (3 to 22 light-minutes away, depending on where the orbits stand) or Jupiter (33 to 54). The planets hold still while it crawls — because at any speed where you can see planets move, light is effectively instantaneous.</li>
+    <li><b>Fly a probe to Mars, Jupiter, or Saturn.</b> Play → Probe to Mars: the spacecraft waits for the launch window (Mars has to lead Earth by about 44°), then coasts along a real Hohmann transfer orbit for roughly eight months while the planets keep moving — arriving where Mars will be, not where it is now. <b>Jupiter</b> and <b>Saturn</b> are the same idea at grand scale: bigger launch windows and multi-year cruises out past the asteroid belt. Or pick the Mars lesson in Play and take the launch controls yourself — the rocket's push is fixed, and only the timing is yours.</li>
+    <li><b>Fly the Voyagers from 1977 to today.</b> Play → Voyager 1 arranges the four giant planets in the rare arc they formed in 1977 — an alignment that comes around once every ~176 years — and launches on 5 September 1977. The probe coasts to Jupiter, swings a few planet radii past it in a slow-motion close-up (the real one passed 349,000 km out in March 1979), is bent onto Saturn for a second assist (November 1980), and comes out above the Sun's escape speed. No engine fires after launch: the speed it stole from the two planets' orbital motion is what carries it out. <b>Voyager 2</b> flies Jupiter, Saturn and Uranus and, like the real one, needs small course-correction burns between planets to thread each flyby; the inlay logs every burn in metres per second. Its fourth target, Neptune, does not close from this approximate 1977 arrangement — the planets here sit on circular orbits at rounded 1977 longitudes, and a fourth flyby needs the true ephemerides — so the card says so rather than pretending. A small mission card keeps the clock, distance, speed against the local escape speed, light-time and a running log out of the way of the view, and at today's date it sets this flight beside the real spacecraft's. Every number is the simulator's own; the flyby distances and the escape fall out of gravity, not a script.</li>
+    <li><b>Fly a probe to the Moon.</b> Play → Probe to the Moon opens a to-scale Earth–Moon view — Earth and the Moon at their true relative size and distance, with the geostationary-satellite ring drawn in for contrast. The probe rides a real translunar trajectory: injected at about 10.8 km/s (the actual Apollo departure speed) and coasting three days on Earth's and the Moon's gravity.</li>
+    <li><b>Send a lightspeed message.</b> Play → Lightspeed message: a radio pulse leaves Earth for Mars (3 to 22 light-minutes away, depending on where the orbits stand) or Jupiter (33 to 54). The planets hold still while it crawls — because at any speed where you can see planets move, light is effectively instantaneous.</li>
     <li><b>Delete the Sun.</b> Click it, open <i>Adjust this body</i>, delete. The planets fly off along near-straight lines — the leash made visible.</li>
     <li><b>Make Jupiter heavier.</b> Drag its mass slider upward and watch the rest of the system start to wobble.</li>
     <li><b>Drag Earth out to Mars's distance.</b> Grab any planet and pull: time pauses, the orbit guide previews the circle it will settle onto, and the inspector's year, perihelion and escape speed change under your hand. Let go and it orbits there — the Moon comes along. Switch on the <b>velocity &amp; gravity arrows</b> in the view options first and watch both arrows shrink as you move it outward.</li>
@@ -703,13 +786,13 @@
   </ul>
 
   <h2 id="daily">Daily Orbit — today's sky, one probe, six launches</h2>
-  <p>Every day the simulator places the planets where they <b>really are</b> on that date and picks one as the target. Press <b>🚀 Daily Orbit</b> and you get two dials — how hard the probe is pushed away from Earth, and in which direction — and six launches to get captured there. Everyone in the world gets the same board, so the result you share is a fair comparison.</p>
+  <p>Every day the simulator places the planets where they <b>really are</b> on that date and picks one as the target. Press <b>Launch today's probe</b> on the Play tab and you get two dials — how hard the probe is pushed away from Earth, and in which direction — and six launches to get captured there. Everyone in the world gets the same board, so the result you share is a fair comparison.</p>
   <p>Nothing is on rails. Each launch is flown under the same N-body gravity as the rest of the page, so Jupiter tugs on your probe, a near pass of Venus bends it, and the target keeps moving while you're in flight. The dotted preview shows the probe's path around the Sun alone; what it can't show is <b>where the planet will be when you get there</b> — that's the puzzle. After each launch the card says how far ahead or behind the target was when you crossed its orbit. Planet ahead? You were late: more speed. Planet behind? You were early: ease off.</p>
   <p><b>Par</b> is the cheapest launch the physics finds for the day, and fuel is counted the way mission planners count it: the launch burn, any mid-course correction, and the braking burn at the planet. Your probe carries a small correction tank (1.5 km/s): a launch that would miss by a little fires one Voyager-style burn on the way, and that fuel counts against you. Three stars is within 5% of par, two within 25%, one star for any arrival. When the day is over you see par's own path as a gold ghost line and the porkchop strip — fuel against flight time for every route the scan found.</p>
 
   <h2>Frequently asked questions</h2>
   <details><summary>Is this a real simulation or a looping animation?</summary><p>A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press <b>R</b> to rebuild the solar system from scratch.</p></details>
-  <details><summary>Are the sizes and distances to scale?</summary><p>The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on <b>true-scale distances</b> in the dock's view options to see the honest spacing (mostly emptiness; zoom in to find the inner planets). Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click.</p></details>
+  <details><summary>Are the sizes and distances to scale?</summary><p>The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on <b>true-scale distances</b> in the View tab to see the honest spacing (mostly emptiness; zoom in to find the inner planets). Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click.</p></details>
   <details><summary>Why does the Sun wobble?</summary><p>Because the planets pull back. The Sun and planets all orbit their common center of mass, and Jupiter is heavy enough to drag the Sun in a small circle around it — about 12 m/s, once every 12 years, in a loop slightly larger than the Sun itself. The real Sun does the same, and detecting that wobble in other stars is one of the main ways exoplanets are discovered: 51 Pegasi b, the first planet found around a Sun-like star, showed up in 1995 as a 56 m/s swing repeating every 4.2 days. The 🎓 <b>What if?</b> lesson zooms in to show the loop.</p></details>
   <details><summary>How far away is the Moon?</summary><p>About 384,000 km — 30 Earth-diameters. Shrink Earth to a basketball and the Moon is a tennis ball about 7 metres away, much farther than most pictures suggest. Light takes 1.3 seconds to cross the gap; Apollo took about three days. The simulator's Earth–Moon view draws both at true relative size and distance, and the 🎓 <b>What if?</b> lesson flies a probe across it.</p></details>
   <details><summary>How does a gravity assist make a spacecraft go faster?</summary><p>Relative to the planet, it doesn't: a spacecraft leaves a flyby at the same speed it arrived, because gravity gives back on the way out what it took on the way in. But the planet is moving around the Sun — Jupiter at about 13 km/s — and the flyby bends the spacecraft's path to travel more along the planet's direction, so relative to the Sun it gains speed. Momentum is conserved: the planet slows by an immeasurably tiny amount. Voyager used this at Jupiter, Saturn, Uranus and Neptune; the 🎓 <b>What if?</b> lesson measures the gain in the simulator, and ⚡ Actions → Voyager flies the whole 1977 mission to today.</p></details>
@@ -1427,9 +1510,15 @@
   let W, H, cx, cy, dpr, stars = [], dockH = 0;
   // The dock wraps to 1–3 rows by width; on phones the toasts, mission chips and
   // the feedback pill all sit relative to its measured top (CSS var --dock-h).
-  function measureDock(){ dockH = document.getElementById('dock').offsetHeight; document.documentElement.style.setProperty('--dock-h', dockH + 'px'); }
+  function measureDock(){
+    const sheet = railSide() ? 0 : railEl.offsetHeight;
+    dockH = document.getElementById('dock').offsetHeight + (sheet ? sheet + 8 : 0);   // on phones the dock rides above the sheet
+    document.documentElement.style.setProperty('--dock-h', dockH + 'px'); document.documentElement.style.setProperty('--sheet-h', sheet + 'px');
+  }
   // fit Neptune's aphelion (compressed or true, per the view option), with margin for labels
   function refit(){ baseScale = Math.min(W,H) * 0.40 / (viewOpts.scale ? maxTrueR : maxDispR); }
+  const railEl = document.getElementById('rail');
+  const railSide = () => W > 760;                                   // desktop: a side rail; phones: a bottom sheet
   function resize(){
     dpr = window.devicePixelRatio || 1;
     // clientWidth, not innerWidth: the page scrolls now, and innerWidth
@@ -1438,7 +1527,8 @@
     canvas.width = W*dpr; canvas.height = H*dpr;
     canvas.style.width = W+'px'; canvas.style.height = H+'px';
     ctx.setTransform(dpr,0,0,dpr,0,0);
-    cx = W/2; cy = H/2;
+    // the rail owns the left 320px on desktop and the bottom of a phone: the sky is centred in what's left
+    cx = railSide() ? W/2 + 160 : W/2; cy = railSide() ? H/2 : Math.max(H*0.22, (H - railEl.offsetHeight)/2);
     measureDock();
     refit();
     stars = [];
@@ -1908,8 +1998,10 @@
     selEdit.hidden = true;                           // card opens as an inspector; controls on demand
     selAdjust.textContent = '⚙ Adjust this body';
     editLabels(); ePanel.hidden = false;
+    document.getElementById('sel-visit').hidden = o !== EARTH; document.getElementById('inspect-empty').hidden = true;
+    setTab('inspect');
   }
-  function deselect(){ selected = null; ePanel.hidden = true; }
+  function deselect(){ selected = null; ePanel.hidden = true; document.getElementById('inspect-empty').hidden = false; }
   function applyMass(){ if (!selected) return; selected.m = sliderToMass(emEl.value); E0 = energy(); emV.textContent = fmtEditMass(selected.m); }
   // a discrete external impulse (thruster burn): add Δv in the chosen heading — leaves the nominal orbit guide so the deviation shows
   function applyNudge(){
@@ -1968,6 +2060,7 @@
   oeEl.addEventListener('input', applyOrbitShape);
   oeEl.addEventListener('change', () => sandbox('orbit_shape'));                 // once per slider release, not per pixel
   oeApsis.addEventListener('click', () => { oeAtPeri = !oeAtPeri; applyOrbitShape(); sandbox('orbit_shape'); });
+  document.getElementById('sel-visit').addEventListener('click', () => earthView());
   document.getElementById('edit-close').addEventListener('click', deselect);
   function removeBody(b){                                                    // the inspector's Delete — lessons use it too
     if (comets.includes(b)) b.dead = true;                                  // a comet / interloper
@@ -1981,8 +2074,7 @@
     selectBody(o); if (!selected) return;
     sandbox(o === EARTH ? 'earth_view' : 'inspect');
     if (o === SUN || o.moon) follow = null;                                 // Sun + Moon: edit in the system view
-    else if (o === EARTH) earthView();                                        // Earth → planet view
-    else follow = o;
+    else follow = o;                                                          // (Earth orbit is its own button on the Inspect tab)
   }
 
   // ---- the object table: Sun + planets + Moon + live comets ----
@@ -2046,17 +2138,7 @@
     if (selected && (selected.deleted || selected.dead)) deselect();        // selected object went away
     if (follow && (follow.deleted || follow.dead)){ follow = null; zoom = 1; }
     launchPanel.hidden = follow !== EARTH;                                   // satellite-launch panel only in the planet view
-    if (!launchPanel.hidden && !viewPanel.hidden) viewPanel.hidden = true;   // the two share the corner — launch wins
-    if (!voyPanel.hidden && !viewPanel.hidden) viewPanel.hidden = true;      // so does the Voyager inlay
-    // the coach and the inspector share the left edge: while a lesson runs, the card keeps clear of the coach —
-    // on phones (both top sheets) it slides under it; on desktop (bottom-anchored) it caps its height so its
-    // header stays below the coach on short windows
-    if (!ePanel.hidden && !coach.hidden){
-      const cb = coach.getBoundingClientRect().bottom, cs = getComputedStyle(ePanel);
-      const pad = parseFloat(cs.paddingTop) + parseFloat(cs.paddingBottom) + parseFloat(cs.borderTopWidth) + parseFloat(cs.borderBottomWidth);   // max-height is the content box
-      if (innerWidth <= 760){ ePanel.style.top = (cb + 8) + 'px'; ePanel.style.maxHeight = Math.max(140, innerHeight - dockH - 24 - cb - 16 - pad) + 'px'; }
-      else { ePanel.style.top = ''; ePanel.style.maxHeight = Math.max(140, innerHeight - 72 - cb - 8 - pad) + 'px'; }
-    } else if (ePanel.style.top || ePanel.style.maxHeight){ ePanel.style.top = ''; ePanel.style.maxHeight = ''; }
+    updModePill();
     timeT.textContent = `t = ${t.toFixed(2)} yr`;
     rateEl.textContent = (timeRate===0 ? 'paused' : (timeRate<0 ? '◀×'+(-timeRate) : '×'+timeRate)) + (warping>1 ? ' ▸▸' : '');
     rateEl.title = warping>1 ? 'fast-forwarding the empty approach' : 'time speed';
@@ -2620,6 +2702,7 @@
       probeStatus.hidden = false;
     }
     if (!opts.voyager) trackEv('mission_start', { mission: probePlan.mname });   // Voyager reports itself once it knows which one it is
+    setTab('play');
     return true;
   }
   function injectProbe(tT, vel, info){
@@ -2927,7 +3010,7 @@
       const el = document.createElement('button'); el.type = 'button'; el.className = 'btn ' + (b.cls || ''); el.textContent = b.label;
       el.addEventListener('click', b.fn); coachBtns.appendChild(el);
     }
-    coach.hidden = false;
+    coach.hidden = false; setTab('play');
   }
   const coachLive = (sel, text) => { const el = coachBody.querySelector(sel); if (el && el.textContent !== text) el.textContent = text; };
   function endLesson(){
@@ -3668,7 +3751,7 @@
   function togglePause(){ setRate(timeRate !== 0 ? 0 : lastRate); }
   // the data drawer (the old always-on table) — open state persists
   function setDrawer(open){
-    drawer.hidden = !open; if (open) sandbox('data_table');
+    drawer.hidden = !open; if (open){ sandbox('data_table'); setTab('view'); }
     try { localStorage.setItem('ssDataOpen', open ? '1' : '0'); } catch(e){}
   }
   try { if (localStorage.getItem('ssDataOpen') === '1') drawer.hidden = false; } catch(e){}
@@ -3680,6 +3763,7 @@
     if (daily){ if (e.key === 'Escape'){ endLesson(); e.preventDefault(); } return; }   // Daily Orbit holds the clock: no transport, view or reset hotkeys
     if (e.key === 'Escape' && placeMode){ exitPlace(); e.preventDefault(); return; }
     if (e.key === 'Escape' && lesson){ endLesson(); e.preventDefault(); return; }
+    if (e.key === 'Escape' && follow === EARTH && zoom >= 5){ resetView(); e.preventDefault(); return; }
     if (e.code === 'Space'){ togglePause(); e.preventDefault(); }
     else if (e.code === 'ArrowUp')   setRate(timeRate + 1);
     else if (e.code === 'ArrowDown') setRate(timeRate - 1);
@@ -3690,6 +3774,34 @@
     else if (e.key === '0') resetView();
     else if (e.key === 'r' || e.key === 'R'){ sandbox('reset'); reset(); }
   });
+
+
+  // ---- the rail: tabs, the phone sheet, and the mode pill ----
+  const railTabs = document.getElementById('rail-tabs');
+  function setTab(name){
+    for (const b of railTabs.querySelectorAll('button')) b.classList.toggle('on', b.dataset.tab === name);
+    for (const sec of document.querySelectorAll('#rail-body > section')) sec.hidden = sec.id !== 'tab-' + name;
+    try { localStorage.setItem('ssTab', name); } catch(e){}
+    if (railEl.classList.contains('peek')) setSheet('half');
+  }
+  function setSheet(state){                                     // phones only: peek | half | full
+    railEl.classList.remove('peek', 'half', 'full'); railEl.classList.add(state);
+    setTimeout(() => { measureDock(); resize(); }, 200);
+  }
+  railTabs.addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (!b) return; if (b.classList.contains('on') && !railSide()) setSheet(railEl.classList.contains('half') ? 'full' : 'half'); else setTab(b.dataset.tab); });
+  document.getElementById('rail-handle').addEventListener('click', () => setSheet(railEl.classList.contains('peek') ? 'half' : railEl.classList.contains('half') ? 'full' : 'peek'));
+  document.getElementById('rail-body').addEventListener('keydown', e => { if (e.target.matches('input, textarea, select')) e.stopPropagation(); });   // typing in a panel never fires sim hotkeys
+  new ResizeObserver(() => { measureDock(); if (!railSide()) resize(); }).observe(railEl);
+  try { const t0 = localStorage.getItem('ssTab'); if (t0 && document.getElementById('tab-' + t0)) setTab(t0); } catch(e){}
+  const modeName = document.getElementById('mode-name'), modeExit = document.getElementById('mode-exit');
+  let modeShown = '';
+  function updModePill(){
+    const m = moonView ? 'Earth–Moon' : daily ? 'Daily Orbit' : (follow === EARTH && zoom >= 5) ? 'Earth orbit' : lesson ? 'Lesson' : probePlan ? 'Mission' : msg ? 'Message' : 'System';
+    if (m === modeShown) return; modeShown = m;
+    modeName.textContent = m;
+    modeExit.hidden = m === 'System'; modeExit.textContent = m === 'Daily Orbit' ? 'Leave the puzzle' : m === 'Lesson' ? 'End the lesson' : m === 'Mission' ? 'End the mission' : m === 'Message' ? 'Cancel' : '← Back to the system';
+  }
+  modeExit.addEventListener('click', () => { if (moonView) exitMoon(); else if (daily || lesson) endLesson(); else if (probePlan) abortProbe('🚀 Mission ended'); else if (msg) endMessage('📡 Transmission cancelled'); else resetView(); });
 
   // ---- the dock: mini-planet chips + action buttons ----
   // Each chip is a tiny rendered planet: axis drawn at the REAL axial tilt
@@ -3944,25 +4056,18 @@
     try { localStorage.setItem('ssMuted', muted ? '1' : '0'); } catch(e){}
     if (!muted) sfx('capture');   // audible confirmation that sound is back
   }
-  document.getElementById('dock').addEventListener('click', e => {
-    const btn = e.target.closest('button'); if (!btn) return;
-    const act = btn.dataset.act;
+  function dockAct(act){
     if (act === 'pause') togglePause();
     else if (act === 'slower') slower();
     else if (act === 'faster') faster();
     else if (act === 'resetview') resetView();
     else if (act === 'reset'){ sandbox('reset'); reset(); }
     else if (act === 'data') setDrawer(drawer.hidden);
-    else if (act === 'view'){ viewPanel.hidden = !viewPanel.hidden; if (!viewPanel.hidden) placeViewPanel(); }
-  });
+  }
+  for (const host of ['dock', 'rail']) document.getElementById(host).addEventListener('click', e => { const btn = e.target.closest('button[data-act]'); if (btn) dockAct(btn.dataset.act); });
 
   // The dock wraps to 1-3 rows depending on width, so the panel's offset is
   // measured from the dock's actual top rather than hardcoded.
-  function placeViewPanel(){
-    const d = document.getElementById('dock').getBoundingClientRect();
-    viewPanel.style.bottom = (window.innerHeight - d.top + 10) + 'px';
-  }
-  window.addEventListener('resize', () => { if (!viewPanel.hidden) placeViewPanel(); });
 
   // ---- view options panel ----
   const viewPanel = document.getElementById('view-panel');
@@ -4092,17 +4197,10 @@
   function dailyFit(){
     if (!daily || !daily.board) return;
     const tp = dP(daily.board.target), rr = Math.max(tp.a * (1 + tp.e), EARTH.a * (1 + EARTH.e));
-    const dR = viewOpts.scale ? rr : RSCALE * Math.asinh(rr / RSCALE), phone = W <= 760;
-    const avail = phone ? Math.min(W, H * 0.5) * 0.42 : Math.min(W - 350, H) * 0.42;
-    zoom = Math.max(0.2, Math.min(4000, avail / (dR * baseScale)));
-    // put the Sun where the free space is: right of the card on desktop, in the top half on a phone
-    const sx = phone ? cx : cx + 160, sy = phone ? H * 0.26 : cy, s = baseScale * zoom;
-    const cX = (cx - sx) / s, cY = (sy - cy) / s, rd = Math.hypot(cX, cY);
-    const k = rd > 1e-9 && !viewOpts.scale ? RSCALE * Math.sinh(rd / RSCALE) / rd : 1;
-    const bx = isFinite(baryX) ? baryX : SUN.x, by = isFinite(baryY) ? baryY : SUN.y;   // (the barycentre is measured per frame; before the first frame it isn't)
-    if (!isFinite(zoom) || !isFinite(cX) || !isFinite(cY)){ zoom = 1; follow = null; return; }
-    daily.cam = { name: 'Daily Orbit', x: bx + cX * k, y: by + cY * k };
-    follow = daily.cam;
+    const dR = viewOpts.scale ? rr : RSCALE * Math.asinh(rr / RSCALE);
+    const avail = railSide() ? Math.min(W - 320, H) * 0.42 : Math.min(W, Math.max(200, H - railEl.offsetHeight)) * 0.42;   // the sky's free area, either way the rail sits
+    const z = avail / (dR * baseScale);
+    zoom = isFinite(z) ? Math.max(0.2, Math.min(4000, z)) : 1; follow = null;
   }
   window.addEventListener('resize', () => { if (daily) setTimeout(dailyFit, 60); });
 
@@ -4114,7 +4212,7 @@
     if (msg){ msg.onEnd = null; endMessage(); }
     if (placeMode) exitPlace();
     deselect(); closeTopPanels(); killHint(); resetView();
-    appEl.classList.add('daily-mode'); document.body.classList.add('daily-on');
+    appEl.classList.add('daily-mode'); document.body.classList.add('daily-on'); setTab('play'); if (!railSide()) setSheet('half');
     daily = { phase: 'loading', board: null, P: {}, flights: [], shown: -1, replay: null, preview: null, dials: { speed: 3, aim: 0 }, override: override || null, warp: 1 };
     lesson = { id: 'daily', tick: dailyTick, draw: dailyDraw, restore: dailyRestore, savedRate: timeRate };
     setRate(0);
@@ -4411,10 +4509,11 @@
   }
   function dailyRestore(){                                      // the card closed: back to the sandbox, the sky left as it stands
     appEl.classList.remove('daily-mode'); document.body.classList.remove('daily-on');
-    if (follow && daily && follow === daily.cam) follow = null;
     daily = null;
   }
   dailyToggle.addEventListener('click', () => { closeTopPanels(); startDaily(); });
+  document.getElementById('daily-go').addEventListener('click', () => { closeTopPanels(); startDaily(); });
+  { const st = document.getElementById('daily-card-streak'); if (dailyStore.streak) st.textContent = '🔥 streak ' + dailyStore.streak; }
   {
     const q = location.search;
     if (/[?&]daily(=|&|$)/.test(q)){ const d = q.match(/[?&]day=(-?\d+)/); setTimeout(() => startDaily(d ? d[1] : null), 0); }   // (a background tab never paints, so no frame is waited for — the camera refits on the first drawn frame)
