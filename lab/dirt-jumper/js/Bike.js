@@ -29,6 +29,7 @@ class Bike {
         this.speed = 220;           // gentle drop-in roll speed
         this.vx = 0;
         this.vy = 0;
+        this.leanVelocity = 0;     // eased angular speed; release stops immediately
         this.angle = 0;             // degrees, 0 = level
         this.airborne = false;
         this.crashed = false;
@@ -158,7 +159,17 @@ class Bike {
         let rot = 0;
         if (input.left) rot -= 1;
         if (input.right) rot += 1;
-        this.angle = djNormDeg(this.angle + rot * s.flipRate * dt);
+        if (rot) {
+            // Exact exponential integration keeps short taps gentle at any FPS.
+            const target = rot * s.flipRate;
+            const tau = s.leanResponse;
+            const decay = Math.exp(-dt / tau);
+            const turn = target * dt + (this.leanVelocity - target) * tau * (1 - decay);
+            this.leanVelocity = target + (this.leanVelocity - target) * decay;
+            this.angle = djNormDeg(this.angle + turn);
+        } else {
+            this.leanVelocity = 0;
+        }
 
         // projectile integration (semi-implicit Euler)
         this.vy += g * dt;
@@ -222,6 +233,8 @@ class Bike {
         else grade = 'bail';
 
         this.airborne = false;
+        this.leanVelocity = 0;
+        this.compress = Math.min(1, Math.max(0, intoSurface) / 500);
         this.lastLanding = { grade, hardness: Math.max(0, intoSurface), x: sx, y: gy, airTime: this.airTime };
 
         if (grade === 'bail') {
@@ -266,10 +279,10 @@ class Bike {
         // local -> world (origin = contact point, +localX forward, -localY up)
         const tx = (px, py) => ({ x: this.x + px * cos - py * sin, y: this.y + px * sin + py * cos });
 
-        const wb = 30;                  // wheelbase / 2
-        const r = 11;                   // wheel radius
+        const wb = 27;                  // wheelbase / 2
+        const r = 14;                   // wheel radius
         const squash = this.compress;   // + squashed, - stretched
-        const bodyH = -24 * (1 - squash * 0.28);   // frame height above contact (up = -)
+        const bodyH = -31 * (1 - squash * 0.16);   // frame height above contact (up = -)
 
         const rear = tx(-wb, -r), front = tx(wb, -r);
         for (const wheel of [rear, front]) {
@@ -295,21 +308,24 @@ class Bike {
             g.strokePath();
         };
         // Diamond frame, fork, saddle and bars face the direction of travel.
-        line([[-30, -11], [-10, bodyH], [2, -12], [-30, -11]], 3, CONFIG.COLORS.BIKE_ACCENT);
-        line([[-10, bodyH], [20, bodyH - 1], [2, -12]], 3, CONFIG.COLORS.BIKE_ACCENT);
-        line([[30, -11], [20, bodyH - 1], [18, bodyH - 8], [26, bodyH - 8]], 3, 0xc8d5d6);
+        line([[-27, -14], [-10, bodyH], [0, -15], [-27, -14]], 3, CONFIG.COLORS.BIKE_ACCENT);
+        line([[-10, bodyH], [20, bodyH - 1], [0, -15]], 3, CONFIG.COLORS.BIKE_ACCENT);
+        line([[27, -14], [20, bodyH - 1], [18, bodyH - 8], [26, bodyH - 8]], 3, 0xc8d5d6);
         line([[-17, bodyH - 3], [-5, bodyH - 3]], 4, CONFIG.COLORS.BIKE);
-        const hipY = bodyH - 15 + squash * 9;
-        const shoulderY = hipY - 16 + squash * 4;
-        line([[-7, hipY], [7, bodyH - 5], [2, -12], [10, -12]], 5, 0x203044);
+        const hipY = bodyH - 13 + squash * 9;
+        const shoulderY = hipY - 14 + squash * 4;
+        line([[-9, hipY], [-15, bodyH - 1], [-6, -15]], 5, 0x192e32);
+        line([[-7, hipY], [7, bodyH - 5], [0, -15], [9, -15]], 6, 0x2b4147);
         line([[-7, hipY], [5, shoulderY]], 8, 0xef8046);
         line([[5, shoulderY], [17, shoulderY + 12], [23, bodyH - 8]], 4, 0xf0c8a1);
+        line([[5, shoulderY], [11, shoulderY + 6]], 6, 0xf4a34d);
         const head = tx(10, shoulderY - 8);
         g.fillStyle(0xf0c8a1, 1);
         g.fillCircle(head.x, head.y, 6);
         g.fillStyle(0xf5ece0, 1);
         g.fillCircle(head.x, head.y - 3, 7);
-        line([[10, shoulderY - 10], [21, shoulderY - 10]], 3, CONFIG.COLORS.BIKE_ACCENT);
+        line([[10, shoulderY - 10], [21, shoulderY - 10]], 3, 0x142d34);
+        line([[13, shoulderY - 6], [19, shoulderY - 4], [18, shoulderY]], 3, 0xf5ece0);
 
     }
 

@@ -342,20 +342,62 @@ class Terrain {
         g.closePath();
         g.fillPath();
 
-        // sunlit top band (offset fill just under the surface)
-        g.fillStyle(CONFIG.COLORS.DIRT_TOP, 1);
-        g.beginPath();
-        g.moveTo(top[0].x, top[0].y);
-        for (const p of top) g.lineTo(p.x, p.y);
-        for (let i = top.length - 1; i >= 0; i--) g.lineTo(top[i].x, top[i].y + 9);
-        g.closePath();
-        g.fillPath();
-
-        // surface outline
-        g.lineStyle(2, CONFIG.COLORS.DIRT_LINE, 0.9);
-        g.beginPath();
-        g.moveTo(top[0].x, top[0].y);
+        // Layered packed earth. Every mark stays anchored to the terrain.
+        for (const [depth, color] of [[29, 0x976344], [12, CONFIG.COLORS.DIRT_TOP]]) {
+            g.fillStyle(color, 1);
+            g.beginPath();
+            g.moveTo(top[0].x, top[0].y);
+            for (const p of top) g.lineTo(p.x, p.y);
+            for (let i = top.length - 1; i >= 0; i--) {
+                const p = top[i];
+                g.lineTo(p.x, p.y + depth + Math.sin(p.x * 0.025) * depth * 0.12);
+            }
+            g.closePath(); g.fillPath();
+        }
+        // Shale seams soften the otherwise empty solid dirt cross-section.
+        for (let row = 0; row < 4; row++) {
+            g.lineStyle(1.5, row % 2 ? 0xb28359 : 0x483e32, 0.22);
+            g.beginPath();
+            for (let i = 0; i < top.length; i++) {
+                const p = top[i], y = p.y + 60 + row * 53 + Math.sin(p.x * 0.012 + row) * 12;
+                if (!i) g.moveTo(p.x, y); else g.lineTo(p.x, y);
+            }
+            g.strokePath();
+        }
+        for (let n = Math.floor(camLeft / 27); n <= camRight / 27; n++) {
+            const x = n * 27 + Math.sin(n * 4.1) * 7;
+            const ground = this.heightAt(x);
+            for (let row = 0; row < 5; row++) {
+                const hash = Math.abs(Math.sin(n * 12.9898 + row * 78.233));
+                const y = ground + 19 + row * 45 + hash * 28;
+                g.fillStyle(row % 2 ? 0xd0aa77 : 0x302f29, 0.18);
+                g.fillEllipse(x + row * 3, y, 2 + hash * 5, 1 + hash * 2);
+            }
+        }
+        // A bright, continuous riding line makes the actual collision surface clear.
+        g.lineStyle(2.5, CONFIG.COLORS.DIRT_LINE, 1);
+        g.beginPath(); g.moveTo(top[0].x, top[0].y);
         for (const p of top) g.lineTo(p.x, p.y);
         g.strokePath();
+
+        // Sparse scrub and rocks along the trail's far edge.
+        for (let n = Math.floor(camLeft / 123); n <= camRight / 123; n++) {
+            const x = n * 123 + Math.sin(n * 3.1) * 18;
+            if (Math.abs(this.slopeAt(x)) > 0.35) continue;
+            const y = this.heightAt(x);
+            g.lineStyle(2, 0x526347, 0.85);
+            for (let j = -2; j <= 2; j++) g.lineBetween(x, y - 1, x + j * 4, y - 6 - Math.abs(Math.sin(n + j)) * 8);
+            if (n % 3 === 0) {
+                g.fillStyle(0x8d8b6d, 1);
+                g.fillTriangle(x + 15, y, x + 21, y - 6, x + 29, y);
+            }
+        }
+        // Flags identify takeoffs before the bike gets there.
+        for (const lip of this.lips) {
+            if (lip.x < camLeft - 30 || lip.x > camRight + 30) continue;
+            const x = lip.x - 12, y = this.heightAt(x);
+            g.lineStyle(2, 0xf7e1b6, 1); g.lineBetween(x, y - 1, x, y - 38);
+            g.fillStyle(0xee8d49, 1); g.fillTriangle(x, y - 38, x + 22, y - 32, x, y - 24);
+        }
     }
 }

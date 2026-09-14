@@ -29,7 +29,8 @@ const CONFIG = {
         pumpDownThresh: 0.025,      // |sin(slope)| above this counts as a real down/up face
 
         // Air
-        flipRate: 270,              // deg/sec rotation — gentle, just for setting landing angle
+        flipRate: 115,              // deg/sec rotation — gentle, just for setting landing angle
+        leanResponse: 0.12,         // seconds to ease into a held lean
         airDrag: 0.04,              // gentle horizontal air drag (per sec)
         minAirSpeed: 70,            // below this a jump lip won't launch you
 
@@ -95,13 +96,13 @@ const CONFIG = {
 
     // ---- Colors ----
     COLORS: {
-        SKY_TOP: 0x2a4a66,
-        SKY_BOT: 0x6f93a8,
+        SKY_TOP: 0x719a9b,
+        SKY_BOT: 0xf2d5a3,
         HILL_FAR: 0x4a6276,
-        DIRT_TOP: 0x9c6b3f,         // sunlit dirt face
-        DIRT_FILL: 0x6f4a28,        // dirt body
+        DIRT_TOP: 0xd8a265,         // sunlit dirt face
+        DIRT_FILL: 0x694a36,        // dirt body
         DIRT_DARK: 0x4e3320,        // shaded dirt
-        DIRT_LINE: 0x3a2616         // outline
+        DIRT_LINE: 0xf3c88a         // outline
     }
 };
 

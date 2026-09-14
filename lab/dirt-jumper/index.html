@@ -11,14 +11,14 @@
     <script src="https://cdn.jsdelivr.net/npm/phaser@3.80.1/dist/phaser.min.js"></script>
     <style>
         html, body {
-            margin: 0; padding: 0; background: #20303c;
+            margin: 0; padding: 0; background: #152c31;
             font-family: 'JetBrains Mono', monospace; color: #f3e9dd;
             height: 100%; overflow: hidden;
         }
         #wrap { display: flex; align-items: center; justify-content: center; height: 100vh; }
         #game-container {
             width: 100%;
-            max-width: min(1100px, 177.7778vh);
+            max-width: min(1440px, 177.7778vh);
             aspect-ratio: 16 / 9;        /* drives height from width for the 960x540 design */
             margin: 0 auto;
         }
@@ -28,11 +28,12 @@
 <body>
     <div id="wrap"><div id="game-container"></div></div>
 
-    <script src="js/config.js?v=20260914b"></script>
-    <script src="js/Terrain.js?v=20260914b"></script>
-    <script src="js/Bike.js?v=20260914b"></script>
-    <script src="js/Particle.js?v=20260914b"></script>
-    <script src="js/RideScene.js?v=20260914b"></script>
+    <script src="js/config.js?v=20260914c"></script>
+    <script src="js/Terrain.js?v=20260914c"></script>
+    <script src="js/Bike.js?v=20260914c"></script>
+    <script src="js/Scenery.js?v=20260914c"></script>
+    <script src="js/Particle.js?v=20260914c"></script>
+    <script src="js/RideScene.js?v=20260914c"></script>
     <script>
         const phaserConfig = {
             type: Phaser.AUTO,
