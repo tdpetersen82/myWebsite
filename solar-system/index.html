@@ -3846,7 +3846,14 @@
     railEl.classList.remove('peek', 'half', 'full'); railEl.classList.add(state);
     setTimeout(() => { measureDock(); resize(); }, 200);
   }
-  railTabs.addEventListener('click', e => { const b = e.target.closest('button[data-tab]'); if (!b) return; if (b.classList.contains('on') && !railSide()) setSheet(railEl.classList.contains('half') ? 'full' : 'half'); else setTab(b.dataset.tab); });
+  // A tab tap is also the way OUT of a mode: the sky goes back to the free-running sandbox and Play shows its landing.
+  // (Programmatic setTab calls — a lesson opening its card, a body being selected — never end anything.)
+  function leaveMode(){ if (moonView) exitMoon(); if (daily || lesson) endLesson(); }
+  railTabs.addEventListener('click', e => {
+    const b = e.target.closest('button[data-tab]'); if (!b) return;
+    if (b.classList.contains('on') && !railSide() && !daily && !lesson){ setSheet(railEl.classList.contains('half') ? 'full' : 'half'); return; }
+    leaveMode(); setTab(b.dataset.tab);
+  });
   document.getElementById('rail-handle').addEventListener('click', () => setSheet(railEl.classList.contains('peek') ? 'half' : railEl.classList.contains('half') ? 'full' : 'peek'));
   document.getElementById('rail-body').addEventListener('keydown', e => { if (e.target.matches('input, textarea, select')) e.stopPropagation(); });   // typing in a panel never fires sim hotkeys
   new ResizeObserver(() => { measureDock(); if (!railSide()) resize(); }).observe(railEl);
@@ -4575,7 +4582,7 @@
     else announce(text, 'capture');
   }
   function dailyRestore(){                                      // the card closed: back to the sandbox, the sky left as it stands
-    appEl.classList.remove('daily-mode'); document.body.classList.remove('daily-on');
+    appEl.classList.remove('daily-mode'); document.body.classList.remove('daily-on'); resetView();   // the board's zoom was the puzzle's; the sandbox gets the whole system back
     daily = null;
   }
   dailyToggle.addEventListener('click', () => { closeTopPanels(); startDaily(); });
