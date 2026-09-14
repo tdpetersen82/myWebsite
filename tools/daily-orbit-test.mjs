@@ -5,7 +5,7 @@
 import { createRequire } from 'node:module';
 const require = createRequire(import.meta.url);
 const { createSolarCore } = require('../solar-system/ss-core.js');
-const OrbitEngine = require('../daily-orbit/orbit-engine.js');
+const OrbitEngine = require('../solar-system/orbit-engine.js');
 
 let fails = 0;
 const ok = (c, name, detail = '') => { console.log((c ? 'ok   ' : 'FAIL ') + name + (c ? '' : '  — ' + detail)); if (!c) fails++; };

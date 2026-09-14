@@ -1,4 +1,4 @@
-// Daily Orbit — the puzzle logic, shared by the page's Web Worker and tools/daily-orbit-test.mjs.
+// Daily Orbit — the puzzle logic, shared by the simulator's Web Worker (orbit-worker.js) and tools/daily-orbit-test.mjs.
 // Runs on a createSolarCore() instance (solar-system/ss-core.js): the same N-body physics as
 // the Solar System sim. Everything here is deterministic — the calendar date is the only seed.
 (function (root) {

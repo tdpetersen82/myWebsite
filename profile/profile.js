@@ -74,7 +74,7 @@
     // Mini Golf banks {best, rounds}; best is the fewest strokes over nine holes (lower is better).
     { name: 'Mini Golf',      href: '../mini-golf/',      best: () => readStatsKey('miniGolfRecord', o => o && Number.isInteger(o.best) ? o.best + ' shots' : null) },
     // Daily Orbit banks a JSON record — best daily streak of arrivals.
-    { name: 'Daily Orbit',    href: '../daily-orbit/',    best: () => readStatsKey('dailyOrbit', o => o && o.best ? o.best : null) },
+    { name: 'Daily Orbit',    href: '../solar-system/?daily',    best: () => readStatsKey('dailyOrbit', o => o && o.best ? o.best : null) },
   ];
 
   const KIDS_ROWS = [

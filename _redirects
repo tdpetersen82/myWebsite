@@ -11,6 +11,8 @@
 /bubble-shooter-hd/*  /bubble-pop/   301
 /chess-solver/        /chess/        301
 /chess-solver/*       /chess/        301
+/daily-orbit/         /solar-system/?daily  301
+/daily-orbit/*        /solar-system/?daily  301
 
 # Retired section, content folded into Arcade
 /retro/    /arcade/   301

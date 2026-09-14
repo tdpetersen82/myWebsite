@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Solar System Simulator — Interactive N-Body Gravity Sandbox</title>
-<meta name="description" content="A real-time N-body solar system simulator. All eight planets and the Moon orbit a free-moving Sun under full gravity — zoom, edit any body, launch comets.">
+<meta name="description" content="A real-time N-body solar system simulator. All eight planets and the Moon orbit a free-moving Sun under full gravity — zoom, edit any body, launch comets, and play Daily Orbit: today's sky, one probe, six launches.">
 <link rel="canonical" href="https://limestonegames.com/solar-system/">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Solar System Simulator","description":"A real-time N-body gravity simulator: all eight planets and the Moon orbit a free-moving Sun. Zoom, edit any body, switch to Earth view, and launch comets to watch gravity reshape the system.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Arcade","item":"https://limestonegames.com/arcade/"},{"@type":"ListItem","position":3,"name":"Solar System"}]}</script>
@@ -20,7 +20,10 @@
   {"@type":"Question","name":"Can planets collide or be destroyed?","acceptedAnswer":{"@type":"Answer","text":"Yes. Bodies that meet merge — the larger absorbs the smaller — and comets can strike planets or the Sun. You can also delete any body from the inspector, including the Sun. The event feed narrates every impact, capture, and escape."}},
   {"@type":"Question","name":"What are the controls?","acceptedAnswer":{"@type":"Answer","text":"Scroll or pinch to zoom, click or tap any body to inspect it, drag a planet to move it to a new orbit. Keyboard: Space pause, up/down arrows time rate, E Earth view, C comet, D data table, 0 reset view, R reset the system."}},
   {"@type":"Question","name":"Why does Voyager keep getting farther away instead of orbiting the Sun?","acceptedAnswer":{"@type":"Answer","text":"Because nothing needs to push it — a force is needed to stop it, and the Sun's gravity is the only thing trying. Gravity weakens with the square of distance, so the total slowing the Sun can ever apply from any point outward is finite: that total is the escape speed there (42 km/s at Earth's distance, 18.5 at Jupiter's, about 3 where Voyager 1 is now). Below it the Sun eventually turns you around into an ordinary orbit; above it the Sun runs out of pull before you run out of speed, and you coast away forever. Voyager 1 crossed that line at Jupiter and Saturn, has not fired an engine since 1977, and is still slowing toward about 16.6 km/s — never zero."}},
-{"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes — free, in the browser, no download and no signup."}}
+{"@type":"Question","name":"What is Daily Orbit?","acceptedAnswer":{"@type":"Answer","text":"A daily launch puzzle inside the simulator. Each day the planets are placed where they really are on that UTC date and one of them is the target. You set a launch speed and heading, and the probe flies under the simulator's full gravity — six launches to get captured, scored on fuel against a par the physics finds for that day, with a shareable emoji result and a streak. Everyone in the world gets the same board."}},
+  {"@type":"Question","name":"What do the Daily Orbit dials mean?","acceptedAnswer":{"@type":"Answer","text":"Speed is how fast the probe leaves Earth, in kilometres per second over Earth's own orbital motion. Aim is the heading of that push: 0° is straight along Earth's direction of travel, positive angles swing it outward from the Sun, and 180° is a braking burn against Earth's motion, which is how you fall inward to Venus or Mercury. Reaching the target's orbit is the easy half; arriving when the planet is there is the puzzle."}},
+  {"@type":"Question","name":"What is par in Daily Orbit?","acceptedAnswer":{"@type":"Answer","text":"The cheapest launch the physics can find for that day: hundreds of candidate transfers are computed and the best are flown for real in the simulation until one arrives and survives a small aiming error. Fuel counts the launch burn, any mid-course correction, and the braking burn at the planet. Three stars is within 5% of par, two within 25%, one star for any arrival."}},
+  {"@type":"Question","name":"Is it free?","acceptedAnswer":{"@type":"Answer","text":"Yes — free, in the browser, no download and no signup."}}
 ]}</script>
 <meta property="og:title" content="Solar System Simulator — Interactive N-Body Gravity Sandbox | Limestone Games">
 <meta property="og:description" content="A real-time N-body solar system simulator. All eight planets and the Moon orbit a free-moving Sun — zoom, edit any body, and launch comets. Free, no downloads.">
@@ -294,6 +297,64 @@
   .vo{display:block;width:100%;margin-top:6px;text-align:left;}
   .vo.off{opacity:.55;}
 
+  /* ---- Daily Orbit: the entry button, the chrome it hides, and its controls inside the coach card ---- */
+  #daily-toggle{background:rgba(255,196,60,0.16);border-color:rgba(255,211,90,0.55);color:#ffe08a;}
+  #daily-toggle:hover{background:rgba(255,196,60,0.32);}
+  #app.daily-mode #dock,#app.daily-mode #comet-ui,#app.daily-mode #microhint,#app.daily-mode #view-panel,
+  #app.daily-mode #data-drawer,#app.daily-mode #edit-panel,#app.daily-mode #probe-status,#app.daily-mode #msg-status{display:none !important;}
+  #app.daily-mode #coach{top:84px;width:318px;max-height:calc(100vh - 100px);overflow-y:auto;}   /* under the HUD title */
+  body.daily-on #fb-pill{left:auto !important;right:10px !important;}
+  .dd-chips{display:flex;flex-wrap:wrap;gap:5px;margin:0 0 9px;}
+  .dd-chip{display:inline-flex;align-items:center;gap:5px;border:1px solid var(--pnl-line);border-radius:999px;padding:3px 9px;font:600 11px/1 system-ui,sans-serif;color:var(--soft);background:rgba(20,26,40,0.6);}
+  .dd-chip i{width:8px;height:8px;border-radius:50%;box-shadow:0 0 6px currentColor;}
+  .dd-chip b{color:var(--ink);}
+  .dd-dial{border:1px solid var(--pnl-line);border-radius:10px;padding:8px 10px;margin:0 0 8px;background:rgba(20,26,40,0.5);}
+  .dd-row{display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+  .dd-row label{font:600 11.5px/1.2 system-ui,sans-serif;color:var(--soft);}
+  .dd-row label small{display:block;font:400 10px/1.3 system-ui,sans-serif;color:var(--dim);margin-top:2px;}
+  .dd-val{display:flex;align-items:center;gap:4px;font:600 12px/1 ui-monospace,Menlo,monospace;color:var(--dim);flex:none;}
+  .dd-val input{width:70px;background:rgba(0,0,0,0.35);border:1px solid var(--pnl-line);border-radius:7px;color:var(--ink);font:600 14px/1.2 ui-monospace,Menlo,monospace;padding:4px 6px;text-align:right;-moz-appearance:textfield;}
+  .dd-val input::-webkit-outer-spin-button,.dd-val input::-webkit-inner-spin-button{-webkit-appearance:none;margin:0;}
+  .dd-val input:focus{outline:none;border-color:var(--acc);}
+  .dd-dial input[type=range]{width:100%;margin:8px 0 5px;accent-color:var(--acc);}
+  .dd-fine{display:flex;gap:4px;}
+  .dd-fine button{flex:1;background:rgba(0,0,0,0.3);border:1px solid var(--pnl-line);border-radius:7px;padding:5px 0;font:600 11px/1 ui-monospace,Menlo,monospace;color:var(--soft);cursor:pointer;}
+  .dd-fine button:hover{border-color:var(--acc);color:#fff;}
+  .dd-fine button:disabled{opacity:.45;cursor:default;}
+  #dd-launch{width:100%;padding:11px 12px;font-size:14px;font-weight:800;text-align:center;}
+  #dd-launch:disabled{opacity:.55;cursor:default;}
+  #dd-pips{display:flex;gap:6px;justify-content:center;margin:8px 0 9px;}
+  #dd-pips i{width:9px;height:9px;border-radius:50%;border:1px solid var(--pnl-line);background:rgba(0,0,0,0.3);}
+  #dd-pips i.hit{background:#6ee787;border-color:#6ee787;}
+  #dd-pips i.near{background:#ffcf5a;border-color:#ffcf5a;}
+  #dd-pips i.miss{background:#ff7a7a;border-color:#ff7a7a;}
+  #dd-pips i.now{border-color:var(--acc);box-shadow:0 0 0 2px rgba(111,157,255,0.35);}
+  .dd-card{border:1px solid var(--pnl-line);border-radius:10px;padding:10px 11px;margin:0 0 8px;background:rgba(20,26,40,0.55);font:500 11.5px/1.5 system-ui,sans-serif;color:var(--soft);}
+  .dd-card[hidden]{display:none;}
+  .dd-card p{margin:0 0 5px;}
+  .dd-card p:last-child{margin-bottom:0;}
+  .dd-card.hit{border-color:rgba(110,231,135,0.5);}
+  .dd-rt{font:700 13px/1.3 system-ui,sans-serif;color:#fff;margin:0 0 5px;}
+  .dd-card.hit .dd-rt{color:#6ee787;} .dd-card.near .dd-rt{color:#ffcf5a;} .dd-card.miss .dd-rt{color:#ff9d9d;}
+  .dd-hint{color:var(--ink);border-left:3px solid var(--acc);padding-left:8px;margin-top:7px !important;}
+  .dd-fuel{font:500 11px/1.5 ui-monospace,Menlo,monospace;color:var(--dim);font-variant-numeric:tabular-nums;}
+  .dd-fuel b{color:var(--ink);}
+  #dd-log{display:flex;flex-direction:column;gap:3px;margin:0 0 8px;}
+  #dd-log:empty{display:none;}
+  .dd-lrow{display:grid;grid-template-columns:16px 1fr auto;align-items:center;gap:6px;font:500 11px/1.3 ui-monospace,Menlo,monospace;color:var(--dim);padding:4px 7px;border-radius:7px;background:rgba(0,0,0,0.22);cursor:pointer;border:1px solid transparent;}
+  .dd-lrow:hover,.dd-lrow.sel{border-color:var(--pnl-line);color:var(--soft);}
+  .dd-lrow .d{color:var(--soft);}
+  .dd-gold{border-color:rgba(255,211,90,0.45);}
+  .dd-done-title{font:700 13px/1.3 system-ui,sans-serif;color:#fff;margin:0 0 4px;}
+  .dd-grid{font-size:17px;letter-spacing:2px;margin:0 0 4px;}
+  .dd-stars{font:700 24px/1 system-ui,sans-serif;color:#ffd35a;letter-spacing:2px;margin:2px 0 6px;}
+  .dd-stars.none{color:var(--dim);font-size:13px;}
+  #dd-strip{display:block;width:100%;height:70px;margin:6px 0 2px;border-radius:7px;background:rgba(0,0,0,0.25);}
+  .dd-cap{font:400 10px/1.4 ui-monospace,Menlo,monospace;color:var(--dim);margin:0 0 7px !important;}
+  .dd-btns{display:flex;gap:6px;}
+  .dd-btns .btn{flex:1;text-align:center;padding:8px 6px;}
+  .dd-count{font:500 11px/1.5 ui-monospace,Menlo,monospace;color:var(--dim);text-align:center;margin:7px 0 0 !important;}
+
   /* ---- the article below the sim ---- */
   #about{max-width:720px;margin:0 auto;padding:70px 20px 90px;
     font:400 15px/1.7 system-ui,sans-serif;color:var(--soft);}
@@ -376,6 +437,10 @@
     #top-btns{flex-direction:column;align-items:flex-end;gap:6px;}
     /* the coach becomes a top sheet on phones, below the stacked buttons */
     #coach{top:104px;left:12px;right:12px;width:auto;max-height:calc(100vh - 340px);overflow-y:auto;}
+    /* Daily Orbit: the sandbox chrome is gone, so the card is a bottom sheet and the board sits in the top half */
+    #app.daily-mode #coach{top:auto;bottom:10px;width:auto;max-height:48vh;}
+    #app.daily-mode #events{bottom:calc(48vh + 22px);}
+    body.daily-on #fb-pill{display:none !important;}   /* (the pill sits outside #app) */
   }
   /* Accessibility: honor prefers-reduced-motion — calm decorative CSS
      animation for motion-sensitive users. Canvas/JS gameplay is unaffected. */
@@ -399,6 +464,7 @@
 </nav>
 <div id="comet-ui">
   <div id="top-btns">
+    <button id="daily-toggle" class="btn" type="button" title="Today's sky, one probe, six launches — the daily launch puzzle, same board for everyone">🚀 Daily Orbit</button>
     <button id="learn-toggle" class="btn" type="button" title="Guided experiments — a question, your prediction, and the real physics answering it">🎓 What if?</button>
     <button id="comet-toggle" class="btn" type="button">⚡ Actions ▾</button>
   </div>
@@ -636,6 +702,11 @@
     <li><b>The Sun moves too.</b> Zoom in tight on the Sun and watch it circle the system's center of mass — the same wobble astronomers use to find planets around other stars.</li>
   </ul>
 
+  <h2 id="daily">Daily Orbit — today's sky, one probe, six launches</h2>
+  <p>Every day the simulator places the planets where they <b>really are</b> on that date and picks one as the target. Press <b>🚀 Daily Orbit</b> and you get two dials — how hard the probe is pushed away from Earth, and in which direction — and six launches to get captured there. Everyone in the world gets the same board, so the result you share is a fair comparison.</p>
+  <p>Nothing is on rails. Each launch is flown under the same N-body gravity as the rest of the page, so Jupiter tugs on your probe, a near pass of Venus bends it, and the target keeps moving while you're in flight. The dotted preview shows the probe's path around the Sun alone; what it can't show is <b>where the planet will be when you get there</b> — that's the puzzle. After each launch the card says how far ahead or behind the target was when you crossed its orbit. Planet ahead? You were late: more speed. Planet behind? You were early: ease off.</p>
+  <p><b>Par</b> is the cheapest launch the physics finds for the day, and fuel is counted the way mission planners count it: the launch burn, any mid-course correction, and the braking burn at the planet. Your probe carries a small correction tank (1.5 km/s): a launch that would miss by a little fires one Voyager-style burn on the way, and that fuel counts against you. Three stars is within 5% of par, two within 25%, one star for any arrival. When the day is over you see par's own path as a gold ghost line and the porkchop strip — fuel against flight time for every route the scan found.</p>
+
   <h2>Frequently asked questions</h2>
   <details><summary>Is this a real simulation or a looping animation?</summary><p>A real one. Each frame numerically integrates the gravitational attraction between every pair of bodies — an N-body simulation. That's why you can permanently alter, destroy, or rearrange the system; there is no loop to snap back to. Press <b>R</b> to rebuild the solar system from scratch.</p></details>
   <details><summary>Are the sizes and distances to scale?</summary><p>The physics uses real AU distances, solar-mass ratios, and eccentricities. The default view gently compresses the space between orbits so all eight planets fit on screen — switch on <b>true-scale distances</b> in the dock's view options to see the honest spacing (mostly emptiness; zoom in to find the inner planets). Drawn sizes are never to scale: at true scale Earth would be invisible, far less than a pixel wide, so bodies are enlarged enough to see and click.</p></details>
@@ -666,6 +737,7 @@
   const canvas = document.getElementById('c');
   const ctx = canvas.getContext('2d');
   let lesson = null;   // the running "What if?" lesson — declared up top because draw() reads it every frame
+  let daily = null;    // the Daily Orbit mode (rides the lesson hooks) — up top for the same reason
   // Usage events (GA4): sandbox_action{action}, mission_start/mission_end/mission_today{mission,outcome},
   // plus the lessons' lesson_start/lesson_complete{lesson}. The params only show up in GA4
   // reports once registered there as event-scoped custom dimensions: action, mission, outcome, lesson.
@@ -2115,7 +2187,7 @@
       else announce(`${d.name} removed from the simulation`, 'escape');
     }
     else if (type === 'probelost') announce(`🛰 Probe lost — it flew into ${d.target}`, 'impact');
-    else if (type === 'reset') announce('System restored', 'escape');
+    else if (type === 'reset'){ if (!daily) announce('System restored', 'escape'); }   // the daily re-arranges the sky between launches: that's not news
   };
   FX = onFx;
 
@@ -2148,7 +2220,7 @@
     let stepped = 0;
     // a mission may ask for slow motion (advance only every slow-th frame — Voyager's flybys)
     // or a warp beyond the comet auto-warp (its 46-year coast, with a higher substep cap)
-    const mWarp = (probePlan && probePlan.warp) || 1, mSlow = (probePlan && probePlan.slow) || 0;
+    const mWarp = (probePlan && probePlan.warp) || (daily && daily.warp) || 1, mSlow = (probePlan && probePlan.slow) || 0;
     const skip = mSlow > 1 && ((probePlan.slowK = ((probePlan.slowK || 0) + 1) % mSlow) !== 0);
     if (timeRate !== 0 && !skip){
       warping = Math.max(warpFactor(), mWarp);
@@ -2184,7 +2256,7 @@
   // get and the inspector's numbers change under your hand. Release and time
   // runs again. A press without movement is still an ordinary click.
   let drag = null, suppressClick = false;
-  const draggable = b => !!b && planets.includes(b) && !b.deleted;
+  const draggable = b => !!b && planets.includes(b) && !b.deleted && !daily;   // the daily board is today's sky — not for rearranging
   function unscr(sx, sy){                                    // screen → world: the inverse of scr()
     const [cX, cY] = camD(), s = S();
     let X = (sx - cx)/s + cX, Y = (cy - sy)/s + cY;         // display-space offset from the barycentre
@@ -3605,6 +3677,7 @@
     // has scrolled to the article, Space/arrows must scroll the page again.
     if (window.scrollY > window.innerHeight/2) return;
     if (moonView){ if (e.key === 'Escape' || e.key === '0'){ exitMoon(); e.preventDefault(); } return; }   // sim hotkeys are inert in the Earth–Moon view
+    if (daily){ if (e.key === 'Escape'){ endLesson(); e.preventDefault(); } return; }   // Daily Orbit holds the clock: no transport, view or reset hotkeys
     if (e.key === 'Escape' && placeMode){ exitPlace(); e.preventDefault(); return; }
     if (e.key === 'Escape' && lesson){ endLesson(); e.preventDefault(); return; }
     if (e.code === 'Space'){ togglePause(); e.preventDefault(); }
@@ -3953,6 +4026,396 @@
   canvas.addEventListener('touchend', e => { if (e.touches.length < 2) pinchD = 0; if (e.touches.length === 0){ dragEnd(); mouseX = mouseY = -1; } }, {passive:true});
 
   resize(); reset(); frame();
+
+  // ---- Daily Orbit: today's sky, one probe, six launches ----
+  // The board is the real sky for today's UTC date (arrangeForDate), held still while the
+  // player aims two dials. Every launch is computed by the worker — this same physics core
+  // plus orbit-engine.js, deterministic, so everyone gets the same par and the same verdict —
+  // and then REPLAYED here: the planets run on the live physics while the probe is drawn
+  // along the computed path, so the flight you watch is the flight that was judged. The
+  // mode rides the lesson machinery (coach card, tick/draw hooks, Escape) and hides the
+  // sandbox chrome while it runs.
+  const DAILY_V = '20260914', DAILY_K = 'dailyOrbit', DAILY_MAX = 6, DAILY_EMO = { hit: '🟩', near: '🟨', miss: '🟥' };
+  const dailyToggle = document.getElementById('daily-toggle');
+  let dailyWorker = null, dailySeq = 0; const dailyPending = {};
+  function dailyRpc(m){
+    return new Promise((res, rej) => {
+      if (!dailyWorker){
+        try { dailyWorker = new Worker('orbit-worker.js?v=' + DAILY_V); } catch (e){ rej(e); return; }
+        dailyWorker.onmessage = e => { const r = e.data, p = dailyPending[r.id]; if (!p) return; delete dailyPending[r.id]; if (r.type === 'error') p.rej(new Error(r.message)); else p.res(r); };
+        dailyWorker.onerror = e => { for (const id in dailyPending){ dailyPending[id].rej(new Error(e.message || 'worker failed')); delete dailyPending[id]; } };
+      }
+      const id = ++dailySeq; dailyPending[id] = { res, rej }; dailyWorker.postMessage(Object.assign({ id }, m));
+    });
+  }
+  const dailyStore = Object.assign({ lastKey: null, streak: 0, best: 0, played: 0, solved: 0, done: {}, live: null },
+    (() => { try { return JSON.parse(localStorage.getItem(DAILY_K)) || {}; } catch (e){ return {}; } })());
+  function dailySave(){ if (daily && daily.override) return; try { localStorage.setItem(DAILY_K, JSON.stringify(dailyStore)); } catch (e){} }
+  const dTrack = (action, extra) => trackEv('daily_orbit', Object.assign({ action }, extra || {}));
+  const dFmt = (v, d) => Number(v).toFixed(d === undefined ? 2 : d);
+  const dDays = d => d >= 365 ? (d / 365.25).toFixed(1) + ' yr' : Math.round(d) + ' d';
+  const dDaysLong = d => d >= 365 ? (d / 365.25).toFixed(1) + ' years' : Math.round(d) + ' days';
+  function dDist(au){
+    const km = au * AU_KM;
+    if (au >= 0.01) return dFmt(au, 3) + ' AU (' + (km / 1e6).toFixed(1) + ' million km)';
+    if (km >= 1e6) return (km / 1e6).toFixed(2) + ' million km';
+    return (Math.round(km / 1000) * 1000).toLocaleString('en-US') + ' km';
+  }
+  const dStars = n => n ? '★'.repeat(n) + '☆'.repeat(3 - n) : '✖';
+  const dDateLong = iso => new Date(iso + 'T00:00:00Z').toLocaleDateString('en-US', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC' });
+  const dCls = f => f.arrived ? 'hit' : f.nearMiss ? 'near' : 'miss';
+  const dP = name => daily.P[name];
+
+  // launch frame at today's Earth: u = prograde, rr = outward (live state — the board is held on launch day while aiming)
+  function dailyFrame(){
+    const ux = EARTH.vx - SUN.vx, uy = EARTH.vy - SUN.vy, ul = Math.hypot(ux, uy) || 1;
+    const rx = EARTH.x - SUN.x, ry = EARTH.y - SUN.y, rl = Math.hypot(rx, ry) || 1;
+    return { ux: ux / ul, uy: uy / ul, rx: rx / rl, ry: ry / rl };
+  }
+  // two-body preview around the Sun alone, Sun-relative samples (what the real flight adds is every other planet's pull)
+  function dailyPreview(){
+    const f = dailyFrame(), s = daily.dials.speed / KMS, a = daily.dials.aim * Math.PI / 180, mu = G * SUN.m;
+    const dx = Math.cos(a) * f.ux + Math.sin(a) * f.rx, dy = Math.cos(a) * f.uy + Math.sin(a) * f.ry;
+    let x = EARTH.x - SUN.x + dx * 0.012, y = EARTH.y - SUN.y + dy * 0.012, vx = EARTH.vx - SUN.vx + s * dx, vy = EARTH.vy - SUN.vy + s * dy;
+    const h = 0.002, n = Math.ceil(daily.board.maxDays / 365.25 / h), pts = [];
+    let r = Math.hypot(x, y), ac = -mu / (r * r * r), ax = ac * x, ay = ac * y;
+    for (let i = 0; i < n; i++){
+      x += vx * h + 0.5 * ax * h * h; y += vy * h + 0.5 * ay * h * h;
+      r = Math.hypot(x, y); if (r < 0.02 || r > 60) break;
+      const a2 = -mu / (r * r * r), ax2 = a2 * x, ay2 = a2 * y;
+      vx += 0.5 * (ax + ax2) * h; vy += 0.5 * (ay + ay2) * h; ax = ax2; ay = ay2;
+      if (i % 3 === 0) pts.push(x, y);
+    }
+    daily.preview = pts;
+  }
+  // frame the board: the target's orbit (and Earth's) fills the space the coach card leaves free
+  function dailyFit(){
+    if (!daily || !daily.board) return;
+    const tp = dP(daily.board.target), rr = Math.max(tp.a * (1 + tp.e), EARTH.a * (1 + EARTH.e));
+    const dR = viewOpts.scale ? rr : RSCALE * Math.asinh(rr / RSCALE), phone = W <= 760;
+    const avail = phone ? Math.min(W, H * 0.5) * 0.42 : Math.min(W - 350, H) * 0.42;
+    zoom = Math.max(0.2, Math.min(4000, avail / (dR * baseScale)));
+    // put the Sun where the free space is: right of the card on desktop, in the top half on a phone
+    const sx = phone ? cx : cx + 160, sy = phone ? H * 0.26 : cy, s = baseScale * zoom;
+    const cX = (cx - sx) / s, cY = (sy - cy) / s, rd = Math.hypot(cX, cY);
+    const k = rd > 1e-9 && !viewOpts.scale ? RSCALE * Math.sinh(rd / RSCALE) / rd : 1;
+    const bx = isFinite(baryX) ? baryX : SUN.x, by = isFinite(baryY) ? baryY : SUN.y;   // (the barycentre is measured per frame; before the first frame it isn't)
+    if (!isFinite(zoom) || !isFinite(cX) || !isFinite(cY)){ zoom = 1; follow = null; return; }
+    daily.cam = { name: 'Daily Orbit', x: bx + cX * k, y: by + cY * k };
+    follow = daily.cam;
+  }
+  window.addEventListener('resize', () => { if (daily) setTimeout(dailyFit, 60); });
+
+  function startDaily(override){
+    if (daily){ coach.hidden = false; return; }
+    if (moonView) exitMoon();
+    if (lesson) endLesson();
+    if (probePlan){ probePlan.onEnd = null; abortProbe(); }
+    if (msg){ msg.onEnd = null; endMessage(); }
+    if (placeMode) exitPlace();
+    deselect(); closeTopPanels(); killHint(); resetView();
+    appEl.classList.add('daily-mode'); document.body.classList.add('daily-on');
+    daily = { phase: 'loading', board: null, P: {}, flights: [], shown: -1, replay: null, preview: null, dials: { speed: 3, aim: 0 }, override: override || null, warp: 1 };
+    lesson = { id: 'daily', tick: dailyTick, draw: dailyDraw, restore: dailyRestore, savedRate: timeRate };
+    setRate(0);
+    coachStep.textContent = 'Daily Orbit'; coachTitle.textContent = 'Placing the planets for today…';
+    coachBody.innerHTML = '<p>Real positions, real gravity — the same board for everyone in the world.</p>'; coachBtns.innerHTML = ''; coach.hidden = false;
+    dTrack('view', { mission: override ? 'check' : 'play' });
+    (async () => {
+      try {
+        let cached = null; try { cached = JSON.parse(sessionStorage.getItem(DAILY_K + 'Board')); } catch (e){}
+        const utcMs = Date.now(), todayISO = new Date(utcMs).toISOString().slice(0, 10);
+        let m = cached && cached.dateISO === todayISO && !override ? { board: cached } : null;
+        if (!m){ m = await dailyRpc(override ? { type: 'setup', day: +override } : { type: 'setup', utcMs }); if (!override) try { sessionStorage.setItem(DAILY_K + 'Board', JSON.stringify(m.board)); } catch (e){} }
+        if (!daily) return;                                         // closed while the worker was thinking
+        if (!m.board.par) throw new Error('no par for today');
+        await dailyBoardReady(m.board);
+      } catch (e){
+        if (!daily) return;
+        coachTitle.textContent = 'The board failed to load'; coachBody.innerHTML = '<p>Please reload the page and try again.</p>';
+        coachBtns.innerHTML = ''; dTrack('error', { message: String(e.message || e).slice(0, 100) });
+      }
+    })();
+  }
+  async function dailyBoardReady(board){
+    daily.board = board; daily.key = board.dateISO;
+    for (const p of board.planets) daily.P[p.name] = p;
+    arrangeForDate(board.jd); setRate(0);                        // today's sky, held still
+    dailyFit(); daily.refit = true;                                  // and once more after the first frame has measured the barycentre
+    const tp = dP(board.target), inward = board.target === 'Venus' || board.target === 'Mercury';
+    daily.dials.speed = board.kind === 'outer' ? 9 : board.target === 'Mars' ? 3 : 4; daily.dials.aim = inward ? 180 : 0;
+    dailyRenderCard();
+    // pick up where this browser left off today (finished or mid-way) by re-flying the same launches — it's deterministic
+    const rec = daily.override ? null : dailyStore.done[daily.key];
+    const live = !rec && !daily.override && dailyStore.live && dailyStore.live.key === daily.key ? dailyStore.live : null;
+    const again = rec ? rec.launches : live ? live.launches : [];
+    if (again.length){
+      coachTitle.textContent = 'Replaying your launches…';
+      for (const l of again){
+        try { const r = await dailyRpc({ type: 'fly', day: board.day, speed: l.speed, aim: l.aim }); if (!daily) return; daily.flights.push(dailyPrep(r.flight, l.aim)); } catch (e){ break; }
+      }
+      daily.shown = daily.flights.length - 1;
+      if (daily.flights.length){ const f = daily.flights[daily.shown]; daily.dials.speed = f.depKms; daily.dials.aim = f.aim; dailySetDial('speed', f.depKms); dailySetDial('aim', f.aim); dailyShowResult(f); }
+    }
+    coachTitle.textContent = 'Target: ' + board.target;
+    daily.phase = 'aim'; dailyRenderLog(); dailyPreview();
+    if (rec || daily.flights.some(f => f.arrived) || daily.flights.length >= DAILY_MAX) dailyFinish(); else dailySetControls(true);
+  }
+  function dailyRenderCard(){
+    const b = daily.board, tp = dP(b.target), win = b.windows.find(w => w.name === b.target);
+    coachStep.textContent = 'Daily Orbit · #' + b.number + ' · ' + dDateLong(b.dateISO);
+    coachTitle.textContent = 'Target: ' + b.target;
+    coachBody.innerHTML =
+      `<div class="dd-chips"><span class="dd-chip"><i style="background:${tp.color};color:${tp.color}"></i>${b.target}</span>` +
+      `<span class="dd-chip" title="${win && win.ratio !== null ? "Today's cheapest transfer costs " + dFmt(win.total, 1) + ' km/s against an ideal-window ' + dFmt(win.ideal, 1) : ''}">Window <b>${win && win.ratio !== null ? (win.ratio <= 1.15 ? 'open' : win.ratio <= 1.6 ? 'fair' : 'closed') : '—'}</b></span>` +
+      `<span class="dd-chip">🔥 Streak <b id="dd-streak">${dailyStore.streak || 0}</b></span></div>` +
+      `<div class="dd-dial"><div class="dd-row"><label for="dd-speed-num">Speed over Earth<small>how hard the probe is pushed away</small></label><span class="dd-val"><input id="dd-speed-num" type="number" min="0.5" max="30" step="0.01" inputmode="decimal"><span>km/s</span></span></div>` +
+      `<input id="dd-speed" type="range" min="0.5" max="30" step="0.05" aria-label="Speed over Earth, km/s"><div class="dd-fine"><button type="button" data-d="speed" data-v="-0.1">−0.1</button><button type="button" data-d="speed" data-v="-0.01">−0.01</button><button type="button" data-d="speed" data-v="0.01">+0.01</button><button type="button" data-d="speed" data-v="0.1">+0.1</button></div></div>` +
+      `<div class="dd-dial"><div class="dd-row"><label for="dd-aim-num">Aim<small>0° = with Earth's motion · + swings outward · ±180° = braking</small></label><span class="dd-val"><input id="dd-aim-num" type="number" min="-180" max="180" step="0.1" inputmode="decimal"><span>°</span></span></div>` +
+      `<input id="dd-aim" type="range" min="-180" max="180" step="0.5" aria-label="Aim, degrees off Earth's direction of travel"><div class="dd-fine"><button type="button" data-d="aim" data-v="-1">−1°</button><button type="button" data-d="aim" data-v="-0.1">−0.1°</button><button type="button" data-d="aim" data-v="0.1">+0.1°</button><button type="button" data-d="aim" data-v="1">+1°</button></div></div>` +
+      `<button id="dd-launch" class="btn primary" type="button" disabled>Launch</button><div id="dd-pips"></div>` +
+      `<div id="dd-result" class="dd-card" hidden></div><div id="dd-log"></div>` +
+      `<div id="dd-done" class="dd-card dd-gold" hidden><div class="dd-done-title" id="dd-done-title"></div><div class="dd-grid" id="dd-grid"></div><div class="dd-stars" id="dd-stars"></div><p class="dd-fuel" id="dd-par"></p>` +
+      `<canvas id="dd-strip" width="270" height="70"></canvas><p class="dd-cap">Fuel for every flight time today — the porkchop. Gold: par. Blue: you.</p>` +
+      `<div class="dd-btns"><button id="dd-share" class="btn primary" type="button">Share result</button><button id="dd-exit" class="btn" type="button">Explore the sky</button></div><p class="dd-count" id="dd-count"></p></div>` +
+      `<p class="note">The dotted line is the probe's path around the Sun alone — the puzzle is where <b>${b.target}</b> will be when you get there. Each result says how far ahead or behind it was.</p>`;
+    coachBtns.innerHTML = '';
+    dailySetDial('speed', daily.dials.speed); dailySetDial('aim', daily.dials.aim);
+    for (const w of ['speed', 'aim']){
+      document.getElementById('dd-' + w).addEventListener('input', e => dailySetDial(w, +e.target.value, true));
+      const num = document.getElementById('dd-' + w + '-num');
+      num.addEventListener('change', () => dailySetDial(w, +num.value || daily.dials[w]));
+      num.addEventListener('keydown', e => { if (e.key === 'Enter'){ dailySetDial(w, +num.value || daily.dials[w]); num.blur(); } e.stopPropagation(); });
+    }
+    coachBody.querySelectorAll('.dd-fine button').forEach(el => el.addEventListener('click', () => dailySetDial(el.dataset.d, daily.dials[el.dataset.d] + +el.dataset.v)));
+    document.getElementById('dd-launch').addEventListener('click', dailyLaunch);
+    document.getElementById('dd-log').addEventListener('click', e => { const r = e.target.closest('.dd-lrow'); if (!r || daily.replay) return; daily.shown = +r.dataset.i; dailyRenderLog(); dailyShowResult(daily.flights[daily.shown]); });
+    document.getElementById('dd-share').addEventListener('click', dailyShare);
+    document.getElementById('dd-exit').addEventListener('click', endLesson);
+  }
+  function dailySetDial(which, v, fromSlider){
+    if (!daily) return;
+    const step = which === 'speed' ? 0.01 : 0.1;
+    v = Math.round(v / step) * step;
+    if (which === 'speed') v = Math.min(30, Math.max(0.5, v)); else { v = ((v + 180) % 360 + 360) % 360 - 180; if (v === -180) v = 180; }
+    daily.dials[which] = +v.toFixed(2);
+    const num = document.getElementById('dd-' + which + '-num'), sl = document.getElementById('dd-' + which);
+    if (num) num.value = which === 'speed' ? daily.dials.speed.toFixed(2) : daily.dials.aim.toFixed(1);
+    if (sl && !fromSlider) sl.value = daily.dials[which];
+    if (daily.board) dailyPreview();
+  }
+  function dailySetControls(on){
+    const ids = ['dd-launch', 'dd-speed', 'dd-aim', 'dd-speed-num', 'dd-aim-num'];
+    for (const id of ids){ const el = document.getElementById(id); if (el) el.disabled = !on; }
+    coachBody.querySelectorAll('.dd-fine button').forEach(b => { b.disabled = !on; });
+    const L = document.getElementById('dd-launch'); if (!L) return;
+    L.textContent = daily.phase === 'done' ? (daily.flights.some(f => f.arrived) ? 'Arrived — back tomorrow' : 'Out of launches') : on ? 'Launch ' + (daily.flights.length + 1) + ' of ' + DAILY_MAX : 'Flying…';
+  }
+  function dailyPrep(f, aim){                                    // closest sample to the target on the outbound leg + how much of the path to show
+    const k = f.planetOrder.indexOf(daily.board.target), n = f.path.length / 2; let best = -1, bd = Infinity;
+    const leg = f.legDays ? f.times.findIndex(tt => tt * 365.25 >= f.legDays) : -1, until = leg > 0 ? leg : n - 1;
+    for (let i = 0; i <= until; i++){ const o = i * f.planetOrder.length * 2 + k * 2, d = Math.hypot(f.path[i * 2] - f.world[o], f.path[i * 2 + 1] - f.world[o + 1]); if (d < bd){ bd = d; best = i; } }
+    f.aim = aim; f.closeIdx = best;
+    f.showIdx = f.arrived || f.crashed ? n - 1 : Math.min(n - 1, Math.max(best, until) + Math.ceil(n * 0.04));
+    return f;
+  }
+  async function dailyLaunch(){
+    if (!daily || daily.phase !== 'aim' || daily.replay) return;
+    daily.phase = 'flying'; dailySetControls(false); document.getElementById('dd-result').hidden = true;
+    const speed = daily.dials.speed, aim = daily.dials.aim;
+    let r;
+    try { r = await dailyRpc({ type: 'fly', day: daily.board.day, speed, aim }); }
+    catch (e){ if (!daily) return; daily.phase = 'aim'; dailySetControls(true); announce('🚀 The flight failed to compute — try again', 'escape'); return; }
+    if (!daily) return;
+    const f = dailyPrep(r.flight, aim);
+    daily.flights.push(f); daily.shown = daily.flights.length - 1;
+    dailyStore.live = { key: daily.key, launches: daily.flights.map(x => ({ speed: x.depKms, aim: x.aim })) }; dailySave();
+    dailyRenderLog();
+    dTrack('launch', { outcome: dCls(f), to_game: daily.board.target, mission: 'launch' + daily.flights.length });
+    // replay on the live physics: planets integrate for real from launch day, the probe rides the computed path
+    arrangeForDate(daily.board.jd);
+    const endT = f.times[f.showIdx], steps = endT / DT, perFrame = Math.max(1, Math.ceil(steps / 300));   // ~5 s of flight at 60 fps
+    daily.warp = Math.max(1, Math.min(8, Math.ceil(perFrame / 32)));
+    daily.replay = { f, t0: t, endT, told: false };
+    setRate(Math.max(1, Math.min(32, Math.ceil(perFrame / daily.warp))));
+    msgFx.push({ x: EARTH.x, y: EARTH.y, born: performance.now() }); sfx('launch');
+  }
+  function dailyTick(){
+    if (!daily) return;
+    if (daily.refit && isFinite(baryX)){ daily.refit = false; dailyFit(); }
+    if (daily.replay){
+      const R = daily.replay, f = R.f, tt = t - R.t0;
+      const live = coachBody.querySelector('#dd-launch'); if (live) live.textContent = 'T+' + dDays(tt * 365.25);
+      if (f.arrived && !R.told && tt >= f.arrDays / 365.25){ R.told = true; const [px, py] = dailyProbeAt(f, tt); msgFx.push({ x: SUN.x + px, y: SUN.y + py, born: performance.now() }); announce('🚀 Captured at ' + daily.board.target + ' — ' + dDaysLong(f.arrDays) + ' in transit', 'capture'); sfx('capture'); }
+      if (tt >= R.endT){
+        if (f.crashed) announce('💥 The probe flew into ' + f.crashed, 'impact');
+        else if (!f.arrived) announce('🚀 Missed ' + daily.board.target + ' — closest ' + dDist(f.closestAU), 'escape');
+        daily.replay = null; daily.warp = 1; setRate(0); arrangeForDate(daily.board.jd);   // back to launch day for the next try
+        dailyShowResult(f);
+        if (f.arrived || daily.flights.length >= DAILY_MAX) dailyFinish(); else { daily.phase = 'aim'; dailySetControls(true); dailyPreview(); }
+      }
+    }
+  }
+  function dailyProbeAt(f, tt){                                  // Sun-relative position along the computed path at flight time tt (years)
+    const T = f.times; let lo = 0, hi = f.showIdx;
+    if (tt <= T[0]) return [f.path[0], f.path[1]];
+    if (tt >= T[hi]) return [f.path[hi * 2], f.path[hi * 2 + 1]];
+    while (hi - lo > 1){ const mid = (lo + hi) >> 1; if (T[mid] <= tt) lo = mid; else hi = mid; }
+    const k = (tt - T[lo]) / ((T[hi] - T[lo]) || 1);
+    return [f.path[lo * 2] + (f.path[hi * 2] - f.path[lo * 2]) * k, f.path[lo * 2 + 1] + (f.path[hi * 2 + 1] - f.path[lo * 2 + 1]) * k];
+  }
+  function dailyDraw(){
+    if (!daily || !daily.board || SUN.deleted) return;
+    const b = daily.board, tp = planets.find(p => p.name === b.target), R = daily.replay;
+    const f = R ? R.f : (daily.shown >= 0 ? daily.flights[daily.shown] : null);
+    const sr = (px, py) => scr(SUN.x + px, SUN.y + py);           // Sun-relative → screen
+    ctx.save();
+    // capture zone around the target (enlarged to stay visible)
+    if (tp && !tp.deleted){
+      const [X, Y] = scr(tp.x, tp.y), rl = Math.hypot(tp.x - SUN.x, tp.y - SUN.y) || 1;
+      const [X2, Y2] = scr(tp.x + (tp.x - SUN.x) / rl * b.arrR, tp.y + (tp.y - SUN.y) / rl * b.arrR);
+      const ring = Math.max(10, Math.hypot(X2 - X, Y2 - Y)) + tp.size;
+      ctx.strokeStyle = 'rgba(255,211,90,0.6)'; ctx.lineWidth = 1; ctx.setLineDash([2, 3]); ctx.beginPath(); ctx.arc(X, Y, ring, 0, 2 * Math.PI); ctx.stroke(); ctx.setLineDash([]);
+    }
+    // par's ghost path once the day is done
+    if (daily.phase === 'done' && b.par && b.par.path){
+      const pp = b.par.path; ctx.beginPath();
+      for (let i = 0; i < pp.length; i += 2){ const [X, Y] = sr(pp[i], pp[i + 1]); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }
+      ctx.setLineDash([5, 5]); ctx.strokeStyle = 'rgba(255,211,90,0.7)'; ctx.lineWidth = 1.5; ctx.stroke(); ctx.setLineDash([]);
+    }
+    // preview arc + aim arrow while aiming
+    if (daily.phase === 'aim' && !R && !EARTH.deleted){
+      if (daily.preview){
+        ctx.beginPath();
+        for (let i = 0; i < daily.preview.length; i += 2){ const [X, Y] = sr(daily.preview[i], daily.preview[i + 1]); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }
+        ctx.setLineDash([3, 6]); ctx.strokeStyle = 'rgba(111,157,255,0.6)'; ctx.lineWidth = 1.2; ctx.stroke(); ctx.setLineDash([]);
+      }
+      const fr = dailyFrame(), [EX, EY] = scr(EARTH.x, EARTH.y), a = daily.dials.aim * Math.PI / 180;
+      const dx = Math.cos(a) * fr.ux + Math.sin(a) * fr.rx, dy = Math.cos(a) * fr.uy + Math.sin(a) * fr.ry;
+      const [TX, TY] = scr(EARTH.x + dx * 1e-3, EARTH.y + dy * 1e-3), an = Math.atan2(TY - EY, TX - EX);   // heading in screen space, honest in the compressed view
+      const L = 22 + Math.min(60, daily.dials.speed * 2.6), tx = EX + Math.cos(an) * L, ty = EY + Math.sin(an) * L;
+      ctx.strokeStyle = '#fff'; ctx.lineWidth = 1.6; ctx.beginPath(); ctx.moveTo(EX, EY); ctx.lineTo(tx, ty); ctx.stroke();
+      ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.moveTo(tx, ty); ctx.lineTo(tx - 7 * Math.cos(an - 0.5), ty - 7 * Math.sin(an - 0.5)); ctx.lineTo(tx - 7 * Math.cos(an + 0.5), ty - 7 * Math.sin(an + 0.5)); ctx.closePath(); ctx.fill();
+    }
+    // the shown flight: its path so far (replay) or whole (afterwards), the probe, the correction burn, the closest-approach gap
+    if (f){
+      const tt = R ? t - R.t0 : f.times[f.showIdx];
+      let idx = f.showIdx; if (R){ idx = 0; while (idx < f.showIdx && f.times[idx + 1] <= tt) idx++; }
+      ctx.beginPath();
+      for (let i = 0; i <= idx; i++){ const [X, Y] = sr(f.path[i * 2], f.path[i * 2 + 1]); i ? ctx.lineTo(X, Y) : ctx.moveTo(X, Y); }
+      const [px, py] = dailyProbeAt(f, tt), [PX, PY] = sr(px, py); ctx.lineTo(PX, PY);
+      ctx.strokeStyle = f.arrived ? 'rgba(110,231,135,0.85)' : 'rgba(230,237,248,0.75)'; ctx.lineWidth = 1.6; ctx.stroke();
+      if (f.corr && f.corr.applied && f.corrIdx >= 0 && idx >= f.corrIdx){
+        const [X, Y] = sr(f.path[f.corrIdx * 2], f.path[f.corrIdx * 2 + 1]);
+        ctx.strokeStyle = 'rgba(255,207,90,0.9)'; ctx.lineWidth = 1.2; ctx.beginPath(); ctx.arc(X, Y, 5, 0, 2 * Math.PI); ctx.stroke();
+      }
+      if (R || !(f.arrived || f.crashed)){ ctx.fillStyle = '#fff'; ctx.shadowColor = '#fff'; ctx.shadowBlur = 8; ctx.beginPath(); ctx.arc(PX, PY, 2.6, 0, 2 * Math.PI); ctx.fill(); ctx.shadowBlur = 0; }
+      if (!R && !f.arrived && !f.crashed && f.closeIdx >= 0){          // where the target WAS at closest approach, and the gap
+        const [cX, cY] = sr(f.path[f.closeIdx * 2], f.path[f.closeIdx * 2 + 1]);
+        const k = f.planetOrder.indexOf(b.target), o = f.closeIdx * f.planetOrder.length * 2 + k * 2, [TX, TY] = sr(f.world[o], f.world[o + 1]);
+        ctx.setLineDash([2, 3]); ctx.strokeStyle = 'rgba(255,122,122,0.8)'; ctx.lineWidth = 1; ctx.beginPath(); ctx.moveTo(cX, cY); ctx.lineTo(TX, TY); ctx.stroke(); ctx.setLineDash([]);
+        ctx.fillStyle = 'rgba(255,122,122,0.9)'; ctx.beginPath(); ctx.arc(cX, cY, 2.2, 0, 2 * Math.PI); ctx.fill();
+        ctx.globalAlpha = 0.45; ctx.fillStyle = tp ? tp.color : '#fff'; ctx.beginPath(); ctx.arc(TX, TY, 2.5 + (tp ? tp.size : 3) * 0.75, 0, 2 * Math.PI); ctx.fill(); ctx.globalAlpha = 1;
+        ctx.fillStyle = 'rgba(255,122,122,0.9)'; ctx.font = '600 10px system-ui,sans-serif'; ctx.textAlign = 'left'; ctx.textBaseline = 'alphabetic';
+        ctx.fillText(b.target + ' at T+' + dDays(f.times[f.closeIdx] * 365.25), TX + 8, TY - 6);
+      }
+    }
+    ctx.restore();
+  }
+  // words for a flight
+  function dailyDescribe(f){
+    const T = daily.board.target, tp = dP(T), rT = Math.hypot(tp.x, tp.y), par = daily.board.par, out = [];
+    if (f.arrived){
+      const c = f.corr && f.corr.applied ? ' + ' + dFmt(f.corr.kms) + ' correction' : '';
+      return { title: 'Captured at ' + T + '!', lines: ['Arrived after <b>' + dDaysLong(f.arrDays) + '</b>' + (f.corr && f.corr.applied ? ', with one mid-course burn on the way.' : ', clean — no correction needed.'),
+        '<span class="dd-fuel">Fuel <b>' + dFmt(f.totalKms, 1) + ' km/s</b> = ' + dFmt(f.depKms) + ' launch' + c + ' + ' + dFmt(f.capKms) + ' braking · par ' + dFmt(par.totalKms, 1) + '</span>',
+        '<b>' + dStars(f.stars) + '</b> ' + (f.ratio <= 1 ? 'Under par!' : f.stars === 3 ? 'Within 5% of par.' : f.stars === 2 ? 'Within 25% of par.' : Math.round((f.ratio - 1) * 100) + '% over par.')], hint: null };
+    }
+    if (f.crashed) return { title: 'Flew straight into ' + f.crashed, lines: [f.crashed === T ? 'Right planet, but far too fast to be captured: it hit the surface.' : 'It never reached ' + T + '.'], hint: f.crashed === T ? 'Almost. A touch less speed, so it can brake into orbit.' : 'Aim a little away from ' + f.crashed + '.' };
+    out.push('Closest approach <b>' + dDist(f.closestAU) + '</b>, ' + dDaysLong(f.closestDays) + ' after launch.');
+    if (f.corr){
+      if (f.corr.applied) out.push('A <b>' + dFmt(f.corr.kms) + ' km/s</b> mid-course burn tried to pull it in' + (f.uncorrected ? ' (it would have missed by ' + dDist(f.uncorrected.closestAU) + ' on its own)' : '') + ' — not enough.');
+      else out.push('Fixing it in flight would have taken <b>' + (f.corr.kms === null ? 'more than the tank holds' : dFmt(f.corr.kms, 1) + ' km/s') + '</b> — over the 1.5 km/s correction tank.');
+    }
+    const fb = Object.entries(f.flybys || {});
+    if (fb.length) out.push('Passed ' + fb.map(([n, d]) => n + ' at ' + dDist(d)).join(', ') + '.');
+    let hint;
+    const cr = f.cross || (f.uncorrected && f.uncorrected.cross);
+    if (!cr) hint = f.outward ? 'It peaked at ' + dFmt(f.rExtreme) + ' AU — short of ' + T + "'s orbit at " + dFmt(rT) + ' AU. More speed.' : 'It only fell to ' + dFmt(f.rExtreme) + ' AU — not far enough in toward ' + T + ' (' + dFmt(rT) + ' AU). More speed, aimed against Earth\'s motion (near ±180°).';
+    else if (Math.abs(cr.lead) < 2) hint = 'You crossed ' + T + "'s orbit almost on top of it, " + dDays(cr.days) + ' in. Fine-tune: a tenth of a degree matters now.';
+    else if (cr.lead > 0) hint = 'You crossed ' + T + "'s orbit " + dFmt(cr.lead, 0) + '° behind it, ' + dDays(cr.days) + ' in — it had already gone by. Arrive sooner: more speed.';
+    else hint = 'You crossed ' + T + "'s orbit " + dFmt(-cr.lead, 0) + '° ahead of it, ' + dDays(cr.days) + ' in — you got there first. Arrive later: less speed, or aim a touch further ' + (f.outward ? 'outward' : 'inward') + ' for a longer road.';
+    return { title: f.nearMiss ? 'Near miss' : 'Missed ' + T, lines: out, hint };
+  }
+  function dailyShowResult(f){
+    const d = dailyDescribe(f), el = document.getElementById('dd-result'); if (!el) return;
+    el.className = 'dd-card ' + dCls(f); el.hidden = false;
+    el.innerHTML = '<div class="dd-rt">' + d.title + '</div>' + d.lines.map(l => '<p>' + l + '</p>').join('') + (d.hint ? '<p class="dd-hint">' + d.hint + '</p>' : '');
+  }
+  function dailyRenderLog(){
+    const log = document.getElementById('dd-log'), pips = document.getElementById('dd-pips'); if (!log) return;
+    log.innerHTML = daily.flights.map((f, i) => '<div class="dd-lrow' + (i === daily.shown ? ' sel' : '') + '" data-i="' + i + '"><span>' + DAILY_EMO[dCls(f)] + '</span><span class="d">' + dFmt(f.depKms) + ' km/s · ' + dFmt(f.aim, 1) + '°</span><span>' + (f.arrived ? dFmt(f.totalKms, 1) + ' km/s ' + dStars(f.stars) : f.crashed ? 'hit ' + f.crashed : 'by ' + (f.closestAU >= 0.01 ? dFmt(f.closestAU, 3) + ' AU' : Math.round(f.closestAU * AU_KM / 1000) + 'k km')) + '</span></div>').join('');
+    const ps = []; for (let i = 0; i < DAILY_MAX; i++) ps.push('<i class="' + (daily.flights[i] ? dCls(daily.flights[i]) : (i === daily.flights.length && daily.phase !== 'done' ? 'now' : '')) + '"></i>');
+    pips.innerHTML = ps.join('');
+  }
+  function dailyFinish(){
+    daily.phase = 'done'; dailySetControls(false); dailyRenderLog();
+    const b = daily.board, won = daily.flights.find(f => f.arrived), key = daily.key;
+    if (!daily.override && !dailyStore.done[key]){
+      dailyStore.done[key] = { target: b.target, launches: daily.flights.map(f => ({ speed: f.depKms, aim: f.aim, r: dCls(f) })), arrived: !!won, stars: won ? won.stars : 0, fuel: won ? +won.totalKms.toFixed(2) : null, par: +b.par.totalKms.toFixed(2) };
+      dailyStore.played++;
+      const y = new Date(Date.UTC(+key.slice(0, 4), +key.slice(5, 7) - 1, +key.slice(8, 10)) - 864e5).toISOString().slice(0, 10);
+      if (won){ dailyStore.solved++; dailyStore.streak = dailyStore.lastKey === y ? (dailyStore.streak || 0) + 1 : 1; dailyStore.best = Math.max(dailyStore.best || 0, dailyStore.streak); }
+      else dailyStore.streak = 0;
+      dailyStore.lastKey = key; dailyStore.live = null;
+      const keys = Object.keys(dailyStore.done).sort(); while (keys.length > 60) delete dailyStore.done[keys.shift()];
+      dailySave();
+      dTrack('done', { outcome: won ? 'arrived' : 'lost', to_game: b.target, mission: String(daily.flights.length), lesson: won ? 'stars' + won.stars : 'none' });
+    }
+    const par = b.par, st = document.getElementById('dd-streak'); if (st) st.textContent = dailyStore.streak || 0;
+    document.getElementById('dd-done-title').textContent = won ? (won.stars === 3 ? 'Mission accomplished' : 'Captured at ' + b.target) : b.target + ' got away';
+    document.getElementById('dd-grid').textContent = daily.flights.map(f => DAILY_EMO[dCls(f)]).join('');
+    const stars = document.getElementById('dd-stars'); stars.textContent = won ? dStars(won.stars) : 'no arrival'; stars.className = 'dd-stars' + (won ? '' : ' none');
+    document.getElementById('dd-par').innerHTML = 'Par: <b>' + dFmt(par.totalKms, 1) + ' km/s</b> — ' + dFmt(par.speed) + ' km/s @ ' + dFmt(par.aim, 1) + '°, ' + dDaysLong(par.tofDays) + (par.corrKms ? ', one ' + dFmt(par.corrKms) + ' km/s correction' : '') + (won ? ' · You: <b>' + dFmt(won.totalKms, 1) + ' km/s</b> in ' + dDaysLong(won.arrDays) : '') + ' · played ' + dailyStore.played + ', arrived ' + dailyStore.solved + ', best streak ' + dailyStore.best;
+    document.getElementById('dd-done').hidden = false; dailyStrip(won); dailyCountdown();
+    setTimeout(() => { const d = document.getElementById('dd-done'); if (d) d.scrollIntoView({ behavior: 'smooth', block: 'nearest' }); }, 300);
+  }
+  function dailyStrip(won){
+    const c = document.getElementById('dd-strip'), s = daily.board.strip; if (!c || !s || !s.length){ if (c) c.hidden = true; return; }
+    const r = c.getBoundingClientRect(), w = Math.max(200, Math.round(r.width)), h = 70, d = window.devicePixelRatio || 1;
+    c.width = w * d; c.height = h * d; const x = c.getContext('2d'); x.setTransform(d, 0, 0, d, 0, 0);
+    const tot = s.map(p => p.dep + p.cap), tMin = s[0].days, tMax = s[s.length - 1].days, fMin = Math.min.apply(null, tot), fMax = Math.min(fMin * 2.6, Math.max.apply(null, tot));
+    const X = tt => 8 + (tt - tMin) / (tMax - tMin || 1) * (w - 16), Y = fu => 8 + (1 - Math.min(1, (fu - fMin) / (fMax - fMin || 1))) * (h - 22);
+    x.strokeStyle = 'rgba(150,170,210,0.55)'; x.lineWidth = 1.5; x.beginPath();
+    s.forEach((p, i) => { const px = X(p.days), py = Y(p.dep + p.cap); i ? x.lineTo(px, py) : x.moveTo(px, py); }); x.stroke();
+    x.fillStyle = 'rgba(159,171,194,0.9)'; x.font = '10px ui-monospace,Menlo,monospace'; x.fillText(dDays(tMin), 6, h - 4); x.textAlign = 'right'; x.fillText(dDays(tMax), w - 6, h - 4); x.textAlign = 'center'; x.fillText('flight time →', w / 2, h - 4); x.textAlign = 'left';
+    const par = daily.board.par; x.fillStyle = '#ffd35a'; x.beginPath(); x.arc(X(par.tofDays), Y(par.totalKms), 4, 0, 7); x.fill();
+    if (won){ x.fillStyle = '#6f9dff'; x.beginPath(); x.arc(X(won.arrDays), Y(won.totalKms), 4, 0, 7); x.fill(); }
+  }
+  function dailyCountdown(){
+    const el = document.getElementById('dd-count'); if (!el || !daily) return;
+    const now = Date.now(), next = Math.ceil(now / 864e5) * 864e5, ms = next - now, hh = Math.floor(ms / 36e5), mm = Math.floor(ms % 36e5 / 6e4);
+    el.textContent = 'Next target in ' + hh + 'h ' + String(mm).padStart(2, '0') + 'm (00:00 UTC)';
+    if (daily.phase === 'done') setTimeout(dailyCountdown, 30000);
+  }
+  function dailyShare(){
+    const b = daily.board, won = daily.flights.find(f => f.arrived);
+    const text = 'Daily Orbit #' + b.number + ' · ' + b.target + '\n' + daily.flights.map(f => DAILY_EMO[dCls(f)]).join('') + ' ' + (won ? dStars(won.stars) + ' (' + daily.flights.length + '/' + DAILY_MAX + ')' : '✖') + '\n' + (won ? 'Fuel ' + dFmt(won.totalKms, 1) + ' km/s · par ' + dFmt(b.par.totalKms, 1) : b.target + ' got away · par ' + dFmt(b.par.totalKms, 1) + ' km/s') + '\nhttps://limestonegames.com/solar-system/?daily';
+    dTrack('share', { outcome: won ? 'arrived' : 'lost' });
+    if (navigator.share && /Mobi|Android/i.test(navigator.userAgent)) navigator.share({ text }).catch(() => {});
+    else if (navigator.clipboard) navigator.clipboard.writeText(text).then(() => announce('📋 Result copied — paste it anywhere', 'capture'), () => announce(text, 'capture'));
+    else announce(text, 'capture');
+  }
+  function dailyRestore(){                                      // the card closed: back to the sandbox, the sky left as it stands
+    appEl.classList.remove('daily-mode'); document.body.classList.remove('daily-on');
+    if (follow && daily && follow === daily.cam) follow = null;
+    daily = null;
+  }
+  dailyToggle.addEventListener('click', () => { closeTopPanels(); startDaily(); });
+  {
+    const q = location.search;
+    if (/[?&]daily(=|&|$)/.test(q)){ const d = q.match(/[?&]day=(-?\d+)/); setTimeout(() => startDaily(d ? d[1] : null), 0); }   // (a background tab never paints, so no frame is waited for — the camera refits on the first drawn frame)
+  }
 })();
 </script>
 <a id="fb-pill" href="/feedback/?from=solar-system" style="position:fixed;left:10px;bottom:38px;z-index:2147483000;font:600 11px/1 Inter,system-ui,sans-serif;color:#fff;background:rgba(16,62,60,0.5);padding:6px 11px;border-radius:999px;text-decoration:none;letter-spacing:0.02em;opacity:0.75" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.75">💬 Feedback</a>
