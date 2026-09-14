@@ -367,15 +367,6 @@
   #rail .panel[hidden]{display:none !important;}
   #rail #coach{padding:12px 13px 12px;}
   #rail #coach:not([hidden]) ~ #play-doors, #rail #voy-panel:not([hidden]) ~ #play-doors{display:none;}   /* while a lesson, the daily or Voyager runs, the card has the tab */
-  #daily-card{display:flex;flex-direction:column;gap:7px;padding:13px 14px;border-radius:12px;border:1px solid rgba(255,211,90,0.55);background:rgba(255,196,60,0.10);}
-  #daily-card-eyebrow{display:flex;justify-content:space-between;align-items:center;font:700 9.5px/1 system-ui,sans-serif;letter-spacing:.14em;text-transform:uppercase;color:#ffd35a;}
-  #daily-card-streak{font:600 10.5px/1 system-ui,sans-serif;letter-spacing:0;text-transform:none;color:var(--soft);}
-  #daily-card-title{font:700 15px/1.25 system-ui,sans-serif;color:#fff;}
-  #daily-card-sub{font:500 11.5px/1.45 system-ui,sans-serif;color:var(--soft);}
-  #daily-card-btns{display:flex;gap:6px;margin-top:3px;}
-  #daily-card-btns .btn{text-align:center;text-decoration:none;}
-  #daily-card-btns #daily-go{flex:1;}
-  #app.daily-mode #daily-card, #rail #coach:not([hidden]) ~ #daily-card, #rail #voy-panel:not([hidden]) ~ #daily-card{display:none;}
   /* lessons and missions: one list, one row style */
   #learn-list .lcard{margin-top:0;}
   #tool-list{display:flex;flex-direction:column;}
@@ -431,10 +422,6 @@
   #rail-tabs button{font-size:13px;padding:11px 0;}
   #rail-tabs button svg{width:16px;height:16px;}
   #rail-body section{gap:10px;padding:14px;}
-  #daily-card{gap:8px;padding:16px 16px 15px;}
-  #daily-card-title{font-size:17px;}
-  #daily-card-sub{font-size:12.5px;}
-  #daily-card-btns .btn{font-size:13px;padding:11px 12px;}
   #play-doors{display:flex;flex-direction:column;}
   .door{display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;column-gap:10px;align-items:center;text-align:left;width:100%;
     padding:13px 4px;border:0;border-bottom:1px solid var(--pnl-line);background:none;color:var(--ink);cursor:pointer;font:inherit;}
@@ -444,6 +431,7 @@
   .door-s{font:500 12px/1.4 system-ui,sans-serif;color:var(--dim);grid-column:1;margin-top:3px;}
   .door-c{grid-column:2;grid-row:1 / span 2;width:8px;height:8px;border-right:2px solid var(--dim);border-bottom:2px solid var(--dim);transform:rotate(-45deg);transition:transform .15s;margin-right:4px;}
   .door.open .door-c{transform:rotate(45deg);}
+  .door.gold .door-t::before{content:'';display:inline-block;width:8px;height:8px;border-radius:50%;background:#ffd35a;box-shadow:0 0 6px #ffd35a;margin-right:8px;vertical-align:1px;}
   .door-list{display:flex;flex-direction:column;padding:2px 0 6px 14px;border-bottom:1px solid var(--pnl-line);}
   .door-list[hidden], #learn-list[hidden], #mission-list[hidden]{display:none !important;}
   .door-list .lcard, .door-list .act{display:block;width:100%;text-align:left;white-space:normal;background:none;border:0;border-radius:0;padding:10px 4px;
@@ -615,12 +603,6 @@
     <div id="voy-today-btns"><button id="voy-keep" class="btn" type="button">Keep flying</button><button id="voy-done" class="btn primary" type="button">Done ✓</button></div>
   </div>
 </div>
-      <div id="daily-card">
-        <div id="daily-card-eyebrow"><span>Daily Orbit</span><span id="daily-card-streak"></span></div>
-        <div id="daily-card-title">Today's sky, one probe, six launches</div>
-        <div id="daily-card-sub">The planets where they really are today. Same board for everyone.</div>
-        <div id="daily-card-btns"><button id="daily-go" class="btn primary" type="button">Play today's puzzle</button></div>
-      </div>
   <div id="msg-panel" class="panel" hidden>
     <div id="msg-title">📡 Lightspeed message</div>
     <button id="msg-mars" class="btn act" type="button" title="Send a pulse from Earth to Mars at the speed of light">→ Mars <span class="lm" id="lm-mars"></span></button>
@@ -641,6 +623,7 @@
           <button id="act-msg" class="btn act" type="button" title="Send a radio pulse from Earth at the true speed of light — time holds still while it crosses">Lightspeed message…</button>
         </div>
         <button class="door" type="button" data-go="build"><span class="door-t">Sandbox</span><span class="door-s">Comets, storms, a rogue star, a planet of your own</span><span class="door-c"></span></button>
+        <button class="door gold" type="button" id="daily-go"><span class="door-t">Daily Orbit</span><span class="door-s">Today's sky, one probe, six launches<span id="daily-door-streak"></span></span><span class="door-c"></span></button>
       </div>
     </section>
     <section id="tab-build" hidden>
@@ -3839,7 +3822,6 @@
   function setTab(name){
     for (const b of railTabs.querySelectorAll('button')) b.classList.toggle('on', b.dataset.tab === name);
     for (const sec of document.querySelectorAll('#rail-body > section')) sec.hidden = sec.id !== 'tab-' + name;
-    try { localStorage.setItem('ssTab', name); } catch(e){}
     if (railEl.classList.contains('peek')) setSheet('half');
   }
   function setSheet(state){                                     // phones only: peek | half | full
@@ -3857,13 +3839,14 @@
   document.getElementById('rail-handle').addEventListener('click', () => setSheet(railEl.classList.contains('peek') ? 'half' : railEl.classList.contains('half') ? 'full' : 'peek'));
   document.getElementById('rail-body').addEventListener('keydown', e => { if (e.target.matches('input, textarea, select')) e.stopPropagation(); });   // typing in a panel never fires sim hotkeys
   new ResizeObserver(() => { measureDock(); if (!railSide()) resize(); }).observe(railEl);
-  try { const t0 = localStorage.getItem('ssTab'); if (t0 && document.getElementById('tab-' + t0)) setTab(t0); } catch(e){}
+  // (the page always opens on Play — a remembered Inspect or View tab made an empty panel the first thing a visitor saw)
   // the Play doors: Learn and Missions open in place, Sandbox is the Build tab
   let doorsOpen = {}; try { doorsOpen = JSON.parse(localStorage.getItem('ssDoors') || '{}'); } catch(e){}
   function syncDoors(){ for (const d of document.querySelectorAll('.door[data-door]')){ const list = document.getElementById(d.dataset.door === 'learn' ? 'learn-list' : 'mission-list'); const open = !!doorsOpen[d.dataset.door]; d.classList.toggle('open', open); list.hidden = !open; } }
   document.getElementById('play-doors').addEventListener('click', e => {
     const d = e.target.closest('.door'); if (!d) return;
     if (d.dataset.go){ setTab(d.dataset.go); return; }
+    if (!d.dataset.door) return;
     doorsOpen[d.dataset.door] = !doorsOpen[d.dataset.door]; try { localStorage.setItem('ssDoors', JSON.stringify(doorsOpen)); } catch(e){} syncDoors();
   });
   syncDoors();
@@ -3975,6 +3958,42 @@
     g.strokeStyle='#eef9ff';g.beginPath();g.moveTo(6,0);g.lineTo(11,0);g.stroke();
     g.fillStyle='#1b2e40';g.fillRect(-6,-2,2,4);g.restore();
   }
+  // Jupiter gets continuous cloud belts and a foreshortened storm, rather than
+  // the generic striped disc and oversized circular spots used by other bodies.
+  function drawJupiter(g, R, th){
+    const belts = [[0,'#8f8272'],[.12,'#c7b99c'],[.23,'#e3d5b9'],[.31,'#b38a67'],[.39,'#956747'],[.45,'#e3cba6'],[.53,'#f2e4c9'],[.60,'#d4b289'],[.65,'#a66d4d'],[.73,'#bb8c66'],[.80,'#e1caab'],[.9,'#b2a086'],[1,'#807866']];
+    const palette=belts.map(([v,c])=>[v,[1,3,5].map(i=>parseInt(c.slice(i,i+2),16))]);
+    const rows=Math.max(90,Math.min(300,Math.ceil(R*3)));
+    for(let i=0;i<rows;i++){
+      const v=i/rows, y=(v*2-1)*R;
+      let k=0;while(k<palette.length-2 && v>palette[k+1][0])k++;
+      const [a,ca]=palette[k],[b,cb]=palette[k+1],t=(v-a)/(b-a);
+      const grain=Math.sin(i*2.1)*3+Math.sin(i*.71)*2;
+      g.fillStyle=`rgb(${ca.map((c,j)=>Math.round(c+(cb[j]-c)*t+grain)).join(',')})`;
+      g.beginPath();
+      for(let x=-R;x<=R+R/40;x+=R/40){
+        const longitude=Math.asin(Math.max(-1,Math.min(1,x/R)))+th;
+        const wave=(Math.sin(longitude*8+v*31)+.4*Math.sin(longitude*19-v*51))*R*.009*Math.sin(v*Math.PI);
+        if(x===-R)g.moveTo(x,y+wave);else g.lineTo(x,y+wave);
+      }
+      g.lineTo(R,y+R*2/rows+R*.022);g.lineTo(-R,y+R*2/rows+R*.022);g.closePath();g.fill();
+    }
+    const a=th+.8, vis=Math.cos(a);
+    if(vis>0){
+      const x=Math.sin(a)*R*.925,y=R*.37;
+      g.save();g.translate(x,y);g.scale(vis,1);
+      // Pale wake surrounds a terracotta oval with nested, irregular cloud curls.
+      g.fillStyle='#cfad84';g.beginPath();g.ellipse(0,0,R*.192,R*.094,-.10,0,Math.PI*2);g.fill();
+      const storm=g.createRadialGradient(-R*.025,-R*.01,0,0,0,R*.19);
+      storm.addColorStop(0,'#a95035');storm.addColorStop(.6,'#c77c50');storm.addColorStop(1,'#dfad79');
+      g.fillStyle=storm;g.beginPath();g.ellipse(0,0,R*.178,R*.082,-.1,0,Math.PI*2);g.fill();
+      for(let j=0;j<4;j++){
+        g.strokeStyle=j%2?'#edbd8733':'#914c3428';g.lineWidth=R*.009;
+        g.beginPath();for(let t=0;t<=Math.PI*2+.1;t+=.1){const r=1-j*.19+.035*Math.sin(t*3+j);const xx=Math.cos(t)*R*.16*r,yy=Math.sin(t)*R*.069*r;if(!t)g.moveTo(xx,yy);else g.lineTo(xx,yy);}g.stroke();
+      }
+      g.restore();
+    }
+  }
   function drawBody(g, d, w, h, R, px, th, axis = true){
     g.clearRect(0, 0, w, h);
     g.save();
@@ -4077,6 +4096,7 @@
       g.beginPath(); g.ellipse(0, R*0.9, R*0.26, R*0.13, 0, 0, 2*Math.PI); g.fill(); g.filter = 'none'; }
     if (d.pole){ g.filter = 'blur(' + blur + 'px)'; g.globalAlpha = 0.5; g.fillStyle = d.pole;   // bright pole (Uranus)
       g.beginPath(); g.ellipse(0, -R*0.8, R*0.5, R*0.3, 0, 0, 2*Math.PI); g.fill(); g.globalAlpha = 1; g.filter = 'none'; }
+    if(d === CHIP_DATA.Jupiter) drawJupiter(g,R,th);
     // Use the bundled Earth photograph in chips and the inspector as well as Earth view.
     if(d === CHIP_DATA.Earth && earthReady){
       const D=Math.max(2,Math.ceil(R*2));
@@ -4587,7 +4607,7 @@
   }
   dailyToggle.addEventListener('click', () => { closeTopPanels(); startDaily(); });
   document.getElementById('daily-go').addEventListener('click', () => { closeTopPanels(); startDaily(); });
-  { const st = document.getElementById('daily-card-streak'); if (dailyStore.streak) st.textContent = '🔥 streak ' + dailyStore.streak; }
+  { const st = document.getElementById('daily-door-streak'); if (dailyStore.streak) st.textContent = ' · streak ' + dailyStore.streak; }
   {
     const q = location.search;
     if (/[?&]daily(=|&|$)/.test(q)){ const d = q.match(/[?&]day=(-?\d+)/); setTimeout(() => startDaily(d ? d[1] : null), 0); }   // (a background tab never paints, so no frame is waited for — the camera refits on the first drawn frame)
