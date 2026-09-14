@@ -204,11 +204,11 @@
   // showcase, so it is deliberately hand-written rather than derived — but it
   // does go stale, so revisit it when a batch of games ships. Prefer ids that
   // have tile art in THUMBS: the non-hero slots render the art and look empty
-  // without it. The hero slot should stay `snake` unless the hover preview is
-  // reworked too — wirePreview() animates a 5-cell snake across the grid.
+  // without it. The hero slot is the flagship: Daily Orbit, the daily puzzle
+  // that gives a returning visitor a reason to come back tomorrow.
   // Unknown ids are skipped safely by the .filter() in the mosaic builder.
   const FEATURED_LAYOUT = [
-    { id: 'snake',           size: 's-hero', isHero: true },
+    { id: 'daily-orbit',     size: 's-hero', isHero: true },
     { id: 'blackjack',       size: 's-tall' },
     { id: 'yahtzee',         size: 's-wide' },
     { id: 'word-search',     size: 's-wide' },
@@ -264,16 +264,19 @@
     `);
   }
 
+  // Illustrated art is a full scene, so it fills the hero edge-to-edge with
+  // the meta card floating over it; a bare glyph sits as a cutout beside it.
   function renderHeroTile(game, size) {
     const best = getBest(game.id);
+    const art = GAME_ART.get(game.id);
+    const artHtml = art
+      ? `<img class="tile-cover" src="assets/thumbs/${art}?v=20260911a" alt="" decoding="async">`
+      : `<div class="tile-art">${glyph(game, 140)}</div>`;
     const a = el(`
-      <a class="tile ${size} has-preview" href="${gameUrl(game)}" style="background:${game.color}22;--g:${game.color}">
+      <a class="tile ${size}" href="${gameUrl(game)}" style="background:${game.color}22;--g:${game.color}">
         ${game.isNew ? '<span class="tile-new">NEW</span>' : ''}
         <div class="tile-decoration"></div>
-        <div class="tile-art">${glyph(game, 140)}</div>
-        <div class="tile-preview" style="background:${game.color}14">
-          <div class="preview-grid" style="--cell:${game.color}"></div>
-        </div>
+        ${artHtml}
         <div class="tile-meta">
           <h3>${game.name}</h3>
           <p class="desc">${game.desc}</p>
@@ -282,37 +285,7 @@
         </div>
       </a>
     `);
-
-    // Build preview grid cells (12x8)
-    const grid = a.querySelector('.preview-grid');
-    const total = 12 * 8;
-    for (let i = 0; i < total; i++) grid.appendChild(document.createElement('div'));
-    wirePreview(a, grid, total);
     return a;
-  }
-
-  // Animate preview when tile is hovered. Uses requestAnimationFrame-driven interval.
-  function wirePreview(tile, grid, total) {
-    let timer = null;
-    let head = 0;
-    const cells = grid.children;
-    function step() {
-      head = (head + 1) % total;
-      for (let i = 0; i < total; i++) cells[i].className = '';
-      for (let i = 0; i < 5; i++) {
-        const idx = (head - i + total) % total;
-        cells[idx].className = 'active';
-      }
-    }
-    tile.addEventListener('mouseenter', () => {
-      if (timer) return;
-      step();
-      timer = setInterval(step, 300);
-    });
-    tile.addEventListener('mouseleave', () => {
-      if (timer) { clearInterval(timer); timer = null; }
-      for (let i = 0; i < total; i++) cells[i].className = '';
-    });
   }
 
   // ── Sidebar ────────────────────────────────────────────────────────────

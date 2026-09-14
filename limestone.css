@@ -477,6 +477,8 @@ body.hub-root {
 @media (max-width: 900px) {
   .hub-mosaic { grid-template-columns: repeat(2, 1fr); }
   .hub-mosaic .tile { grid-column: span 1 !important; grid-row: span 1 !important; }
+  /* The hero keeps the full width and two rows so its card has room. */
+  .hub-mosaic .tile.s-hero { grid-column: span 2 !important; grid-row: span 2 !important; }
   .hub-mosaic.tight { grid-auto-rows: 188px; }
 }
 
@@ -538,6 +540,16 @@ body.hub-root {
 .tile.s-hero:hover .tile-art {
   transform: translate(20%, 12%) scale(1.06) rotate(-3deg);
 }
+.tile-cover {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  border-radius: inherit;
+  transition: transform 0.5s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+.tile:hover .tile-cover { transform: scale(1.04); }
 .tile-decoration {
   position: absolute;
   inset: 0;
@@ -564,42 +576,6 @@ body.hub-root {
   left: -10%;
   bottom: -10%;
   background: rgba(0, 0, 0, 0.04);
-}
-
-/* Hover preview — animated mini-grid */
-.tile-preview {
-  position: absolute;
-  inset: 14px;
-  border-radius: 14px;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.25s;
-  overflow: hidden;
-}
-.tile.has-preview:hover .tile-preview { opacity: 1; }
-.tile.has-preview:hover .tile-art { opacity: 0; }
-.preview-grid {
-  width: 100%;
-  height: 100%;
-  display: grid;
-  grid-template-columns: repeat(12, 1fr);
-  grid-template-rows: repeat(8, 1fr);
-  gap: 1px;
-  padding: 6px;
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 12px;
-}
-.preview-grid div {
-  background: rgba(0, 0, 0, 0.04);
-  border-radius: 1px;
-}
-.preview-grid div.active {
-  background: var(--cell, #7BC97B);
-  animation: hub-pulse 1.2s ease-in-out infinite;
-}
-@keyframes hub-pulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.7; transform: scale(0.92); }
 }
 
 /* Meta block */
@@ -780,6 +756,10 @@ body.hub-root {
 .tile:hover .s-hero .play-cta,
 .tile.s-hero:hover .play-cta {
   background: var(--accent);
+}
+@media (max-width: 900px) {
+  .tile.s-hero .tile-meta { max-width: none; padding: 16px 18px; }
+  .tile.s-hero .tile-meta h3 { font-size: 26px; }
 }
 
 /* Tile chrome */
