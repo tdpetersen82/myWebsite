@@ -4035,7 +4035,7 @@
   // along the computed path, so the flight you watch is the flight that was judged. The
   // mode rides the lesson machinery (coach card, tick/draw hooks, Escape) and hides the
   // sandbox chrome while it runs.
-  const DAILY_V = '20260914b', DAILY_K = 'dailyOrbit', DAILY_MAX = 6, DAILY_EMO = { hit: '🟩', near: '🟨', miss: '🟥' };
+  const DAILY_V = '20260914c', DAILY_K = 'dailyOrbit', DAILY_MAX = 6, DAILY_EMO = { hit: '🟩', near: '🟨', miss: '🟥' };
   const dailyToggle = document.getElementById('daily-toggle');
   let dailyWorker = null, dailySeq = 0; const dailyPending = {};
   function dailyRpc(m){
@@ -4164,7 +4164,7 @@
   }
   function dailyRenderCard(){
     const b = daily.board, tp = dP(b.target), win = b.windows.find(w => w.name === b.target);
-    coachStep.textContent = 'Daily Orbit · #' + b.number + ' · ' + dDateLong(b.dateISO);
+    coachStep.textContent = 'Daily Orbit · #' + b.number + ' · ' + dDateLong(b.dateISO) + (daily.override ? ' · practice' : '');
     coachTitle.textContent = 'Target: ' + b.target;
     coachBody.innerHTML =
       `<div class="dd-chips"><span class="dd-chip"><i style="background:${tp.color};color:${tp.color}"></i>${b.target}</span>` +
@@ -4178,7 +4178,8 @@
       `<div id="dd-result" class="dd-card" hidden></div><div id="dd-log"></div>` +
       `<div id="dd-done" class="dd-card dd-gold" hidden><div class="dd-done-title" id="dd-done-title"></div><div class="dd-grid" id="dd-grid"></div><div class="dd-stars" id="dd-stars"></div><p class="dd-fuel" id="dd-par"></p>` +
       `<canvas id="dd-strip" width="270" height="70"></canvas><p class="dd-cap">Fuel for every flight time today — the porkchop. Gold: par. Blue: you.</p>` +
-      `<div class="dd-btns"><button id="dd-share" class="btn primary" type="button">Share result</button><button id="dd-exit" class="btn" type="button">Explore the sky</button></div><p class="dd-count" id="dd-count"></p></div>` +
+      `<div class="dd-btns"><button id="dd-share" class="btn primary" type="button">Share result</button><button id="dd-again" class="btn" type="button" title="Fly today's board again for practice — your record and streak stay as they are">Play it again</button><button id="dd-exit" class="btn" type="button">Explore the sky</button></div><p class="dd-count" id="dd-count"></p></div>` +
+      (daily.override ? '<p class="note">Practice run — nothing here counts toward your record or streak.</p>' : '') +
       `<p class="note">The dotted line is the probe's path around the Sun alone — the puzzle is where <b>${b.target}</b> will be when you get there. Each result says how far ahead or behind it was.</p>`;
     coachBtns.innerHTML = '';
     dailySetDial('speed', daily.dials.speed); dailySetDial('aim', daily.dials.aim);
@@ -4193,6 +4194,7 @@
     document.getElementById('dd-log').addEventListener('click', e => { const r = e.target.closest('.dd-lrow'); if (!r || daily.replay) return; daily.shown = +r.dataset.i; dailyRenderLog(); dailyShowResult(daily.flights[daily.shown]); });
     document.getElementById('dd-share').addEventListener('click', dailyShare);
     document.getElementById('dd-exit').addEventListener('click', endLesson);
+    document.getElementById('dd-again').addEventListener('click', () => { const d = String(daily.board.day); dTrack('again'); endLesson(); startDaily(d); });   // practice: the same board, nothing saved
   }
   function dailySetDial(which, v, fromSlider){
     if (!daily) return;
@@ -4210,7 +4212,7 @@
     for (const id of ids){ const el = document.getElementById(id); if (el) el.disabled = !on; }
     coachBody.querySelectorAll('.dd-fine button').forEach(b => { b.disabled = !on; });
     const L = document.getElementById('dd-launch'); if (!L) return;
-    L.textContent = daily.phase === 'done' ? (daily.flights.some(f => f.arrived) ? 'Arrived — back tomorrow' : 'Out of launches') : on ? 'Launch ' + (daily.flights.length + 1) + ' of ' + DAILY_MAX : 'Flying…';
+    L.textContent = daily.phase === 'done' ? (daily.flights.some(f => f.arrived) ? (daily.override ? 'Arrived' : 'Arrived — back tomorrow') : 'Out of launches') : on ? 'Launch ' + (daily.flights.length + 1) + ' of ' + DAILY_MAX : 'Flying…';
   }
   function dailyPrep(f, aim){                                    // closest sample to the target on the outbound leg + how much of the path to show
     const k = f.planetOrder.indexOf(daily.board.target), n = f.path.length / 2; let best = -1, bd = Infinity;
