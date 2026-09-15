@@ -1,4 +1,4 @@
-// Fracas — page driver: rendering, input, sound, menu. Rules live in engine.mjs.
+// Dynamine — page driver: rendering, input, sound, menu. Rules live in engine.mjs.
 // Theme: a limestone mine. Miners, dynamite, rock, bats and knockers, a lift.
 import {
   createGame, step, drainEvents, W, H, FLOOR, WALL, BRICK, RULES, ITEM, ENEMY, tileOf, atCentre,
@@ -13,7 +13,7 @@ const menu = document.getElementById('menu');
 const menuSub = document.getElementById('menu-sub');
 const scoreEl = document.getElementById('score');
 const hiEl = document.getElementById('highScore');
-const HS_KEY = 'fracasHighScore';
+const HS_KEY = 'dynamineHighScore';
 let highScore = parseInt(localStorage.getItem(HS_KEY) || '0', 10) || 0;
 hiEl.textContent = highScore;
 
@@ -132,7 +132,7 @@ function startMode(m) {
   menu.hidden = true;
   canvas.focus({ preventScroll: true });
   drainEvents(game).forEach(handleEvent);
-  gtagEvent('fracas_start', { mode: m });
+  gtagEvent('dynamine_start', { mode: m });
 }
 function showMenu(sub) {
   game = null; mode = null;
@@ -201,7 +201,7 @@ function handleEvent(e) {
         if (game !== g || overShown) return;
         overShown = true;
         if (window.ArcadeGameOver) {
-          window.ArcadeGameOver.show({ score: e.score, best: highScore, restart: () => { gtagEvent('play_again', { from: 'fracas' }); startMode('adventure'); } });
+          window.ArcadeGameOver.show({ score: e.score, best: highScore, restart: () => { gtagEvent('play_again', { from: 'dynamine' }); startMode('adventure'); } });
         } else showMenu('Game over. Score ' + e.score.toLocaleString());
       }, 1600);
       break;
@@ -217,7 +217,7 @@ function frame(now) {
   requestAnimationFrame(frame);
   const dtReal = Math.min(0.1, (now - lastFrame) / 1000 || 0);
   lastFrame = now;
-  if (game && !paused && !window.__fracas?.frozen) {
+  if (game && !paused && !window.__dynamine?.frozen) {
     acc += dtReal;
     while (acc >= FIXED) {
       const inputs = [
@@ -229,12 +229,16 @@ function frame(now) {
       drainEvents(game).forEach(handleEvent);
       acc -= FIXED;
     }
-    if (game.mode === 'adventure') {
-      scoreEl.textContent = game.score;
-      if (game.score > highScore) { highScore = game.score; hiEl.textContent = highScore; localStorage.setItem(HS_KEY, String(highScore)); }
-    }
+    syncScore();
   }
   draw(dtReal);
+}
+// Mirror the score into the page (the chrome copies it to its topbar) and
+// persist a new best the moment it happens, not only at game over.
+function syncScore() {
+  if (!game || game.mode !== 'adventure') return;
+  scoreEl.textContent = game.score;
+  if (game.score > highScore) { highScore = game.score; hiEl.textContent = highScore; localStorage.setItem(HS_KEY, String(highScore)); }
 }
 requestAnimationFrame(t => { lastFrame = t; frame(t); });
 
@@ -772,7 +776,7 @@ showMenu('');
 
 // Debug handle for headless/browser verification (tools/VERIFICATION.md):
 // pump(seconds) advances the simulation with the current held keys, then draws.
-window.__fracas = {
+window.__dynamine = {
   frozen: false,            // true = the live loop stops stepping; pump() drives time
   get state() { return game; },
   get mode() { return mode; },
@@ -786,6 +790,7 @@ window.__fracas = {
       step(game, FIXED, inputs);
       drainEvents(game).forEach(handleEvent);
     }
+    syncScore();
     draw(FIXED);
     return game.status;
   },

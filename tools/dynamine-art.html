@@ -1,12 +1,12 @@
 <!doctype html>
 <meta charset="utf-8">
-<title>Fracas art builder</title>
+<title>Dynamine art builder</title>
 <!--
-  Draws the Fracas cabinet tile (assets/thumbs/fracas-arcade-YYYYMMDD.png, 1200×1200)
-  and the OG share card (assets/og/fracas.jpg, 1200×630) with canvas, then POSTs
+  Draws the Dynamine cabinet tile (assets/thumbs/dynamine-arcade-YYYYMMDD.png, 1200×1200)
+  and the OG share card (assets/og/dynamine.jpg, 1200×630) with canvas, then POSTs
   them to tools/serve.mjs's /__save. No PIL needed.
-  Run:  node tools/serve.mjs 8099  →  open http://localhost:8099/tools/fracas-art.html?save=1
-  The OG card composites assets/thumbs/fracas.png (a 600×600 board capture taken
+  Run:  node tools/serve.mjs 8099  →  open http://localhost:8099/tools/dynamine-art.html?save=1
+  The OG card composites assets/thumbs/dynamine.png (a 600×600 board capture taken
   from the game page) the same way tools/make-og-images.py does for other games.
 -->
 <style>body{background:#111;color:#ddd;font:14px system-ui;margin:20px}canvas{display:block;margin:12px 0;max-width:100%;border:1px solid #333}</style>
@@ -14,7 +14,7 @@
 <canvas id="tile" width="1200" height="1200"></canvas>
 <canvas id="og" width="1200" height="630"></canvas>
 <script>
-const TILE_NAME = 'fracas-arcade-20260915.png';
+const TILE_NAME = 'dynamine-arcade-20260915.png';
 const S = 1200;
 
 function drawTile() {
@@ -158,12 +158,12 @@ async function drawOg() {
   x.beginPath(); x.moveTo(50, 200); x.lineTo(50, 50); x.lineTo(200, 50); x.stroke();
   x.beginPath(); x.moveTo(1000, 580); x.lineTo(1150, 580); x.lineTo(1150, 430); x.stroke();
   x.fillStyle = '#ffffff'; x.font = 'bold 96px "Arial Bold", Arial, Helvetica, sans-serif'; x.textBaseline = 'alphabetic';
-  x.fillText('Fracas', 96, 318);
+  x.fillText('Dynamine', 96, 318);
   x.fillStyle = '#b9b6d9'; x.font = '30px Arial, Helvetica, sans-serif';
   x.fillText('Free browser game — no installs', 96, 374);
   x.fillStyle = '#6d63d4'; x.fillRect(96, 508, 250, 4);
   x.fillStyle = '#ffffff'; x.font = 'bold 26px Arial, Helvetica, sans-serif'; x.fillText('LIMESTONE GAMES', 96, 548);
-  const img = new Image(); img.src = '../assets/thumbs/fracas.png?' + Date.now();
+  const img = new Image(); img.src = '../assets/thumbs/dynamine.png?' + Date.now();
   await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
   x.fillStyle = '#ffffff'; x.fillRect(672, 97, 436, 436);
   x.drawImage(img, 676, 101, 428, 428);
@@ -177,10 +177,10 @@ async function save(canvas, path, type, q) {
 (async () => {
   drawTile();
   let msg = 'drawn';
-  try { await drawOg(); } catch (e) { msg = 'OG needs assets/thumbs/fracas.png (' + e + ')'; }
+  try { await drawOg(); } catch (e) { msg = 'OG needs assets/thumbs/dynamine.png (' + e + ')'; }
   if (new URLSearchParams(location.search).get('save')) {
     msg += ' | ' + await save(document.getElementById('tile'), 'assets/thumbs/' + TILE_NAME, 'image/png');
-    msg += ' | ' + await save(document.getElementById('og'), 'assets/og/fracas.jpg', 'image/jpeg', 0.9);
+    msg += ' | ' + await save(document.getElementById('og'), 'assets/og/dynamine.jpg', 'image/jpeg', 0.9);
   }
   document.getElementById('status').textContent = msg;
 })();

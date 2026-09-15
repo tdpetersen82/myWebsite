@@ -41,7 +41,7 @@
 
   // Shared illustrated artwork for game tiles, featured cards, and sidebar icons.
   const GAME_ART = new Map([
-    ['fracas', 'fracas-arcade-20260915.png'],
+    ['dynamine', 'dynamine-arcade-20260915.png'],
     ['mini-golf', 'mini-golf-arcade-20260909.png'],
     ['daily-orbit', 'daily-orbit-arcade-20260911.png'],
     ['snake', 'snake-kids-20260909.png'],
@@ -111,7 +111,7 @@
     'space-invaders': 'spaceInvadersHighScore',
     asteroids: 'asteroidsHighScore',
     frogger: 'froggerHighScore',
-    fracas: 'fracasHighScore',
+    dynamine: 'dynamineHighScore',
     simon: 'simonHighScore',
     defender: 'defenderHighScore',
     'lunar-lander': 'lunarLanderHighScore',
@@ -154,7 +154,7 @@
     'space-invaders': '<rect x="20" y="14" width="6" height="6" fill="C"/><rect x="38" y="14" width="6" height="6" fill="C"/><rect x="14" y="20" width="36" height="10" rx="2" fill="C"/><rect x="10" y="26" width="6" height="8" fill="C"/><rect x="48" y="26" width="6" height="8" fill="C"/><rect x="20" y="34" width="8" height="4" fill="C"/><rect x="36" y="34" width="8" height="4" fill="C"/><rect x="28" y="48" width="8" height="6" rx="1" fill="C" opacity="0.7"/>',
     'block-puzzle': '<rect x="8" y="40" width="10" height="10" rx="2" fill="C"/><rect x="18" y="40" width="10" height="10" rx="2" fill="C"/><rect x="18" y="30" width="10" height="10" rx="2" fill="C"/><rect x="28" y="40" width="10" height="10" rx="2" fill="C" opacity="0.7"/><rect x="38" y="40" width="10" height="10" rx="2" fill="C" opacity="0.7"/><rect x="38" y="30" width="10" height="10" rx="2" fill="C" opacity="0.7"/><rect x="38" y="12" width="10" height="10" rx="2" fill="C" opacity="0.4"/>',
     asteroids: '<polygon points="32,8 22,14 14,22 18,32 14,42 28,46 42,42 46,32 42,22 38,14" fill="none" stroke="C" stroke-width="3" stroke-linejoin="round"/><polygon points="32,28 28,34 32,40 36,34" fill="C"/>',
-    fracas: '<circle cx="32" cy="36" r="13" fill="C"/><rect x="29" y="18" width="6" height="7" fill="C"/><path d="M35 18 q5 -8 11 -3" stroke="C" stroke-width="3" fill="none"/><circle cx="46" cy="15" r="3" fill="#fff"/>',
+    dynamine: '<circle cx="32" cy="36" r="13" fill="C"/><rect x="29" y="18" width="6" height="7" fill="C"/><path d="M35 18 q5 -8 11 -3" stroke="C" stroke-width="3" fill="none"/><circle cx="46" cy="15" r="3" fill="#fff"/>',
     frogger: '<ellipse cx="32" cy="34" rx="12" ry="9" fill="C"/><circle cx="26" cy="26" r="4" fill="C"/><circle cx="38" cy="26" r="4" fill="C"/><circle cx="26" cy="25" r="1.5" fill="#fff"/><circle cx="38" cy="25" r="1.5" fill="#fff"/>',
     'missile-command': '<circle cx="20" cy="38" r="3" fill="C"/><line x1="20" y1="38" x2="40" y2="14" stroke="C" stroke-width="2.5" stroke-dasharray="3 3"/><polygon points="40,12 36,18 44,18" fill="C"/><rect x="10" y="44" width="44" height="6" rx="2" fill="C" opacity="0.4"/>',
     'lunar-lander': '<polygon points="32,12 22,28 42,28" fill="C"/><rect x="26" y="28" width="12" height="6" fill="C" opacity="0.8"/><line x1="22" y1="28" x2="16" y2="40" stroke="C" stroke-width="2"/><line x1="42" y1="28" x2="48" y2="40" stroke="C" stroke-width="2"/><rect x="14" y="44" width="36" height="6" rx="1" fill="C" opacity="0.3"/>',

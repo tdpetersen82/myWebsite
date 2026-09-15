@@ -1,6 +1,6 @@
-// Fracas — pure game logic. No DOM, no timers, no rendering.
+// Dynamine — pure game logic. No DOM, no timers, no rendering.
 // The page (game.mjs) drives it with step(state, dt, inputs) and draws state;
-// tools/fracas-test.mjs drives it headlessly. Keep it that way.
+// tools/dynamine-test.mjs drives it headlessly. Keep it that way.
 
 export const FLOOR = 0, WALL = 1, BRICK = 2;
 export const W = 13, H = 11;

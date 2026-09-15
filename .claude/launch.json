@@ -36,7 +36,7 @@
       "autoPort": true
     },
     {
-      "name": "website-fracas",
+      "name": "website-dynamine",
       "runtimeExecutable": "node",
       "runtimeArgs": [
         "tools/serve.mjs",

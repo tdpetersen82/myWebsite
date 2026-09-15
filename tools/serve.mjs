@@ -16,7 +16,7 @@ const types = {
 
 http.createServer((req, res) => {
   // Dev-only: POST /__save {path, dataUrl} writes a browser-rendered asset
-  // under assets/ (how the Fracas tile + OG card are produced without PIL).
+  // under assets/ (how the Dynamine tile + OG card are produced without PIL).
   if (req.method === 'POST' && req.url === '/__save') {
     let body = '';
     req.on('data', c => { body += c; });

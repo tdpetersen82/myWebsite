@@ -1,12 +1,12 @@
 #!/usr/bin/env node
-// Headless rules test for /fracas/ (engine.mjs). Run after any engine edit:
-//   node tools/fracas-test.mjs
+// Headless rules test for /dynamine/ (engine.mjs). Run after any engine edit:
+//   node tools/dynamine-test.mjs
 // Proves correctness of the rules (layout, blasts, movement, doors, timers,
 // sudden death, the computer miner). It says nothing about feel.
 import {
   createGame, step, drainEvents, placeBomb, blastCells, dangerMap, tileAt, bombAt, fireAt,
   FLOOR, WALL, BRICK, W, H, RULES, ENEMY, ITEM, startLevel,
-} from '../fracas/engine.mjs';
+} from '../dynamine/engine.mjs';
 
 let passed = 0, failed = 0;
 function check(name, cond, detail = '') {
