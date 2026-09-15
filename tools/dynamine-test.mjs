@@ -54,7 +54,7 @@ for (let seed = 1; seed <= 25; seed++) {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (tileAt(s, x, y) !== WALL) nonWall++;
   check('maze fully connected', seen.size === nonWall, seen.size + ' vs ' + nonWall);
   check('exit visible on floor', s.door.revealed && tileAt(s, s.door.x, s.door.y) === FLOOR);
-  check('level has distinct bombable shafts', s.shafts.length >= 2 && s.shafts.every(t => tileAt(s,t.x,t.y) === BRICK && !s.items.has(t.y*W+t.x) && (t.x !== s.door.x || t.y !== s.door.y)));
+  check('level has distinct walkable linked shafts', s.shafts.length >= 3 && s.shafts.every(t => tileAt(s,t.x,t.y) === FLOOR && !s.items.has(t.y*W+t.x) && (t.x !== s.door.x || t.y !== s.door.y)));
   check('items hide under bricks', [...s.items.keys()].every(k => s.grid[k] === BRICK));
   check('enemies spawn on floor away from the miner', s.enemies.every(e => tileAt(s, Math.floor(e.x), Math.floor(e.y)) === FLOOR && e.x + e.y >= 7));
 }
@@ -176,16 +176,7 @@ console.log('door');
   const p = s.players[0];
   const d = s.door;
   check('exit visible but locked at start', d.revealed && !d.open);
-  // Blast every entrance from an adjacent corridor. Its back tile must stay safe.
   let ev = [];
-  for (const shaft of s.shafts) {
-    const side = tileAt(s, shaft.x - 1, shaft.y) !== WALL ? [shaft.x - 1, shaft.y] : [shaft.x, shaft.y - 1];
-    s.grid[side[1] * W + side[0]] = FLOOR;
-    teleport(p, side[0], side[1]); placeBomb(s,p);
-    teleport(p,1,1); p.invulnUntil = s.time + 10;
-    ev = run(s,2.2);
-    check('blast seals shaft and awards event', shaft.sealed && tileAt(s,shaft.x,shaft.y) === FLOOR && ev.some(e => e.type === 'shaftSealed'));
-  }
   check('exit stays shut while enemies live', !d.open);
   // Kill enemies with fire directly.
   const before = s.score;
@@ -245,7 +236,6 @@ console.log('door');
   s.players[0].invulnUntil = 1e9;
   let bad = 0;
   const start = s.enemies.map(e => [e.x, e.y]), far = s.enemies.map(() => 0);
-  s.shafts.forEach(s => { s.nextSpawn = Infinity; }); // isolate initial enemy movement
   for (let t = 0; t < 30; t += DT) {
     step(s, DT, [{ held: [] }]); drainEvents(s);
     s.enemies.forEach((e, i) => {
@@ -358,29 +348,78 @@ console.log('computer');
   check('the blocked side (wall) stays safe', d[1 * W + 0] === Infinity);
 }
 
-// Shaft spawning, objective gating, and Battle isolation.
-console.log('mineshafts');
+// Fracas-style vent network: bombs ON a vent emit range-one crosses at all vents.
+console.log('connected mineshafts');
+function networkFixture() {
+  const s = createGame({seed:42}); skipIntro(s); clearEnemies(s);
+  for(let y=1;y<H-1;y++) for(let x=1;x<W-1;x++) s.grid[y*W+x]=FLOOR;
+  s.shafts=[{x:3,y:3},{x:7,y:3},{x:9,y:7}];s.items.clear();
+  s.door={x:11,y:9,revealed:true,open:false};
+  s.players[0].invulnUntil=1e9;
+  return s;
+}
 {
-  const s = createGame({seed:42}); skipIntro(s);
-  const shaft = s.shafts[0];
-  s.players[0].invulnUntil = 1e9;
-  for (const t of s.shafts) t.nextSpawn = Infinity;
-  const adjacent = [[shaft.x-1,shaft.y],[shaft.x+1,shaft.y],[shaft.x,shaft.y-1],[shaft.x,shaft.y+1]]
-    .find(([x,y]) => tileAt(s,x,y) !== WALL);
-  s.grid[adjacent[1]*W+adjacent[0]] = FLOOR;
-  clearEnemies(s); shaft.nextSpawn = s.time;
-  let ev = run(s,.1);
-  check('active entrance spawns a bat', ev.some(e => e.type === 'shaftSpawn') && s.enemies.some(e => e.alive));
-  clearEnemies(s); shaft.nextSpawn = Infinity;
-  run(s,.1);
-  check('living shafts prevent a clear even with no enemies', !s.door.open);
-  for (const t of s.shafts) { t.sealed = true; t.nextSpawn = s.time; }
-  ev = run(s,.1);
-  check('all shafts sealed and enemies cleared opens exit', s.door.open);
-  ev = run(s,20);
-  check('sealed shafts never spawn again', !ev.some(e => e.type === 'shaftSpawn') && s.enemies.every(e => !e.alive));
-  const battle = createGame({mode:'battle',seed:42});
-  check('battle has no shaft objective', battle.shafts.length === 0 && battle.door === null);
+  const s=networkFixture(), p=s.players[0];p.range=5;
+  teleport(p,3,3);check('dynamite can be placed ON a shaft',placeBomb(s,p));
+  const cells=blastCells(s,3,3,5), hit=(x,y)=>cells.some(c=>c[0]===x&&c[1]===y);
+  check('one shaft bomb covers every shaft and its four neighbors', s.shafts.every(v=>[[0,0],[-1,0],[1,0],[0,-1],[0,1]].every(([dx,dy])=>hit(v.x+dx,v.y+dy))));
+  check('network range stays one despite upgrades, including source',!hit(1,3)&&!hit(5,3)&&!hit(9,5));
+  check('network cells are unique',new Set(cells.map(c=>c[1]*W+c[0])).size===cells.length);
+  const predicted=dangerMap(s);
+  check('CPU predicts remote shaft blasts',Math.abs(predicted[7*W+10]-RULES.bombFuse)<.01);
+  const count=s.enemies.length;
+  teleport(p,1,1);let ev=run(s,2.1);
+  check('all shafts actually emit lethal fire together',s.shafts.every(v=>fireAt(s,v.x,v.y)&&fireAt(s,v.x+1,v.y)));
+  check('network does not spawn creatures',s.enemies.length===count);
+  check('shafts survive and stay walkable',s.shafts.length===3&&s.shafts.every(v=>tileAt(s,v.x,v.y)===FLOOR));
+  run(s,.5);teleport(p,3,3);placeBomb(s,p);teleport(p,1,1);ev=run(s,2.1);
+  check('network can be reused after its first blast',fireAt(s,9,7));
+}
+{
+  const s=networkFixture(),p=s.players[0];
+  s.grid[2*W+7]=WALL;s.grid[3*W+8]=BRICK;
+  teleport(p,3,3);placeBomb(s,p);
+  const cells=blastCells(s,3,3,4);
+  check('walls block remote outlet flames',!cells.some(c=>c[0]===7&&c[1]===2));
+  teleport(p,1,1);run(s,2.1);
+  check('remote flame destroys adjacent rock',tileAt(s,8,3)===FLOOR);
+  check('remote blast cannot pass through that rock',!fireAt(s,9,3));
+}
+{
+  const s=networkFixture(),p=s.players[0];p.maxBombs=2;p.range=3;
+  teleport(p,3,3);placeBomb(s,p);run(s,.5);
+  teleport(p,9,8);placeBomb(s,p);
+  check('CPU propagates early detonation through the network',dangerMap(s)[8*W+11]<1.6);
+  teleport(p,1,1);const ev=run(s,1.6);
+  check('remote outlet chain-detonates a second bomb',ev.filter(e=>e.type==='explode').length===2&&s.bombs.length===0&&fireAt(s,11,8));
+}
+{
+  const s=networkFixture();
+  const cells=blastCells(s,2,3,1);
+  check('a blast merely passing over a shaft does not activate network',cells.some(c=>c[0]===3&&c[1]===3)&&!cells.some(c=>c[0]===7&&c[1]===3));
+  s.shafts.push({x:4,y:3});
+  const overlap=blastCells(s,3,3,1);
+  check('neighboring connected shafts cannot cause recursive blasts',overlap.length<25&&new Set(overlap.map(c=>c[1]*W+c[0])).size===overlap.length);
+  s.grid[7*W+9]=WALL;
+  check('a cave-in disables its buried outlet',!blastCells(s,3,3,1).some(c=>c[0]===9&&c[1]===7));
+}
+{
+  const s=networkFixture(),p=s.players[0];
+  teleport(p,3,3);placeBomb(s,p);teleport(p,9,8);
+  p.invulnUntil=0;p.graceUntil=0;p.movedSinceSpawn=true;
+  const lives=s.lives;run(s,2.1);
+  check('remote shaft flames can kill the player',s.lives===lives-1);
+}
+{
+  const s=networkFixture();
+  const enemy={type:'bat',x:9.5,y:8.5,alive:true,deadAt:-1,walkPhase:0,moving:false,speed:0,dir:'up',decideAtCentre:true,atNode:false};
+  s.enemies.push(enemy);
+  teleport(s.players[0],3,3);placeBomb(s,s.players[0]);teleport(s.players[0],1,1);
+  const score=s.score;run(s,2.1);
+  check('remote shaft flames kill enemies and award their score',!enemy.alive&&s.score>=score+ENEMY.bat.score);
+  check('clearing enemies opens exit without destroying shafts',s.door.open&&s.shafts.length===3);
+  const battle=createGame({mode:'battle',seed:42});
+  check('battle has connected shafts but no exit objective',battle.shafts.length===3&&battle.door===null&&battle.shafts.every(v=>tileAt(battle,v.x,v.y)===FLOOR));
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

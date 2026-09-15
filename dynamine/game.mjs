@@ -2,8 +2,8 @@
 // Theme: a limestone mine. Miners, dynamite, rock, bats and knockers, a lift.
 import {
   createGame, step, drainEvents, W, H, FLOOR, WALL, BRICK, RULES, ITEM, ENEMY, tileOf, atCentre,
-} from './engine.mjs?v=20260915c';
-import { drawShaft } from './shaft-art.mjs?v=20260915c';
+} from './engine.mjs?v=20260915d';
+import { drawShaft, drawVent } from './shaft-art.mjs?v=20260915d';
 
 const TILE = 56, HUD = 48;
 const BW = W * TILE, BH = H * TILE;
@@ -144,18 +144,16 @@ function showMenu(sub) {
   menuSub.textContent = sub || '';
   menu.hidden = false;
   scoreEl.textContent = '0';
-  document.getElementById('mission').textContent = 'Bomb the marked shafts · Clear the creatures · Enter the green exit';
+  document.getElementById('mission').textContent = 'Bomb ON one shaft → blast ALL shafts · Clear creatures to open the exit';
 }
 
 // ---------------------------------------------------------------- events → presentation
 function handleEvent(e) {
   const g = game;
   switch (e.type) {
-    case 'level': banner = { text: 'LEVEL ' + e.level, sub: 'Bomb the shafts. Clear the bats. Enter the exit.', until: g.time + 1.6, style: 'level' }; break;
+    case 'level': banner = { text: 'LEVEL ' + e.level, sub: 'Bomb ON one shaft. Fire bursts from ALL shafts.', until: g.time + 1.6, style: 'level' }; break;
     case 'round': banner = { text: 'ROUND ' + e.round, sub: firstTo(), until: g.time + 1.6, style: 'level' }; break;
     case 'go': banner = { text: 'GO!', until: g.time + 0.5, style: 'go' }; break;
-    case 'shaftSealed': Sound.thud(); popups.push({ x: e.x + .5, y: e.y + .5, text: 'SHAFT SEALED +250', until: g.time + 1.3 }); break;
-    case 'shaftSpawn': popups.push({ x: e.x + .5, y: e.y + .5, text: 'BAT SPAWN', until: g.time + .7, small: true }); break;
     case 'bomb': Sound.place(); break;
     case 'explode':
       Sound.explode(); shake = Math.max(shake, 5);
@@ -275,10 +273,10 @@ function draw(dtReal) {
   }
   drawFloor(g);
   drawItems(g);
+  drawLift(g);
   drawFires(g);
   drawBombs(g);
   drawRocksAndPillars(g);
-  drawLift(g);
   drawMineLighting(g);
   drawCorpses(g);
   drawEnemies(g);
@@ -447,32 +445,20 @@ function drawRocksAndPillars(g) {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const t = g.grid[y * W + x];
     if (t === WALL) drawPillar(x, y);
-    else if (t === BRICK && !g.shafts.some(s => s.x === x && s.y === y)) drawRock(x, y, g.seed);
+    else if (t === BRICK) drawRock(x, y, g.seed);
   }
 }
 
 // Entrances stay visible through the whole level; only the exit turns green.
 function drawLift(g) {
-  for (const shaft of g.shafts) {
-    if (shaft.sealed) {
-      const px = shaft.x * TILE, py = shaft.y * TILE;
-      ctx.fillStyle = '#142b29'; roundRect(px+4,py+5,48,47,6); ctx.fill();
-      ctx.strokeStyle = '#6cbd96'; ctx.lineWidth = 2; ctx.stroke();
-      for (let i = 0; i < 4; i++) polygon([[px+8+i*10,py+38],[px+13+i*9,py+22-i%2*6],[px+24+i*7,py+40]], '#65736b');
-      label('SEALED',px+28,py+13,9,'#abedc6','Inter');
-      ctx.strokeStyle = '#abedc6';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(px+21,py+43);ctx.lineTo(px+27,py+48);ctx.lineTo(px+36,py+38);ctx.stroke();
-    } else {
-      drawShaft(ctx,shaft.x,shaft.y,{ sealed:true, time:g.time, label:'BOMB' });
-    }
-  }
+  const armed = g.bombs.some(b => g.shafts.some(s => s.x === b.x && s.y === b.y));
+  for (const shaft of g.shafts) drawVent(ctx,shaft.x,shaft.y,{time:g.time,armed});
   const d = g.door;
   if (d) drawShaft(ctx,d.x,d.y,{open:d.open,time:g.time,label:'EXIT'});
-  const active = g.shafts.filter(s => !s.sealed).length;
   const enemies = g.enemies.filter(e => e.alive).length;
   const objective = missionEl;
-  const text = g.mode !== 'adventure' ? 'Last miner standing wins · First to 3 rounds' :
-    active ? `Bomb ${active} marked mineshaft${active === 1 ? '' : 's'} shut · ${enemies} creatures left` :
-    enemies ? `All shafts sealed · Clear ${enemies} remaining creature${enemies === 1 ? '' : 's'}` :
+  const text = g.mode !== 'adventure' ? 'Bomb ON one cyan shaft → ALL shafts blast · Last miner standing wins' :
+    enemies ? `${enemies} creatures left · Bomb ON one cyan shaft → ALL shafts blast` :
     'EXIT OPEN · Walk into the green mineshaft to finish!';
   if (objective.textContent !== text) objective.textContent = text;
   objective.dataset.ready = String(!!d?.open);

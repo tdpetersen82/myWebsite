@@ -241,11 +241,11 @@ export function startLevel(state, level) {
     used.add(key(x, y));
     state.enemies.push(makeEnemy(type, x, y, state.rng));
   }
-  // Bombable entrances occupy rock tiles, keeping movement/blast blocking consistent.
-  // They never conceal gear or replace the exit, and are visible immediately.
+  // Walkable, connected mine vents: a bomb ON any vent blasts every vent.
   state.shafts = shuffled.filter(([x,y]) => grid[key(x,y)] === BRICK &&
-    !state.items.has(key(x,y)) && x + y >= 6).slice(0, Math.min(2 + Math.floor(level / 3), 4))
-    .map(([x,y], i) => ({ x, y, sealed: false, nextSpawn: state.time + 14 + i * 4 }));
+    !state.items.has(key(x,y)) && x + y >= 6).slice(0, Math.min(3 + Math.floor(level / 4), 4))
+    .map(([x,y]) => ({ x, y }));
+  for (const shaft of state.shafts) grid[key(shaft.x,shaft.y)] = FLOOR;
   const p = state.players[0];
   resetPlayer(p, level > 1);
   state.status = 'intro'; state.statusUntil = state.time + 1.6;
@@ -267,6 +267,8 @@ export function startRound(state) {
   }
   const pool = [ITEM.FIRE, ITEM.BOMB, ITEM.FIRE, ITEM.BOMB, ITEM.SPEED, ITEM.FIRE, ITEM.BOMB, ITEM.SHIELD, ITEM.SPEED, ITEM.FIRE, ITEM.BOMB, ITEM.SPEED];
   shuffled.slice(0, pool.length).forEach(([x, y], i) => state.items.set(key(x, y), { type: pool[i], hidden: true }));
+  state.shafts = shuffled.filter(([x,y]) => !state.items.has(key(x,y))).slice(0,3).map(([x,y]) => ({x,y}));
+  for (const shaft of state.shafts) grid[key(shaft.x,shaft.y)] = FLOOR;
   state.players.forEach(p => resetPlayer(p, false));
   state.status = 'intro'; state.statusUntil = state.time + 1.6;
   state.events.push({ type: 'round', round: state.round });
@@ -376,7 +378,7 @@ export function placeBomb(state, p) {
 }
 
 // Cells a bomb would cover: rays stop at walls and on the first brick.
-export function blastCells(state, x, y, range) {
+function localBlastCells(state, x, y, range) {
   const cells = [[x, y, 'centre']];
   for (const d of DIR_NAMES) {
     const [dx, dy] = DIRS[d];
@@ -389,6 +391,19 @@ export function blastCells(state, x, y, range) {
     }
   }
   return cells;
+}
+
+// Share the same footprint with damage, chain reactions, and CPU danger prediction.
+// Only a bomb placed on a vent uses the network; a passing ray is a normal blast.
+export function blastCells(state, x, y, range) {
+  const vents = state.shafts.filter(s => tileAt(state,s.x,s.y) === FLOOR);
+  if (!vents.some(s => s.x === x && s.y === y)) return localBlastCells(state,x,y,range);
+  const cells = new Map();
+  for (const vent of vents) for (const cell of localBlastCells(state,vent.x,vent.y,1)) {
+    const k = key(cell[0],cell[1]);
+    if (!cells.has(k) || cell[2] === 'centre') cells.set(k,cell);
+  }
+  return [...cells.values()];
 }
 
 function explode(state, bomb) {
@@ -404,12 +419,6 @@ function explode(state, bomb) {
     if (state.grid[k] === BRICK) {
       state.grid[k] = FLOOR;
       state.events.push({ type: 'brick', x: cx, y: cy });
-      const shaft = state.shafts.find(s => !s.sealed && s.x === cx && s.y === cy);
-      if (shaft) {
-        shaft.sealed = true;
-        addScore(state, 250);
-        state.events.push({ type: 'shaftSealed', x: cx, y: cy });
-      }
       if (owner && state.mode === 'adventure') addScore(state, RULES.brickScore);
       const it = state.items.get(k);
       if (it) it.hidden = false;
@@ -705,8 +714,6 @@ export function step(state, dt, inputs = []) {
     }
   }
 
-  tickShafts(state);
-
   // Enemies
   for (const e of state.enemies) {
     if (!e.alive) continue;
@@ -720,25 +727,6 @@ export function step(state, dt, inputs = []) {
   return state;
 }
 
-function tickShafts(state) {
-  if (state.mode !== 'adventure') return;
-  for (const shaft of state.shafts) {
-    if (shaft.sealed || state.time < shaft.nextSpawn) continue;
-    // Resolve a blast before allowing its target to emit another enemy.
-    if (state.bombs.some(b => !b.exploded && state.time >= b.at + b.fuse)) continue;
-    const exits = DIR_NAMES.map(d => [shaft.x + DIRS[d][0], shaft.y + DIRS[d][1]])
-      .filter(([x,y]) => tileAt(state,x,y) === FLOOR && !bombAt(state,x,y) && !fireAt(state,x,y) &&
-        state.players.every(p => !p.alive || Math.abs(p.x-x-.5) + Math.abs(p.y-y-.5) > 2) &&
-        state.enemies.every(e => !e.alive || tileOf(e.x) !== x || tileOf(e.y) !== y));
-    if (exits.length && state.enemies.filter(e => e.alive).length < Math.min(4 + state.level, 10)) {
-      const [x,y] = exits[Math.floor(state.rng() * exits.length)];
-      state.enemies.push(makeEnemy('bat', x, y, state.rng));
-      state.events.push({ type: 'shaftSpawn', x: shaft.x, y: shaft.y });
-      shaft.nextSpawn = state.time + 16;
-    } else shaft.nextSpawn = state.time + 2;
-  }
-}
-
 function tickBombs(state, dt) {
   for (const b of state.bombs) {
     if (!b.exploded && state.time >= b.at + b.fuse) explode(state, b);
@@ -746,7 +734,7 @@ function tickBombs(state, dt) {
   state.bombs = state.bombs.filter(b => !b.exploded);
   for (const [k, until] of state.fires) if (until <= state.time) state.fires.delete(k);
   // Door opens once every enemy is gone.
-  if (state.door && state.door.revealed && !state.door.open && state.enemies.every(e => !e.alive) && state.shafts.every(s => s.sealed)) {
+  if (state.door && state.door.revealed && !state.door.open && state.enemies.every(e => !e.alive)) {
     state.door.open = true;
     state.events.push({ type: 'doorOpen' });
   }
@@ -762,7 +750,7 @@ function resolveHits(state) {
       state.events.push({ type: 'kill', enemy: e.type, x: e.x, y: e.y, score: ENEMY[e.type].score });
     }
   }
-  if (state.door && state.door.revealed && !state.door.open && state.enemies.every(e => !e.alive) && state.shafts.every(s => s.sealed)) {
+  if (state.door && state.door.revealed && !state.door.open && state.enemies.every(e => !e.alive)) {
     state.door.open = true;
     state.events.push({ type: 'doorOpen' });
   }
