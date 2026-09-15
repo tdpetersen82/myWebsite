@@ -1,8 +1,8 @@
 // Hook & Ladder — pure rules. No DOM, no timers, no rendering.
 // A tillered aerial ladder truck: the driver steers the tractor's front
 // wheels, the tillerman steers the trailer's rear wheels. Fires break out
-// around a city grid; park the ladder in the marked lane before the building
-// burns down. Headless-tested by tools/hook-and-ladder-test.mjs.
+// around a city grid; pull alongside, pump water, aim the hose and rescue
+// stranded people before the building burns down. Headless-tested by tools/hook-and-ladder-test.mjs.
 
 export const TILE = 40;
 export const COLS = 31;
@@ -16,14 +16,14 @@ export const STREET = 0, BUILDING = 1, PARK = 2;
 
 const DEG = Math.PI / 180;
 export const RULES = {
-  maxSpeed: 165,        // px/s forward
+  maxSpeed: 185,        // px/s forward
   reverseSpeed: 70,
   accel: 140,
   brake: 300,
   coast: 110,
-  maxSteer: 40 * DEG,   // tractor front wheels
-  steerRate: 300 * DEG,
-  steerReturn: 360 * DEG,
+  maxSteer: 32 * DEG,   // tractor front wheels
+  steerRate: 150 * DEG,
+  steerReturn: 200 * DEG,
   maxTiller: 35 * DEG,  // trailer rear wheels
   tillerRate: 150 * DEG,
   tillerReturn: 220 * DEG,
@@ -36,9 +36,9 @@ export const RULES = {
   trailerBack: 12,      // body behind the rear axle
   width: 22,
   turntable: 50,        // distance behind the hitch, centre of the ladder base
-  stunTime: 0.7,
-  parkSpeed: 8,         // |v| below this counts as stopped
-  ladderTime: 1.6,
+  stunTime: 0.18,
+  parkSpeed: 28,        // slow enough for the crew to stop and deploy
+  ladderTime: 0.65,
   retractTime: 0.6,
   betweenFires: 1.6,
   lives: 3,
@@ -202,13 +202,18 @@ export function stepTruck(state, inp, dt) {
 
   const locked = state.stun > 0 || state.ladder;
   if (locked) tr.v = approach(tr.v, 0, R.brake * 2 * dt);
-  else if (inp.gas && !inp.brake) tr.v = tr.v < 0 ? approach(tr.v, 0, R.brake * dt) : Math.min(R.maxSpeed, tr.v + R.accel * dt);
+  else if (inp.gas && !inp.brake) {
+    // Slow into turns, and cap yaw so a long key press cannot spin the cab.
+    const target = R.maxSpeed - 85 * Math.abs(tr.steer / R.maxSteer);
+    tr.v = approach(tr.v, tr.v < 0 ? 0 : target, (tr.v > target ? R.brake : R.accel) * dt);
+  }
   else if (inp.brake) tr.v = tr.v > 0 ? approach(tr.v, 0, R.brake * dt) : Math.max(-R.reverseSpeed, tr.v - R.accel * 0.7 * dt);
   else tr.v = approach(tr.v, 0, R.coast * dt);
   if (Math.abs(tr.v) < 0.01) { tr.v = 0; return null; }
 
   const prev = { x: tr.x, y: tr.y, h1: tr.h1, h2: tr.h2 };
-  tr.h1 += tr.v / R.L1 * Math.tan(tr.steer) * dt;
+  const yaw = tr.v / R.L1 * Math.tan(tr.steer);
+  tr.h1 += Math.max(-1.45, Math.min(1.45, yaw)) * dt;
   tr.x += Math.cos(tr.h1) * tr.v * dt;
   tr.y += Math.sin(tr.h1) * tr.v * dt;
   tr.h2 += tr.v * Math.sin(tr.h1 - tr.h2 - tr.tiller) / (R.L2 * Math.cos(tr.tiller)) * dt;
@@ -251,7 +256,7 @@ export function streetDistance(world, fromX, fromY, zones) {
 
 export function burnTimeFor(dist, firesOut) {
   const diff = Math.max(0.55, 1 - firesOut * 0.035);
-  return Math.min(60, Math.max(14, (15 + dist * 1.05) * diff));
+  return Math.min(85, Math.max(38, (45 + dist * 1.15) * diff));
 }
 
 export function dispatchFire(state) {
@@ -259,21 +264,48 @@ export function dispatchFire(state) {
   const cands = world.buildings.filter(b => b.state !== 'ruined' && b !== state.lastBuilding && b.zones.length);
   const scored = cands.map(b => ({ b, d: streetDistance(world, truck.x, truck.y, b.zones) })).filter(o => o.d >= RULES.minDispatchTiles);
   const pool = scored.length ? scored : cands.map(b => ({ b, d: Math.max(1, streetDistance(world, truck.x, truck.y, b.zones)) }));
-  const pick = pool[Math.floor(state.rng() * pool.length)];
+  // A nearby first call teaches the job before asking for a cross-city drive.
+  const intro = cands.filter(b => b.cx >= truck.x && b.cx <= truck.x + 360 && b.zones.some(z => z.side === 's' && z.y === PITCH * TILE));
+  const pick = state.firesOut === 0 && state.lives === RULES.lives && intro.length
+    ? { b: intro[0], d: streetDistance(world, truck.x, truck.y, intro[0].zones) }
+    : pool[Math.floor(state.rng() * pool.length)];
   pick.b.state = 'burning';
   const total = burnTimeFor(pick.d, state.firesOut);
-  state.fire = { building: pick.b, t: total, total, dist: pick.d, clean: true };
+  const count = state.firesOut >= 3 ? 5 : 4;
+  const targets = Array.from({ length: count }, (_, i) => ({
+    at: 0.12 + i * 0.76 / (count - 1),
+    kind: i === 1 || (count === 5 && i === 3) ? 'person' : 'fire',
+    hp: 1,
+  }));
+  state.fire = { building: pick.b, t: total, total, dist: pick.d, clean: true, targets };
+  // Clear the service frontage so a mission never asks players to park on a car.
+  const zones = serviceZones(pick.b);
+  world.cars = world.cars.filter(c => !zones.some(z => c.x < z.x + z.w && c.x + c.w > z.x && c.y < z.y + z.h && c.y + c.h > z.y));
   state.lastBuilding = pick.b;
   state.events.push({ type: 'dispatch', building: pick.b, time: total });
 }
 
-export function parkedInZone(state) {
-  const f = state.fire;
-  if (!f) return null;
-  const p = turntable(state.truck);
-  for (const z of f.building.zones) if (p.x >= z.x && p.x <= z.x + z.w && p.y >= z.y && p.y <= z.y + z.h) return z;
-  return null;
+export function serviceZones(building) {
+  return building.zones.map(z => {
+    const horizontal = z.side === 'n' || z.side === 's';
+    return { ...z,
+      x: z.x - (horizontal ? 18 : z.side === 'w' ? 40 : 0),
+      y: z.y - (!horizontal ? 18 : z.side === 'n' ? 40 : 0),
+      w: z.w + (horizontal ? 36 : 40), h: z.h + (horizontal ? 40 : 36),
+    };
+  });
 }
+export function parkedInZone(state) {
+  if (!state.fire) return null;
+  const points = [turntable(state.truck), state.truck];
+  return serviceZones(state.fire.building).find(z => points.some(p =>
+    p.x >= z.x && p.x <= z.x + z.w && p.y >= z.y && p.y <= z.y + z.h)) || null;
+}
+export function targetPoint(building, at) {
+  const angle = -Math.PI / 2 + at * Math.PI * 2;
+  return { x: building.cx + Math.cos(angle) * (building.w * TILE / 2 - 18), y: building.cy + Math.sin(angle) * (building.h * TILE / 2 - 22) };
+}
+
 export function canRaiseLadder(state) {
   return !!(state.status === 'playing' && state.fire && !state.ladder && Math.abs(state.truck.v) < RULES.parkSpeed && parkedInZone(state));
 }
@@ -289,7 +321,7 @@ export function createGame({ seed = (Date.now() % 1e9) >>> 0, mode = 'duo' } = {
     seed, rng, mode, world, truck,
     status: 'menu', t: 0, paused: false,
     fire: null, ladder: null, nextFireIn: 0.8, lastBuilding: null,
-    stun: 0, crashes: 0, score: 0, firesOut: 0, lives: RULES.lives,
+    stun: 0, crashCooldown: 0, recovered: false, crashes: 0, rescued: 0, score: 0, firesOut: 0, lives: RULES.lives,
     events: [],
   };
 }
@@ -298,59 +330,90 @@ export function startGame(state) { state.status = 'playing'; state.t = 0; }
 export function step(state, dt, inp = {}) {
   if (state.status !== 'playing' || state.paused) return;
   state.t += dt;
-  if (state.stun > 0) state.stun = Math.max(0, state.stun - dt);
+  state.stun = Math.max(0, state.stun - dt);
+  state.crashCooldown = Math.max(0, state.crashCooldown - dt);
 
-  // Raising the ladder locks the truck before it can creep this frame.
-  if (state.fire && !state.ladder && inp.ladder && canRaiseLadder(state)) {
-    const tt = turntable(state.truck);
-    state.ladder = { t: 0, retract: false, x0: tt.x, y0: tt.y, x1: state.fire.building.cx, y1: state.fire.building.cy };
+  // Recovery is explicit, costs clock time, and only triggers once per press.
+  if (inp.recover && !state.recovered && !state.ladder) {
+    const poses = [];
+    for (let r = 1.5; r < ROWS; r += PITCH) for (let c = 1.5; c < COLS; c += PITCH) {
+      for (const h of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) {
+        const pose = { ...spawnTruck(), x: c * TILE, y: r * TILE, h1: h, h2: h };
+        if (!truckCollides(state.world, pose)) poses.push(pose);
+      }
+    }
+    poses.sort((a, b) => Math.hypot(a.x - state.truck.x, a.y - state.truck.y) - Math.hypot(b.x - state.truck.x, b.y - state.truck.y));
+    if (poses.length) {
+      state.truck = poses[0]; state.stun = 0;
+      if (state.fire) { state.fire.t = Math.max(0, state.fire.t - 5); state.fire.clean = false; }
+      state.events.push({ type: 'recover' });
+    }
+  }
+  state.recovered = !!inp.recover;
+
+  if (inp.ladder && canRaiseLadder(state)) {
+    const tt = turntable(state.truck), p = targetPoint(state.fire.building, 0.12);
+    state.truck.v = 0;
+    state.ladder = { t: 0, retract: false, aim: 0.12, pressure: 0, working: false, x0: tt.x, y0: tt.y, x1: p.x, y1: p.y };
     state.events.push({ type: 'deploy' });
   }
-
   const hit = stepTruck(state, inp, dt);
   if (hit) {
     state.stun = RULES.stunTime;
     state.truck.v = 0;
-    state.crashes++;
-    if (state.fire) state.fire.clean = false;
-    state.events.push({ type: 'crash', part: hit, x: state.truck.x, y: state.truck.y });
+    if (state.crashCooldown === 0) {
+      state.crashes++; state.crashCooldown = 1;
+      if (state.fire) state.fire.clean = false;
+      state.events.push({ type: 'crash', part: hit, x: state.truck.x, y: state.truck.y });
+    }
   }
 
-  if (state.ladder) {
-    const L = state.ladder;
+  const L = state.ladder;
+  if (L) {
     L.t += dt;
-    if (!L.retract && L.t >= RULES.ladderTime) {
-      const f = state.fire;
-      const bonus = Math.round(f.t) * 5;
-      const clean = f.clean ? 50 : 0;
-      const gained = 100 + bonus + clean;
-      state.score += gained;
-      state.firesOut++;
-      f.building.state = 'saved';
-      state.events.push({ type: 'extinguished', building: f.building, gained, bonus, clean: f.clean });
-      state.fire = null;
-      state.nextFireIn = RULES.betweenFires;
-      L.retract = true; L.t = 0;
-    } else if (L.retract && L.t >= RULES.retractTime) {
-      state.ladder = null;
+    if (L.retract) {
+      if (L.t >= RULES.retractTime) state.ladder = null;
+    } else {
+      L.aim = Math.max(0, Math.min(1, L.aim + (inp.tiller || 0) * dt * 0.42));
+      L.pressure = approach(L.pressure, inp.gas || state.mode === 'solo' ? 1 : 0, dt * 1.4);
+      const p = targetPoint(state.fire.building, L.aim);
+      L.x1 = p.x; L.y1 = p.y;
+      L.working = !!inp.ladder && L.t >= RULES.ladderTime;
+      const target = state.fire.targets.find(t => t.hp > 0 && Math.abs(t.at - L.aim) < 0.085);
+      L.spraying = L.working && (!target || target.kind === 'fire') && L.pressure > 0.15;
+      if (L.working && target) {
+        const rate = target.kind === 'person' ? 0.65 : L.pressure * 0.8;
+        target.hp = Math.max(0, target.hp - rate * dt);
+        if (target.hp === 0) {
+          if (target.kind === 'person') state.rescued++;
+          state.events.push({ type: 'target', kind: target.kind, ...targetPoint(state.fire.building, target.at) });
+        }
+      }
+      if (state.fire.targets.every(t => t.hp === 0)) {
+        const f = state.fire, bonus = Math.round(f.t) * 5, clean = f.clean ? 50 : 0;
+        const gained = 150 + bonus + clean + f.targets.filter(t => t.kind === 'person').length * 100;
+        state.score += gained; state.firesOut++; f.building.state = 'saved';
+        state.events.push({ type: 'extinguished', building: f.building, gained, bonus, clean: f.clean });
+        state.fire = null; state.nextFireIn = RULES.betweenFires;
+        L.retract = true; L.t = 0; L.spraying = false;
+      }
     }
-  } else if (state.fire) {
-    const f = state.fire;
-    f.t -= dt;
-    if (f.t <= 0) {
-      f.t = 0;
-      f.building.state = 'ruined';
-      state.lives--;
-      state.events.push({ type: 'burnout', building: f.building });
-      state.fire = null;
+  }
+  // The emergency stays live while working: aim and teamwork still matter.
+  if (state.fire) {
+    state.fire.t = Math.max(0, state.fire.t - dt);
+    if (state.fire.t === 0) {
+      const b = state.fire.building; b.state = 'ruined'; state.lives--;
+      state.events.push({ type: 'burnout', building: b });
+      state.fire = null; state.ladder = null;
       if (state.lives <= 0) {
         state.status = 'over';
         state.events.push({ type: 'gameover', score: state.score, fires: state.firesOut });
       } else state.nextFireIn = RULES.betweenFires + 0.6;
     }
-  } else {
+  } else if (!state.ladder) {
     state.nextFireIn -= dt;
-    if (state.nextFireIn <= 0) dispatchFire(state);
+    if (state.nextFireIn <= 0 && state.status === 'playing') dispatchFire(state);
   }
 }
 

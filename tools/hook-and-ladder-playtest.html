@@ -1,0 +1,54 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Hook & Ladder — input playtest</title>
+<style>body{margin:0;background:#13222b;color:#fff;font:13px system-ui}header{padding:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}button{padding:7px 12px;background:#304651;color:white;border:1px solid #688794;border-radius:5px}button[aria-pressed=true]{background:#197e59}output{font:11px monospace}iframe{width:100%;height:calc(100vh - 80px);border:0}</style>
+<header><b>Input playtest</b><button id="release">Release all</button><button id="arrival">Drive to first call</button><button id="complete">Work the call</button><span id="keys"></span><output id="state"></output></header>
+<iframe title="Game" src="../hook-and-ladder/"></iframe>
+<script>
+// Test controls send the same keyboard events as the site's touch pads.
+// No teleporting or state edits: drive, park, aim and complete calls normally.
+const frame = document.querySelector('iframe'), down = new Set();
+const names = { w:'W · gas/pump', s:'S · brake', a:'A · left', d:'D · right', ArrowLeft:'← · tail/aim', ArrowRight:'→ · tail/aim', ArrowUp:'↑ · work' };
+function key(type, key) { frame.contentWindow.dispatchEvent(new KeyboardEvent(type,{key,bubbles:true})); }
+function focusGame() {
+  frame.contentWindow.focus();
+  const view = frame.contentWindow.__hookLadder?.();
+  if (view?.game.paused) { key('keydown','p'); key('keyup','p'); }
+}
+for (const [k,label] of Object.entries(names)) {
+  const b=document.createElement('button'); b.textContent=label; b.setAttribute('aria-pressed','false');
+  b.onpointerdown=e=>e.preventDefault();
+  b.onclick=()=>{focusGame(); if(down.has(k)){down.delete(k);key('keyup',k)}else{down.add(k);key('keydown',k)} b.setAttribute('aria-pressed',String(down.has(k)));};
+  document.querySelector('#keys').append(b);
+}
+document.querySelector('#release').onclick=()=>{pilot=null; focusGame(); for(const k of down)key('keyup',k); down.clear(); document.querySelectorAll('[aria-pressed]').forEach(b=>b.setAttribute('aria-pressed','false'));};
+let pilot = null;
+function setKeys(keys) {
+  for (const k of down) if (!keys.includes(k)) { key('keyup',k); down.delete(k); }
+  for (const k of keys) if (!down.has(k)) { key('keydown',k); down.add(k); }
+}
+for (const [id,stage] of [['arrival','drive'],['complete','work']]) document.querySelector('#'+id).onclick=()=>{focusGame();pilot=stage;};
+setInterval(()=>{
+  const view=frame.contentWindow.__hookLadder?.(); if(!view||!pilot)return;
+  const g=view.game;
+  if(g.status!=='playing'||g.paused)return;
+  if(pilot==='drive') {
+    if(g.ladder){setKeys([]);pilot=null;key('keydown','p');key('keyup','p');return;}
+    if(!g.fire)return;
+    const z=g.fire.building.zones.find(z=>z.side==='s'&&z.y===280);
+    if(!z){setKeys([]);pilot=null;return;}
+    setKeys(g.truck.x < z.x + 5 ? ['w'] : ['s','ArrowUp']);
+  } else {
+    if(!g.fire||!g.ladder){setKeys([]);pilot=null;return;}
+    const target=g.fire.targets.find(t=>t.hp>0);
+    const keys=['w','ArrowUp'];
+    if(target&&Math.abs(target.at-g.ladder.aim)>.018)keys.push(target.at>g.ladder.aim?'ArrowRight':'ArrowLeft');
+    setKeys(keys);
+  }
+},16);
+setInterval(()=>{
+  const view=frame.contentWindow.__hookLadder?.(); if(!view)return;
+  const g=view.game;
+  document.querySelector('#state').textContent=JSON.stringify({status:g.status,paused:g.paused,x:Math.round(g.truck.x),y:Math.round(g.truck.y),speed:Math.round(g.truck.v),crashes:g.crashes,score:g.score,saved:g.firesOut,aim:g.ladder?.aim,targets:g.fire?.targets?.map(t=>[t.kind,Math.round(t.hp*100)])});
+},100);
+</script>
