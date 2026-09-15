@@ -34,6 +34,16 @@
       ],
       "port": 8097,
       "autoPort": true
+    },
+    {
+      "name": "website-fracas",
+      "runtimeExecutable": "node",
+      "runtimeArgs": [
+        "tools/serve.mjs",
+        "8099"
+      ],
+      "port": 8099,
+      "autoPort": true
     }
   ]
 }

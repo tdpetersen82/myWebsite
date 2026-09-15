@@ -64,6 +64,7 @@
     { name: 'Breakout',       href: '../breakout/',       best: () => readBest('breakoutHighScore') },
     { name: 'Asteroids',      href: '../asteroids/',      best: () => readBest('asteroidsHighScore') },
     { name: 'Frogger',        href: '../frogger/',        best: () => readBest('froggerHighScore') },
+    { name: 'Fracas',         href: '../fracas/',         best: () => readBest('fracasHighScore') },
     { name: 'Defender',       href: '../defender/',       best: () => readBest('defenderHighScore') },
     { name: 'Missile Command',href: '../missile-command/',best: () => readBest('missileCommandHighScore') },
     { name: 'Lunar Lander',   href: '../lunar-lander/',   best: () => readBest('lunarLanderHighScore') },

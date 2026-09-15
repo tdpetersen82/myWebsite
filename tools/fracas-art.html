@@ -1,0 +1,187 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Fracas art builder</title>
+<!--
+  Draws the Fracas cabinet tile (assets/thumbs/fracas-arcade-YYYYMMDD.png, 1200×1200)
+  and the OG share card (assets/og/fracas.jpg, 1200×630) with canvas, then POSTs
+  them to tools/serve.mjs's /__save. No PIL needed.
+  Run:  node tools/serve.mjs 8099  →  open http://localhost:8099/tools/fracas-art.html?save=1
+  The OG card composites assets/thumbs/fracas.png (a 600×600 board capture taken
+  from the game page) the same way tools/make-og-images.py does for other games.
+-->
+<style>body{background:#111;color:#ddd;font:14px system-ui;margin:20px}canvas{display:block;margin:12px 0;max-width:100%;border:1px solid #333}</style>
+<p id="status">drawing…</p>
+<canvas id="tile" width="1200" height="1200"></canvas>
+<canvas id="og" width="1200" height="630"></canvas>
+<script>
+const TILE_NAME = 'fracas-arcade-20260915.png';
+const S = 1200;
+
+function drawTile() {
+  const c = document.getElementById('tile'), x = c.getContext('2d');
+  // background: deep navy with a warm glow behind the dynamite
+  const bg = x.createLinearGradient(0, 0, 0, S); bg.addColorStop(0, '#0b1020'); bg.addColorStop(1, '#0a0d18');
+  x.fillStyle = bg; x.fillRect(0, 0, S, S);
+  const glow = x.createRadialGradient(660, 620, 40, 660, 620, 620);
+  glow.addColorStop(0, 'rgba(255,150,60,0.55)'); glow.addColorStop(0.45, 'rgba(255,110,50,0.12)'); glow.addColorStop(1, 'rgba(0,0,0,0)');
+  x.fillStyle = glow; x.fillRect(0, 0, S, S);
+  // gallery floor: dark earth with a faint grid, in perspective-ish flat top-down
+  x.save(); x.translate(0, 660);
+  const fg = x.createLinearGradient(0, 0, 0, 500); fg.addColorStop(0, '#2c2520'); fg.addColorStop(1, '#17120f');
+  x.fillStyle = fg; x.fillRect(0, 0, S, 540);
+  x.strokeStyle = 'rgba(0,0,0,0.35)'; x.lineWidth = 3;
+  for (let i = 0; i <= 8; i++) { x.beginPath(); x.moveTo(i * 150, 0); x.lineTo(i * 150, 540); x.stroke(); }
+  for (let j = 0; j <= 3; j++) { x.beginPath(); x.moveTo(0, j * 150); x.lineTo(S, j * 150); x.stroke(); }
+  // back wall edge
+  x.fillStyle = 'rgba(255,255,255,0.05)'; x.fillRect(0, 0, S, 4);
+  x.restore();
+  // vignette
+  const vg = x.createRadialGradient(600, 560, 300, 600, 600, 900);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.75)');
+  x.fillStyle = vg; x.fillRect(0, 0, S, S);
+
+  // boulders (pale limestone) — back row, right side, front-left
+  boulder(x, 1000, 720, 2.0, 0); boulder(x, 880, 960, 2.4, 1); boulder(x, 190, 990, 2.2, 2); boulder(x, 1090, 880, 1.6, 1); boulder(x, 560, 1040, 1.8, 0);
+  // bedrock pillars along the back wall
+  pillar(x, 40, 690, 2.4); pillar(x, 1040, 560, 2.2);
+  // bats
+  bat(x, 300, 300, 2.6, 0.2); bat(x, 960, 240, 2.0, 1.4);
+  // knocker peeking behind a boulder
+  knocker(x, 1010, 850, 2.3);
+  // dynamite bundle, hero object, with spark
+  dynamite(x, 680, 700, 5.4);
+  // the miner, front-left, headlamp on
+  miner(x, 360, 820, 5.4);
+}
+
+function boulder(x, cx, cy, s, v) {
+  x.save(); x.translate(cx, cy); x.scale(s, s);
+  x.fillStyle = 'rgba(0,0,0,0.45)'; x.beginPath(); x.ellipse(2, 22, 26, 8, 0, 0, Math.PI * 2); x.fill();
+  const pts = v === 0 ? [[-24, -6], [-14, -22], [8, -24], [24, -10], [22, 14], [6, 22], [-16, 18]]
+    : v === 1 ? [[-22, -14], [0, -24], [22, -14], [24, 8], [10, 22], [-12, 22], [-24, 6]]
+    : [[-24, 0], [-18, -20], [12, -22], [24, -4], [18, 18], [-6, 24], [-20, 16]];
+  const gr = x.createLinearGradient(-20, -24, 16, 24);
+  gr.addColorStop(0, '#e6dcc2'); gr.addColorStop(0.55, '#c9bc9c'); gr.addColorStop(1, '#7d7159');
+  x.fillStyle = gr; x.beginPath(); pts.forEach(([a, b], i) => i ? x.lineTo(a, b) : x.moveTo(a, b)); x.closePath(); x.fill();
+  x.fillStyle = 'rgba(255,250,235,0.35)';
+  x.beginPath(); x.moveTo(pts[0][0] + 4, pts[0][1] + 2); x.lineTo(pts[1][0] + 2, pts[1][1] + 4); x.lineTo(pts[2][0] - 2, pts[2][1] + 5); x.lineTo(-2, -4); x.closePath(); x.fill();
+  x.strokeStyle = 'rgba(70,58,40,0.6)'; x.lineWidth = 1.5;
+  x.beginPath(); x.moveTo(-6, -2); x.lineTo(2, 6); x.lineTo(-2, 14); x.stroke();
+  x.beginPath(); x.moveTo(10, -10 + v * 3); x.lineTo(16, 2); x.stroke();
+  x.restore();
+}
+function pillar(x, px, py, s) {
+  x.save(); x.translate(px, py); x.scale(s, s);
+  x.fillStyle = '#2c2a33'; x.fillRect(0, 0, 56, 56);
+  x.fillStyle = '#3f3d49'; x.fillRect(2, 12, 52, 42);
+  x.fillStyle = '#5c5968'; x.beginPath(); x.moveTo(2, 12); x.lineTo(7, 3); x.lineTo(49, 3); x.lineTo(54, 12); x.closePath(); x.fill();
+  x.fillStyle = 'rgba(255,255,255,0.10)'; x.fillRect(7, 3, 42, 3);
+  x.fillStyle = 'rgba(0,0,0,0.22)'; x.fillRect(48, 12, 6, 42);
+  x.strokeStyle = 'rgba(0,0,0,0.35)'; x.lineWidth = 1.5; x.beginPath(); x.moveTo(16, 18); x.lineTo(24, 30); x.lineTo(20, 42); x.stroke();
+  x.restore();
+}
+function bat(x, cx, cy, s, ph) {
+  x.save(); x.translate(cx, cy); x.scale(s, s);
+  const flap = Math.sin(ph);
+  x.fillStyle = '#4a2c6e';
+  for (const sg of [-1, 1]) {
+    x.beginPath(); x.moveTo(sg * 6, 0);
+    x.quadraticCurveTo(sg * 16, -10 - flap * 8, sg * 26, -2 - flap * 10);
+    x.quadraticCurveTo(sg * 20, 4 - flap * 4, sg * 16, 6 - flap * 2);
+    x.quadraticCurveTo(sg * 10, 4, sg * 6, 8); x.closePath(); x.fill();
+  }
+  x.fillStyle = '#5d3a85'; x.beginPath(); x.ellipse(0, 2, 8, 10, 0, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#4a2c6e'; x.beginPath(); x.moveTo(-6, -6); x.lineTo(-3, -14); x.lineTo(0, -6); x.moveTo(6, -6); x.lineTo(3, -14); x.lineTo(0, -6); x.fill();
+  x.fillStyle = '#ffe36b'; x.beginPath(); x.arc(-3, -2, 2, 0, Math.PI * 2); x.arc(3, -2, 2, 0, Math.PI * 2); x.fill();
+  x.restore();
+}
+function knocker(x, cx, cy, s) {
+  x.save(); x.translate(cx, cy); x.scale(s, s);
+  x.fillStyle = '#5f8f4a'; x.beginPath(); x.moveTo(-11, 20); x.lineTo(-9, 0); x.lineTo(9, 0); x.lineTo(11, 20); x.closePath(); x.fill();
+  x.fillStyle = '#7fb45f'; x.beginPath(); x.arc(0, -6, 12, 0, Math.PI * 2); x.fill();
+  x.beginPath(); x.moveTo(-10, -8); x.lineTo(-22, -16); x.lineTo(-11, -2); x.closePath(); x.fill();
+  x.beginPath(); x.moveTo(10, -8); x.lineTo(22, -16); x.lineTo(11, -2); x.closePath(); x.fill();
+  x.fillStyle = '#fff36b'; x.beginPath(); x.arc(-5, -7, 3.5, 0, Math.PI * 2); x.arc(5, -7, 3.5, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#2b3a10'; x.beginPath(); x.arc(-5, -7, 1.6, 0, Math.PI * 2); x.arc(5, -7, 1.6, 0, Math.PI * 2); x.fill();
+  x.restore();
+}
+function rr(x, a, b, w, h, r) { x.beginPath(); x.moveTo(a + r, b); x.lineTo(a + w - r, b); x.quadraticCurveTo(a + w, b, a + w, b + r); x.lineTo(a + w, b + h - r); x.quadraticCurveTo(a + w, b + h, a + w - r, b + h); x.lineTo(a + r, b + h); x.quadraticCurveTo(a, b + h, a, b + h - r); x.lineTo(a, b + r); x.quadraticCurveTo(a, b, a + r, b); x.closePath(); }
+function dynamite(x, cx, cy, s) {
+  x.save(); x.translate(cx, cy); x.scale(s, s);
+  x.fillStyle = 'rgba(0,0,0,0.45)'; x.beginPath(); x.ellipse(0, 20, 22, 7, 0, 0, Math.PI * 2); x.fill();
+  x.rotate(-0.25);
+  for (const dx of [-9, 0, 9]) {
+    const gr = x.createLinearGradient(dx - 5, 0, dx + 5, 0);
+    gr.addColorStop(0, '#7f1d18'); gr.addColorStop(0.4, '#d63a30'); gr.addColorStop(1, '#8e221b');
+    x.fillStyle = gr; rr(x, dx - 5, -16, 10, 32, 3); x.fill();
+  }
+  x.fillStyle = '#e8d9b0'; x.fillRect(-15, -6, 30, 4); x.fillRect(-15, 5, 30, 4);
+  x.strokeStyle = '#caa06a'; x.lineWidth = 3; x.beginPath(); x.moveTo(0, -16); x.quadraticCurveTo(6, -26, 14, -24); x.stroke();
+  const sp = x.createRadialGradient(14, -24, 1, 14, -24, 9);
+  sp.addColorStop(0, '#fff'); sp.addColorStop(0.35, '#ffd36b'); sp.addColorStop(1, 'rgba(255,140,60,0)');
+  x.fillStyle = sp; x.beginPath(); x.arc(14, -24, 9, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#fff2c4';
+  for (let i = 0; i < 7; i++) { const a = i * 0.9, r = 5 + (i % 3) * 2; x.beginPath(); x.arc(14 + Math.cos(a) * r, -24 + Math.sin(a) * r, 1, 0, Math.PI * 2); x.fill(); }
+  x.restore();
+}
+function miner(x, cx, cy, s) {
+  x.save(); x.translate(cx, cy); x.scale(s, s);
+  const gl = x.createRadialGradient(24, -18, 2, 24, -18, 60);
+  gl.addColorStop(0, 'rgba(255,236,170,0.35)'); gl.addColorStop(1, 'rgba(255,236,170,0)');
+  x.fillStyle = gl; x.beginPath(); x.arc(24, -18, 60, 0, Math.PI * 2); x.fill();
+  x.fillStyle = 'rgba(0,0,0,0.45)'; x.beginPath(); x.ellipse(0, 22, 16, 5, 0, 0, Math.PI * 2); x.fill();
+  x.strokeStyle = '#7a5230'; x.lineWidth = 3; x.beginPath(); x.moveTo(13, 16); x.lineTo(17, -16); x.stroke();
+  x.strokeStyle = '#c3c6cf'; x.lineWidth = 4; x.beginPath(); x.moveTo(8, -14); x.quadraticCurveTo(17, -24, 26, -14); x.stroke();
+  x.fillStyle = '#d9c7a8'; x.fillRect(-9, -6, 18, 10);
+  const rg = x.createLinearGradient(-12, 0, 12, 20); rg.addColorStop(0, '#4f7cff'); rg.addColorStop(1, '#243f9e');
+  x.fillStyle = rg; x.beginPath(); x.moveTo(-10, 0); x.lineTo(10, 0); x.lineTo(13, 20); x.lineTo(-13, 20); x.closePath(); x.fill();
+  x.fillStyle = '#4f7cff'; x.fillRect(-7, -6, 3, 8); x.fillRect(4, -6, 3, 8);
+  x.fillStyle = '#c9a15a'; x.fillRect(-4, 4, 8, 6);
+  x.fillStyle = '#3a2a20'; x.fillRect(-11, 18, 9, 5); x.fillRect(2, 18, 9, 5);
+  x.fillStyle = '#f2cfa8'; x.beginPath(); x.arc(0, -11, 8, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#6b4a2a'; x.beginPath(); x.moveTo(-7, -9); x.lineTo(7, -9); x.lineTo(0, 0); x.closePath(); x.fill();
+  x.fillStyle = '#1b1b24'; x.fillRect(-2, -14, 2, 3); x.fillRect(4, -14, 2, 3);
+  x.fillStyle = '#ffd93d'; x.beginPath(); x.arc(0, -16, 11, Math.PI, 0); x.closePath(); x.fill(); x.fillRect(-14, -17, 28, 4);
+  x.fillStyle = '#d9b21c'; x.fillRect(-3, -27, 6, 8);
+  x.fillStyle = 'rgba(255,245,194,0.5)'; x.beginPath(); x.arc(3, -21, 5.5, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#fff5c2'; x.beginPath(); x.arc(3, -21, 3.2, 0, Math.PI * 2); x.fill();
+  x.restore();
+}
+
+// OG card: same layout as tools/make-og-images.py (dark navy, corner brackets, title, board shot).
+async function drawOg() {
+  const c = document.getElementById('og'), x = c.getContext('2d');
+  const W = 1200, H = 630;
+  const bg = x.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#20203f'); bg.addColorStop(1, '#0d0d1e');
+  x.fillStyle = bg; x.fillRect(0, 0, W, H);
+  x.strokeStyle = '#e6e6f0'; x.lineWidth = 3;
+  x.beginPath(); x.moveTo(50, 200); x.lineTo(50, 50); x.lineTo(200, 50); x.stroke();
+  x.beginPath(); x.moveTo(1000, 580); x.lineTo(1150, 580); x.lineTo(1150, 430); x.stroke();
+  x.fillStyle = '#ffffff'; x.font = 'bold 96px "Arial Bold", Arial, Helvetica, sans-serif'; x.textBaseline = 'alphabetic';
+  x.fillText('Fracas', 96, 318);
+  x.fillStyle = '#b9b6d9'; x.font = '30px Arial, Helvetica, sans-serif';
+  x.fillText('Free browser game — no installs', 96, 374);
+  x.fillStyle = '#6d63d4'; x.fillRect(96, 508, 250, 4);
+  x.fillStyle = '#ffffff'; x.font = 'bold 26px Arial, Helvetica, sans-serif'; x.fillText('LIMESTONE GAMES', 96, 548);
+  const img = new Image(); img.src = '../assets/thumbs/fracas.png?' + Date.now();
+  await new Promise((res, rej) => { img.onload = res; img.onerror = rej; });
+  x.fillStyle = '#ffffff'; x.fillRect(672, 97, 436, 436);
+  x.drawImage(img, 676, 101, 428, 428);
+}
+
+async function save(canvas, path, type, q) {
+  const dataUrl = canvas.toDataURL(type, q);
+  const r = await fetch('/__save', { method: 'POST', body: JSON.stringify({ path, dataUrl }) });
+  return path + ' → ' + await r.text();
+}
+(async () => {
+  drawTile();
+  let msg = 'drawn';
+  try { await drawOg(); } catch (e) { msg = 'OG needs assets/thumbs/fracas.png (' + e + ')'; }
+  if (new URLSearchParams(location.search).get('save')) {
+    msg += ' | ' + await save(document.getElementById('tile'), 'assets/thumbs/' + TILE_NAME, 'image/png');
+    msg += ' | ' + await save(document.getElementById('og'), 'assets/og/fracas.jpg', 'image/jpeg', 0.9);
+  }
+  document.getElementById('status').textContent = msg;
+})();
+</script>

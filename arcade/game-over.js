@@ -5,7 +5,7 @@
     'block-puzzle': 'Block Puzzle', pong: 'Pong', breakout: 'Breakout',
     'space-invaders': 'Space Invaders', asteroids: 'Asteroids', simon: 'Simon',
     'spacex-lander': 'SpaceX Lander', frogger: 'Frogger', 'lunar-lander': 'Lunar Lander',
-    'missile-command': 'Missile Command', defender: 'Defender'
+    'missile-command': 'Missile Command', defender: 'Defender', fracas: 'Fracas'
   };
   const related = {
     'block-puzzle': ['simon', 'breakout', 'frogger'],
@@ -17,7 +17,8 @@
     'spacex-lander': ['lunar-lander', 'asteroids', 'missile-command'],
     'lunar-lander': ['spacex-lander', 'asteroids', 'defender'],
     'missile-command': ['space-invaders', 'defender', 'asteroids'],
-    defender: ['space-invaders', 'asteroids', 'missile-command']
+    defender: ['space-invaders', 'asteroids', 'missile-command'],
+    fracas: ['frogger', 'space-invaders', 'breakout']
   };
   let dialog, restart, previousFocus;
   const game = location.pathname.split('/').filter(Boolean)[0];
