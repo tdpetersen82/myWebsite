@@ -8,6 +8,7 @@ cd "$(dirname "$0")/.." || exit 1
 DAYS="${1:-90}"
 echo "################ GOOGLE (GSC + GA4), ${DAYS}-day window ################"
 node tools/seo-report.mjs --days "$DAYS" || echo "seo-report failed"
+node tools/ga4-pulse.mjs || echo "ga4-pulse failed"
 echo; echo "################ BING ################"
 node tools/bing-report.mjs || echo "bing-report failed"
 echo; echo "################ CLOUDFLARE ################"
