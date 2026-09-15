@@ -137,7 +137,7 @@ export function createGame(opts = {}) {
   const seed = opts.seed == null ? (Date.now() & 0x7fffffff) : opts.seed;
   const state = {
     mode, seed, rng: mulberry32(seed),
-    grid: null, bombs: [], fires: new Map(), items: new Map(), door: null,
+    grid: null, bombs: [], fires: new Map(), items: new Map(), door: null, shafts: [],
     players: [], enemies: [], particles: [],
     time: 0, timer: 0, level: 0, score: 0, lives: 3, extraLifeIdx: 0,
     status: 'intro', statusUntil: 0, events: [], round: 0, roundWinner: null,
@@ -172,7 +172,7 @@ export function startLevel(state, level) {
   state.enemies = [];
   state.timer = RULES.levelTime; state.hurry = false;
   state.suddenDeath = null;
-  // Door + items hide under distinct bricks, door never in the spawn column/row corridor.
+  // The exit is visible from the start, away from the spawn corridor.
   const shuffled = bricks.slice();
   for (let i = shuffled.length - 1; i > 0; i--) {
     const j = Math.floor(state.rng() * (i + 1));
@@ -180,7 +180,8 @@ export function startLevel(state, level) {
   }
   const far = shuffled.filter(([x, y]) => x + y >= 8);
   const doorCell = far[0] || shuffled[0];
-  state.door = { x: doorCell[0], y: doorCell[1], revealed: false, open: false };
+  state.door = { x: doorCell[0], y: doorCell[1], revealed: true, open: false };
+  grid[key(doorCell[0], doorCell[1])] = FLOOR;
   const pool = [ITEM.BOMB, ITEM.FIRE, ITEM.BOMB, ITEM.FIRE, ITEM.SPEED, ITEM.SHIELD, ITEM.BOMB, ITEM.FIRE];
   let placed = 0;
   for (const [x, y] of shuffled) {
@@ -240,6 +241,11 @@ export function startLevel(state, level) {
     used.add(key(x, y));
     state.enemies.push(makeEnemy(type, x, y, state.rng));
   }
+  // Bombable entrances occupy rock tiles, keeping movement/blast blocking consistent.
+  // They never conceal gear or replace the exit, and are visible immediately.
+  state.shafts = shuffled.filter(([x,y]) => grid[key(x,y)] === BRICK &&
+    !state.items.has(key(x,y)) && x + y >= 6).slice(0, Math.min(2 + Math.floor(level / 3), 4))
+    .map(([x,y], i) => ({ x, y, sealed: false, nextSpawn: state.time + 14 + i * 4 }));
   const p = state.players[0];
   resetPlayer(p, level > 1);
   state.status = 'intro'; state.statusUntil = state.time + 1.6;
@@ -251,7 +257,7 @@ export function startRound(state) {
   const { grid, bricks } = buildGrid(state.rng, 0.62, [CORNERS[0], CORNERS[1]]);
   state.grid = grid;
   state.bombs = []; state.fires = new Map(); state.items = new Map(); state.particles = [];
-  state.enemies = []; state.door = null; state.roundWinner = null;
+  state.enemies = []; state.shafts = []; state.door = null; state.roundWinner = null;
   state.timer = RULES.battleTime;
   state.suddenDeath = null;
   const shuffled = bricks.slice();
@@ -398,6 +404,12 @@ function explode(state, bomb) {
     if (state.grid[k] === BRICK) {
       state.grid[k] = FLOOR;
       state.events.push({ type: 'brick', x: cx, y: cy });
+      const shaft = state.shafts.find(s => !s.sealed && s.x === cx && s.y === cy);
+      if (shaft) {
+        shaft.sealed = true;
+        addScore(state, 250);
+        state.events.push({ type: 'shaftSealed', x: cx, y: cy });
+      }
       if (owner && state.mode === 'adventure') addScore(state, RULES.brickScore);
       const it = state.items.get(k);
       if (it) it.hidden = false;
@@ -693,6 +705,8 @@ export function step(state, dt, inputs = []) {
     }
   }
 
+  tickShafts(state);
+
   // Enemies
   for (const e of state.enemies) {
     if (!e.alive) continue;
@@ -706,6 +720,25 @@ export function step(state, dt, inputs = []) {
   return state;
 }
 
+function tickShafts(state) {
+  if (state.mode !== 'adventure') return;
+  for (const shaft of state.shafts) {
+    if (shaft.sealed || state.time < shaft.nextSpawn) continue;
+    // Resolve a blast before allowing its target to emit another enemy.
+    if (state.bombs.some(b => !b.exploded && state.time >= b.at + b.fuse)) continue;
+    const exits = DIR_NAMES.map(d => [shaft.x + DIRS[d][0], shaft.y + DIRS[d][1]])
+      .filter(([x,y]) => tileAt(state,x,y) === FLOOR && !bombAt(state,x,y) && !fireAt(state,x,y) &&
+        state.players.every(p => !p.alive || Math.abs(p.x-x-.5) + Math.abs(p.y-y-.5) > 2) &&
+        state.enemies.every(e => !e.alive || tileOf(e.x) !== x || tileOf(e.y) !== y));
+    if (exits.length && state.enemies.filter(e => e.alive).length < Math.min(4 + state.level, 10)) {
+      const [x,y] = exits[Math.floor(state.rng() * exits.length)];
+      state.enemies.push(makeEnemy('bat', x, y, state.rng));
+      state.events.push({ type: 'shaftSpawn', x: shaft.x, y: shaft.y });
+      shaft.nextSpawn = state.time + 16;
+    } else shaft.nextSpawn = state.time + 2;
+  }
+}
+
 function tickBombs(state, dt) {
   for (const b of state.bombs) {
     if (!b.exploded && state.time >= b.at + b.fuse) explode(state, b);
@@ -713,7 +746,7 @@ function tickBombs(state, dt) {
   state.bombs = state.bombs.filter(b => !b.exploded);
   for (const [k, until] of state.fires) if (until <= state.time) state.fires.delete(k);
   // Door opens once every enemy is gone.
-  if (state.door && state.door.revealed && !state.door.open && state.enemies.every(e => !e.alive)) {
+  if (state.door && state.door.revealed && !state.door.open && state.enemies.every(e => !e.alive) && state.shafts.every(s => s.sealed)) {
     state.door.open = true;
     state.events.push({ type: 'doorOpen' });
   }
@@ -729,7 +762,7 @@ function resolveHits(state) {
       state.events.push({ type: 'kill', enemy: e.type, x: e.x, y: e.y, score: ENEMY[e.type].score });
     }
   }
-  if (state.door && state.door.revealed && !state.door.open && state.enemies.every(e => !e.alive)) {
+  if (state.door && state.door.revealed && !state.door.open && state.enemies.every(e => !e.alive) && state.shafts.every(s => s.sealed)) {
     state.door.open = true;
     state.events.push({ type: 'doorOpen' });
   }

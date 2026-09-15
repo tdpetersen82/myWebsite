@@ -2,7 +2,8 @@
 // Theme: a limestone mine. Miners, dynamite, rock, bats and knockers, a lift.
 import {
   createGame, step, drainEvents, W, H, FLOOR, WALL, BRICK, RULES, ITEM, ENEMY, tileOf, atCentre,
-} from './engine.mjs?v=20260914a';
+} from './engine.mjs?v=20260915c';
+import { drawShaft } from './shaft-art.mjs?v=20260915c';
 
 const TILE = 56, HUD = 48;
 const BW = W * TILE, BH = H * TILE;
@@ -13,6 +14,8 @@ const PIXEL_RATIO = Math.min(window.devicePixelRatio || 1, 2);
 canvas.width = BW * PIXEL_RATIO; canvas.height = (BH + HUD) * PIXEL_RATIO;
 const menu = document.getElementById('menu');
 const menuSub = document.getElementById('menu-sub');
+const missionEl = document.getElementById('mission');
+document.querySelector('.ch-bezel')?.prepend(missionEl);
 const scoreEl = document.getElementById('score');
 const hiEl = document.getElementById('highScore');
 const HS_KEY = 'dynamineHighScore';
@@ -141,15 +144,18 @@ function showMenu(sub) {
   menuSub.textContent = sub || '';
   menu.hidden = false;
   scoreEl.textContent = '0';
+  document.getElementById('mission').textContent = 'Bomb the marked shafts · Clear the creatures · Enter the green exit';
 }
 
 // ---------------------------------------------------------------- events → presentation
 function handleEvent(e) {
   const g = game;
   switch (e.type) {
-    case 'level': banner = { text: 'LEVEL ' + e.level, sub: 'Blast the rock. Find the lift.', until: g.time + 1.6, style: 'level' }; break;
+    case 'level': banner = { text: 'LEVEL ' + e.level, sub: 'Bomb the shafts. Clear the bats. Enter the exit.', until: g.time + 1.6, style: 'level' }; break;
     case 'round': banner = { text: 'ROUND ' + e.round, sub: firstTo(), until: g.time + 1.6, style: 'level' }; break;
     case 'go': banner = { text: 'GO!', until: g.time + 0.5, style: 'go' }; break;
+    case 'shaftSealed': Sound.thud(); popups.push({ x: e.x + .5, y: e.y + .5, text: 'SHAFT SEALED +250', until: g.time + 1.3 }); break;
+    case 'shaftSpawn': popups.push({ x: e.x + .5, y: e.y + .5, text: 'BAT SPAWN', until: g.time + .7, small: true }); break;
     case 'bomb': Sound.place(); break;
     case 'explode':
       Sound.explode(); shake = Math.max(shake, 5);
@@ -175,7 +181,7 @@ function handleEvent(e) {
     case 'shieldPop': Sound.shield(); popups.push({ x: g.players[e.player].x, y: g.players[e.player].y, text: 'HELMET!', until: g.time + 0.9 }); break;
     case 'respawn': break;
     case 'door': popups.push({ x: e.x + 0.5, y: e.y + 0.5, text: 'THE LIFT', until: g.time + 1.2 }); break;
-    case 'doorOpen': Sound.door(); banner = { text: 'LIFT OPEN', sub: 'Get to the lift.', until: g.time + 1.5, style: 'good' }; break;
+    case 'doorOpen': Sound.door(); banner = { text: 'EXIT OPEN', sub: 'Enter the green mineshaft to finish.', until: g.time + 1.5, style: 'good' }; break;
     case 'levelClear': Sound.clear(); banner = { text: 'LEVEL ' + e.level + ' CLEAR', sub: '+' + e.bonus.toLocaleString() + ' bonus', until: g.time + 2.4, style: 'good' }; break;
     case 'hurry': Sound.hurry(); banner = { text: 'HURRY!', sub: 'The gas has caught.', until: g.time + 1.6, style: 'warn' }; flashUntil = g.time + 0.6; break;
     case 'extraLife': Sound.life(); banner = { text: 'EXTRA LIFE', until: g.time + 1.4, style: 'good' }; break;
@@ -269,10 +275,10 @@ function draw(dtReal) {
   }
   drawFloor(g);
   drawItems(g);
-  drawLift(g);
   drawFires(g);
   drawBombs(g);
   drawRocksAndPillars(g);
+  drawLift(g);
   drawMineLighting(g);
   drawCorpses(g);
   drawEnemies(g);
@@ -441,29 +447,35 @@ function drawRocksAndPillars(g) {
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const t = g.grid[y * W + x];
     if (t === WALL) drawPillar(x, y);
-    else if (t === BRICK) drawRock(x, y, g.seed);
+    else if (t === BRICK && !g.shafts.some(s => s.x === x && s.y === y)) drawRock(x, y, g.seed);
   }
 }
 
-// The lift: an iron cage set into the floor. Lamp glows when it's open.
+// Entrances stay visible through the whole level; only the exit turns green.
 function drawLift(g) {
-  const d = g.door;
-  if (!d || !d.revealed) return;
-  const px = d.x * TILE, py = d.y * TILE;
-  ctx.fillStyle = '#1a1614'; ctx.fillRect(px + 5, py + 4, TILE - 10, TILE - 8);
-  if (d.open) {
-    const gl = ctx.createRadialGradient(px + TILE / 2, py + TILE / 2, 4, px + TILE / 2, py + TILE / 2, 30);
-    gl.addColorStop(0, 'rgba(255,214,120,' + (0.8 + 0.2 * Math.sin(g.time * 6)) + ')'); gl.addColorStop(1, 'rgba(255,190,90,0)');
-    ctx.fillStyle = gl; ctx.fillRect(px, py, TILE, TILE);
+  for (const shaft of g.shafts) {
+    if (shaft.sealed) {
+      const px = shaft.x * TILE, py = shaft.y * TILE;
+      ctx.fillStyle = '#142b29'; roundRect(px+4,py+5,48,47,6); ctx.fill();
+      ctx.strokeStyle = '#6cbd96'; ctx.lineWidth = 2; ctx.stroke();
+      for (let i = 0; i < 4; i++) polygon([[px+8+i*10,py+38],[px+13+i*9,py+22-i%2*6],[px+24+i*7,py+40]], '#65736b');
+      label('SEALED',px+28,py+13,9,'#abedc6','Inter');
+      ctx.strokeStyle = '#abedc6';ctx.lineWidth=3;ctx.beginPath();ctx.moveTo(px+21,py+43);ctx.lineTo(px+27,py+48);ctx.lineTo(px+36,py+38);ctx.stroke();
+    } else {
+      drawShaft(ctx,shaft.x,shaft.y,{ sealed:true, time:g.time, label:'BOMB' });
+    }
   }
-  ctx.strokeStyle = d.open ? '#c9a15a' : '#7a7480'; ctx.lineWidth = 3;
-  ctx.strokeRect(px + 6.5, py + 5.5, TILE - 13, TILE - 11);
-  ctx.lineWidth = 2;
-  for (let i = 1; i < 4; i++) { const x = px + 6 + i * (TILE - 12) / 4; ctx.beginPath(); ctx.moveTo(x, py + 6); ctx.lineTo(x, py + TILE - 6); ctx.stroke(); }
-  ctx.beginPath(); ctx.moveTo(px + 6, py + TILE / 2); ctx.lineTo(px + TILE - 6, py + TILE / 2); ctx.stroke();
-  // cable + wheel above
-  ctx.fillStyle = '#7a7480'; ctx.fillRect(px + TILE / 2 - 1, py + 1, 2, 5);
-  ctx.beginPath(); ctx.arc(px + TILE / 2, py + 3, 3, 0, Math.PI * 2); ctx.fill();
+  const d = g.door;
+  if (d) drawShaft(ctx,d.x,d.y,{open:d.open,time:g.time,label:'EXIT'});
+  const active = g.shafts.filter(s => !s.sealed).length;
+  const enemies = g.enemies.filter(e => e.alive).length;
+  const objective = missionEl;
+  const text = g.mode !== 'adventure' ? 'Last miner standing wins · First to 3 rounds' :
+    active ? `Bomb ${active} marked mineshaft${active === 1 ? '' : 's'} shut · ${enemies} creatures left` :
+    enemies ? `All shafts sealed · Clear ${enemies} remaining creature${enemies === 1 ? '' : 's'}` :
+    'EXIT OPEN · Walk into the green mineshaft to finish!';
+  if (objective.textContent !== text) objective.textContent = text;
+  objective.dataset.ready = String(!!d?.open);
 }
 
 const ITEM_COL = { bomb: '#ff6a5a', fire: '#ffb347', speed: '#c9ff5c', shield: '#ffd93d' };
@@ -758,7 +770,7 @@ function drawHud(g) {
     const tcol = g.hurry ? '#ff5a2c' : low ? '#ffb347' : '#f4e6d2';
     label(g.hurry ? 'HURRY' : mmss(t), BW / 2, 31, 20, tcol, mono);
     const left = g.enemies.filter(e => e.alive).length;
-    labelRight(left + ' LEFT', BW - 200, 30, 13, '#c7b196', mono);
+    labelRight(left + ' FOES', BW - 200, 30, 13, '#c7b196', mono);
     let x = BW - 16;
     const chips = [['🧨', p.maxBombs], ['💥', p.range], ['👢', p.speedItems > 0 ? p.speedItems : null], ['⛑', p.shield ? '' : null]];
     for (const [icon, val] of chips.reverse()) {

@@ -53,7 +53,8 @@ for (let seed = 1; seed <= 25; seed++) {
   let nonWall = 0;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (tileAt(s, x, y) !== WALL) nonWall++;
   check('maze fully connected', seen.size === nonWall, seen.size + ' vs ' + nonWall);
-  check('door hides under a brick', tileAt(s, s.door.x, s.door.y) === BRICK);
+  check('exit visible on floor', s.door.revealed && tileAt(s, s.door.x, s.door.y) === FLOOR);
+  check('level has distinct bombable shafts', s.shafts.length >= 2 && s.shafts.every(t => tileAt(s,t.x,t.y) === BRICK && !s.items.has(t.y*W+t.x) && (t.x !== s.door.x || t.y !== s.door.y)));
   check('items hide under bricks', [...s.items.keys()].every(k => s.grid[k] === BRICK));
   check('enemies spawn on floor away from the miner', s.enemies.every(e => tileAt(s, Math.floor(e.x), Math.floor(e.y)) === FLOOR && e.x + e.y >= 7));
 }
@@ -173,17 +174,19 @@ console.log('door');
   const s = createGame({ seed: 8 });
   skipIntro(s);
   const p = s.players[0];
-  // Blow up the door's brick: stand next to it with a clear floor.
   const d = s.door;
-  const side = tileAt(s, d.x - 1, d.y) !== WALL ? [d.x - 1, d.y] : [d.x, d.y - 1];
-  s.grid[side[1] * W + side[0]] = FLOOR;
-  teleport(p, side[0], side[1]);
-  check('door starts hidden', !d.revealed);
-  placeBomb(s, p);
-  teleport(p, 1, 1); p.invulnUntil = s.time + 3;
-  let ev = run(s, 2.2);
-  check('door revealed by the blast', d.revealed && ev.some(e => e.type === 'door'));
-  check('door stays shut while enemies live', !d.open);
+  check('exit visible but locked at start', d.revealed && !d.open);
+  // Blast every entrance from an adjacent corridor. Its back tile must stay safe.
+  let ev = [];
+  for (const shaft of s.shafts) {
+    const side = tileAt(s, shaft.x - 1, shaft.y) !== WALL ? [shaft.x - 1, shaft.y] : [shaft.x, shaft.y - 1];
+    s.grid[side[1] * W + side[0]] = FLOOR;
+    teleport(p, side[0], side[1]); placeBomb(s,p);
+    teleport(p,1,1); p.invulnUntil = s.time + 10;
+    ev = run(s,2.2);
+    check('blast seals shaft and awards event', shaft.sealed && tileAt(s,shaft.x,shaft.y) === FLOOR && ev.some(e => e.type === 'shaftSealed'));
+  }
+  check('exit stays shut while enemies live', !d.open);
   // Kill enemies with fire directly.
   const before = s.score;
   s.enemies.forEach(e => { s.fires.set(Math.floor(e.y) * W + Math.floor(e.x), s.time + 0.3); });
@@ -242,6 +245,7 @@ console.log('door');
   s.players[0].invulnUntil = 1e9;
   let bad = 0;
   const start = s.enemies.map(e => [e.x, e.y]), far = s.enemies.map(() => 0);
+  s.shafts.forEach(s => { s.nextSpawn = Infinity; }); // isolate initial enemy movement
   for (let t = 0; t < 30; t += DT) {
     step(s, DT, [{ held: [] }]); drainEvents(s);
     s.enemies.forEach((e, i) => {
@@ -352,6 +356,31 @@ console.log('computer');
   check('danger on the bomb tile and open ray', Math.abs(d[1 * W + 1] - RULES.bombFuse) < 0.05 && d[1 * W + 2] < Infinity);
   check('brick shields the tile behind it', d[1 * W + 4] === Infinity);
   check('the blocked side (wall) stays safe', d[1 * W + 0] === Infinity);
+}
+
+// Shaft spawning, objective gating, and Battle isolation.
+console.log('mineshafts');
+{
+  const s = createGame({seed:42}); skipIntro(s);
+  const shaft = s.shafts[0];
+  s.players[0].invulnUntil = 1e9;
+  for (const t of s.shafts) t.nextSpawn = Infinity;
+  const adjacent = [[shaft.x-1,shaft.y],[shaft.x+1,shaft.y],[shaft.x,shaft.y-1],[shaft.x,shaft.y+1]]
+    .find(([x,y]) => tileAt(s,x,y) !== WALL);
+  s.grid[adjacent[1]*W+adjacent[0]] = FLOOR;
+  clearEnemies(s); shaft.nextSpawn = s.time;
+  let ev = run(s,.1);
+  check('active entrance spawns a bat', ev.some(e => e.type === 'shaftSpawn') && s.enemies.some(e => e.alive));
+  clearEnemies(s); shaft.nextSpawn = Infinity;
+  run(s,.1);
+  check('living shafts prevent a clear even with no enemies', !s.door.open);
+  for (const t of s.shafts) { t.sealed = true; t.nextSpawn = s.time; }
+  ev = run(s,.1);
+  check('all shafts sealed and enemies cleared opens exit', s.door.open);
+  ev = run(s,20);
+  check('sealed shafts never spawn again', !ev.some(e => e.type === 'shaftSpawn') && s.enemies.every(e => !e.alive));
+  const battle = createGame({mode:'battle',seed:42});
+  check('battle has no shaft objective', battle.shafts.length === 0 && battle.door === null);
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);

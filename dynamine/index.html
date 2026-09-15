@@ -13,7 +13,7 @@
     <link rel="canonical" href="https://limestonegames.com/dynamine/">
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Dynamine","description":"A Bomberman-style maze game set in a limestone mine. Lay dynamite, blast the rock, dodge bats and knockers and find the lift. Solo levels, or battle the computer or a friend on one keyboard.","playMode":["SinglePlayer","MultiPlayer"],"numberOfPlayers":{"@type":"QuantitativeValue","minValue":1,"maxValue":2},"applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Arcade","item":"https://limestonegames.com/arcade/"},{"@type":"ListItem","position":3,"name":"Dynamine"}]}</script>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Dynamine?","acceptedAnswer":{"@type":"Answer","text":"Move with the arrow keys or WASD and press Space to lay dynamite. It blows two seconds later in a cross shape, clearing rock and anything standing in the blast — including you. Clear the critters, uncover the lift, and step into it to finish the level."}},{"@type":"Question","name":"Can I play Dynamine with two players?","acceptedAnswer":{"@type":"Answer","text":"Yes. Battle mode is two miners on one keyboard: WASD and Space against the arrow keys and Enter. You can also battle the computer. First to three rounds wins, and the roof caves in from the edges if a round runs long."}},{"@type":"Question","name":"Is Dynamine free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs."}},{"@type":"Question","name":"Does my Dynamine high score save?","acceptedAnswer":{"@type":"Answer","text":"Yes — your best Adventure score is stored locally in your browser."}}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Dynamine?","acceptedAnswer":{"@type":"Answer","text":"Move with the arrow keys or WASD and press Space to lay dynamite. It blows two seconds later in a cross shape, clearing rock and anything standing in the blast — including you. Bomb the marked mineshafts shut, clear the creatures, and enter the green EXIT to finish the level."}},{"@type":"Question","name":"Can I play Dynamine with two players?","acceptedAnswer":{"@type":"Answer","text":"Yes. Battle mode is two miners on one keyboard: WASD and Space against the arrow keys and Enter. You can also battle the computer. First to three rounds wins, and the roof caves in from the edges if a round runs long."}},{"@type":"Question","name":"Is Dynamine free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs."}},{"@type":"Question","name":"Does my Dynamine high score save?","acceptedAnswer":{"@type":"Answer","text":"Yes — your best Adventure score is stored locally in your browser."}}]}</script>
     <meta property="og:title" content="Dynamine — Blast the Rock, Beat the Bats | Limestone Games">
     <meta property="og:description" content="A Bomberman-style maze game set in a limestone mine. Lay dynamite, blast the rock, dodge bats and knockers and find the lift. Solo levels, or battle the computer or a friend on one keyboard.">
     <meta property="og:type" content="website">
@@ -35,15 +35,17 @@
     <link rel="stylesheet" href="../arcade/game-over.css?v=20260909a">
     <script src="../arcade/game-over.js?v=20260914a"></script>
     <style>
-        /* 13×11 board plus a 48px HUD strip: keep the cabinet box at that ratio
-           instead of the chrome's 4:3 default, and never taller than 70vh. */
+        /* 13×11 board plus a 48px HUD strip. Reserve room for the visible mission above it. */
         .ch-bezel #game-container {
             aspect-ratio: 728 / 664;
-            max-width: min(728px, calc(70vh * 728 / 664));
+            max-height: 62vh;
+            max-width: min(728px, calc(62vh * 728 / 664));
             margin: 0 auto;
             position: relative;
         }
         #game-container canvas { outline: none; width: 100%; height: 100%; }
+        #mission { max-width: 728px; margin: 0 auto 10px; padding: 8px 12px; position: relative; z-index: 5; border: 1px solid #8b7046; border-radius: 8px; background: #13282d; color: #ffe1a2; font: 600 clamp(12px, 2vw, 15px)/1.5 Inter, sans-serif; text-align: center; }
+        #mission[data-ready="true"] { color: #a0ffd0; border-color: #61c390; }
         /* Mode menu over the board */
         #menu {
             position: absolute; inset: 0; z-index: 3;
@@ -120,13 +122,14 @@
             <p>Score: <span id="score">0</span></p>
             <p>High Score: <span id="highScore">0</span></p>
         </div>
+        <div id="mission" role="status" aria-live="polite">Bomb the marked shafts · Clear the creatures · Enter the green exit</div>
         <div id="game-container">
             <canvas id="gameCanvas" width="728" height="664" tabindex="0" aria-label="Dynamine game board. Arrow keys or WASD move the miner, Space lays dynamite."></canvas>
             <div id="menu" role="dialog" aria-label="Choose a mode">
                 <p class="m-title">DYNAMINE</p>
-                <p class="m-tag">Blast the rock. Beat the bats. Find the lift.</p>
+                <p class="m-tag">Bomb the shafts. Clear the bats. Reach the exit.</p>
                 <p id="menu-sub"></p>
-                <button type="button" data-mode="adventure"><span class="m-ico">⛑️</span><span><b>Adventure</b><small>Dig through the mine level by level. Three lives.</small></span></button>
+                <button type="button" data-mode="adventure"><span class="m-ico">⛑️</span><span><b>Adventure</b><small>Seal the marked shafts, clear the creatures, enter the exit.</small></span></button>
                 <button type="button" data-mode="cpu"><span class="m-ico">⚔️</span><span><b>Battle the computer</b><small>Last miner standing. First to three rounds.</small></span></button>
                 <button type="button" data-mode="duel"><span class="m-ico">👥</span><span><b>Two players</b><small>One keyboard: WASD + Space vs Arrows + Enter.</small></span></button>
                 <p class="m-keys"><kbd>Arrows</kbd> or <kbd>WASD</kbd> move · <kbd>Space</kbd> dynamite · <kbd>P</kbd> pause</p>
@@ -138,7 +141,7 @@
 
         <section class="game-overview" aria-label="About Dynamine">
             <h2>How to play Dynamine</h2>
-            <p>Dynamine is a maze bomber in the Bomberman tradition, set in a limestone mine. The galleries are choked with rock, and the only way through is dynamite. Lay a bundle, step clear, and two seconds later it goes off in a cross of fire that clears the rock and anything else it touches &mdash; bats, knockers, other miners, and you if you linger. Blast through the rock to find gear and the lift, clear every critter, then step into the lift to ride down to the next level.</p>
+            <p>Dynamine is a maze bomber in the Bomberman tradition, set in a limestone mine. The galleries are choked with rock, and the only way through is dynamite. Lay a bundle, step clear, and two seconds later it goes off in a cross of fire that clears the rock and anything else it touches &mdash; bats, knockers, other miners, and you if you linger. Blast through rock to find gear. Bomb every timber-framed entrance marked BOMB to seal it and stop its bats. Clear the remaining creatures, then walk into the green EXIT mineshaft to finish the level.</p>
 
             <h3>Controls</h3>
             <ul>
@@ -151,7 +154,7 @@
 
             <h3>Modes</h3>
             <ul>
-                <li><b>Adventure.</b> Solo levels that get denser and meaner. Each level hides the lift under one of the rocks; it opens once every critter is gone. Three lives, a three-minute clock per level, and a score that saves as your best. Run the clock out and the gas catches: sparks come hunting.</li>
+                <li><b>Adventure.</b> Solo levels that get denser and meaner. Every level has visible entrances marked BOMB that release bats. Hit each entrance with a blast to seal it. The visible EXIT turns green once all shafts are sealed and all creatures are gone. Three lives, a three-minute clock per level, and a score that saves as your best. Run the clock out and the gas catches: sparks come hunting.</li>
                 <li><b>Battle the computer.</b> Two miners, one gallery, last one standing takes the round. First to three rounds wins the match. With 45 seconds left the roof starts caving in from the edges, so a stand-off never lasts.</li>
                 <li><b>Two players.</b> The same gallery, two people on one keyboard.</li>
             </ul>
@@ -173,7 +176,7 @@
                 <li><b>Chain them.</b> A blast that reaches another bundle sets it off at once. Two bundles with a long fuse can be turned into one wide trap.</li>
                 <li><b>Rock shields you.</b> The blast stops at the first rock it hits, so an unbroken boulder between you and the dynamite is as good as a wall.</li>
                 <li><b>Hunt the hunters.</b> Knockers, the green mine goblins, chase when they see you down a corridor. Let one line up on you, lay a bundle, and step around the corner.</li>
-                <li><b>Find the lift early, take it last.</b> It only runs once the level is clear. Know where it is, then finish the critters before you head for it.</li>
+                <li><b>Seal the shafts first.</b> Put dynamite beside a BOMB entrance and get behind a corner. The blast seals that shaft permanently and earns 250 points. After all shafts and creatures are cleared, enter the green EXIT.</li>
                 <li><b>In Battle, take the middle.</b> The cave-in eats the edges first. Whoever holds the centre with more blast range usually wins the endgame.</li>
             </ul>
 
@@ -181,7 +184,7 @@
             <p>The maze-bomber formula &mdash; a grid of pillars, breakable blocks, bombs on a fuse and enemies that wander in &mdash; dates to Hudson Soft's <i>Bomberman</i> in 1983 and its four-player battle mode on the SNES a decade later. Dynamine is our own take, moved underground to a limestone mine: the same one-more-go loop, drawn fresh with dynamite, boulders, bats and knockers, and a computer opponent that knows better than to stand in its own blast.</p>
 
             <h3>Frequently asked</h3>
-            <p><b>How do I play Dynamine?</b> Move with the arrow keys or WASD and press Space to lay dynamite. It blows two seconds later in a cross shape, clearing rock and anything standing in the blast &mdash; including you. Clear the critters, uncover the lift, and step into it to finish the level.</p>
+            <p><b>How do I play Dynamine?</b> Move with the arrow keys or WASD and press Space to lay dynamite. It blows two seconds later in a cross shape, clearing rock and anything standing in the blast &mdash; including you. Bomb the marked mineshafts shut, clear the creatures, and enter the green EXIT to finish the level.</p>
             <p><b>Can I play Dynamine with two players?</b> Yes. Battle mode is two miners on one keyboard: WASD and Space against the arrow keys and Enter. You can also battle the computer. First to three rounds wins, and the roof caves in from the edges if a round runs long.</p>
             <p><b>Is Dynamine free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
             <p><b>Does my high score save?</b> Yes &mdash; your best Adventure score is stored locally in your browser.</p>
@@ -196,7 +199,7 @@
         </section>
     </div>
 
-    <script type="module" src="game.mjs?v=20260915b"></script>
+    <script type="module" src="game.mjs?v=20260915c"></script>
     <!-- Ad Slot: Game Page Banner -->
     <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
         <ins class="adsbygoogle"
