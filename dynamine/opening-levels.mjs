@@ -36,7 +36,7 @@ export const OPENING_LEVELS = [
       '#....*.....E#',
       '#############',
     ],
-    rewards: [{x:5,y:3,type:'fire'}, {x:8,y:5,type:'shield'}],
+    rewards: [{x:5,y:3,type:'fire'}, {x:8,y:5,type:'radiation'}],
   },
   {
     name: 'Fireball Gallery',
@@ -72,7 +72,7 @@ export const OPENING_LEVELS = [
       '#...b*..S..E#',
       '#############',
     ],
-    rewards: [{x:5,y:3,type:'bomb'}, {x:8,y:5,type:'shield'}, {x:5,y:7,type:'fire'}],
+    rewards: [{x:5,y:3,type:'bomb'}, {x:8,y:5,type:'radiation'}, {x:5,y:7,type:'fire'}],
   },
   {
     name: 'The Proving Ground',
@@ -90,6 +90,6 @@ export const OPENING_LEVELS = [
       '#...*k..S..E#',
       '#############',
     ],
-    rewards: [{x:5,y:3,type:'bomb'}, {x:8,y:5,type:'ignitor'}, {x:4,y:8,type:'shield'}, {x:8,y:7,type:'fire'}],
+    rewards: [{x:5,y:3,type:'bomb'}, {x:8,y:5,type:'ignitor'}, {x:4,y:8,type:'radiation'}, {x:8,y:7,type:'fire'}],
   },
 ];

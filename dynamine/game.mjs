@@ -2,8 +2,11 @@
 // Theme: a limestone mine. Miners, dynamite, rock, bats and knockers, a lift.
 import {
   createGame, step, drainEvents, W, H, FLOOR, WALL, BRICK, RULES, ITEM, ENEMY, tileOf, atCentre,
-} from './engine.mjs?v=20260915h';
-import { drawShaft, drawVent, drawExitMist } from './shaft-art.mjs?v=20260915h';
+} from './engine.mjs?v=20260915i';
+import { drawShaft, drawVent, drawExitMist } from './shaft-art.mjs?v=20260915i';
+
+import { JARS, PASSWORDS, passwordForLevel } from './classic-content.mjs?v=20260915i';
+import { drawClassicPickup, drawFeatures, drawSpellEffects, EFFECT_COLORS } from './classic-art.mjs?v=20260915i';
 
 const TILE = 56, HUD = 48;
 const BW = W * TILE, BH = H * TILE;
@@ -55,6 +58,15 @@ hiEl.textContent = highScore;
 
 const gtagEvent = (name, params) => { if (typeof window.gtag === 'function') window.gtag('event', name, params); };
 
+const passwordForm = document.getElementById('password-form');
+document.querySelector('.ch-bezel').before(passwordForm);
+passwordForm.addEventListener('submit',e=>{
+  e.preventDefault();
+  const code=document.getElementById('level-password').value.trim().toUpperCase();
+  if(!PASSWORDS[code]) {document.getElementById('password-message').textContent='Unknown password';return;}
+  document.getElementById('password-message').textContent='';startMode('adventure',code);
+});
+
 // ---------------------------------------------------------------- sound
 const Sound = (() => {
   let ac = null, muted = false;
@@ -105,9 +117,11 @@ const Sound = (() => {
 
 // ---------------------------------------------------------------- input
 // Per-player "held" lists, most recent key first, plus an edge-triggered bomb.
-const held = [[], []];
-const bombQueued = [false, false];
-const powerQueued = [false,false];
+const held = [[], [], [], []];
+const bombQueued = [false, false, false, false];
+const powerQueued = [false,false,false,false];
+const bombHeld = [false,false,false,false];
+const padEdges = new Map();
 let mode = null;          // 'adventure' | 'cpu' | 'duel'
 const KEYMAP = {
   arrows: { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' },
@@ -116,8 +130,8 @@ const KEYMAP = {
 function routeKey(e) {
   const k = e.key;
   const arrows = KEYMAP.arrows[k], wasd = KEYMAP.wasd[k];
-  if (mode === 'duel') {
-    if(k==='f'||k==='F') return {p:0,power:true};
+  if (mode === 'duel' || mode==='adventure'&&game?.players.length>1) {
+    if(k==='f'||k==='F'||k==='Tab') return {p:0,power:true};
     if(k==='Shift' && e.location !== 1) return {p:1,power:true};
     if (wasd) return { p: 0, dir: wasd };
     if (arrows) return { p: 1, dir: arrows };
@@ -125,7 +139,7 @@ function routeKey(e) {
     if (k === 'Enter' || k === '/') return { p: 1, bomb: true };
     return null;
   }
-  if(k==='f'||k==='F') return {p:0,power:true};
+  if(k==='f'||k==='F'||k==='Tab') return {p:0,power:true};
   if (arrows || wasd) return { p: 0, dir: arrows || wasd };
   if (k === ' ' || k === 'Enter' || k === 'z' || k === 'Z' || k === 'x' || k === 'X' || k === 'e' || k === 'E') return { p: 0, bomb: true };
   return null;
@@ -141,15 +155,35 @@ document.addEventListener('keydown', e => {
     const i = h.indexOf(r.dir); if (i >= 0) h.splice(i, 1);
     h.unshift(r.dir);
   } else if (r.power && !e.repeat) powerQueued[r.p] = true;
-  else if (r.bomb && !e.repeat) bombQueued[r.p] = true;
+  else if (r.bomb) {bombHeld[r.p]=true;if(!e.repeat)bombQueued[r.p]=true;}
 });
 document.addEventListener('keyup', e => {
   const r = routeKey(e);
+  if(r?.bomb) bombHeld[r.p]=false;
   if (!r || !r.dir) return;
   const h = held[r.p];
   const i = h.indexOf(r.dir); if (i >= 0) h.splice(i, 1);
 });
-window.addEventListener('blur', () => { held[0].length = 0; held[1].length = 0; });
+window.addEventListener('blur', () => { held.forEach(h=>h.length=0);bombHeld.fill(false);bombQueued.fill(false);powerQueued.fill(false);padEdges.clear(); });
+
+function gatherInputs() {
+  const inputs=held.map((h,id)=>({held:[...h],bomb:bombQueued[id],power:powerQueued[id],bombHeld:bombHeld[id]}));
+  bombQueued.fill(false);powerQueued.fill(false);
+  for(const pad of navigator.getGamepads?.() || []) {
+    if(!pad)continue;
+    const id=game?.players.length===1?0:pad.index+2;
+    if(!game?.players[id])continue;
+    const down=n=>!!pad.buttons[n]?.pressed,old=padEdges.get(pad.index)||{};
+    const bomb=down(0),power=down(1);
+    const dirs=[];
+    if(down(12)||pad.axes[1]<-.4)dirs.push('up');if(down(13)||pad.axes[1]>.4)dirs.push('down');
+    if(down(14)||pad.axes[0]<-.4)dirs.push('left');if(down(15)||pad.axes[0]>.4)dirs.push('right');
+    if(dirs.length)inputs[id].held=dirs;
+    inputs[id].bomb ||= bomb&&!old.bomb;inputs[id].power ||= power&&!old.power;inputs[id].bombHeld ||= bomb;
+    padEdges.set(pad.index,{bomb,power});
+  }
+  return inputs;
+}
 
 // ---------------------------------------------------------------- game state
 let game = null, paused = false, lastFrame = 0, acc = 0;
@@ -159,19 +193,21 @@ let shake = 0;
 let runStartBest = 0;
 let overShown = false;
 
-function startMode(m) {
+function startMode(m,password='') {
   mode = m;
-  held[0].length = 0; held[1].length = 0; bombQueued[0] = bombQueued[1] = false; powerQueued[0] = powerQueued[1] = false;
+  held.forEach(h=>h.length=0);bombQueued.fill(false);powerQueued.fill(false);bombHeld.fill(false);padEdges.clear();
   blasts = []; particles = []; popups = []; corpses = []; banner = null; shake = 0;
   overShown = false; paused = false;
   const bezel = document.querySelector('.ch-bezel');
   if (bezel) { bezel.classList.remove('ch-paused'); bezel.classList.add('ch-started'); }   // hides the chrome's INSERT COIN
-  if (m === 'adventure') game = createGame({ mode: 'adventure' });
-  else game = createGame({ mode: 'battle', cpu: m === 'cpu', p1Name: 'Blue', p2Name: m === 'cpu' ? 'The computer' : 'Red' });
+  if (m === 'adventure') game = createGame({ mode: 'adventure',password,players:Number(document.getElementById('player-count').value) });
+  else game = createGame({ mode: 'battle', players:m==='cpu'?2:Math.max(2,Number(document.getElementById('player-count').value)), cpu: m === 'cpu', p1Name: 'Blue', p2Name: m === 'cpu' ? 'The computer' : 'Red' });
   runStartBest = highScore;
-  scoreEl.textContent = m === 'adventure' ? '0' : '0–0';
+  scoreEl.textContent = m === 'adventure' ? '0' : game.players.map(()=>0).join('–');
   menu.hidden = true;
+  document.getElementById('password-form').hidden = true;
   canvas.focus({ preventScroll: true });
+  window.scrollTo(0,0);
   drainEvents(game).forEach(handleEvent);
   gtagEvent('dynamine_start', { mode: m });
 }
@@ -179,6 +215,7 @@ function showMenu(sub) {
   game = null; mode = null;
   menuSub.textContent = sub || '';
   menu.hidden = false;
+  document.getElementById('password-form').hidden = false;
   scoreEl.textContent = '0';
   document.getElementById('power-status').textContent = 'Five opening levels · Learn a new trick in each mine';
   document.getElementById('mission').textContent = 'Clear the creatures → enter the green exit';
@@ -188,7 +225,8 @@ function showMenu(sub) {
 function handleEvent(e) {
   const g = game;
   switch (e.type) {
-    case 'level': banner = { text: g.lesson ? e.level + ' · ' + g.lesson.name.toUpperCase() : 'LEVEL ' + e.level, sub: g.lesson?.hint || (e.level >= 10 ? 'They anticipate your moves. Use the shafts.' : e.level >= 8 ? 'They hunt around corners. Keep moving.' : e.level >= 5 ? 'They dodge bombs. Set a trap.' : e.level >= 3 ? 'They spot you down corridors. Watch your back.' : 'Bomb ON one shaft. Fire bursts from ALL shafts.'), until: g.time + 1.6, style: 'level' }; break;
+    case 'level': {const code=passwordForLevel(e.level);if(code&&e.level>=(PASSWORDS[localStorage.getItem('dynaminePassword')]||1)){localStorage.setItem('dynaminePassword',code);document.getElementById('level-password').value=code;} }
+    banner = { text: g.lesson ? e.level + ' · ' + g.lesson.name.toUpperCase() : 'LEVEL ' + e.level, sub: g.lesson?.hint || (e.level >= 10 ? 'They anticipate your moves. Use the shafts.' : e.level >= 8 ? 'They hunt around corners. Keep moving.' : e.level >= 5 ? 'They dodge bombs. Set a trap.' : e.level >= 3 ? 'They spot you down corridors. Watch your back.' : 'Bomb ON one shaft. Fire bursts from ALL shafts.'), until: g.time + 1.6, style: 'level' }; break;
     case 'round': banner = { text: 'ROUND ' + e.round, sub: firstTo(), until: g.time + 1.6, style: 'level' }; break;
     case 'go': banner = { text: 'GO!', until: g.time + 0.5, style: 'go' }; break;
     case 'power': if(e.power === ITEM.FIREBALL) Sound.kill(); else Sound.place(); break;
@@ -226,14 +264,14 @@ function handleEvent(e) {
     case 'roundEnd': {
       Sound.round();
       const name = e.winner == null ? null : g.players[e.winner].name;
-      banner = { text: name ? name.toUpperCase() + ' WINS THE ROUND' : 'DRAW', sub: e.wins[0] + ' – ' + e.wins[1], until: g.time + 2.6, style: name ? 'good' : 'warn' };
-      scoreEl.textContent = e.wins[0] + '–' + e.wins[1];
+      banner = { text: name ? name.toUpperCase() + ' WINS THE ROUND' : 'DRAW', sub: e.wins.join(' – '), until: g.time + 2.6, style: name ? 'good' : 'warn' };
+      scoreEl.textContent = e.wins.join('–');
       break;
     }
     case 'matchOver': {
       const wn = g.players[e.winner];
-      const line = wn.name + ' wins the match ' + g.players[0].wins + '–' + g.players[1].wins;
-      banner = { text: wn.name.toUpperCase() + ' WINS', sub: 'Match ' + g.players[0].wins + '–' + g.players[1].wins, until: g.time + 3.0, style: 'good' };
+      const line = wn.name + ' wins the match ' + g.players.map(p=>p.wins).join('–');
+      banner = { text: wn.name.toUpperCase() + ' WINS', sub: 'Match ' + g.players.map(p=>p.wins).join('–'), until: g.time + 3.0, style: 'good' };
       gtagEvent('game_over', { score: g.players[0].wins, mode });
       setTimeout(() => { if (game === g) showMenu(line + '. Rematch?'); }, 3000);
       break;
@@ -253,7 +291,7 @@ function handleEvent(e) {
   }
   if (banner && banner.shownAt == null) banner.shownAt = g.time;
 }
-const ITEM_LABEL = { bomb: '+DYNAMITE', fire: '+BLAST', speed: '+BOOTS', shield: 'HELMET', fireball: 'FIREBALL · F TO SHOOT', ignitor: 'IGNITOR · F TO DETONATE' };
+const ITEM_LABEL = {...Object.fromEntries(Object.entries(JARS).map(([k,v])=>[k,v.name.toUpperCase()])),heart:'+LIFE',max:'MAX BOMBS + RANGE',radiation:'INVINCIBLE · 10s', bomb: '+DYNAMITE', fire: '+BLAST', speed: '+BOOTS', shield: 'HELMET', fireball: 'FIREBALL · F TO SHOOT', ignitor: 'IGNITOR · F TO DETONATE' };
 function firstTo() { return 'First to ' + RULES.battleWinsNeeded + ' rounds wins'; }
 
 // ---------------------------------------------------------------- loop
@@ -264,11 +302,7 @@ function frame(now) {
   if (game && !paused && !window.__dynamine?.frozen) {
     acc += dtReal;
     while (acc >= FIXED) {
-      const inputs = [
-        { held: held[0], bomb: bombQueued[0], power: powerQueued[0] },
-        { held: held[1], bomb: bombQueued[1], power: powerQueued[1] },
-      ];
-      bombQueued[0] = bombQueued[1] = false; powerQueued[0] = powerQueued[1] = false;
+      const inputs = gatherInputs();
       step(game, FIXED, inputs);
       drainEvents(game).forEach(handleEvent);
       acc -= FIXED;
@@ -311,6 +345,7 @@ function draw(dtReal) {
     shake = Math.max(0, shake - dtReal * 24);
   }
   drawFloor(g);
+  drawFeatures(ctx,g,TILE);
   drawItems(g);
   drawLift(g);
   drawFires(g);
@@ -321,6 +356,7 @@ function draw(dtReal) {
   drawEnemies(g);
   drawPlayers(g);
   drawProjectiles(g);
+  drawSpellEffects(ctx,g,TILE);
   if(g.door?.open) {
     ctx.save(); ctx.beginPath(); ctx.rect(0,0,BW,BH); ctx.clip();
     drawExitMist(ctx,g.door.x,g.door.y,{time:g.time,openedAt:g.door.openedAt ?? 0});
@@ -489,21 +525,21 @@ function drawLift(g) {
   const armed = g.bombs.some(b => g.shafts.some(s => s.x === b.x && s.y === b.y));
   for (const shaft of g.shafts) drawVent(ctx,shaft.x,shaft.y,{time:g.time,armed});
   const d = g.door;
-  if (d) drawShaft(ctx,d.x,d.y,{open:d.open,time:g.time,label:'EXIT'});
+  if (d?.revealed) drawShaft(ctx,d.x,d.y,{open:d.open,time:g.time,label:'EXIT'});
   const enemies = g.enemies.filter(e => e.alive).length;
-  const atLockedExit = d && !d.open && g.players.some(p => p.alive && tileOf(p.x) === d.x && tileOf(p.y) === d.y);
+  const atLockedExit = d?.revealed && !d.open && g.players.some(p => p.alive && tileOf(p.x) === d.x && tileOf(p.y) === d.y);
   const onShaft = g.players.some(p => p.alive && g.shafts.some(s => tileOf(p.x) === s.x && tileOf(p.y) === s.y));
   const objective = missionEl;
-  const text = g.mode !== 'adventure' ? 'Last miner standing wins · Shaft bombs blast every shaft' :
+  const text = g.mode !== 'adventure' ? `Round ${g.round} · ${mmss(Math.ceil(g.timer))} · Last miner standing wins` :
     atLockedExit ? `EXIT LOCKED · ${enemies} creature${enemies === 1 ? '' : 's'} left` :
     !enemies ? 'EXIT OPEN · Enter the green mineshaft!' :
     onShaft ? `ON SHAFT · Space blasts ALL shafts · ${enemies} left` :
-    `${g.lesson?.name || 'Depth ' + g.level} · ${enemies} creature${enemies === 1 ? '' : 's'} left → exit`;
+    `${g.lesson?.name || 'Depth ' + g.level} · ${enemies} creature${enemies === 1 ? '' : 's'} left → reveal exit`;
   if (objective.textContent !== text) objective.textContent = text;
   objective.dataset.ready = String(!!d?.open);
 }
 
-const ITEM_COL = { bomb: '#ff6a5a', fire: '#ffb347', speed: '#c9ff5c', shield: '#ffd93d', fireball:'#ff853e', ignitor:'#b99cff' };
+const ITEM_COL = {heart:'#ff687e',max:'#ffe285',radiation:'#c7ff5e', ...Object.fromEntries(Object.entries(JARS).map(([k,v])=>[k,v.color])), bomb: '#ff6a5a', fire: '#ffb347', speed: '#c9ff5c', shield: '#ffd93d', fireball:'#ff853e', ignitor:'#b99cff' };
 function drawItems(g) {
   for (const [k, it] of g.items) {
     if (it.hidden) continue;
@@ -519,6 +555,7 @@ function drawItems(g) {
 }
 function drawItemIcon(type, s) {
   ctx.save(); ctx.scale(s, s);
+  if(drawClassicPickup(ctx,type)) {ctx.restore();return;}
   if (type === ITEM.BOMB) {
     // one stick of dynamite
     ctx.rotate(-0.5);
@@ -580,6 +617,7 @@ function drawBombs(g) {
     const sp = 3 + 2 * Math.sin(g.time * 40);
     ctx.fillStyle = '#ffd36b'; ctx.beginPath(); ctx.arc(14, -24, sp, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(14, -24, sp * 0.45, 0, Math.PI * 2); ctx.fill();
+    if(b.effect) {ctx.fillStyle=EFFECT_COLORS[b.effect];ctx.fillRect(-15,-8,30,16);ctx.fillStyle='#172126';ctx.font='bold 18px sans-serif';ctx.textAlign='center';ctx.fillText(b.effect==='electric'?'ϟ':'◎',0,6);}
     ctx.restore();
   }
 }
@@ -691,7 +729,7 @@ function drawCorpses(g) {
 }
 
 // ---- the miner
-const OVERALLS = { blue: ['#4f7cff', '#243f9e'], red: ['#ff5a5a', '#8e1f2a'] };
+const OVERALLS = { blue: ['#4f7cff', '#243f9e'], red: ['#ff5a5a', '#8e1f2a'], gold:['#edc359','#96701c'], purple:['#be83ff','#6434a0'] };
 function drawMiner(p, g) {
   const px = p.x * TILE, py = p.y * TILE;
   const [c1, c2] = OVERALLS[p.color] || OVERALLS.blue;
@@ -712,7 +750,7 @@ function drawMiner(p, g) {
   else if (blink) ctx.globalAlpha = 0.45;
   ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(0, 20, 15, 5, 0, 0, Math.PI * 2); ctx.fill();
   ctx.translate(0, -bob);
-  if (p.shield) { ctx.strokeStyle = 'rgba(255,217,61,' + (0.6 + 0.3 * Math.sin(g.time * 8)) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, -2, 26, 0, Math.PI * 2); ctx.stroke(); }
+  if (g.time < p.invulnUntil || p.shield) { ctx.strokeStyle = 'rgba(255,217,61,' + (0.6 + 0.3 * Math.sin(g.time * 8)) + ')'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(0, -2, 26, 0, Math.PI * 2); ctx.stroke(); }
   // pickaxe over the shoulder
   ctx.strokeStyle = '#7a5230'; ctx.lineWidth = 3; ctx.beginPath(); ctx.moveTo(13 * side, 16); ctx.lineTo(17 * side, -16); ctx.stroke();
   ctx.strokeStyle = '#c3c6cf'; ctx.lineWidth = 4; ctx.beginPath(); ctx.moveTo(8 * side, -14); ctx.quadraticCurveTo(17 * side, -24, 26 * side, -14); ctx.stroke();
@@ -743,6 +781,8 @@ function drawMiner(p, g) {
 function drawProjectiles(g) {
   for(const shot of g.projectiles) {
     ctx.save();ctx.translate(shot.x*TILE,shot.y*TILE);ctx.rotate(Math.atan2(shot.dy,shot.dx));
+    const color=EFFECT_COLORS[shot.effect||'fire'];
+    if(shot.effect&&shot.effect!=='fire') {ctx.strokeStyle=color;ctx.lineWidth=3;ctx.shadowColor=color;ctx.shadowBlur=12;ctx.beginPath();ctx.arc(0,0,9,0,Math.PI*2);ctx.stroke();ctx.fillStyle=color;ctx.font='bold 18px sans-serif';ctx.fillText(shot.effect==='electric'?'ϟ':'◎',-7,6);ctx.restore();continue;}
     const tail=ctx.createLinearGradient(-27,0,8,0);tail.addColorStop(0,'rgba(255,69,24,0)');tail.addColorStop(.6,'#ff6b27');tail.addColorStop(1,'#fff4be');
     ctx.fillStyle=tail;ctx.beginPath();ctx.moveTo(-28,0);ctx.quadraticCurveTo(-8,-12,6,-6);ctx.quadraticCurveTo(16,0,6,6);ctx.quadraticCurveTo(-8,12,-28,0);ctx.fill();
     ctx.shadowColor='#ff8b35';ctx.shadowBlur=18;ctx.fillStyle='#fff3be';ctx.beginPath();ctx.arc(3,0,5,0,Math.PI*2);ctx.fill();ctx.restore();
@@ -799,13 +839,16 @@ function drawBanner(g) {
 
 function updatePowerHud(g) {
   const panel=document.getElementById('power-status');
-  const lines=g.players.filter(p=>!p.cpu).map(p=>{
+  const humans=g.players.filter(p=>!p.cpu);
+  const lines=humans.map(p=>{
     const remaining=Math.max(0,Math.ceil(p.powerUntil-g.time));
-    const key=mode==='duel'&&p.id===1?'Right Shift':'F';
+    const key=p.id>=2?'Pad B':p.id===1?'Right Shift':'F';
+    if(humans.length>1)return `${p.name}: ${p.power&&remaining?(JARS[p.power]?.name||'Ignitor')+' '+remaining+'s':'no power'} (${key})`;
     if(!p.power||!remaining) return g.mode === 'adventure' && g.lesson ?
-      g.lesson.hint : `${mode==='duel'?p.name+': ':''}${key} · Find a fireball or ignitor`;
-    const action=p.power===ITEM.FIREBALL?'Fireball — shoot':(g.bombs.some(b=>b.owner===p.id&&!b.exploded)?'Ignitor — detonate bomb':'Ignitor — place a bomb first');
-    return `${key} · ${action} · ${remaining}s`;
+      g.lesson.hint : `${mode==='duel'?p.name+': ':''}${key} · Find a jar or ignitor`;
+    const jar=JARS[p.power];
+    const action=jar ? jar.name + (jar.bomb?' — plants spell bomb':jar.form==='stone'?' — four directions':' — aim + fire') :(g.bombs.some(b=>b.owner===p.id&&!b.exploded)?'Ignitor — detonate bomb':'Ignitor — place a bomb first');
+    return `${key} · ${action} · ${remaining}s${jar?.form==='glass'?' · Hold bomb to fire backward':''}`;
   });
   const text=lines.join(' | ');if(panel.textContent!==text)panel.textContent=text;
   panel.dataset.active=String(g.players.some(p=>!p.cpu&&p.powerUntil>g.time));
@@ -815,25 +858,27 @@ function drawHud(g) {
   ctx.fillStyle = '#14100d'; ctx.fillRect(0, 0, BW, HUD);
   ctx.fillStyle = 'rgba(216,156,86,0.25)'; ctx.fillRect(0, HUD - 1, BW, 1);
   const mono = 'JetBrains Mono';
+  if(g.players.length>2 || g.mode==='adventure'&&g.players.length>1) {
+    g.players.forEach((p,i)=>{const x=i*BW/g.players.length+12;labelLeft(p.name+' · '+(g.mode==='adventure'?'♥ '+p.lives:p.wins+' wins'),x,18,13,{blue:'#7fa2ff',red:'#ff7a7a',gold:'#ffdc78',purple:'#cc9bff'}[p.color],mono);labelLeft('◆ '+(p.maxBombs-g.bombs.filter(b=>b.owner===p.id&&!b.exploded).length)+'  ◇ '+p.range,x,37,12,'#dfddca',mono);});
+    return;
+  }
   if (g.mode === 'adventure') {
     const p = g.players[0];
     labelLeft('LEVEL ' + g.level, 16, 30, 17, '#ffc34d', 'Bricolage Grotesque');
-    for (let i = 0; i < g.lives; i++) hatIcon(150 + i * 24, 30);
-    const t = Math.ceil(g.timer);
-    const low = g.hurry || t <= 30;
-    const tcol = g.hurry ? '#ff5a2c' : low ? '#ffb347' : '#f4e6d2';
-    label(g.hurry ? 'HURRY' : mmss(t), BW / 2, 31, 20, tcol, mono);
+    hatIcon(145,30);labelLeft('×'+g.lives,160,30,16,'#ffe1a2',mono);
+    const password=passwordForLevel(g.level);
+    label(password || 'CLEAR THE MINE', BW / 2, 30, 12, password ? '#8effbf' : '#c7b196', mono);
     const left = g.enemies.filter(e => e.alive).length;
     labelRight(left + ' FOES', BW - 200, 30, 13, '#c7b196', mono);
     let x = BW - 16;
-    const chips = [['🧨', p.maxBombs], ['💥', p.range], ['👢', p.speedItems > 0 ? p.speedItems : null], ['⛑', p.shield ? '' : null]];
+    const chips = [['◆', p.maxBombs-g.bombs.filter(b=>b.owner===p.id&&!b.exploded).length], ['◇', p.range], ['👢', p.speedItems > 0 ? p.speedItems : null], ['☢', g.time<p.invulnUntil ? Math.ceil(p.invulnUntil-g.time) : null]];
     for (const [icon, val] of chips.reverse()) {
       if (val === null) continue;
       const txt = icon + (val === '' ? '' : ' ' + val);
       ctx.font = '600 14px ' + mono; const w = ctx.measureText(txt).width + 14;
       x -= w;
       ctx.fillStyle = 'rgba(255,255,255,0.06)'; roundRect(x, 12, w, 24, 8); ctx.fill();
-      ctx.fillStyle = '#f4e6d2'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(txt, x + 7, 25);
+      ctx.fillStyle = icon==='◆'?'#64e789':icon==='◇'?'#bd83ff':'#f4e6d2'; ctx.textAlign = 'left'; ctx.textBaseline = 'middle'; ctx.fillText(txt, x + 7, 25);
       x -= 6;
     }
   } else {
@@ -915,6 +960,7 @@ document.addEventListener('keydown', e => {
     if (btn) btn.click(); else window.gameAPI.pause();
   }
 });
+document.getElementById('level-password').value=localStorage.getItem('dynaminePassword')||'';
 showMenu('');
 
 // Debug handle for headless/browser verification (tools/VERIFICATION.md):
@@ -928,8 +974,7 @@ window.__dynamine = {
     if (!game) return null;
     let n = Math.round(seconds / FIXED);
     while (n-- > 0) {
-      const inputs = [{ held: held[0], bomb: bombQueued[0], power: powerQueued[0] }, { held: held[1], bomb: bombQueued[1], power: powerQueued[1] }];
-      bombQueued[0] = bombQueued[1] = false; powerQueued[0] = powerQueued[1] = false;
+      const inputs = gatherInputs();
       step(game, FIXED, inputs);
       drainEvents(game).forEach(handleEvent);
     }

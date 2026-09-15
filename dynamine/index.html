@@ -70,6 +70,13 @@
             body.ch-game .ch-touch { display: flex; grid-column: 2; grid-row: 2; flex-direction: column; gap: 12px; }
             .ch-touch-group:last-child { flex-direction: row !important; }
         }
+        #password-form { grid-column:1 / -1; display:flex; flex-wrap:wrap; justify-content:center; align-items:center; gap:6px; margin:0 0 6px; font:12px Inter,sans-serif; }
+        .ch-stage:has(#menu:not([hidden])) .ch-touch { display:none; }
+        @media (max-height:500px) { body.ch-game .ch-stage:has(#menu:not([hidden])) { grid-template-columns:minmax(0,1fr); } }
+        #password-form[hidden] { display:none; }
+        #password-form select, #password-form input { width:100px; padding:5px; background:#15282d; color:#fff; border:1px solid #816846; border-radius:4px; }
+        #password-form button { padding:5px 10px; color:#ffe1a2; background:#263b3d; border:1px solid #816846; border-radius:4px; cursor:pointer; }
+        #password-message { color:#ffb292; }
         /* Mode menu over the board */
         #menu {
             position: absolute; inset: 0; z-index: 3;
@@ -80,6 +87,8 @@
             font-family: 'Inter', system-ui, sans-serif;
         }
         #menu[hidden] { display: none; }
+        #menu-sub:empty { display:none; }
+        .ch-bezel:has(#menu:not([hidden])) #mission, .ch-bezel:has(#menu:not([hidden])) #power-status { display:none; }
         #menu .m-title {
             font-family: 'Bricolage Grotesque', system-ui, sans-serif;
             font-weight: 700; font-size: clamp(34px, 9cqw, 64px); letter-spacing: 0.08em;
@@ -141,13 +150,19 @@
       data-hint-1="Arrows / WASD move"
       data-hint-2="Space dynamite"
       data-hint-3="F power · P pause"
-      data-touch="◀:~ArrowLeft,▲:~ArrowUp,▼:~ArrowDown,▶:~ArrowRight | 🧨:Space,POWER:f">
+      data-touch="◀:~ArrowLeft,▲:~ArrowUp,▼:~ArrowDown,▶:~ArrowRight | 🧨:~Space,POWER:f">
     <div class="container">
         <h1>🧨 Dynamine</h1>
         <div class="game-info">
             <p>Score: <span id="score">0</span></p>
             <p>High Score: <span id="highScore">0</span></p>
         </div>
+        <form id="password-form" aria-label="Start at a level password">
+            <label for="player-count">Players</label><select id="player-count" aria-label="Number of local players"><option value="1">1</option><option value="2">2 · keyboard</option><option value="4">4 · keyboard + 2 pads</option></select>
+            <label for="level-password">Password</label>
+            <input id="level-password" maxlength="12" autocomplete="off" autocapitalize="characters" placeholder="e.g. EARTH">
+            <button type="submit">Go</button><span id="password-message" role="status"></span>
+        </form>
         <div id="mission" role="status" aria-live="polite">Clear the creatures → enter the green exit</div>
         <div id="power-status">Five opening levels · Learn a new trick in each mine</div>
         <div id="game-container">
@@ -158,7 +173,7 @@
                 <p id="menu-sub"></p>
                 <button type="button" data-mode="adventure"><span class="m-ico">⛑️</span><span><b>Adventure</b><small>Learn the tricks. Clear the creatures. Reach the exit.</small></span></button>
                 <button type="button" data-mode="cpu"><span class="m-ico">⚔️</span><span><b>Battle the computer</b><small>Connected shafts. Last miner standing. First to three.</small></span></button>
-                <button type="button" data-mode="duel"><span class="m-ico">👥</span><span><b>Two players</b><small>One keyboard: WASD + Space vs Arrows + Enter.</small></span></button>
+                <button type="button" data-mode="duel"><span class="m-ico">👥</span><span><b>Local battle</b><small>2 keyboard players · add 2 gamepads for four.</small></span></button>
                 <p class="m-keys"><kbd>Arrows</kbd> or <kbd>WASD</kbd> move · <kbd>Space</kbd> dynamite · <kbd>P</kbd> pause</p>
             </div>
         </div>
@@ -174,7 +189,7 @@
             <ul>
                 <li><kbd>&larr;</kbd> <kbd>&uarr;</kbd> <kbd>&rarr;</kbd> <kbd>&darr;</kbd> or <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> &mdash; move</li>
                 <li><kbd>Space</kbd> &mdash; lay dynamite (also <kbd>Z</kbd>, <kbd>X</kbd>, <kbd>Enter</kbd>)</li>
-                <li><kbd>F</kbd> &mdash; use your equipped power: fireball or ignitor. Powers last 40 seconds; picking up another replaces the current power.</li>
+                <li><kbd>F</kbd> &mdash; use your equipped jar or ignitor. Powers last 40 seconds; picking up another replaces the current power.</li>
                 <li><kbd>P</kbd> &mdash; pause</li>
                 <li>Two players: the blue miner uses <kbd>WASD</kbd> + <kbd>Space</kbd>, the red miner uses the arrow keys + <kbd>Enter</kbd>. Powers: blue <kbd>F</kbd>, red <kbd>Right Shift</kbd>.</li>
                 <li>On a phone, use the on-screen pad, dynamite button, and POWER button.</li>
@@ -182,26 +197,30 @@
 
             <h3>Modes</h3>
             <ul>
-                <li><b>Adventure.</b> Five designed opening mines teach bombing, linked shafts, fireballs, the ignitor, and trapping clever enemies. Randomized mines begin at level 6. Enemy tactics progress throughout the adventure: enemies spot you down corridors from level 3, anticipate blasts from level 5, find routes around obstacles from level 8, and attempt interceptions from level 10. Cyan floor shafts appear from level 2. Place dynamite ON any shaft to blast every shaft at once, with a one-tile range around each. Clear all creatures to turn the visible EXIT green, then walk across it. An orange exit is locked until those creatures are defeated. The open exit glows green and releases rising mist. Three lives, a three-minute clock per level, and a score that saves as your best. Run the clock out and the gas catches: sparks come hunting.</li>
+                <li><b>Adventure.</b> Five designed opening mines teach bombing, linked shafts, fireballs, the ignitor, and trapping clever enemies. Randomized mines begin at level 6. Enemy tactics progress throughout the adventure: enemies spot you down corridors from level 3, anticipate blasts from level 5, find routes around obstacles from level 8, and attempt interceptions from level 10. Cyan floor shafts appear from level 2. Place dynamite ON any shaft to blast every shaft at once, with a one-tile range around each. Clear all creatures to reveal the green EXIT, then walk across it. The exit appears only after the last creature is defeated, glowing green and releasing rising mist. Three lives and a score that saves as your best. Adventure has no countdown or timeout enemies. Passwords let you start at later depths.</li>
                 <li><b>Battle the computer.</b> Two miners, one gallery with connected shafts, last one standing takes the round. First to three rounds wins the match. With 45 seconds left the roof starts caving in from the edges, so a stand-off never lasts.</li>
-                <li><b>Two players.</b> The same gallery, two people on one keyboard.</li>
+                <li><b>Local battle.</b> Two keyboard players, or select four players and connect two gamepads.</li>
             </ul>
 
             <h3>Gear</h3>
             <ul>
                 <li><b>🔥 Fireball flask</b> &mdash; press F to shoot in the direction you face. Stops at rock and walls, defeats creatures, and ignites bombs. Reusable for 40 seconds.</li>
                 <li><b>🟣 Ignitor</b> &mdash; plant dynamite, then press F to detonate it early. With extra bomb capacity, it triggers the first bomb you placed. Works through connected shafts. Bombs still explode normally after two seconds.</li>
-                <li><b>🧨 Dynamite</b> &mdash; lay one more bundle at a time (up to six).</li>
-                <li><b>💥 Blast</b> &mdash; the explosion reaches one tile further in every direction.</li>
+                <li><b>Green gem</b> &mdash; lay one more bundle at a time (up to six).</li>
+                <li><b>Purple gem</b> &mdash; the explosion reaches one tile further in every direction.</li>
                 <li><b>👢 Boots</b> &mdash; move faster. Stacks three times.</li>
-                <li><b>⛑ Helmet</b> &mdash; survive one hit.</li>
+                <li><b>☢ Radiation</b> &mdash; temporary invincibility. <b>♥ Heart</b> grants an extra life; <b>MAX</b> fills bomb capacity and blast range.</li>
             </ul>
             <p>In Adventure permanent gear carries over between levels; temporary powers reset on a new level or after losing a life. In Battle everyone starts each round fresh, and the gallery hides a full set to race for.</p>
 
+            <h3>Jars and machinery</h3>
+            <p>Glass jars fire forward; hold the bomb button while using a jar to fire backward. Stone jars act in all four directions. Select two or four players for shared Adventure or local Battle. Players 1–2 use the keyboard; players 3–4 use two standard gamepads (D-pad/stick to move, A to bomb, B for powers). A single gamepad can also control solo Adventure. Fireballs defeat creatures; electricity briefly stops movement; teleport magic relocates its target to another safe floor tile; wind pushes characters and bombs and redirects projectiles. Stone electric and teleport jars plant a spell bomb using an available bomb slot. Jars and the ignitor are reusable for 40 seconds.</p>
+            <p>From depth 6, watch for retracting spikes, cycling electric barriers, moving platforms, one-way arrows, and L-shaped flip doors. Barriers block movement and blasts. Platforms carry bombs and creatures too. Blasts and projectiles rotate flip doors. Spiders can cross bombs; deeper creatures move faster and avoid danger.</p>
+            <p>Level passwords: MOON 1, EARTH 6, FIRE 11, MAGIC 16, LOVE 21, PINE 26, SPELL 31, BATTLE 36, SMIGGLE 41, TIME 46, STAR 51, POWER 56. These open Dynamine’s own layouts. The rules reference is the <a href="https://gamefaqs.gamespot.com/pc/928822-fracas-1997/faqs/40822">Fracas guide</a>; art, layouts, precise effect timings, and Battle’s first-to-three/cave-in format remain specific to Dynamine.</p>
             <h3>Tips &amp; strategy</h3>
             <ul>
                 <li><b>Never blast in a dead end.</b> Before you light it, know which way you're leaving. A one-tile pocket with dynamite at your back is where most runs end.</li>
-                <li><b>Dynamite is a wall.</b> Once you step off a bundle you can't walk back over it, and neither can a critter. Use one to plug a corridor between you and something nasty.</li>
+                <li><b>Dynamite is a wall.</b> Once you step off a bundle you can't walk back over it, most creatures are blocked too, but spiders can cross. Use one to plug a corridor between you and something nasty.</li>
                 <li><b>Corners are safety.</b> Fire only travels in straight lines, so a step around a pillar puts you out of reach of any blast.</li>
                 <li><b>Chain them.</b> A blast that reaches another bundle sets it off at once. Two bundles with a long fuse can be turned into one wide trap.</li>
                 <li><b>Rock shields you.</b> The blast stops at the first rock it hits, so an unbroken boulder between you and the dynamite is as good as a wall.</li>
@@ -229,7 +248,7 @@
         </section>
     </div>
 
-    <script type="module" src="game.mjs?v=20260915h"></script>
+    <script type="module" src="game.mjs?v=20260915i"></script>
     <!-- Ad Slot: Game Page Banner -->
     <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
         <ins class="adsbygoogle"
