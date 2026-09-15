@@ -55,7 +55,8 @@ for (let seed = 1; seed <= 25; seed++) {
   check('maze fully connected', seen.size === nonWall, seen.size + ' vs ' + nonWall);
   check('exit visible on floor', s.door.revealed && tileAt(s, s.door.x, s.door.y) === FLOOR);
   check('level has distinct walkable linked shafts', s.shafts.length >= 3 && s.shafts.every(t => tileAt(s,t.x,t.y) === FLOOR && !s.items.has(t.y*W+t.x) && (t.x !== s.door.x || t.y !== s.door.y)));
-  check('items hide under bricks', [...s.items.keys()].every(k => s.grid[k] === BRICK));
+  check('hidden items stay under bricks; visible items are walkable', [...s.items].every(([k,it]) => s.grid[k] === (it.hidden?BRICK:FLOOR)));
+  check('fireball tutorial pickup is available from spawn',s.items.get(2*W+1)?.type===ITEM.FIREBALL&&!s.items.get(2*W+1).hidden);
   check('enemies spawn on floor away from the miner', s.enemies.every(e => tileAt(s, Math.floor(e.x), Math.floor(e.y)) === FLOOR && e.x + e.y >= 7));
 }
 {

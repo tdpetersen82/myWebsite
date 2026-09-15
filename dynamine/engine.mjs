@@ -9,7 +9,7 @@ export const DIRS = { up: [0, -1], down: [0, 1], left: [-1, 0], right: [1, 0] };
 const DIR_NAMES = ['up', 'down', 'left', 'right'];
 const OPPOSITE = { up: 'down', down: 'up', left: 'right', right: 'left' };
 
-export const ITEM = { BOMB: 'bomb', FIRE: 'fire', SPEED: 'speed', SHIELD: 'shield' };
+export const ITEM = { BOMB: 'bomb', FIRE: 'fire', SPEED: 'speed', SHIELD: 'shield', FIREBALL: 'fireball', IGNITOR: 'ignitor' };
 // bat: flutters about. knocker: mine goblin, chases on sight. spider: fast and
 // erratic. spark: ignited gas that hunts you down once the clock runs out.
 export const ENEMY = {
@@ -20,6 +20,7 @@ export const ENEMY = {
 };
 
 export const RULES = {
+  powerDuration: 40, fireballCooldown: 0.45, projectileSpeed: 8,
   bombFuse: 2.0,        // seconds from placement to blast
   fireTime: 0.45,       // seconds a blast cell stays lethal
   baseSpeed: 3.0,       // player tiles per second
@@ -99,6 +100,7 @@ function makePlayer(id, corner, opts = {}) {
     id, x: corner.x + 0.5, y: corner.y + 0.5, spawn: { ...corner },
     dir: 'down', moving: false, facing: 'down',
     speedItems: 0, maxBombs: 1, range: 1, shield: false,
+    power: null, powerUntil: 0, powerReady: 0,
     alive: true, deadAt: -1, invulnUntil: 0, graceUntil: 0, movedSinceSpawn: false,
     cpu: !!opts.cpu, name: opts.name || 'Miner', color: opts.color || 'blue',
     wins: 0, ai: null, bombCooldown: 0, walkPhase: 0, decideAtCentre: !!opts.cpu, atNode: false,
@@ -137,7 +139,7 @@ export function createGame(opts = {}) {
   const seed = opts.seed == null ? (Date.now() & 0x7fffffff) : opts.seed;
   const state = {
     mode, seed, rng: mulberry32(seed),
-    grid: null, bombs: [], fires: new Map(), items: new Map(), door: null, shafts: [],
+    grid: null, projectiles: [], projectileHits: new Set(), bombs: [], fires: new Map(), items: new Map(), door: null, shafts: [],
     players: [], enemies: [], particles: [],
     time: 0, timer: 0, level: 0, score: 0, lives: 3, extraLifeIdx: 0,
     status: 'intro', statusUntil: 0, events: [], round: 0, roundWinner: null,
@@ -158,6 +160,7 @@ export function createGame(opts = {}) {
 
 function resetPlayer(p, keepPowers) {
   p.x = p.spawn.x + 0.5; p.y = p.spawn.y + 0.5;
+  p.power = null; p.powerUntil = 0; p.powerReady = 0;
   p.dir = 'down'; p.facing = 'down'; p.moving = false;
   p.alive = true; p.deadAt = -1; p.invulnUntil = 0; p.graceUntil = 0; p.movedSinceSpawn = false; p.ai = null; p.bombCooldown = 0;
   if (!keepPowers) { p.speedItems = 0; p.maxBombs = 1; p.range = 1; p.shield = false; }
@@ -168,6 +171,7 @@ export function startLevel(state, level) {
   state.level = level;
   const { grid, bricks } = buildGrid(state.rng, spec.density, [CORNERS[0]]);
   state.grid = grid;
+  state.projectiles = []; state.projectileHits = new Set();
   state.bombs = []; state.fires = new Map(); state.items = new Map(); state.particles = [];
   state.enemies = [];
   state.timer = RULES.levelTime; state.hurry = false;
@@ -184,7 +188,7 @@ export function startLevel(state, level) {
   const doorCell = far[0] || shuffled[0];
   state.door = { x: doorCell[0], y: doorCell[1], revealed: true, open: false };
   grid[key(doorCell[0], doorCell[1])] = FLOOR;
-  const pool = [ITEM.BOMB, ITEM.FIRE, ITEM.BOMB, ITEM.FIRE, ITEM.SPEED, ITEM.SHIELD, ITEM.BOMB, ITEM.FIRE];
+  const pool = [ITEM.IGNITOR, ITEM.BOMB, ITEM.FIRE, ITEM.SPEED, ITEM.SHIELD, ITEM.FIREBALL, ITEM.BOMB, ITEM.FIRE];
   let placed = 0;
   for (const [x, y] of shuffled) {
     if (placed >= spec.items) break;
@@ -192,6 +196,8 @@ export function startLevel(state, level) {
     state.items.set(key(x, y), { type: pool[placed % pool.length], hidden: true });
     placed++;
   }
+  // A visible fireball flask teaches the second action immediately.
+  state.items.set(key(1,2), {type: ITEM.FIREBALL, hidden:false});
   // Enemies spawn on floor cells far from the miner, and only in open
   // regions (6+ connected floor tiles) so none start sealed in a pocket.
   const region = new Int16Array(W * H).fill(-1);
@@ -258,6 +264,7 @@ export function startRound(state) {
   state.round += 1;
   const { grid, bricks } = buildGrid(state.rng, 0.62, [CORNERS[0], CORNERS[1]]);
   state.grid = grid;
+  state.projectiles = []; state.projectileHits = new Set();
   state.bombs = []; state.fires = new Map(); state.items = new Map(); state.particles = [];
   state.enemies = []; state.shafts = []; state.door = null; state.roundWinner = null;
   state.timer = RULES.battleTime;
@@ -267,7 +274,7 @@ export function startRound(state) {
     const j = Math.floor(state.rng() * (i + 1));
     [shuffled[i], shuffled[j]] = [shuffled[j], shuffled[i]];
   }
-  const pool = [ITEM.FIRE, ITEM.BOMB, ITEM.FIRE, ITEM.BOMB, ITEM.SPEED, ITEM.FIRE, ITEM.BOMB, ITEM.SHIELD, ITEM.SPEED, ITEM.FIRE, ITEM.BOMB, ITEM.SPEED];
+  const pool = [ITEM.FIRE, ITEM.BOMB, ITEM.FIRE, ITEM.BOMB, ITEM.SPEED, ITEM.FIRE, ITEM.BOMB, ITEM.SHIELD, ITEM.SPEED, ITEM.FIRE, ITEM.FIREBALL, ITEM.IGNITOR];
   shuffled.slice(0, pool.length).forEach(([x, y], i) => state.items.set(key(x, y), { type: pool[i], hidden: true }));
   state.shafts = shuffled.filter(([x,y]) => !state.items.has(key(x,y))).slice(0,3).map(([x,y]) => ({x,y}));
   for (const shaft of state.shafts) grid[key(shaft.x,shaft.y)] = FLOOR;
@@ -445,6 +452,70 @@ function addScore(state, n) {
   }
 }
 
+// ---------------------------------------------------------------- temporary powers
+export function usePower(state,p) {
+  if (!p.alive || state.status !== 'playing' || !p.power || state.time >= p.powerUntil || state.time < p.powerReady) return false;
+  if (p.power === ITEM.IGNITOR) {
+    const bomb = state.bombs.find(b => b.owner === p.id && !b.exploded);
+    if (!bomb) return false;
+    explode(state,bomb); // Includes connected shafts and ordinary chain reactions.
+    p.powerReady = state.time + .2;
+  } else if (p.power === ITEM.FIREBALL) {
+    const [dx,dy] = DIRS[p.facing] || DIRS.down;
+    state.projectiles.push({x:p.x,y:p.y,dx,dy,owner:p.id,life:1.6});
+    p.powerReady = state.time + RULES.fireballCooldown;
+  } else return false;
+  p.movedSinceSpawn = true;
+  state.events.push({type:'power',power:p.power,player:p.id,x:p.x,y:p.y});
+  return true;
+}
+
+function tickProjectiles(state,dt) {
+  for (const shot of state.projectiles) {
+    shot.life -= dt;
+    const distance = RULES.projectileSpeed * dt;
+    const samples = Math.max(1,Math.ceil(distance/.08));
+    for(let i=0;i<samples && shot.life>0;i++) {
+      shot.x += shot.dx * distance/samples; shot.y += shot.dy * distance/samples;
+      const x=tileOf(shot.x),y=tileOf(shot.y);
+      if(tileAt(state,x,y)!==FLOOR) { shot.life=0; break; }
+      const bomb=bombAt(state,x,y);
+      if(bomb) {explode(state,bomb);shot.life=0;break;}
+      const target=[...state.enemies,...state.players.filter(p=>p.id!==shot.owner)]
+        .find(e=>e.alive && !state.projectileHits.has(e) && Math.abs(e.x-shot.x)<.42 && Math.abs(e.y-shot.y)<.42);
+      if(target) {state.projectileHits.add(target);shot.life=0;break;}
+    }
+  }
+  state.projectiles=state.projectiles.filter(s=>s.life>0);
+}
+
+function cpuUsePower(state,p) {
+  const foe=state.players.find(o=>o.id!==p.id&&o.alive);
+  if(!foe) return;
+  if(p.power===ITEM.IGNITOR) {
+    const first=state.bombs.find(b=>b.owner===p.id&&!b.exploded);
+    if(!first) return;
+    const projected=dangerMap(state);
+    const ownCell=key(tileOf(p.x),tileOf(p.y));
+    const cells=blastCells(state,first.x,first.y,first.range);
+    // Only pull the trigger after escaping every current bomb footprint.
+    if(projected[ownCell]===Infinity && cells.some(([x,y])=>tileAt(state,x,y)===BRICK || (x===tileOf(foe.x)&&y===tileOf(foe.y)))) usePower(state,p);
+  } else if(p.power===ITEM.FIREBALL) {
+    const [dx,dy]=DIRS[p.facing];
+    // Never shoot down a lane containing a bomb; the resulting blast could
+    // undo an otherwise safe escape plan.
+    let seesFoe=false;
+    for(let i=0;i<Math.max(W,H);i++) {
+      const x=tileOf(p.x)+dx*i,y=tileOf(p.y)+dy*i;
+      if(tileAt(state,x,y)!==FLOOR) break;
+      if(bombAt(state,x,y)) return;
+      if(x===tileOf(foe.x)&&y===tileOf(foe.y)) seesFoe=true;
+    }
+    if(!seesFoe) return;
+    if((dx && Math.abs(foe.y-p.y)<.35 && (foe.x-p.x)*dx>0) || (dy && Math.abs(foe.x-p.x)<.35 && (foe.y-p.y)*dy>0)) usePower(state,p);
+  }
+}
+
 // ---------------------------------------------------------------- danger map (AI)
 // Seconds until each tile becomes lethal (Infinity = safe). Chain reactions
 // are folded in: a bomb caught in another's blast inherits the shorter fuse.
@@ -452,6 +523,17 @@ export function dangerMap(state, extraBomb) {
   const danger = new Float64Array(W * H).fill(Infinity);
   const bombs = state.bombs.filter(b => !b.exploded).map(b => ({ x: b.x, y: b.y, range: b.range, t: b.at + b.fuse - state.time }));
   if (extraBomb) bombs.push({ ...extraBomb, t: RULES.bombFuse });
+  for(const shot of state.projectiles) {
+    const length=shot.life*RULES.projectileSpeed;
+    for(let distance=0;distance<=length;distance+=.1) {
+      const x=tileOf(shot.x+shot.dx*distance),y=tileOf(shot.y+shot.dy*distance),k=key(x,y);
+      if(tileAt(state,x,y)!==FLOOR) break;
+      const arrival=distance/RULES.projectileSpeed;
+      danger[k]=Math.min(danger[k],arrival);
+      const bomb=bombs.find(b=>b.x===x&&b.y===y);
+      if(bomb) {bomb.t=Math.min(bomb.t,arrival);break;}
+    }
+  }
   // Relax fuses through chains.
   let changed = true;
   while (changed) {
@@ -544,7 +626,7 @@ function cpuThink(state, p) {
     if (foe && tileOf(foe.x) === cx && tileOf(foe.y) === cy) hitsFoe = true;
   }
   const mine = state.bombs.filter(b => b.owner === p.id && !b.exploded).length;
-  const canBomb = mine < p.maxBombs && !bombAt(state, px, py) && p.bombCooldown <= 0;
+  const canBomb = !state.projectiles.some(s=>s.owner===p.id) && mine < p.maxBombs && !bombAt(state, px, py) && p.bombCooldown <= 0;
   if (canBomb && (hitsFoe || (hitsBrick && state.rng() < 0.85))) {
     const after = dangerMap(state, { x: px, y: py, range: p.range });
     const okAfter = (x, y, steps) => after[key(x, y)] > steps * stepTime + 0.35 && !(x === px && y === py);
@@ -660,6 +742,7 @@ export function step(state, dt, inputs = []) {
   }
   if (state.status === 'over') return state;
 
+  state.projectileHits.clear();
   // Timer
   state.timer = Math.max(0, state.timer - dt);
   if (state.mode === 'adventure' && state.timer <= 0 && !state.hurry) {
@@ -682,7 +765,7 @@ export function step(state, dt, inputs = []) {
       }
       continue;
     }
-    let held = [], bomb = false;
+    let held = [], bomb = false, power = false;
     if (p.cpu) {
       if (p.atNode || !p.ai || !p.ai.dir || !p.moving) p.ai = cpuThink(state, p);
       held = p.ai.dir ? [p.ai.dir] : [];
@@ -691,13 +774,14 @@ export function step(state, dt, inputs = []) {
     } else {
       const inp = inputs[p.id] || {};
       held = inp.held || [];
-      bomb = !!inp.bomb;
+      bomb = !!inp.bomb; power = !!inp.power;
     }
     if (bomb) { if (placeBomb(state, p)) p.bombCooldown = 0.25; }
     const want = held.length ? pickDirection(state, p, held) : null;
     if (want || bomb) p.movedSinceSpawn = true;
     moveEntity(state, p, want, playerSpeed(p), dt);
     if (p.moving) p.walkPhase += dt * playerSpeed(p) * 2.2;
+    if(p.cpu) cpuUsePower(state,p); else if(power) usePower(state,p);
     // Pick up items
     const k = key(tileOf(p.x), tileOf(p.y));
     const it = state.items.get(k);
@@ -725,6 +809,7 @@ export function step(state, dt, inputs = []) {
     e.walkPhase += dt * 3;
   }
 
+  tickProjectiles(state,dt);
   tickBombs(state, dt);
   resolveHits(state);
   return state;
@@ -747,7 +832,7 @@ function resolveHits(state) {
   // Enemies in fire
   for (const e of state.enemies) {
     if (!e.alive) continue;
-    if (fireAt(state, tileOf(e.x), tileOf(e.y))) {
+    if (fireAt(state, tileOf(e.x), tileOf(e.y)) || state.projectileHits.has(e)) {
       e.alive = false; e.deadAt = state.time;
       addScore(state, ENEMY[e.type].score);
       state.events.push({ type: 'kill', enemy: e.type, x: e.x, y: e.y, score: ENEMY[e.type].score });
@@ -763,6 +848,7 @@ function resolveHits(state) {
     const px = tileOf(p.x), py = tileOf(p.y);
     let hit = null;
     if (fireAt(state, px, py)) hit = 'fire';
+    if (state.projectileHits.has(p)) hit = 'fireball';
     if (!hit && state.grid[key(px, py)] === WALL) hit = 'crushed';
     if (!hit) {
       for (const e of state.enemies) {
@@ -807,6 +893,7 @@ function applyItem(state, p, type) {
   else if (type === ITEM.FIRE) p.range = Math.min(RULES.maxRange, p.range + 1);
   else if (type === ITEM.SPEED) p.speedItems = Math.min(RULES.maxSpeedItems, p.speedItems + 1);
   else if (type === ITEM.SHIELD) p.shield = true;
+  else if(type===ITEM.FIREBALL || type===ITEM.IGNITOR) {p.power=type;p.powerUntil=state.time+RULES.powerDuration;p.powerReady=state.time;}
   if (state.mode === 'adventure') addScore(state, RULES.itemScore);
 }
 

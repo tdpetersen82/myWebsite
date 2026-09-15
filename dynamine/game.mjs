@@ -2,8 +2,8 @@
 // Theme: a limestone mine. Miners, dynamite, rock, bats and knockers, a lift.
 import {
   createGame, step, drainEvents, W, H, FLOOR, WALL, BRICK, RULES, ITEM, ENEMY, tileOf, atCentre,
-} from './engine.mjs?v=20260915e';
-import { drawShaft, drawVent } from './shaft-art.mjs?v=20260915e';
+} from './engine.mjs?v=20260915f';
+import { drawShaft, drawVent } from './shaft-art.mjs?v=20260915f';
 
 const TILE = 56, HUD = 48;
 const BW = W * TILE, BH = H * TILE;
@@ -16,6 +16,7 @@ const menu = document.getElementById('menu');
 const menuSub = document.getElementById('menu-sub');
 const missionEl = document.getElementById('mission');
 document.querySelector('.ch-bezel')?.prepend(missionEl);
+missionEl.after(document.getElementById('power-status'));
 const scoreEl = document.getElementById('score');
 const hiEl = document.getElementById('highScore');
 const HS_KEY = 'dynamineHighScore';
@@ -76,6 +77,7 @@ const Sound = (() => {
 // Per-player "held" lists, most recent key first, plus an edge-triggered bomb.
 const held = [[], []];
 const bombQueued = [false, false];
+const powerQueued = [false,false];
 let mode = null;          // 'adventure' | 'cpu' | 'duel'
 const KEYMAP = {
   arrows: { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' },
@@ -85,12 +87,15 @@ function routeKey(e) {
   const k = e.key;
   const arrows = KEYMAP.arrows[k], wasd = KEYMAP.wasd[k];
   if (mode === 'duel') {
+    if(k==='f'||k==='F') return {p:0,power:true};
+    if(k==='Shift' && e.location !== 1) return {p:1,power:true};
     if (wasd) return { p: 0, dir: wasd };
     if (arrows) return { p: 1, dir: arrows };
     if (k === ' ' || k === 'q' || k === 'Q' || k === 'e' || k === 'E') return { p: 0, bomb: true };
-    if (k === 'Enter' || k === '/' || k === 'Shift' && e.location === 2) return { p: 1, bomb: true };
+    if (k === 'Enter' || k === '/') return { p: 1, bomb: true };
     return null;
   }
+  if(k==='f'||k==='F') return {p:0,power:true};
   if (arrows || wasd) return { p: 0, dir: arrows || wasd };
   if (k === ' ' || k === 'Enter' || k === 'z' || k === 'Z' || k === 'x' || k === 'X' || k === 'e' || k === 'E') return { p: 0, bomb: true };
   return null;
@@ -105,7 +110,8 @@ document.addEventListener('keydown', e => {
     const h = held[r.p];
     const i = h.indexOf(r.dir); if (i >= 0) h.splice(i, 1);
     h.unshift(r.dir);
-  } else if (r.bomb && !e.repeat) bombQueued[r.p] = true;
+  } else if (r.power && !e.repeat) powerQueued[r.p] = true;
+  else if (r.bomb && !e.repeat) bombQueued[r.p] = true;
 });
 document.addEventListener('keyup', e => {
   const r = routeKey(e);
@@ -125,7 +131,7 @@ let overShown = false;
 
 function startMode(m) {
   mode = m;
-  held[0].length = 0; held[1].length = 0; bombQueued[0] = bombQueued[1] = false;
+  held[0].length = 0; held[1].length = 0; bombQueued[0] = bombQueued[1] = false; powerQueued[0] = powerQueued[1] = false;
   blasts = []; particles = []; popups = []; corpses = []; banner = null; shake = 0;
   overShown = false; paused = false;
   const bezel = document.querySelector('.ch-bezel');
@@ -144,6 +150,7 @@ function showMenu(sub) {
   menuSub.textContent = sub || '';
   menu.hidden = false;
   scoreEl.textContent = '0';
+  document.getElementById('power-status').textContent = 'F · Use your power · Pick up the glowing flask near the start';
   document.getElementById('mission').textContent = 'Bomb ON one shaft → blast ALL shafts · Clear creatures to open the exit';
 }
 
@@ -154,6 +161,7 @@ function handleEvent(e) {
     case 'level': banner = { text: 'LEVEL ' + e.level, sub: 'Bomb ON one shaft. Fire bursts from ALL shafts.', until: g.time + 1.6, style: 'level' }; break;
     case 'round': banner = { text: 'ROUND ' + e.round, sub: firstTo(), until: g.time + 1.6, style: 'level' }; break;
     case 'go': banner = { text: 'GO!', until: g.time + 0.5, style: 'go' }; break;
+    case 'power': if(e.power === ITEM.FIREBALL) Sound.kill(); else Sound.place(); break;
     case 'bomb': Sound.place(); break;
     case 'explode':
       Sound.explode(); shake = Math.max(shake, 5);
@@ -167,7 +175,7 @@ function handleEvent(e) {
       });
       if (g.mode === 'adventure') popups.push({ x: e.x + 0.5, y: e.y + 0.5, text: '+' + RULES.brickScore, until: g.time + 0.7, small: true });
       break;
-    case 'item': Sound.pickup(); popups.push({ x: e.x + 0.5, y: e.y + 0.5, text: ITEM_LABEL[e.item], until: g.time + 1.0 }); break;
+    case 'item': Sound.pickup(); popups.push({ x: e.x + 0.5, y: e.y + 0.5, text: mode === 'duel' && e.player === 1 ? ITEM_LABEL[e.item].replace('F TO', 'SHIFT TO') : ITEM_LABEL[e.item], until: g.time + 1.0 }); break;
     case 'kill':
       Sound.kill(); popups.push({ x: e.x, y: e.y, text: '+' + e.score, until: g.time + 1.0 });
       corpses.push({ x: e.x, y: e.y, type: e.enemy, at: g.time });
@@ -215,7 +223,7 @@ function handleEvent(e) {
   }
   if (banner && banner.shownAt == null) banner.shownAt = g.time;
 }
-const ITEM_LABEL = { bomb: '+DYNAMITE', fire: '+BLAST', speed: '+BOOTS', shield: 'HELMET' };
+const ITEM_LABEL = { bomb: '+DYNAMITE', fire: '+BLAST', speed: '+BOOTS', shield: 'HELMET', fireball: 'FIREBALL · F TO SHOOT', ignitor: 'IGNITOR · F TO DETONATE' };
 function firstTo() { return 'First to ' + RULES.battleWinsNeeded + ' rounds wins'; }
 
 // ---------------------------------------------------------------- loop
@@ -227,10 +235,10 @@ function frame(now) {
     acc += dtReal;
     while (acc >= FIXED) {
       const inputs = [
-        { held: held[0], bomb: bombQueued[0] },
-        { held: held[1], bomb: bombQueued[1] },
+        { held: held[0], bomb: bombQueued[0], power: powerQueued[0] },
+        { held: held[1], bomb: bombQueued[1], power: powerQueued[1] },
       ];
-      bombQueued[0] = bombQueued[1] = false;
+      bombQueued[0] = bombQueued[1] = false; powerQueued[0] = powerQueued[1] = false;
       step(game, FIXED, inputs);
       drainEvents(game).forEach(handleEvent);
       acc -= FIXED;
@@ -266,6 +274,7 @@ function draw(dtReal) {
   if (!g) { drawIdleBoard(); ctx.restore(); return; }
 
   drawHud(g);
+  updatePowerHud(g);
   ctx.translate(0, HUD);
   if (shake > 0) {
     ctx.translate((Math.random() - 0.5) * shake, (Math.random() - 0.5) * shake);
@@ -281,6 +290,7 @@ function draw(dtReal) {
   drawCorpses(g);
   drawEnemies(g);
   drawPlayers(g);
+  drawProjectiles(g);
   drawParticles(g, dtReal);
   drawPopups(g);
   if (g.time < flashUntil) { ctx.fillStyle = 'rgba(255,120,60,' + (0.35 * (flashUntil - g.time) / 0.6) + ')'; ctx.fillRect(0, 0, BW, BH); }
@@ -457,7 +467,7 @@ function drawLift(g) {
   objective.dataset.ready = String(!!d?.open);
 }
 
-const ITEM_COL = { bomb: '#ff6a5a', fire: '#ffb347', speed: '#c9ff5c', shield: '#ffd93d' };
+const ITEM_COL = { bomb: '#ff6a5a', fire: '#ffb347', speed: '#c9ff5c', shield: '#ffd93d', fireball:'#ff853e', ignitor:'#b99cff' };
 function drawItems(g) {
   for (const [k, it] of g.items) {
     if (it.hidden) continue;
@@ -481,6 +491,12 @@ function drawItemIcon(type, s) {
     ctx.fillStyle = '#e8d9b0'; ctx.fillRect(-6, -6, 12, 3); ctx.fillRect(-6, 4, 12, 3);
     ctx.strokeStyle = '#caa06a'; ctx.lineWidth = 2; ctx.beginPath(); ctx.moveTo(0, -14); ctx.quadraticCurveTo(4, -20, 8, -18); ctx.stroke();
     ctx.fillStyle = '#ffd36b'; ctx.beginPath(); ctx.arc(8, -18, 2.5, 0, Math.PI * 2); ctx.fill();
+  } else if(type===ITEM.FIREBALL) {
+    ctx.fillStyle='#84421e';roundRect(-10,-6,20,21,5);ctx.fill();ctx.fillStyle='#ffe3ac';ctx.fillRect(-5,-15,10,7);
+    ctx.fillStyle='#ff702e';flame(0,1,10);ctx.fillStyle='#ffe9ae';flame(0,4,5);
+  } else if(type===ITEM.IGNITOR) {
+    ctx.fillStyle='#7252a6';roundRect(-13,-7,26,23,4);ctx.fill();ctx.fillStyle='#d6c2ff';ctx.fillRect(-3,-16,6,11);ctx.fillRect(-11,-18,22,5);
+    ctx.fillStyle='#fbdc86';star(0,4,7,4,.4);
   } else if (type === ITEM.FIRE) {
     // blast: a starburst
     ctx.fillStyle = '#ff7a2f'; star(0, 0, 14, 8, 0.5); ctx.fillStyle = '#ffd36b'; star(0, 0, 7, 8, 0.5);
@@ -688,6 +704,15 @@ function drawMiner(p, g) {
   ctx.fillStyle = 'rgba(255,245,194,0.5)'; ctx.beginPath(); ctx.arc(0 + ex * 1.5, -21, 5.5, 0, Math.PI * 2); ctx.fill();
   ctx.restore();
 }
+function drawProjectiles(g) {
+  for(const shot of g.projectiles) {
+    ctx.save();ctx.translate(shot.x*TILE,shot.y*TILE);ctx.rotate(Math.atan2(shot.dy,shot.dx));
+    const tail=ctx.createLinearGradient(-27,0,8,0);tail.addColorStop(0,'rgba(255,69,24,0)');tail.addColorStop(.6,'#ff6b27');tail.addColorStop(1,'#fff4be');
+    ctx.fillStyle=tail;ctx.beginPath();ctx.moveTo(-28,0);ctx.quadraticCurveTo(-8,-12,6,-6);ctx.quadraticCurveTo(16,0,6,6);ctx.quadraticCurveTo(-8,12,-28,0);ctx.fill();
+    ctx.shadowColor='#ff8b35';ctx.shadowBlur=18;ctx.fillStyle='#fff3be';ctx.beginPath();ctx.arc(3,0,5,0,Math.PI*2);ctx.fill();ctx.restore();
+  }
+}
+
 function drawPlayers(g) {
   for (const p of g.players) {
     if (!p.alive && g.time - p.deadAt > RULES.respawnDelay) continue;
@@ -734,6 +759,19 @@ function drawBanner(g) {
   label(banner.text, BW / 2, BH / 2 - (banner.sub ? 12 : 0), 40, col, 'Bricolage Grotesque');
   if (banner.sub) label(banner.sub, BW / 2, BH / 2 + 26, 15, '#f4e6d2', 'Inter');
   ctx.restore();
+}
+
+function updatePowerHud(g) {
+  const panel=document.getElementById('power-status');
+  const lines=g.players.filter(p=>!p.cpu).map(p=>{
+    const remaining=Math.max(0,Math.ceil(p.powerUntil-g.time));
+    const key=mode==='duel'&&p.id===1?'Right Shift':'F';
+    if(!p.power||!remaining) return `${mode==='duel'?p.name+': ':''}${key} · Find a fireball flask or purple ignitor`;
+    const action=p.power===ITEM.FIREBALL?'Fireball — shoot':'Ignitor — detonate oldest bomb';
+    return `${key} · ${action} · ${remaining}s`;
+  });
+  const text=lines.join(' | ');if(panel.textContent!==text)panel.textContent=text;
+  panel.dataset.active=String(g.players.some(p=>!p.cpu&&p.powerUntil>g.time));
 }
 
 function drawHud(g) {
@@ -848,13 +886,13 @@ window.__dynamine = {
   frozen: false,            // true = the live loop stops stepping; pump() drives time
   get state() { return game; },
   get mode() { return mode; },
-  held, bombQueued,
+  held, bombQueued, powerQueued,
   pump(seconds) {
     if (!game) return null;
     let n = Math.round(seconds / FIXED);
     while (n-- > 0) {
-      const inputs = [{ held: held[0], bomb: bombQueued[0] }, { held: held[1], bomb: bombQueued[1] }];
-      bombQueued[0] = bombQueued[1] = false;
+      const inputs = [{ held: held[0], bomb: bombQueued[0], power: powerQueued[0] }, { held: held[1], bomb: bombQueued[1], power: powerQueued[1] }];
+      bombQueued[0] = bombQueued[1] = false; powerQueued[0] = powerQueued[1] = false;
       step(game, FIXED, inputs);
       drainEvents(game).forEach(handleEvent);
     }

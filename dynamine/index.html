@@ -38,13 +38,15 @@
         /* 13×11 board plus a 48px HUD strip. Reserve room for the visible mission above it. */
         .ch-bezel #game-container {
             aspect-ratio: 728 / 664;
-            max-height: 62vh;
-            max-width: min(728px, calc(62vh * 728 / 664));
+            max-height: 58vh;
+            max-width: min(728px, calc(58vh * 728 / 664));
             margin: 0 auto;
             position: relative;
         }
         #game-container canvas { outline: none; width: 100%; height: 100%; }
         #mission { max-width: 728px; margin: 0 auto 10px; padding: 8px 12px; position: relative; z-index: 5; border: 1px solid #8b7046; border-radius: 8px; background: #13282d; color: #ffe1a2; font: 600 clamp(12px, 2vw, 15px)/1.5 Inter, sans-serif; text-align: center; }
+        #power-status { color: #b7c9cd; text-align: center; font: 600 clamp(11px, 1.5vw, 13px)/1.4 Inter, sans-serif; max-width:728px; margin:0 auto 8px; position:relative; z-index:5; }
+        #power-status[data-active="true"] { color:#ffc983; }
         #mission[data-ready="true"] { color: #a0ffd0; border-color: #61c390; }
         /* Mode menu over the board */
         #menu {
@@ -105,7 +107,9 @@
         .ch-touch-group:first-child .ch-touch-btn:nth-child(2) { grid-area: up; }
         .ch-touch-group:first-child .ch-touch-btn:nth-child(3) { grid-area: down; }
         .ch-touch-group:first-child .ch-touch-btn:nth-child(4) { grid-area: right; }
-        .ch-touch-group:last-child .ch-touch-btn { width: 96px; height: 96px; border-radius: 50%; font-size: 30px; background: rgba(120,40,20,0.9); }
+        .ch-touch-group:last-child .ch-touch-btn { width: 64px; height: 64px; border-radius: 50%; font-size: 20px; background: rgba(120,40,20,0.9); }
+        .ch-touch-group:last-child { flex-direction:column; gap:8px; }
+        .ch-touch-group:last-child .ch-touch-btn:last-child { background:#57377e; font-size:14px; }
         .ch-touch-group:last-child .ch-touch-btn.ch-touch-active { background: var(--ch-ember); }
     </style>
 </head>
@@ -114,8 +118,8 @@
       data-title="Dynamine"
       data-hint-1="Arrows / WASD move"
       data-hint-2="Space dynamite"
-      data-hint-3="P pause"
-      data-touch="◀:~ArrowLeft,▲:~ArrowUp,▼:~ArrowDown,▶:~ArrowRight | 🧨:Space">
+      data-hint-3="F power · P pause"
+      data-touch="◀:~ArrowLeft,▲:~ArrowUp,▼:~ArrowDown,▶:~ArrowRight | 🧨:Space,POWER:f">
     <div class="container">
         <h1>🧨 Dynamine</h1>
         <div class="game-info">
@@ -123,8 +127,9 @@
             <p>High Score: <span id="highScore">0</span></p>
         </div>
         <div id="mission" role="status" aria-live="polite">Bomb ON one shaft → blast ALL shafts · Clear creatures to open the exit</div>
+        <div id="power-status">F · Use your power · Pick up the glowing flask near the start</div>
         <div id="game-container">
-            <canvas id="gameCanvas" width="728" height="664" tabindex="0" aria-label="Dynamine game board. Arrow keys or WASD move the miner, Space lays dynamite."></canvas>
+            <canvas id="gameCanvas" width="728" height="664" tabindex="0" aria-label="Dynamine game board. Arrow keys or WASD move the miner, Space lays dynamite; F uses your equipped power."></canvas>
             <div id="menu" role="dialog" aria-label="Choose a mode">
                 <p class="m-title">DYNAMINE</p>
                 <p class="m-tag">One shaft. Every shaft. A mine full of fire.</p>
@@ -147,9 +152,10 @@
             <ul>
                 <li><kbd>&larr;</kbd> <kbd>&uarr;</kbd> <kbd>&rarr;</kbd> <kbd>&darr;</kbd> or <kbd>W</kbd> <kbd>A</kbd> <kbd>S</kbd> <kbd>D</kbd> &mdash; move</li>
                 <li><kbd>Space</kbd> &mdash; lay dynamite (also <kbd>Z</kbd>, <kbd>X</kbd>, <kbd>Enter</kbd>)</li>
+                <li><kbd>F</kbd> &mdash; use your equipped power: fireball or ignitor. Powers last 40 seconds; picking up another replaces the current power.</li>
                 <li><kbd>P</kbd> &mdash; pause</li>
-                <li>Two players: the blue miner uses <kbd>WASD</kbd> + <kbd>Space</kbd>, the red miner uses the arrow keys + <kbd>Enter</kbd>.</li>
-                <li>On a phone, use the on-screen pad and dynamite button.</li>
+                <li>Two players: the blue miner uses <kbd>WASD</kbd> + <kbd>Space</kbd>, the red miner uses the arrow keys + <kbd>Enter</kbd>. Powers: blue <kbd>F</kbd>, red <kbd>Right Shift</kbd>.</li>
+                <li>On a phone, use the on-screen pad, dynamite button, and POWER button.</li>
             </ul>
 
             <h3>Modes</h3>
@@ -161,12 +167,14 @@
 
             <h3>Gear</h3>
             <ul>
+                <li><b>🔥 Fireball flask</b> &mdash; press F to shoot in the direction you face. Stops at rock and walls, defeats creatures, and ignites bombs. Reusable for 40 seconds.</li>
+                <li><b>🟣 Ignitor</b> &mdash; press F to detonate your oldest dynamite early. Works through connected shafts. Bombs still explode normally after two seconds.</li>
                 <li><b>🧨 Dynamite</b> &mdash; lay one more bundle at a time (up to six).</li>
                 <li><b>💥 Blast</b> &mdash; the explosion reaches one tile further in every direction.</li>
                 <li><b>👢 Boots</b> &mdash; move faster. Stacks three times.</li>
                 <li><b>⛑ Helmet</b> &mdash; survive one hit.</li>
             </ul>
-            <p>In Adventure your gear carries over between levels. In Battle everyone starts each round fresh, and the gallery hides a full set to race for.</p>
+            <p>In Adventure permanent gear carries over between levels; temporary powers reset on a new level or after losing a life. In Battle everyone starts each round fresh, and the gallery hides a full set to race for.</p>
 
             <h3>Tips &amp; strategy</h3>
             <ul>
@@ -199,7 +207,7 @@
         </section>
     </div>
 
-    <script type="module" src="game.mjs?v=20260915e"></script>
+    <script type="module" src="game.mjs?v=20260915f"></script>
     <!-- Ad Slot: Game Page Banner -->
     <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
         <ins class="adsbygoogle"
