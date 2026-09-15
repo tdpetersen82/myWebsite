@@ -8,7 +8,9 @@ const TILE = 56, HUD = 48;
 const BW = W * TILE, BH = H * TILE;
 const canvas = document.getElementById('gameCanvas');
 const ctx = canvas.getContext('2d');
-canvas.width = BW; canvas.height = BH + HUD;
+// Render at device resolution while retaining the original logical board size.
+const PIXEL_RATIO = Math.min(window.devicePixelRatio || 1, 2);
+canvas.width = BW * PIXEL_RATIO; canvas.height = (BH + HUD) * PIXEL_RATIO;
 const menu = document.getElementById('menu');
 const menuSub = document.getElementById('menu-sub');
 const scoreEl = document.getElementById('score');
@@ -246,8 +248,8 @@ requestAnimationFrame(t => { lastFrame = t; frame(t); });
 // Limestone mine: dark earth floor, timber-braced bedrock pillars, pale
 // limestone boulders you blast with dynamite, and a lift cage for the exit.
 const COL = {
-  floorA: '#2b241f', floorB: '#27211c', floorLine: 'rgba(0,0,0,0.28)',
-  rockTop: '#e2d8be', rockMid: '#c9bc9c', rockDark: '#8f8267', rockCrack: 'rgba(70,58,40,0.6)',
+  floorA: '#283738', floorB: '#263334', floorLine: 'rgba(0,0,0,0.28)',
+  rockTop: '#f7e2b0', rockMid: '#c6ad7c', rockDark: '#716044', rockCrack: 'rgba(70,58,40,0.6)',
   bedrock: '#3f3d49', bedrockTop: '#5c5968',
 };
 const hash = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
@@ -255,7 +257,7 @@ const hash = (x, y) => ((x * 73856093) ^ (y * 19349663)) >>> 0;
 function draw(dtReal) {
   const g = game;
   ctx.save();
-  ctx.setTransform(1, 0, 0, 1, 0, 0);
+  ctx.setTransform(PIXEL_RATIO, 0, 0, PIXEL_RATIO, 0, 0);
   ctx.clearRect(0, 0, canvas.width, canvas.height);
   if (!g) { drawIdleBoard(); ctx.restore(); return; }
 
@@ -271,6 +273,7 @@ function draw(dtReal) {
   drawFires(g);
   drawBombs(g);
   drawRocksAndPillars(g);
+  drawMineLighting(g);
   drawCorpses(g);
   drawEnemies(g);
   drawPlayers(g);
@@ -296,46 +299,102 @@ function drawIdleBoard() {
   ctx.globalAlpha = 1;
 }
 
+// Deterministic floor detail: no random noise or flicker between frames.
 function drawFloor(g) {
-  const sd = g.suddenDeath;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
+    const px = x * TILE, py = y * TILE;
     ctx.fillStyle = (x + y) % 2 ? COL.floorA : COL.floorB;
+    ctx.fillRect(px, py, TILE, TILE);
+    for (let i = 0; i < 13; i++) {
+      const h = hash(x * 17 + i, y * 13 + g.seed);
+      ctx.fillStyle = i % 3 ? 'rgba(175,193,165,.08)' : 'rgba(0,0,0,.18)';
+      ctx.fillRect(px + h % 53, py + (h >>> 9) % 53, 1 + (h >>> 17) % 4, 1);
+    }
+    // Shallow slate seams and a soft shadow below solid tiles.
+    ctx.strokeStyle = 'rgba(10,19,22,.32)'; ctx.lineWidth = 1;
+    ctx.beginPath(); ctx.moveTo(px, py + 55); ctx.lineTo(px + 56, py + 55); ctx.stroke();
+    if (y && g.grid[(y - 1) * W + x] !== FLOOR) {
+      const shade = ctx.createLinearGradient(0, py, 0, py + 17);
+      shade.addColorStop(0, 'rgba(3,9,14,.55)'); shade.addColorStop(1, 'rgba(3,9,14,0)');
+      ctx.fillStyle = shade; ctx.fillRect(px, py, TILE, 17);
+    }
+    // Abandoned narrow-gauge track along the central gallery.
+    if (y === 5) {
+      ctx.fillStyle = '#35403b';
+      for (let i = 0; i < 3; i++) ctx.fillRect(px + i * 20, py + 12, 6, 32);
+      ctx.fillStyle = '#59635b'; ctx.fillRect(px, py + 17, TILE, 2); ctx.fillRect(px, py + 38, TILE, 2);
+      ctx.fillStyle = '#172528'; ctx.fillRect(px, py + 19, TILE, 2); ctx.fillRect(px, py + 40, TILE, 2);
+    }
+  }
+  if (g.suddenDeath?.warn) {
+    const [x, y] = g.suddenDeath.warn;
+    ctx.fillStyle = `rgba(255,90,44,${0.25 + 0.35 * Math.abs(Math.sin(g.time * 14))})`;
     ctx.fillRect(x * TILE, y * TILE, TILE, TILE);
-    const h = hash(x + g.seed, y);
-    if (h % 4 === 0) { ctx.fillStyle = 'rgba(255,240,200,0.045)'; ctx.fillRect(x * TILE + 8 + h % 20, y * TILE + 26 + (h >> 3) % 18, 9, 3); }
-    if (h % 7 === 0) { ctx.fillStyle = 'rgba(0,0,0,0.25)'; ctx.fillRect(x * TILE + 30 - h % 12, y * TILE + 12 + (h >> 5) % 20, 5, 5); }
   }
-  ctx.strokeStyle = COL.floorLine; ctx.lineWidth = 1;
-  for (let x = 0; x <= W; x++) { ctx.beginPath(); ctx.moveTo(x * TILE + 0.5, 0); ctx.lineTo(x * TILE + 0.5, BH); ctx.stroke(); }
-  for (let y = 0; y <= H; y++) { ctx.beginPath(); ctx.moveTo(0, y * TILE + 0.5); ctx.lineTo(BW, y * TILE + 0.5); ctx.stroke(); }
-  if (sd && sd.warn) {
-    const [wx, wy] = sd.warn;
-    const a = 0.25 + 0.35 * Math.abs(Math.sin(g.time * 14));
-    ctx.fillStyle = 'rgba(255,90,44,' + a + ')';
-    ctx.fillRect(wx * TILE, wy * TILE, TILE, TILE);
-  }
+}
+
+function polygon(points, fill, stroke = null) {
+  ctx.beginPath(); points.forEach(([x, y], i) => i ? ctx.lineTo(x, y) : ctx.moveTo(x, y));
+  ctx.closePath(); ctx.fillStyle = fill; ctx.fill();
+  if (stroke) { ctx.strokeStyle = stroke; ctx.lineWidth = 1; ctx.stroke(); }
 }
 
 // Bedrock pillar: a solid, bevelled block of dark stone. Reads as
 // "unbreakable" next to the pale limestone you can blast.
 function drawPillar(x, y) {
   const px = x * TILE, py = y * TILE;
-  ctx.fillStyle = '#2c2a33'; ctx.fillRect(px, py, TILE, TILE);
-  // front face
-  ctx.fillStyle = COL.bedrock; ctx.fillRect(px + 2, py + 12, TILE - 4, TILE - 14);
-  // top face (lighter) with a bevel
-  ctx.fillStyle = COL.bedrockTop;
-  ctx.beginPath(); ctx.moveTo(px + 2, py + 12); ctx.lineTo(px + 7, py + 3); ctx.lineTo(px + TILE - 7, py + 3); ctx.lineTo(px + TILE - 2, py + 12); ctx.closePath(); ctx.fill();
-  ctx.fillStyle = 'rgba(255,255,255,0.10)'; ctx.fillRect(px + 7, py + 3, TILE - 14, 3);
-  // side shading + base shadow
-  ctx.fillStyle = 'rgba(0,0,0,0.22)'; ctx.fillRect(px + TILE - 8, py + 12, 6, TILE - 14);
-  ctx.fillStyle = 'rgba(0,0,0,0.4)'; ctx.fillRect(px + 2, py + TILE - 5, TILE - 4, 3);
-  // cracks and chips
-  const h = hash(x * 5 + 11, y * 7 + 3);
-  ctx.strokeStyle = 'rgba(0,0,0,0.35)'; ctx.lineWidth = 1.5;
-  ctx.beginPath(); ctx.moveTo(px + 12 + h % 9, py + 18); ctx.lineTo(px + 20 + h % 9, py + 30); ctx.lineTo(px + 16 + h % 9, py + 42); ctx.stroke();
-  ctx.beginPath(); ctx.moveTo(px + 34, py + 22 + (h >> 4) % 8); ctx.lineTo(px + 44, py + 34 + (h >> 4) % 8); ctx.stroke();
-  ctx.fillStyle = 'rgba(255,255,255,0.06)'; ctx.fillRect(px + 10, py + 20, 5, 2); ctx.fillRect(px + 36, py + 40, 6, 2);
+  ctx.save(); ctx.translate(px, py);
+  ctx.fillStyle = '#101e24'; ctx.fillRect(0, 0, 56, 56);
+  const face = ctx.createLinearGradient(0, 5, 50, 56);
+  face.addColorStop(0, '#5a7478'); face.addColorStop(.4, '#3f555e'); face.addColorStop(1, '#202f3b');
+  polygon([[3,12],[9,3],[46,3],[53,13],[52,50],[5,51]], face, '#142832');
+  polygon([[3,12],[9,3],[46,3],[53,13],[33,10],[16,14]], '#718a88');
+  polygon([[39,15],[53,13],[52,50],[40,46]], '#2a3c49');
+  for (let i = 0; i < 5; i++) {
+    const h = hash(x + i * 7, y + 3);
+    ctx.strokeStyle = i % 2 ? '#263c45' : 'rgba(163,190,177,.18)';
+    ctx.beginPath(); ctx.moveTo(7, 17 + i * 7); ctx.lineTo(20 + h % 10, 15 + i * 7); ctx.lineTo(46, 19 + i * 7); ctx.stroke();
+  }
+  // Heavy timber and iron collars clearly identify indestructible supports.
+  if (x > 0 && x < W - 1 && y > 0 && y < H - 1) {
+    const wood = ctx.createLinearGradient(5, 0, 14, 0);
+    wood.addColorStop(0, '#503d2b'); wood.addColorStop(.45, '#a1804e'); wood.addColorStop(1, '#493728');
+    ctx.fillStyle = wood; ctx.fillRect(5, 9, 9, 43); ctx.fillRect(42, 9, 9, 43);
+    ctx.fillStyle = '#b0935f'; ctx.fillRect(3, 8, 50, 7);
+    ctx.fillStyle = '#584631'; ctx.fillRect(3, 15, 50, 3);
+    for (const bx of [5,42]) for (const by of [20,43]) {
+      ctx.fillStyle = '#26323b'; ctx.fillRect(bx, by, 9, 5);
+      ctx.fillStyle = '#b7beb0'; ctx.fillRect(bx + 4, by + 1, 2, 2);
+    }
+  } else if ((x + y) % 3 === 0) {
+    // Small mineral veins belong to the outer wall, never the walkable grid.
+    polygon([[19,37],[16,23],[22,17],[26,30],[24,39]], '#569e9d');
+    polygon([[24,39],[28,23],[33,20],[34,33]], '#8cc4b7');
+    ctx.fillStyle = '#c3e4cc'; ctx.fillRect(21,22,2,7);
+  }
+  ctx.restore();
+}
+
+function drawMineLighting(g) {
+  ctx.save();
+  ctx.beginPath(); ctx.rect(0, 0, BW, BH); ctx.clip();
+  for (const x of [1, 5, 9]) for (const y of [0, H - 1]) {
+    const px = x * TILE + 28, py = y * TILE + 28;
+    const glow = ctx.createRadialGradient(px, py, 2, px, py, 105);
+    glow.addColorStop(0, 'rgba(255,187,74,.29)'); glow.addColorStop(1, 'rgba(255,159,52,0)');
+    ctx.fillStyle = glow; ctx.fillRect(px - 105, py - 105, 210, 210);
+    ctx.fillStyle = '#17232a'; roundRect(px - 9, py - 12, 18, 27, 4); ctx.fill();
+    ctx.shadowColor = '#ffbd54'; ctx.shadowBlur = 15;
+    ctx.fillStyle = '#ffe8a6'; roundRect(px - 5, py - 8, 10, 17, 3); ctx.fill();
+    ctx.shadowBlur = 0; ctx.fillStyle = '#785a35'; ctx.fillRect(px - 8, py - 1, 16, 3);
+  }
+  // Dust catches the lamps; kept sparse so threats remain easy to read.
+  for (let i = 0; i < 16; i++) {
+    const x = (hash(i, 17) % BW + Math.sin(g.time * .25 + i) * 12);
+    const y = (hash(i, 29) % BH - g.time * (2 + i % 3)) % BH;
+    ctx.fillStyle = 'rgba(255,224,158,.22)'; ctx.fillRect(x, (y + BH) % BH, 1.5, 1.5);
+  }
+  ctx.restore();
 }
 
 // Limestone boulder: pale, faceted, cracked. Facet layout varies per tile.
@@ -355,6 +414,20 @@ function drawRock(x, y, seed) {
   // top facet highlight
   ctx.fillStyle = 'rgba(255,250,235,0.35)';
   ctx.beginPath(); ctx.moveTo(pts[0][0] + 4, pts[0][1] + 2); ctx.lineTo(pts[1][0] + 2, pts[1][1] + 4); ctx.lineTo(pts[2][0] - 2, pts[2][1] + 5); ctx.lineTo(-2, -4); ctx.closePath(); ctx.fill();
+  ctx.save();
+  ctx.beginPath(); pts.forEach(([a,b], i) => i ? ctx.lineTo(a,b) : ctx.moveTo(a,b)); ctx.closePath(); ctx.clip();
+  polygon([[0,-4],[pts[2][0],pts[2][1]],[24,-10],[18,10]], 'rgba(255,240,191,.22)');
+  polygon([[0,-4],[18,10],[6,24],[-8,15]], 'rgba(62,49,34,.22)');
+  for (let i = 0; i < 5; i++) {
+    ctx.strokeStyle = i % 2 ? 'rgba(255,248,213,.20)' : 'rgba(69,57,35,.22)';
+    ctx.beginPath(); ctx.moveTo(-25, i * 7 - 14); ctx.lineTo(-5, i * 7 - 18); ctx.lineTo(25, i * 7 - 9); ctx.stroke();
+  }
+  for (let i = 0; i < 18; i++) {
+    const n = hash(h + i, i + 5);
+    ctx.fillStyle = i % 3 ? 'rgba(66,51,31,.22)' : 'rgba(255,249,216,.5)';
+    ctx.fillRect(n % 44 - 22, (n >>> 8) % 44 - 22, 1.5, 1);
+  }
+  ctx.restore();
   // cracks + specks
   ctx.strokeStyle = COL.rockCrack; ctx.lineWidth = 1.5;
   ctx.beginPath(); ctx.moveTo(-6, -2); ctx.lineTo(2, 6); ctx.lineTo(-2, 14); ctx.stroke();
@@ -478,6 +551,7 @@ function drawFires(g) {
     for (const [cx, cy, kind, dir] of b.cells) {
       const px = cx * TILE + TILE / 2, py = cy * TILE + TILE / 2;
       ctx.save(); ctx.translate(px, py); ctx.globalAlpha = fade;
+      ctx.shadowColor = '#ff7926'; ctx.shadowBlur = 22;
       if (kind === 'centre') {
         const r = 26 * grow;
         const gr = ctx.createRadialGradient(0, 0, 2, 0, 0, r);
@@ -491,7 +565,7 @@ function drawFires(g) {
         gr.addColorStop(0, 'rgba(255,90,44,0.35)'); gr.addColorStop(0.5, '#fff1c4'); gr.addColorStop(1, 'rgba(255,90,44,0.35)');
         ctx.fillStyle = gr;
         roundRect(-len / 2, -thick / 2, len, thick, kind === 'end' ? thick / 2 : 6); ctx.fill();
-        ctx.fillStyle = 'rgba(255,179,71,0.9)'; roundRect(-len / 2, -thick / 4, len, thick / 2, 4); ctx.fill();
+        ctx.fillStyle = '#fff4c1'; roundRect(-len / 2, -thick / 4, len, thick / 2, 4); ctx.fill();
       }
       ctx.restore();
     }
@@ -506,15 +580,17 @@ function drawCritter(type, px, py, phase, alpha = 1, scale = 1, facing = 'down')
     const flap = Math.sin(phase * 5);
     ctx.fillStyle = 'rgba(40,20,60,0.4)'; ctx.beginPath(); ctx.ellipse(0, 18, 16, 5, 0, 0, Math.PI * 2); ctx.fill();
     ctx.translate(0, Math.sin(phase * 2.5) * 3 - 6);
-    ctx.fillStyle = '#4a2c6e';
+    ctx.fillStyle = '#9663c5';
     for (const s of [-1, 1]) {
       ctx.beginPath(); ctx.moveTo(s * 6, 0);
       ctx.quadraticCurveTo(s * 16, -10 - flap * 8, s * 26, -2 - flap * 10);
       ctx.quadraticCurveTo(s * 20, 4 - flap * 4, s * 16, 6 - flap * 2);
       ctx.quadraticCurveTo(s * 10, 4, s * 6, 8); ctx.closePath(); ctx.fill();
     }
-    ctx.fillStyle = '#5d3a85'; ctx.beginPath(); ctx.ellipse(0, 2, 8, 10, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#4a2c6e'; ctx.beginPath(); ctx.moveTo(-6, -6); ctx.lineTo(-3, -14); ctx.lineTo(0, -6); ctx.moveTo(6, -6); ctx.lineTo(3, -14); ctx.lineTo(0, -6); ctx.fill();
+    ctx.fillStyle = '#bb8ae3'; ctx.beginPath(); ctx.ellipse(0, 2, 8, 10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#9663c5'; ctx.beginPath(); ctx.moveTo(-6, -6); ctx.lineTo(-3, -14); ctx.lineTo(0, -6); ctx.moveTo(6, -6); ctx.lineTo(3, -14); ctx.lineTo(0, -6); ctx.fill();
+    ctx.strokeStyle = '#deb4f4'; ctx.lineWidth = 1;
+    for (const side of [-1,1]) { ctx.beginPath(); ctx.moveTo(side * 6,0); ctx.lineTo(side * 16,-6-flap*5); ctx.lineTo(side*24,-2-flap*10); ctx.stroke(); }
     ctx.fillStyle = '#ffe36b'; ctx.beginPath(); ctx.arc(-3 + ex * 0.4, -2, 2, 0, Math.PI * 2); ctx.arc(3 + ex * 0.4, -2, 2, 0, Math.PI * 2); ctx.fill();
   } else if (type === 'knocker') {
     const bob = Math.abs(Math.sin(phase * 3)) * 3;
@@ -536,15 +612,15 @@ function drawCritter(type, px, py, phase, alpha = 1, scale = 1, facing = 'down')
   } else if (type === 'spider') {
     const wig = Math.sin(phase * 12) * 3;
     ctx.fillStyle = 'rgba(0,0,0,0.35)'; ctx.beginPath(); ctx.ellipse(0, 14, 18, 5, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#1f1a24'; ctx.lineWidth = 3;
+    ctx.strokeStyle = '#937399'; ctx.lineWidth = 3;
     for (let i = 0; i < 4; i++) {
       const y0 = -6 + i * 5, sgn = i % 2 ? 1 : -1;
       for (const s of [-1, 1]) {
         ctx.beginPath(); ctx.moveTo(s * 6, y0); ctx.lineTo(s * 18, y0 - 6 + sgn * wig); ctx.lineTo(s * 24, y0 + 6 + sgn * wig); ctx.stroke();
       }
     }
-    ctx.fillStyle = '#2a2230'; ctx.beginPath(); ctx.ellipse(0, 4, 12, 10, 0, 0, Math.PI * 2); ctx.fill();
-    ctx.fillStyle = '#3b2f42'; ctx.beginPath(); ctx.arc(0, -8, 7, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#594568'; ctx.beginPath(); ctx.ellipse(0, 4, 12, 10, 0, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = '#866092'; ctx.beginPath(); ctx.arc(0, -8, 7, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = '#ff4a3d'; ctx.beginPath(); ctx.arc(-3 + ex * 0.5, -9, 1.8, 0, Math.PI * 2); ctx.arc(3 + ex * 0.5, -9, 1.8, 0, Math.PI * 2); ctx.arc(-6, -6, 1.2, 0, Math.PI * 2); ctx.arc(6, -6, 1.2, 0, Math.PI * 2); ctx.fill();
     ctx.fillStyle = 'rgba(255,255,255,0.12)'; ctx.beginPath(); ctx.ellipse(-3, 0, 4, 3, 0, 0, Math.PI * 2); ctx.fill();
   } else {
@@ -613,7 +689,8 @@ function drawMiner(p, g) {
   const ex = p.facing === 'left' ? -2 : p.facing === 'right' ? 2 : 0;
   if (p.facing !== 'up') { ctx.fillStyle = '#1b1b24'; ctx.fillRect(-4 + ex, -14, 2, 3); ctx.fillRect(2 + ex, -14, 2, 3); }
   // hard hat + lamp
-  ctx.fillStyle = '#ffd93d'; ctx.beginPath(); ctx.arc(0, -16, 11, Math.PI, 0); ctx.closePath(); ctx.fill();
+  const helmet = ctx.createLinearGradient(-10,-27,10,-15); helmet.addColorStop(0,'#fff1a1'); helmet.addColorStop(.45,'#ffcf48'); helmet.addColorStop(1,'#bd731c');
+  ctx.fillStyle = helmet; ctx.beginPath(); ctx.arc(0, -16, 11, Math.PI, 0); ctx.closePath(); ctx.fill();
   ctx.fillRect(-14, -17, 28, 4);
   ctx.fillStyle = '#d9b21c'; ctx.fillRect(-3, -27, 6, 8);
   ctx.fillStyle = '#fff5c2'; ctx.beginPath(); ctx.arc(0 + ex * 1.5, -21, 3.2, 0, Math.PI * 2); ctx.fill();
