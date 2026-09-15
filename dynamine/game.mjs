@@ -2,8 +2,8 @@
 // Theme: a limestone mine. Miners, dynamite, rock, bats and knockers, a lift.
 import {
   createGame, step, drainEvents, W, H, FLOOR, WALL, BRICK, RULES, ITEM, ENEMY, tileOf, atCentre,
-} from './engine.mjs?v=20260915g';
-import { drawShaft, drawVent, drawExitMist } from './shaft-art.mjs?v=20260915g';
+} from './engine.mjs?v=20260915h';
+import { drawShaft, drawVent, drawExitMist } from './shaft-art.mjs?v=20260915h';
 
 const TILE = 56, HUD = 48;
 const BW = W * TILE, BH = H * TILE;
@@ -17,6 +17,36 @@ const menuSub = document.getElementById('menu-sub');
 const missionEl = document.getElementById('mission');
 document.querySelector('.ch-bezel')?.prepend(missionEl);
 missionEl.after(document.getElementById('power-status'));
+// Fit the entire cabinet, including visible touch controls, after text reflows.
+// Use document coordinates so scrolling never changes the board's size.
+(() => {
+  const board = document.getElementById('game-container');
+  const stage = document.querySelector('.ch-stage');
+  const bezel = document.querySelector('.ch-bezel');
+  let pending = false;
+  function fit() {
+    pending = false;
+    const style = getComputedStyle(bezel);
+    const gap = parseFloat(getComputedStyle(stage).rowGap) || 0;
+    const after = [...stage.children].slice([...stage.children].indexOf(bezel)+1)
+      .filter(el => getComputedStyle(el).display !== 'none' &&
+        !(getComputedStyle(stage).display === 'grid' && el.classList.contains('ch-touch')))
+      .reduce((height,el) => height + el.getBoundingClientRect().height + gap, 0);
+    const top = board.getBoundingClientRect().top + window.scrollY;
+    const availableHeight = Math.max(120, (window.visualViewport?.height || innerHeight) - top - after - parseFloat(style.paddingBottom) - 12);
+    const stageStyle = getComputedStyle(stage);
+    const availableWidth = stage.clientWidth - parseFloat(stageStyle.paddingLeft) - parseFloat(stageStyle.paddingRight) - parseFloat(style.paddingLeft) - parseFloat(style.paddingRight);
+    const width = Math.floor(Math.min(availableWidth, availableHeight * BW / (BH + HUD), 900));
+    stage.style.setProperty('--board-width', width + 'px');
+  }
+  const schedule = () => { if (!pending) { pending = true; requestAnimationFrame(fit); } };
+  const observer = new ResizeObserver(schedule);
+  [stage, missionEl, document.getElementById('power-status')].forEach(el => observer.observe(el));
+  window.addEventListener('resize', schedule);
+  window.visualViewport?.addEventListener('resize', schedule);
+  document.fonts.ready.then(schedule);
+  schedule();
+})();
 const scoreEl = document.getElementById('score');
 const hiEl = document.getElementById('highScore');
 const HS_KEY = 'dynamineHighScore';
@@ -150,15 +180,15 @@ function showMenu(sub) {
   menuSub.textContent = sub || '';
   menu.hidden = false;
   scoreEl.textContent = '0';
-  document.getElementById('power-status').textContent = 'F · Use your power · Pick up the glowing flask near the start';
-  document.getElementById('mission').textContent = 'Bomb ON one shaft → blast ALL shafts · Clear creatures to open the exit';
+  document.getElementById('power-status').textContent = 'Five opening levels · Learn a new trick in each mine';
+  document.getElementById('mission').textContent = 'Clear the creatures → enter the green exit';
 }
 
 // ---------------------------------------------------------------- events → presentation
 function handleEvent(e) {
   const g = game;
   switch (e.type) {
-    case 'level': banner = { text: 'LEVEL ' + e.level, sub: e.level >= 10 ? 'They anticipate your moves. Use the shafts.' : e.level >= 8 ? 'They hunt around corners. Keep moving.' : e.level >= 5 ? 'They dodge bombs. Set a trap.' : e.level >= 3 ? 'They spot you down corridors. Watch your back.' : 'Bomb ON one shaft. Fire bursts from ALL shafts.', until: g.time + 1.6, style: 'level' }; break;
+    case 'level': banner = { text: g.lesson ? e.level + ' · ' + g.lesson.name.toUpperCase() : 'LEVEL ' + e.level, sub: g.lesson?.hint || (e.level >= 10 ? 'They anticipate your moves. Use the shafts.' : e.level >= 8 ? 'They hunt around corners. Keep moving.' : e.level >= 5 ? 'They dodge bombs. Set a trap.' : e.level >= 3 ? 'They spot you down corridors. Watch your back.' : 'Bomb ON one shaft. Fire bursts from ALL shafts.'), until: g.time + 1.6, style: 'level' }; break;
     case 'round': banner = { text: 'ROUND ' + e.round, sub: firstTo(), until: g.time + 1.6, style: 'level' }; break;
     case 'go': banner = { text: 'GO!', until: g.time + 0.5, style: 'go' }; break;
     case 'power': if(e.power === ITEM.FIREBALL) Sound.kill(); else Sound.place(); break;
@@ -464,10 +494,11 @@ function drawLift(g) {
   const atLockedExit = d && !d.open && g.players.some(p => p.alive && tileOf(p.x) === d.x && tileOf(p.y) === d.y);
   const onShaft = g.players.some(p => p.alive && g.shafts.some(s => tileOf(p.x) === s.x && tileOf(p.y) === s.y));
   const objective = missionEl;
-  const text = g.mode !== 'adventure' ? 'Bomb ON one cyan shaft → ALL shafts blast · Last miner standing wins' :
-    atLockedExit ? `EXIT LOCKED · Defeat ${enemies} remaining creature${enemies === 1 ? '' : 's'} first` :
-    enemies ? (onShaft ? `ON SHAFT · Press Space to blast ALL shafts · ${enemies} creatures left` : `${enemies} creatures left · Walk onto an open cyan shaft, then press Space`) :
-    'EXIT OPEN · Walk into the green mineshaft to finish!';
+  const text = g.mode !== 'adventure' ? 'Last miner standing wins · Shaft bombs blast every shaft' :
+    atLockedExit ? `EXIT LOCKED · ${enemies} creature${enemies === 1 ? '' : 's'} left` :
+    !enemies ? 'EXIT OPEN · Enter the green mineshaft!' :
+    onShaft ? `ON SHAFT · Space blasts ALL shafts · ${enemies} left` :
+    `${g.lesson?.name || 'Depth ' + g.level} · ${enemies} creature${enemies === 1 ? '' : 's'} left → exit`;
   if (objective.textContent !== text) objective.textContent = text;
   objective.dataset.ready = String(!!d?.open);
 }
@@ -771,7 +802,8 @@ function updatePowerHud(g) {
   const lines=g.players.filter(p=>!p.cpu).map(p=>{
     const remaining=Math.max(0,Math.ceil(p.powerUntil-g.time));
     const key=mode==='duel'&&p.id===1?'Right Shift':'F';
-    if(!p.power||!remaining) return `${mode==='duel'?p.name+': ':''}${key} · Find a fireball flask or purple ignitor`;
+    if(!p.power||!remaining) return g.mode === 'adventure' && g.lesson ?
+      g.lesson.hint : `${mode==='duel'?p.name+': ':''}${key} · Find a fireball or ignitor`;
     const action=p.power===ITEM.FIREBALL?'Fireball — shoot':(g.bombs.some(b=>b.owner===p.id&&!b.exploded)?'Ignitor — detonate bomb':'Ignitor — place a bomb first');
     return `${key} · ${action} · ${remaining}s`;
   });

@@ -2,6 +2,8 @@
 // The page (game.mjs) drives it with step(state, dt, inputs) and draws state;
 // tools/dynamine-test.mjs drives it headlessly. Keep it that way.
 
+import { OPENING_LEVELS } from './opening-levels.mjs?v=20260915h';
+
 export const FLOOR = 0, WALL = 1, BRICK = 2;
 export const W = 13, H = 11;
 
@@ -167,15 +169,32 @@ function resetPlayer(p, keepPowers) {
 }
 
 export function startLevel(state, level) {
+  const lesson = OPENING_LEVELS[level - 1];
   const spec = levelSpec(level);
   state.level = level;
-  const { grid, bricks } = buildGrid(state.rng, spec.density, [CORNERS[0]]);
+  const { grid, bricks } = lesson ? {grid:new Uint8Array(W * H), bricks:[]} : buildGrid(state.rng, spec.density, [CORNERS[0]]);
   state.grid = grid;
   state.projectiles = []; state.projectileHits = new Set();
   state.bombs = []; state.fires = new Map(); state.items = new Map(); state.particles = [];
   state.enemies = [];
   state.timer = RULES.levelTime; state.hurry = false;
   state.suddenDeath = null;
+  state.lesson = lesson ? {name:lesson.name, hint:lesson.hint} : null;
+  if (lesson) {
+    state.shafts = [];
+    for (let y=0; y<H; y++) for (let x=0; x<W; x++) {
+      const cell = lesson.rows[y][x];
+      grid[key(x,y)] = cell === '#' ? WALL : cell === '*' ? BRICK : FLOOR;
+      if (cell === 'S') state.shafts.push({x,y});
+      if (cell === 'E') state.door = {x,y,revealed:true,open:false};
+      if (cell === 'b' || cell === 'k') state.enemies.push(makeEnemy(cell === 'b' ? 'bat' : 'knocker',x,y,state.rng));
+      const pickup = {f:ITEM.FIREBALL,i:ITEM.IGNITOR,'+':ITEM.BOMB}[cell];
+      if (pickup) state.items.set(key(x,y),{type:pickup,hidden:false});
+    }
+    for (const {x,y,type} of lesson.rewards) state.items.set(key(x,y),{type,hidden:true});
+    finishLevelSetup(state,level);
+    return;
+  }
   // Keep one connected shaft directly reachable from the starting corridor.
   grid[key(3,1)] = FLOOR;
   // The exit is visible from the start, away from the spawn corridor.
@@ -254,6 +273,10 @@ export function startLevel(state, level) {
     !state.items.has(key(x,y)) && x + y >= 6).slice(0, Math.min(3 + Math.floor(level / 4), 4) - 1)
     .map(([x,y]) => ({ x, y }))];
   for (const shaft of state.shafts) grid[key(shaft.x,shaft.y)] = FLOOR;
+  finishLevelSetup(state,level);
+}
+
+function finishLevelSetup(state,level) {
   const p = state.players[0];
   resetPlayer(p, level > 1);
   state.status = 'intro'; state.statusUntil = state.time + 1.6;

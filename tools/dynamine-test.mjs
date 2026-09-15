@@ -31,6 +31,7 @@ function clearEnemies(state) { state.enemies.forEach(e => { e.alive = false; });
 console.log('layout');
 for (let seed = 1; seed <= 25; seed++) {
   const s = createGame({ seed });
+  startLevel(s, 6); // Procedural layouts follow the five authored opening mines.
   let ok = true;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) {
     const border = x === 0 || y === 0 || x === W - 1 || y === H - 1;
@@ -443,7 +444,7 @@ for (const dt of [1/120,1/60]) for (const speedItems of [0,1,2,3]) for (const [d
   check('exit opening beneath an off-centre player finishes level',s.status==='cleared');
 }
 {
-  const s=createGame({seed:99});skipIntro(s);clearEnemies(s);
+  const s=createGame({seed:99});startLevel(s,2);skipIntro(s);clearEnemies(s);
   const p=s.players[0];p.invulnUntil=1e9;
   run(s,.68,()=>[{held:['right']}]);
   check('walk from spawn directly onto first shaft',tileOf(p.x)===3&&tileOf(p.y)===1&&s.shafts.some(v=>v.x===3&&v.y===1));

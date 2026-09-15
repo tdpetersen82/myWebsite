@@ -35,19 +35,41 @@
     <link rel="stylesheet" href="../arcade/game-over.css?v=20260909a">
     <script src="../arcade/game-over.js?v=20260914a"></script>
     <style>
-        /* 13×11 board plus a 48px HUD strip. Reserve room for the visible mission above it. */
+        /* Give the board the viewport space left after the compact controls. */
+        body.ch-game .ch-stage { max-width: 960px; margin: 10px auto; padding: 0 12px; gap: 8px; }
+        body.ch-game .ch-topbar { padding: 7px 12px; gap: 12px; }
+        body.ch-game .ch-eyebrow { display: none; }
+        body.ch-game .ch-bezel { padding: 10px; box-sizing: border-box; width: 100%; max-width: calc(var(--board-width, 728px) + 20px); margin-inline: auto; }
+        body.ch-game .ch-hint { padding: 0; }
+        .ch-bezel .ch-coin { display: none; }
         .ch-bezel #game-container {
             aspect-ratio: 728 / 664;
-            max-height: 58vh;
-            max-width: min(728px, calc(58vh * 728 / 664));
+            width: var(--board-width, 100%);
+            max-height: none;
+            max-width: 100%;
             margin: 0 auto;
             position: relative;
         }
-        #game-container canvas { outline: none; width: 100%; height: 100%; }
-        #mission { max-width: 728px; margin: 0 auto 10px; padding: 8px 12px; position: relative; z-index: 5; border: 1px solid #8b7046; border-radius: 8px; background: #13282d; color: #ffe1a2; font: 600 clamp(12px, 2vw, 15px)/1.5 Inter, sans-serif; text-align: center; }
-        #power-status { color: #b7c9cd; text-align: center; font: 600 clamp(11px, 1.5vw, 13px)/1.4 Inter, sans-serif; max-width:728px; margin:0 auto 8px; position:relative; z-index:5; }
+        .ch-bezel #game-container canvas { outline: none; width: 100%; height: 100%; max-height: none; }
+        #mission { margin: 0 auto 3px; color: #ffe1a2; font: 600 13px/1.4 Inter, sans-serif; text-align: center; }
+        #power-status { color: #b7c9cd; text-align: center; font: 600 12px/1.4 Inter, sans-serif; margin:0 auto 6px; }
         #power-status[data-active="true"] { color:#ffc983; }
-        #mission[data-ready="true"] { color: #a0ffd0; border-color: #61c390; }
+        #mission[data-ready="true"] { color: #a0ffd0; }
+        @media (max-width: 760px) {
+            body.ch-game .ch-stage { padding: 0 8px; margin: 8px auto; }
+            body.ch-game .ch-topbar { gap: 6px 10px; }
+            #mission { font-size: 12px; }
+            body.ch-game .ch-hint { display: none; }
+        }
+        @media (max-height: 500px) and (max-width: 760px), (max-height: 500px) and (pointer: coarse) {
+            body.ch-game .ch-stage { display: grid; grid-template-columns: minmax(0, 1fr) 180px; align-items: center; }
+            body.ch-game .ch-topbar { grid-column: 1 / -1; grid-template-columns: auto 1fr auto; grid-template-areas: none; }
+            body.ch-game .ch-topbar > * { grid-area: auto; }
+            body.ch-game .ch-title, body.ch-game .ch-hint { display: none; }
+            body.ch-game .ch-bezel { grid-column: 1; }
+            body.ch-game .ch-touch { display: flex; grid-column: 2; grid-row: 2; flex-direction: column; gap: 12px; }
+            .ch-touch-group:last-child { flex-direction: row !important; }
+        }
         /* Mode menu over the board */
         #menu {
             position: absolute; inset: 0; z-index: 3;
@@ -126,15 +148,15 @@
             <p>Score: <span id="score">0</span></p>
             <p>High Score: <span id="highScore">0</span></p>
         </div>
-        <div id="mission" role="status" aria-live="polite">Bomb ON one shaft → blast ALL shafts · Clear creatures to open the exit</div>
-        <div id="power-status">F · Use your power · Pick up the glowing flask near the start</div>
+        <div id="mission" role="status" aria-live="polite">Clear the creatures → enter the green exit</div>
+        <div id="power-status">Five opening levels · Learn a new trick in each mine</div>
         <div id="game-container">
             <canvas id="gameCanvas" width="728" height="664" tabindex="0" aria-label="Dynamine game board. Arrow keys or WASD move the miner, Space lays dynamite; F uses your equipped power."></canvas>
             <div id="menu" role="dialog" aria-label="Choose a mode">
                 <p class="m-title">DYNAMINE</p>
-                <p class="m-tag">One shaft. Every shaft. A mine full of fire.</p>
+                <p class="m-tag">Five opening mines. Then into the deep.</p>
                 <p id="menu-sub"></p>
-                <button type="button" data-mode="adventure"><span class="m-ico">⛑️</span><span><b>Adventure</b><small>Use connected shafts. Clear the creatures. Reach the exit.</small></span></button>
+                <button type="button" data-mode="adventure"><span class="m-ico">⛑️</span><span><b>Adventure</b><small>Learn the tricks. Clear the creatures. Reach the exit.</small></span></button>
                 <button type="button" data-mode="cpu"><span class="m-ico">⚔️</span><span><b>Battle the computer</b><small>Connected shafts. Last miner standing. First to three.</small></span></button>
                 <button type="button" data-mode="duel"><span class="m-ico">👥</span><span><b>Two players</b><small>One keyboard: WASD + Space vs Arrows + Enter.</small></span></button>
                 <p class="m-keys"><kbd>Arrows</kbd> or <kbd>WASD</kbd> move · <kbd>Space</kbd> dynamite · <kbd>P</kbd> pause</p>
@@ -160,7 +182,7 @@
 
             <h3>Modes</h3>
             <ul>
-                <li><b>Adventure.</b> Solo levels that get denser and smarter: enemies spot you down corridors from level 3, anticipate blasts from level 5, find routes around obstacles from level 8, and attempt interceptions from level 10. Every level has visible cyan floor shafts. Place dynamite ON any shaft to blast every shaft at once, with a one-tile range around each. Clear all creatures to turn the visible EXIT green, then walk across it. An orange exit is locked until those creatures are defeated. The open exit glows green and releases rising mist. Three lives, a three-minute clock per level, and a score that saves as your best. Run the clock out and the gas catches: sparks come hunting.</li>
+                <li><b>Adventure.</b> Five designed opening mines teach bombing, linked shafts, fireballs, the ignitor, and trapping clever enemies. Randomized mines begin at level 6. Enemy tactics progress throughout the adventure: enemies spot you down corridors from level 3, anticipate blasts from level 5, find routes around obstacles from level 8, and attempt interceptions from level 10. Cyan floor shafts appear from level 2. Place dynamite ON any shaft to blast every shaft at once, with a one-tile range around each. Clear all creatures to turn the visible EXIT green, then walk across it. An orange exit is locked until those creatures are defeated. The open exit glows green and releases rising mist. Three lives, a three-minute clock per level, and a score that saves as your best. Run the clock out and the gas catches: sparks come hunting.</li>
                 <li><b>Battle the computer.</b> Two miners, one gallery with connected shafts, last one standing takes the round. First to three rounds wins the match. With 45 seconds left the roof starts caving in from the edges, so a stand-off never lasts.</li>
                 <li><b>Two players.</b> The same gallery, two people on one keyboard.</li>
             </ul>
@@ -207,7 +229,7 @@
         </section>
     </div>
 
-    <script type="module" src="game.mjs?v=20260915g"></script>
+    <script type="module" src="game.mjs?v=20260915h"></script>
     <!-- Ad Slot: Game Page Banner -->
     <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
         <ins class="adsbygoogle"
