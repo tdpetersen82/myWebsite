@@ -1,7 +1,7 @@
 // Dirt Jumper — Terrain heightfield.
 //
 // Continuous C^1 height profile T(x) built from streamed parametric features
-// (rollers / whoops / tabletop / gap), stitched at matching height AND slope.
+// (rollers / tabletop / gap), stitched at matching height AND slope.
 //
 // Implementation: a list of control knots {x, y} interpolated with MONOTONE
 // cubic Hermite tangents (PCHIP / Fritsch-Carlson). Why this and not raw
@@ -38,7 +38,7 @@ class Terrain {
         const T = CONFIG.TERRAIN;
         this._push(0, 0);
         this._push(T.startFlat * 0.5, 4);    // tiny initial pitch
-        this._push(T.startFlat, 18);
+        this._push(T.startFlat, 34);
         this._recomputeTail();
     }
 
@@ -124,32 +124,17 @@ class Terrain {
 
     _rint(lo, hi) { return lo + Math.floor(this.rng() * (hi - lo + 1)); }
 
-    // PUMP ROLLERS — flowy sine hills you pump for speed. Gentle faces (length
-    // 12-16x height → ~10-14°) and ONE consistent base size per section (only
-    // ±15% per roller, fixed spacing) so the whole section flows as a single
-    // rhythm instead of random whoops. These never auto-launch the bike (see
-    // Bike: natural launch fires only at jump lips) — you stay glued and pump.
+    // Rounded, evenly paced rollers: push through the trough, extend on the climb.
     genPumpRollers(count, d) {
         const P = CONFIG.TERRAIN.pump;
-        const baseH = (P.minH + this.rng() * (P.maxH - P.minH)) * (1 + d * 0.25);
-        const ratio = P.minRatio + this.rng() * (P.maxRatio - P.minRatio);
+        // A section shares one tempo with a small, repeating height variation.
+        const baseH = (P.minH + (P.maxH - P.minH) * 0.5) * (1 + d * 0.12);
+        const ratio = (P.minRatio + P.maxRatio) * 0.5;
         for (let i = 0; i < count; i++) {
-            const h = baseH * (0.85 + this.rng() * 0.30);   // gentle ±15% variation
-            const wl = baseH * ratio;                        // consistent spacing
-            this._rel(wl * 0.5, P.drop * 0.5 - h * 0.5);     // crest (up)
-            this._rel(wl * 0.5, P.drop * 0.5 + h * 0.5);     // trough (down)
-        }
-    }
-
-    // WHOOPS — the tight, uniform, jerky tech section (ratio ~2.6 → ~45° bumps).
-    // Deliberately distinct from pump rollers: small, close, rough to skim/pump.
-    genWhoops(count, d) {
-        const W = CONFIG.TERRAIN.whoops;
-        const h = W.h + d * 5;
-        const wl = h * W.ratio;
-        for (let i = 0; i < count; i++) {
-            this._rel(wl * 0.5, W.drop * 0.5 - h * 0.5);
-            this._rel(wl * 0.5, W.drop * 0.5 + h * 0.5);
+            const h = baseH * (1 + Math.sin(i * 1.7) * 0.04);
+            const wl = baseH * ratio;
+            this._rel(wl * 0.45, -h);
+            this._rel(wl * 0.55, h + P.drop);
         }
     }
 
@@ -161,64 +146,64 @@ class Terrain {
         const J = CONFIG.TERRAIN.jump;
         const kickH = J.kickH + J.kickHPerD * d;
         const kickLen = kickH * J.kickRatio;
-        // curved kicker: gentle base steepening to a steep lip.
+        const prevLast = this.knots.length - 1;
         this._rel(kickLen * 0.55, -kickH * 0.38);
-        this._rel(kickLen * 0.45, -kickH * 0.62);   // the lip — the launch point
+        this._rel(kickLen * 0.45, -kickH * 0.62);
         const lipX = this._last().x;
-        this._registerLip(lipX, J.lipBoost + kickH * J.lipBoostPerH);   // bigger kicker → bigger air
-        // a short "nose" that continues UP slightly keeps the lip's PCHIP tangent
-        // steeply upward (same-sign neighbours, not clamped to flat), so launching
-        // at the lip carries real up-velocity (vy = speed·sin(lip)) → a true pop.
-        this._rel(kickLen * 0.18, -kickH * 0.05);
-
+        this._registerLip(lipX, J.lipBoost + kickH * J.lipBoostPerH);
+        // Continue the takeoff tangent instead of flattening the top of the lip.
+        this._rel(kickLen * 0.12, -kickH * 0.09);
+        const deck = J.tableLen + d * 30;
         if (kind === 'gap') {
             const gap = J.gapMin + J.gapPerD * d;
-            const voidD = kickH * J.voidRatio;
-            this._rel(gap * 0.5, kickH + voidD);    // drop into the pit floor (below baseline)
-            this._rel(gap * 0.5, -voidD);           // up to far edge (~baseline) = landing lip
-            const landDrop = kickH;                 // land on a downslope, net descent = kickH
-            this._rel(landDrop / J.landRatio, landDrop);
+            this._rel(gap * 0.5, kickH * 0.85);
+            this._rel(gap * 0.5, -kickH * 0.85);
+            this._rel(35, 5);
         } else {
-            this._rel(J.tableLen, J.tableDrop);     // flat-ish table top (roll or send it)
-            const landDrop = kickH - J.tableDrop + 20;
-            this._rel(landDrop / J.landRatio, landDrop);   // matched downslope landing
+            this._rel(deck, J.tableDrop);
         }
+        // Broad landing catch zone accommodates different approach speeds.
+        // Its run-out is protected: no next kicker hides under the flight arc.
+        const landingStart = this._last().x;
+        const landLen = J.landingLen + d * J.landingLenPerD;
+        this._rel(landLen * 0.22, landLen * J.landRatio * 0.15);
+        this._rel(landLen * 0.56, landLen * J.landRatio * 0.70);
+        this._rel(landLen * 0.22, landLen * J.landRatio * 0.15);
+        const landingEnd = this._last().x;
+        this._rel(J.runUp + d * 35, 18);
+        this.lips[this.lips.length - 1].landingStart = landingStart;
+        this.lips[this.lips.length - 1].landingEnd = landingEnd;
+        this._recomputeTail(Math.max(0, prevLast - 1));
     }
 
-    // A JUMP LINE: 1-3 jumps in rhythm, the landing of one flowing into the
-    // short run-up of the next. Gaps only appear once you're warmed up.
-    genJumpLine(d, allowGap) {
-        const J = CONFIG.TERRAIN.jump;
-        const count = 1 + Math.floor(d * 1.4 + this.rng() * 0.7);   // 1..3
+    genJumpLine(d, allowGap, count = 2) {
         for (let i = 0; i < count; i++) {
-            const useGap = allowGap && (i > 0 || d > 0.4) && this.rng() < (0.30 + d * 0.35);
-            this.genJump(useGap ? 'gap' : 'table', d);
-            if (i < count - 1) this._rel(J.runUp, 12);   // run-up to the next kicker
+            this.genJump(allowGap && i === count - 1 ? 'gap' : 'table', d);
         }
     }
 
-    // Track layout: warm up, then alternate a PUMP section (build speed) with a
-    // "spend it" feature (a jump line, occasionally whoops). Connectors descend
-    // gently so the track always flows — no flat dead spots.
+    // Composed phrases replace random feature piles: build, send, recover.
+    // Every run opens on the same three rollers and a forgiving tabletop.
     nextFeature() {
-        const T = CONFIG.TERRAIN;
-        const d = CONFIG.difficultyAt(this.endX);
         const n = this.featureCount++;
-        // the prior endpoint becomes interior now → retangent it (and all new knots).
+        const d = CONFIG.difficultyAt(this.endX);
         const prevLast = this.knots.length - 1;
-
         if (n === 0) {
-            this.genPumpRollers(this._rint(T.pump.minCount, T.pump.maxCount), d * 0.4);
-        } else if (n % 2 === 1) {
-            this.genPumpRollers(this._rint(T.pump.minCount, T.pump.maxCount), d);
+            this.genPumpRollers(3, 0);
+            this._rel(120, 12);
+        } else if (n === 1) {
+            this.genJumpLine(0, false, 1);
         } else {
-            const pick = (n / 2) % 3;
-            if (pick === 2) this.genWhoops(this._rint(T.whoops.minCount, T.whoops.maxCount), d);
-            else this.genJumpLine(d, n > 2);    // first jump line is tables-only
+            const phrase = (n - 2) % 4;
+            if (phrase === 0 || phrase === 2) {
+                this.genPumpRollers(phrase === 0 ? 2 : 3, d);
+                this._rel(110, 12);
+            } else {
+                // First build confidence with tables. Later, one short gap closes
+                // a two-jump phrase; landings never shrink with difficulty.
+                this.genJumpLine(d, n >= 9 && phrase === 3, 2);
+            }
         }
-
-        // gentle descending connector (never dead-flat → keeps pump flow)
-        this._rel(90 + this.rng() * 70, T.baseDrop);
         this._recomputeTail(Math.max(0, prevLast - 1));
     }
 
@@ -392,8 +377,13 @@ class Terrain {
                 g.fillTriangle(x + 15, y, x + 21, y - 6, x + 29, y);
             }
         }
-        // Flags identify takeoffs before the bike gets there.
+        // Orange flags mark takeoffs; teal flags mark the start of each landing.
         for (const lip of this.lips) {
+            if (lip.landingStart >= camLeft - 30 && lip.landingStart <= camRight + 30) {
+                const lx=lip.landingStart,ly=this.heightAt(lx);
+                g.lineStyle(2,0xf7e1b6,1);g.lineBetween(lx,ly-1,lx,ly-30);
+                g.fillStyle(0x67c7af,1);g.fillTriangle(lx,ly-30,lx+18,ly-25,lx,ly-19);
+            }
             if (lip.x < camLeft - 30 || lip.x > camRight + 30) continue;
             const x = lip.x - 12, y = this.heightAt(x);
             g.lineStyle(2, 0xf7e1b6, 1); g.lineBetween(x, y - 1, x, y - 38);

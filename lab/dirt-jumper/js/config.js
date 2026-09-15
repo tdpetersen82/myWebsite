@@ -56,47 +56,28 @@ const CONFIG = {
         caseBailSpeed: 720          // slamming into a surface harder than this = bail
     },
 
-    // ---- Terrain feature parameters (parametric; Phase 2 scales/adds) ----
-    // Lengths in px, heights in px (down is +). `drop` = net downhill descent
-    // a feature adds (keeps the track net-downhill).
-    // Built on real pump-track + dirt-jump geometry (~1ft ≈ 10px at this scale):
-    //   * PUMP rollers = flowy SINE wave, length ≈ 8-11x height (the "10:1" rule)
-    //     → ~17-21° faces. Rounded & ROLLABLE: you pump them for speed, you don't
-    //     launch. Heights/spacing are VARIED (uniform spacing reads as whoops).
-    //   * WHOOPS  = the tight, uniform, jerky (~45°) tech section — a distinct
-    //     feature, not the bread-and-butter rollers.
-    //   * JUMPS   = a curved kicker up to a steep LIP (≈35° → real pop, since
-    //     vy=speed·sin(lip)) then a TABLE (roll-or-jump) or a GAP (pit), each
-    //     with a matched downslope LANDING. Chained 1-3 into a jump LINE.
-    // Layout alternates pump-to-build-speed → jump-line-to-spend-it.
+    // Composed downhill phrases: three warm-up rollers, one tabletop, then
+    // alternating pump sections and two-jump lines with generous run-outs.
     TERRAIN: {
-        startFlat: 540,             // gentle run-in before the first feature
-        baseDrop: 26,               // gentle descent on connectors (keeps flow, no flat spots)
-        // Flowy pump rollers (the pumpable hills). Gentle faces (~10-14°, length
-        // 12-16x height) and a CONSISTENT base size per section (only ±15% per
-        // roller) so a section reads as one flowing rhythm, not random whoops.
-        pump: { minH: 18, maxH: 30, minRatio: 12, maxRatio: 16, minCount: 4, maxCount: 7, drop: 10 },
-        // Tight jerky whoops (tech section).
-        whoops: { h: 13, ratio: 2.6, minCount: 5, maxCount: 8, drop: 8 },
-        // Dirt jumps: steep kicker lip (pop) + matched downslope landing.
+        startFlat: 360,
+        pump: { minH: 23, maxH: 29, minRatio: 10.5, maxRatio: 11.5, drop: 18 },
         jump: {
-            kickH: 26, kickHPerD: 26,   // kicker height (scales with difficulty d)
-            kickRatio: 1.6,             // kickLen = kickH*ratio
-            lipBoost: 110, lipBoostPerH: 3.2,  // designed launch impulse (base + per kicker-px); speed carries distance
-            tableLen: 95, tableDrop: 8, // tabletop flat top
-            landRatio: 0.62,            // landing downslope = landLen*ratio (≈32°)
-            gapMin: 70, gapPerD: 150,   // pit width to clear (punishing scales with d)
-            voidRatio: 0.7,             // pit depth = kickH*ratio below baseline
-            runUp: 70                   // run-up between jumps in a line
+            kickH: 34, kickHPerD: 12,
+            kickRatio: 2.8,
+            lipBoost: 90, lipBoostPerH: 1.2,
+            tableLen: 125, tableDrop: 5,
+            landRatio: 0.30,
+            landingLen: 340, landingLenPerD: 90,
+            gapMin: 90, gapPerD: 25,
+            runUp: 250
         },
-        // streaming
-        lookahead: 1700,            // px to keep generated ahead of the bike
-        cullBehind: 1100            // px behind the camera to drop (draw/memory only)
+        lookahead: 1700,
+        cullBehind: 1100
     },
 
     // gentle difficulty creep: difficulty d ramps with distance travelled.
     DIFF: {
-        rampDist: 9000,             // px over which d climbs from 0 -> 1
+        rampDist: 16000,             // px over which d climbs from 0 -> 1
         max: 1.6                    // d caps here (features never get unfair)
     },
 
