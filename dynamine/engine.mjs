@@ -172,6 +172,8 @@ export function startLevel(state, level) {
   state.enemies = [];
   state.timer = RULES.levelTime; state.hurry = false;
   state.suddenDeath = null;
+  // Keep one connected shaft directly reachable from the starting corridor.
+  grid[key(3,1)] = FLOOR;
   // The exit is visible from the start, away from the spawn corridor.
   const shuffled = bricks.slice();
   for (let i = shuffled.length - 1; i > 0; i--) {
@@ -186,7 +188,7 @@ export function startLevel(state, level) {
   let placed = 0;
   for (const [x, y] of shuffled) {
     if (placed >= spec.items) break;
-    if (x === doorCell[0] && y === doorCell[1]) continue;
+    if ((x === doorCell[0] && y === doorCell[1]) || (x === 3 && y === 1)) continue;
     state.items.set(key(x, y), { type: pool[placed % pool.length], hidden: true });
     placed++;
   }
@@ -242,9 +244,9 @@ export function startLevel(state, level) {
     state.enemies.push(makeEnemy(type, x, y, state.rng));
   }
   // Walkable, connected mine vents: a bomb ON any vent blasts every vent.
-  state.shafts = shuffled.filter(([x,y]) => grid[key(x,y)] === BRICK &&
-    !state.items.has(key(x,y)) && x + y >= 6).slice(0, Math.min(3 + Math.floor(level / 4), 4))
-    .map(([x,y]) => ({ x, y }));
+  state.shafts = [{x:3,y:1}, ...shuffled.filter(([x,y]) => grid[key(x,y)] === BRICK &&
+    !state.items.has(key(x,y)) && x + y >= 6).slice(0, Math.min(3 + Math.floor(level / 4), 4) - 1)
+    .map(([x,y]) => ({ x, y }))];
   for (const shaft of state.shafts) grid[key(shaft.x,shaft.y)] = FLOOR;
   const p = state.players[0];
   resetPlayer(p, level > 1);
@@ -704,8 +706,9 @@ export function step(state, dt, inputs = []) {
       applyItem(state, p, it.type);
       state.events.push({ type: 'item', item: it.type, x: k % W, y: Math.floor(k / W), player: p.id });
     }
-    // Door
-    if (state.door && state.door.open && tileOf(p.x) === state.door.x && tileOf(p.y) === state.door.y && atCentre(p)) {
+    // Entering any part of an open exit completes the level. Exact centre
+    // checks miss crossings at fractional movement speeds and frame steps.
+    if (state.door && state.door.open && tileOf(p.x) === state.door.x && tileOf(p.y) === state.door.y) {
       const bonus = RULES.levelBonus + Math.floor(state.timer) * RULES.timeBonus;
       addScore(state, bonus);
       state.status = 'cleared'; state.statusUntil = state.time + 2.4;

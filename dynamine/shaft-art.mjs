@@ -31,28 +31,31 @@ export function drawShaft(ctx, x, y, { open = false, time = 0, label = 'EXIT' } 
   }
   ctx.fillStyle = '#15262b';ctx.fillRect(12,1,32,12);
   ctx.fillStyle = accent;ctx.font = 'bold 9px system-ui';ctx.textAlign = 'center';ctx.textBaseline = 'middle';ctx.fillText(label,28,7);
+  if (!open) { ctx.fillStyle='#251512';ctx.fillRect(7,43,42,11);ctx.fillStyle='#ffc29a';ctx.font='bold 8px system-ui';ctx.fillText('LOCKED',28,49); }
   ctx.restore();
 }
 
-// Connected floor vents: walkable steel grilles with a shared cyan identity.
+// Open, walkable pipe mouths. The empty center makes the shaft visibly usable.
 export function drawVent(ctx,x,y,{time=0,armed=false}={}) {
   ctx.save();ctx.translate(x*56+28,y*56+28);
-  const color = armed ? '#ffc16e' : '#64e7ef';
-  const pulse = armed ? .6 + .4 * Math.sin(time*14) : .75;
-  ctx.fillStyle = '#07141d';ctx.beginPath();ctx.ellipse(0,6,24,20,0,0,Math.PI*2);ctx.fill();
-  const metal = ctx.createLinearGradient(-22,-22,22,22);
-  metal.addColorStop(0,'#b4d9cf');metal.addColorStop(.35,'#4c858c');metal.addColorStop(.7,'#24434e');metal.addColorStop(1,'#82afb1');
-  ctx.fillStyle=metal;ctx.beginPath();ctx.roundRect(-24,-23,48,46,8);ctx.fill();
-  ctx.fillStyle='#071920';ctx.beginPath();ctx.roundRect(-18,-17,36,32,6);ctx.fill();
-  ctx.shadowColor=color;ctx.shadowBlur=armed?14:7;ctx.strokeStyle=color;ctx.lineWidth=2;
-  ctx.globalAlpha=pulse;ctx.beginPath();ctx.roundRect(-21,-20,42,40,7);ctx.stroke();ctx.shadowBlur=0;ctx.globalAlpha=1;
-  for(let i=-12;i<=12;i+=8) {
-    ctx.fillStyle='#35535e';ctx.fillRect(i-2,-15,4,29);
-    ctx.fillStyle='#7caaaa';ctx.fillRect(i-2,-15,1,29);
+  const color=armed?'#ffc16e':'#64e7ef';
+  ctx.fillStyle='#111c23';ctx.beginPath();ctx.ellipse(0,8,25,19,0,0,Math.PI*2);ctx.fill();
+  const metal=ctx.createLinearGradient(-24,-24,24,24);
+  metal.addColorStop(0,'#b0e5de');metal.addColorStop(.4,'#467f89');metal.addColorStop(1,'#163842');
+  ctx.fillStyle=metal;ctx.beginPath();ctx.ellipse(0,0,24,21,0,0,Math.PI*2);ctx.fill();
+  ctx.fillStyle='#020b13';ctx.beginPath();ctx.ellipse(0,0,17,15,0,0,Math.PI*2);ctx.fill();
+  // Receding rings and a ladder on one side, leaving the mouth unobstructed.
+  for(let i=0;i<3;i++) {
+    ctx.strokeStyle=['#356573','#244b5a','#183643'][i];ctx.lineWidth=1.5;
+    ctx.beginPath();ctx.ellipse(0,3+i*3,14-i*3,10-i*2,0,0,Math.PI);ctx.stroke();
   }
-  for(const dx of [-19,19]) for(const dy of [-18,17]) {ctx.fillStyle='#dbebda';ctx.beginPath();ctx.arc(dx,dy,1.5,0,Math.PI*2);ctx.fill();}
-  // Matching arrows suggest flow into the underground connection.
-  ctx.strokeStyle=color;ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-6,-8);ctx.lineTo(0,-2);ctx.lineTo(6,-8);ctx.moveTo(-6,0);ctx.lineTo(0,6);ctx.lineTo(6,0);ctx.stroke();
-  ctx.fillStyle='#152d36';ctx.fillRect(-18,16,36,10);ctx.fillStyle=color;ctx.font='bold 8px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('LINK',0,21);
+  ctx.strokeStyle='#64857c';ctx.lineWidth=1.5;
+  for(let i=0;i<3;i++){ctx.beginPath();ctx.moveTo(7-i,1+i*4);ctx.lineTo(12-i,1+i*4);ctx.stroke();}
+  ctx.strokeStyle=color;ctx.lineWidth=2.5;ctx.shadowColor=color;ctx.shadowBlur=armed?16:6;
+  ctx.globalAlpha=armed?.65+.35*Math.sin(time*14):.9;
+  ctx.beginPath();ctx.ellipse(0,-1,21,18,0,0,Math.PI*2);ctx.stroke();ctx.globalAlpha=1;ctx.shadowBlur=0;
+  for(const dx of [-20,20]){ctx.fillStyle='#d3e7ca';ctx.beginPath();ctx.arc(dx,0,1.5,0,Math.PI*2);ctx.fill();}
+  ctx.fillStyle='#142c32';ctx.fillRect(-19,17,38,11);ctx.fillStyle=color;
+  ctx.font='bold 8px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText('SHAFT',0,23);
   ctx.restore();
 }

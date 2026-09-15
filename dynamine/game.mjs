@@ -2,8 +2,8 @@
 // Theme: a limestone mine. Miners, dynamite, rock, bats and knockers, a lift.
 import {
   createGame, step, drainEvents, W, H, FLOOR, WALL, BRICK, RULES, ITEM, ENEMY, tileOf, atCentre,
-} from './engine.mjs?v=20260915d';
-import { drawShaft, drawVent } from './shaft-art.mjs?v=20260915d';
+} from './engine.mjs?v=20260915e';
+import { drawShaft, drawVent } from './shaft-art.mjs?v=20260915e';
 
 const TILE = 56, HUD = 48;
 const BW = W * TILE, BH = H * TILE;
@@ -249,7 +249,7 @@ function syncScore() {
 requestAnimationFrame(t => { lastFrame = t; frame(t); });
 
 // ---------------------------------------------------------------- drawing
-// Limestone mine: dark earth floor, timber-braced bedrock pillars, pale
+// Limestone mine: dark earth floor, solid bedrock pillars, pale
 // limestone boulders you blast with dynamite, and a lift cage for the exit.
 const COL = {
   floorA: '#283738', floorB: '#263334', floorLine: 'rgba(0,0,0,0.28)',
@@ -359,18 +359,8 @@ function drawPillar(x, y) {
     ctx.strokeStyle = i % 2 ? '#263c45' : 'rgba(163,190,177,.18)';
     ctx.beginPath(); ctx.moveTo(7, 17 + i * 7); ctx.lineTo(20 + h % 10, 15 + i * 7); ctx.lineTo(46, 19 + i * 7); ctx.stroke();
   }
-  // Heavy timber and iron collars clearly identify indestructible supports.
-  if (x > 0 && x < W - 1 && y > 0 && y < H - 1) {
-    const wood = ctx.createLinearGradient(5, 0, 14, 0);
-    wood.addColorStop(0, '#503d2b'); wood.addColorStop(.45, '#a1804e'); wood.addColorStop(1, '#493728');
-    ctx.fillStyle = wood; ctx.fillRect(5, 9, 9, 43); ctx.fillRect(42, 9, 9, 43);
-    ctx.fillStyle = '#b0935f'; ctx.fillRect(3, 8, 50, 7);
-    ctx.fillStyle = '#584631'; ctx.fillRect(3, 15, 50, 3);
-    for (const bx of [5,42]) for (const by of [20,43]) {
-      ctx.fillStyle = '#26323b'; ctx.fillRect(bx, by, 9, 5);
-      ctx.fillStyle = '#b7beb0'; ctx.fillRect(bx + 4, by + 1, 2, 2);
-    }
-  } else if ((x + y) % 3 === 0) {
+  // Solid stone silhouette: no doorway-like timber frames on blocked tiles.
+  if ((x === 0 || x === W - 1 || y === 0 || y === H - 1) && (x + y) % 3 === 0) {
     // Small mineral veins belong to the outer wall, never the walkable grid.
     polygon([[19,37],[16,23],[22,17],[26,30],[24,39]], '#569e9d');
     polygon([[24,39],[28,23],[33,20],[34,33]], '#8cc4b7');
@@ -456,9 +446,12 @@ function drawLift(g) {
   const d = g.door;
   if (d) drawShaft(ctx,d.x,d.y,{open:d.open,time:g.time,label:'EXIT'});
   const enemies = g.enemies.filter(e => e.alive).length;
+  const atLockedExit = d && !d.open && g.players.some(p => p.alive && tileOf(p.x) === d.x && tileOf(p.y) === d.y);
+  const onShaft = g.players.some(p => p.alive && g.shafts.some(s => tileOf(p.x) === s.x && tileOf(p.y) === s.y));
   const objective = missionEl;
   const text = g.mode !== 'adventure' ? 'Bomb ON one cyan shaft → ALL shafts blast · Last miner standing wins' :
-    enemies ? `${enemies} creatures left · Bomb ON one cyan shaft → ALL shafts blast` :
+    atLockedExit ? `EXIT LOCKED · Defeat ${enemies} remaining creature${enemies === 1 ? '' : 's'} first` :
+    enemies ? (onShaft ? `ON SHAFT · Press Space to blast ALL shafts · ${enemies} creatures left` : `${enemies} creatures left · Walk onto an open cyan shaft, then press Space`) :
     'EXIT OPEN · Walk into the green mineshaft to finish!';
   if (objective.textContent !== text) objective.textContent = text;
   objective.dataset.ready = String(!!d?.open);

@@ -5,7 +5,7 @@
 // sudden death, the computer miner). It says nothing about feel.
 import {
   createGame, step, drainEvents, placeBomb, blastCells, dangerMap, tileAt, bombAt, fireAt,
-  FLOOR, WALL, BRICK, W, H, RULES, ENEMY, ITEM, startLevel,
+  FLOOR, WALL, BRICK, W, H, RULES, ENEMY, ITEM, startLevel, tileOf,
 } from '../dynamine/engine.mjs';
 
 let passed = 0, failed = 0;
@@ -70,6 +70,7 @@ console.log('blasts');
   const s = createGame({ seed: 3 });
   skipIntro(s);
   const p = s.players[0];
+  s.shafts = []; // This fixture tests an ordinary floor bomb, not the vent network.
   // Carve a known corridor: row 1 from x=1..5 floor, brick at (6,1), floor beyond it.
   for (let x = 1; x <= 7; x++) s.grid[1 * W + x] = FLOOR;
   s.grid[1 * W + 6] = BRICK; s.grid[1 * W + 7] = FLOOR;
@@ -420,6 +421,39 @@ function networkFixture() {
   check('clearing enemies opens exit without destroying shafts',s.door.open&&s.shafts.length===3);
   const battle=createGame({mode:'battle',seed:42});
   check('battle has connected shafts but no exit objective',battle.shafts.length===3&&battle.door===null&&battle.shafts.every(v=>tileAt(battle,v.x,v.y)===FLOOR));
+}
+
+// Regression: continuous movement must trigger exits without landing on an exact centre.
+console.log('exit crossing and shaft access');
+for (const dt of [1/120,1/60]) for (const speedItems of [0,1,2,3]) for (const [dx,dy,dir] of [[1,0,'right'],[-1,0,'left'],[0,1,'down'],[0,-1,'up']]) {
+  const s=networkFixture(),p=s.players[0];
+  s.door={x:5,y:5,revealed:true,open:true};p.speedItems=speedItems;
+  p.x=5.5-dx*1.99;p.y=5.5-dy*1.99;
+  for(let t=0;t<1&&s.status==='playing';t+=dt)step(s,dt,[{held:[dir]}]);
+  check(`crossing open exit completes level (${dir}, speed ${speedItems}, dt ${dt})`,s.status==='cleared');
+}
+{
+  const s=networkFixture(),p=s.players[0];
+  s.door={x:5,y:5,revealed:true,open:false};
+  s.enemies.push({type:'bat',x:9.5,y:9.5,alive:true,moving:false,walkPhase:0,speed:0,dir:'up',decideAtCentre:true});
+  p.x=5.2;p.y=5.5;step(s,1/120,[{held:[]}]);
+  check('locked exit does not finish before creatures are cleared',s.status==='playing'&&!s.door.open);
+  clearEnemies(s);step(s,1/120,[{held:[]}]);step(s,1/120,[{held:[]}]);
+  check('exit opening beneath an off-centre player finishes level',s.status==='cleared');
+}
+{
+  const s=createGame({seed:99});skipIntro(s);clearEnemies(s);
+  const p=s.players[0];p.invulnUntil=1e9;
+  run(s,.68,()=>[{held:['right']}]);
+  check('walk from spawn directly onto first shaft',tileOf(p.x)===3&&tileOf(p.y)===1&&s.shafts.some(v=>v.x===3&&v.y===1));
+  step(s,1/120,[{held:[],bomb:true}]);
+  check('bomb input works while standing on shaft',s.bombs.some(b=>b.x===3&&b.y===1));
+  run(s,.7,()=>[{held:['left']}]);
+  check('player can walk off shaft after planting bomb',tileOf(p.x)===1&&p.alive);
+  run(s,1.4);
+  check('actual walk-on bomb fires through all shafts',s.shafts.every(v=>fireAt(s,v.x,v.y)));
+  run(s,.5);run(s,.7,()=>[{held:['right']}]);
+  check('shaft can be walked onto again after blast',tileOf(p.x)===3&&tileOf(p.y)===1);
 }
 
 console.log(`\n${passed} passed, ${failed} failed`);
