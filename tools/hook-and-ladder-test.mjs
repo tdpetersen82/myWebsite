@@ -5,7 +5,7 @@
 // collisions, dispatch fairness, ladder flow, lives). It says nothing about feel.
 import {
   truckBodies, createGame, startGame, step, drainEvents, buildWorld, mulberry32, tileAt, truckCollides,
-  streetDistance, canRaiseLadder, serviceZones, turntable, wrapAngle, burnTimeFor,
+  streetDistance, canRaiseLadder, serviceZones, roofPoint, aimDistance, rescueBlocked, turntable, wrapAngle, burnTimeFor,
   COLS, ROWS, TILE, W, H, STREET, BUILDING, PARK, RULES, isStreetCol, isStreetRow, spawnTruck, PITCH, STREET_W,
 } from '../hook-and-ladder/engine.mjs';
 
@@ -103,7 +103,7 @@ console.log('kinematics');
   let maxArt = 0;
   run(g, 8, s => { maxArt = Math.max(maxArt, Math.abs(wrapAngle(s.truck.h1 - s.truck.h2))); return { brake: true, steer: 1 }; });
   check('reverse full-lock never exceeds max articulation', maxArt <= RULES.maxArticulation + 1e-6, deg(maxArt).toFixed(1));
-  check('… and does reach it', maxArt >= RULES.maxArticulation - 1e-6);
+  check('reverse assist avoids a full jackknife', maxArt < RULES.maxArticulation - .01);
 }
 {
   // Tiller right on a straight → tail swings to the truck's right (+y when heading east),
@@ -136,7 +136,7 @@ console.log('kinematics');
   }
   const passive = cornerClearance(0), counter = cornerClearance(-1);
   check('passive trailer cuts inside the corner', passive < 35, passive.toFixed(1));
-  check('counter-steered tiller keeps the tail clear', counter > passive + 15, `${passive.toFixed(1)} → ${counter.toFixed(1)}`);
+  check('automatic corner assist matches a coordinated tillerman', counter >= passive - 3, `${passive.toFixed(1)} → ${counter.toFixed(1)}`);
 }
 
 // ---------------------------------------------------------------- collisions
@@ -187,6 +187,32 @@ for (const turnAt of [265, 275, 285]) {
   check('coordinated 90-degree city turn, start x=' + turnAt, g.truck.y >= 560 && g.crashes === 0);
 }
 
+// Arcade handling regressions: controllable straights, brakes and wall contact.
+{
+  const g = playing(21); g.nextFireIn = 1e9; g.world = openWorld();
+  g.truck.h1 = g.truck.h2 = .18;
+  run(g, .8, { gas: true });
+  check('releasing steering straightens a nearly aligned cab', Math.abs(g.truck.h1) < .005);
+  run(g, 1, { handbrake: true });
+  check('handbrake stops without reversing', g.truck.v === 0);
+  g.truck.h1 = g.truck.h2 = .5;
+  run(g, .2, { gas: true });
+  check('straightening does not hijack intentional diagonal driving', Math.abs(g.truck.h1 - .5) < 1e-8);
+}
+{
+  const g = playing(22); g.nextFireIn = 1e9; g.world.cars = [];
+  g.truck.x = 450; g.truck.y = 388.5; g.truck.v = 150;
+  const x = g.truck.x;
+  run(g, .15, { gas: true, steer: 1 });
+  check('glancing contact slides along a wall', g.truck.x > x + 8 && g.truck.v > 0);
+  check('sliding never penetrates the wall', truckCollides(g.world, g.truck) === null);
+}
+{
+  const g = playing(23); g.world = openWorld();
+  g.world.cars = [{ x: g.truck.x - 25, y: g.truck.y - 5, w: 10, h: 10 }];
+  check('a car underneath the middle of the trailer is detected', truckCollides(g.world, g.truck) === 'trailer');
+}
+
 // ---------------------------------------------------------------- response and crew work
 console.log('response and crew work');
 function deploy(g) {
@@ -201,11 +227,25 @@ function deploy(g) {
   g.world.cars = []; g.world.grid.fill(STREET);
   step(g, DT, { ladder: true }); drainEvents(g);
 }
+function crewInput(g) {
+  const L = g.ladder, f = g.fire;
+  if (!L || !f) return {};
+  const person = f.targets.find(t => t.kind === 'person' && t.hp > 0);
+  const fire = person && rescueBlocked(person) ? person.guard : f.targets.find(t => t.kind === 'fire' && t.hp > 0);
+  const hose = fire ? roofPoint(fire.at) : L.hose;
+  const basket = person ? roofPoint(person.at) : L.basket;
+  const axis = (to, from) => Math.abs(to - from) > .025 ? Math.sign(to - from) : 0;
+  return {
+    hoseX: axis(hose.u, L.hose.u), hoseY: axis(hose.v, L.hose.v),
+    rescueX: axis(basket.u, L.basket.u), rescueY: axis(basket.v, L.basket.v),
+    spray: !!fire && aimDistance(hose, L.hose) < .12 && !L.dry,
+    rescue: !!person && aimDistance(basket, L.basket) < .12,
+  };
+}
 function finishCall(g) {
-  return run(g, 20, s => {
+  return run(g, 28, s => {
     if (!s.fire || !s.ladder || s.ladder.retract) { s.nextFireIn = 1e9; return {}; }
-    const target = s.fire.targets.find(t => t.hp > 0);
-    return { gas: true, ladder: true, tiller: target && Math.abs(target.at - s.ladder.aim) > .015 ? Math.sign(target.at - s.ladder.aim) : 0 };
+    return crewInput(s);
   });
 }
 {
@@ -226,23 +266,48 @@ function finishCall(g) {
 {
   const g = playing(8); deploy(g);
   const before = g.fire.t, x = g.truck.x, y = g.truck.y;
-  run(g, 3, { ladder: true });
-  check('holding hose without the pump cannot clear fire', g.fire.targets[0].hp === 1);
-  check('deploy does not automatically finish the job', g.firesOut === 0 && !!g.fire);
+  run(g, 3, { gas: true, ladder: true });
+  check('old pump key cannot clear fires automatically', g.fire.targets.every(t => t.hp === 1));
   check('emergency clock continues while deployed', g.fire.t < before - 2.9);
-  run(g, 2, { gas: true });
-  check('pump alone cannot extinguish anything', g.fire.targets[0].hp === 1 && g.ladder.pressure === 1);
-  check('pump cannot move the parked truck', g.truck.x === x && g.truck.y === y);
-  run(g, 2, { gas: true, ladder: true });
-  check('aimed hose plus pump clears the selected fire', g.fire.targets[0].hp === 0);
-  check('other targets are untouched', g.fire.targets.slice(1).every(t => t.hp === 1));
+  check('driving controls cannot move a deployed truck', g.truck.x === x && g.truck.y === y);
+  const person = g.fire.targets.find(t => t.kind === 'person');
+  g.ladder.basket = roofPoint(person.at);
+  run(g, 2, { rescue: true });
+  check('nearby flames prevent an unsafe rescue', person.hp === 1 && rescueBlocked(person));
+  g.ladder.hose = roofPoint(person.guard.at);
+  run(g, 1.6, { spray: true, rescue: true });
+  check('hose clears the fire under its cursor', person.guard.hp === 0);
+  check('a rescue can progress while P1 sprays', person.hp < 1);
   const ev = finishCall(g), ex = ev.find(e => e.type === 'extinguished');
-  check('crew can finish the whole call', !!ex && g.firesOut === 1);
-  check('rescue counted', g.rescued === 1 && ev.some(e => e.type === 'target' && e.kind === 'person'));
+  check('both players can finish the whole call', !!ex && g.firesOut === 1);
+  check('rescue counted', g.rescued === 1);
   check('score includes rescue and clean bonus', ex && ex.gained === 150 + ex.bonus + 50 + 100 && g.score === ex.gained);
   check('ladder retracts after completion', !g.ladder);
   g.nextFireIn = 0; run(g, DT);
-  check('next dispatch is a different building', g.fire && g.fire.building !== ex.building);
+  check('next dispatch is a different building', g.fire && ex && g.fire.building !== ex.building);
+}
+{
+  const g = playing(24); deploy(g);
+  const person = g.fire.targets.find(t => t.kind === 'person');
+  person.guard.hp = 0; g.ladder.basket = roofPoint(person.at);
+  run(g, 3, { rescue: true });
+  check('rescues bank points immediately', g.score === 100 && g.rescued === 1);
+  g.fire.t = .1; run(g, .2);
+  check('a missed call cannot take back rescued-person points', g.score === 100 && g.lives === 2);
+}
+{
+  const g = playing(19); deploy(g);
+  g.ladder.hose = { u: .03, v: .04 };
+  run(g, 7, { spray: true });
+  check('spraying consumes pressure', g.ladder.dry && g.ladder.pressure === 0);
+  check('missing the flames does not damage targets', g.fire.targets.every(t => t.hp === 1));
+  run(g, 1, { spray: true });
+  check('holding an empty hose cannot refill it', g.ladder.pressure === 0);
+  run(g, 2, {});
+  check('release rebuilds hose pressure', !g.ladder.dry && g.ladder.pressure > .9);
+  const oldHose = { ...g.ladder.hose }, oldBasket = { ...g.ladder.basket };
+  run(g, .2, { hoseX: 1, rescueY: -1 });
+  check('hose and ladder move independently', g.ladder.hose.u > oldHose.u && g.ladder.hose.v === oldHose.v && g.ladder.basket.u === oldBasket.u && g.ladder.basket.v < oldBasket.v);
 }
 {
   const g = playing(10); deploy(g);
@@ -251,10 +316,10 @@ function finishCall(g) {
   check('crash forfeits clean bonus', ex && !ex.clean && ex.gained === 150 + ex.bonus + 100);
 }
 {
-  const g = playing(18); g.firesOut = 3; deploy(g);
+  const g = playing(18); g.firesOut = 2; deploy(g);
   check('later calls add a second rescue', g.fire.targets.filter(t => t.kind === 'person').length === 2);
   const ev = finishCall(g), ex = ev.find(e => e.type === 'extinguished');
-  check('later call can be completed with both people rescued', !!ex && g.rescued === 2 && g.firesOut === 4);
+  check('later call can be completed with both people rescued', !!ex && g.rescued === 2 && g.firesOut === 3);
 }
 {
   const g = playing(11); deploy(g);
@@ -280,24 +345,23 @@ function finishCall(g) {
   g.truck.x = W / 2; g.truck.y = H / 2; g.truck.v = RULES.maxSpeed;
   let maxYaw = 0;
   run(g, .7, { gas: true, steer: 1 });
-  check('truck slows into a held turn', g.truck.v < 120);
+  check('arcade turns keep useful forward speed', g.truck.v >= 150 && g.truck.v < RULES.maxSpeed);
   // Inspect successive engine frames instead of just the final heading.
   for (let i = 0; i < 30; i++) { const h = g.truck.h1; step(g, DT, { gas: true, steer: 1 }); maxYaw = Math.max(maxYaw, Math.abs(wrapAngle(g.truck.h1 - h)) / DT); }
-  check('steering yaw is capped at 83 degrees/s', maxYaw <= 1.45 + 1e-8);
+  check('steering yaw is capped at 123 degrees/s', maxYaw <= 2.15 + 1e-8);
   check('difficulty ramps but has a time floor', burnTimeFor(20, 0) > burnTimeFor(20, 10) && burnTimeFor(20, 40) === burnTimeFor(20, 60));
 }
 {
   // Play the entire opening call on the real city, with no teleports or cleared collision grid.
   for (let seed = 1; seed <= 100; seed++) {
     const g = playing(seed);
-    for (let i = 0; i < 2400 && !g.firesOut; i++) {
+    for (let i = 0; i < 3600 && !g.firesOut; i++) {
       let input = {};
       if (g.fire && !g.ladder) {
         const z = g.fire.building.zones.find(z => z.side === 's' && z.y === 280);
         if (z) input = g.truck.x < z.x + 5 ? { gas: true } : { brake: true, ladder: true };
       } else if (g.fire && g.ladder) {
-        const target = g.fire.targets.find(t => t.hp > 0);
-        input = { gas: true, ladder: true, tiller: target && Math.abs(target.at - g.ladder.aim) > .015 ? Math.sign(target.at - g.ladder.aim) : 0 };
+        input = crewInput(g);
       }
       step(g, 1 / 120, input);
     }

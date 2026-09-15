@@ -1,8 +1,10 @@
 // Hook & Ladder — rendering, input, sound and page wiring. Rules live in engine.mjs.
 import {
-  createGame, startGame, step, drainEvents, canRaiseLadder, parkedInZone, truckBodies, turntable,
-  serviceZones, targetPoint, W, H, TILE, COLS, ROWS, STREET, BUILDING, PARK, RULES, isStreetCol, isStreetRow, PITCH, STREET_W, BLOCKS_X, BLOCKS_Y, blockAt,
-} from './engine.mjs?v=20260915d';
+  createGame, startGame, step, drainEvents, canRaiseLadder, parkedInZone,
+  serviceZones, W, H, TILE, RULES,
+} from './engine.mjs?v=20260915f';
+
+import { paintCity, drawIncident, drawWorldFire } from './art.mjs?v=20260915f';
 
 const HS_KEY = 'hookAndLadderHighScore';
 const canvas = document.getElementById('gameCanvas');
@@ -32,6 +34,7 @@ let lightPhase = 0;
 let shake = 0;
 let lastTs = 0;
 let runId = 0;
+let touchScene = null;
 const camera = { x: W / 2, y: H / 2, zoom: 1 };
 function screenPoint(x, y) { return { x: (x - camera.x) * camera.zoom + W / 2, y: (y - camera.y) * camera.zoom + H / 2 }; }
 
@@ -68,32 +71,39 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) { hel
 
 function readInput() {
   const h = { has: key => held.has(key) || tapped.has(key) };
-  if (mode === 'solo') {
-    return {
-      gas: h.has('w') || h.has('arrowup'),
-      brake: h.has('s') || h.has('arrowdown'),
-      steer: (h.has('d') || h.has('arrowright') ? 1 : 0) - (h.has('a') || h.has('arrowleft') ? 1 : 0),
-      tiller: game.ladder ? ((h.has('d') || h.has('arrowright') ? 1 : 0) - (h.has('a') || h.has('arrowleft') ? 1 : 0)) : 0,
-      recover: h.has('r'),
-      ladder: h.has(' ') || h.has('enter'),
-    };
-  }
+  const hx = Number(h.has('d')) - Number(h.has('a'));
+  const hy = Number(h.has('s')) - Number(h.has('w'));
+  const rx = Number(h.has('arrowright')) - Number(h.has('arrowleft'));
+  const ry = Number(h.has('arrowdown')) - Number(h.has('arrowup'));
   return {
-    recover: h.has('r'),
-    gas: h.has('w'),
-    brake: h.has('s'),
-    steer: (h.has('d') ? 1 : 0) - (h.has('a') ? 1 : 0),
-    tiller: (h.has('arrowright') ? 1 : 0) - (h.has('arrowleft') ? 1 : 0),
-    ladder: h.has('arrowup') || h.has('enter') || h.has(' '),
+    recover: h.has('r'), gas: h.has('w') || (mode === 'solo' && h.has('arrowup')),
+    brake: h.has('s') || (mode === 'solo' && h.has('arrowdown')),
+    handbrake: h.has(' '), steer: hx || (mode === 'solo' ? rx : 0),
+    tiller: mode === 'solo' ? 0 : rx,
+    ladder: h.has('enter') || h.has('arrowup') || (mode === 'solo' && h.has(' ')),
+    hoseX: hx, hoseY: hy, rescueX: rx, rescueY: ry,
+    spray: h.has(' '), rescue: h.has('enter') || (mode === 'solo' && h.has(' ')),
   };
 }
 
 // ---------------------------------------------------------------- sound
 let audio = null;
+let engineTone = null;
 function ac() {
   if (!audio) { try { audio = new (window.AudioContext || window.webkitAudioContext)(); } catch (e) { return null; } }
   if (audio.state === 'suspended') audio.resume();
   return audio;
+}
+function updateEngineAudio() {
+  if (!audio) return;
+  if (!engineTone) {
+    const oscillator=audio.createOscillator(), gain=audio.createGain();
+    oscillator.type='triangle';gain.gain.value=0;oscillator.connect(gain);gain.connect(audio.destination);oscillator.start();engineTone={oscillator,gain};
+  }
+  const running=game.status==='playing'&&!game.paused&&!game.ladder&&!muted;
+  const speed=Math.abs(game.truck.v)/RULES.maxSpeed;
+  engineTone.oscillator.frequency.setTargetAtTime(38+speed*66,audio.currentTime,.08);
+  engineTone.gain.gain.setTargetAtTime(running ? .014+speed*.018 : 0,audio.currentTime,.05);
 }
 ['pointerdown', 'keydown', 'touchstart'].forEach(ev => window.addEventListener(ev, () => ac(), { passive: true }));
 function tone(freq, dur, type = 'sine', vol = 0.15, when = 0, slideTo = null) {
@@ -138,7 +148,7 @@ function startMode(m) {
   if (window.ArcadeGameOver) window.ArcadeGameOver.hide();
   const bezel = document.querySelector('.ch-bezel');
   if (bezel) { bezel.classList.remove('ch-paused'); bezel.classList.add('ch-started'); }
-  setMission('Follow the alarm. Pull alongside the building and press ↑ to deploy.');
+  setMission('Follow the alarm. Pull alongside and press Enter to deploy the crew.');
   canvas.focus({ preventScroll: true });
   gtagEvent('hook_and_ladder_start', { mode: m });
 }
@@ -163,24 +173,32 @@ window.gameAPI = {
   restart() { startMode(mode); },
   pause() {
     if (game.status !== 'playing') return;
-    game.paused = !game.paused; held.clear(); tapped.clear();
+    game.paused = !game.paused; held.clear(); tapped.clear(); updateEngineAudio();
     const bezel = document.querySelector('.ch-bezel');
     if (bezel) bezel.classList.toggle('ch-paused', game.paused);
   },
-  mute() { muted = !muted; },
+  mute() { muted = !muted; updateEngineAudio(); },
 };
+
+function syncScore() {
+  scoreEl.textContent = game.score; firesEl.textContent = game.firesOut;
+  if (game.score > highScore) {
+    highScore = game.score; hiEl.textContent = highScore;
+    try { localStorage.setItem(HS_KEY, String(highScore)); } catch (e) {}
+  }
+}
 
 // ---------------------------------------------------------------- events
 function onEvent(e) {
   switch (e.type) {
     case 'dispatch': {
       SFX.siren(); cityLayer = null;
-      banner = { text: 'CALL ' + String(game.firesOut + 1).padStart(2, '0'), sub: 'Put out the roof fires. Bring everyone home.', t: 0, dur: 2.0, color: '#ffb347' };
-      setMission('🔥 Fire! Pull the ladder up alongside the burning building, then ' + (mode === 'duo' ? 'P2 presses ▲.' : 'press Space.'));
+      banner = { text: 'CALL ' + String(game.firesOut + 1).padStart(2, '0'), sub: game.fire.title + ' · Hose + ladder crew', t: 0, dur: 2.0, color: '#ffb347' };
+      setMission('🔥 Fire! Pull the ladder up alongside the burning building, then ' + (mode === 'duo' ? 'P2 presses Enter.' : 'press Space.'));
       break;
     }
     case 'crash': {
-      SFX.crash(); shake = 0.35;
+      if (e.scrape) noise(.08, .05); else SFX.crash(); shake = e.scrape ? .10 : .3;
       for (let i = 0; i < 10; i++) particles.push({ x: e.x, y: e.y, vx: (Math.random() - 0.5) * 160, vy: (Math.random() - 0.5) * 160, life: 0, max: 0.4 + Math.random() * 0.3, r: 2, color: '#ffd166', kind: 'spark' });
       break;
     }
@@ -188,6 +206,7 @@ function onEvent(e) {
     case 'recover':
       banner = { text: 'BACK ON THE ROAD', sub: 'Recovery · 5 seconds lost', t: 0, dur: 1.5, color: '#ffd166' }; break;
     case 'target':
+      if (e.gained) syncScore();
       tone(e.kind === 'person' ? 880 : 540, 0.16, 'triangle', 0.12);
       floaters.push({ x: e.x, y: e.y, text: e.kind === 'person' ? 'RESCUED +100' : 'FIRE OUT', t: 0, dur: 1.2, color: '#a4ffd0' }); break;
     case 'extinguished': {
@@ -196,8 +215,7 @@ function onEvent(e) {
       if (e.clean) parts.push('clean run');
       banner = { text: 'SAVED', sub: parts.join(' · '), t: 0, dur: 1.8, color: '#7dffb0' };
       floaters.push({ x: e.building.cx, y: e.building.cy, text: '+' + e.gained, t: 0, dur: 1.4, color: '#7dffb0' });
-      scoreEl.textContent = game.score; firesEl.textContent = game.firesOut;
-      if (game.score > highScore) { highScore = game.score; hiEl.textContent = highScore; try { localStorage.setItem(HS_KEY, String(highScore)); } catch (er) {} }
+      syncScore();
       setMission('Saved. Listen for the next alarm.', true);
       break;
     }
@@ -228,90 +246,11 @@ function roundRect(c, x, y, w, h, r) {
 }
 function buildCityLayer() {
   const off = document.createElement('canvas');
-  off.width = canvas.width; off.height = canvas.height;
-  const c = off.getContext('2d');
-  c.setTransform(scale, 0, 0, scale, 0, 0);
-  const w = game.world;
-  // asphalt
-  c.fillStyle = '#34363c'; c.fillRect(0, 0, W, H);
-  // subtle asphalt grain
-  c.fillStyle = 'rgba(255,255,255,0.025)';
-  for (let i = 0; i < 400; i++) c.fillRect((i * 7919) % W, (i * 104729) % H, 3, 3);
-  // Lane markings: a solid white line marks the curb lane on each side, a
-  // dashed yellow centre line splits the two through lanes. None inside intersections.
-  const hRuns = [], vRuns = [];
-  for (let r = 0; r < ROWS; r += PITCH) for (let cc = 0; cc < COLS; cc++) if (!isStreetCol(cc)) hRuns.push([cc * TILE, (cc + 1) * TILE, r]);
-  for (let cc = 0; cc < COLS; cc += PITCH) for (let r = 0; r < ROWS; r++) if (!isStreetRow(r)) vRuns.push([r * TILE, (r + 1) * TILE, cc]);
-  c.lineWidth = 2;
-  c.strokeStyle = 'rgba(255,255,255,0.38)'; c.setLineDash([]);
-  for (const [a, b, r] of hRuns) for (const k of [1, 2]) { c.beginPath(); c.moveTo(a, (r + k) * TILE); c.lineTo(b, (r + k) * TILE); c.stroke(); }
-  for (const [a, b, cc] of vRuns) for (const k of [1, 2]) { c.beginPath(); c.moveTo((cc + k) * TILE, a); c.lineTo((cc + k) * TILE, b); c.stroke(); }
-  c.strokeStyle = '#d9b64a'; c.setLineDash([14, 12]);
-  for (const [a, b, r] of hRuns) { c.beginPath(); c.moveTo(a, (r + 1.5) * TILE); c.lineTo(b, (r + 1.5) * TILE); c.stroke(); }
-  for (const [a, b, cc] of vRuns) { c.beginPath(); c.moveTo((cc + 1.5) * TILE, a); c.lineTo((cc + 1.5) * TILE, b); c.stroke(); }
-  c.setLineDash([]);
-  // corner curb bumps: a small white stop line where each block face meets an intersection
-  c.fillStyle = 'rgba(255,255,255,0.5)';
-  for (let by = 0; by < BLOCKS_Y; by++) for (let bx = 0; bx < BLOCKS_X; bx++) {
-    const b = blockAt(bx, by), x = b.col * TILE, y = b.row * TILE, s4 = 4 * TILE;
-    c.fillRect(x - TILE * STREET_W + 4, y - 8, TILE * STREET_W - 8, 3); c.fillRect(x - TILE * STREET_W + 4, y + s4 + 5, TILE * STREET_W - 8, 3);
-    c.fillRect(x - 8, y - TILE * STREET_W + 4, 3, TILE * STREET_W - 8); c.fillRect(x + s4 + 5, y - TILE * STREET_W + 4, 3, TILE * STREET_W - 8);
-  }
-  // sidewalks around each block
-  for (let by = 0; by < BLOCKS_Y; by++) for (let bx = 0; bx < BLOCKS_X; bx++) {
-    const b = blockAt(bx, by), x = b.col * TILE, y = b.row * TILE;
-    c.fillStyle = '#8f9096'; c.fillRect(x, y, 4 * TILE, 4 * TILE);
-    c.strokeStyle = 'rgba(0,0,0,0.18)'; c.lineWidth = 1;
-    for (let k = 1; k < 8; k++) { c.beginPath(); c.moveTo(x + k * 20, y); c.lineTo(x + k * 20, y + 4 * TILE); c.stroke(); c.beginPath(); c.moveTo(x, y + k * 20); c.lineTo(x + 4 * TILE, y + k * 20); c.stroke(); }
-    c.strokeStyle = '#b9bac0'; c.lineWidth = 2; c.strokeRect(x + 1, y + 1, 4 * TILE - 2, 4 * TILE - 2);
-  }
-  // parks
-  for (const p of w.parks) {
-    const x = p.col * TILE + 6, y = p.row * TILE + 6, s = 4 * TILE - 12;
-    c.fillStyle = '#4d8b4b'; roundRect(c, x, y, s, s, 10); c.fill();
-    c.fillStyle = 'rgba(0,0,0,0.08)';
-    for (let i = 0; i < 12; i++) { c.beginPath(); c.arc(x + 12 + ((i * 53) % (s - 24)), y + 12 + ((i * 97) % (s - 24)), 8 + (i % 3) * 4, 0, Math.PI * 2); c.fill(); }
-    c.strokeStyle = '#cbb27a'; c.lineWidth = 6; c.beginPath(); c.moveTo(x + 8, y + s / 2); c.quadraticCurveTo(x + s / 2, y + s / 2 - 30, x + s - 8, y + s / 2); c.stroke();
-  }
-  for (const t of w.trees) {
-    c.fillStyle = 'rgba(0,0,0,0.3)'; c.beginPath(); c.arc(t.x + 3, t.y + 4, t.r, 0, Math.PI * 2); c.fill();
-    c.fillStyle = '#2f6b33'; c.beginPath(); c.arc(t.x, t.y, t.r, 0, Math.PI * 2); c.fill();
-    c.fillStyle = '#4c9a4a'; c.beginPath(); c.arc(t.x - t.r * 0.25, t.y - t.r * 0.25, t.r * 0.55, 0, Math.PI * 2); c.fill();
-  }
-  // buildings
-  for (const b of w.buildings) drawBuildingBase(c, b);
-  // parked cars
-  for (const car of w.cars) {
-    c.fillStyle = 'rgba(0,0,0,0.35)'; roundRect(c, car.x + 2, car.y + 3, car.w, car.h, 4); c.fill();
-    c.fillStyle = car.color; roundRect(c, car.x, car.y, car.w, car.h, 4); c.fill();
-    c.fillStyle = 'rgba(20,30,45,0.85)';
-    if (car.dir === 'h') { c.fillRect(car.x + 7, car.y + 3, 6, car.h - 6); c.fillRect(car.x + car.w - 11, car.y + 3, 4, car.h - 6); }
-    else { c.fillRect(car.x + 3, car.y + 7, car.w - 6, 6); c.fillRect(car.x + 3, car.y + car.h - 11, car.w - 6, 4); }
-    c.strokeStyle = 'rgba(255,255,255,0.25)'; c.lineWidth = 1; roundRect(c, car.x + 0.5, car.y + 0.5, car.w - 1, car.h - 1, 4); c.stroke();
-  }
+  const detail = Math.max(2, Math.min(4, scale * 2));
+  off.width = Math.round(W * detail); off.height = Math.round(H * detail);
+  const c = off.getContext('2d'); c.scale(detail, detail);
+  paintCity(c, game.world);
   return off;
-}
-function drawBuildingBase(c, b) {
-  const x = b.col * TILE + 7, y = b.row * TILE + 7, w = b.w * TILE - 14, h = b.h * TILE - 14;
-  c.fillStyle = 'rgba(0,0,0,0.38)'; c.fillRect(x + 5, y + 6, w, h);
-  c.fillStyle = b.roof; c.fillRect(x, y, w, h);
-  c.fillStyle = 'rgba(255,255,255,0.14)'; c.fillRect(x, y, w, 3); c.fillRect(x, y, 3, h);
-  c.fillStyle = 'rgba(0,0,0,0.22)'; c.fillRect(x, y + h - 3, w, 3); c.fillRect(x + w - 3, y, 3, h);
-  c.strokeStyle = 'rgba(0,0,0,0.28)'; c.lineWidth = 1; c.strokeRect(x + 6.5, y + 6.5, w - 13, h - 13);
-  // roof furniture, seeded by id
-  const r = (n) => ((b.id * 9301 + n * 49297) % 233280) / 233280;
-  const units = 1 + Math.floor(r(1) * 3);
-  for (let i = 0; i < units; i++) {
-    const ux = x + 12 + r(2 + i) * (w - 34), uy = y + 12 + r(9 + i) * (h - 34);
-    c.fillStyle = '#5b5f66'; c.fillRect(ux, uy, 14, 10);
-    c.fillStyle = '#8a8f97'; c.fillRect(ux + 2, uy + 2, 10, 6);
-  }
-  if (b.floors >= 5) {
-    const tx = x + w - 22, ty = y + 12;
-    c.fillStyle = 'rgba(0,0,0,0.3)'; c.beginPath(); c.arc(tx + 2, ty + 2, 9, 0, Math.PI * 2); c.fill();
-    c.fillStyle = '#6e5a48'; c.beginPath(); c.arc(tx, ty, 9, 0, Math.PI * 2); c.fill();
-    c.fillStyle = '#8c7561'; c.beginPath(); c.arc(tx, ty, 5, 0, Math.PI * 2); c.fill();
-  }
 }
 
 // ---------------------------------------------------------------- dynamic drawing
@@ -333,38 +272,6 @@ function drawZones(t) {
     ctx.save(); ctx.translate(z.x + z.w / 2, z.y + z.h / 2);
     if (z.h > z.w) ctx.rotate(-Math.PI / 2);   // vertical lane: run the label along it
     ctx.fillText('PULL ALONGSIDE', 0, 0); ctx.restore();
-  }
-}
-function drawBurning(b, t) {
-  for (const target of game.fire.targets) {
-    const p = targetPoint(b, target.at), selected = game.ladder && Math.abs(game.ladder.aim - target.at) < 0.085;
-    ctx.save(); ctx.translate(p.x, p.y);
-    if (target.hp <= 0) {
-      ctx.fillStyle = '#8df5ba'; ctx.font = 'bold 17px system-ui'; ctx.textAlign = 'center'; ctx.fillText('✓', 0, 5); ctx.restore(); continue;
-    }
-    ctx.fillStyle = selected ? 'rgba(109,255,184,.24)' : 'rgba(12,18,24,.7)';
-    ctx.beginPath(); ctx.arc(0, 0, 17, 0, Math.PI * 2); ctx.fill();
-    if (target.kind === 'person') {
-      ctx.strokeStyle = '#b3ffe3'; ctx.lineWidth = 3; ctx.lineCap = 'round';
-      ctx.fillStyle = '#ffe0b2'; ctx.beginPath(); ctx.arc(0, -8, 4, 0, Math.PI * 2); ctx.fill();
-      ctx.beginPath(); ctx.moveTo(0, -2); ctx.lineTo(0, 8); ctx.moveTo(-7, -5 - Math.sin(t * 5) * 3); ctx.lineTo(0, 1); ctx.lineTo(7, -7); ctx.moveTo(-5, 14); ctx.lineTo(0, 8); ctx.lineTo(5, 14); ctx.stroke();
-    } else {
-      const glow = ctx.createRadialGradient(0, 0, 3, 0, 0, 34);
-      glow.addColorStop(0, 'rgba(255,110,20,.6)'); glow.addColorStop(1, 'rgba(255,80,0,0)');
-      ctx.fillStyle = glow; ctx.fillRect(-34, -34, 68, 68);
-      const size = (7 + target.hp * 3) * (1 + Math.sin(t * 12 + target.at * 9) * 0.1);
-      ctx.fillStyle = '#ff6b38'; ctx.beginPath(); ctx.moveTo(-size, 8); ctx.quadraticCurveTo(-size, -2, -3, -size * 1.7); ctx.quadraticCurveTo(0, -5, 6, -13); ctx.quadraticCurveTo(size * 1.6, 9, 0, 13); ctx.closePath(); ctx.fill();
-      ctx.fillStyle = '#ffe39b'; ctx.beginPath(); ctx.ellipse(0, 5, size * .38, size * .65, 0, 0, Math.PI * 2); ctx.fill();
-    }
-    ctx.fillStyle = '#17232b'; ctx.fillRect(-14, 20, 28, 4);
-    ctx.fillStyle = target.kind === 'person' ? '#91f5c6' : '#ffb757'; ctx.fillRect(-14, 20, 28 * target.hp, 4);
-    ctx.restore();
-  }
-  const L = game.ladder;
-  if (L && !L.retract) {
-    ctx.strokeStyle = '#f4ffff'; ctx.lineWidth = 2;
-    ctx.beginPath(); ctx.arc(L.x1, L.y1, 20, 0, Math.PI * 2); ctx.stroke();
-    for (const d of [-1, 1]) { ctx.beginPath(); ctx.moveTo(L.x1 + d * 23, L.y1); ctx.lineTo(L.x1 + d * 29, L.y1); ctx.stroke(); }
   }
 }
 function drawRuined(b) {
@@ -391,13 +298,21 @@ function wheel(x, y, angle, len = 12, wid = 6) {
 function drawTruck(t) {
   const tr = game.truck, R = RULES, hw = R.width / 2;
   const alarm = !!game.fire || !!game.ladder;
+  // Headlight cones and a low chassis shadow make the cab direction readable.
+  ctx.save(); ctx.translate(tr.x, tr.y); ctx.rotate(tr.h1);
+  const beam = ctx.createLinearGradient(35, 0, 170, 0); beam.addColorStop(0, 'rgba(255,239,183,.2)'); beam.addColorStop(1, 'rgba(255,239,183,0)');
+  ctx.fillStyle = beam; ctx.beginPath(); ctx.moveTo(36,-9); ctx.lineTo(175,-52); ctx.lineTo(175,52); ctx.lineTo(36,9); ctx.closePath(); ctx.fill(); ctx.restore();
   // ---- trailer
   ctx.save(); ctx.translate(tr.x, tr.y); ctx.rotate(tr.h2);
   ctx.fillStyle = 'rgba(0,0,0,0.35)'; roundRect(ctx, -(R.L2 + R.trailerBack) + 3, -hw + 4, R.L2 + R.trailerBack + R.trailerFront, R.width, 4); ctx.fill();
   wheel(-R.L2, -hw + 2, tr.tiller); wheel(-R.L2, hw - 2, tr.tiller);
   wheel(-R.L2 + 14, -hw + 2, 0); wheel(-R.L2 + 14, hw - 2, 0);
-  ctx.fillStyle = '#c4202a'; roundRect(ctx, -(R.L2 + R.trailerBack), -hw, R.L2 + R.trailerBack + R.trailerFront, R.width, 4); ctx.fill();
+  const enamel = ctx.createLinearGradient(0, -hw, 0, hw); enamel.addColorStop(0, '#f05d49'); enamel.addColorStop(.45, '#c82d32'); enamel.addColorStop(1, '#791e2c');
+  ctx.fillStyle = enamel; roundRect(ctx, -(R.L2 + R.trailerBack), -hw, R.L2 + R.trailerBack + R.trailerFront, R.width, 4); ctx.fill();
   ctx.fillStyle = 'rgba(255,255,255,0.75)'; ctx.fillRect(-(R.L2 + R.trailerBack) + 2, -hw + 1, R.L2 + R.trailerBack + R.trailerFront - 4, 2); ctx.fillRect(-(R.L2 + R.trailerBack) + 2, hw - 3, R.L2 + R.trailerBack + R.trailerFront - 4, 2);
+  // Equipment lockers and reflective side strip.
+  ctx.fillStyle = '#d4dee0';
+  for (let x = -R.L2 + 18; x < -10; x += 14) { ctx.fillRect(x, -hw + 3, 10, 4); ctx.fillRect(x, hw - 7, 10, 4); }
   // tillerman's cab at the very back
   ctx.fillStyle = '#8c1a22'; ctx.fillRect(-(R.L2 + R.trailerBack), -hw + 3, 14, R.width - 6);
   ctx.fillStyle = '#1b2733'; ctx.fillRect(-(R.L2 + R.trailerBack) + 2, -hw + 5, 4, R.width - 10);
@@ -418,12 +333,15 @@ function drawTruck(t) {
   wheel(0, -hw + 2, 0); wheel(0, hw - 2, 0);
   wheel(R.L1, -hw + 2, tr.steer); wheel(R.L1, hw - 2, tr.steer);
   const nose = R.tractorLen - R.tractorBack;
-  ctx.fillStyle = '#d0232e'; roundRect(ctx, -R.tractorBack, -hw, R.tractorLen, R.width, 5); ctx.fill();
-  ctx.fillStyle = '#e63946'; roundRect(ctx, 3, -hw + 2, nose - 16, R.width - 4, 3); ctx.fill();   // cab roof
-  ctx.fillStyle = '#1b2733'; ctx.fillRect(nose - 13, -hw + 3, 8, R.width - 6);                     // windshield
+  ctx.fillStyle = '#273d48'; ctx.fillRect(-R.tractorBack, -hw + 3, 16, R.width - 6);
+  ctx.fillStyle = '#d0232e'; roundRect(ctx, 4, -hw, R.tractorLen - R.tractorBack - 4, R.width, 5); ctx.fill();
+  ctx.fillStyle = '#a2b2b8'; ctx.beginPath(); ctx.arc(0,0,5,0,Math.PI*2); ctx.fill();
+  ctx.fillStyle = '#e8ebdf'; roundRect(ctx, 3, -hw + 2, nose - 16, R.width - 4, 3); ctx.fill();   // cab roof
+  ctx.fillStyle = '#214753'; ctx.fillRect(nose - 13, -hw + 3, 8, R.width - 6);                     // windshield
   ctx.fillStyle = '#f6f6f6'; ctx.fillRect(nose - 5, -hw + 4, 4, R.width - 8);                      // grille / bumper
   ctx.fillStyle = '#ffe08a'; ctx.fillRect(nose - 3, -hw + 2, 3, 4); ctx.fillRect(nose - 3, hw - 6, 3, 4);   // headlights
   ctx.fillStyle = 'rgba(255,255,255,0.7)'; ctx.fillRect(-R.tractorBack + 2, -hw + 1, R.tractorLen - 4, 2); ctx.fillRect(-R.tractorBack + 2, hw - 3, R.tractorLen - 4, 2);
+  ctx.fillStyle = '#872b31'; ctx.font = 'bold 9px monospace'; ctx.textAlign = 'center'; ctx.textBaseline = 'middle'; ctx.fillText('07', 22, 0);
   // light bar
   const flashRed = Math.floor(t * 8) % 2 === 0;
   ctx.fillStyle = alarm ? (flashRed ? '#ff2f2f' : '#8a1010') : '#5a1a1a'; ctx.fillRect(8, -hw + 3, 5, hw - 4);
@@ -435,29 +353,6 @@ function drawTruck(t) {
     g.addColorStop(0, flashRed ? 'rgba(255,40,40,0.22)' : 'rgba(60,110,255,0.22)'); g.addColorStop(1, 'rgba(0,0,0,0)');
     ctx.fillStyle = g; ctx.fillRect(tr.x - 70, tr.y - 70, 140, 140);
     ctx.restore();
-  }
-  // ---- extended ladder
-  const L = game.ladder;
-  if (L) {
-    const tt = turntable(tr);
-    const ease = x => 1 - Math.pow(1 - x, 3);
-    const p = L.retract ? 1 - Math.min(1, L.t / RULES.retractTime) : ease(Math.min(1, L.t / RULES.ladderTime));
-    const ang = Math.atan2(L.y1 - tt.y, L.x1 - tt.x);
-    const len = 20 + (Math.hypot(L.x1 - tt.x, L.y1 - tt.y) - 20) * p;
-    ctx.save(); ctx.translate(tt.x, tt.y); ctx.rotate(ang);
-    ctx.fillStyle = 'rgba(0,0,0,0.3)'; ctx.fillRect(0, -7 + 5, len, 14);
-    ctx.strokeStyle = '#f4f4f4'; ctx.lineWidth = 2.5;
-    ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(len, -5); ctx.moveTo(0, 6); ctx.lineTo(len, 5); ctx.stroke();
-    ctx.lineWidth = 1.5;
-    for (let s = 6; s < len; s += 8) { ctx.beginPath(); ctx.moveTo(s, -6); ctx.lineTo(s, 6); ctx.stroke(); }
-    ctx.fillStyle = '#c4202a'; ctx.fillRect(len - 8, -8, 8, 16);
-    ctx.restore();
-    ctx.fillStyle = '#6d6f75'; ctx.beginPath(); ctx.arc(tt.x, tt.y, 9, 0, Math.PI * 2); ctx.fill();
-    ctx.strokeStyle = '#d9dbe0'; ctx.lineWidth = 2; ctx.beginPath(); ctx.arc(tt.x, tt.y, 6, 0, Math.PI * 2); ctx.stroke();
-    if (!L.retract && L.spraying && p > 0.8 && !game.paused) {
-      const tipX = tt.x + Math.cos(ang) * len, tipY = tt.y + Math.sin(ang) * len;
-      for (let i = 0; i < 3; i++) particles.push({ x: tipX, y: tipY, vx: Math.cos(ang) * 90 + (Math.random() - 0.5) * 60, vy: Math.sin(ang) * 90 + (Math.random() - 0.5) * 60, life: 0, max: 0.5 + Math.random() * 0.3, r: 2.5, color: '#7fd0ff', kind: 'water' });
-    }
   }
 }
 
@@ -489,7 +384,7 @@ function hudBox(x, y, w, h, align = 'left') {
 }
 function drawHUD(t) {
   ctx.save(); ctx.scale(hud, hud);
-  const sw = W / hud, sh = H / hud, f = game.fire, L = game.ladder;
+  const sw = W / hud, sh = H / hud, L = game.ladder, f = game.fire || L?.incident;
   ctx.textBaseline = 'middle';
   hudBox(12, 12, 150, 48);
   ctx.textAlign = 'left'; ctx.fillStyle = '#91a4b3'; ctx.font = 'bold 10px system-ui'; ctx.fillText('SCORE / SAVED', 23, 26);
@@ -497,19 +392,21 @@ function drawHUD(t) {
   const clockW = Math.min(260, sw - 350), clockX = (sw - clockW) / 2;
   hudBox(clockX, 12, clockW, 48);
   ctx.textAlign = 'center'; ctx.fillStyle = f && f.t < 12 ? '#ff7e6e' : '#ffe3a8'; ctx.font = 'bold 17px monospace';
-  ctx.fillText(f ? Math.ceil(f.t) + 's · CALL ' + (game.firesOut + 1) : 'STANDING BY', sw / 2, 30);
+  ctx.fillText(f ? Math.ceil(f.t) + 's · CALL ' + f.number : 'STANDING BY', sw / 2, 30);
   ctx.fillStyle = '#98abb5'; ctx.font = '10px system-ui'; ctx.fillText('♥ '.repeat(game.lives) + '  ' + game.rescued + ' RESCUED', sw / 2, 49);
-  // A city map preserves route planning while the camera stays with the crew.
-  const mx = sw - 157, my = 12, mw = 145, mh = 80;
-  hudBox(mx - 4, my - 4, mw + 8, mh + 8);
-  ctx.fillStyle = '#273740'; ctx.fillRect(mx, my, mw, mh);
-  for (const b of game.world.buildings) {
-    ctx.fillStyle = b === f?.building ? '#ff8a4c' : b.state === 'saved' ? '#467e70' : '#687278';
-    ctx.fillRect(mx + b.col * TILE / W * mw, my + b.row * TILE / H * mh, b.w * TILE / W * mw, b.h * TILE / H * mh);
+  // On scene the objective replaces the city map, keeping the roof uncluttered.
+  if (L && f) {
+    hudBox(sw-157,12,145,48);
+    ctx.textAlign='left';ctx.font='bold 10px monospace';ctx.fillStyle='#95b6c3';ctx.fillText('CREW OBJECTIVE',sw-146,26);
+    const fires=f.targets.filter(t=>t.kind==='fire'&&t.hp>0).length,people=f.targets.filter(t=>t.kind==='person'&&t.hp>0).length;
+    ctx.font='bold 12px monospace';ctx.fillStyle='#f2d4a7';ctx.fillText(fires+' FIRES / '+people+' PEOPLE',sw-146,46);
+  } else {
+    const mx=sw-157,my=12,mw=145,mh=80;
+    hudBox(mx-4,my-4,mw+8,mh+8);ctx.fillStyle='#192e3a';ctx.fillRect(mx,my,mw,mh);
+    for(const b of game.world.buildings){ctx.fillStyle=b===f?.building?'#ffae6a':b.state==='saved'?'#467e70':'#526b78';ctx.fillRect(mx+b.col*TILE/W*mw,my+b.row*TILE/H*mh,b.w*TILE/W*mw,b.h*TILE/H*mh);}
+    ctx.strokeStyle='#94bccb';ctx.lineWidth=1;ctx.strokeRect(mx+(camera.x-W/camera.zoom/2)/W*mw,my+(camera.y-H/camera.zoom/2)/H*mh,mw/camera.zoom,mh/camera.zoom);
+    ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mx+game.truck.x/W*mw,my+game.truck.y/H*mh,3,0,Math.PI*2);ctx.fill();
   }
-  ctx.strokeStyle = '#c1d8e8'; ctx.lineWidth = 1;
-  ctx.strokeRect(mx + (camera.x - W / camera.zoom / 2) / W * mw, my + (camera.y - H / camera.zoom / 2) / H * mh, mw / camera.zoom, mh / camera.zoom);
-  ctx.fillStyle = '#fff'; ctx.beginPath(); ctx.arc(mx + game.truck.x / W * mw, my + game.truck.y / H * mh, 3, 0, Math.PI * 2); ctx.fill();
   if (f && !L) {
     const p = screenPoint(f.building.cx, f.building.cy);
     if (p.x < 40 || p.x > W - 40 || p.y < 100 || p.y > H - 100) {
@@ -519,30 +416,39 @@ function drawHUD(t) {
       ctx.fillStyle = '#ffe4bb'; ctx.font = 'bold 10px system-ui'; ctx.textAlign = 'center'; ctx.fillText('FIRE', x, y + 23);
     }
   }
-  const deployed = L && !L.retract;
+  const deployed = !!L;
   const panelW = (sw - 36) / 2, py = sh - 65;
   for (const [x, color, title, detail] of [
-    [12, '#ffce77', deployed ? 'P1 · HOLD W TO PUMP' : 'P1 · DRIVE', deployed ? 'Keep the hose supplied with water' : 'W gas · S brake/reverse · A D steer'],
-    [24 + panelW, '#8ddfff', deployed ? 'P2 · AIM + WORK' : 'P2 · STEER THE TAIL', deployed ? '← → aim · hold ↑ spray / rescue' : '← → rear wheels · ↑ deploy nearby'],
+    [12, '#8cddff', deployed ? 'P1 · HOSE CREW' : 'P1 · DRIVER', deployed ? 'WASD aim · hold SPACE to spray' : 'W/S gas/reverse · A/D steer · Space brake'],
+    [24 + panelW, '#ffcb7b', deployed ? 'P2 · RESCUE CREW' : 'P2 · TILLERMAN', deployed ? 'Arrows aim · hold ENTER to rescue' : '← → swing tail · Enter deploy nearby'],
   ]) {
     hudBox(x, py, panelW, 53); ctx.textAlign = 'left'; ctx.fillStyle = color; ctx.font = 'bold 12px system-ui'; ctx.fillText(title, x + 10, py + 16);
     ctx.fillStyle = '#d5e0e7'; ctx.font = '11px system-ui'; ctx.fillText(detail, x + 10, py + 36);
   }
   if (deployed) {
-    const w = Math.min(330, sw - 30), x = (sw - w) / 2, y = sh - 113;
-    hudBox(x, y, w, 38);
-    ctx.textAlign = 'left'; ctx.fillStyle = L.pressure > .3 ? '#8ddfff' : '#ffcf77'; ctx.font = 'bold 11px system-ui';
-    ctx.fillText('WATER', x + 10, y + 13);
-    ctx.fillStyle = '#34434d'; ctx.fillRect(x + 63, y + 9, w - 75, 8);
-    ctx.fillStyle = '#7bd4ff'; ctx.fillRect(x + 63, y + 9, (w - 75) * L.pressure, 8);
-    const target = f.targets.find(t => t.hp > 0 && Math.abs(t.at - L.aim) < .085);
-    ctx.fillStyle = '#fff'; ctx.textAlign = 'center'; ctx.font = '10px system-ui';
-    ctx.fillText(target?.kind === 'person' ? 'HOLD ↑ · BRING THEM DOWN' : target ? 'HOLD ↑ · SOAK THE FLAMES' : '← → · AIM AT A FIRE OR PERSON', sw / 2, y + 28);
+    const x = 22, y = py - 18, w = panelW - 20;
+    ctx.fillStyle = '#152c3a'; ctx.fillRect(x, y, w, 7);
+    ctx.fillStyle = L.dry ? '#ff997a' : '#76d8ff'; ctx.fillRect(x, y, w * L.pressure, 7);
+    ctx.font = 'bold 10px monospace'; ctx.textAlign = 'left'; ctx.fillStyle = '#d5eaf3';
+    if (L.dry) ctx.fillText('RELEASE SPACE TO REBUILD PRESSURE', x, y - 9);
+    const fires = f.targets.filter(t => t.kind === 'fire' && t.hp > 0).length;
+    const people = f.targets.filter(t => t.kind === 'person' && t.hp > 0).length;
+    ctx.textAlign = 'right'; ctx.fillStyle = '#d4e6e8'; ctx.fillText(fires + ' FIRES / ' + people + ' PEOPLE LEFT', sw - 24, y + 3);
   } else if (canRaiseLadder(game)) {
     ctx.textAlign = 'center'; ctx.fillStyle = '#a1ffd0'; ctx.font = 'bold 15px system-ui';
-    hudBox(sw / 2 - 155, sh - 108, 310, 30); ctx.fillText('↑ DEPLOY · CREW IN POSITION', sw / 2, sh - 93);
+    hudBox(sw / 2 - 155, sh - 108, 310, 30); ctx.fillText('ENTER · DEPLOY THE CREW', sw / 2, sh - 93);
   } else if (f && parkedInZone(game)) {
-    ctx.textAlign = 'center'; ctx.fillStyle = '#ffdc98'; ctx.font = 'bold 13px system-ui'; ctx.fillText('SLOW DOWN · THEN PRESS ↑', sw / 2, sh - 90);
+    ctx.textAlign = 'center'; ctx.fillStyle = '#ffdc98'; ctx.font = 'bold 13px system-ui'; ctx.fillText('SPACE TO BRAKE · ENTER TO DEPLOY', sw / 2, sh - 90);
+  }
+  if (!deployed && game.status === 'playing') {
+    const x = 22, y = py - 18;
+    ctx.fillStyle = '#203b48'; ctx.fillRect(x,y,panelW-20,5);
+    ctx.fillStyle = '#84d9e8'; ctx.fillRect(x,y,(panelW-20)*Math.abs(game.truck.v)/RULES.maxSpeed,5);
+    ctx.font = 'bold 10px monospace'; ctx.textAlign = 'left'; ctx.fillStyle = '#acced8';
+    ctx.fillText(Math.round(Math.abs(game.truck.v)*.28) + (game.truck.v < -1 ? '  REVERSE' : '  KM/H'), x, y-8);
+    const cx = 24 + panelW + (panelW / 2);
+    ctx.strokeStyle = '#3c5260'; ctx.lineWidth = 3; ctx.beginPath();ctx.moveTo(cx-45,y);ctx.lineTo(cx+45,y);ctx.stroke();
+    ctx.fillStyle = '#ffcb7b';ctx.beginPath();ctx.arc(cx + game.truck.tiller / RULES.maxTiller * 40,y,4,0,Math.PI*2);ctx.fill();
   }
   ctx.restore();
 }
@@ -577,7 +483,7 @@ function drawFloaters(dt) {
 
 // ---------------------------------------------------------------- loop
 function render(dt, t) {
-  if (!cityLayer || cityLayer.width !== canvas.width) cityLayer = buildCityLayer();
+  if (!cityLayer) cityLayer = buildCityLayer();
   const active = game.status !== 'menu', zoom = active ? (hud > 1.5 && !game.ladder ? 2 : 1.65) : 1;
   camera.zoom = zoom;
   const tr = game.truck;
@@ -596,14 +502,24 @@ function render(dt, t) {
   }
   if (!game.ladder) drawZones(t);
   drawTruck(t);
-  if (game.fire) { drawBurning(game.fire.building, t); if (dt) spawnSmoke(game.fire.building, dt); }
+  if (game.fire && !game.ladder) { drawWorldFire(ctx, game.fire, t); if (dt) spawnSmoke(game.fire.building, dt); }
   drawParticles(dt); drawFloaters(dt);
   ctx.restore();
+  if (game.ladder) drawIncident(ctx, game, t, hud);
   if (active) drawHUD(t);
   drawBanner(dt);
+  const scene = !!game.ladder;
+  if (touchScene !== scene) {
+    touchScene = scene;
+    const pads = document.querySelectorAll('.ch-touch-group');
+    const driver = pads[0]?.querySelector('.ch-touch-btn:nth-child(5)');
+    const rescue = pads[1]?.querySelector('.ch-touch-btn:nth-child(5)');
+    if (driver) { driver.textContent = scene ? 'SPRAY' : 'BRAKE'; driver.setAttribute('aria-label', scene ? 'Spray water' : 'Brake'); }
+    if (rescue) { rescue.textContent = scene ? 'RESCUE' : 'DEPLOY'; rescue.setAttribute('aria-label', scene ? 'Rescue person' : 'Deploy crew'); }
+  }
   if (game.status === 'playing') {
-    if (game.ladder && !game.ladder.retract) setMission('ON SCENE · P1 holds W to pump. P2 aims with ← → and holds ↑ to put out fires or rescue people.', true);
-    else if (canRaiseLadder(game)) setMission('IN POSITION · P2 presses ↑ to deploy the ladder.', true);
+    if (game.ladder && !game.ladder.retract) setMission('ON SCENE · P1: WASD + Space fights fires. P2: arrows + Enter rescues people. Clear flames blocking the ladder.', true);
+    else if (canRaiseLadder(game)) setMission('IN POSITION · P2 presses Enter to deploy the crew.', true);
     else if (game.fire) setMission('EN ROUTE · Follow the orange alarm on the map. Pull alongside the highlighted building. Stuck? R recovers (−5s).');
   }
 }
@@ -617,6 +533,7 @@ function frame(ts) {
     for (let i = 0; i < steps; i++) step(game, dt / steps, input);
     for (const e of drainEvents(game)) onEvent(e);
   }
+  updateEngineAudio();
   render(game.paused ? 0 : dt, lightPhase);
   requestAnimationFrame(frame);
 }

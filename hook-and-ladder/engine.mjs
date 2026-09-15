@@ -1,7 +1,7 @@
 // Hook & Ladder — pure rules. No DOM, no timers, no rendering.
 // A tillered aerial ladder truck: the driver steers the tractor's front
 // wheels, the tillerman steers the trailer's rear wheels. Fires break out
-// around a city grid; pull alongside, pump water, aim the hose and rescue
+// around a city grid; pull alongside, aim the hose and ladder, and rescue
 // stranded people before the building burns down. Headless-tested by tools/hook-and-ladder-test.mjs.
 
 export const TILE = 40;
@@ -16,30 +16,30 @@ export const STREET = 0, BUILDING = 1, PARK = 2;
 
 const DEG = Math.PI / 180;
 export const RULES = {
-  maxSpeed: 185,        // px/s forward
-  reverseSpeed: 70,
-  accel: 140,
-  brake: 300,
-  coast: 110,
-  maxSteer: 32 * DEG,   // tractor front wheels
-  steerRate: 150 * DEG,
-  steerReturn: 200 * DEG,
+  maxSpeed: 210,        // px/s forward
+  reverseSpeed: 85,
+  accel: 340,
+  brake: 520,
+  coast: 145,
+  maxSteer: 38 * DEG,   // tractor front wheels
+  steerRate: 340 * DEG,
+  steerReturn: 540 * DEG,
   maxTiller: 35 * DEG,  // trailer rear wheels
   tillerRate: 150 * DEG,
   tillerReturn: 220 * DEG,
-  maxArticulation: 70 * DEG,
+  maxArticulation: 58 * DEG,
   L1: 32,               // tractor wheelbase (rear axle → front axle)
   tractorLen: 52,       // body: 10 behind the rear axle, 42 ahead of it
   tractorBack: 10,
-  L2: 84,               // hitch (tractor rear axle) → trailer rear axle
+  L2: 68,               // hitch (tractor rear axle) → trailer rear axle
   trailerFront: 6,      // body ahead of the hitch
   trailerBack: 12,      // body behind the rear axle
-  width: 22,
-  turntable: 50,        // distance behind the hitch, centre of the ladder base
-  stunTime: 0.18,
-  parkSpeed: 28,        // slow enough for the crew to stop and deploy
+  width: 25,
+  turntable: 40,        // distance behind the hitch, centre of the ladder base
+  stunTime: 0,
+  parkSpeed: 65,        // slow enough for the crew to stop and deploy
   ladderTime: 0.65,
-  retractTime: 0.6,
+  retractTime: 1.2,
   betweenFires: 1.6,
   lives: 3,
   minDispatchTiles: 9,
@@ -154,11 +154,12 @@ export function spawnTruck() {
 }
 
 // Oriented rectangles for the tractor and the trailer, as corner lists.
-export function truckBodies(tr) {
+export function truckBodies(tr, margin = 0) {
   const c1 = Math.cos(tr.h1), s1 = Math.sin(tr.h1);
   const c2 = Math.cos(tr.h2), s2 = Math.sin(tr.h2);
-  const hw = RULES.width / 2;
+  const hw = RULES.width / 2 - margin;
   const rect = (ox, oy, c, s, a, b) => {
+    a += margin; b -= margin;
     // segment from a to b along heading (c,s) through (ox,oy); returns corners
     const px = -s * hw, py = c * hw;
     return [
@@ -174,59 +175,87 @@ export function truckBodies(tr) {
 export function turntable(tr) {
   return { x: tr.x - Math.cos(tr.h2) * RULES.turntable, y: tr.y - Math.sin(tr.h2) * RULES.turntable };
 }
-function samplePoints(corners) {
-  const pts = corners.slice();
-  for (let i = 0; i < 4; i++) {
-    const a = corners[i], b = corners[(i + 1) % 4];
-    pts.push([(a[0] + b[0]) / 2, (a[1] + b[1]) / 2]);
+function overlapsRect(poly, x, y, w, h) {
+  const box = [[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
+  const axes = [[1,0],[0,1], [poly[1][0]-poly[0][0],poly[1][1]-poly[0][1]], [poly[2][0]-poly[1][0],poly[2][1]-poly[1][1]]];
+  for (const [ax,ay] of axes) {
+    const a = poly.map(([px,py]) => px*ax+py*ay), b = box.map(([px,py]) => px*ax+py*ay);
+    if (Math.max(...a) <= Math.min(...b) || Math.max(...b) <= Math.min(...a)) return false;
   }
-  return pts;
+  return true;
 }
 export function truckCollides(world, tr) {
-  const b = truckBodies(tr);
-  for (const p of samplePoints(b.tractor)) if (pointSolid(world, p[0], p[1])) return 'tractor';
-  for (const p of samplePoints(b.trailer)) if (pointSolid(world, p[0], p[1])) return 'trailer';
+  // A small body inset forgives paint-to-curb contact. Exact rectangle overlap
+  // catches parked cars anywhere under a trailer, not just at sampled corners.
+  for (const [name,poly] of Object.entries(truckBodies(tr, 2))) {
+    const xs=poly.map(p=>p[0]),ys=poly.map(p=>p[1]);
+    const left=Math.min(...xs),right=Math.max(...xs),top=Math.min(...ys),bottom=Math.max(...ys);
+    if(left<0||right>W||top<0||bottom>H)return name;
+    for(let r=tileOf(top);r<=tileOf(bottom);r++)for(let c=tileOf(left);c<=tileOf(right);c++){
+      if(tileAt(world,c,r)!==STREET&&overlapsRect(poly,c*TILE,r*TILE,TILE,TILE))return name;
+    }
+    for(const car of world.cars){
+      if(car.x>right||car.x+car.w<left||car.y>bottom||car.y+car.h<top)continue;
+      if(overlapsRect(poly,car.x,car.y,car.w,car.h))return name;
+    }
+  }
   return null;
 }
 
-// Articulated kinematics. Hitch sits on the tractor's rear axle; the trailer's
-// rear axle rolls in the direction its (tillered) wheels point, so
-//   dh2/dt = v · sin(h1 − h2 − tiller) / (L2 · cos tiller)
-// which settles at h2 = h1 − tiller: steering the tiller swings the tail out.
+// Arcade steering: a fast rack, stable straights and a following rear axle.
+// P2 can deliberately swing the tail; an unsteered tail gets corner assistance.
 export function stepTruck(state, inp, dt) {
   const tr = state.truck, R = RULES;
-  const steerT = (inp.steer || 0) * R.maxSteer;
+  state.scraping = false;
+  if (state.ladder) { tr.v = 0; return null; }
+  const steering = Math.max(-1, Math.min(1, inp.steer || 0));
+  const steerT = steering * R.maxSteer;
   tr.steer = approach(tr.steer, steerT, (steerT ? R.steerRate : R.steerReturn) * dt);
-  const tillerT = state.mode === 'solo' ? 0 : (inp.tiller || 0) * R.maxTiller;
-  tr.tiller = approach(tr.tiller, tillerT, (tillerT ? R.tillerRate : R.tillerReturn) * dt);
-
-  const locked = state.stun > 0 || state.ladder;
-  if (locked) tr.v = approach(tr.v, 0, R.brake * 2 * dt);
-  else if (inp.gas && !inp.brake) {
-    // Slow into turns, and cap yaw so a long key press cannot spin the cab.
-    const target = R.maxSpeed - 85 * Math.abs(tr.steer / R.maxSteer);
-    tr.v = approach(tr.v, tr.v < 0 ? 0 : target, (tr.v > target ? R.brake : R.accel) * dt);
-  }
-  else if (inp.brake) tr.v = tr.v > 0 ? approach(tr.v, 0, R.brake * dt) : Math.max(-R.reverseSpeed, tr.v - R.accel * 0.7 * dt);
+  const manual = state.mode === 'solo' ? 0 : (inp.tiller || 0);
+  const assist = tr.v >= 0 && !manual ? -steering * .65 : 0;
+  tr.tiller = approach(tr.tiller, (manual || assist) * R.maxTiller, R.tillerRate * dt);
+  if (inp.handbrake) tr.v = approach(tr.v, 0, R.brake * 1.5 * dt);
+  else if (inp.brake) tr.v = approach(tr.v, -R.reverseSpeed, (tr.v > 0 ? R.brake : R.accel * .6) * dt);
+  else if (inp.gas) tr.v = approach(tr.v, R.maxSpeed - Math.abs(steering) * 55, (tr.v < 0 ? R.brake : R.accel) * dt);
   else tr.v = approach(tr.v, 0, R.coast * dt);
-  if (Math.abs(tr.v) < 0.01) { tr.v = 0; return null; }
+  if (Math.abs(tr.v) < .1) { tr.v = 0; return null; }
 
   const prev = { x: tr.x, y: tr.y, h1: tr.h1, h2: tr.h2 };
   const yaw = tr.v / R.L1 * Math.tan(tr.steer);
-  tr.h1 += Math.max(-1.45, Math.min(1.45, yaw)) * dt;
+  tr.h1 += Math.max(-2.15, Math.min(2.15, yaw)) * dt;
+  // Releasing near a cardinal heading settles onto that street, instead of
+  // leaving a tiny angle that drifts the rig into a wall two blocks later.
+  if (!steering && tr.v > 0) {
+    const straight = Math.round(tr.h1 / (Math.PI / 2)) * Math.PI / 2;
+    const delta = wrapAngle(straight - tr.h1);
+    if (Math.abs(delta) < 15 * DEG) tr.h1 += delta * (1 - Math.exp(-9 * dt));
+  }
   tr.x += Math.cos(tr.h1) * tr.v * dt;
   tr.y += Math.sin(tr.h1) * tr.v * dt;
-  tr.h2 += tr.v * Math.sin(tr.h1 - tr.h2 - tr.tiller) / (R.L2 * Math.cos(tr.tiller)) * dt;
+  let trailerYaw = tr.v * Math.sin(tr.h1 - tr.h2 - tr.tiller) / (R.L2 * Math.cos(tr.tiller));
+  // Reverse stabilisation prevents the rear becoming an uncontrollable hinge.
+  if (tr.v < 0 && !manual) trailerYaw = wrapAngle(tr.h1 - tr.h2) * 3;
+  tr.h2 += trailerYaw * dt;
   const art = wrapAngle(tr.h1 - tr.h2);
   if (Math.abs(art) > R.maxArticulation) tr.h2 = tr.h1 - Math.sign(art) * R.maxArticulation;
   tr.h1 = wrapAngle(tr.h1); tr.h2 = wrapAngle(tr.h2);
 
   const hit = truckCollides(state.world, tr);
-  if (hit) {
-    Object.assign(tr, prev);
-    return hit;
+  if (!hit) return null;
+  const desired = { x: tr.x, y: tr.y, h1: tr.h1, h2: tr.h2 };
+  // A glancing scrape should slide, not repeatedly freeze the entire truck.
+  const trials = [
+    { ...desired, h2: prev.h2 },
+    { ...prev, x: desired.x },
+    { ...prev, y: desired.y },
+  ].sort((a, b) => Math.hypot(b.x - prev.x, b.y - prev.y) - Math.hypot(a.x - prev.x, a.y - prev.y));
+  for (const pose of trials) {
+    if (Math.hypot(pose.x - prev.x, pose.y - prev.y) < Math.abs(tr.v) * dt * .15) continue;
+    Object.assign(tr, pose);
+    if (!truckCollides(state.world, tr)) { state.scraping = true; return hit; }
   }
-  return null;
+  Object.assign(tr, prev);
+  return hit;
 }
 
 // ---------------------------------------------------------------- fires
@@ -271,13 +300,18 @@ export function dispatchFire(state) {
     : pool[Math.floor(state.rng() * pool.length)];
   pick.b.state = 'burning';
   const total = burnTimeFor(pick.d, state.firesOut);
-  const count = state.firesOut >= 3 ? 5 : 4;
+  const types = ['APARTMENT RESCUE', 'MARKET FIRE', 'ROOFTOP EVACUATION'];
+  const incident = state.firesOut % types.length;
+  const count = incident === 2 ? 6 : incident === 1 ? 5 : 4;
   const targets = Array.from({ length: count }, (_, i) => ({
     at: 0.12 + i * 0.76 / (count - 1),
-    kind: i === 1 || (count === 5 && i === 3) ? 'person' : 'fire',
+    kind: i === 1 || (incident === 2 && i === 4) ? 'person' : 'fire',
     hp: 1,
   }));
-  state.fire = { building: pick.b, t: total, total, dist: pick.d, clean: true, targets };
+  for (const person of targets.filter(t => t.kind === 'person')) {
+    person.guard = targets.filter(t => t.kind === 'fire').sort((a,b) => Math.abs(a.at-person.at)-Math.abs(b.at-person.at))[0];
+  }
+  state.fire = { building: pick.b, number: state.firesOut + 1, title: types[incident], t: total, total, dist: pick.d, clean: true, rescuePoints: 0, targets };
   // Clear the service frontage so a mission never asks players to park on a car.
   const zones = serviceZones(pick.b);
   world.cars = world.cars.filter(c => !zones.some(z => c.x < z.x + z.w && c.x + c.w > z.x && c.y < z.y + z.h && c.y + c.h > z.y));
@@ -301,10 +335,16 @@ export function parkedInZone(state) {
   return serviceZones(state.fire.building).find(z => points.some(p =>
     p.x >= z.x && p.x <= z.x + z.w && p.y >= z.y && p.y <= z.y + z.h)) || null;
 }
-export function targetPoint(building, at) {
+export function roofPoint(at) {
   const angle = -Math.PI / 2 + at * Math.PI * 2;
-  return { x: building.cx + Math.cos(angle) * (building.w * TILE / 2 - 18), y: building.cy + Math.sin(angle) * (building.h * TILE / 2 - 22) };
+  return { u: .5 + Math.cos(angle) * .32, v: .5 + Math.sin(angle) * .30 };
 }
+export function targetPoint(building, at) {
+  const p = roofPoint(at);
+  return { x: (building.col + p.u * building.w) * TILE, y: (building.row + p.v * building.h) * TILE };
+}
+export function aimDistance(a, b) { return Math.hypot((a.u - b.u) * 1.8, a.v - b.v); }
+export function rescueBlocked(person) { return person.guard && person.guard.hp > .25; }
 
 export function canRaiseLadder(state) {
   return !!(state.status === 'playing' && state.fire && !state.ladder && Math.abs(state.truck.v) < RULES.parkSpeed && parkedInZone(state));
@@ -321,7 +361,7 @@ export function createGame({ seed = (Date.now() % 1e9) >>> 0, mode = 'duo' } = {
     seed, rng, mode, world, truck,
     status: 'menu', t: 0, paused: false,
     fire: null, ladder: null, nextFireIn: 0.8, lastBuilding: null,
-    stun: 0, crashCooldown: 0, recovered: false, crashes: 0, rescued: 0, score: 0, firesOut: 0, lives: RULES.lives,
+    stun: 0, scraping: false, crashCooldown: 0, recovered: false, crashes: 0, rescued: 0, score: 0, firesOut: 0, lives: RULES.lives,
     events: [],
   };
 }
@@ -354,17 +394,18 @@ export function step(state, dt, inp = {}) {
   if (inp.ladder && canRaiseLadder(state)) {
     const tt = turntable(state.truck), p = targetPoint(state.fire.building, 0.12);
     state.truck.v = 0;
-    state.ladder = { t: 0, retract: false, aim: 0.12, pressure: 0, working: false, x0: tt.x, y0: tt.y, x1: p.x, y1: p.y };
+    state.ladder = { t: 0, retract: false, hose: { u: .5, v: .5 }, basket: { u: .5, v: .88 }, pressure: 1, dry: false, spraying: false, rescuing: false, x0: tt.x, y0: tt.y, x1: p.x, y1: p.y };
     state.events.push({ type: 'deploy' });
   }
   const hit = stepTruck(state, inp, dt);
   if (hit) {
     state.stun = RULES.stunTime;
-    state.truck.v = 0;
+    if (!state.scraping) state.truck.v = 0;
+    else state.truck.v = Math.sign(state.truck.v) * Math.min(Math.abs(state.truck.v), 115);
     if (state.crashCooldown === 0) {
       state.crashes++; state.crashCooldown = 1;
       if (state.fire) state.fire.clean = false;
-      state.events.push({ type: 'crash', part: hit, x: state.truck.x, y: state.truck.y });
+      state.events.push({ type: 'crash', scrape: state.scraping, part: hit, x: state.truck.x, y: state.truck.y });
     }
   }
 
@@ -374,28 +415,44 @@ export function step(state, dt, inp = {}) {
     if (L.retract) {
       if (L.t >= RULES.retractTime) state.ladder = null;
     } else {
-      L.aim = Math.max(0, Math.min(1, L.aim + (inp.tiller || 0) * dt * 0.42));
-      L.pressure = approach(L.pressure, inp.gas || state.mode === 'solo' ? 1 : 0, dt * 1.4);
-      const p = targetPoint(state.fire.building, L.aim);
-      L.x1 = p.x; L.y1 = p.y;
-      L.working = !!inp.ladder && L.t >= RULES.ladderTime;
-      const target = state.fire.targets.find(t => t.hp > 0 && Math.abs(t.at - L.aim) < 0.085);
-      L.spraying = L.working && (!target || target.kind === 'fire') && L.pressure > 0.15;
-      if (L.working && target) {
-        const rate = target.kind === 'person' ? 0.65 : L.pressure * 0.8;
-        target.hp = Math.max(0, target.hp - rate * dt);
+      for (const [cursor, dx, dy] of [
+        [L.hose, inp.hoseX || 0, inp.hoseY || 0],
+        [L.basket, inp.rescueX || 0, inp.rescueY || 0],
+      ]) {
+        const diagonal = Math.hypot(dx, dy) > 1 ? Math.SQRT1_2 : 1;
+        cursor.u = Math.max(.03, Math.min(.97, cursor.u + dx * dt * .52 * diagonal));
+        cursor.v = Math.max(.04, Math.min(.96, cursor.v + dy * dt * .88 * diagonal));
+      }
+      if (state.mode === 'solo') L.basket = { ...L.hose };
+      L.x1 = (state.fire.building.col + L.basket.u * state.fire.building.w) * TILE;
+      L.y1 = (state.fire.building.row + L.basket.v * state.fire.building.h) * TILE;
+      L.spraying = !!inp.spray && !L.dry && L.t >= RULES.ladderTime;
+      L.pressure = Math.max(0, Math.min(1, L.pressure + dt * (L.spraying ? -.20 : inp.spray ? 0 : .48)));
+      if (L.pressure === 0) { L.dry = true; L.spraying = false; }
+      if (L.pressure > .3) L.dry = false;
+      L.rescuing = !!inp.rescue && L.t >= RULES.ladderTime;
+      for (const target of state.fire.targets) {
+        if (target.hp <= 0) continue;
+        const pos = roofPoint(target.at);
+        if (target.kind === 'fire') {
+          if (L.spraying && aimDistance(L.hose, pos) < .16) target.hp = Math.max(0, target.hp - dt * .85);
+          else target.hp = Math.min(1, target.hp + dt * .035);
+        } else if (L.rescuing && !rescueBlocked(target) && aimDistance(L.basket, pos) < .15) {
+          target.hp = Math.max(0, target.hp - dt * .55);
+        }
         if (target.hp === 0) {
-          if (target.kind === 'person') state.rescued++;
-          state.events.push({ type: 'target', kind: target.kind, ...targetPoint(state.fire.building, target.at) });
+          target.doneAt = state.t;
+          if (target.kind === 'person') { state.rescued++; state.score += 100; state.fire.rescuePoints += 100; }
+          state.events.push({ type: 'target', gained: target.kind === 'person' ? 100 : 0, kind: target.kind, ...targetPoint(state.fire.building, target.at) });
         }
       }
       if (state.fire.targets.every(t => t.hp === 0)) {
         const f = state.fire, bonus = Math.round(f.t) * 5, clean = f.clean ? 50 : 0;
         const gained = 150 + bonus + clean + f.targets.filter(t => t.kind === 'person').length * 100;
-        state.score += gained; state.firesOut++; f.building.state = 'saved';
+        state.score += gained - f.rescuePoints; state.firesOut++; f.building.state = 'saved';
         state.events.push({ type: 'extinguished', building: f.building, gained, bonus, clean: f.clean });
         state.fire = null; state.nextFireIn = RULES.betweenFires;
-        L.retract = true; L.t = 0; L.spraying = false;
+        L.incident = f; L.retract = true; L.t = 0; L.spraying = false; L.rescuing = false;
       }
     }
   }
