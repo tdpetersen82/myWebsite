@@ -675,25 +675,49 @@ export function atCentre(e) {
 }
 
 // ---------------------------------------------------------------- enemies
-function enemyThink(state, e) {
+function enemyThink(state, e, danger = null) {
   const spec = ENEMY[e.type];
   const ex = tileOf(e.x), ey = tileOf(e.y);
-  const open = DIR_NAMES.filter(d => {
+  let open = DIR_NAMES.filter(d => {
     const nx = ex + DIRS[d][0], ny = ey + DIRS[d][1];
     return tileAt(state, nx, ny) === FLOOR && !bombAt(state, nx, ny) && !fireAt(state, nx, ny);
   });
-  if (!open.length) return e.dir;
+  if (!open.length) return null;
+  const here = key(ex,ey);
+  if(danger) {
+    const arrival = 1 / Math.max(e.speed,.1);
+    const safeStep = (x,y,steps) => danger[key(x,y)] > steps * arrival + .18;
+    // Veteran enemies escape the complete predicted blast, including linked
+    // shafts and fireball-triggered chains, instead of just avoiding live fire.
+    if(danger[here] < Infinity) {
+      const {dist,prev}=bfs(state,ex,ey,e,safeStep);
+      let safest=-1;
+      for(let k=0;k<W*H;k++) if(dist[k]>0&&danger[k]===Infinity&&(safest<0||dist[k]<dist[safest])) safest=k;
+      if(safest>=0) return firstStep(prev,here,safest);
+    }
+    const safe=open.filter(d=>safeStep(ex+DIRS[d][0],ey+DIRS[d][1],1));
+    if(safe.length) open=safe;
+    else if(danger[here]===Infinity) return null; // Wait instead of entering a blast.
+    else return open.reduce((best,d)=>danger[key(ex+DIRS[d][0],ey+DIRS[d][1])]>danger[key(ex+DIRS[best][0],ey+DIRS[best][1])]?d:best);
+  }
   const p = state.players[0];
   const target = p && p.alive ? p : null;
   const forward = open.filter(d => d !== OPPOSITE[e.dir]);
   const pick = arr => arr[Math.floor(state.rng() * arr.length)];
 
-  if (spec.style === 'chaser' && target) {
-    const { dist, prev } = bfs(state, ex, ey, e, (x, y) => !fireAt(state, x, y));
-    const tk = key(tileOf(target.x), tileOf(target.y));
-    if (dist[tk] > 0) { const d = firstStep(prev, key(ex, ey), tk); if (d && open.includes(d)) return d; }
+  if ((spec.style === 'chaser' || state.level >= 8) && target) {
+    let tx=tileOf(target.x),ty=tileOf(target.y);
+    // At deep levels, half the enemies aim a tile ahead of a moving miner.
+    if(state.level>=10 && target.moving && (ex+ey)%2===0) {
+      const [dx,dy]=DIRS[target.facing] || [0,0];
+      if(tileAt(state,tx+dx,ty+dy)===FLOOR&&!bombAt(state,tx+dx,ty+dy)){tx+=dx;ty+=dy;}
+    }
+    const route = bfs(state,ex,ey,e,(x,y,steps)=>!fireAt(state,x,y)&&(!danger||danger[key(x,y)]>steps/Math.max(e.speed,.1)+.18));
+    let destination=key(tx,ty);
+    if(route.dist[destination]<0) destination=key(tileOf(target.x),tileOf(target.y));
+    if(route.dist[destination]>0){const d=firstStep(route.prev,here,destination);if(d&&open.includes(d))return d;}
   }
-  if (spec.style === 'hunter' && target && state.rng() < 0.8) {
+  if ((spec.style === 'hunter' || state.level >= 3) && target && state.rng() < (state.level >= 3 ? .9 : .8)) {
     // Line of sight along a row or column → give chase.
     const tx = tileOf(target.x), ty = tileOf(target.y);
     for (const d of open) {
@@ -801,10 +825,17 @@ export function step(state, dt, inputs = []) {
     }
   }
 
+  // Share hazard prediction between enemies that reconsider during this step.
+  let enemyDanger = null;
+  const cautious = state.level >= 5 && (state.bombs.length || state.projectiles.length || state.fires.size);
   // Enemies
   for (const e of state.enemies) {
     if (!e.alive) continue;
-    if (e.atNode || !e.moving) e.dir = enemyThink(state, e);
+    if (e.atNode || !e.moving || (cautious && state.time >= (e.rethinkAt || 0))) {
+      if(cautious && !enemyDanger) enemyDanger = dangerMap(state);
+      e.dir = enemyThink(state,e,enemyDanger);
+      e.rethinkAt = state.time + Math.max(.12,.35-(state.level-5)*.035);
+    }
     moveEntity(state, e, e.dir, e.speed, dt);
     e.walkPhase += dt * 3;
   }
@@ -824,6 +855,7 @@ function tickBombs(state, dt) {
   // Door opens once every enemy is gone.
   if (state.door && state.door.revealed && !state.door.open && state.enemies.every(e => !e.alive)) {
     state.door.open = true;
+    state.door.openedAt = state.time;
     state.events.push({ type: 'doorOpen' });
   }
 }
@@ -840,6 +872,7 @@ function resolveHits(state) {
   }
   if (state.door && state.door.revealed && !state.door.open && state.enemies.every(e => !e.alive)) {
     state.door.open = true;
+    state.door.openedAt = state.time;
     state.events.push({ type: 'doorOpen' });
   }
   // Players in fire, touched by enemies, or crushed by the closing walls

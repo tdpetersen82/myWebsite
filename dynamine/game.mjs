@@ -2,8 +2,8 @@
 // Theme: a limestone mine. Miners, dynamite, rock, bats and knockers, a lift.
 import {
   createGame, step, drainEvents, W, H, FLOOR, WALL, BRICK, RULES, ITEM, ENEMY, tileOf, atCentre,
-} from './engine.mjs?v=20260915f';
-import { drawShaft, drawVent } from './shaft-art.mjs?v=20260915f';
+} from './engine.mjs?v=20260915g';
+import { drawShaft, drawVent, drawExitMist } from './shaft-art.mjs?v=20260915g';
 
 const TILE = 56, HUD = 48;
 const BW = W * TILE, BH = H * TILE;
@@ -158,7 +158,7 @@ function showMenu(sub) {
 function handleEvent(e) {
   const g = game;
   switch (e.type) {
-    case 'level': banner = { text: 'LEVEL ' + e.level, sub: 'Bomb ON one shaft. Fire bursts from ALL shafts.', until: g.time + 1.6, style: 'level' }; break;
+    case 'level': banner = { text: 'LEVEL ' + e.level, sub: e.level >= 10 ? 'They anticipate your moves. Use the shafts.' : e.level >= 8 ? 'They hunt around corners. Keep moving.' : e.level >= 5 ? 'They dodge bombs. Set a trap.' : e.level >= 3 ? 'They spot you down corridors. Watch your back.' : 'Bomb ON one shaft. Fire bursts from ALL shafts.', until: g.time + 1.6, style: 'level' }; break;
     case 'round': banner = { text: 'ROUND ' + e.round, sub: firstTo(), until: g.time + 1.6, style: 'level' }; break;
     case 'go': banner = { text: 'GO!', until: g.time + 0.5, style: 'go' }; break;
     case 'power': if(e.power === ITEM.FIREBALL) Sound.kill(); else Sound.place(); break;
@@ -291,6 +291,11 @@ function draw(dtReal) {
   drawEnemies(g);
   drawPlayers(g);
   drawProjectiles(g);
+  if(g.door?.open) {
+    ctx.save(); ctx.beginPath(); ctx.rect(0,0,BW,BH); ctx.clip();
+    drawExitMist(ctx,g.door.x,g.door.y,{time:g.time,openedAt:g.door.openedAt ?? 0});
+    ctx.restore();
+  }
   drawParticles(g, dtReal);
   drawPopups(g);
   if (g.time < flashUntil) { ctx.fillStyle = 'rgba(255,120,60,' + (0.35 * (flashUntil - g.time) / 0.6) + ')'; ctx.fillRect(0, 0, BW, BH); }
@@ -767,7 +772,7 @@ function updatePowerHud(g) {
     const remaining=Math.max(0,Math.ceil(p.powerUntil-g.time));
     const key=mode==='duel'&&p.id===1?'Right Shift':'F';
     if(!p.power||!remaining) return `${mode==='duel'?p.name+': ':''}${key} · Find a fireball flask or purple ignitor`;
-    const action=p.power===ITEM.FIREBALL?'Fireball — shoot':'Ignitor — detonate oldest bomb';
+    const action=p.power===ITEM.FIREBALL?'Fireball — shoot':(g.bombs.some(b=>b.owner===p.id&&!b.exploded)?'Ignitor — detonate bomb':'Ignitor — place a bomb first');
     return `${key} · ${action} · ${remaining}s`;
   });
   const text=lines.join(' | ');if(panel.textContent!==text)panel.textContent=text;

@@ -1,0 +1,16 @@
+<!doctype html><html lang="en"><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Dynamine shaft artwork preview</title>
+<style>body{margin:30px;background:#102126;color:#e7dec4;font:16px system-ui}canvas{width:min(100%,840px);display:block}button{padding:10px;margin:12px 0}</style>
+<h1>Dynamine shaft artwork</h1><p>Production renderers: open shaft, armed shaft, locked exit, and open exit with mist.</p><button id="replay">Replay exit opening</button><canvas id="art" width="840" height="360"></canvas>
+<script type="module">
+import {drawVent,drawShaft,drawExitMist} from '../dynamine/shaft-art.mjs?v=20260915g';
+const ctx=document.getElementById('art').getContext('2d');let openedAt=0;
+document.getElementById('replay').onclick=()=>{openedAt=performance.now()/1000;};
+function frame(now){const time=now/1000;ctx.clearRect(0,0,840,360);
+ ['Open shaft','Armed shaft','Locked exit','Open exit / mist'].forEach((label,i)=>{
+  const x=20+i*208;ctx.fillStyle='#cbd1ba';ctx.font='14px system-ui';ctx.textAlign='left';ctx.fillText(label,x,335);
+  ctx.save();ctx.translate(x,140);ctx.scale(3,3);ctx.fillStyle='#283738';ctx.fillRect(-2,-35,64,94);
+  if(i<2)drawVent(ctx,0,0,{time,armed:i===1});else drawShaft(ctx,0,0,{time,open:i===3});
+  if(i===3)drawExitMist(ctx,0,0,{time,openedAt});ctx.restore();
+ });requestAnimationFrame(frame);}
+requestAnimationFrame(frame);
+</script></html>
