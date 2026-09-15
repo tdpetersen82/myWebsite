@@ -5,8 +5,11 @@
     'block-puzzle': 'Block Puzzle', pong: 'Pong', breakout: 'Breakout',
     'space-invaders': 'Space Invaders', asteroids: 'Asteroids', simon: 'Simon',
     'spacex-lander': 'SpaceX Lander', frogger: 'Frogger', 'lunar-lander': 'Lunar Lander',
-    'missile-command': 'Missile Command', defender: 'Defender', dynamine: 'Dynamine'
+    'missile-command': 'Missile Command', defender: 'Defender', dynamine: 'Dynamine',
+    'hook-and-ladder': 'Hook & Ladder'
   };
+  // Cabinet art file dates; anything not listed uses the 2026-09-09 batch.
+  const artDate = { dynamine: '20260915', 'hook-and-ladder': '20260915' };
   const related = {
     'block-puzzle': ['simon', 'breakout', 'frogger'],
     pong: ['breakout', 'block-puzzle', 'frogger'],
@@ -18,7 +21,8 @@
     'lunar-lander': ['spacex-lander', 'asteroids', 'defender'],
     'missile-command': ['space-invaders', 'defender', 'asteroids'],
     defender: ['space-invaders', 'asteroids', 'missile-command'],
-    dynamine: ['frogger', 'space-invaders', 'breakout']
+    dynamine: ['hook-and-ladder', 'frogger', 'space-invaders'],
+    'hook-and-ladder': ['dynamine', 'frogger', 'pong']
   };
   let dialog, restart, previousFocus;
   const game = location.pathname.split('/').filter(Boolean)[0];
@@ -42,7 +46,7 @@
       const link = document.createElement('a');
       link.href = '../' + id + '/'; link.dataset.game = id;
       const img = document.createElement('img');
-      img.src = '../assets/thumbs/' + id + '-arcade-20260909.png'; img.alt = '';
+      img.src = '../assets/thumbs/' + id + '-arcade-' + (artDate[id] || '20260909') + '.png'; img.alt = '';
       img.width = img.height = 160; img.decoding = 'async';
       const label = document.createElement('span'); label.textContent = titles[id];
       link.append(img, label); grid.appendChild(link);

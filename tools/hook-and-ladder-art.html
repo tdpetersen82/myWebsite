@@ -1,0 +1,148 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Hook & Ladder art builder</title>
+<!--
+  Draws the cabinet tile (assets/thumbs/hook-and-ladder-arcade-YYYYMMDD.png, 1200×1200)
+  and the OG share card (assets/og/hook-and-ladder.jpg, 1200×630) with canvas, then
+  POSTs them to tools/serve.mjs's /__save. No PIL needed.
+  Run:  node tools/serve.mjs 8099  →  open http://localhost:8099/tools/hook-and-ladder-art.html?save=1
+-->
+<style>body{background:#111;color:#ddd;font:14px system-ui;margin:20px}canvas{display:block;margin:12px 0;max-width:100%;border:1px solid #333}</style>
+<p id="status">drawing…</p>
+<canvas id="tile" width="1200" height="1200"></canvas>
+<canvas id="og" width="1200" height="630"></canvas>
+<script>
+const TILE_NAME = 'hook-and-ladder-arcade-20260915.png';
+function rr(x, X, y, w, h, r) { x.beginPath(); x.moveTo(X + r, y); x.arcTo(X + w, y, X + w, y + h, r); x.arcTo(X + w, y + h, X, y + h, r); x.arcTo(X, y + h, X, y, r); x.arcTo(X, y, X + w, y, r); x.closePath(); }
+
+// A top-down street scene: two blocks, a corner, the truck mid-swing, a fire ahead.
+function scene(x, Wd, Hd, s) {
+  x.save(); x.scale(s, s);
+  const w = Wd / s, h = Hd / s;
+  // asphalt
+  x.fillStyle = '#34363c'; x.fillRect(0, 0, w, h);
+  // blocks: bottom-left and top-right, a corner between
+  const blocks = [[-60, h * 0.56, w * 0.50, h + 60], [w * 0.56, -60, w + 60, h * 0.34]];
+  for (const [ax, ay, bx, by] of blocks) {
+    x.fillStyle = '#8f9096'; x.fillRect(ax, ay, bx - ax, by - ay);
+    x.strokeStyle = 'rgba(0,0,0,0.18)'; x.lineWidth = 1;
+    for (let k = ax; k < bx; k += 36) { x.beginPath(); x.moveTo(k, ay); x.lineTo(k, by); x.stroke(); }
+    for (let k = ay; k < by; k += 36) { x.beginPath(); x.moveTo(ax, k); x.lineTo(bx, k); x.stroke(); }
+    x.strokeStyle = '#b9bac0'; x.lineWidth = 3; x.strokeRect(ax + 1, ay + 1, bx - ax - 2, by - ay - 2);
+  }
+  // lane dashes
+  x.strokeStyle = '#d9b64a'; x.lineWidth = 4; x.setLineDash([26, 22]);
+  x.beginPath(); x.moveTo(0, h * 0.45); x.lineTo(w * 0.53, h * 0.45); x.stroke();
+  x.beginPath(); x.moveTo(w * 0.53, h * 0.45); x.lineTo(w * 0.53, h); x.stroke();
+  x.setLineDash([]);
+  // buildings on the blocks
+  const bld = (bx, by, bw, bh, roof, tower) => {
+    x.fillStyle = 'rgba(0,0,0,0.38)'; x.fillRect(bx + 10, by + 12, bw, bh);
+    x.fillStyle = roof; x.fillRect(bx, by, bw, bh);
+    x.fillStyle = 'rgba(255,255,255,0.14)'; x.fillRect(bx, by, bw, 6); x.fillRect(bx, by, 6, bh);
+    x.fillStyle = 'rgba(0,0,0,0.22)'; x.fillRect(bx, by + bh - 6, bw, 6); x.fillRect(bx + bw - 6, by, 6, bh);
+    x.strokeStyle = 'rgba(0,0,0,0.28)'; x.lineWidth = 2; x.strokeRect(bx + 13, by + 13, bw - 26, bh - 26);
+    x.fillStyle = '#5b5f66'; x.fillRect(bx + 30, by + 30, 28, 20); x.fillStyle = '#8a8f97'; x.fillRect(bx + 34, by + 34, 20, 12);
+    if (tower) { x.fillStyle = 'rgba(0,0,0,0.3)'; x.beginPath(); x.arc(bx + bw - 44, by + 46, 20, 0, 7); x.fill(); x.fillStyle = '#6e5a48'; x.beginPath(); x.arc(bx + bw - 48, by + 42, 20, 0, 7); x.fill(); x.fillStyle = '#8c7561'; x.beginPath(); x.arc(bx + bw - 48, by + 42, 10, 0, 7); x.fill(); }
+  };
+  bld(14, h * 0.56 + 14, w * 0.25 - 28, h * 0.5, '#b5654a', true);
+  bld(w * 0.25 + 14, h * 0.56 + 14, w * 0.25 - 28, h * 0.5, '#c9a27a', false);
+  bld(w * 0.56 + 14, 14, w * 0.44 - 28, h * 0.34 - 28, '#8f9aa8', false);
+  // parked car
+  x.fillStyle = 'rgba(0,0,0,0.35)'; rr(x, w * 0.08 + 4, h * 0.56 - 40 + 5, 70, 34, 8); x.fill();
+  x.fillStyle = '#3d5a80'; rr(x, w * 0.08, h * 0.56 - 40, 70, 34, 8); x.fill();
+  x.fillStyle = 'rgba(20,30,45,0.85)'; x.fillRect(w * 0.08 + 14, h * 0.56 - 34, 12, 22); x.fillRect(w * 0.08 + 54, h * 0.56 - 34, 8, 22);
+  // burning building (top right) — flames + glow, and a marked lane below it
+  const bx0 = w * 0.56 + 14, bw0 = w * 0.44 - 28, bh0 = h * 0.34 - 28;
+  const fx = bx0 + bw0 / 2, fy = 14 + bh0 / 2;
+  x.fillStyle = 'rgba(255,190,60,0.22)'; x.fillRect(bx0, h * 0.34, bw0, 84);
+  x.setLineDash([16, 12]); x.strokeStyle = 'rgba(255,205,90,0.95)'; x.lineWidth = 4; x.strokeRect(bx0 + 2, h * 0.34 + 2, bw0 - 4, 80); x.setLineDash([]);
+  x.fillStyle = '#ffcf5a'; x.font = 'bold 30px Inter, system-ui, sans-serif'; x.textAlign = 'center'; x.textBaseline = 'middle'; x.fillText('LADDER', fx, h * 0.34 + 42);
+  x.save(); x.globalCompositeOperation = 'lighter';
+  const glow = x.createRadialGradient(fx, fy, 20, fx, fy, 300); glow.addColorStop(0, 'rgba(255,140,40,0.65)'); glow.addColorStop(1, 'rgba(255,60,0,0)');
+  x.fillStyle = glow; x.fillRect(fx - 340, fy - 340, 680, 680);
+  // scorched patch under the fire, then a few big overlapping flames: wide base,
+  // leaning tip, red → orange → yellow, drawn with cubic curves so they read as fire.
+  x.fillStyle = 'rgba(40,20,10,0.55)'; x.beginPath(); x.ellipse(fx, fy + 30, 190, 70, 0, 0, 7); x.fill();
+  const flame = (px, py, r, lean, layers) => {
+    for (const [k, col] of layers) {
+      const R = r * k, tipX = px + lean * R, tipY = py - R * 1.9;
+      x.fillStyle = col; x.beginPath();
+      x.moveTo(px - R, py);
+      x.bezierCurveTo(px - R * 1.1, py - R * 0.9, px - R * 0.2, py - R * 1.1, tipX, tipY);
+      x.bezierCurveTo(px + R * 0.3, py - R * 1.0, px + R * 1.1, py - R * 0.8, px + R, py);
+      x.bezierCurveTo(px + R * 0.6, py + R * 0.45, px - R * 0.6, py + R * 0.45, px - R, py);
+      x.closePath(); x.fill();
+    }
+  };
+  const L = [[1, 'rgba(225,55,15,0.92)'], [0.7, 'rgba(255,150,30,0.95)'], [0.4, 'rgba(255,240,170,0.98)']];
+  flame(fx - 120, fy + 40, 46, 0.25, L); flame(fx + 110, fy + 45, 42, -0.3, L);
+  flame(fx - 45, fy + 50, 58, 0.15, L); flame(fx + 40, fy + 48, 62, -0.1, L);
+  flame(fx - 5, fy + 40, 40, 0.3, L);
+  x.restore();
+  for (let i = 0; i < 9; i++) { x.fillStyle = `rgba(70,70,80,${0.3 - i * 0.027})`; x.beginPath(); x.arc(fx - 60 - i * 30, fy - 60 - i * 26, 20 + i * 8, 0, 7); x.fill(); }
+  // the truck, big, swinging its tail through the corner toward the fire
+  truck(x, w * 0.40, h * 0.40, -0.45, 0.10, 4.2);
+  x.restore();
+}
+function wheel(x, px, py, a, len, wid) { x.save(); x.translate(px, py); x.rotate(a); x.fillStyle = '#111'; rr(x, -len / 2, -wid / 2, len, wid, 3); x.fill(); x.fillStyle = '#444'; x.fillRect(-1.5, -wid / 2, 3, wid); x.restore(); }
+function truck(x, hx, hy, h1, h2, s) {
+  const L1 = 32, L2 = 84, hw = 11, back = 10, len = 52, tf = 6, tb = 12, nose = len - back;
+  x.save(); x.translate(hx, hy); x.scale(s, s);
+  // trailer
+  x.save(); x.rotate(h2);
+  x.fillStyle = 'rgba(0,0,0,0.4)'; rr(x, -(L2 + tb) + 4, -hw + 5, L2 + tb + tf, 26, 4); x.fill();
+  wheel(x, -L2, -hw + 2, -0.45, 12, 6); wheel(x, -L2, hw - 2, -0.45, 12, 6); wheel(x, -L2 + 14, -hw + 2, 0, 12, 6); wheel(x, -L2 + 14, hw - 2, 0, 12, 6);
+  x.fillStyle = '#c4202a'; rr(x, -(L2 + tb), -hw, L2 + tb + tf, 22, 4); x.fill();
+  x.fillStyle = 'rgba(255,255,255,0.75)'; x.fillRect(-(L2 + tb) + 2, -hw + 1, L2 + tb + tf - 4, 2); x.fillRect(-(L2 + tb) + 2, hw - 3, L2 + tb + tf - 4, 2);
+  x.fillStyle = '#8c1a22'; x.fillRect(-(L2 + tb), -hw + 3, 14, 16); x.fillStyle = '#1b2733'; x.fillRect(-(L2 + tb) + 2, -hw + 5, 4, 12);
+  x.strokeStyle = '#f2f2f2'; x.lineWidth = 2; x.beginPath(); x.moveTo(-L2 + 2, -5); x.lineTo(tf - 3, -5); x.moveTo(-L2 + 2, 5); x.lineTo(tf - 3, 5); x.stroke();
+  x.lineWidth = 1.5; for (let k = -L2 + 6; k < tf - 3; k += 7) { x.beginPath(); x.moveTo(k, -5); x.lineTo(k, 5); x.stroke(); }
+  x.fillStyle = '#6d6f75'; x.beginPath(); x.arc(-50, 0, 8, 0, 7); x.fill(); x.strokeStyle = '#a9abb1'; x.lineWidth = 2; x.beginPath(); x.arc(-50, 0, 5, 0, 7); x.stroke();
+  x.restore();
+  // tractor
+  x.save(); x.rotate(h1);
+  x.fillStyle = 'rgba(0,0,0,0.4)'; rr(x, -back + 4, -hw + 5, len, 22, 5); x.fill();
+  wheel(x, 0, -hw + 2, 0, 12, 6); wheel(x, 0, hw - 2, 0, 12, 6); wheel(x, L1, -hw + 2, 0.5, 12, 6); wheel(x, L1, hw - 2, 0.5, 12, 6);
+  x.fillStyle = '#d0232e'; rr(x, -back, -hw, len, 22, 5); x.fill();
+  x.fillStyle = '#e63946'; rr(x, 3, -hw + 2, nose - 16, 18, 3); x.fill();
+  x.fillStyle = '#1b2733'; x.fillRect(nose - 13, -hw + 3, 8, 16); x.fillStyle = '#f6f6f6'; x.fillRect(nose - 5, -hw + 4, 4, 14);
+  x.fillStyle = '#ffe08a'; x.fillRect(nose - 3, -hw + 2, 3, 4); x.fillRect(nose - 3, hw - 6, 3, 4);
+  x.fillStyle = 'rgba(255,255,255,0.7)'; x.fillRect(-back + 2, -hw + 1, len - 4, 2); x.fillRect(-back + 2, hw - 3, len - 4, 2);
+  x.fillStyle = '#ff2f2f'; x.fillRect(8, -hw + 3, 5, hw - 4); x.fillStyle = '#2f6bff'; x.fillRect(8, 1, 5, hw - 4);
+  x.restore();
+  x.restore();
+}
+
+function drawTile() {
+  const c = document.getElementById('tile'), x = c.getContext('2d');
+  scene(x, 1200, 1200, 1);
+  // vignette + title strip
+  const vg = x.createRadialGradient(600, 560, 320, 600, 600, 900); vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+  x.fillStyle = vg; x.fillRect(0, 0, 1200, 1200);
+}
+function drawOG() {
+  const c = document.getElementById('og'), x = c.getContext('2d');
+  scene(x, 1200, 630, 0.85);
+  const g = x.createLinearGradient(0, 0, 0, 630); g.addColorStop(0, 'rgba(0,0,0,0.15)'); g.addColorStop(1, 'rgba(0,0,0,0.75)');
+  x.fillStyle = g; x.fillRect(0, 0, 1200, 630);
+  x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+  x.font = '700 78px "Bricolage Grotesque", Inter, system-ui, sans-serif'; x.lineWidth = 10; x.strokeStyle = 'rgba(0,0,0,0.7)';
+  x.strokeText('Hook & Ladder', 60, 540); x.fillStyle = '#ffd166'; x.fillText('Hook & Ladder', 60, 540);
+  x.font = '600 30px Inter, system-ui, sans-serif'; x.lineWidth = 6; x.strokeText('Two players · one tiller truck · limestonegames.com', 62, 590);
+  x.fillStyle = '#fff'; x.fillText('Two players · one tiller truck · limestonegames.com', 62, 590);
+}
+async function save(canvas, path, type, q) {
+  const r = await fetch('/__save', { method: 'POST', body: JSON.stringify({ path, dataUrl: canvas.toDataURL(type, q) }) });
+  return r.ok ? (await r.json()).bytes : 'ERR ' + await r.text();
+}
+document.fonts.load('700 78px "Bricolage Grotesque"').then(() => document.fonts.load('600 30px Inter')).finally(async () => {
+  drawTile(); drawOG();
+  const st = document.getElementById('status');
+  if (new URLSearchParams(location.search).get('save')) {
+    const a = await save(document.getElementById('tile'), 'assets/thumbs/' + TILE_NAME, 'image/png');
+    const b = await save(document.getElementById('og'), 'assets/og/hook-and-ladder.jpg', 'image/jpeg', 0.88);
+    st.textContent = 'saved tile ' + a + ' bytes, og ' + b + ' bytes';
+  } else st.textContent = 'drawn (add ?save=1 to write files)';
+});
+</script>

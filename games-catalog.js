@@ -5,6 +5,7 @@
   'use strict';
 
   window.LG_GAMES = [
+    { id: 'hook-and-ladder', name: 'Hook & Ladder', cat: 'classic', desc: 'Two players, one tiller truck. Park the ladder.', color: '#E63946', added: '2026-09-15' },
     { id: 'dynamine', name: 'Dynamine', cat: 'classic', desc: 'Dynamite, rock, bats. Find the lift.', color: '#F2A65A', added: '2026-09-15' },
     { id: 'mini-golf', name: 'Mini Golf', cat: 'classic', desc: 'Nine neon holes. Bank, putt, beat par.', color: '#64EADB', added: '2026-09-09' },
     { id: 'daily-orbit', name: 'Daily Orbit', cat: 'classic', desc: "Today's sky, one probe, six launches.", color: '#6F9DFF', url: '/solar-system/?daily', added: '2026-09-11' },
