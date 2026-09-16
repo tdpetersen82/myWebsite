@@ -435,5 +435,14 @@ console.log('consistent cars and deliberate controls');
  run(fresh,1,{gas:true});check('speed builds progressively halfway through acceleration',Math.abs(fresh.truck.v-105)<1e-6);
  run(fresh,1.5,{gas:true});check('standard truck takes three seconds to reach full speed',Math.abs(fresh.truck.v-RULES.maxSpeed)<1e-6);
 }
+{
+ for(let seed=1;seed<=30;seed++){
+  const world=buildWorld(mulberry32(seed));
+  check('every parked car starts against the curb '+seed,world.cars.every(c=>{
+   const offset=(c.dir==='h'?c.y:c.x)%(PITCH*TILE),width=c.dir==='h'?c.h:c.w;
+   return Math.min(offset,STREET_W*TILE-offset-width)===3;
+  }));
+ }
+}
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

@@ -129,13 +129,13 @@ export function buildWorld(rng) {
   const CAR_COLORS = ['#e8e4dc', '#3d5a80', '#6b7b8c', '#c0392b', '#2c3e50', '#d9c27a', '#7f8c8d', '#2e7d5b'];
   for (const c of cars) c.color = CAR_COLORS[Math.floor(rng() * CAR_COLORS.length)];
 
-  // Staggered utility vans create short slaloms on selected inner streets.
-  // They occupy opposing curb lanes, never the full road or an intersection.
+  // Extra parked cars sit against the curb, with the same three-pixel
+  // clearance as other parked cars. Keep both travel lanes open.
   for(let bx=2;bx<BLOCKS_X-1;bx+=2){
     const x=(STREET_W+bx*PITCH)*TILE;
     for(let i=cars.length-1;i>=0;i--){const c=cars[i];if(c.x<x+145&&c.x+c.w>x+15&&c.y<396&&c.y+c.h>280)cars.splice(i,1);}
-    cars.push({x:x+45,y:284,w:34,h:17,dir:'h',color:'#d4ae66',work:true});
-    cars.push({x:x+100,y:362,w:34,h:17,dir:'h',color:'#d4ae66',work:true});
+    cars.push({x:x+45,y:283,w:34,h:17,dir:'h',color:'#d4ae66',work:true});
+    cars.push({x:x+100,y:380,w:34,h:17,dir:'h',color:'#d4ae66',work:true});
   }
   const traffic = [];
   for (const b of blocks) {
