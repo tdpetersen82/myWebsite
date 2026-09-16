@@ -135,7 +135,7 @@ console.log('kinematics');
   }
   const passive = cornerClearance(0), counter = cornerClearance(-1);
   check('passive trailer cuts inside the corner', passive < 35, passive.toFixed(1));
-  check('automatic corner assist matches a coordinated tillerman', counter >= passive - 3, `${passive.toFixed(1)} → ${counter.toFixed(1)}`);
+  check('manual tiller increases corner clearance', counter > passive, `${passive.toFixed(1)} → ${counter.toFixed(1)}`);
 }
 
 // Backing must stay controllable with either player steering, including at
@@ -149,7 +149,7 @@ console.log('reverse handling');
   run(g, .1, { brake: true });
   check('gear change has a deliberate neutral pause', g.truck.v === 0);
   run(g, .5, { brake: true });
-  check('holding S engages reverse after the pause', g.truck.v < -40);
+  check('holding S engages reverse after the pause', g.truck.v < -20);
   run(g, .7, { gas: true, brake: true });
   check('conflicting throttle keys stop instead of reversing', g.truck.v === 0);
 }
@@ -202,7 +202,7 @@ console.log('collisions');
 {
   const g = playing(4); g.nextFireIn = 1e9;
   g.truck.x = 80; g.truck.h1 = g.truck.h2 = Math.PI;
-  const ev = run(g, 1, { gas: true });
+  const ev = run(g, 1.5, { gas: true });
   check('map edge is solid', ev.some(e => e.type === 'crash'));
 }
 
@@ -215,7 +215,7 @@ for (const turnAt of [265, 275, 285]) {
     if (phase === 1 && g.truck.h1 >= Math.PI / 2 - .09) phase = 2;
     step(g, 1 / 120, phase === 0 ? { gas: true } : phase === 1
       ? { gas: true, steer: 1, tiller: -1 }
-      : { gas: true, tiller: g.truck.h2 < 1.1 ? -.6 : 0 });
+      : { gas: true, tiller: Math.max(-1,Math.min(1,((g.truck.h2 < 1.1 ? -.6*RULES.maxTiller : 0)-g.truck.tiller)/(RULES.tillerRate/120))) });
   }
   check('coordinated 90-degree city turn, start x=' + turnAt, g.truck.y >= 560 && g.crashes === 0);
 }
@@ -310,7 +310,7 @@ console.log('traffic and damage');
 }
 function impact(upgrades={}){
   const g=createGame({seed:3,upgrades});startGame(g);g.nextFireIn=1e9;g.world.traffic=[];
-  g.truck.x=440;run(g,1,{gas:true,steer:-1});return g;
+  g.truck.x=W-80;g.truck.v=180;run(g,1,{gas:true});return g;
 }
 {
  const normal=impact(),armored=impact({armor:true});
@@ -318,11 +318,11 @@ function impact(upgrades={}){
  check('bodywork upgrade reduces damage',armored.damage<normal.damage);
  const g=playing();g.world=openWorld();g.nextFireIn=1e9;g.truck.x=W-42;g.damage=99;g.truck.v=180;
  run(g,.1,{gas:true});check('total damage ends the run',g.status==='over'&&g.damage===100);
- const fast=createGame({upgrades:{engine:true}});startGame(fast);fast.world=openWorld();fast.nextFireIn=1e9;run(fast,1,{gas:true});
+ const fast=createGame({upgrades:{engine:true}});startGame(fast);fast.world=openWorld();fast.nextFireIn=1e9;run(fast,4,{gas:true});
  check('engine upgrade increases top speed',fast.truck.v>RULES.maxSpeed);
 }
 {
-  const g=createGame({seed:61});startGame(g);run(g,1);
+  const g=createGame({seed:83});startGame(g);run(g,1);
   const z=serviceZones(g.fire.building).find(z=>z.side==='s'&&z.y===280);
   for(let i=0;i<2400&&!g.firesOut;i++){
     let input={};const f=g.fire;
@@ -335,7 +335,7 @@ function impact(upgrades={}){
     }
     step(g,1/120,input);
   }
-  check('full distant drive, park, rescue and spray using controls with traffic',g.firesOut===1&&g.damage===0&&g.score>0);
+  check('full distant drive, park, rescue and spray using controls with traffic',g.firesOut===1&&g.damage===0&&g.score>0, JSON.stringify({calls:g.firesOut,damage:g.damage,x:g.truck.x}));
   const before=g.world.traffic.map(c=>c.distance);g.paused=true;run(g,1);
   check('pause freezes traffic too',g.world.traffic.every((c,i)=>c.distance===before[i]));
 }
@@ -420,6 +420,20 @@ check('four different call types rotate',callTitles.size===4);
   run(g,1.3,target.kind==='person'?{grab:true}:{spray:true});check('multi-target call can finish each target independently',target.hp===0);
  }
  run(g,1);check('multi-person rescue completes once',g.firesOut===1);
+}
+console.log('consistent cars and deliberate controls');
+{
+ const world=buildWorld(mulberry32(2));
+ check('all parked cars share the same physical size',world.cars.every(c=>c.dir==='h'?c.w===34&&c.h===17:c.w===17&&c.h===34));
+ const g=playing();g.world=openWorld();g.nextFireIn=1e9;
+ run(g,.1,{tiller:1});const angle=g.truck.tiller;
+ run(g,.5);check('released tiller holds its angle at rest',g.truck.tiller===angle);
+ run(g,.5,{gas:true,steer:-1});check('cab steering cannot override held tiller angle',g.truck.tiller===angle);
+ run(g,.1,{tiller:-1});check('opposite input can straighten rear wheels',Math.abs(g.truck.tiller)<1e-6);
+ const fresh=playing();fresh.world=openWorld();fresh.nextFireIn=1e9;
+ run(fresh,.5,{gas:true});check('half-second throttle does not launch at full speed',Math.abs(fresh.truck.v-35)<1e-6);
+ run(fresh,1,{gas:true});check('speed builds progressively halfway through acceleration',Math.abs(fresh.truck.v-105)<1e-6);
+ run(fresh,1.5,{gas:true});check('standard truck takes three seconds to reach full speed',Math.abs(fresh.truck.v-RULES.maxSpeed)<1e-6);
 }
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

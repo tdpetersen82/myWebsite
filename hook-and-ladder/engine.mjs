@@ -17,7 +17,7 @@ const DEG = Math.PI / 180;
 export const RULES = {
   maxSpeed: 210,        // px/s forward
   reverseSpeed: 68,
-  accel: 340,
+  accel: 70,           // about three seconds from rest to full forward speed
   brake: 520,
   coast: 145,
   maxSteer: 38 * DEG,   // tractor front wheels
@@ -134,8 +134,8 @@ export function buildWorld(rng) {
   for(let bx=2;bx<BLOCKS_X-1;bx+=2){
     const x=(STREET_W+bx*PITCH)*TILE;
     for(let i=cars.length-1;i>=0;i--){const c=cars[i];if(c.x<x+145&&c.x+c.w>x+15&&c.y<396&&c.y+c.h>280)cars.splice(i,1);}
-    cars.push({x:x+20,y:284,w:52,h:34,dir:'h',color:'#d4ae66',work:true});
-    cars.push({x:x+90,y:362,w:52,h:34,dir:'h',color:'#d4ae66',work:true});
+    cars.push({x:x+45,y:284,w:34,h:17,dir:'h',color:'#d4ae66',work:true});
+    cars.push({x:x+100,y:362,w:34,h:17,dir:'h',color:'#d4ae66',work:true});
   }
   const traffic = [];
   for (const b of blocks) {
@@ -307,7 +307,7 @@ function sweepTruck(world,from,to) {
 }
 
 // Arcade steering: a fast rack, stable straights and a following rear axle.
-// P2 can deliberately swing the tail; an unsteered tail gets corner assistance.
+// Rear steering holds its angle until P2 changes it; there is no automatic assist.
 export function stepTruck(state, inp, dt) {
   const tr = state.truck, R = RULES;
   state.scraping = false; state.contactImpact=0;
@@ -316,8 +316,7 @@ export function stepTruck(state, inp, dt) {
   const steerT = steering * R.maxSteer;
   tr.steer = approach(tr.steer, steerT, (steerT ? R.steerRate : R.steerReturn) * dt);
   const manual = inp.tiller || 0;
-  const assist = tr.v >= 0 && !manual ? -steering * .35 : 0;
-  tr.tiller = approach(tr.tiller, (manual || assist) * R.maxTiller, R.tillerRate * dt);
+  tr.tiller = Math.max(-R.maxTiller, Math.min(R.maxTiller, tr.tiller + manual * R.tillerRate * dt));
   // Opposite throttle first stops the truck, then engages the other direction.
   // This also makes a short tap of S a brake instead of an accidental reverse.
   tr.shiftWait = Math.max(0, (tr.shiftWait || 0) - dt);
@@ -330,7 +329,7 @@ export function stepTruck(state, inp, dt) {
     if (tr.v === 0) tr.shiftWait = .16;
   } else if (direction && tr.shiftWait === 0) {
     const target = direction < 0 ? -R.reverseSpeed : R.maxSpeed * (state.upgrades?.engine ? 1.15 : 1) * (1 - (state.damage || 0)*.002) - Math.abs(steering) * 55;
-    tr.v = approach(tr.v, target, (direction < 0 ? 150 : R.accel) * dt);
+    tr.v = approach(tr.v, target, (direction < 0 ? R.accel * .8 : R.accel) * dt);
   } else tr.v = approach(tr.v, 0, R.coast * dt);
   if (Math.abs(tr.v) < .1) { tr.v = 0; return null; }
 

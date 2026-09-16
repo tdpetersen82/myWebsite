@@ -2,9 +2,9 @@
 import {
   createGame, startGame, step, drainEvents, readyToPark, parkedInZone,
   serviceZones, callZones, routeToCall, turntable, roofPoint, W as WORLD_W, H as WORLD_H, TILE, RULES,
-} from './engine.mjs?v=20260916l';
+} from './engine.mjs?v=20260916m';
 
-import { paintCity, drawWorldFire, drawCars, person } from './art.mjs?v=20260916l';
+import { paintCity, drawWorldFire, drawCars, person } from './art.mjs?v=20260916m';
 
 const W = 1240, H = 680; // Fixed camera viewport; the world can grow independently.
 const HS_KEY = 'hookAndLadderHighScore';
@@ -502,7 +502,7 @@ function drawHUD(t) {
   const panelW = (sw - 36) / 2, py = sh - 65;
   for (const [x, color, title, detail] of [
     [12, '#8cddff', game.fire?.crew ? 'P1 · LADDER' : 'P1 · DRIVER', game.fire?.crew ? 'WASD move · Space grab · E drive' : 'W/S gas/reverse · A/D steer · Space brake'],
-    [24 + panelW, '#ffcb7b', game.fire?.crew ? 'P2 · HOSE' : 'P2 · TILLERMAN', game.fire?.crew ? 'Arrows aim · Enter spray' : '← → steer rear wheels'],
+    [24 + panelW, '#ffcb7b', game.fire?.crew ? 'P2 · HOSE' : 'P2 · TILLERMAN', game.fire?.crew ? 'Arrows aim · Enter spray' : '← → adjust · release holds angle'],
   ]) {
     hudBox(x, py, panelW, 53); ctx.textAlign = 'left'; ctx.fillStyle = color; ctx.font = 'bold 12px system-ui'; ctx.fillText(title, x + 10, py + 16);
     ctx.fillStyle = '#d5e0e7'; ctx.font = '11px system-ui'; ctx.fillText(detail, x + 10, py + 36);
