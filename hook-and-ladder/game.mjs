@@ -1,10 +1,10 @@
 // Hook & Ladder — rendering, input, sound and page wiring. Rules live in engine.mjs.
 import {
-  createGame, startGame, step, drainEvents, canRaiseLadder, parkedInZone,
+  createGame, startGame, step, drainEvents, readyToPark, parkedInZone,
   serviceZones, W, H, TILE, RULES,
-} from './engine.mjs?v=20260916a';
+} from './engine.mjs?v=20260916b';
 
-import { paintCity, drawIncident, drawWorldFire } from './art.mjs?v=20260916a';
+import { paintCity, drawWorldFire } from './art.mjs?v=20260916b';
 
 const HS_KEY = 'hookAndLadderHighScore';
 const canvas = document.getElementById('gameCanvas');
@@ -21,8 +21,7 @@ let highScore = 0;
 try { highScore = parseInt(localStorage.getItem(HS_KEY) || '0', 10) || 0; } catch (e) {}
 hiEl.textContent = highScore;
 
-let game = createGame({ mode: 'duo' });
-let mode = 'duo';
+let game = createGame();
 let muted = false;
 let scale = 1;
 let hud = 1;             // HUD magnification for small displays (1 on desktop, up to 2.2 on phones)
@@ -34,7 +33,6 @@ let lightPhase = 0;
 let shake = 0;
 let lastTs = 0;
 let runId = 0;
-let touchScene = null;
 const camera = { x: W / 2, y: H / 2, zoom: 1 };
 function screenPoint(x, y) { return { x: (x - camera.x) * camera.zoom + W / 2, y: (y - camera.y) * camera.zoom + H / 2 }; }
 
@@ -72,17 +70,10 @@ document.addEventListener('visibilitychange', () => { if (document.hidden) { hel
 function readInput() {
   const h = { has: key => held.has(key) || tapped.has(key) };
   const hx = Number(h.has('d')) - Number(h.has('a'));
-  const hy = Number(h.has('s')) - Number(h.has('w'));
-  const rx = Number(h.has('arrowright')) - Number(h.has('arrowleft'));
-  const ry = Number(h.has('arrowdown')) - Number(h.has('arrowup'));
   return {
-    recover: h.has('r'), gas: h.has('w') || (mode === 'solo' && h.has('arrowup')),
-    brake: h.has('s') || (mode === 'solo' && h.has('arrowdown')),
-    handbrake: h.has(' '), steer: hx || (mode === 'solo' ? rx : 0),
-    tiller: mode === 'solo' ? 0 : rx,
-    ladder: h.has('enter') || h.has('arrowup') || (mode === 'solo' && h.has(' ')),
-    hoseX: hx, hoseY: hy, rescueX: rx, rescueY: ry,
-    spray: h.has(' '), rescue: h.has('enter') || (mode === 'solo' && h.has(' ')),
+    recover: h.has('r'), gas: h.has('w'), brake: h.has('s'),
+    handbrake: h.has(' '), steer: hx,
+    tiller: Number(h.has('arrowright')) - Number(h.has('arrowleft')),
   };
 }
 
@@ -100,7 +91,7 @@ function updateEngineAudio() {
     const oscillator=audio.createOscillator(), gain=audio.createGain();
     oscillator.type='triangle';gain.gain.value=0;oscillator.connect(gain);gain.connect(audio.destination);oscillator.start();engineTone={oscillator,gain};
   }
-  const running=game.status==='playing'&&!game.paused&&!game.ladder&&!muted;
+  const running=game.status==='playing'&&!game.paused&&!muted;
   const speed=Math.abs(game.truck.v)/RULES.maxSpeed;
   engineTone.oscillator.frequency.setTargetAtTime(38+speed*66,audio.currentTime,.08);
   engineTone.gain.gain.setTargetAtTime(running ? .014+speed*.018 : 0,audio.currentTime,.05);
@@ -130,16 +121,15 @@ function noise(dur, vol = 0.25) {
 const SFX = {
   siren() { for (let i = 0; i < 4; i++) tone(i % 2 ? 880 : 660, 0.32, 'sawtooth', 0.06, i * 0.34); },
   crash() { noise(0.22, 0.3); tone(90, 0.25, 'square', 0.12); },
-  ladder() { tone(220, 1.3, 'triangle', 0.12, 0, 640); },
   saved() { [523, 659, 784, 1046].forEach((f, i) => tone(f, 0.22, 'triangle', 0.14, i * 0.11)); },
   burnout() { tone(300, 0.5, 'sawtooth', 0.12, 0, 90); tone(150, 0.7, 'square', 0.08, 0.2, 60); },
   over() { [392, 330, 262, 196].forEach((f, i) => tone(f, 0.35, 'triangle', 0.14, i * 0.22)); },
 };
 
 // ---------------------------------------------------------------- flow
-function startMode(m) {
-  mode = m; runId++; held.clear(); tapped.clear(); cityLayer = null;
-  game = createGame({ mode: m });
+function startShift() {
+  runId++; held.clear(); tapped.clear(); cityLayer = null;
+  game = createGame();
   startGame(game);
   camera.zoom = 1.65; camera.x = Math.max(W / camera.zoom / 2, game.truck.x); camera.y = H / 2;
   particles = []; floaters = []; banner = null; shake = 0;
@@ -148,9 +138,9 @@ function startMode(m) {
   if (window.ArcadeGameOver) window.ArcadeGameOver.hide();
   const bezel = document.querySelector('.ch-bezel');
   if (bezel) { bezel.classList.remove('ch-paused'); bezel.classList.add('ch-started'); }
-  setMission('Follow the alarm. Pull alongside and press Enter to deploy the crew.');
+  setMission('Follow the alarm. Park the whole truck parallel to the curb in the marked area.');
   canvas.focus({ preventScroll: true });
-  gtagEvent('hook_and_ladder_start', { mode: m });
+  gtagEvent('hook_and_ladder_start', { mode: 'driving' });
 }
 function setMission(text, ready) {
   if (!missionEl) return;
@@ -166,11 +156,11 @@ function showMenu(sub) {
   menuSub.textContent = sub || '';
   menu.hidden = false;
 }
-menu.querySelectorAll('button[data-mode]').forEach(b => b.addEventListener('click', () => startMode(b.dataset.mode)));
+menu.querySelector('[data-start]').addEventListener('click', startShift);
 
 window.gameAPI = {
-  start() { if (game.status !== 'playing') startMode(mode); },
-  restart() { startMode(mode); },
+  start() { if (game.status !== 'playing') startShift(); },
+  restart() { startShift(); },
   pause() {
     if (game.status !== 'playing') return;
     game.paused = !game.paused; held.clear(); tapped.clear(); updateEngineAudio();
@@ -193,8 +183,8 @@ function onEvent(e) {
   switch (e.type) {
     case 'dispatch': {
       SFX.siren(); cityLayer = null;
-      banner = { text: 'CALL ' + String(game.firesOut + 1).padStart(2, '0'), sub: game.fire.title + ' · Hose + ladder crew', t: 0, dur: 2.0, color: '#ffb347' };
-      setMission('🔥 Fire! Pull the ladder up alongside the burning building, then ' + (mode === 'duo' ? 'P2 presses Enter.' : 'press Space.'));
+      banner = { text: 'CALL ' + String(game.firesOut + 1).padStart(2, '0'), sub: game.fire.title + ' · Drive & park', t: 0, dur: 2.0, color: '#ffb347' };
+      setMission('Respond to the alarm. Stop both axles inside the marked area, parallel to the curb.');
       break;
     }
     case 'crash': {
@@ -202,21 +192,16 @@ function onEvent(e) {
       for (let i = 0; i < 10; i++) particles.push({ x: e.x, y: e.y, vx: (Math.random() - 0.5) * 160, vy: (Math.random() - 0.5) * 160, life: 0, max: 0.4 + Math.random() * 0.3, r: 2, color: '#ffd166', kind: 'spark' });
       break;
     }
-    case 'deploy': SFX.ladder(); banner = null; break;
     case 'recover':
       banner = { text: 'BACK ON THE ROAD', sub: 'Recovery · 5 seconds lost', t: 0, dur: 1.5, color: '#ffd166' }; break;
-    case 'target':
-      if (e.gained) syncScore();
-      tone(e.kind === 'person' ? 880 : 540, 0.16, 'triangle', 0.12);
-      floaters.push({ x: e.x, y: e.y, text: e.kind === 'person' ? 'RESCUED +100' : 'FIRE OUT', t: 0, dur: 1.2, color: '#a4ffd0' }); break;
     case 'extinguished': {
       SFX.saved();
       const parts = ['+' + e.gained];
       if (e.clean) parts.push('clean run');
-      banner = { text: 'SAVED', sub: parts.join(' · '), t: 0, dur: 1.8, color: '#7dffb0' };
+      banner = { text: 'ARRIVED', sub: parts.join(' · '), t: 0, dur: 1.8, color: '#7dffb0' };
       floaters.push({ x: e.building.cx, y: e.building.cy, text: '+' + e.gained, t: 0, dur: 1.4, color: '#7dffb0' });
       syncScore();
-      setMission('Saved. Listen for the next alarm.', true);
+      setMission('Crew delivered. Get ready for the next call.', true);
       break;
     }
     case 'burnout': {
@@ -227,13 +212,13 @@ function onEvent(e) {
     }
     case 'gameover': {
       SFX.over();
-      gtagEvent('game_over', { score: e.score, fires: e.fires, mode });
+      gtagEvent('game_over', { score: e.score, fires: e.fires, mode: 'driving' });
       setMission('Shift over. ' + e.fires + (e.fires === 1 ? ' fire' : ' fires') + ' put out.');
       const finishedRun = runId;
       setTimeout(() => {
         if (runId !== finishedRun || game.status !== 'over') return;
         showMenu('Shift over · ' + e.fires + ' saved · ' + e.score + ' points');
-        if (window.ArcadeGameOver) window.ArcadeGameOver.show({ score: e.score, best: highScore, restart: () => { gtagEvent('play_again', { from: 'hook-and-ladder' }); startMode(mode); } });
+        if (window.ArcadeGameOver) window.ArcadeGameOver.show({ score: e.score, best: highScore, restart: () => { gtagEvent('play_again', { from: 'hook-and-ladder' }); startShift(); } });
       }, 900);
       break;
     }
@@ -259,7 +244,7 @@ function drawZones(t) {
   const parked = parkedInZone(game);
   const pulse = 0.55 + 0.45 * Math.sin(t * 5);
   for (const z of serviceZones(f.building)) {
-    const ready = parked?.side === z.side && Math.abs(game.truck.v) < RULES.parkSpeed;
+    const ready = parked?.side === z.side && readyToPark(game);
     ctx.fillStyle = ready ? 'rgba(90,230,140,0.30)' : `rgba(255,190,60,${0.14 + 0.12 * pulse})`;
     ctx.fillRect(z.x, z.y, z.w, z.h);
     ctx.setLineDash([8, 6]); ctx.lineDashOffset = -t * 40;
@@ -271,7 +256,7 @@ function drawZones(t) {
     ctx.font = `bold ${Math.round(13 * Math.min(hud, 1.5))}px Inter, system-ui, sans-serif`; ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.save(); ctx.translate(z.x + z.w / 2, z.y + z.h / 2);
     if (z.h > z.w) ctx.rotate(-Math.PI / 2);   // vertical lane: run the label along it
-    ctx.fillText('PULL ALONGSIDE', 0, 0); ctx.restore();
+    ctx.fillText('PARK BOTH AXLES', 0, 0); ctx.restore();
   }
 }
 function drawRuined(b) {
@@ -297,7 +282,7 @@ function wheel(x, y, angle, len = 12, wid = 6) {
 }
 function drawTruck(t) {
   const tr = game.truck, R = RULES, hw = R.width / 2;
-  const alarm = !!game.fire || !!game.ladder;
+  const alarm = !!game.fire;
   // Headlight cones and a low chassis shadow make the cab direction readable.
   ctx.save(); ctx.translate(tr.x, tr.y); ctx.rotate(tr.h1);
   const beam = ctx.createLinearGradient(35, 0, 170, 0); beam.addColorStop(0, 'rgba(255,239,183,.2)'); beam.addColorStop(1, 'rgba(255,239,183,0)');
@@ -317,7 +302,7 @@ function drawTruck(t) {
   ctx.fillStyle = '#8c1a22'; ctx.fillRect(-(R.L2 + R.trailerBack), -hw + 3, 14, R.width - 6);
   ctx.fillStyle = '#1b2733'; ctx.fillRect(-(R.L2 + R.trailerBack) + 2, -hw + 5, 4, R.width - 10);
   // stowed ladder
-  if (!game.ladder) {
+  {
     ctx.strokeStyle = '#f2f2f2'; ctx.lineWidth = 2;
     ctx.beginPath(); ctx.moveTo(-R.L2 + 2, -5); ctx.lineTo(R.trailerFront - 3, -5); ctx.moveTo(-R.L2 + 2, 5); ctx.lineTo(R.trailerFront - 3, 5); ctx.stroke();
     ctx.lineWidth = 1.5;
@@ -384,30 +369,24 @@ function hudBox(x, y, w, h, align = 'left') {
 }
 function drawHUD(t) {
   ctx.save(); ctx.scale(hud, hud);
-  const sw = W / hud, sh = H / hud, L = game.ladder, f = game.fire || L?.incident;
+  const sw = W / hud, sh = H / hud, f = game.fire;
   ctx.textBaseline = 'middle';
   hudBox(12, 12, 150, 48);
-  ctx.textAlign = 'left'; ctx.fillStyle = '#91a4b3'; ctx.font = 'bold 10px system-ui'; ctx.fillText('SCORE / SAVED', 23, 26);
+  ctx.textAlign = 'left'; ctx.fillStyle = '#91a4b3'; ctx.font = 'bold 10px system-ui'; ctx.fillText('SCORE / CALLS', 23, 26);
   ctx.fillStyle = '#fff'; ctx.font = 'bold 18px monospace'; ctx.fillText(game.score + ' / ' + game.firesOut, 23, 46);
   const clockW = Math.min(260, sw - 350), clockX = (sw - clockW) / 2;
   hudBox(clockX, 12, clockW, 48);
   ctx.textAlign = 'center'; ctx.fillStyle = f && f.t < 12 ? '#ff7e6e' : '#ffe3a8'; ctx.font = 'bold 17px monospace';
   ctx.fillText(f ? Math.ceil(f.t) + 's · CALL ' + f.number : 'STANDING BY', sw / 2, 30);
-  ctx.fillStyle = '#98abb5'; ctx.font = '10px system-ui'; ctx.fillText('♥ '.repeat(game.lives) + '  ' + game.rescued + ' RESCUED', sw / 2, 49);
-  // On scene the objective replaces the city map, keeping the roof uncluttered.
-  if (L && f) {
-    hudBox(sw-157,12,145,48);
-    ctx.textAlign='left';ctx.font='bold 10px monospace';ctx.fillStyle='#95b6c3';ctx.fillText('CREW OBJECTIVE',sw-146,26);
-    const fires=f.targets.filter(t=>t.kind==='fire'&&t.hp>0).length,people=f.targets.filter(t=>t.kind==='person'&&t.hp>0).length;
-    ctx.font='bold 12px monospace';ctx.fillStyle='#f2d4a7';ctx.fillText(fires+' FIRES / '+people+' PEOPLE',sw-146,46);
-  } else {
+  ctx.fillStyle = '#98abb5'; ctx.font = '10px system-ui'; ctx.fillText('♥ '.repeat(game.lives) + '  ' + game.crashes + ' SCRAPES', sw / 2, 49);
+  {
     const mx=sw-157,my=12,mw=145,mh=80;
     hudBox(mx-4,my-4,mw+8,mh+8);ctx.fillStyle='#192e3a';ctx.fillRect(mx,my,mw,mh);
     for(const b of game.world.buildings){ctx.fillStyle=b===f?.building?'#ffae6a':b.state==='saved'?'#467e70':'#526b78';ctx.fillRect(mx+b.col*TILE/W*mw,my+b.row*TILE/H*mh,b.w*TILE/W*mw,b.h*TILE/H*mh);}
     ctx.strokeStyle='#94bccb';ctx.lineWidth=1;ctx.strokeRect(mx+(camera.x-W/camera.zoom/2)/W*mw,my+(camera.y-H/camera.zoom/2)/H*mh,mw/camera.zoom,mh/camera.zoom);
     ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mx+game.truck.x/W*mw,my+game.truck.y/H*mh,3,0,Math.PI*2);ctx.fill();
   }
-  if (f && !L) {
+  if (f) {
     const p = screenPoint(f.building.cx, f.building.cy);
     if (p.x < 40 || p.x > W - 40 || p.y < 100 || p.y > H - 100) {
       const x = Math.max(30, Math.min(sw - 30, p.x / hud)), y = Math.max(112, Math.min(sh - 110, p.y / hud));
@@ -416,31 +395,19 @@ function drawHUD(t) {
       ctx.fillStyle = '#ffe4bb'; ctx.font = 'bold 10px system-ui'; ctx.textAlign = 'center'; ctx.fillText('FIRE', x, y + 23);
     }
   }
-  const deployed = !!L;
   const panelW = (sw - 36) / 2, py = sh - 65;
   for (const [x, color, title, detail] of [
-    [12, '#8cddff', deployed ? 'P1 · HOSE CREW' : 'P1 · DRIVER', deployed ? 'WASD aim · hold SPACE to spray' : 'W/S gas/reverse · A/D steer · Space brake'],
-    [24 + panelW, '#ffcb7b', deployed ? 'P2 · RESCUE CREW' : 'P2 · TILLERMAN', deployed ? 'Arrows aim · hold ENTER to rescue' : '← → swing tail · Enter deploy nearby'],
+    [12, '#8cddff', 'P1 · DRIVER', 'W/S gas/reverse · A/D steer · Space brake'],
+    [24 + panelW, '#ffcb7b', 'P2 · TILLERMAN', '← → steer rear wheels'],
   ]) {
     hudBox(x, py, panelW, 53); ctx.textAlign = 'left'; ctx.fillStyle = color; ctx.font = 'bold 12px system-ui'; ctx.fillText(title, x + 10, py + 16);
     ctx.fillStyle = '#d5e0e7'; ctx.font = '11px system-ui'; ctx.fillText(detail, x + 10, py + 36);
   }
-  if (deployed) {
-    const x = 22, y = py - 18, w = panelW - 20;
-    ctx.fillStyle = '#152c3a'; ctx.fillRect(x, y, w, 7);
-    ctx.fillStyle = L.dry ? '#ff997a' : '#76d8ff'; ctx.fillRect(x, y, w * L.pressure, 7);
-    ctx.font = 'bold 10px monospace'; ctx.textAlign = 'left'; ctx.fillStyle = '#d5eaf3';
-    if (L.dry) ctx.fillText('RELEASE SPACE TO REBUILD PRESSURE', x, y - 9);
-    const fires = f.targets.filter(t => t.kind === 'fire' && t.hp > 0).length;
-    const people = f.targets.filter(t => t.kind === 'person' && t.hp > 0).length;
-    ctx.textAlign = 'right'; ctx.fillStyle = '#d4e6e8'; ctx.fillText(fires + ' FIRES / ' + people + ' PEOPLE LEFT', sw - 24, y + 3);
-  } else if (canRaiseLadder(game)) {
-    ctx.textAlign = 'center'; ctx.fillStyle = '#a1ffd0'; ctx.font = 'bold 15px system-ui';
-    hudBox(sw / 2 - 155, sh - 108, 310, 30); ctx.fillText('ENTER · DEPLOY THE CREW', sw / 2, sh - 93);
-  } else if (f && parkedInZone(game)) {
-    ctx.textAlign = 'center'; ctx.fillStyle = '#ffdc98'; ctx.font = 'bold 13px system-ui'; ctx.fillText('SPACE TO BRAKE · ENTER TO DEPLOY', sw / 2, sh - 90);
+  if (f && parkedInZone(game)) {
+    ctx.textAlign = 'center'; ctx.fillStyle = '#a1ffd0'; ctx.font = 'bold 13px system-ui';
+    ctx.fillText(readyToPark(game) ? 'HOLD STILL · CREW ARRIVING' : 'STOP BOTH AXLES IN THE ZONE · ALIGN WITH CURB', sw / 2, sh - 90);
   }
-  if (!deployed && game.status === 'playing') {
+  if (game.status === 'playing') {
     const x = 22, y = py - 18;
     ctx.fillStyle = '#203b48'; ctx.fillRect(x,y,panelW-20,5);
     ctx.fillStyle = '#84d9e8'; ctx.fillRect(x,y,(panelW-20)*Math.abs(game.truck.v)/RULES.maxSpeed,5);
@@ -484,10 +451,10 @@ function drawFloaters(dt) {
 // ---------------------------------------------------------------- loop
 function render(dt, t) {
   if (!cityLayer) cityLayer = buildCityLayer();
-  const active = game.status !== 'menu', zoom = active ? (hud > 1.5 && !game.ladder ? 2 : 1.65) : 1;
+  const active = game.status !== 'menu', zoom = active ? (hud > 1.5 ? 2 : 1.65) : 1;
   camera.zoom = zoom;
   const tr = game.truck;
-  const focal = game.ladder && game.fire ? { x: tr.x * .35 + game.fire.building.cx * .65, y: tr.y * .35 + game.fire.building.cy * .65 } : { x: tr.x - Math.cos(tr.h2) * 25 + Math.cos(tr.h1) * tr.v * .35, y: tr.y - Math.sin(tr.h2) * 25 + Math.sin(tr.h1) * tr.v * .35 };
+  const focal = { x: tr.x - Math.cos(tr.h2) * 25 + Math.cos(tr.h1) * tr.v * .35, y: tr.y - Math.sin(tr.h2) * 25 + Math.sin(tr.h1) * tr.v * .35 };
   const tx = active ? Math.max(W / zoom / 2, Math.min(W - W / zoom / 2, focal.x)) : W / 2;
   const ty = active ? Math.max(H / zoom / 2, Math.min(H - H / zoom / 2, focal.y)) : H / 2;
   const ease = 1 - Math.exp(-dt * 5);
@@ -500,27 +467,15 @@ function render(dt, t) {
     if (b.state === 'ruined') drawRuined(b);
     else if (b.state === 'saved') drawSaved(b);
   }
-  if (!game.ladder) drawZones(t);
+  drawZones(t);
   drawTruck(t);
-  if (game.fire && !game.ladder) { drawWorldFire(ctx, game.fire, t); if (dt) spawnSmoke(game.fire.building, dt); }
+  if (game.fire) { drawWorldFire(ctx, game.fire, t); if (dt) spawnSmoke(game.fire.building, dt); }
   drawParticles(dt); drawFloaters(dt);
   ctx.restore();
-  if (game.ladder) drawIncident(ctx, game, t, hud);
   if (active) drawHUD(t);
   drawBanner(dt);
-  const scene = !!game.ladder;
-  if (touchScene !== scene) {
-    touchScene = scene;
-    const pads = document.querySelectorAll('.ch-touch-group');
-    const driver = pads[0]?.querySelector('.ch-touch-btn:nth-child(5)');
-    const rescue = pads[1]?.querySelector('.ch-touch-btn:nth-child(5)');
-    if (driver) { driver.textContent = scene ? 'SPRAY' : 'BRAKE'; driver.setAttribute('aria-label', scene ? 'Spray water' : 'Brake'); }
-    if (rescue) { rescue.textContent = scene ? 'RESCUE' : 'DEPLOY'; rescue.setAttribute('aria-label', scene ? 'Rescue person' : 'Deploy crew'); }
-  }
-  if (game.status === 'playing') {
-    if (game.ladder && !game.ladder.retract) setMission('ON SCENE · P1: WASD + Space fights fires. P2: arrows + Enter rescues people. Clear flames blocking the ladder.', true);
-    else if (canRaiseLadder(game)) setMission('IN POSITION · P2 presses Enter to deploy the crew.', true);
-    else if (game.fire) setMission('EN ROUTE · Follow the orange alarm on the map. Pull alongside the highlighted building. Stuck? R recovers (−5s).');
+  if (game.status === 'playing' && game.fire) {
+    setMission(readyToPark(game) ? 'HOLD STILL · Delivering the crew…' : 'DRIVE TO THE ALARM · Park both axles in the marked area, parallel to the curb. Space brakes. R recovers (−5s).', readyToPark(game));
   }
 }
 function frame(ts) {
@@ -540,4 +495,4 @@ function frame(ts) {
 requestAnimationFrame(frame);
 showMenu('');
 // Debug/verification handle (read-only use; tools/VERIFICATION.md drives the game through it).
-window.__hookLadder = () => ({ game, mode, held, particles });
+window.__hookLadder = () => ({ game, held, particles });

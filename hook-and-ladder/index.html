@@ -9,20 +9,19 @@
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
-    <meta name="description" content="Play Hook &amp; Ladder free in your browser: a two-player top-down fire truck game. One player drives the cab, the other steers the tiller at the back of the long ladder truck. Swing the tail around corners, pull alongside the fire, aim the hose and rescue people before time runs out. One keyboard, no downloads.">
+    <meta name="description" content="Play Hook &amp; Ladder free in your browser: a two-player top-down fire truck game. One player drives the cab, the other steers the tiller at the back of the long ladder truck. Swing the tail around corners, park at each alarm before time runs out. One keyboard, no downloads.">
     <link rel="canonical" href="https://limestonegames.com/hook-and-ladder/">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Hook & Ladder","description":"A two-player top-down fire truck game. One player drives the cab, the other steers the tiller at the back of the long ladder truck. Swing the tail around corners, pull alongside the fire, aim the hose and rescue people before time runs out.","playMode":["MultiPlayer","SinglePlayer"],"numberOfPlayers":{"@type":"QuantitativeValue","minValue":1,"maxValue":2},"applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Hook & Ladder","description":"A two-player top-down fire truck game. One player drives the cab, the other steers the tiller at the back of the long ladder truck. Swing the tail around corners, park at each alarm before time runs out.","playMode":["MultiPlayer"],"numberOfPlayers":{"@type":"QuantitativeValue","minValue":2,"maxValue":2},"applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Arcade","item":"https://limestonegames.com/arcade/"},{"@type":"ListItem","position":3,"name":"Hook & Ladder"}]}</script>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Hook & Ladder?","acceptedAnswer":{"@type":"Answer","text":"Two people share one keyboard. The driver uses W and S for gas and brake and A and D to steer the cab. The tillerman uses the left and right arrow keys to steer the rear wheels of the trailer and Enter to deploy the ladder. When a fire breaks out, drive to the burning building, pull alongside and press Enter to deploy. Then P1 aims the hose with WASD and sprays with Space, while P2 aims the ladder with the arrows and holds Enter to rescue people. Cool any fire blocking a rescue first."}},{"@type":"Question","name":"What is a tiller fire truck?","acceptedAnswer":{"@type":"Answer","text":"A tiller, or tractor-drawn aerial, is a ladder truck with a second steering position at the very back. The tillerman steers the trailer's rear wheels, which lets a truck the length of a semi turn down narrow city streets. In a turn the tillerman steers opposite to the driver so the tail swings wide instead of cutting the corner."}},{"@type":"Question","name":"Can I play Hook & Ladder alone?","acceptedAnswer":{"@type":"Answer","text":"Yes. WASD drives and aims both tools on scene; Space sprays and rescues. Two-player mode gives each player an independent tool."}},{"@type":"Question","name":"Is Hook & Ladder free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs."}},{"@type":"Question","name":"Does my Hook & Ladder high score save?","acceptedAnswer":{"@type":"Answer","text":"Yes — your best score is stored locally in your browser."}}]}</script>
     <meta property="og:title" content="Hook &amp; Ladder — Two-Player Tiller Fire Truck Game | Limestone Games">
-    <meta property="og:description" content="One player drives the cab, the other steers the tail. Swing the ladder truck around the block, pull alongside the fire, aim the hose and rescue people before time runs out.">
+    <meta property="og:description" content="One player drives the cab, the other steers the tail. Swing the ladder truck around the block, park at each alarm before time runs out.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://limestonegames.com/hook-and-ladder/">
     <meta property="og:site_name" content="Limestone Games">
     <meta property="og:image" content="https://limestonegames.com/assets/og/hook-and-ladder.jpg">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Hook &amp; Ladder — Two-Player Tiller Fire Truck Game | Limestone Games">
-    <meta name="twitter:description" content="One player drives the cab, the other steers the tail. Swing the ladder truck around the block, pull alongside the fire, aim the hose and rescue people before time runs out.">
+    <meta name="twitter:description" content="One player drives the cab, the other steers the tail. Swing the ladder truck around the block, park at each alarm before time runs out.">
     <meta name="twitter:image" content="https://limestonegames.com/assets/og/hook-and-ladder.jpg">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -147,7 +146,6 @@
         #menu .m-role.p1 b { color: #8adfff; } #menu .m-role.p2 b { color: #ffcb7b; }
         #menu button { background: #214a5b; border: 1px solid #6098a8; border-radius: 7px; }
         #menu button:hover, #menu button:focus-visible { background: #2a6173; border-color: #b0e9f0; }
-        #menu button[data-mode="solo"] { background: transparent; border-color: #304d5c; font-size: 12px; padding: 6px 16px; }
         .ch-touch-group:first-child, .ch-touch-group:last-child { display: grid; grid-template-columns: repeat(3, 46px); grid-template-rows: 42px 42px 32px; grid-template-areas: ". up ." "left down right" "action action action"; gap: 5px; }
         .ch-touch-group .ch-touch-btn { width: 46px !important; height: 42px !important; min-width: 0; padding: 0; }
         .ch-touch-group:first-child .ch-touch-btn { background: #183646; border-color: #46778a; }
@@ -164,66 +162,58 @@
 <body class="ch-game" data-category="arcade"
       data-eyebrow="Cabinet · Hook &amp; Ladder"
       data-title="Hook &amp; Ladder"
-      data-hint-1="P1 WASD · Space hose/brake"
-      data-hint-2="P2 arrows · Enter rescue"
+      data-hint-1="P1 WASD · Space brake"
+      data-hint-2="P2 ← → rear steering"
       data-hint-3="P pause · R recover"
-      data-stats="fires:Saved"
-      data-touch="◀:~a,▲:~w,▼:~s,▶:~d,SPRAY:~Space | ◀:~ArrowLeft,▲:~ArrowUp,▼:~ArrowDown,▶:~ArrowRight,RESCUE:~Enter">
+      data-stats="fires:Calls"
+      data-touch="◀:~a,▲:~w,▼:~s,▶:~d,BRAKE:~Space | ◀:~ArrowLeft,▶:~ArrowRight">
     <div class="container">
         <h1>🚒 Hook &amp; Ladder</h1>
         <div class="game-info">
             <p>Score: <span id="score">0</span></p>
             <p>High Score: <span id="highScore">0</span></p>
-            <p>Fires out: <span id="fires">0</span></p>
+            <p>Calls completed: <span id="fires">0</span></p>
         </div>
-        <div id="mission" role="status" aria-live="polite">Two players. One crew. Drive together, fight the fire, bring everyone home.</div>
+        <div id="mission" role="status" aria-live="polite">Drive to the alarm. Park the rig. Beat the clock.</div>
         <div id="game-container">
-            <canvas id="gameCanvas" width="1240" height="680" tabindex="0" aria-label="Hook and Ladder city map. Player one drives the cab with W, A, S and D; player two steers the trailer with the left and right arrow keys and deploys with Enter. On scene P1 aims with WASD and sprays with Space; P2 aims with arrows and rescues with Enter."></canvas>
-            <div id="menu" role="dialog" aria-label="Choose a mode">
+            <canvas id="gameCanvas" width="1240" height="680" tabindex="0" aria-label="Hook and Ladder driving game. P1 uses WASD and Space to drive and brake. P2 steers the rear wheels with left and right arrows."></canvas>
+            <div id="menu" role="dialog" aria-label="Start your shift">
                 <p class="m-title">HOOK &amp; LADDER</p>
-                <p class="m-tag">Drive together. Fight the fire. Bring everyone home.</p>
+                <p class="m-tag">Two drivers. One long truck. Every second counts.</p>
                 <p id="menu-sub"></p>
                 <div class="m-roles">
-                    <div class="m-role p1"><b>P1 · Driver / Hose</b><kbd>WASD</kbd> drive · <kbd>Space</kbd> brake<br>At the fire: <kbd>WASD</kbd> aim · <kbd>Space</kbd> spray</div>
-                    <div class="m-role p2"><b>P2 · Ladder / Rescue</b><kbd>←</kbd> <kbd>→</kbd> swing the tail · <kbd>Enter</kbd> deploy<br>At the fire: <kbd>arrows</kbd> aim · <kbd>Enter</kbd> rescue</div>
+                    <div class="m-role p1"><b>P1 · Driver</b><kbd>W</kbd> gas · <kbd>S</kbd> reverse<br><kbd>A</kbd> <kbd>D</kbd> steer · <kbd>Space</kbd> brake</div>
+                    <div class="m-role p2"><b>P2 · Tillerman</b><kbd>←</kbd> <kbd>→</kbd> steer the rear wheels<br>Work together around tight corners</div>
                 </div>
-                <button type="button" data-mode="duo"><span class="m-ico">👥</span><span><b>Start a two-player shift</b><small>P1 on WASD · P2 on arrows · first call is close by</small></span></button>
-                <button type="button" data-mode="solo"><span class="m-ico">🚒</span><span><b>Solo</b><small>WASD to drive and aim · hold Space to work</small></span></button>
+                <button type="button" data-start><span class="m-ico">👥</span><span><b>Start a two-player shift</b><small>P1 on WASD · P2 on arrows · drive and park</small></span></button>
+
             </div>
         </div>
-        <div class="controls">
-            <p>P1: WASD drives and aims the hose; Space brakes or sprays. P2: arrows steer and aim the ladder; Enter deploys or rescues. R recovers the truck at a five-second cost.</p>
-        </div>
-
+        <div class="controls"><p>P1: WASD drives; Space brakes. P2: left/right arrows steer the rear wheels. R recovers at a five-second cost.</p></div>
         <section class="game-overview" aria-label="About Hook &amp; Ladder">
             <h2>How to play Hook &amp; Ladder</h2>
-            <p>Take a two-person ladder crew into a burning city. One player drives the cab while the other steers the long trailer. Follow the alarm on the minimap, pull into the broad highlighted area beside the building, slow down and deploy. The camera opens into a rooftop rescue. P1 aims a water stream while P2 moves the ladder independently. Cool the fires that block a rescue, bring the people down and finish the remaining flames. Every completed call earns points, with bonuses for quick responses, rescues and clean driving. Lose three buildings and the shift ends.</p>
-
+            <p>Race a long articulated fire truck across the city. Every alarm requires a drive. Navigate corners and parked cars, then stop both axles in the highlighted area parallel to the curb. Hold still briefly to deliver the crew and earn the next call. Fast arrivals and clean driving score more points. Miss three calls and the shift ends.</p>
             <h3>Controls</h3>
             <ul>
-                <li><b>P1 — driver and hose:</b> <kbd>W</kbd> accelerates, <kbd>S</kbd> brakes, then hold to reverse, <kbd>A</kbd> <kbd>D</kbd> steer. <kbd>Space</kbd> brakes without reversing. Backing is slower with automatic trailer stabilization; P2 can still guide the rear. On scene, <kbd>WASD</kbd> moves the blue hose cursor and <kbd>Space</kbd> sprays.</li>
-                <li><b>P2 — tillerman and rescue:</b> <kbd>←</kbd> <kbd>→</kbd> swing the tail. Press <kbd>Enter</kbd> alongside the fire to deploy. All four arrow keys then move the amber ladder cursor. Hold <kbd>Enter</kbd> over a person to bring them down once the nearby fire is under control.</li>
-                <li><b>Recovery:</b> <kbd>R</kbd> returns a stuck truck to a clear intersection and costs five seconds. <kbd>P</kbd> pauses.</li>
-                <li><b>Solo:</b> WASD drives and aims both tools on scene. Space sprays and rescues. Two players have independent tools.</li>
-                <li><b>Touch:</b> the left pad drives and aims the hose; the right pad steers and aims the ladder. Use the Spray and Rescue buttons to work.</li>
+                <li><b>P1 — driver:</b> W accelerates. S brakes, then reverses. A/D steer the front wheels. Space brakes without reversing.</li>
+                <li><b>P2 — tillerman:</b> Left/right arrows steer the rear wheels. Coordinate with the driver to clear tight corners.</li>
+                <li><b>Recovery:</b> R returns a stuck truck to an intersection and costs five seconds. P pauses.</li>
+                <li><b>Touch:</b> The left pad drives and brakes; the right pad steers the rear wheels.</li>
             </ul>
-
-            <h3>Tips &amp; strategy</h3>
+            <h3>Driving tips</h3>
             <ul>
-                <li><b>Turn, then release.</b> The cab settles onto the street when you release steering near a straight heading. The tail follows with corner assistance; P2 can override it to swing wider or tuck in.</li>
-                <li><b>Pull alongside.</b> Either the cab or ladder base can enter the highlighted service area. Slow down and press Enter; the crew handles the stop.</li>
-                <li><b>Use controlled bursts.</b> Release Space between targets to rebuild hose pressure. Partly extinguished fires grow back; finish them before moving on.</li>
-                <li><b>Clear a rescue path.</b> A red dotted line connects each person to the fire blocking their rescue. P1 cools that fire while P2 positions the ladder. When the person is marked ready, hold Enter to rescue them.</li>
-                <li><b>Finish the whole call.</b> Clear every fire and rescue every person before the timer expires. Later calls send you farther across the city and add more people.</li>
+                <li><b>Watch the trailer.</b> The cab can clear a corner while the trailer clips it. P2 can steer the tail wide.</li>
+                <li><b>Back up carefully.</b> Reversing can increase the bend at the hitch. Use small steering inputs and pull forward to straighten the rig. At the hitch limit, further folding stops the truck.</li>
+                <li><b>Park the whole rig.</b> Both axles must be inside the marked zone, nearly parallel to the curb, and stopped for the call to count.</li>
+                <li><b>Keep moving between calls.</b> The next alarm appears on the same city map. Clean arrivals earn a 150-point bonus.</li>
             </ul>
 
             <h3>About tiller trucks</h3>
             <p>A tiller, or tractor-drawn aerial, is a ladder truck built like a semi with a second driver at the very back. The tillerman sits above the rear axle and steers the trailer's wheels, which is what lets a rig that long snake through old city streets and around double-parked cars. Fire departments in San Francisco, Los Angeles and Washington still run them for exactly that reason. Driver and tillerman talk over an intercom the whole ride, and in a tight turn the tillerman steers the opposite way to the driver so the tail swings clear. Hook &amp; Ladder puts those two seats on one keyboard.</p>
 
             <h3>Frequently asked</h3>
-            <p><b>How do I play Hook &amp; Ladder?</b> Two people share one keyboard. The driver uses W and S for gas and brake and A and D to steer the cab. The tillerman uses the left and right arrows to steer the rear wheels and Enter to deploy the ladder. Drive to the burning building, pull alongside and press Enter to deploy. Then P1 aims the hose with WASD and sprays with Space, while P2 aims the ladder with the arrows and holds Enter to rescue people. Cool any fire blocking a rescue first.</p>
+            <p><b>How do I play Hook &amp; Ladder?</b> Drive to each alarm and park both axles in the marked area before time runs out. P1 drives the cab; P2 steers the rear wheels.</p>
             <p><b>What is a tiller fire truck?</b> A ladder truck with a second steering position at the back. The tillerman steers the trailer's rear wheels so a truck the length of a semi can turn down narrow streets. In a turn the tillerman steers opposite to the driver so the tail swings wide.</p>
-            <p><b>Can I play alone?</b> Yes. WASD drives and aims both tools on scene; Space sprays and rescues. Two-player mode gives each player an independent tool.</p>
             <p><b>Is Hook &amp; Ladder free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
             <p><b>Does my high score save?</b> Yes &mdash; your best score is stored locally in your browser.</p>
 
@@ -237,7 +227,7 @@
         </section>
     </div>
 
-    <script type="module" src="game.mjs?v=20260916a"></script>
+    <script type="module" src="game.mjs?v=20260916b"></script>
     <!-- Ad Slot: Game Page Banner -->
     <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
         <ins class="adsbygoogle"

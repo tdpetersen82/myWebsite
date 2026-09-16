@@ -1,5 +1,5 @@
 // Canvas artwork. The city and the incident board share one night-shift palette.
-import { W, H, TILE, PITCH, BLOCKS_X, BLOCKS_Y, blockAt, roofPoint, rescueBlocked } from './engine.mjs?v=20260916a';
+import { W, H, TILE, PITCH, BLOCKS_X, BLOCKS_Y, blockAt, roofPoint } from './engine.mjs?v=20260916b';
 const TAU = Math.PI * 2;
 function rect(c,x,y,w,h,r=0){c.beginPath();c.roundRect(x,y,w,h,r);}
 function glow(c,x,y,r,color){const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}
@@ -102,60 +102,6 @@ function person(c,x,y,t,color='#ffd5aa'){
   c.beginPath();c.moveTo(x,y-3);c.lineTo(x,y+7);c.moveTo(x-7,y+15);c.lineTo(x,y+7);c.lineTo(x+7,y+15);c.stroke();
   c.beginPath();c.moveTo(x-11,y-9-Math.sin(t*6)*4);c.lineTo(x,y);c.lineTo(x+11,y-8);c.stroke();
   c.fillStyle=color;c.beginPath();c.arc(x,y-11,6,0,TAU);c.fill();
-}
-export function drawIncident(c,game,t,hud){
-  const L=game.ladder,f=game.fire||L?.incident;if(!L||!f)return;
-  c.fillStyle='rgba(3,12,20,.93)';c.fillRect(0,0,W,H);
-  const x=W*.12,y=hud>1.5?H*.27:H*.18,w=W*.76,h=hud>1.5?H*.49:H*.60;
-  const pos=p=>({x:x+p.u*w,y:y+p.v*h}), ui=Math.min(hud,1.8);
-  // Rooftop cutaway: warm windows below a cold steel-blue parapet.
-  c.fillStyle='#0a1924';rect(c,x+10,y+16,w,h+14,10);c.fill();
-  c.fillStyle='#283f50';rect(c,x,y+10,w,h+15,8);c.fill();
-  for(let k=20;k<w-20;k+=40){c.fillStyle=k%80===20?'#deb277':'#4e6f7c';c.fillRect(x+k,y+h+12,18,6);}
-  const roof=c.createLinearGradient(x,y,x+w,y+h);roof.addColorStop(0,'#344e60');roof.addColorStop(1,'#192f40');c.fillStyle=roof;rect(c,x,y,w,h,7);c.fill();
-  c.strokeStyle='#688898';c.lineWidth=4;rect(c,x+3,y+3,w-6,h-6,5);c.stroke();
-  c.strokeStyle='rgba(139,175,188,.12)';c.lineWidth=1;
-  for(let xx=x+32;xx<x+w;xx+=32){c.beginPath();c.moveTo(xx,y+6);c.lineTo(xx,y+h-6);c.stroke();}
-  for(let yy=y+32;yy<y+h;yy+=32){c.beginPath();c.moveTo(x+6,yy);c.lineTo(x+w-6,yy);c.stroke();}
-  c.fillStyle='#0c2535';rect(c,x+w*.42,y+h*.39,w*.16,h*.20,5);c.fill();
-  c.strokeStyle='#537887';c.lineWidth=2;c.stroke();c.fillStyle='#86a0aa';c.font='bold 12px monospace';c.textAlign='center';c.fillText('ROOF ACCESS',x+w*.5,y+h*.5);
-  c.fillStyle='#b6c8ce';c.font=`600 ${13*ui}px monospace`;c.textAlign='left';c.fillText(f.title,x,y-13);
-  const base={x:W*.69,y:H*.88},basket=pos(L.basket),hose=pos(L.hose);
-  const dx=basket.x-base.x,dy=basket.y-base.y,len=Math.hypot(dx,dy),angle=Math.atan2(dy,dx);
-  const extension=Math.min(1,L.t/.65);c.save();c.translate(base.x,base.y);c.rotate(angle);
-  c.strokeStyle='#111f28';c.lineWidth=18;c.beginPath();c.moveTo(0,5);c.lineTo(len*extension,5);c.stroke();
-  c.strokeStyle='#c1d2d8';c.lineWidth=3;
-  for(const off of [-7,7]){c.beginPath();c.moveTo(0,off);c.lineTo(len*extension,off);c.stroke();}
-  c.lineWidth=2;for(let j=7;j<len*extension;j+=15){c.beginPath();c.moveTo(j,-7);c.lineTo(j,7);c.stroke();}c.restore();
-  c.fillStyle='#cb493b';rect(c,base.x-26,base.y-10,52,21,5);c.fill();c.fillStyle='#f3c078';c.beginPath();c.arc(base.x,base.y,9,0,TAU);c.fill();
-  for(const target of f.targets){
-    const p=pos(roofPoint(target.at));
-    if(target.hp<=0){
-      const age=game.t-(target.doneAt??0);
-      if(target.kind==='person'&&age<1.1){const k=Math.min(1,age/1.1);person(c,p.x+(base.x-p.x)*k,p.y+(base.y-p.y)*k,t);}
-      else if(target.kind==='fire'&&age<1){c.save();c.globalAlpha=(1-age)*.35;c.fillStyle='#b8edf2';c.beginPath();c.arc(p.x,p.y-age*24,10+age*25,0,TAU);c.fill();c.restore();}
-      c.fillStyle='#78e4b4';c.font='bold 17px system-ui';c.textAlign='center';c.fillText('✓',p.x,p.y+4);continue;}
-    if(target.kind==='fire')flame(c,p.x,p.y,(14+target.hp*11)*Math.min(ui,1.3),t,target.at*10);
-    else{
-      const blocked=rescueBlocked(target);
-      if(blocked){const guard=pos(roofPoint(target.guard.at));c.strokeStyle='rgba(255,139,91,.4)';c.setLineDash([4,6]);c.beginPath();c.moveTo(p.x,p.y);c.lineTo(guard.x,guard.y);c.stroke();c.setLineDash([]);}
-      c.save();c.translate(p.x,p.y);c.scale(ui,ui);person(c,0,0,t);c.restore();c.fillStyle=blocked?'#ffb094':'#aff9d6';c.font=`bold ${10*ui}px monospace`;c.textAlign='center';c.fillText(blocked?'CLEAR NEARBY FIRE':'READY FOR LADDER',p.x,p.y-30*ui);
-    }
-    c.fillStyle='#0c202e';rect(c,p.x-23,p.y+26,46,5,2);c.fill();c.fillStyle=target.kind==='fire'?'#ffa95c':'#91e4b9';rect(c,p.x-23,p.y+26,46*target.hp,5,2);c.fill();
-  }
-  // The hose and ladder have distinct cursors and can work simultaneously.
-  if(L.spraying){
-    const origin={x:W*.29,y:H*.88};
-    c.strokeStyle='rgba(87,204,255,.22)';c.lineWidth=14;c.beginPath();c.moveTo(origin.x,origin.y);c.quadraticCurveTo((origin.x+hose.x)/2,Math.min(origin.y,hose.y)-70,hose.x,hose.y);c.stroke();
-    c.strokeStyle='#a0e7ff';c.lineWidth=4;c.stroke();
-    for(let i=0;i<12;i++){const a=t*8+i*2.4,r=8+(i%4)*5;c.fillStyle=i%2?'#dcfaff':'#75d7ff';c.beginPath();c.arc(hose.x+Math.cos(a)*r,hose.y+Math.sin(a)*r*.6,2,0,TAU);c.fill();}
-  }
-  for(const [p,color,label] of [[hose,'#8adfff','1 · HOSE'],[basket,'#ffcb7b','2 · LADDER']]){
-    c.strokeStyle=color;c.lineWidth=2;c.beginPath();c.arc(p.x,p.y,22,0,TAU);c.stroke();
-    for(const sign of [-1,1]){c.beginPath();c.moveTo(p.x+sign*27,p.y);c.lineTo(p.x+sign*34,p.y);c.moveTo(p.x,p.y+sign*27);c.lineTo(p.x,p.y+sign*34);c.stroke();}
-    const ly=p.y>y+h-65*ui?p.y-54*ui:p.y+36;
-    c.fillStyle='#0d2230';rect(c,p.x-43*ui,ly,86*ui,18*ui,4);c.fill();c.fillStyle=color;c.font=`bold ${10*ui}px monospace`;c.textAlign='center';c.fillText(label,p.x,ly+12*ui);
-  }
 }
 export function drawWorldFire(c,f,t){
   const b=f.building;
