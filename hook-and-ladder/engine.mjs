@@ -17,7 +17,7 @@ export const STREET = 0, BUILDING = 1, PARK = 2;
 const DEG = Math.PI / 180;
 export const RULES = {
   maxSpeed: 210,        // px/s forward
-  reverseSpeed: 85,
+  reverseSpeed: 68,
   accel: 340,
   brake: 520,
   coast: 145,
@@ -214,14 +214,24 @@ export function stepTruck(state, inp, dt) {
   const manual = state.mode === 'solo' ? 0 : (inp.tiller || 0);
   const assist = tr.v >= 0 && !manual ? -steering * .65 : 0;
   tr.tiller = approach(tr.tiller, (manual || assist) * R.maxTiller, R.tillerRate * dt);
-  if (inp.handbrake) tr.v = approach(tr.v, 0, R.brake * 1.5 * dt);
-  else if (inp.brake) tr.v = approach(tr.v, -R.reverseSpeed, (tr.v > 0 ? R.brake : R.accel * .6) * dt);
-  else if (inp.gas) tr.v = approach(tr.v, R.maxSpeed - Math.abs(steering) * 55, (tr.v < 0 ? R.brake : R.accel) * dt);
-  else tr.v = approach(tr.v, 0, R.coast * dt);
+  // Opposite throttle first stops the truck, then engages the other direction.
+  // This also makes a short tap of S a brake instead of an accidental reverse.
+  tr.shiftWait = Math.max(0, (tr.shiftWait || 0) - dt);
+  const direction = inp.brake ? -1 : inp.gas ? 1 : 0;
+  if (inp.handbrake || (inp.brake && inp.gas)) {
+    tr.v = approach(tr.v, 0, R.brake * 1.5 * dt);
+    tr.shiftWait = 0;
+  } else if (direction && tr.v * direction < 0) {
+    tr.v = approach(tr.v, 0, R.brake * dt);
+    if (tr.v === 0) tr.shiftWait = .16;
+  } else if (direction && tr.shiftWait === 0) {
+    const target = direction < 0 ? -R.reverseSpeed : R.maxSpeed - Math.abs(steering) * 55;
+    tr.v = approach(tr.v, target, (direction < 0 ? 150 : R.accel) * dt);
+  } else tr.v = approach(tr.v, 0, R.coast * dt);
   if (Math.abs(tr.v) < .1) { tr.v = 0; return null; }
 
   const prev = { x: tr.x, y: tr.y, h1: tr.h1, h2: tr.h2 };
-  const yaw = tr.v / R.L1 * Math.tan(tr.steer);
+  const yaw = tr.v / (tr.v < 0 ? 72 : R.L1) * Math.tan(tr.steer);
   tr.h1 += Math.max(-2.15, Math.min(2.15, yaw)) * dt;
   // Releasing near a cardinal heading settles onto that street, instead of
   // leaving a tiny angle that drifts the rig into a wall two blocks later.
@@ -233,8 +243,16 @@ export function stepTruck(state, inp, dt) {
   tr.x += Math.cos(tr.h1) * tr.v * dt;
   tr.y += Math.sin(tr.h1) * tr.v * dt;
   let trailerYaw = tr.v * Math.sin(tr.h1 - tr.h2 - tr.tiller) / (R.L2 * Math.cos(tr.tiller));
-  // Reverse stabilisation prevents the rear becoming an uncontrollable hinge.
-  if (tr.v < 0 && !manual) trailerYaw = wrapAngle(tr.h1 - tr.h2) * 3;
+  // Arcade backing: preserve wheel-direction steering, but keep the rear
+  // controlled even while P2 steers. Correction is per distance travelled,
+  // so creeping cannot whip the tail sideways. A small, smoothly requested
+  // articulation lets P2 guide the rear without disabling stabilization.
+  if (tr.v < 0) {
+    const targetArt = -tr.tiller * .55;
+    const error = wrapAngle(tr.h1 - tr.h2 - targetArt);
+    const follow = Math.abs(tr.v) / R.L2 * 2.5;
+    trailerYaw = yaw * .85 + error * follow;
+  }
   tr.h2 += trailerYaw * dt;
   const art = wrapAngle(tr.h1 - tr.h2);
   if (Math.abs(art) > R.maxArticulation) tr.h2 = tr.h1 - Math.sign(art) * R.maxArticulation;

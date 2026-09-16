@@ -139,6 +139,57 @@ console.log('kinematics');
   check('automatic corner assist matches a coordinated tillerman', counter >= passive - 3, `${passive.toFixed(1)} → ${counter.toFixed(1)}`);
 }
 
+// Backing must stay controllable with either player steering, including at
+// very low speed and after an actual collision in the city.
+console.log('reverse handling');
+{
+  const g = playing(); g.world = openWorld(); g.nextFireIn = 1e9;
+  g.truck.x = 600; g.truck.v = 120;
+  run(g, .25, { brake: true });
+  check('opposite throttle stops before changing direction', g.truck.v === 0);
+  run(g, .1, { brake: true });
+  check('gear change has a deliberate neutral pause', g.truck.v === 0);
+  run(g, .5, { brake: true });
+  check('holding S engages reverse after the pause', g.truck.v < -40);
+  run(g, .7, { gas: true, brake: true });
+  check('conflicting throttle keys stop instead of reversing', g.truck.v === 0);
+}
+for (const steer of [-1, 0, 1]) for (const tiller of [-1, 0, 1]) {
+  const g = playing(); g.world = openWorld(); g.nextFireIn = 1e9;
+  g.truck.x = 650; g.truck.y = 340;
+  let maxArt = 0;
+  run(g, 2, state => {
+    maxArt = Math.max(maxArt, Math.abs(wrapAngle(state.truck.h1 - state.truck.h2)));
+    return { brake: true, steer, tiller };
+  });
+  check(`reverse remains stable with both controls ${steer}/${tiller}`, maxArt < 30 * Math.PI / 180, deg(maxArt));
+  check(`reverse test actually moves without hitting bounds ${steer}/${tiller}`, g.crashes === 0 && g.truck.v === -RULES.reverseSpeed);
+  if (steer) check('reverse steering follows wheel direction', Math.sign(g.truck.h1) === -steer);
+  run(g, .5, { handbrake: true });
+  const stopped = { ...g.truck };
+  run(g, .5, { steer: -1, tiller: 1 });
+  check('steering at rest cannot rotate either body', g.truck.h1 === stopped.h1 && g.truck.h2 === stopped.h2);
+}
+{
+  const g = playing(); g.world = openWorld(); g.nextFireIn = 1e9;
+  g.truck.x = 600; g.truck.h2 = .4; g.truck.v = -.5;
+  run(g, DT, { brake: true });
+  check('creeping backward does not whip a bent trailer around', Math.abs(g.truck.h2 - .4) < .002);
+  run(g, 1.5, { brake: true, tiller: 1 });
+  const bent = Math.abs(wrapAngle(g.truck.h1 - g.truck.h2));
+  run(g, 1.5, { brake: true });
+  check('releasing P2 straightens the trailer while backing', Math.abs(wrapAngle(g.truck.h1 - g.truck.h2)) < bent * .15);
+}
+for (const steer of [-1, 1]) {
+  const g = playing(3); g.nextFireIn = 1e9; g.truck.x = 440;
+  run(g, 3, { gas: true, steer });
+  const stuck = { ...g.truck };
+  check('back-out scenario starts at a real collision', g.crashes > 0 && g.truck.v === 0);
+  run(g, 2, { brake: true });
+  check('S backs out of a blocked turn without recovery', Math.hypot(g.truck.x - stuck.x, g.truck.y - stuck.y) > 35 && g.truck.v < -60);
+  check('backing out preserves collision clearance', truckCollides(g.world, g.truck) === null);
+}
+
 // ---------------------------------------------------------------- collisions
 console.log('collisions');
 {

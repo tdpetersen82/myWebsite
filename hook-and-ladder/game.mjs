@@ -2,9 +2,9 @@
 import {
   createGame, startGame, step, drainEvents, canRaiseLadder, parkedInZone,
   serviceZones, W, H, TILE, RULES,
-} from './engine.mjs?v=20260915f';
+} from './engine.mjs?v=20260916a';
 
-import { paintCity, drawIncident, drawWorldFire } from './art.mjs?v=20260915f';
+import { paintCity, drawIncident, drawWorldFire } from './art.mjs?v=20260916a';
 
 const HS_KEY = 'hookAndLadderHighScore';
 const canvas = document.getElementById('gameCanvas');
