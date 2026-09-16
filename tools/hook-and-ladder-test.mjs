@@ -396,6 +396,28 @@ function bumpCar(speed){
  check('finished jobs cannot burn out during their animation',f.t===.05&&g.lives===RULES.lives);
  run(g,.5);check('completion animation awards the call once',g.firesOut===1&&!g.fire);
 }
+console.log('displaced traffic');
+{
+ const g=playing();g.world=openWorld();g.nextFireIn=1e9;
+ const car={...createGame(42).world.traffic[0],x:650,y:331.5,w:34,h:17};
+ g.world.traffic=[car];g.truck.x=610;g.truck.v=100;
+ stepTruck(g,{gas:true},1/120);
+ check('truck impact takes traffic off its old route',car.displaced===true);
+ run(g,3,{handbrake:true});const x=car.x,y=car.y;
+ run(g,5,{handbrake:true});
+ check('pushed traffic stays where it settles',car.x===x&&car.y===y&&x>650);
+ check('settled traffic does not overlap truck',!truckCollides(g.world,g.truck));
+}
+{
+ const g=playing();g.world=openWorld();g.nextFireIn=1e9;
+ const car={x:650,y:331.5,w:34,h:17};g.world.cars=[car];g.truck.x=610;
+ run(g,2,{gas:true});const x=car.x;run(g,2,{gas:true});
+ check('gentle throttle keeps pushing a car forward',x>650&&car.x>x+5);
+ check('sustained pushing keeps truck outside car',!truckCollides(g.world,g.truck));
+ const wallCar={x:W-34,y:100,w:34,h:17,vx:80,vy:60};g.world.cars=[wallCar];
+ run(g,.5,{handbrake:true});
+ check('car slides along boundary without bouncing back',wallCar.x===W-34&&wallCar.y>100&&wallCar.vx===0);
+}
 console.log('routes and call variety');
 const callTitles=new Set();
 for(let seed=1;seed<=30;seed++)for(let variant=0;variant<4;variant++){

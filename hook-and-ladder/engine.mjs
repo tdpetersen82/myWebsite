@@ -169,24 +169,24 @@ export function trafficPose(car, distance) {
   return { x:left+x-w/2, y:top+y-h/2, w, h, heading };
 }
 function moveRecoil(state,car,dt) {
-  car.bumpCooldown=Math.max(0,(car.bumpCooldown||0)-dt);
   let vx=car.vx||0,vy=car.vy||0;
-  const anchor=car.route?trafficPose(car,car.distance):null;
-  const offset=anchor?Math.hypot(anchor.x-car.x,anchor.y-car.y):0;
-  if(Math.hypot(vx,vy)<.5&&offset<.05){car.vx=car.vy=0;return false;}
-  // Traffic eases back into its lane after the recoil settles. Parked cars
-  // remain where the impact pushed them.
-  if(anchor&&Math.hypot(vx,vy)<8){vx=(anchor.x-car.x)*2;vy=(anchor.y-car.y)*2;}
+  if(Math.hypot(vx,vy)<.5){car.vx=car.vy=0;return false;}
+  // Friction dissipates the shove. Never pull a displaced car toward a route.
   const steps=Math.max(1,Math.ceil(Math.hypot(vx,vy)*dt/2));
   const bodies=Object.values(truckBodies(state.truck,2));
   for(let i=0;i<steps;i++){
+    const clear=(x,y)=>{
+      if(x<0||y<0||x+car.w>W||y+car.h>H)return false;
+      for(let r=tileOf(y);r<=tileOf(y+car.h-.001);r++)for(let c=tileOf(x);c<=tileOf(x+car.w-.001);c++)if(tileAt(state.world,c,r)!==STREET)return false;
+      if(bodies.some(poly=>overlapsRect(poly,x,y,car.w,car.h)))return false;
+      return ![...state.world.cars,...(state.world.traffic||[])].some(other=>other!==car&&x<other.x+other.w&&x+car.w>other.x&&y<other.y+other.h&&y+car.h>other.y);
+    };
     const x=car.x+vx*dt/steps,y=car.y+vy*dt/steps;
-    let blocked=x<0||y<0||x+car.w>W||y+car.h>H;
-    for(let r=tileOf(y);r<=tileOf(y+car.h-.001);r++)for(let c=tileOf(x);c<=tileOf(x+car.w-.001);c++)if(tileAt(state.world,c,r)!==STREET)blocked=true;
-    if(bodies.some(poly=>overlapsRect(poly,x,y,car.w,car.h)))blocked=true;
-    if([...state.world.cars,...(state.world.traffic||[])].some(other=>other!==car&&x<other.x+other.w&&x+car.w>other.x&&y<other.y+other.h&&y+car.h>other.y))blocked=true;
-    if(blocked){vx*=-.2;vy*=-.2;break;}
-    car.x=x;car.y=y;
+    if(clear(x,y)){car.x=x;car.y=y;}
+    else if(vx&&clear(x,car.y)){car.x=x;vy=0;}
+    else if(vy&&clear(car.x,y)){car.y=y;vx=0;}
+    else{vx=vy=0;break;}
+
   }
   car.vx=vx*Math.exp(-5*dt);car.vy=vy*Math.exp(-5*dt);
   return true;
@@ -195,7 +195,7 @@ export function stepTraffic(state, dt) {
   const traffic=state.world.traffic || [], bodies=Object.values(truckBodies(state.truck, -5));
   for(const car of state.world.cars)moveRecoil(state,car,dt);
   for (const car of traffic) {
-    if(moveRecoil(state,car,dt))continue;
+    if(moveRecoil(state,car,dt)||car.displaced)continue;
     const ahead=trafficPose(car,car.distance+car.speed*dt+26);
     const next=trafficPose(car,car.distance+car.speed*dt);
     const blocked=[next,ahead].some(p=>bodies.some(poly=>overlapsRect(poly,p.x,p.y,p.w,p.h))) ||
@@ -362,10 +362,13 @@ export function stepTruck(state, inp, dt) {
   const before=truckBodies(prev,2)[hit],after=truckBodies(desired,2)[hit];
   state.contactImpact=Math.max(0,...before.map((p,i)=>-((after[i][0]-p[0])*normal[0]+(after[i][1]-p[1])*normal[1])/dt));
   const car=result.contact.car;
-  if(car&&state.contactImpact>8&&!(car.bumpCooldown>0)){
-    const impulse=Math.min(180,state.contactImpact*.8);
-    car.vx=(car.vx||0)-normal[0]*impulse;car.vy=(car.vy||0)-normal[1]*impulse;
-    car.bumpCooldown=.25;
+  if(car&&state.contactImpact>.1){
+    // A heavy truck can keep pushing at low speed. Set a separating velocity
+    // rather than stacking impulses each frame or waiting for another crash.
+    const impulse=Math.min(140,Math.max((inp.gas||inp.brake)?14:0,state.contactImpact*.65));
+    const away=-(car.vx||0)*normal[0]-(car.vy||0)*normal[1];
+    if(impulse>away){car.vx=(car.vx||0)-normal[0]*(impulse-away);car.vy=(car.vy||0)-normal[1]*(impulse-away);}
+    car.displaced=true;
   }
   let pose=result.pose;
   for(let i=0;i<3&&result.contact;i++){

@@ -56,22 +56,15 @@
         mix-blend-mode: overlay;
         pointer-events: none;
       }
-      /* Hero motif: two paddles, one ball */
-      .tp-scene { position: relative; width: 300px; height: 190px; margin: 0 auto; }
-      .tp-net { position: absolute; left: 50%; top: 0; bottom: 0; width: 4px; margin-left: -2px;
-        background: repeating-linear-gradient(180deg, rgba(74,34,48,0.45) 0 12px, transparent 12px 22px); border-radius: 2px; }
-      .tp-paddle { position: absolute; width: 14px; height: 74px; border-radius: 7px;
-        box-shadow: 0 8px 18px -6px rgba(0,0,0,0.35), inset 0 2px 4px rgba(255,255,255,0.4); }
-      .tp-paddle.l { left: 24px; top: 32px; background: linear-gradient(180deg, #4FB3F6, #1E7FC4); }
-      .tp-paddle.r { right: 24px; top: 84px; background: linear-gradient(180deg, #7ED47F, #3C9B44); }
-      .tp-ball { position: absolute; left: 172px; top: 96px; width: 20px; height: 20px; border-radius: 50%;
-        background: radial-gradient(circle at 35% 30%, #FF8A80, #D93025); box-shadow: 0 6px 14px -4px rgba(0,0,0,0.35); }
-      .tp-kbd { position: absolute; font-family: 'JetBrains Mono', ui-monospace, monospace; font-size: 11px; font-weight: 500;
-        color: rgba(74,34,48,0.8); letter-spacing: 0.08em; }
-      .tp-kbd.l { left: 8px; top: 120px; }
-      .tp-kbd.r { right: 8px; top: 40px; text-align: right; }
-      .tp-kbd kbd { display: inline-block; padding: 2px 6px; border-radius: 5px; background: rgba(255,255,255,0.65);
-        border: 1px solid rgba(74,34,48,0.25); font: inherit; margin: 1px; }
+      .tp-feature { display: block; width: min(100%, 350px); margin: auto; color: #fff; text-decoration: none; background: #162734; border: 1px solid #ffffff55; border-radius: 24px; overflow: hidden; box-shadow: 0 22px 48px #4a223033; transition: transform .2s; }
+      .tp-feature:hover { transform: translateY(-4px); }
+      .tp-feature:focus-visible { outline: 3px solid #4a2230; outline-offset: 5px; }
+      .tp-feature img { display: block; width: 100%; height: auto; aspect-ratio: 1; }
+      .tp-feature-copy { padding: 18px 22px 22px; }
+      .tp-feature-copy small { color: #8edbff; text-transform: uppercase; letter-spacing: .12em; font-size: 10px; font-weight: 700; }
+      .tp-feature-copy strong { display: block; font-size: 23px; margin: 7px 0; }
+      .tp-feature-copy p { font-size: 14px; line-height: 1.5; margin: 0 0 14px; color: #d2e2e9; }
+      .tp-feature-copy span { font-weight: 700; font-size: 14px; color: #ffda86; }
 
       /* Illustrated game tiles */
       .cat-card-shot {
@@ -105,7 +98,7 @@
         .cat-card-head { padding-top: 16px; }
         .cat-card-head > div:last-child { min-width: 0; }
         .cat-card-head h3 { overflow-wrap: anywhere; }
-        .tp-scene { transform: scale(0.85); transform-origin: top center; }
+
       }
     </style>
 </head>
@@ -145,14 +138,15 @@
             </div>
         </div>
         <div class="cat-hero-right">
-            <div class="tp-scene" aria-hidden="true">
-                <div class="tp-net"></div>
-                <div class="tp-paddle l"></div>
-                <div class="tp-ball"></div>
-                <div class="tp-paddle r"></div>
-                <div class="tp-kbd l"><kbd>W</kbd><kbd>S</kbd></div>
-                <div class="tp-kbd r"><kbd>↑</kbd><kbd>↓</kbd></div>
-            </div>
+            <a class="tp-feature" href="../hook-and-ladder/">
+                <img src="../assets/thumbs/hook-and-ladder-arcade-20260916.svg" alt="An articulated fire truck turning through the city toward a rescue" width="600" height="600" fetchpriority="high">
+                <div class="tp-feature-copy">
+                    <small>Featured co-op · 2 players</small>
+                    <strong>One truck. Two drivers.</strong>
+                    <p>Steer the cab and rear wheels together. Dodge traffic, rescue people and put out fires before the clock runs out.</p>
+                    <span>Play Hook &amp; Ladder &rarr;</span>
+                </div>
+            </a>
         </div>
     </header>
 
