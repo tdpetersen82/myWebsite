@@ -1,24 +1,27 @@
 // Authored opening course. # bedrock, * breakable rock, . floor, S linked
-// shaft, E exit, b bat, k knocker, f fireball, i ignitor, + bomb capacity.
+// shaft, E exit, b bat, k knocker, f flare launcher, i blasting plunger, + bomb capacity.
 // Enemies and pickups occupy floor; hidden rewards are listed separately.
 export const OPENING_LEVELS = [
   {
-    name: 'First Blast',
-    hint: 'Space: plant a bomb, then step around a corner.',
+    name: 'Collapsed Gallery',
+    hint: 'Space: blast a path through the cave-in. Retreat around a corner.',
     rows: [
       '#############',
-      '#...*.......#',
+      '#...*..**...#',
       '#.#.#.#.#.#.#',
-      '#...*...b...#',
+      '#...*...b.*.#',
       '###.#.###.#.#',
-      '#...*.......#',
+      '#.*.*..*..*.#',
       '#.#.###.#.#.#',
-      '#.....*...b.#',
+      '#...*.*...b.#',
       '#.#.#.#.#.#.#',
-      '#.....*....E#',
+      '#..**.*..b.E#',
       '#############',
     ],
-    rewards: [{x:4,y:3,type:'bomb'}, {x:6,y:7,type:'fire'}],
+    rewards: [
+      { x: 4, y: 3, type: 'bomb' },
+      { x: 6, y: 7, type: 'fire' },
+    ],
   },
   {
     name: 'Connected Shafts',
@@ -36,11 +39,14 @@ export const OPENING_LEVELS = [
       '#....*.....E#',
       '#############',
     ],
-    rewards: [{x:5,y:3,type:'fire'}, {x:8,y:5,type:'radiation'}],
+    rewards: [
+      { x: 5, y: 3, type: 'fire' },
+      { x: 8, y: 5, type: 'shield' },
+    ],
   },
   {
-    name: 'Fireball Gallery',
-    hint: 'Collect the orange flask. Face a creature and press F.',
+    name: 'Flare Gallery',
+    hint: 'Collect the flare launcher. Face a creature and press F.',
     rows: [
       '#############',
       '#...*......b#',
@@ -54,11 +60,14 @@ export const OPENING_LEVELS = [
       '#.......*..E#',
       '#############',
     ],
-    rewards: [{x:4,y:3,type:'fireball'}, {x:8,y:9,type:'bomb'}],
+    rewards: [
+      { x: 4, y: 3, type: 'fireball' },
+      { x: 8, y: 9, type: 'bomb' },
+    ],
   },
   {
     name: 'Fuse Workshop',
-    hint: 'Collect +bomb and the purple ignitor. F fires a planted bomb early.',
+    hint: 'Collect +bomb and the blasting plunger. F fires a planted bomb early.',
     rows: [
       '#############',
       '#.+S.*.....b#',
@@ -72,7 +81,11 @@ export const OPENING_LEVELS = [
       '#...b*..S..E#',
       '#############',
     ],
-    rewards: [{x:5,y:3,type:'bomb'}, {x:8,y:5,type:'radiation'}, {x:5,y:7,type:'fire'}],
+    rewards: [
+      { x: 5, y: 3, type: 'bomb' },
+      { x: 8, y: 5, type: 'shield' },
+      { x: 5, y: 7, type: 'fire' },
+    ],
   },
   {
     name: 'The Proving Ground',
@@ -90,6 +103,11 @@ export const OPENING_LEVELS = [
       '#...*k..S..E#',
       '#############',
     ],
-    rewards: [{x:5,y:3,type:'bomb'}, {x:8,y:5,type:'ignitor'}, {x:4,y:8,type:'radiation'}, {x:8,y:7,type:'fire'}],
+    rewards: [
+      { x: 5, y: 3, type: 'bomb' },
+      { x: 8, y: 5, type: 'ignitor' },
+      { x: 4, y: 8, type: 'shield' },
+      { x: 8, y: 7, type: 'fire' },
+    ],
   },
 ];

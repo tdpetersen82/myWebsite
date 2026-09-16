@@ -79,5 +79,5 @@ for(let i=0;i<125;i++)step(s,1/60);
 check('shaft lesson permits safe retreat at starting speed',p.alive&&s.shafts.every(v=>s.fires.has(key(v.x,v.y))));
 startLevel(s,3);check('fireball appears in gallery near spawn',s.items.get(key(1,2)).type===ITEM.FIREBALL);
 startLevel(s,4);check('ignitor comes with visible extra capacity', [...s.items.values()].some(it=>it.type===ITEM.BOMB&&!it.hidden)&&[...s.items.values()].some(it=>it.type===ITEM.IGNITOR&&!it.hidden));
-startLevel(s,6);check('deeper mines return to randomized generation',s.lesson.name==='Spike Gallery'&&s.enemies.length>=5);
+startLevel(s,6);check('deeper mines return to randomized generation',s.lesson===null&&s.enemies.length>=5);
 console.log(`${checks} opening-level checks passed`);

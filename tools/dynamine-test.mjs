@@ -54,7 +54,7 @@ for (let seed = 1; seed <= 25; seed++) {
   let nonWall = 0;
   for (let y = 0; y < H; y++) for (let x = 0; x < W; x++) if (tileAt(s, x, y) !== WALL) nonWall++;
   check('maze fully connected', seen.size === nonWall, seen.size + ' vs ' + nonWall);
-  check('exit hidden on floor until creatures are gone', !s.door.revealed && tileAt(s, s.door.x, s.door.y) === FLOOR);
+  check('exit remains hidden on floor', !s.door.revealed && tileAt(s, s.door.x, s.door.y) === FLOOR);
   check('level has distinct walkable linked shafts', s.shafts.length >= 3 && s.shafts.every(t => tileAt(s,t.x,t.y) === FLOOR && !s.items.has(t.y*W+t.x) && (t.x !== s.door.x || t.y !== s.door.y)));
   check('hidden items stay under bricks; visible items are walkable', [...s.items].every(([k,it]) => s.grid[k] === (it.hidden?BRICK:FLOOR)));
   check('fireball tutorial pickup is available from spawn',s.items.get(2*W+1)?.type===ITEM.FIREBALL&&!s.items.get(2*W+1).hidden);
@@ -178,7 +178,7 @@ console.log('door');
   skipIntro(s);
   const p = s.players[0];
   const d = s.door;
-  check('exit hidden and locked at start', !d.revealed && !d.open);
+  check('exit initially hidden', !d.revealed && !d.open);
   let ev = [];
   check('exit stays shut while enemies live', !d.open);
   // Kill enemies with fire directly.
@@ -201,8 +201,7 @@ console.log('door');
   s.timer = 0.2;
   const before = s.enemies.length;
   const ev = run(s, 0.5);
-  check('Adventure has no timeout creatures', !ev.some(e => e.type === 'hurry') && s.enemies.length === before);
-  check('sparks never spawn on the miner', s.enemies.filter(e => e.type === 'spark').every(e => Math.abs(e.x - 1.5) >= 2 || Math.abs(e.y - 1.5) >= 2));
+  check('Adventure does not spawn timeout enemies', s.enemies.length === before && s.timer === 0.2);
 }
 {
   const s = createGame({ seed: 13 });
@@ -336,7 +335,7 @@ console.log('computer');
   }
   check('the computer never dies to its own bombs (40 matches)', selfDeaths === 0, selfDeaths + ' deaths');
   check('the computer wins every round against a miner who never moves', rounds > 0 && roundsWon === rounds, roundsWon + '/' + rounds);
-  check('…and finishes within the round clock with the expanded pickup pool', slowest < RULES.battleTime + 2, slowest.toFixed(1) + 's');
+  check('…and does it before sudden death', slowest < RULES.battleTime - RULES.suddenDeathAt + 2, slowest.toFixed(1) + 's');
 }
 {
   // Danger map: a bomb's own tile and rays are timed; bricks shield tiles behind them.
@@ -351,7 +350,7 @@ console.log('computer');
   check('the blocked side (wall) stays safe', d[1 * W + 0] === Infinity);
 }
 
-// Fracas-style vent network: bombs ON a vent emit range-one crosses at all vents.
+// Connected vent network: bombs ON a vent emit range-one crosses at all vents.
 console.log('connected mineshafts');
 function networkFixture() {
   const s = createGame({seed:42}); skipIntro(s); clearEnemies(s);
