@@ -157,16 +157,17 @@
         .ch-touch-group:last-child .ch-touch-btn:nth-child(2) { background: #182f3a; }
         .ch-touch-group:last-child .ch-touch-btn:nth-child(5) { background: #62462c; }
         @media (max-width: 600px) { .ch-topbar { padding: 9px; } .ch-bezel { padding: 4px; } #menu { gap: 6px; } #mission { font-size: 11px; } }
+     #menu [hidden]{display:none!important}.garage-access{text-align:right;margin:6px 0}.garage-access button{background:#203e4c;color:#f6deb0;border:1px solid #63828c;border-radius:6px;padding:6px 12px;cursor:pointer} .garage{margin-top:10px;border-top:1px solid #42616e;padding-top:8px;font-size:12px}.garage p{margin:4px 0;color:#b8cbd1}.garage button{display:inline-flex!important;width:auto!important;margin:4px!important;padding:7px!important;font-size:11px!important}.garage button:disabled{opacity:.5;cursor:default}#menu{max-height:100%;overflow-y:auto}.garage small{display:block}
     </style>
 </head>
 <body class="ch-game" data-category="arcade"
       data-eyebrow="Cabinet · Hook &amp; Ladder"
       data-title="Hook &amp; Ladder"
-      data-hint-1="P1 WASD · Space brake"
-      data-hint-2="P2 ← → rear steering"
+      data-hint-1="P1 WASD · Space brake/grab"
+      data-hint-2="P2 arrows · Enter hose"
       data-hint-3="P pause · R recover"
       data-stats="fires:Calls"
-      data-touch="◀:~a,▲:~w,▼:~s,▶:~d,BRAKE:~Space | ◀:~ArrowLeft,▶:~ArrowRight">
+      data-touch="◀:~a,▲:~w,▼:~s,▶:~d,BRAKE/GRAB:~Space,DRIVE:~e | ◀:~ArrowLeft,▲:~ArrowUp,▼:~ArrowDown,▶:~ArrowRight,SPRAY:~Enter">
     <div class="container">
         <h1>🚒 Hook &amp; Ladder</h1>
         <div class="game-info">
@@ -175,44 +176,51 @@
             <p>Calls completed: <span id="fires">0</span></p>
         </div>
         <div id="mission" role="status" aria-live="polite">Drive to the alarm. Park the rig. Beat the clock.</div>
+        <div class="garage-access"><button type="button" id="open-garage">Garage / upgrades</button></div>
         <div id="game-container">
             <canvas id="gameCanvas" width="1240" height="680" tabindex="0" aria-label="Hook and Ladder driving game. P1 uses WASD and Space to drive and brake. P2 steers the rear wheels with left and right arrows."></canvas>
             <div id="menu" role="dialog" aria-label="Start your shift">
                 <p class="m-title">HOOK &amp; LADDER</p>
-                <p class="m-tag">Two drivers. One long truck. Every second counts.</p>
+                <p class="m-tag">Drive together. Rescue and spray. Stay on the streets.</p>
                 <p id="menu-sub"></p>
                 <div class="m-roles">
-                    <div class="m-role p1"><b>P1 · Driver</b><kbd>W</kbd> gas · <kbd>S</kbd> reverse<br><kbd>A</kbd> <kbd>D</kbd> steer · <kbd>Space</kbd> brake</div>
-                    <div class="m-role p2"><b>P2 · Tillerman</b><kbd>←</kbd> <kbd>→</kbd> steer the rear wheels<br>Work together around tight corners</div>
+                    <div class="m-role p1"><b>P1 · Driver</b><kbd>W</kbd> gas · <kbd>S</kbd> reverse<br><kbd>A</kbd> <kbd>D</kbd> steer · <kbd>Space</kbd> brake<br>On scene: WASD ladder · Space grabs</div>
+                    <div class="m-role p2"><b>P2 · Tillerman</b><kbd>←</kbd> <kbd>→</kbd> steer the rear wheels<br>On scene: arrows aim · Enter sprays</div>
                 </div>
                 <button type="button" data-start><span class="m-ico">👥</span><span><b>Start a two-player shift</b><small>P1 on WASD · P2 on arrows · drive and park</small></span></button>
 
+                <button type="button" id="resume-shift" hidden>Resume shift</button>
+                <div class="garage"><b>GARAGE · <span id="credits">0</span> credits</b><p>Earn 50 credits per call. Upgrades stay installed. Buy them with game credits.</p>
+                  <button type="button" data-upgrade="engine"><span>Engine · +15% speed<small>100 credits</small></span></button>
+                  <button type="button" data-upgrade="armor"><span>Bodywork · 35% less damage<small>100 credits</small></span></button>
+                  <button type="button" data-upgrade="equipment"><span>Ladder + hose · 50% faster<small>100 credits</small></span></button>
+                </div>
             </div>
         </div>
         <div class="controls"><p>P1: WASD drives; Space brakes. P2: left/right arrows steer the rear wheels. R recovers at a five-second cost.</p></div>
         <section class="game-overview" aria-label="About Hook &amp; Ladder">
             <h2>How to play Hook &amp; Ladder</h2>
-            <p>Race a long articulated fire truck across the city. Every alarm requires a drive. Navigate corners and parked cars, then stop both axles in the highlighted area parallel to the curb. Hold still briefly to deliver the crew and earn the next call. Fast arrivals and clean driving score more points. Miss three calls and the shift ends.</p>
+            <p>Race a long articulated fire truck across the city. Every alarm requires a drive. Navigate corners and parked cars, then stop both axles in the highlighted area parallel to the curb. Hold still briefly to set up on the same city map. P1 moves the ladder with WASD and holds Space to grab the person. P2 aims the hose with arrows and holds Enter to spray. Do both in either order to complete the call. Fast arrivals and clean driving score more points. Miss three calls or reach 100% truck damage and the shift ends. The city has twice the original area, with moving traffic that yields to the truck.</p>
             <h3>Controls</h3>
             <ul>
-                <li><b>P1 — driver:</b> W accelerates. S brakes, then reverses. A/D steer the front wheels. Space brakes without reversing.</li>
-                <li><b>P2 — tillerman:</b> Left/right arrows steer the rear wheels. Coordinate with the driver to clear tight corners.</li>
+                <li><b>P1 — driver:</b> W accelerates. S brakes, then reverses. A/D steer the front wheels. Space brakes without reversing. When parked: WASD moves the ladder; hold Space over the person to grab them. E packs up and returns to driving.</li>
+                <li><b>P2 — tillerman:</b> Left/right arrows steer the rear wheels. Coordinate with the driver to clear tight corners. When parked: arrows aim the hose; hold Enter over the fire to spray.</li>
                 <li><b>Recovery:</b> R returns a stuck truck to an intersection and costs five seconds. P pauses.</li>
-                <li><b>Touch:</b> The left pad drives and brakes; the right pad steers the rear wheels.</li>
+                <li><b>Touch:</b> The left pad drives or moves the ladder; Brake/Grab stops or rescues. The right pad steers or aims the hose; Spray fires the hose. Drive packs up.</li>
             </ul>
             <h3>Driving tips</h3>
             <ul>
                 <li><b>Watch the trailer.</b> The cab can clear a corner while the trailer clips it. P2 can steer the tail wide.</li>
                 <li><b>Back up carefully.</b> Reversing can increase the bend at the hitch. Use small steering inputs and pull forward to straighten the rig. At the hitch limit, further folding stops the truck.</li>
-                <li><b>Park the whole rig.</b> Both axles must be inside the marked zone, nearly parallel to the curb, and stopped for the call to count.</li>
-                <li><b>Keep moving between calls.</b> The next alarm appears on the same city map. Clean arrivals earn a 150-point bonus.</li>
+                <li><b>Park the whole rig.</b> Both axles must be inside the marked zone, nearly parallel to the curb, and stopped to set up the ladder and hose. Rescue and spray in either order.</li>
+                <li><b>Keep moving between calls.</b> The next alarm appears on the same city map. Clean calls earn a 150-point bonus. Every completed call also earns 50 garage credits.</li>
             </ul>
 
             <h3>About tiller trucks</h3>
             <p>A tiller, or tractor-drawn aerial, is a ladder truck built like a semi with a second driver at the very back. The tillerman sits above the rear axle and steers the trailer's wheels, which is what lets a rig that long snake through old city streets and around double-parked cars. Fire departments in San Francisco, Los Angeles and Washington still run them for exactly that reason. Driver and tillerman talk over an intercom the whole ride, and in a tight turn the tillerman steers the opposite way to the driver so the tail swings clear. Hook &amp; Ladder puts those two seats on one keyboard.</p>
 
             <h3>Frequently asked</h3>
-            <p><b>How do I play Hook &amp; Ladder?</b> Drive to each alarm and park both axles in the marked area before time runs out. P1 drives the cab; P2 steers the rear wheels.</p>
+            <p><b>How do I play Hook &amp; Ladder?</b> Drive to each alarm and park both axles in the marked area. P1 moves the ladder and grabs the person; P2 aims and sprays the hose. Finish both in either order before time runs out.</p>
             <p><b>What is a tiller fire truck?</b> A ladder truck with a second steering position at the back. The tillerman steers the trailer's rear wheels so a truck the length of a semi can turn down narrow streets. In a turn the tillerman steers opposite to the driver so the tail swings wide.</p>
             <p><b>Is Hook &amp; Ladder free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
             <p><b>Does my high score save?</b> Yes &mdash; your best score is stored locally in your browser.</p>
@@ -227,7 +235,7 @@
         </section>
     </div>
 
-    <script type="module" src="game.mjs?v=20260916b"></script>
+    <script type="module" src="game.mjs?v=20260916e"></script>
     <!-- Ad Slot: Game Page Banner -->
     <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
         <ins class="adsbygoogle"

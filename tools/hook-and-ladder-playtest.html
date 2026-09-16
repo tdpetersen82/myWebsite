@@ -2,13 +2,14 @@
 <meta charset="utf-8">
 <title>Hook & Ladder — input playtest</title>
 <style>body{margin:0;background:#13222b;color:#fff;font:13px system-ui}header{padding:8px;display:flex;gap:8px;align-items:center;flex-wrap:wrap}button{padding:7px 12px;background:#304651;color:white;border:1px solid #688794;border-radius:5px}button[aria-pressed=true]{background:#197e59}output{font:11px monospace}iframe{width:100%;height:calc(100vh - 80px);border:0}</style>
-<header><b>Input playtest</b><button id="release">Release all</button><button id="backing">Test backing</button><span id="keys"></span><output id="state"></output></header>
-<iframe title="Game" src="../hook-and-ladder/"></iframe>
+<header><b>Input playtest</b><button id="release">Release all</button><button id="arrival">Drive and inspect scene</button><button id="call">Drive and work call</button><button id="backing">Test backing</button><span id="keys"></span><output id="state"></output></header>
+<iframe title="Game" src="../hook-and-ladder/?seed=61"></iframe>
 <script type="module">
+import {serviceZones,roofPoint} from "../hook-and-ladder/engine.mjs?v=20260916e";
 // Test controls send the same keyboard events as the site's touch pads.
 // No teleporting or state edits: drive, park, aim and complete calls normally.
 const frame = document.querySelector('iframe'), down = new Set();
-const names = { w:'W · gas', s:'S · reverse', a:'A · left', d:'D · right', ' ':'Space · brake', ArrowLeft:'← · rear wheels', ArrowRight:'→ · rear wheels' };
+const names = { w:'W · gas', s:'S · reverse', a:'A · left', d:'D · right', ' ':'Space · brake', ArrowLeft:'← · rear wheels', ArrowRight:'→ · rear wheels',ArrowUp:'↑ · hose',ArrowDown:'↓ · hose',Enter:'Enter · spray',e:'E · drive' };
 function key(type, key) { frame.contentWindow.dispatchEvent(new KeyboardEvent(type,{key,bubbles:true})); }
 function focusGame() {
   frame.contentWindow.focus();
@@ -27,6 +28,8 @@ document.querySelector('#backing').onclick=()=>{
   focusGame(); setKeys([]); pilot='backing';
   backingStart=frame.contentWindow.__hookLadder().game.t; backingSamples=[];
 };
+document.querySelector('#arrival').onclick=()=>{focusGame();pilot='arrival';};
+document.querySelector('#call').onclick=()=>{focusGame();pilot='call';};
 function setKeys(keys) {
   for (const k of down) if (!keys.includes(k)) { key('keyup',k); down.delete(k); }
   for (const k of keys) if (!down.has(k)) { key('keydown',k); down.add(k); }
@@ -35,6 +38,21 @@ setInterval(()=>{
   const view=frame.contentWindow.__hookLadder?.(); if(!view||!pilot)return;
   const g=view.game;
   if(g.status!=='playing'||g.paused)return;
+  if(pilot==='call'||pilot==='arrival') {
+    if(g.firesOut>0){setKeys([]);pilot=null;key('keydown','p');key('keyup','p');return;}
+    const f=g.fire;if(!f)return;
+    if(!f.crew){const z=serviceZones(f.building).find(z=>z.side==='s'&&z.y===280);if(!z){pilot=null;return;}setKeys(g.truck.x<z.x+100?['w']:[' ']);return;}
+    if(pilot==='arrival'){setKeys([]);pilot=null;key('keydown','p');key('keyup','p');return;}
+    const keys=[];
+    for(const [kind,cursor,left,right,up,down,action]of[['person',f.crew.ladder,'a','d','w','s',' '],['fire',f.crew.hose,'ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter']]){
+      const target=f.targets.find(t=>t.kind===kind);if(target.hp===0)continue;
+      const p=roofPoint(target.at);
+      if(Math.abs(cursor.u-p.u)>.025)keys.push(cursor.u<p.u?right:left);
+      if(Math.abs(cursor.v-p.v)>.025)keys.push(cursor.v<p.v?down:up);
+      if(Math.hypot((cursor.u-p.u)*f.building.w*40,(cursor.v-p.v)*f.building.h*40)<20)keys.push(action);
+    }
+    setKeys(keys);return;
+  }
   if(pilot==='backing') {
     const elapsed=g.t-backingStart;
     backingSamples.push({v:g.truck.v,art:Math.abs(g.truck.h1-g.truck.h2)});
@@ -51,6 +69,6 @@ setInterval(()=>{
 setInterval(()=>{
   const view=frame.contentWindow.__hookLadder?.(); if(!view)return;
   const g=view.game;
-  document.querySelector('#state').textContent=JSON.stringify({status:g.status,paused:g.paused,x:Math.round(g.truck.x),y:Math.round(g.truck.y),speed:Math.round(g.truck.v),crashes:g.crashes,score:g.score,saved:g.firesOut,backing:backingSamples.length?{minSpeed:Math.round(Math.min(...backingSamples.map(s=>s.v))),maxSpeed:Math.round(Math.max(...backingSamples.map(s=>s.v))),maxBend:Math.round(Math.max(...backingSamples.map(s=>s.art))*180/Math.PI)}:undefined,dispatchDistance:g.fire?.dist});
+  document.querySelector('#state').textContent=JSON.stringify({status:g.status,paused:g.paused,x:Math.round(g.truck.x),y:Math.round(g.truck.y),speed:Math.round(g.truck.v),crashes:g.crashes,score:g.score,saved:g.firesOut,backing:backingSamples.length?{minSpeed:Math.round(Math.min(...backingSamples.map(s=>s.v))),maxSpeed:Math.round(Math.max(...backingSamples.map(s=>s.v))),maxBend:Math.round(Math.max(...backingSamples.map(s=>s.art))*180/Math.PI)}:undefined,damage:g.damage,crew:!!g.fire?.crew,targets:g.fire?.targets.map(t=>[t.kind,t.hp]),traffic:g.world.traffic.slice(0,2).map(c=>[Math.round(c.x),Math.round(c.y)]),dispatchDistance:g.fire?.dist});
 },100);
 </script>

@@ -1,5 +1,5 @@
 // Canvas artwork. The city and the incident board share one night-shift palette.
-import { W, H, TILE, PITCH, BLOCKS_X, BLOCKS_Y, blockAt, roofPoint } from './engine.mjs?v=20260916b';
+import { W, H, TILE, PITCH, BLOCKS_X, BLOCKS_Y, blockAt, roofPoint } from './engine.mjs?v=20260916e';
 const TAU = Math.PI * 2;
 function rect(c,x,y,w,h,r=0){c.beginPath();c.roundRect(x,y,w,h,r);}
 function glow(c,x,y,r,color){const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}
@@ -49,14 +49,6 @@ export function paintCity(c,world) {
     for(let i=0;i<3;i++){c.fillStyle=['#23584b','#347461','#4c8c70'][i];c.beginPath();c.arc(t.x-i*2,t.y-i*3,t.r-i*3,0,TAU);c.fill();}
   }
   for(const b of world.buildings)building(c,b);
-  for(const car of world.cars){
-    c.save();c.translate(car.x+car.w/2,car.y+car.h/2);if(car.dir==='v')c.rotate(Math.PI/2);
-    c.fillStyle='#061019';rect(c,-18,-8,37,20,5);c.fill();
-    c.fillStyle=car.color;rect(c,-17,-8,34,16,4);c.fill();
-    c.fillStyle='#142b38';rect(c,-8,-6,15,12,3);c.fill();
-    c.fillStyle='#a2c0c9';c.fillRect(5,-5,2,10);c.fillStyle='#d8dbc2';c.fillRect(14,-6,2,3);c.fillRect(14,3,2,3);
-    c.fillStyle='#b84942';c.fillRect(-17,-6,2,3);c.fillRect(-17,3,2,3);c.restore();
-  }
   c.font='600 8px monospace';c.fillStyle='#758c96';c.textAlign='center';
   const streets=['HARBOR','UNION','STATION','CANAL'];
   for(let i=0;i<4;i++)c.fillText(streets[i]+' ST',(5+i*7)*TILE,325);
@@ -109,5 +101,16 @@ export function drawWorldFire(c,f,t){
   for(const target of f.targets){
     if(target.hp<=0)continue;const p=roofPoint(target.at),x=(b.col+p.u*b.w)*TILE,y=(b.row+p.v*b.h)*TILE;
     if(target.kind==='fire')flame(c,x,y,7+target.hp*5,t,target.at*10);else{c.save();c.translate(x,y);c.scale(.65,.65);person(c,0,0,t);c.restore();}
+  }
+}
+
+export function drawCars(c,cars){
+  for(const car of cars){
+    c.save();c.translate(car.x+car.w/2,car.y+car.h/2);c.rotate(car.heading ?? (car.dir==='v'?Math.PI/2:0));
+    c.fillStyle='#061019';rect(c,-18,-8,37,20,5);c.fill();
+    c.fillStyle=car.color;rect(c,-17,-8,34,16,4);c.fill();
+    c.fillStyle='#142b38';rect(c,-8,-6,15,12,3);c.fill();
+    c.fillStyle='#a2c0c9';c.fillRect(5,-5,2,10);c.fillStyle='#d8dbc2';c.fillRect(14,-6,2,3);c.fillRect(14,3,2,3);
+    c.fillStyle='#b84942';c.fillRect(-17,-6,2,3);c.fillRect(-17,3,2,3);c.restore();
   }
 }

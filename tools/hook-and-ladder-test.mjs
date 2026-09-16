@@ -5,7 +5,7 @@
 // collisions, dispatch fairness, ladder flow, lives). It says nothing about feel.
 import {
   truckBodies, createGame, startGame, step, drainEvents, buildWorld, mulberry32, tileAt, truckCollides,
-  streetDistance, readyToPark, serviceZones, turntable, wrapAngle, burnTimeFor,
+  streetDistance, readyToPark, serviceZones, roofPoint, stepTraffic, trafficPose, turntable, wrapAngle, burnTimeFor,
   COLS, ROWS, TILE, W, H, STREET, BUILDING, PARK, RULES, isStreetCol, isStreetRow, spawnTruck, PITCH, STREET_W,
 } from '../hook-and-ladder/engine.mjs';
 
@@ -22,10 +22,10 @@ function run(state, seconds, inp = {}) {
 function openWorld() {
   // Everything is street: for pure kinematics tests.
   const w = buildWorld(mulberry32(1));
-  w.grid.fill(STREET); w.cars = []; w.buildings.forEach(b => { b.zones = []; });
+  w.grid.fill(STREET); w.cars = []; w.traffic = []; w.buildings.forEach(b => { b.zones = []; });
   return w;
 }
-function playing(seed = 1, mode = 'duo') { const g = createGame({ seed, mode }); startGame(g); return g; }
+function playing(seed = 1, mode = 'duo') { const g = createGame({ seed, mode }); startGame(g); g.world.traffic=[]; return g; }
 
 // ---------------------------------------------------------------- layout
 console.log('layout');
@@ -41,7 +41,7 @@ for (let seed = 1; seed <= 30; seed++) {
   }
   check('streets on the 7-tile pitch, blocks solid (seed ' + seed + ')', ok);
   check('one park', parkCount === 16, String(parkCount));
-  check('7 blocks of buildings', w.buildings.length >= 14 && w.buildings.length <= 28, String(w.buildings.length));
+  check('15 blocks of buildings', w.buildings.length >= 30 && w.buildings.length <= 60, String(w.buildings.length));
   for (const b of w.buildings) {
     check('building faces a street', b.zones.length >= 2, `#${b.id} ${b.zones.length}`);
     for (const z of b.zones) {
@@ -271,21 +271,79 @@ for (let seed = 1; seed <= 100; seed++) {
   check('bent trailer cannot count as parking', !readyToPark(g));
   g.truck.h2=pose.h1;
   run(g,.4);check('parking requires a brief stationary hold',g.firesOut===0);
-  run(g,.5);check('parking completes call without another mode',g.firesOut===1&&g.score>0&&!g.ladder&&!g.fire);
+  run(g,.5);check('parking sets up tools without completing the call',g.firesOut===0&&!!g.fire.crew);
+  const order=seed%2?['person','fire']:['fire','person'];
+  for(const kind of order){
+    const target=f.targets.find(t=>t.kind===kind),p=roofPoint(target.at);
+    const cursor=kind==='person'?'ladder':'hose';f.crew[cursor]={...p};
+    run(g,1.3,kind==='person'?{grab:true}:{spray:true});
+    check('each tool works independently in either order',target.hp===0);
+  }
+  check('both jobs finish the call on the map',g.firesOut===1&&g.score>0&&!g.fire);
   const score=g.score;run(g,2);
   check('next call also requires driving',g.fire?.dist>=RULES.minDispatchTiles&&g.score===score);
 }
 {
-  // Complete a real distant dispatch through throttle/brake input only.
-  const g=playing(2);run(g,1);
-  const z=serviceZones(g.fire.building).find(z=>z.side==='s'&&z.y===280);
-  for(let i=0;i<1000&&!g.firesOut;i++)step(g,1/120,g.truck.x>z.x+110?{handbrake:true}:{gas:true});
-  check('drive from spawn and complete distant call using controls',g.firesOut===1&&g.crashes===0&&g.truck.x>1000);
+  check('map area doubled exactly', W*H===1240*680*2);
 }
 function parkedInZoneForTest(g) { return serviceZones(g.fire.building).some(z=>g.truck.x>=z.x&&g.truck.x<=z.x+z.w&&g.truck.y>=z.y&&g.truck.y<=z.y+z.h); }
 {
-  const g=playing();run(g,300);
+  const g=playing();run(g,400);
   check('three missed calls end the shift',g.status==='over'&&g.lives===0);
+}
+console.log('traffic and damage');
+{
+  const g=createGame({seed:4});startGame(g);g.nextFireIn=1e9;
+  const starts=g.world.traffic.map(c=>c.distance);
+  for(let i=0;i<1200;i++)stepTraffic(g,1/60);
+  check('traffic makes sustained progress',g.world.traffic.filter((c,i)=>c.distance-starts[i]>150).length>=8);
+  let streets=true;
+  for(const car of g.world.traffic)for(let d=0;d<1000;d+=5){const p=trafficPose(car,d);for(const [x,y]of[[p.x,p.y],[p.x+p.w,p.y+p.h]])if(tileAt(g.world,Math.floor(x/TILE),Math.floor(y/TILE))!==STREET)streets=false;}
+  check('rounded traffic routes remain entirely on streets',streets);
+  check('traffic yields without driving into stationary truck',!truckCollides(g.world,g.truck));
+  const car=g.world.traffic[0],p=trafficPose(car,car.distance+50);
+  g.truck={...spawnTruck(),x:p.x+p.w/2,y:p.y+p.h/2,h1:p.heading,h2:p.heading};
+  for(let i=0;i<300;i++)stepTraffic(g,1/60);
+  check('traffic brakes for a truck occupying its route',!truckCollides(g.world,g.truck));
+}
+function impact(upgrades={}){
+  const g=createGame({seed:3,upgrades});startGame(g);g.nextFireIn=1e9;g.world.traffic=[];
+  g.truck.x=440;run(g,1,{gas:true,steer:-1});return g;
+}
+{
+ const normal=impact(),armored=impact({armor:true});
+ check('collisions damage the truck',normal.damage>0);
+ check('bodywork upgrade reduces damage',armored.damage<normal.damage);
+ const g=playing();g.world=openWorld();g.nextFireIn=1e9;g.truck.x=W-42;g.damage=99;g.truck.v=180;
+ run(g,.1,{gas:true});check('total damage ends the run',g.status==='over'&&g.damage===100);
+ const fast=createGame({upgrades:{engine:true}});startGame(fast);fast.world=openWorld();fast.nextFireIn=1e9;run(fast,1,{gas:true});
+ check('engine upgrade increases top speed',fast.truck.v>RULES.maxSpeed);
+}
+{
+  const g=createGame({seed:61});startGame(g);run(g,1);
+  const z=serviceZones(g.fire.building).find(z=>z.side==='s'&&z.y===280);
+  for(let i=0;i<2400&&!g.firesOut;i++){
+    let input={};const f=g.fire;
+    if(!f.crew)input=g.truck.x<z.x+100?{gas:true}:{handbrake:true};
+    else for(const kind of ['person','fire']){
+      const target=f.targets.find(t=>t.kind===kind),p=roofPoint(target.at),cursor=kind==='person'?f.crew.ladder:f.crew.hose,prefix=kind==='person'?'ladder':'hose';
+      input[prefix+'X']=Math.abs(p.u-cursor.u)>.025?Math.sign(p.u-cursor.u):0;
+      input[prefix+'Y']=Math.abs(p.v-cursor.v)>.025?Math.sign(p.v-cursor.v):0;
+      input[kind==='person'?'grab':'spray']=true;
+    }
+    step(g,1/120,input);
+  }
+  check('full distant drive, park, rescue and spray using controls with traffic',g.firesOut===1&&g.damage===0&&g.score>0);
+  const before=g.world.traffic.map(c=>c.distance);g.paused=true;run(g,1);
+  check('pause freezes traffic too',g.world.traffic.every((c,i)=>c.distance===before[i]));
+}
+{
+  function equipmentRun(upgraded){
+    const g=playing(8);run(g,1);g.upgrades.equipment=upgraded;
+    const f=g.fire,target=f.targets.find(t=>t.kind==='fire');f.crew={ladder:{u:.5,v:.5},hose:roofPoint(target.at)};
+    run(g,.5,{spray:true});return target.hp;
+  }
+  check('equipment upgrade speeds spraying by fifty percent',Math.abs((1-equipmentRun(true))/(1-equipmentRun(false))-1.5)<1e-6);
 }
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

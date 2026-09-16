@@ -4,7 +4,7 @@
 // around a city grid; drive and park the rig before time runs out. Headless-tested by tools/hook-and-ladder-test.mjs.
 
 export const TILE = 40;
-export const COLS = 31;
+export const COLS = 62;
 export const ROWS = 17;
 export const PITCH = 7;       // street (3 tiles) + block (4 tiles)
 export const STREET_W = 3;
@@ -66,9 +66,9 @@ export function tileOf(px) { return Math.floor(px / TILE); }
 // Streets are three tiles wide (two lanes plus a curb lane) on a 7-tile pitch:
 // cols 0-2, 7-9, 14-16, 21-23, 28-30 and rows 0-2, 7-9, 14-16. The 4×4 blocks
 // between hold buildings or a park. Street centre lines sit at tile 1.5 of each street.
-export function isStreetCol(c) { return c % PITCH < STREET_W; }
+export function isStreetCol(c) { return c >= 56 || c % PITCH < STREET_W; }
 export function isStreetRow(r) { return r % PITCH < STREET_W; }
-export const BLOCKS_X = 4, BLOCKS_Y = 2;
+export const BLOCKS_X = 8, BLOCKS_Y = 2;
 export function blockAt(bx, by) { return { bx, by, col: STREET_W + bx * PITCH, row: STREET_W + by * PITCH }; }
 
 const ROOFS = ['#b5654a', '#c9a27a', '#8f9aa8', '#a97c5b', '#7f8c8d', '#c4b09a', '#9c6f5e', '#b8b1a6', '#8a7f74', '#a5866b'];
@@ -129,7 +129,45 @@ export function buildWorld(rng) {
   const CAR_COLORS = ['#e8e4dc', '#3d5a80', '#6b7b8c', '#c0392b', '#2c3e50', '#d9c27a', '#7f8c8d', '#2e7d5b'];
   for (const c of cars) c.color = CAR_COLORS[Math.floor(rng() * CAR_COLORS.length)];
 
-  return { grid, buildings, parks, trees, cars };
+  const traffic = [];
+  for (const b of blocks) {
+    const route = { left: (b.bx * PITCH + 1.5) * TILE + 18,
+      top: (b.by * PITCH + 1.5) * TILE + 18, size: PITCH * TILE - 36 };
+    const car = { route, distance: rng() * (route.size * 4), speed: 44 + rng() * 24, color: CAR_COLORS[Math.floor(rng()*CAR_COLORS.length)] };
+    Object.assign(car, trafficPose(car, car.distance)); traffic.push(car);
+  }
+  return { grid, buildings, parks, trees, cars, traffic };
+}
+
+// Closed clockwise routes use rounded corners inside intersections. The two
+// sides of each street carry opposite directions, with no edge teleportation.
+export function trafficPose(car, distance) {
+  const { left, top, size } = car.route, radius = 26;
+  const straight = size - radius * 2, quarter = Math.PI * radius / 2;
+  const sideLength = straight + quarter, perimeter = sideLength * 4;
+  const d = ((distance % perimeter) + perimeter) % perimeter;
+  const side = Math.floor(d / sideLength), along = d % sideLength;
+  let x, y, heading;
+  if (along < straight) { x = radius + along; y = 0; heading = 0; }
+  else {
+    const a = (along-straight)/radius;
+    x=size-radius+Math.sin(a)*radius; y=radius-Math.cos(a)*radius; heading=a;
+  }
+  for (let i=0;i<side;i++) [x,y]=[size-y,x];
+  heading += side*Math.PI/2;
+  const w=Math.abs(Math.cos(heading))*34+Math.abs(Math.sin(heading))*17;
+  const h=Math.abs(Math.sin(heading))*34+Math.abs(Math.cos(heading))*17;
+  return { x:left+x-w/2, y:top+y-h/2, w, h, heading };
+}
+export function stepTraffic(state, dt) {
+  const traffic=state.world.traffic || [], bodies=Object.values(truckBodies(state.truck, -5));
+  for (const car of traffic) {
+    const ahead=trafficPose(car,car.distance+car.speed*dt+26);
+    const next=trafficPose(car,car.distance+car.speed*dt);
+    const blocked=[next,ahead].some(p=>bodies.some(poly=>overlapsRect(poly,p.x,p.y,p.w,p.h))) ||
+      [...state.world.cars,...traffic].some(other=>other!==car && ahead.x<other.x+other.w+5 && ahead.x+ahead.w>other.x-5 && ahead.y<other.y+other.h+5 && ahead.y+ahead.h>other.y-5);
+    if (!blocked) { car.distance+=car.speed*dt; Object.assign(car,trafficPose(car,car.distance)); }
+  }
 }
 
 export function tileAt(world, c, r) {
@@ -190,7 +228,7 @@ export function truckCollides(world, tr) {
     for(let r=tileOf(top);r<=tileOf(bottom);r++)for(let c=tileOf(left);c<=tileOf(right);c++){
       if(tileAt(world,c,r)!==STREET&&overlapsRect(poly,c*TILE,r*TILE,TILE,TILE))return name;
     }
-    for(const car of world.cars){
+    for(const car of [...world.cars, ...(world.traffic || [])]){
       if(car.x>right||car.x+car.w<left||car.y>bottom||car.y+car.h<top)continue;
       if(overlapsRect(poly,car.x,car.y,car.w,car.h))return name;
     }
@@ -203,6 +241,7 @@ export function truckCollides(world, tr) {
 export function stepTruck(state, inp, dt) {
   const tr = state.truck, R = RULES;
   state.scraping = false;
+  if (state.fire?.crew) { tr.v=0; return null; }
   const steering = Math.max(-1, Math.min(1, inp.steer || 0));
   const steerT = steering * R.maxSteer;
   tr.steer = approach(tr.steer, steerT, (steerT ? R.steerRate : R.steerReturn) * dt);
@@ -220,7 +259,7 @@ export function stepTruck(state, inp, dt) {
     tr.v = approach(tr.v, 0, R.brake * dt);
     if (tr.v === 0) tr.shiftWait = .16;
   } else if (direction && tr.shiftWait === 0) {
-    const target = direction < 0 ? -R.reverseSpeed : R.maxSpeed - Math.abs(steering) * 55;
+    const target = direction < 0 ? -R.reverseSpeed : R.maxSpeed * (state.upgrades?.engine ? 1.15 : 1) * (1 - (state.damage || 0)*.002) - Math.abs(steering) * 55;
     tr.v = approach(tr.v, target, (direction < 0 ? 150 : R.accel) * dt);
   } else tr.v = approach(tr.v, 0, R.coast * dt);
   if (Math.abs(tr.v) < .1) { tr.v = 0; return null; }
@@ -291,7 +330,7 @@ export function streetDistance(world, fromX, fromY, zones) {
 
 export function burnTimeFor(dist, firesOut) {
   const diff = Math.max(0.55, 1 - firesOut * 0.035);
-  return Math.min(85, Math.max(38, (45 + dist * 1.15) * diff));
+  return Math.min(120, Math.max(38, (45 + dist * 1.15) * diff));
 }
 
 export function dispatchFire(state) {
@@ -302,15 +341,8 @@ export function dispatchFire(state) {
   const pick = pool[Math.floor(state.rng() * pool.length)];
   pick.b.state = 'burning';
   const total = burnTimeFor(pick.d, state.firesOut);
-  const types = ['APARTMENT RESCUE', 'MARKET FIRE', 'ROOFTOP EVACUATION'];
-  const incident = state.firesOut % types.length;
-  const count = incident === 2 ? 6 : incident === 1 ? 5 : 4;
-  const targets = Array.from({ length: count }, (_, i) => ({
-    at: 0.12 + i * 0.76 / (count - 1),
-    kind: i === 1 || (incident === 2 && i === 4) ? 'person' : 'fire',
-    hp: 1,
-  }));
-  state.fire = { building: pick.b, number: state.firesOut + 1, title: types[incident], t: total, total, dist: pick.d, clean: true, targets };
+  const targets = [{ at: .25, kind: 'person', hp: 1 }, { at: .65, kind: 'fire', hp: 1 }];
+  state.fire = { building: pick.b, number: state.firesOut + 1, title: 'FIRE & RESCUE', t: total, total, dist: pick.d, clean: true, targets };
   // Clear the service frontage so a mission never asks players to park on a car.
   const zones = serviceZones(pick.b);
   world.cars = world.cars.filter(c => !zones.some(z => c.x < z.x + z.w && c.x + c.w > z.x && c.y < z.y + z.h && c.y + c.h > z.y));
@@ -350,17 +382,18 @@ export function roofPoint(at) {
   return { u: .5 + Math.cos(angle) * .32, v: .5 + Math.sin(angle) * .30 };
 }
 // ---------------------------------------------------------------- game
-export function createGame({ seed = (Date.now() % 1e9) >>> 0 } = {}) {
+export function createGame({ seed = (Date.now() % 1e9) >>> 0, upgrades = {} } = {}) {
   const rng = mulberry32(seed);
   const world = buildWorld(rng);
   const truck = spawnTruck();
   // Keep the run-up around the spawn clear of parked cars.
   world.cars = world.cars.filter(c => Math.hypot(c.x + c.w / 2 - truck.x, c.y + c.h / 2 - truck.y) > 6 * TILE);
+  world.traffic = world.traffic.filter(c => Math.hypot(c.x-truck.x,c.y-truck.y)>200);
   return {
-    seed, rng, world, truck,
+    seed, rng, world, truck, upgrades: { engine:!!upgrades.engine, armor:!!upgrades.armor, equipment:!!upgrades.equipment },
     status: 'menu', t: 0, paused: false,
     fire: null, nextFireIn: 0.8, lastBuilding: null,
-    stun: 0, scraping: false, crashCooldown: 0, recovered: false, crashes: 0, score: 0, firesOut: 0, lives: RULES.lives,
+    stun: 0, scraping: false, crashCooldown: 0, recovered: false, crashes: 0, damage: 0, score: 0, firesOut: 0, lives: RULES.lives,
     events: [],
   };
 }
@@ -374,6 +407,7 @@ export function step(state, dt, inp = {}) {
 
   // Recovery is explicit, costs clock time, and only triggers once per press.
   if (inp.recover && !state.recovered) {
+    if(state.fire){state.fire.crew=null;state.fire.parked=0;}
     const poses = [];
     for (let r = 1.5; r < ROWS; r += PITCH) for (let c = 1.5; c < COLS; c += PITCH) {
       for (const h of [0, Math.PI / 2, Math.PI, -Math.PI / 2]) {
@@ -390,6 +424,9 @@ export function step(state, dt, inp = {}) {
   }
   state.recovered = !!inp.recover;
 
+  if (inp.leave && state.fire) { state.fire.crew=null; state.fire.parked=0; }
+  stepTraffic(state, dt);
+  const impactSpeed=Math.abs(state.truck.v);
   const hit = stepTruck(state, inp, dt);
   if (hit) {
     state.stun = RULES.stunTime;
@@ -397,21 +434,43 @@ export function step(state, dt, inp = {}) {
     else state.truck.v = Math.sign(state.truck.v) * Math.min(Math.abs(state.truck.v), 115);
     if (state.crashCooldown === 0) {
       state.crashes++; state.crashCooldown = 1;
+      state.damage = Math.min(100, state.damage + Math.ceil((state.scraping ? 3 : Math.max(4, Math.round(impactSpeed * .16))) * (state.upgrades.armor ? .65 : 1)));
+      if(state.damage>=100){
+        state.status='over'; state.truck.v=0;
+        state.events.push({type:'gameover',score:state.score,fires:state.firesOut,reason:'Truck disabled'});
+      }
       if (state.fire) state.fire.clean = false;
       state.events.push({ type: 'crash', scrape: state.scraping, part: hit, x: state.truck.x, y: state.truck.y });
     }
   }
 
-  // The entire shift stays on the road. Deliver the rig, stopped and parallel
-  // to the curb, then dispatch the next call without changing controls or camera.
+  if (state.status === 'over') return;
+  // Crew tools operate on the city map with no camera or scene switch.
   if (state.fire) {
-    state.fire.parked = readyToPark(state) ? (state.fire.parked || 0) + dt : 0;
-    if (state.fire.parked >= .8) {
-      const f = state.fire, bonus = Math.round(f.t) * 5;
-      const gained = 200 + bonus + (f.clean ? 150 : 0);
-      state.score += gained; state.firesOut++; f.building.state = 'saved';
-      state.events.push({ type: 'extinguished', building: f.building, gained, bonus, clean: f.clean });
-      state.fire = null; state.nextFireIn = RULES.betweenFires;
+    const f=state.fire, b=f.building;
+    f.parked = !inp.leave && readyToPark(state) ? (f.parked || 0) + dt : 0;
+    if (f.parked>=.4 && !f.crew) {
+      state.truck.v=0;
+      f.crew={ladder:{u:.5,v:.85},hose:{u:.5,v:.85}};
+    }
+    if (f.crew) {
+      for (const [cursor,dx,dy] of [[f.crew.ladder,inp.ladderX||0,inp.ladderY||0],[f.crew.hose,inp.hoseX||0,inp.hoseY||0]]) {
+        const length=Math.max(1,Math.hypot(dx,dy));
+        cursor.u=Math.max(.05,Math.min(.95,cursor.u+dx/length*dt*100/(b.w*TILE)));
+        cursor.v=Math.max(.05,Math.min(.95,cursor.v+dy/length*dt*100/(b.h*TILE)));
+      }
+      f.crew.spray=!!inp.spray; f.crew.grab=!!inp.grab;
+      for (const target of f.targets) {
+        const cursor=target.kind==='person'?f.crew.ladder:f.crew.hose, p=roofPoint(target.at);
+        const active=target.kind==='person'?inp.grab:inp.spray;
+        if(active&&Math.hypot((p.u-cursor.u)*b.w*TILE,(p.v-cursor.v)*b.h*TILE)<25) target.hp=Math.max(0,target.hp-dt*(state.upgrades.equipment?1.5:1)/(target.kind==='person'?.6:1.2));
+      }
+    }
+    if (f.targets.every(target=>target.hp===0)) {
+      const bonus=Math.round(f.t)*5, gained=200+bonus+(f.clean?150:0);
+      state.score+=gained;state.firesOut++;f.building.state='saved';
+      state.events.push({type:'extinguished',building:f.building,gained,bonus,clean:f.clean});
+      state.fire=null;state.nextFireIn=RULES.betweenFires;
     }
   }
   if (state.fire) {
