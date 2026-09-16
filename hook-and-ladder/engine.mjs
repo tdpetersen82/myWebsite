@@ -178,7 +178,7 @@ function moveRecoil(state,car,dt) {
     const clear=(x,y)=>{
       if(x<0||y<0||x+car.w>W||y+car.h>H)return false;
       for(let r=tileOf(y);r<=tileOf(y+car.h-.001);r++)for(let c=tileOf(x);c<=tileOf(x+car.w-.001);c++)if(tileAt(state.world,c,r)!==STREET)return false;
-      if(bodies.some(poly=>overlapsRect(poly,x,y,car.w,car.h)))return false;
+      if(bodies.some(poly=>overlapsPolygons(poly,carBody({...car,x,y}))))return false;
       return ![...state.world.cars,...(state.world.traffic||[])].some(other=>other!==car&&x<other.x+other.w&&x+car.w>other.x&&y<other.y+other.h&&y+car.h>other.y);
     };
     const x=car.x+vx*dt/steps,y=car.y+vy*dt/steps;
@@ -243,27 +243,39 @@ export function truckBodies(tr, margin = 0) {
 export function turntable(tr) {
   return { x: tr.x - Math.cos(tr.h2) * RULES.turntable, y: tr.y - Math.sin(tr.h2) * RULES.turntable };
 }
-function overlapsRect(poly, x, y, w, h) {
-  const box = [[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
-  const axes = [[1,0],[0,1], [poly[1][0]-poly[0][0],poly[1][1]-poly[0][1]], [poly[2][0]-poly[1][0],poly[2][1]-poly[1][1]]];
-  for (const [ax,ay] of axes) {
-    const a = poly.map(([px,py]) => px*ax+py*ay), b = box.map(([px,py]) => px*ax+py*ay);
-    if (Math.max(...a) <= Math.min(...b) || Math.max(...b) <= Math.min(...a)) return false;
+function boxCorners(x,y,w,h) { return [[x,y],[x+w,y],[x+w,y+h],[x,y+h]]; }
+// Moving cars rotate inside their broad-phase box. Test the actual body,
+// not the empty triangular corners of that box.
+function carBody(car) {
+  if(car.heading === undefined)return boxCorners(car.x,car.y,car.w,car.h);
+  const cx=car.x+car.w/2,cy=car.y+car.h/2,c=Math.cos(car.heading),s=Math.sin(car.heading);
+  return [[-17,-8],[17,-8],[17,8],[-17,8]].map(([x,y])=>[cx+x*c-y*s,cy+x*s+y*c]);
+}
+function polygonAxes(a,b) {
+  return [a,b].flatMap(poly=>[0,1].map(i=>{
+    const dx=poly[i+1][0]-poly[i][0],dy=poly[i+1][1]-poly[i][1],length=Math.hypot(dx,dy);
+    return [-dy/length,dx/length];
+  }));
+}
+function overlapsPolygons(poly,box) {
+  for (const [ax,ay] of polygonAxes(poly,box)) {
+    const a=poly.map(([x,y])=>x*ax+y*ay),b=box.map(([x,y])=>x*ax+y*ay);
+    if(Math.max(...a)<=Math.min(...b)||Math.max(...b)<=Math.min(...a))return false;
   }
   return true;
 }
+function overlapsRect(poly,x,y,w,h) { return overlapsPolygons(poly,boxCorners(x,y,w,h)); }
 // Minimum separating axis points away from the obstacle toward the truck.
-function contactNormal(poly,x,y,w,h) {
-  const box=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
+function polygonNormal(poly,box) {
   let depth=Infinity,normal=[0,0];
-  for(const axis of [[1,0],[0,1],[poly[1][0]-poly[0][0],poly[1][1]-poly[0][1]],[poly[2][0]-poly[1][0],poly[2][1]-poly[1][1]]]){
-    const length=Math.hypot(...axis),ax=axis[0]/length,ay=axis[1]/length;
+  for(const [ax,ay] of polygonAxes(poly,box)){
     const a=poly.map(p=>p[0]*ax+p[1]*ay),b=box.map(p=>p[0]*ax+p[1]*ay);
     const positive=Math.max(...b)-Math.min(...a),negative=Math.max(...a)-Math.min(...b);
     if(Math.min(positive,negative)<depth){depth=Math.min(positive,negative);normal=positive<negative?[ax,ay]:[-ax,-ay];}
   }
   return normal;
 }
+function contactNormal(poly,x,y,w,h) { return polygonNormal(poly,boxCorners(x,y,w,h)); }
 export function truckCollides(world,tr){return truckContact(world,tr)?.part || null;}
 function truckContact(world, tr) {
   // A small body inset forgives paint-to-curb contact. Exact rectangle overlap
@@ -280,7 +292,8 @@ function truckContact(world, tr) {
     }
     for(const car of [...world.cars, ...(world.traffic || [])]){
       if(car.x>right||car.x+car.w<left||car.y>bottom||car.y+car.h<top)continue;
-      if(overlapsRect(poly,car.x,car.y,car.w,car.h))return {part:name,car,n:contactNormal(poly,car.x,car.y,car.w,car.h)};
+      const body=carBody(car);
+      if(overlapsPolygons(poly,body))return {part:name,car,n:polygonNormal(poly,body)};
     }
   }
   return null;
@@ -348,9 +361,12 @@ export function stepTruck(state, inp, dt) {
   let trailerYaw = tr.v * Math.sin(tr.h1 - tr.h2 - tr.tiller) / (R.L2 * Math.cos(tr.tiller));
   tr.h2 += trailerYaw * dt;
   const art = wrapAngle(tr.h1 - tr.h2);
-  // The hitch stops further folding; never rotate the trailer into a new pose.
+  // Limit further cab steering at the hitch stop, while the rig keeps rolling.
+  // Preserve trailer motion and sweep the resulting pose against real obstacles.
   if (Math.abs(art) > R.maxArticulation && Math.abs(art) > Math.abs(wrapAngle(prev.h1 - prev.h2))) {
-    Object.assign(tr, prev); tr.v = 0; return null;
+    tr.h1 = tr.h2 + Math.sign(art) * R.maxArticulation;
+    tr.x = prev.x + Math.cos(tr.h1) * tr.v * dt;
+    tr.y = prev.y + Math.sin(tr.h1) * tr.v * dt;
   }
   tr.h1 = wrapAngle(tr.h1); tr.h2 = wrapAngle(tr.h2);
 

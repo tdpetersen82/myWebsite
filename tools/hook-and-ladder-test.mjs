@@ -399,7 +399,7 @@ function bumpCar(speed){
 console.log('displaced traffic');
 {
  const g=playing();g.world=openWorld();g.nextFireIn=1e9;
- const car={...createGame(42).world.traffic[0],x:650,y:331.5,w:34,h:17};
+ const car={...createGame(42).world.traffic[0],x:650,y:331.5,w:34,h:17,heading:0};
  g.world.traffic=[car];g.truck.x=610;g.truck.v=100;
  stepTruck(g,{gas:true},1/120);
  check('truck impact takes traffic off its old route',car.displaced===true);
@@ -417,6 +417,25 @@ console.log('displaced traffic');
  const wallCar={x:W-34,y:100,w:34,h:17,vx:80,vy:60};g.world.cars=[wallCar];
  run(g,.5,{handbrake:true});
  check('car slides along boundary without bouncing back',wallCar.x===W-34&&wallCar.y>100&&wallCar.vx===0);
+}
+console.log('visible collision bounds and hitch limits');
+{
+ const g=playing();g.world=openWorld();g.nextFireIn=1e9;
+ const side=51/Math.sqrt(2);
+ g.world.traffic=[{x:650-side/2,y:340-side/2,w:side,h:side,heading:Math.PI/4}];
+ Object.assign(g.truck,{x:596,y:314,h1:0,h2:0});
+ check('empty corner of rotated car bounds does not block truck',!truckCollides(g.world,g.truck));
+ g.truck.y=334;
+ check('actual rotated car body still blocks truck',truckCollides(g.world,g.truck)==='tractor');
+}
+for(const reverse of [false,true]){
+ const g=playing();g.world=openWorld();g.nextFireIn=1e9;
+ Object.assign(g.truck,{x:1000,y:340,h1:0,h2:-RULES.maxArticulation,v:reverse?-40:60});
+ const x=g.truck.x,y=g.truck.y;
+ run(g,.3,reverse?{brake:true,steer:-1}:{gas:true,steer:1});
+ check('hitch limit keeps rolling in open space '+reverse,Math.hypot(g.truck.x-x,g.truck.y-y)>10&&Math.abs(g.truck.v)>20);
+ check('rolling hitch still limits folding '+reverse,Math.abs(wrapAngle(g.truck.h1-g.truck.h2))<=RULES.maxArticulation+1e-9);
+ check('rolling hitch needs no crash damage '+reverse,g.damage===0);
 }
 console.log('routes and call variety');
 const callTitles=new Set();
