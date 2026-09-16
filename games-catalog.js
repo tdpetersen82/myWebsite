@@ -5,8 +5,8 @@
   'use strict';
 
   window.LG_GAMES = [
-    { id: 'hook-and-ladder', name: 'Hook & Ladder', cat: 'classic', desc: 'Two players, one tiller truck. Park the ladder.', color: '#E63946', added: '2026-09-15' },
-    { id: 'dynamine', name: 'Dynamine', cat: 'classic', desc: 'Dynamite, rock, bats. Find the lift.', color: '#F2A65A', added: '2026-09-15' },
+    { id: 'hook-and-ladder', name: 'Hook & Ladder', cat: 'classic', desc: 'Two players, one tiller truck. Park the ladder.', color: '#E63946', added: '2026-09-15', twoPlayer: true },
+    { id: 'dynamine', name: 'Dynamine', cat: 'classic', desc: 'Dynamite, rock, bats. Find the lift.', color: '#F2A65A', added: '2026-09-15', twoPlayer: true },
     { id: 'mini-golf', name: 'Mini Golf', cat: 'classic', desc: 'Nine neon holes. Bank, putt, beat par.', color: '#64EADB', added: '2026-09-09' },
     { id: 'daily-orbit', name: 'Daily Orbit', cat: 'classic', desc: "Today's sky, one probe, six launches.", color: '#6F9DFF', url: '/solar-system/?daily', added: '2026-09-11' },
     { id: 'snake',             name: 'Snake',             cat: 'kids',    desc: "Eat, grow, don't crash.",         color: '#7BC97B', added: '2026-03-12' },
@@ -15,11 +15,11 @@
     { id: 'shape-sorter',      name: 'Shape Sorter',      cat: 'kids',    desc: 'Drag shapes into matching buckets.', color: '#6DD5FA', added: '2026-05-06' },
     { id: 'counting-critters', name: 'Counting Critters', cat: 'kids',    desc: 'How many critters? Tap the number.', color: '#A78BFA', added: '2026-05-06' },
     { id: 'animal-detective',  name: 'Animal Detective',  cat: 'kids',    desc: 'Guess the animal in 20 yes-or-no questions.', color: '#FF6F61', added: '2026-05-06' },
-    { id: 'tic-tac-toe',       name: 'Tic-Tac-Toe',       cat: 'kids',    desc: 'The classic Xs and Os. Three levels.', color: '#2EC4B6', added: '2026-07-15' },
+    { id: 'tic-tac-toe',       name: 'Tic-Tac-Toe',       cat: 'kids',    desc: 'The classic Xs and Os. Three levels.', color: '#2EC4B6', added: '2026-07-15', twoPlayer: true },
     { id: 'go-fish',           name: 'Go Fish',           cat: 'kids',    desc: 'Ask for animals, fish the pond, make books.', color: '#1E9BD7', added: '2026-07-15' },
     { id: 'crazy-eights',      name: 'Crazy Eights',      cat: 'kids',    desc: 'Match the card or play a wild 8.', color: '#F58A3C', added: '2026-07-15' },
     { id: 'dogs',              name: 'Pup Quiz',          cat: 'kids',    desc: 'Five clues, one dog breed. New puzzle daily.', color: '#8A5A2B', url: '/dogs/play.html', added: '2026-08-13' },
-    { id: 'pong',              name: 'Pong',              cat: 'classic', desc: 'Paddle vs. Computer. Keep it alive.',    color: '#8FA8E6', added: '2026-03-12' },
+    { id: 'pong',              name: 'Pong',              cat: 'classic', desc: 'Paddle vs. Computer. Keep it alive.',    color: '#8FA8E6', added: '2026-03-12', twoPlayer: true },
     { id: 'breakout',          name: 'Breakout',          cat: 'classic', desc: 'Bricks, ball, bounce.',            color: '#F2A65A', added: '2026-03-12' },
     { id: 'space-invaders',    name: 'Space Invaders',    cat: 'classic', desc: 'Defend Earth from alien waves.',   color: '#9B7EDC', added: '2026-03-12' },
     { id: 'block-puzzle',      name: 'Block Puzzle',      cat: 'classic', desc: 'Stack, clear, score.',             color: '#5DC4D9', added: '2026-03-12' },
@@ -31,24 +31,24 @@
     { id: 'defender',          name: 'Defender',          cat: 'classic', desc: 'Save the humanoids.',              color: '#9B7EDC', added: '2026-03-12' },
     { id: 'simon',             name: 'Simon',             cat: 'classic', desc: 'Watch. Repeat. Repeat longer.',    color: '#F08488', added: '2026-03-12' },
     { id: 'solar-system',      name: 'Solar System',      cat: 'classic', desc: 'Planets orbit the Sun under real gravity.', color: '#F2A65A', added: '2026-06-02' },
-    { id: 'connect-4',         name: 'Connect 4',         cat: 'puzzle',  desc: 'Four in a row. Three levels.',      color: '#8FA8E6', added: '2026-03-12' },
+    { id: 'connect-4',         name: 'Connect 4',         cat: 'puzzle',  desc: 'Four in a row. Three levels.',      color: '#8FA8E6', added: '2026-03-12', twoPlayer: true },
     { id: 'connect-dots',      name: 'Dots & Boxes',      cat: 'puzzle',  desc: 'Lines, boxes, strategy.',          color: '#F08488', added: '2026-03-12' },
     { id: '2048',              name: '2048',              cat: 'puzzle',  desc: 'Merge tiles. Reach 2048.',          color: '#F2A65A', added: '2026-05-07' },
     { id: 'chess',             name: 'Chess',             cat: 'puzzle',  desc: 'Full rules. Three difficulties.', color: '#9B7EDC', added: '2026-05-08' },
-    { id: 'checkers',          name: 'Checkers',          cat: 'puzzle',  desc: 'Mandatory captures. Multi-jumps. Crown me.',   color: '#D23B33', added: '2026-05-08' },
+    { id: 'checkers',          name: 'Checkers',          cat: 'puzzle',  desc: 'Mandatory captures. Multi-jumps. Crown me.',   color: '#D23B33', added: '2026-05-08', twoPlayer: true },
     { id: 'backgammon',        name: 'Backgammon',        cat: 'puzzle',  desc: 'Roll, race, bear off. Pip-count strategy.',     color: '#A26F3C', added: '2026-05-08' },
-    { id: 'othello',           name: 'Othello',           cat: 'puzzle',  desc: 'Flip flanked discs. Hold the corners.',         color: '#1A7B3F', added: '2026-05-08' },
-    { id: 'chinese-checkers',  name: 'Chinese Checkers',  cat: 'puzzle',  desc: 'Hop chains. 2, 3, or 6 players.',               color: '#2DA1A6', added: '2026-05-08' },
+    { id: 'othello',           name: 'Othello',           cat: 'puzzle',  desc: 'Flip flanked discs. Hold the corners.',         color: '#1A7B3F', added: '2026-05-08', twoPlayer: true },
+    { id: 'chinese-checkers',  name: 'Chinese Checkers',  cat: 'puzzle',  desc: 'Hop chains. 2, 3, or 6 players.',               color: '#2DA1A6', added: '2026-05-08', twoPlayer: true },
     { id: 'ultimate-tic-tac-toe', name: 'Ultimate Tic-Tac-Toe', cat: 'puzzle', desc: 'Nine boards in one. Your move picks the next.', color: '#E8A330', added: '2026-05-10' },
     { id: 'sudoku',            name: 'Sudoku',            cat: 'puzzle',  desc: 'Fill the grid 1–9. Four difficulties.', color: '#2E6CB4', added: '2026-06-05' },
     { id: 'minesweeper',       name: 'Minesweeper',       cat: 'puzzle',  desc: 'Clear the board. Flag the mines.',  color: '#5B6470', added: '2026-06-05' },
     { id: 'mahjong',           name: 'Mahjong Solitaire', cat: 'puzzle',  desc: 'Match free tiles. Clear the mound.', color: '#1FA88A', added: '2026-06-02' },
-    { id: 'mancala',           name: 'Mancala',           cat: 'puzzle',  desc: 'Sow seeds. Capture across. Claim the store.',   color: '#B85C38', added: '2026-05-10' },
+    { id: 'mancala',           name: 'Mancala',           cat: 'puzzle',  desc: 'Sow seeds. Capture across. Claim the store.',   color: '#B85C38', added: '2026-05-10', twoPlayer: true },
     { id: 'word-search',       name: 'Word Search',       cat: 'puzzle',  desc: 'Find hidden words — or make your own puzzle.', color: '#C96F2A', added: '2026-06-18' },
     { id: 'crossword-maker',   name: 'Crossword Maker',   cat: 'puzzle',  desc: 'Your words, your clues — a printable crossword.', color: '#3D5A80', added: '2026-08-10' },
     { id: 'hangman',           name: 'Hangman',           cat: 'puzzle',  desc: 'Guess the word by theme. Build a streak.', color: '#2E8B57', added: '2026-06-18' },
-    { id: 'yahtzee',           name: 'Yahtzee',           cat: 'puzzle',  desc: 'Roll, hold, fill the card. Best total wins.', color: '#34558B', added: '2026-07-15' },
-    { id: 'farkle',            name: 'Farkle',            cat: 'puzzle',  desc: 'Push your luck to 10,000. Bank or bust.', color: '#B0413E', added: '2026-07-15' },
+    { id: 'yahtzee',           name: 'Yahtzee',           cat: 'puzzle',  desc: 'Roll, hold, fill the card. Best total wins.', color: '#34558B', added: '2026-07-15', twoPlayer: true },
+    { id: 'farkle',            name: 'Farkle',            cat: 'puzzle',  desc: 'Push your luck to 10,000. Bank or bust.', color: '#B0413E', added: '2026-07-15', twoPlayer: true },
     // Both live under /dogs/ and so need the `url` override: the finder owns
     // the directory index, the game sits beside it.
     { id: 'dog-breed-finder',  name: 'Dog Breed Finder',  cat: 'puzzle',  desc: 'Answer eight questions, see which breeds fit.', color: '#A9743C', url: '/dogs/', added: '2026-08-13' },
@@ -66,6 +66,9 @@
     { id: 'texas-holdem',      name: "Texas Hold'em",     cat: 'casino',  desc: '4-handed cash game. Equity hints.', color: '#E8B05B', added: '2026-05-07' },
     { id: 'slot-machine',      name: 'Slot Machine',      cat: 'casino',  desc: 'Three reels, three themes.',       color: '#C8A14A', added: '2026-05-08' },
   ];
+
+  // `twoPlayer: true` = two people can play on one screen (same keyboard or
+  // pass-and-play). Drives the homepage 2P badge + pill and /two-player/.
 
   // "New" is derived from `added`, never hand-maintained. A game wears the NEW
   // badge for NEW_WINDOW_DAYS after it ships, then quietly stops. (Previously

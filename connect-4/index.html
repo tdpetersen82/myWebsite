@@ -7,21 +7,21 @@
     <script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
     <script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());if(/(^|\.)limestonegames\.com$/.test(location.hostname))gtag("config","G-DP6FGVETMV");addEventListener("error",function(e){try{gtag("event","js_error",{message:String(e.message||"").slice(0,150),source:(String(e.filename||"").split("/").pop().split("?")[0]||location.pathname)+":"+(e.lineno||0),page_path:location.pathname})}catch(_){}});addEventListener("unhandledrejection",function(e){try{var r=e.reason;gtag("event","js_error",{message:String(r&&r.message||r||"").slice(0,150),source:"promise",page_path:location.pathname})}catch(_){}});</script>
     <title>Connect 4 — Play Free Online vs. Computer | Limestone Games</title>
-    <meta name="description" content="Play Connect 4 free in your browser against the computer. Three difficulty tiers plus a tutorial mode that marks the best moves. No downloads.">
-    <meta name="keywords" content="connect 4, connect four, online connect 4, free connect 4, browser connect 4, connect 4 vs Computer, four in a row">
+    <meta name="description" content="Play Connect 4 free in your browser against the computer or with a friend on one screen. Three difficulty tiers plus a tutorial mode that marks the best moves. No downloads.">
+    <meta name="keywords" content="connect 4, connect four, online connect 4, free connect 4, browser connect 4, connect 4 vs Computer, connect 4 two player, four in a row">
     <link rel="canonical" href="https://limestonegames.com/connect-4/">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Connect 4","description":"Play Connect 4 free in your browser against the computer. Three difficulty tiers, four-in-a-row, and a tutorial mode that marks the best moves.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Connect 4","description":"Play Connect 4 free in your browser against the computer or with two players on one screen. Three difficulty tiers, four-in-a-row, and a tutorial mode that marks the best moves.","playMode":["SinglePlayer","MultiPlayer"],"numberOfPlayers":{"@type":"QuantitativeValue","minValue":1,"maxValue":2},"applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Strategy","item":"https://limestonegames.com/strategy/"},{"@type":"ListItem","position":3,"name":"Connect 4"}]}</script>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Connect 4?","acceptedAnswer":{"@type":"Answer","text":"Click or tap a column to drop your disc. The first player to line up four of their discs in a row — horizontally, vertically, or diagonally — wins."}},{"@type":"Question","name":"Is Connect 4 free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs."}},{"@type":"Question","name":"What's the best opening?","acceptedAnswer":{"@type":"Answer","text":"The center column. It belongs to more winning lines than any other column, so taking it first gives the most flexibility."}},{"@type":"Question","name":"Does my record save?","acceptedAnswer":{"@type":"Answer","text":"Yes — your wins, losses, and best streak are stored locally in your browser."}},{"@type":"Question","name":"Is there a tutorial?","acceptedAnswer":{"@type":"Answer","text":"Yes — switch on Tutorial mode under the board. Each turn it rings columns where you can win, marks spots you must block, and stars the strongest move."}}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Connect 4?","acceptedAnswer":{"@type":"Answer","text":"Click or tap a column to drop your disc. The first player to line up four of their discs in a row — horizontally, vertically, or diagonally — wins."}},{"@type":"Question","name":"Is Connect 4 free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs."}},{"@type":"Question","name":"What's the best opening?","acceptedAnswer":{"@type":"Answer","text":"The center column. It belongs to more winning lines than any other column, so taking it first gives the most flexibility."}},{"@type":"Question","name":"Does my record save?","acceptedAnswer":{"@type":"Answer","text":"Yes — your wins, losses, and best streak are stored locally in your browser."}},{"@type":"Question","name":"Is there a tutorial?","acceptedAnswer":{"@type":"Answer","text":"Yes — switch on Tutorial mode under the board. Each turn it rings columns where you can win, marks spots you must block, and stars the strongest move."}},{"@type":"Question","name":"Can two people play Connect 4 on one screen?","acceptedAnswer":{"@type":"Answer","text":"Yes — switch Mode in the top bar to 2 players. Red and yellow take turns tapping columns on the same device."}}]}</script>
     <meta property="og:title" content="Connect 4 — Play Free Online vs. Computer | Limestone Games">
-    <meta property="og:description" content="Play Connect 4 free in your browser against the computer. Three difficulty tiers.">
+    <meta property="og:description" content="Play Connect 4 free in your browser — against the computer or two players on one screen. Three difficulty tiers.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://limestonegames.com/connect-4/">
     <meta property="og:site_name" content="Limestone Games">
     <meta property="og:image" content="https://limestonegames.com/assets/og/connect-4.jpg">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Connect 4 — Play Free Online vs. Computer | Limestone Games">
-    <meta name="twitter:description" content="Play Connect 4 free in your browser against the computer. Three difficulty tiers.">
+    <meta name="twitter:description" content="Play Connect 4 free in your browser — against the computer or two players on one screen. Three difficulty tiers.">
     <meta name="twitter:image" content="https://limestonegames.com/assets/og/connect-4.jpg">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -93,6 +93,7 @@
         flex-wrap: wrap; align-items: center;
       }
       .stats > div { display: flex; flex-direction: column; gap: 3px; align-items: flex-start; line-height: 1; }
+      .stats > div[hidden] { display: none; }
       .stats .l { color: color-mix(in oklab, var(--ink) 50%, transparent); font-weight: 600; font-size: 9.5px; text-transform: uppercase; letter-spacing: 0.12em; }
       .stats .v { font-size: 16px; font-weight: 800; color: var(--accent); font-variant-numeric: tabular-nums; }
       .stats .v.score { color: var(--ink); }
@@ -166,14 +167,20 @@
         <header class="top-bar">
             <a class="tb-back" href="../strategy/">← Strategy</a>
             <div class="tb-title">
-                <span class="tb-eyebrow"><span class="tb-dot"></span>Connect Four · vs Computer</span>
+                <span class="tb-eyebrow"><span class="tb-dot"></span>Connect Four · <span id="modeTag">vs Computer</span></span>
                 <h1>Connect 4</h1>
             </div>
             <div class="stats">
-            <div><span class="l">Turn</span><span class="v" id="turn" data-reserve="Thinking…">Your move</span></div>
-            <div><span class="l">Record</span><span class="v" id="wins" data-reserve="88–88">0–0</span></div>
-            <div><span class="l">Streak</span><span class="v" id="streak" data-reserve="88">0</span></div>
-            <div><span class="l">Level</span>
+            <div><span class="l">Turn</span><span class="v" id="turn" data-reserve="Yellow's move">Your move</span></div>
+            <div><span class="l" id="winsLabel">Record</span><span class="v" id="wins" data-reserve="88–88">0–0</span></div>
+            <div><span class="l" id="streakLabel">Streak</span><span class="v" id="streak" data-reserve="88">0</span></div>
+            <div><span class="l">Mode</span>
+                <select class="diff" id="mode" aria-label="Game mode">
+                    <option value="vs">vs computer</option>
+                    <option value="two">2 players</option>
+                </select>
+            </div>
+            <div id="levelCell"><span class="l">Level</span>
                 <select class="diff" id="difficulty" aria-label="Difficulty">
                     <option value="easy">Easy</option>
                     <option value="medium">Medium</option>
@@ -198,12 +205,12 @@
             <label class="tut-switch"><input type="checkbox" id="tutorialToggle"><span class="tut-track"><span class="tut-knob"></span></span>Tutorial</label>
             <a href="../strategy/"><button class="ghost">More strategy games</button></a>
         </div>
-        <p class="hint">You are red and move first. Drop a disc into any column — get four of your discs in a row (across, down, or diagonally) before the computer does. New to the game? Switch on Tutorial and the board marks wins, must-blocks, and the strongest move.</p>        </div>
+        <p class="hint">Red moves first. Drop a disc into any column — get four of your discs in a row (across, down, or diagonally) before your opponent does. Play the computer at three levels, or set Mode to 2 players and take turns with a friend on this screen. New to the game? Switch on Tutorial and the board marks wins, must-blocks, and the strongest move for whoever is up.</p>        </div>
         
 
         <section class="game-overview" aria-label="About Connect 4">
             <h2>How to play Connect 4 online</h2>
-            <p>Connect 4 is the fast, two-player &ldquo;four in a row&rdquo; game played in a standing seven-by-six grid. You and the computer take turns dropping discs down the columns; the first to line up four of their color &mdash; in any direction &mdash; wins. This free browser version has three difficulty levels, an optional tutorial mode, and no downloads or signup.</p>
+            <p>Connect 4 is the fast, two-player &ldquo;four in a row&rdquo; game played in a standing seven-by-six grid. Players take turns dropping discs down the columns; the first to line up four of their color &mdash; in any direction &mdash; wins. This free browser version lets you play the computer at three difficulty levels or share one screen with a friend in 2-player mode, with an optional tutorial and no downloads or signup.</p>
 
             <h3>Connect 4 rules</h3>
             <ul>
@@ -216,8 +223,8 @@
             <ul>
                 <li><b>Take the center.</b> The middle column sits in the most winning lines &mdash; claiming it early is the single strongest move.</li>
                 <li><b>Build double threats.</b> Set up two ways to make four at once; your opponent can only block one.</li>
-                <li><b>Watch the diagonals.</b> Diagonal fours are the easiest to miss &mdash; on both your side and the computer's.</li>
-                <li><b>Block on time, not late.</b> If the computer has three in a row with an open end, block it before adding to your own plan.</li>
+                <li><b>Watch the diagonals.</b> Diagonal fours are the easiest to miss &mdash; on both your side and your opponent's.</li>
+                <li><b>Block on time, not late.</b> If your opponent has three in a row with an open end, block it before adding to your own plan.</li>
                 <li><b>Think about the stack.</b> Every disc you drop changes which slots open next &mdash; don't hand your opponent a winning square right above your move.</li>
             </ul>
             <p>Played perfectly, the first player can always force a win by starting in the center column &mdash; which is exactly why the center is so valuable.</p>
@@ -227,13 +234,15 @@
             <p><b>What's the best first move in Connect 4?</b> The center column. It belongs to the most possible four-in-a-rows, and with perfect play a center start is a forced win for the first player.</p>
             <p><b>Is there a tutorial?</b> Yes &mdash; switch on Tutorial mode under the board. Each turn it rings columns where you can win, marks spots you must block, and stars the strongest move.</p>
             <p><b>Is Connect 4 free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
-            <p><b>Does my record save?</b> Yes &mdash; your results are stored locally in your browser.</p>
+            <p><b>Does my record save?</b> Yes &mdash; your results against the computer are stored locally in your browser.</p>
+            <p><b>Can two people play Connect 4 on one screen?</b> Yes &mdash; switch Mode in the top bar to 2 players. Red and yellow take turns tapping columns on the same device.</p>
 
             <h3>More strategy games</h3>
             <ul class="related-games-list">
                 <li><a href="../ultimate-tic-tac-toe/">Ultimate Tic-Tac-Toe</a></li>
                 <li><a href="../othello/">Othello</a></li>
                 <li><a href="../checkers/">Checkers</a></li>
+                <li><a href="../two-player/">More two-player games &rarr;</a></li>
                 <li><a href="../strategy/">All strategy games &rarr;</a></li>
             </ul>
         </section>
@@ -254,6 +263,11 @@
         const winsEl = document.getElementById('wins');
         const streakEl = document.getElementById('streak');
         const diffEl = document.getElementById('difficulty');
+        const modeEl = document.getElementById('mode');
+        const modeTagEl = document.getElementById('modeTag');
+        const levelCellEl = document.getElementById('levelCell');
+        const winsLabelEl = document.getElementById('winsLabel');
+        const streakLabelEl = document.getElementById('streakLabel');
         const newGameBtn = document.getElementById('newGame');
         const overEl = document.getElementById('over');
         const overTitleEl = document.getElementById('overTitle');
@@ -268,6 +282,7 @@
         const KEY_DRAW   = 'connect4GamesDraw';
         const KEY_DIFF   = 'connect4Difficulty';
         const KEY_TUT    = 'connect4Tutorial';
+        const KEY_MODE   = 'connect4Mode';
         const DEFAULT_STATUS = 'Click or tap a column to drop your disc.';
 
         const BOARD_BLUE = '#2B5FA8';
@@ -276,10 +291,23 @@
         const YELLOW = '#E8B84B', YELLOW_HI = '#F6D680';
 
         let board, turn, gameOver, aiThinking, hoverCol = -1;
+        let aiTimer = null;
         let difficulty = localStorage.getItem(KEY_DIFF) || 'medium';
+        // 'vs' = red (you) against the computer; 'two' = red and yellow share this screen.
+        let mode = localStorage.getItem(KEY_MODE) === 'two' ? 'two' : 'vs';
+        const tally = { [PLAYER]: 0, [AI]: 0 };   // 2-player session wins (red, yellow); not persisted
         let anim = null;   // { col, row, color, startY, targetY, t0, dur }
         let tutorial = localStorage.getItem(KEY_TUT) === '1';
-        let hints = null;  // { wins: [col], blocks: [col], avoid: [col], best: col|null }
+        let hints = null;  // { me, opp, wins: [col], blocks: [col], avoid: [col], best: col|null }
+
+        function other(p) { return p === PLAYER ? AI : PLAYER; }
+        function sideName(p) { return p === PLAYER ? 'Red' : 'Yellow'; }
+        // In 2-player mode every turn is a human turn; vs the computer only red's is.
+        function humanTurn() { return mode === 'two' || turn === PLAYER; }
+        function turnText() { return mode === 'two' ? sideName(turn) + "'s move" : 'Your move'; }
+        function defaultStatus() { return mode === 'two' ? sideName(turn) + ': click or tap a column.' : DEFAULT_STATUS; }
+        // Name of the side the tutorial is warning about.
+        function oppName() { return mode === 'two' ? sideName(hints.opp) : 'the computer'; }
 
         function readNum(k) { const n = parseInt(localStorage.getItem(k), 10); return isFinite(n) && n >= 0 ? n : 0; }
         function writeNum(k, v) { try { localStorage.setItem(k, String(v)); } catch (e) {} }
@@ -287,8 +315,23 @@
         function recordLoss() { writeNum(KEY_LOSS, readNum(KEY_LOSS) + 1); writeNum(KEY_STREAK, 0); }
         function recordDraw() { writeNum(KEY_DRAW, readNum(KEY_DRAW) + 1); writeNum(KEY_STREAK, 0); }
         function refreshStats() {
+            if (mode === 'two') {
+                // Record/Streak are vs-computer stats; in 2P the cells show a session tally instead.
+                winsLabelEl.textContent = 'Red';
+                streakLabelEl.textContent = 'Yellow';
+                winsEl.textContent = tally[PLAYER];
+                streakEl.textContent = tally[AI];
+                return;
+            }
+            winsLabelEl.textContent = 'Record';
+            streakLabelEl.textContent = 'Streak';
             winsEl.textContent = readNum(KEY_WINS) + '–' + readNum(KEY_LOSS);
             streakEl.textContent = readNum(KEY_STREAK);
+        }
+        function applyMode() {
+            modeEl.value = mode;
+            levelCellEl.hidden = mode === 'two';
+            modeTagEl.textContent = mode === 'two' ? '2 Players' : 'vs Computer';
         }
 
         function newBoard() { return Array.from({ length: ROWS }, () => Array(COLS).fill(0)); }
@@ -392,32 +435,35 @@
             return won;
         }
 
+        // Hints are for whichever side is to move: red vs the computer, or
+        // either colour in 2-player mode (the engine is side-agnostic).
         function computeHints() {
             hints = null;
-            if (!tutorial || gameOver || aiThinking || turn !== PLAYER) return;
+            if (!tutorial || gameOver || aiThinking || !humanTurn()) return;
+            const me = turn, opp = other(me);
             const cols = validCols(board);
-            const wins = cols.filter(c => winsAt(c, PLAYER));
-            const blocks = cols.filter(c => winsAt(c, AI));
+            const wins = cols.filter(c => winsAt(c, me));
+            const blocks = cols.filter(c => winsAt(c, opp));
             const avoid = [];
             let best = null;
             if (!wins.length) {
-                // A move only creates a new computer win in the slot it opens
+                // A move only creates a new opponent win in the slot it opens
                 // directly above itself — check just that.
                 for (const c of cols) {
                     if (blocks.includes(c)) continue;
                     const r = dropRow(board, c);
-                    board[r][c] = PLAYER;
-                    if (winsAt(c, AI)) avoid.push(c);
+                    board[r][c] = me;
+                    if (winsAt(c, opp)) avoid.push(c);
                     board[r][c] = 0;
                 }
                 if (!blocks.length) {
-                    // Same engine the computer uses, from the player's side
-                    // (the minimizing player), always at full strength.
-                    best = minimax(board, 6, -Infinity, Infinity, false).col;
+                    // Same engine the computer uses, always at full strength.
+                    // minimax maximizes for AI (yellow) and minimizes for PLAYER (red).
+                    best = minimax(board, 6, -Infinity, Infinity, me === AI).col;
                     if (best == null) best = cols[0];
                 }
             }
-            hints = { wins, blocks, avoid, best };
+            hints = { me, opp, wins, blocks, avoid, best };
             setStatus(coachLine());
         }
 
@@ -445,11 +491,12 @@
         // is playable soon (at most one fill below it), never for lines that
         // need a whole stack built first.
         function whyBest(c) {
+            const me = hints.me, opp = hints.opp, them = oppName();
             const r = dropRow(board, c);
-            board[r][c] = PLAYER;
-            const winCols = validCols(board).filter(d => winsAt(d, PLAYER));
-            const threatDir = winCols.length === 1 ? lineDirAt(winCols[0], PLAYER) : null;
-            // Scan 4-windows through the new disc that have no computer discs.
+            board[r][c] = me;
+            const winCols = validCols(board).filter(d => winsAt(d, me));
+            const threatDir = winCols.length === 1 ? lineDirAt(winCols[0], me) : null;
+            // Scan 4-windows through the new disc that have no opponent discs.
             let openDir = null, linked = false;
             for (let rr = 0; rr < ROWS; rr++) for (let cc = 0; cc < COLS; cc++) {
                 for (const [dr, dc, dirName] of [[0, 1, 'across'], [1, 0, 'vertically'], [1, 1, 'diagonally'], [1, -1, 'diagonally']]) {
@@ -460,8 +507,8 @@
                     for (let k = 0; k < 4; k++) {
                         const wr = rr + dr * k, wc = cc + dc * k;
                         if (wr === r && wc === c) hasNew = true;
-                        if (board[wr][wc] === PLAYER) mine++;
-                        else if (board[wr][wc] === AI) theirs++;
+                        if (board[wr][wc] === me) mine++;
+                        else if (board[wr][wc] === opp) theirs++;
                         else empties.push([wr, wc]);
                     }
                     if (!hasNew || theirs) continue;
@@ -479,12 +526,12 @@
                 }
             }
             board[r][c] = 0;
-            if (winCols.length >= 2) return '★ — this sets up two winning spots at once; the computer can’t block both.';
-            if (winCols.length === 1) return '★ — this gives you three ' + threatDir + ' with a winning spot open; the computer must respond.';
-            board[r][c] = AI;
-            const aiWinSpots = validCols(board).filter(d => winsAt(d, AI)).length;
+            if (winCols.length >= 2) return '★ — this sets up two winning spots at once; ' + them + ' can’t block both.';
+            if (winCols.length === 1) return '★ — this gives you three ' + threatDir + ' with a winning spot open; ' + them + ' must respond.';
+            board[r][c] = opp;
+            const oppWinSpots = validCols(board).filter(d => winsAt(d, opp)).length;
             board[r][c] = 0;
-            if (aiWinSpots) return '★ — this takes the square the computer needs to build its own three.';
+            if (oppWinSpots) return '★ — this takes the square ' + them + ' needs to build its own three.';
             if (openDir) return '★ — this builds three of your discs ' + openDir + ', still open toward four.';
             if (c === 3) return '★ — the center column joins more four-in-a-row lines than any other spot.';
             if (linked) return '★ — this links your discs with open space toward four.';
@@ -492,12 +539,14 @@
         }
 
         function coachLine() {
-            if (hints.wins.length > 1) return 'Tutorial: green rings — you can connect four in two places. Pick either and win.';
-            if (hints.wins.length === 1) return 'Tutorial: green ring — drop there to connect four ' + lineDirAt(hints.wins[0], PLAYER) + ' and win.';
-            if (hints.blocks.length > 1) return 'Tutorial: two red rings — the computer has two ways to win, and you can only block one.';
-            if (hints.blocks.length === 1) return 'Tutorial: red ring — the computer can connect four ' + lineDirAt(hints.blocks[0], AI) + ' there. Block it now.';
-            let s = 'Tutorial: ' + whyBest(hints.best);
-            if (hints.avoid.length) s += ' Red ✕ = the computer wins right on top.';
+            const lead = mode === 'two' ? 'Tutorial for ' + sideName(hints.me) + ': ' : 'Tutorial: ';
+            const them = oppName();
+            if (hints.wins.length > 1) return lead + 'green rings — you can connect four in two places. Pick either and win.';
+            if (hints.wins.length === 1) return lead + 'green ring — drop there to connect four ' + lineDirAt(hints.wins[0], hints.me) + ' and win.';
+            if (hints.blocks.length > 1) return lead + 'two red rings — ' + them + ' has two ways to win, and you can only block one.';
+            if (hints.blocks.length === 1) return lead + 'red ring — ' + them + ' can connect four ' + lineDirAt(hints.blocks[0], hints.opp) + ' there. Block it now.';
+            let s = lead + whyBest(hints.best);
+            if (hints.avoid.length) s += ' Red ✕ = ' + them + ' wins right on top.';
             return s;
         }
 
@@ -547,12 +596,12 @@
         function drawHints() {
             for (const c of hints.wins) {
                 const r = dropRow(board, c);
-                ctx.globalAlpha = 0.45; drawDisc(cx(c), cy(r), PLAYER); ctx.globalAlpha = 1;
+                ctx.globalAlpha = 0.45; drawDisc(cx(c), cy(r), hints.me); ctx.globalAlpha = 1;
                 drawRing(c, r, '#2E9E4F');
             }
             for (const c of hints.blocks) {
                 const r = dropRow(board, c);
-                ctx.globalAlpha = 0.4; drawDisc(cx(c), cy(r), AI); ctx.globalAlpha = 1;
+                ctx.globalAlpha = 0.4; drawDisc(cx(c), cy(r), hints.opp); ctx.globalAlpha = 1;
                 drawRing(c, r, '#C8455A');
             }
             for (const c of hints.avoid) drawCross(c, dropRow(board, c));
@@ -573,14 +622,14 @@
 
         function draw() {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            // Hover column tint (player's turn only)
-            if (hoverCol >= 0 && !gameOver && !aiThinking && turn === PLAYER) {
+            // Hover column tint (human turns only; shows the colour about to drop)
+            if (hoverCol >= 0 && !gameOver && !aiThinking && humanTurn()) {
                 ctx.fillStyle = 'rgba(43, 95, 168, 0.10)';
                 ctx.fillRect(hoverCol * CELL, 0, CELL, canvas.height);
                 const gr = dropRow(board, hoverCol);
                 if (gr >= 0) {
                     ctx.globalAlpha = 0.35;
-                    drawDisc(cx(hoverCol), cy(gr), PLAYER);
+                    drawDisc(cx(hoverCol), cy(gr), turn);
                     ctx.globalAlpha = 1;
                 }
             }
@@ -599,8 +648,8 @@
                     drawDisc(cx(c), cy(r), p);
                 }
             }
-            // Tutorial markers (player's turn only, after discs settle)
-            if (tutorial && hints && !anim && !gameOver && !aiThinking && turn === PLAYER) {
+            // Tutorial markers (human turns only, after discs settle)
+            if (tutorial && hints && !anim && !gameOver && !aiThinking && humanTurn()) {
                 drawHints();
             }
             // Falling disc (cosmetic; board already committed)
@@ -625,6 +674,12 @@
 
         function endIfDone() {
             const w = winnerOf(board);
+            if (mode === 'two') {
+                // Session tally only — the saved record/streak belong to vs-computer play.
+                if (w) { tally[w]++; refreshStats(); showOver('', sideName(w) + ' wins!', sideName(w) + ' connected four. Play again?'); gameOver = true; return true; }
+                if (isFull(board)) { showOver('tie', "It's a draw", 'The grid filled with no four-in-a-row.'); gameOver = true; return true; }
+                return false;
+            }
             if (w === PLAYER) { recordWin(); refreshStats(); showOver('', 'You win!', 'Four in a row — streak preserved.'); gameOver = true; return true; }
             if (w === AI) { recordLoss(); refreshStats(); showOver('lose', 'You lost', 'The computer connected four. Streak reset.'); gameOver = true; return true; }
             if (isFull(board)) { recordDraw(); refreshStats(); showOver('tie', "It's a draw", 'The grid filled with no four-in-a-row.'); gameOver = true; return true; }
@@ -645,21 +700,31 @@
         }
 
         function playerMove(col) {
-            if (gameOver || aiThinking || turn !== PLAYER) return;
+            if (gameOver || aiThinking || !humanTurn()) return;
             if (dropRow(board, col) < 0) return;
-            drop(col, PLAYER);
+            drop(col, turn);
             hints = null;
             if (endIfDone()) { draw(); return; }
+            if (mode === 'two') {
+                // Pass the turn to the other person at the screen; no AI, no delay.
+                turn = other(turn);
+                setStatus(defaultStatus());
+                turnEl.textContent = turnText();
+                computeHints();
+                draw();
+                return;
+            }
             turn = AI;
             aiThinking = true;
             setStatus('Computer is thinking…');
             turnEl.textContent = 'Thinking…';
             draw();
-            setTimeout(aiMove, 420);
+            aiTimer = setTimeout(aiMove, 420);
         }
 
         function aiMove() {
-            if (gameOver) { aiThinking = false; return; }
+            aiTimer = null;
+            if (gameOver || mode !== 'vs') { aiThinking = false; return; }
             const col = chooseAICol();
             if (col >= 0) drop(col, AI);
             aiThinking = false;
@@ -672,6 +737,8 @@
         }
 
         function startGame() {
+            // A pending computer reply must not land on the fresh board.
+            if (aiTimer) { clearTimeout(aiTimer); aiTimer = null; }
             board = newBoard();
             turn = PLAYER;
             gameOver = false;
@@ -679,8 +746,8 @@
             anim = null;
             hoverCol = -1;
             overEl.classList.remove('show');
-            setStatus(DEFAULT_STATUS);
-            turnEl.textContent = 'Your move';
+            setStatus(defaultStatus());
+            turnEl.textContent = turnText();
             refreshStats();
             computeHints();
             draw();
@@ -704,6 +771,13 @@
 
         diffEl.value = difficulty;
         diffEl.addEventListener('change', () => { difficulty = diffEl.value; localStorage.setItem(KEY_DIFF, difficulty); startGame(); });
+        applyMode();
+        modeEl.addEventListener('change', () => {
+            mode = modeEl.value === 'two' ? 'two' : 'vs';
+            try { localStorage.setItem(KEY_MODE, mode); } catch (e) {}
+            applyMode();
+            startGame();
+        });
         newGameBtn.addEventListener('click', startGame);
         overBtn.addEventListener('click', startGame);
 
@@ -716,7 +790,7 @@
                 computeHints();
             } else {
                 hints = null;
-                if (!gameOver && turn === PLAYER && !aiThinking) setStatus(DEFAULT_STATUS);
+                if (!gameOver && humanTurn() && !aiThinking) setStatus(defaultStatus());
             }
             draw();
         });

@@ -14,21 +14,24 @@
             display: block;
             margin: 20px auto;
         }
+        /* 600×400 board: the chrome caps height at 70vh but leaves width at 100%,
+           which stretched the canvas on wide, short viewports. Cap the width to match. */
+        .ch-bezel #gameCanvas { max-width: calc(70vh * 1.5); margin: 0 auto; }
     </style>
-    <meta name="description" content="Play Pong free in your browser. Move the paddle and keep the ball in play against the computer in the original arcade game! No downloads, no installs.">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Pong","description":"Play Pong free in your browser. Move the paddle and keep the ball in play against the computer in the original arcade game! No downloads, no installs.","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <meta name="description" content="Play Pong free in your browser — against the computer, or two players on one keyboard. The original arcade paddle game: no downloads, no installs.">
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Pong","description":"Play Pong free in your browser — against the computer, or two players on one keyboard. The original arcade paddle game: no downloads, no installs.","playMode":["SinglePlayer","MultiPlayer"],"numberOfPlayers":{"@type":"QuantitativeValue","minValue":1,"maxValue":2},"applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <link rel="canonical" href="https://limestonegames.com/pong/">
 <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Arcade","item":"https://limestonegames.com/arcade/"},{"@type":"ListItem","position":3,"name":"Pong"}]}</script>
-<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Pong?","acceptedAnswer":{"@type":"Answer","text":"Press Space to start, then use the arrow keys (↑↓) to move your paddle. Don't let the ball get past you."}},{"@type":"Question","name":"Is Pong free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs."}},{"@type":"Question","name":"Can I play Pong with two players?","acceptedAnswer":{"@type":"Answer","text":"This version is single-player against the computer. A two-player mode isn't supported yet."}},{"@type":"Question","name":"Does my Pong high score save?","acceptedAnswer":{"@type":"Answer","text":"Yes — your best Pong score is stored locally in your browser via localStorage."}}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Pong?","acceptedAnswer":{"@type":"Answer","text":"Press Space to serve, then use the arrow keys (↑↓) to move your paddle. Every ball past the computer is a point; one past you ends the run."}},{"@type":"Question","name":"Is Pong free?","acceptedAnswer":{"@type":"Answer","text":"Yes — no signup, no downloads, no installs."}},{"@type":"Question","name":"Can I play Pong with two players?","acceptedAnswer":{"@type":"Answer","text":"Yes — pick Two Players on the start screen (or press 2). Blue on the left uses W and S, Green on the right uses the arrow keys, and the first to 7 points wins. On a touchscreen, drag on your half of the board."}},{"@type":"Question","name":"Does my Pong high score save?","acceptedAnswer":{"@type":"Answer","text":"Yes — your best Pong score is stored locally in your browser via localStorage."}}]}</script>
     <meta property="og:title" content="Pong — Play the Classic Arcade Game Online Free | Limestone Games">
-    <meta property="og:description" content="Play Pong free in your browser. Move the paddle and keep the ball in play against the computer in the original arcade game! No downloads, no installs.">
+    <meta property="og:description" content="Play Pong free in your browser — against the computer, or two players on one keyboard. The original arcade paddle game: no downloads, no installs.">
     <meta property="og:type" content="website">
     <meta property="og:url" content="https://limestonegames.com/pong/">
     <meta property="og:site_name" content="Limestone Games">
     <meta property="og:image" content="https://limestonegames.com/assets/og/pong.jpg">
     <meta name="twitter:card" content="summary_large_image">
     <meta name="twitter:title" content="Pong — Play the Classic Arcade Game Online Free | Limestone Games">
-    <meta name="twitter:description" content="Play Pong free in your browser. Move the paddle and keep the ball in play against the computer in the original arcade game! No downloads, no installs.">
+    <meta name="twitter:description" content="Play Pong free in your browser — against the computer, or two players on one keyboard. The original arcade paddle game: no downloads, no installs.">
     <meta name="twitter:image" content="https://limestonegames.com/assets/og/pong.jpg">
     <link rel="icon" href="/favicon.ico" sizes="any">
     <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
@@ -46,9 +49,9 @@
 <body class="ch-game" data-category="arcade"
       data-eyebrow="Cabinet · Pong"
       data-title="Pong"
-      data-hint-1="↑↓ paddle"
+      data-hint-1="↑↓ paddle · W/S left paddle (2P)"
       data-hint-2="Space serve"
-      data-hint-3="R restart"
+      data-hint-3="1 / 2 pick mode"
       data-touch="▲:ArrowUp,▼:ArrowDown | Serve:Space">
     <div class="container">
         <h1>🏓 Pong Game</h1>
@@ -56,27 +59,30 @@
             <p>Score: <span id="score">0</span></p>
             <p>High Score: <span id="highScore">0</span></p>
         </div>
-        <canvas id="gameCanvas" width="600" height="400"></canvas>
+        <canvas id="gameCanvas" width="600" height="400" style="touch-action:none" aria-label="Pong board. Arrow keys move the green paddle; in two-player mode W and S move the blue paddle."></canvas>
         <div class="controls">
-            <p>Use Arrow Keys (↑↓) to move the paddle</p>
-            <p>Press Space to start</p>
+            <p>Arrow keys (↑↓) move your paddle; in two-player mode W/S move the left paddle</p>
+            <p>Press Space to serve</p>
             <button id="restartBtn" class="play-button">Restart Game</button>
         </div>
 
         <section class="game-overview" aria-label="About Pong">
             <h2>How to play Pong</h2>
-            <p>Pong is the original arcade ball-and-paddle game &mdash; Atari's first hit and the title that lit the spark for the entire video-game industry. You control one paddle, the computer controls the other, and you bounce a ball back and forth. Miss the ball off your side and the round ends.</p>
+            <p>Pong is the original arcade ball-and-paddle game &mdash; Atari's first hit and the title that lit the spark for the entire video-game industry. Play it two ways: against the computer, where every ball past its paddle is a point and one past yours ends the run, or <b>two players on one keyboard</b>, first to seven. Pick a mode on the start screen.</p>
 
             <h3>Controls</h3>
             <ul>
-                <li><kbd>&uarr;</kbd> <kbd>&darr;</kbd> &mdash; move your paddle up and down</li>
-                <li><kbd>Space</kbd> &mdash; start or pause the game</li>
-                <li><kbd>R</kbd> &mdash; restart after a game over</li>
+                <li><kbd>&uarr;</kbd> <kbd>&darr;</kbd> &mdash; move the right (green) paddle</li>
+                <li><kbd>W</kbd> <kbd>S</kbd> &mdash; move the left (blue) paddle in two-player mode</li>
+                <li><kbd>Space</kbd> &mdash; serve, or play again after a game</li>
+                <li><kbd>1</kbd> / <kbd>2</kbd> &mdash; pick vs the computer or two players from the start screen</li>
+                <li><kbd>R</kbd> &mdash; restart</li>
+                <li>Touchscreen &mdash; drag on your half of the board to move your paddle</li>
             </ul>
 
             <h3>Tips &amp; strategy</h3>
             <ul>
-                <li><b>Aim with the paddle edges.</b> Hitting near the top of the paddle sends the ball up; the bottom sends it down. The center sends it back flat.</li>
+                <li><b>Aim with the paddle edges.</b> Hitting near the top of the paddle sends the ball up, the bottom sends it down, and the center returns it flat. The farther from the middle, the steeper the angle.</li>
                 <li><b>Don't hover at the center.</b> Drift toward the side the ball is heading &mdash; early position beats fast reaction.</li>
                 <li><b>Force the angle.</b> A steep return is harder for the computer to chase down than a flat one.</li>
                 <li><b>Use the wall rebounds.</b> A ball bouncing off the top or bottom wall buys you extra read time.</li>
@@ -85,10 +91,13 @@
             <h3>About Pong</h3>
             <p>Pong shipped from Atari in 1972 as the first commercially successful arcade game, designed by Allan Alcorn as a training exercise for new engineer Nolan Bushnell. The home console version, released in 1975, sold out of Sears in days and kicked off the home video-game market. The mechanic is two paddles, one ball, no instructions &mdash; the original cabinet's only direction read "Avoid missing ball for high score."</p>
 
+            <h3>Two-player Pong</h3>
+            <p>Choose <b>Two Players</b> on the start screen or press <kbd>2</kbd>. Blue on the left plays with <kbd>W</kbd> and <kbd>S</kbd>, Green on the right with the arrow keys, sharing one keyboard. Every ball past a paddle is a point for the other side and the first to seven wins. Rallies speed up a little with each hit, so the long ones get frantic. On a tablet, each player drags on their own half of the board.</p>
+
             <h3>Frequently asked</h3>
-            <p><b>How do I play Pong?</b> Press Space to start, then use the arrow keys to move your paddle. Don't let the ball get past you.</p>
+            <p><b>How do I play Pong?</b> Press Space to serve, then use the arrow keys to move your paddle. Every ball past the computer is a point; one past you ends the run.</p>
             <p><b>Is Pong free?</b> Yes &mdash; no signup, no downloads, no installs.</p>
-            <p><b>Can I play Pong with two players?</b> This version is single-player against the computer. Two-player mode isn't supported yet.</p>
+            <p><b>Can I play Pong with two players?</b> Yes &mdash; pick Two Players on the start screen (or press 2). Blue on the left uses W and S, Green on the right uses the arrow keys, and the first to 7 points wins. On a touchscreen, drag on your half of the board.</p>
             <p><b>Does my high score save?</b> Yes &mdash; your best Pong score is stored locally in your browser.</p>
 
             <h3>More arcade games</h3>
@@ -96,6 +105,7 @@
                 <li><a href="../breakout/">Breakout</a></li>
                 <li><a href="../asteroids/">Asteroids</a></li>
                 <li><a href="../space-invaders/">Space Invaders</a></li>
+                <li><a href="../two-player/">More two-player games &rarr;</a></li>
                 <li><a href="../arcade/">All arcade games &rarr;</a></li>
             </ul>
         </section>
@@ -107,6 +117,7 @@
         const scoreElement = document.getElementById('score');
         const highScoreElement = document.getElementById('highScore');
         const restartBtn = document.getElementById('restartBtn');
+        const W = canvas.width, H = canvas.height;
 
         // Sound effects using Web Audio API
         const audioContext = new (window.AudioContext || window.webkitAudioContext)();
@@ -122,179 +133,215 @@
             if (muted) return;
             const oscillator = audioContext.createOscillator();
             const gainNode = audioContext.createGain();
-            
             oscillator.connect(gainNode);
             gainNode.connect(audioContext.destination);
-            
             oscillator.frequency.value = frequency;
             oscillator.type = type;
-            
             gainNode.gain.setValueAtTime(0.2, audioContext.currentTime);
             gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + duration);
-            
             oscillator.start(audioContext.currentTime);
             oscillator.stop(audioContext.currentTime + duration);
         }
+        function playPaddleHitSound() { playSound(400, 0.1, 'square'); }
+        function playScoreSound() { playSound(600, 0.15, 'sine'); }
+        function playGameOverSound() { playSound(200, 0.1); setTimeout(() => playSound(150, 0.2), 100); }
+        function playWinSound() { playSound(520, 0.12); setTimeout(() => playSound(660, 0.12), 120); setTimeout(() => playSound(880, 0.2), 240); }
 
-        function playPaddleHitSound() {
-            playSound(400, 0.1, 'square');
-        }
+        // ── Modes ─────────────────────────────────────────────────────────
+        // 'vs'  — you (right, green) against the computer (left, blue). Endless: every
+        //         ball past the computer is a point; one past you ends the run.
+        // 'two' — two people on one keyboard. Blue (left) uses W/S, Green (right)
+        //         uses ↑/↓. First to WIN_SCORE points wins.
+        const KEY_MODE = 'pongMode';
+        const WIN_SCORE = 7;
+        let mode = localStorage.getItem(KEY_MODE) === 'two' ? 'two' : 'vs';
 
-        function playScoreSound() {
-            playSound(600, 0.15, 'sine');
-        }
+        const GREEN = '#4CAF50', BLUE = '#2196F3';
 
-        function playGameOverSound() {
-            playSound(200, 0.1);
-            setTimeout(() => playSound(150, 0.2), 100);
-        }
+        // Right paddle: always a person (you in vs mode, Green in two-player).
+        const paddle = { x: W - 30, y: H / 2 - 40, width: 10, height: 80, speed: 6, dy: 0 };
+        // Left paddle: the computer in vs mode, Blue in two-player.
+        const leftPaddle = { x: 20, y: H / 2 - 40, width: 10, height: 80, speed: 3, dy: 0 };
 
-        // Game objects
-        const paddle = {
-            x: canvas.width - 30,
-            y: canvas.height / 2 - 40,
-            width: 10,
-            height: 80,
-            speed: 6,
-            dy: 0
-        };
+        const ball = { x: W / 2, y: H / 2, radius: 8, dx: 4, dy: 4 };
 
-        const aiPaddle = {
-            x: 20,
-            y: canvas.height / 2 - 40,
-            width: 10,
-            height: 80,
-            speed: 3
-        };
-
-        const ball = {
-            x: canvas.width / 2,
-            y: canvas.height / 2,
-            radius: 8,
-            dx: 4,
-            dy: 4,
-            speed: 4
-        };
-
-        let score = 0;
-        let highScore = localStorage.getItem('pongHighScore') || 0;
+        let score = 0;                       // vs mode
+        let blueScore = 0, greenScore = 0;   // two-player
+        let winner = '';                     // 'Blue' | 'Green' after a two-player game
+        let highScore = parseInt(localStorage.getItem('pongHighScore'), 10) || 0;
         let gameRunning = false;
         let isGameOver = false;
         let muted = false;
-        let gameLoop;
         let lastFrameTime = 0;
         const targetFPS = 60;
         const frameDelay = 1000 / targetFPS;
 
-        highScoreElement.textContent = highScore;
+        function updateScoreText() {
+            if (mode === 'two') scoreElement.textContent = blueScore + '–' + greenScore;
+            else scoreElement.textContent = score;
+            highScoreElement.textContent = highScore;
+        }
+        updateScoreText();
 
-        function drawRect(x, y, w, h, color) {
-            ctx.fillStyle = color;
-            ctx.fillRect(x, y, w, h);
+        function setMode(m) {
+            if (gameRunning) return;
+            mode = m === 'two' ? 'two' : 'vs';
+            try { localStorage.setItem(KEY_MODE, mode); } catch (e) {}
+            updateScoreText();
+            drawGame();
         }
 
+        // ── Drawing ───────────────────────────────────────────────────────
+        function drawRect(x, y, w, h, color) { ctx.fillStyle = color; ctx.fillRect(x, y, w, h); }
         function drawCircle(x, y, r, color) {
-            ctx.fillStyle = color;
-            ctx.beginPath();
-            ctx.arc(x, y, r, 0, Math.PI * 2);
-            ctx.fill();
+            ctx.fillStyle = color; ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fill();
+        }
+
+        // Mode buttons drawn on the idle / game-over screens. Hit-tested on click.
+        const modeButtons = [
+            { mode: 'vs',  label: 'VS THE COMPUTER', key: '1', x: W / 2 - 200, y: 0, w: 190, h: 44 },
+            { mode: 'two', label: 'TWO PLAYERS',     key: '2', x: W / 2 + 10,  y: 0, w: 190, h: 44 },
+        ];
+        function drawModeButtons(y) {
+            ctx.textAlign = 'center';
+            ctx.textBaseline = 'middle';
+            for (const b of modeButtons) {
+                b.y = y;
+                const on = b.mode === mode;
+                ctx.fillStyle = on ? '#fff' : 'rgba(255,255,255,0.08)';
+                ctx.strokeStyle = on ? '#fff' : 'rgba(255,255,255,0.45)';
+                ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.roundRect(b.x, b.y, b.w, b.h, 8); ctx.fill(); ctx.stroke();
+                ctx.fillStyle = on ? '#111' : '#fff';
+                ctx.font = 'bold 15px Arial';
+                ctx.fillText(b.key + ' · ' + b.label, b.x + b.w / 2, b.y + b.h / 2 + 1);
+            }
+            ctx.textBaseline = 'alphabetic';
         }
 
         function drawGame() {
-            // Clear canvas
-            drawRect(0, 0, canvas.width, canvas.height, '#111');
+            drawRect(0, 0, W, H, '#111');
+            for (let i = 0; i < H; i += 20) drawRect(W / 2 - 2, i, 4, 10, '#333');
 
-            // Draw center line
-            for (let i = 0; i < canvas.height; i += 20) {
-                drawRect(canvas.width / 2 - 2, i, 4, 10, '#333');
+            if (mode === 'two') {
+                ctx.font = 'bold 56px Arial';
+                ctx.textAlign = 'center';
+                ctx.fillStyle = 'rgba(33,150,243,0.35)';
+                ctx.fillText(String(blueScore), W / 4, 70);
+                ctx.fillStyle = 'rgba(76,175,80,0.35)';
+                ctx.fillText(String(greenScore), (3 * W) / 4, 70);
             }
 
-            // Draw paddles
-            drawRect(paddle.x, paddle.y, paddle.width, paddle.height, '#4CAF50');
-            drawRect(aiPaddle.x, aiPaddle.y, aiPaddle.width, aiPaddle.height, '#2196F3');
-
-            // Draw ball
+            drawRect(paddle.x, paddle.y, paddle.width, paddle.height, GREEN);
+            drawRect(leftPaddle.x, leftPaddle.y, leftPaddle.width, leftPaddle.height, BLUE);
             drawCircle(ball.x, ball.y, ball.radius, '#FF5252');
+
+            if (gameRunning) return;
+
+            // Idle / game-over screen: title, result, mode buttons, serve hint.
+            ctx.fillStyle = 'rgba(0, 0, 0, 0.72)';
+            ctx.fillRect(0, 0, W, H);
+            ctx.fillStyle = '#fff';
+            ctx.textAlign = 'center';
+            if (isGameOver) {
+                ctx.font = 'bold 34px Arial';
+                ctx.fillText(mode === 'two' ? winner + ' wins!' : 'Game Over!', W / 2, H / 2 - 70);
+                ctx.font = '18px Arial';
+                ctx.fillStyle = '#bbb';
+                ctx.fillText(mode === 'two' ? 'Blue ' + blueScore + ' · Green ' + greenScore
+                                            : 'Score ' + score + ' · Best ' + highScore, W / 2, H / 2 - 38);
+            } else {
+                ctx.font = 'bold 40px Arial';
+                ctx.fillText('PONG', W / 2, H / 2 - 66);
+                ctx.font = '15px Arial';
+                ctx.fillStyle = '#bbb';
+                ctx.fillText(mode === 'two' ? 'Blue: W / S   ·   Green: ↑ / ↓   ·   first to ' + WIN_SCORE
+                                            : 'Move with ↑ / ↓ — every ball past the computer is a point', W / 2, H / 2 - 36);
+            }
+            drawModeButtons(H / 2 - 10);
+            ctx.font = '16px Arial';
+            ctx.fillStyle = '#fff';
+            ctx.fillText(isGameOver ? 'Space to play again' : 'Space to serve', W / 2, H / 2 + 72);
+        }
+
+        // ── Physics ───────────────────────────────────────────────────────
+        function clampPaddle(p) {
+            if (p.y < 0) p.y = 0;
+            if (p.y + p.height > H) p.y = H - p.height;
+        }
+
+        // Where the ball meets the paddle decides the return angle: the middle sends
+        // it back flat, the ends send it away steeply (up to 45°). The right paddle
+        // speeds the ball up 5% per hit (capped); in two-player both paddles do.
+        function bounceOff(p, dir) {
+            const rel = Math.max(-1, Math.min(1, (ball.y - (p.y + p.height / 2)) / (p.height / 2)));
+            const accel = (mode === 'two' || p === paddle) ? 1.05 : 1;
+            const speed = Math.min(Math.hypot(ball.dx, ball.dy) * accel, 12);
+            const angle = rel * (Math.PI / 4);
+            ball.dx = dir * speed * Math.cos(angle);
+            ball.dy = speed * Math.sin(angle);
+            ball.x = dir > 0 ? p.x + p.width + ball.radius : p.x - ball.radius;
+            playPaddleHitSound();
         }
 
         function updateGame() {
             if (!gameRunning) return;
 
-            // Move player paddle
             paddle.y += paddle.dy;
-            if (paddle.y < 0) paddle.y = 0;
-            if (paddle.y + paddle.height > canvas.height) {
-                paddle.y = canvas.height - paddle.height;
-            }
+            clampPaddle(paddle);
 
-            // AI paddle follows ball
-            const aiPaddleCenter = aiPaddle.y + aiPaddle.height / 2;
-            if (aiPaddleCenter < ball.y - 35) {
-                aiPaddle.y += aiPaddle.speed;
-            } else if (aiPaddleCenter > ball.y + 35) {
-                aiPaddle.y -= aiPaddle.speed;
+            if (mode === 'vs') {
+                // Computer paddle follows the ball with a dead zone so it can miss.
+                const c = leftPaddle.y + leftPaddle.height / 2;
+                if (c < ball.y - 35) leftPaddle.y += leftPaddle.speed;
+                else if (c > ball.y + 35) leftPaddle.y -= leftPaddle.speed;
+            } else {
+                leftPaddle.y += leftPaddle.dy;
             }
+            clampPaddle(leftPaddle);
 
-            // Keep AI paddle in bounds
-            if (aiPaddle.y < 0) aiPaddle.y = 0;
-            if (aiPaddle.y + aiPaddle.height > canvas.height) {
-                aiPaddle.y = canvas.height - aiPaddle.height;
-            }
-
-            // Move ball
             ball.x += ball.dx;
             ball.y += ball.dy;
 
-            // Ball collision with top and bottom
-            if (ball.y - ball.radius < 0) {
-                ball.y = ball.radius;
-                ball.dy *= -1;
-                playPaddleHitSound();
-            } else if (ball.y + ball.radius > canvas.height) {
-                ball.y = canvas.height - ball.radius;
-                ball.dy *= -1;
-                playPaddleHitSound();
+            if (ball.y - ball.radius < 0) { ball.y = ball.radius; ball.dy *= -1; playPaddleHitSound(); }
+            else if (ball.y + ball.radius > H) { ball.y = H - ball.radius; ball.dy *= -1; playPaddleHitSound(); }
+
+            if (ball.dx > 0 && ball.x + ball.radius >= paddle.x && ball.x - ball.radius <= paddle.x + paddle.width &&
+                ball.y + ball.radius >= paddle.y && ball.y - ball.radius <= paddle.y + paddle.height) {
+                bounceOff(paddle, -1);
+            }
+            if (ball.dx < 0 && ball.x - ball.radius <= leftPaddle.x + leftPaddle.width && ball.x + ball.radius >= leftPaddle.x &&
+                ball.y + ball.radius >= leftPaddle.y && ball.y - ball.radius <= leftPaddle.y + leftPaddle.height) {
+                bounceOff(leftPaddle, 1);
             }
 
-            // Ball collision with player paddle
-            if (ball.x + ball.radius > paddle.x &&
-                ball.y > paddle.y &&
-                ball.y < paddle.y + paddle.height) {
-                ball.dx = -Math.abs(ball.dx);
-                playPaddleHitSound();
-
-                // Increase difficulty slightly (with speed cap)
-                const sign_x = Math.sign(ball.dx);
-                const sign_y = Math.sign(ball.dy);
-                ball.dx = sign_x * Math.min(Math.abs(ball.dx) * 1.05, 12);
-                ball.dy = sign_y * Math.min(Math.abs(ball.dy) * 1.05, 12);
-            }
-
-            // Ball collision with AI paddle
-            if (ball.x - ball.radius < aiPaddle.x + aiPaddle.width &&
-                ball.y > aiPaddle.y &&
-                ball.y < aiPaddle.y + aiPaddle.height) {
-                ball.dx = Math.abs(ball.dx);
-                playPaddleHitSound();
-            }
-
-            // Ball got past AI paddle (left side) - player scores!
+            // Past the left paddle: the right side scores.
             if (ball.x + ball.radius < 0) {
-                score++;
-                scoreElement.textContent = score;
-                playScoreSound();
-
-                if (score > highScore) {
-                    highScore = score;
-                    highScoreElement.textContent = highScore;
-                    localStorage.setItem('pongHighScore', highScore);
+                if (mode === 'two') {
+                    greenScore++;
+                    playScoreSound();
+                    updateScoreText();
+                    if (greenScore >= WIN_SCORE) { endTwoPlayer('Green'); return; }
+                    resetBall(-1);
+                } else {
+                    score++;
+                    playScoreSound();
+                    if (score > highScore) { highScore = score; localStorage.setItem('pongHighScore', highScore); }
+                    updateScoreText();
+                    resetBall(0);
                 }
-
-                resetBall();
             }
-            // Ball got past player paddle (right side) - game over
-            if (ball.x - ball.radius > canvas.width) {
-                gameOver();
+            // Past the right paddle: the left side scores (vs mode: game over).
+            if (ball.x - ball.radius > W) {
+                if (mode === 'two') {
+                    blueScore++;
+                    playScoreSound();
+                    updateScoreText();
+                    if (blueScore >= WIN_SCORE) { endTwoPlayer('Blue'); return; }
+                    resetBall(1);
+                } else {
+                    gameOver();
+                }
             }
         }
 
@@ -305,22 +352,38 @@
             window.ArcadeGameOver.show({ score, restart: () => window.gameAPI.restart() });
         }
 
-        function resetBall() {
-            ball.x = canvas.width / 2;
-            ball.y = canvas.height / 2;
-            ball.dx = (Math.random() > 0.5 ? 1 : -1) * 4;
+        function endTwoPlayer(who) {
+            winner = who;
+            gameRunning = false;
+            isGameOver = true;
+            playWinSound();
+            const top = Math.max(blueScore, greenScore);
+            window.ArcadeGameOver.show({
+                title: who + ' wins ' + blueScore + '–' + greenScore,
+                message: 'Rematch: press Space or Play again. Close this panel to switch modes.',
+                score: top, best: top,
+                restart: () => window.gameAPI.restart()
+            });
+        }
+
+        // dir: +1 serve toward the right, -1 toward the left, 0 random.
+        function resetBall(dir) {
+            ball.x = W / 2;
+            ball.y = H / 2;
+            const d = dir || (Math.random() > 0.5 ? 1 : -1);
+            ball.dx = d * 4;
             ball.dy = (Math.random() > 0.5 ? 1 : -1) * 4;
         }
 
         function startGame() {
             window.ArcadeGameOver.hide();
             if (gameRunning) return;
-            
-            score = 0;
-            scoreElement.textContent = score;
-            paddle.y = canvas.height / 2 - paddle.height / 2;
-            aiPaddle.y = canvas.height / 2 - aiPaddle.height / 2;
-            resetBall();
+            score = 0; blueScore = 0; greenScore = 0; winner = '';
+            paddle.dy = 0; leftPaddle.dy = 0;
+            paddle.y = H / 2 - paddle.height / 2;
+            leftPaddle.y = H / 2 - leftPaddle.height / 2;
+            resetBall(0);
+            updateScoreText();
             gameRunning = true;
             isGameOver = false;
             lastFrameTime = performance.now();
@@ -328,73 +391,78 @@
 
         function gameLoopFunction(currentTime) {
             requestAnimationFrame(gameLoopFunction);
-
-            // Frame rate limiting
             const deltaTime = currentTime - lastFrameTime;
             if (deltaTime < frameDelay) return;
             lastFrameTime = currentTime - (deltaTime % frameDelay);
-
             updateGame();
             drawGame();
-
-            if (isGameOver) {
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.75)';
-                ctx.fillRect(0, 0, canvas.width, canvas.height);
-                ctx.fillStyle = '#fff';
-                ctx.font = '30px Arial';
-                ctx.textAlign = 'center';
-                ctx.fillText('Game Over!', canvas.width / 2, canvas.height / 2);
-                ctx.font = '20px Arial';
-                ctx.fillText('Press Restart or Space to play again', canvas.width / 2, canvas.height / 2 + 40);
-            }
         }
 
+        // ── Input ─────────────────────────────────────────────────────────
         document.addEventListener('keydown', (e) => {
             if (e.key === 'r' || e.key === 'R') { gameRunning = false; isGameOver = false; startGame(); return; }
-
             if (e.key === ' ' || e.key === 'Spacebar') {
                 e.preventDefault();
-                if (!gameRunning) {
-                    startGame();
-                }
+                if (!gameRunning) startGame();
+                return;
             }
+            if (!gameRunning && (e.key === '1' || e.key === '2')) { setMode(e.key === '2' ? 'two' : 'vs'); startGame(); return; }
 
-            if (e.key === 'ArrowUp') {
-                e.preventDefault();
-                paddle.dy = -paddle.speed;
-            } else if (e.key === 'ArrowDown') {
-                e.preventDefault();
-                paddle.dy = paddle.speed;
-            }
+            if (e.key === 'ArrowUp') { e.preventDefault(); paddle.dy = -paddle.speed; }
+            else if (e.key === 'ArrowDown') { e.preventDefault(); paddle.dy = paddle.speed; }
+            else if (mode === 'two' && (e.key === 'w' || e.key === 'W')) leftPaddle.dy = -paddle.speed;
+            else if (mode === 'two' && (e.key === 's' || e.key === 'S')) leftPaddle.dy = paddle.speed;
         });
-
         document.addEventListener('keyup', (e) => {
-            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') {
-                paddle.dy = 0;
-            }
+            if (e.key === 'ArrowUp' || e.key === 'ArrowDown') paddle.dy = 0;
+            if (e.key === 'w' || e.key === 'W' || e.key === 's' || e.key === 'S') leftPaddle.dy = 0;
         });
+
+        // Pointer input on the board: when idle, tap a mode button (or anywhere to
+        // serve); while playing, drag to move a paddle — the right half moves the
+        // green paddle, and in two-player the left half moves the blue one.
+        function boardPoint(e) {
+            const r = canvas.getBoundingClientRect();
+            return { x: (e.clientX - r.left) * (W / r.width), y: (e.clientY - r.top) * (H / r.height) };
+        }
+        let dragging = false;
+        canvas.addEventListener('pointerdown', (e) => {
+            const p = boardPoint(e);
+            if (!gameRunning) {
+                const hit = modeButtons.find(b => p.x >= b.x && p.x <= b.x + b.w && p.y >= b.y && p.y <= b.y + b.h);
+                if (hit) setMode(hit.mode);
+                startGame();
+                return;
+            }
+            dragging = true;
+            try { canvas.setPointerCapture(e.pointerId); } catch (err) {}
+            dragPaddle(p);
+        });
+        canvas.addEventListener('pointermove', (e) => { if (dragging && gameRunning) dragPaddle(boardPoint(e)); });
+        ['pointerup', 'pointercancel', 'lostpointercapture'].forEach(t => canvas.addEventListener(t, () => { dragging = false; }));
+        function dragPaddle(p) {
+            const target = (mode === 'two' && p.x < W / 2) ? leftPaddle : paddle;
+            target.y = p.y - target.height / 2;
+            clampPaddle(target);
+        }
 
         restartBtn.addEventListener('click', startGame);
 
         window.gameAPI = {
-            start:   () => { startGame(); },
+            // The arcade chrome calls start() from its Press Start panel; show the
+            // mode menu (idle screen) rather than serving straight away.
+            start:   () => { if (!gameRunning) drawGame(); },
             pause:   () => { if (isGameOver) return; gameRunning = !gameRunning; if (gameRunning) lastFrameTime = performance.now(); },
             restart: () => { gameRunning = false; isGameOver = false; startGame(); },
             mute:    () => { muted = !muted; }
         };
 
-        // Start game loop
         requestAnimationFrame(gameLoopFunction);
-
-        // Draw initial state
         drawGame();
 
         // Canvas sizing is handled by CSS: arcade-game.css has
         //   .ch-bezel canvas { width:100%; height:auto; max-height:70vh }
         // which already fits this landscape board to the bezel responsively.
-        // The old JS transform:scale() IIFE fought that rule — on desktop it
-        // computed s=1 (no-op) but on mobile it computed s<1 and shrank the
-        // already-fitted canvas a second time, collapsing the board. Removed.
     </script>
     <!-- Ad Slot: Game Page Banner -->
     <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">

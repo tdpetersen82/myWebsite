@@ -257,7 +257,7 @@
 
     return el(`
       <a class="tile ${size} tileB ${hasShot ? 'has-shot' : 'no-shot'}" href="${gameUrl(game)}" style="--g:${game.color}">
-        ${game.isNew ? '<span class="tile-new">NEW</span>' : ''}
+        ${game.isNew ? '<span class="tile-new">NEW</span>' : ''}${game.twoPlayer ? '<span class="tile-2p" title="Two players on one screen">2P</span>' : ''}
         <div class="shot">${top}</div>
         <div class="tfoot">
           <div class="tf-text">
@@ -280,7 +280,7 @@
       : `<div class="tile-art">${glyph(game, 140)}</div>`;
     const a = el(`
       <a class="tile ${size}" href="${gameUrl(game)}" style="background:${game.color}22;--g:${game.color}">
-        ${game.isNew ? '<span class="tile-new">NEW</span>' : ''}
+        ${game.isNew ? '<span class="tile-new">NEW</span>' : ''}${game.twoPlayer ? '<span class="tile-2p" title="Two players on one screen">2P</span>' : ''}
         <div class="tile-decoration"></div>
         ${artHtml}
         <div class="tile-meta">
@@ -338,12 +338,13 @@
 
   function matches(g) {
     if (state.filter === 'new' && !g.isNew) return false;
-    if (state.filter !== 'all' && state.filter !== 'new' && g.cat !== state.filter) return false;
+    if (state.filter === 'two' && !g.twoPlayer) return false;
+    if (state.filter !== 'all' && state.filter !== 'new' && state.filter !== 'two' && g.cat !== state.filter) return false;
     if (state.query) {
       // Shared scorer from games-catalog.js — same tiers as the palette, and
       // typo-tolerant so "yachtzee" still surfaces Yahtzee.
       const q = state.query.trim().toLowerCase();
-      const hay = (g.name + ' ' + g.desc + ' ' + g.cat + ' ' + (CAT_LABEL[g.cat] || '')).toLowerCase();
+      const hay = (g.name + ' ' + g.desc + ' ' + g.cat + ' ' + (CAT_LABEL[g.cat] || '') + (g.twoPlayer ? ' 2 player two player multiplayer' : '')).toLowerCase();
       if (q && window.LG_SCORE(q, g.name.toLowerCase(), hay) < 0) return false;
     }
     return true;
@@ -401,6 +402,7 @@
     if (isFiltering) {
       const filterLabel = state.filter === 'new'
         ? 'New'
+        : state.filter === 'two' ? 'Two players'
         : (CATEGORIES.find(c => c.id === state.filter) || {}).label;
       let s = `${allMatching.length} match${allMatching.length === 1 ? '' : 'es'}`;
       if (state.query) s += ` for "${state.query}"`;
@@ -476,6 +478,7 @@
     const pills = [
       { id: 'all', label: 'All' },
       ...CATEGORIES,
+      { id: 'two', label: '👥 2 Players' },
       { id: 'new', label: '⊕ New' },
     ];
     pills.forEach(p => {
