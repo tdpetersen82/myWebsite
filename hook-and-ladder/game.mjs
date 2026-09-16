@@ -2,9 +2,9 @@
 import {
   createGame, startGame, step, drainEvents, readyToPark, parkedInZone,
   serviceZones, turntable, roofPoint, W as WORLD_W, H as WORLD_H, TILE, RULES,
-} from './engine.mjs?v=20260916e';
+} from './engine.mjs?v=20260916f';
 
-import { paintCity, drawWorldFire, drawCars } from './art.mjs?v=20260916e';
+import { paintCity, drawWorldFire, drawCars } from './art.mjs?v=20260916f';
 
 const W = 1240, H = 680; // Fixed camera viewport; the world can grow independently.
 const HS_KEY = 'hookAndLadderHighScore';

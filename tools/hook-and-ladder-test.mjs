@@ -4,7 +4,7 @@
 // Proves the rules are correct (layout, articulated kinematics, tiller effect,
 // collisions, dispatch fairness, ladder flow, lives). It says nothing about feel.
 import {
-  truckBodies, createGame, startGame, step, drainEvents, buildWorld, mulberry32, tileAt, truckCollides,
+  truckBodies, stepTruck, createGame, startGame, step, drainEvents, buildWorld, mulberry32, tileAt, truckCollides,
   streetDistance, readyToPark, serviceZones, roofPoint, stepTraffic, trafficPose, turntable, wrapAngle, burnTimeFor,
   COLS, ROWS, TILE, W, H, STREET, BUILDING, PARK, RULES, isStreetCol, isStreetRow, spawnTruck, PITCH, STREET_W,
 } from '../hook-and-ladder/engine.mjs';
@@ -183,7 +183,7 @@ console.log('collisions');
   check('driving into a building crashes', !!crash);
   check('crash names the part', crash && (crash.part === 'tractor' || crash.part === 'trailer'));
   check('truck is restored to a free pose', truckCollides(g.world, g.truck) === null);
-  check('crash stops the truck', g.truck.v <= 1e-9 && g.stun >= 0);
+  check('wall contact slows the truck while allowing sliding', Math.abs(g.truck.v) < 50 && g.stun >= 0);
   check('crash is counted', g.crashes >= 1);
   // If reversing still leaves the crew wedged, recovery gives a safe road pose.
   run(g, 1.5, { brake: true });
@@ -201,7 +201,7 @@ console.log('collisions');
 }
 {
   const g = playing(4); g.nextFireIn = 1e9;
-  g.truck.x = 5; g.truck.h1 = g.truck.h2 = Math.PI;
+  g.truck.x = 80; g.truck.h1 = g.truck.h2 = Math.PI;
   const ev = run(g, 1, { gas: true });
   check('map edge is solid', ev.some(e => e.type === 'crash'));
 }
@@ -344,6 +344,31 @@ function impact(upgrades={}){
     run(g,.5,{spray:true});return target.hp;
   }
   check('equipment upgrade speeds spraying by fifty percent',Math.abs((1-equipmentRun(true))/(1-equipmentRun(false))-1.5)<1e-6);
+}
+console.log('contact resolution');
+{
+  const g=playing();g.world=openWorld();g.nextFireIn=1e9;
+  g.truck.x=600;g.truck.v=210;g.world.cars=[{x:720,y:325,w:4,h:30}];
+  const hit=stepTruck(g,{gas:true},1);
+  check('swept collision catches thin cars across a long timestep',hit==='tractor'&&g.truck.x<681);
+  check('swept contact reaches the obstacle without penetrating',g.truck.x>679&&!truckCollides(g.world,g.truck));
+  check('head-on contact removes forward velocity',g.truck.v===0);
+  run(g,2,{brake:true});check('reverse immediately frees the truck after impact',g.truck.x<600&&!truckCollides(g.world,g.truck));
+}
+{
+  const g=playing();g.world=openWorld();g.nextFireIn=1e9;
+  g.truck.x=W-100;g.truck.v=180;
+  run(g,1,{gas:true});const damage=g.damage;
+  run(g,4,{gas:true});
+  check('holding throttle against a wall does not repeatedly drain health',damage>0&&g.damage===damage);
+  check('resting at a wall never penetrates it',!truckCollides(g.world,g.truck));
+}
+{
+  const g=playing();g.world=openWorld();g.nextFireIn=1e9;
+  g.world.cars=[{x:500,y:370,w:250,h:20}];g.truck.x=560;g.truck.y=355;g.truck.h1=g.truck.h2=.1;g.truck.v=170;
+  let largestStep=0;
+  for(let i=0;i<30;i++){const x=g.truck.x,y=g.truck.y;step(g,1/120,{gas:true});largestStep=Math.max(largestStep,Math.hypot(g.truck.x-x,g.truck.y-y));}
+  check('glancing collision slides without a sideways teleport',largestStep<2&&g.truck.x>580&&!truckCollides(g.world,g.truck));
 }
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

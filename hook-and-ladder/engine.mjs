@@ -218,29 +218,65 @@ function overlapsRect(poly, x, y, w, h) {
   }
   return true;
 }
-export function truckCollides(world, tr) {
+// Minimum separating axis points away from the obstacle toward the truck.
+function contactNormal(poly,x,y,w,h) {
+  const box=[[x,y],[x+w,y],[x+w,y+h],[x,y+h]];
+  let depth=Infinity,normal=[0,0];
+  for(const axis of [[1,0],[0,1],[poly[1][0]-poly[0][0],poly[1][1]-poly[0][1]],[poly[2][0]-poly[1][0],poly[2][1]-poly[1][1]]]){
+    const length=Math.hypot(...axis),ax=axis[0]/length,ay=axis[1]/length;
+    const a=poly.map(p=>p[0]*ax+p[1]*ay),b=box.map(p=>p[0]*ax+p[1]*ay);
+    const positive=Math.max(...b)-Math.min(...a),negative=Math.max(...a)-Math.min(...b);
+    if(Math.min(positive,negative)<depth){depth=Math.min(positive,negative);normal=positive<negative?[ax,ay]:[-ax,-ay];}
+  }
+  return normal;
+}
+export function truckCollides(world,tr){return truckContact(world,tr)?.part || null;}
+function truckContact(world, tr) {
   // A small body inset forgives paint-to-curb contact. Exact rectangle overlap
   // catches parked cars anywhere under a trailer, not just at sampled corners.
   for (const [name,poly] of Object.entries(truckBodies(tr, 2))) {
     const xs=poly.map(p=>p[0]),ys=poly.map(p=>p[1]);
     const left=Math.min(...xs),right=Math.max(...xs),top=Math.min(...ys),bottom=Math.max(...ys);
-    if(left<0||right>W||top<0||bottom>H)return name;
+    if(left<0)return {part:name,n:[1,0]};
+    if(right>W)return {part:name,n:[-1,0]};
+    if(top<0)return {part:name,n:[0,1]};
+    if(bottom>H)return {part:name,n:[0,-1]};
     for(let r=tileOf(top);r<=tileOf(bottom);r++)for(let c=tileOf(left);c<=tileOf(right);c++){
-      if(tileAt(world,c,r)!==STREET&&overlapsRect(poly,c*TILE,r*TILE,TILE,TILE))return name;
+      if(tileAt(world,c,r)!==STREET&&overlapsRect(poly,c*TILE,r*TILE,TILE,TILE))return {part:name,n:contactNormal(poly,c*TILE,r*TILE,TILE,TILE)};
     }
     for(const car of [...world.cars, ...(world.traffic || [])]){
       if(car.x>right||car.x+car.w<left||car.y>bottom||car.y+car.h<top)continue;
-      if(overlapsRect(poly,car.x,car.y,car.w,car.h))return name;
+      if(overlapsRect(poly,car.x,car.y,car.w,car.h))return {part:name,n:contactNormal(poly,car.x,car.y,car.w,car.h)};
     }
   }
   return null;
+}
+
+// Sweep both bodies, including the tail's rotation, to the first contact.
+// Small travel samples prevent tunnelling; bisection finds the last clear pose.
+function sweepTruck(world,from,to) {
+  const dh1=wrapAngle(to.h1-from.h1),dh2=wrapAngle(to.h2-from.h2);
+  const distance=Math.hypot(to.x-from.x,to.y-from.y)+Math.max(Math.abs(dh1)*52,Math.abs(dh2)*80);
+  const count=Math.max(1,Math.ceil(distance/2));
+  const at=t=>({x:from.x+(to.x-from.x)*t,y:from.y+(to.y-from.y)*t,h1:from.h1+dh1*t,h2:from.h2+dh2*t});
+  let clear=0;
+  for(let i=1;i<=count;i++){
+    const t=i/count,contact=truckContact(world,at(t));
+    if(contact){
+      let lo=clear,hi=t;
+      for(let j=0;j<12;j++){const mid=(lo+hi)/2;if(truckContact(world,at(mid)))hi=mid;else lo=mid;}
+      return {pose:at(lo),contact,t:lo};
+    }
+    clear=t;
+  }
+  return {pose:to,contact:null,t:1};
 }
 
 // Arcade steering: a fast rack, stable straights and a following rear axle.
 // P2 can deliberately swing the tail; an unsteered tail gets corner assistance.
 export function stepTruck(state, inp, dt) {
   const tr = state.truck, R = RULES;
-  state.scraping = false;
+  state.scraping = false; state.contactImpact=0;
   if (state.fire?.crew) { tr.v=0; return null; }
   const steering = Math.max(-1, Math.min(1, inp.steer || 0));
   const steerT = steering * R.maxSteer;
@@ -285,21 +321,27 @@ export function stepTruck(state, inp, dt) {
   }
   tr.h1 = wrapAngle(tr.h1); tr.h2 = wrapAngle(tr.h2);
 
-  const hit = truckCollides(state.world, tr);
-  if (!hit) return null;
-  const desired = { x: tr.x, y: tr.y, h1: tr.h1, h2: tr.h2 };
-  // A glancing scrape should slide, not repeatedly freeze the entire truck.
-  const trials = [
-    { ...desired, h2: prev.h2 },
-    { ...prev, x: desired.x },
-    { ...prev, y: desired.y },
-  ].sort((a, b) => Math.hypot(b.x - prev.x, b.y - prev.y) - Math.hypot(a.x - prev.x, a.y - prev.y));
-  for (const pose of trials) {
-    if (Math.hypot(pose.x - prev.x, pose.y - prev.y) < Math.abs(tr.v) * dt * .15) continue;
-    Object.assign(tr, pose);
-    if (!truckCollides(state.world, tr)) { state.scraping = true; return hit; }
+  const desired={x:tr.x,y:tr.y,h1:tr.h1,h2:tr.h2};
+  let result=sweepTruck(state.world,prev,desired);
+  if(!result.contact)return null;
+  const hit=result.contact.part,normal=result.contact.n;
+  // Measure motion into the surface at the struck body, including rotation.
+  const before=truckBodies(prev,2)[hit],after=truckBodies(desired,2)[hit];
+  state.contactImpact=Math.max(0,...before.map((p,i)=>-((after[i][0]-p[0])*normal[0]+(after[i][1]-p[1])*normal[1])/dt));
+  let pose=result.pose;
+  for(let i=0;i<3&&result.contact;i++){
+    const [nx,ny]=result.contact.n;
+    const dx=desired.x-pose.x,dy=desired.y-pose.y,inward=Math.min(0,dx*nx+dy*ny);
+    const slide={...pose,x:pose.x+dx-inward*nx,y:pose.y+dy-inward*ny};
+    result=sweepTruck(state.world,pose,slide);pose=result.pose;
   }
-  Object.assign(tr, prev);
+  Object.assign(tr,pose);
+  const wanted=Math.hypot(desired.x-prev.x,desired.y-prev.y);
+  const moved=Math.hypot(tr.x-prev.x,tr.y-prev.y);
+  // Keep tangential speed on a scrape. Head-on impacts settle without bounce.
+  const tangent=Math.sqrt(Math.max(0,1-(Math.cos(tr.h1)*normal[0]+Math.sin(tr.h1)*normal[1])**2));
+  state.scraping=moved>Math.max(.001,wanted*.15)&&tangent>.3;
+  tr.v=state.scraping?tr.v*tangent:0;
   return hit;
 }
 
@@ -426,15 +468,12 @@ export function step(state, dt, inp = {}) {
 
   if (inp.leave && state.fire) { state.fire.crew=null; state.fire.parked=0; }
   stepTraffic(state, dt);
-  const impactSpeed=Math.abs(state.truck.v);
   const hit = stepTruck(state, inp, dt);
   if (hit) {
     state.stun = RULES.stunTime;
-    if (!state.scraping) state.truck.v = 0;
-    else state.truck.v = Math.sign(state.truck.v) * Math.min(Math.abs(state.truck.v), 115);
-    if (state.crashCooldown === 0) {
+    if (state.crashCooldown === 0 && state.contactImpact > 12) {
       state.crashes++; state.crashCooldown = 1;
-      state.damage = Math.min(100, state.damage + Math.ceil((state.scraping ? 3 : Math.max(4, Math.round(impactSpeed * .16))) * (state.upgrades.armor ? .65 : 1)));
+      state.damage = Math.min(100, state.damage + Math.ceil(Math.max(1, Math.round((state.contactImpact - 12) * .16)) * (state.upgrades.armor ? .65 : 1)));
       if(state.damage>=100){
         state.status='over'; state.truck.v=0;
         state.events.push({type:'gameover',score:state.score,fires:state.firesOut,reason:'Truck disabled'});
