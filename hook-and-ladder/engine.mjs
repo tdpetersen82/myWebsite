@@ -30,7 +30,7 @@ export const RULES = {
   L1: 32,               // tractor wheelbase (rear axle → front axle)
   tractorLen: 52,       // body: 10 behind the rear axle, 42 ahead of it
   tractorBack: 10,
-  L2: 68,               // hitch (tractor rear axle) → trailer rear axle
+  L2: 78,               // hitch (tractor rear axle) → trailer rear axle
   trailerFront: 6,      // body ahead of the hitch
   trailerBack: 12,      // body behind the rear axle
   width: 25,
@@ -281,7 +281,7 @@ function truckContact(world, tr) {
 // Small travel samples prevent tunnelling; bisection finds the last clear pose.
 function sweepTruck(world,from,to) {
   const dh1=wrapAngle(to.h1-from.h1),dh2=wrapAngle(to.h2-from.h2);
-  const distance=Math.hypot(to.x-from.x,to.y-from.y)+Math.max(Math.abs(dh1)*52,Math.abs(dh2)*80);
+  const distance=Math.hypot(to.x-from.x,to.y-from.y)+Math.max(Math.abs(dh1)*52,Math.abs(dh2)*(RULES.L2+RULES.trailerBack));
   const count=Math.max(1,Math.ceil(distance/2));
   const at=t=>({x:from.x+(to.x-from.x)*t,y:from.y+(to.y-from.y)*t,h1:from.h1+dh1*t,h2:from.h2+dh2*t});
   let clear=0;
@@ -307,7 +307,7 @@ export function stepTruck(state, inp, dt) {
   const steerT = steering * R.maxSteer;
   tr.steer = approach(tr.steer, steerT, (steerT ? R.steerRate : R.steerReturn) * dt);
   const manual = inp.tiller || 0;
-  const assist = tr.v >= 0 && !manual ? -steering * .65 : 0;
+  const assist = tr.v >= 0 && !manual ? -steering * .35 : 0;
   tr.tiller = approach(tr.tiller, (manual || assist) * R.maxTiller, R.tillerRate * dt);
   // Opposite throttle first stops the truck, then engages the other direction.
   // This also makes a short tap of S a brake instead of an accidental reverse.
@@ -531,12 +531,16 @@ export function step(state, dt, inp = {}) {
       }
       f.crew.spray=!!inp.spray; f.crew.grab=!!inp.grab;
       for (const target of f.targets) {
+        if(target.hp===0)continue;
         const cursor=target.kind==='person'?f.crew.ladder:f.crew.hose, p=roofPoint(target.at);
         const active=target.kind==='person'?inp.grab:inp.spray;
-        if(active&&Math.hypot((p.u-cursor.u)*b.w*TILE,(p.v-cursor.v)*b.h*TILE)<25) target.hp=Math.max(0,target.hp-dt*(state.upgrades.equipment?1.5:1)/(target.kind==='person'?.6:1.2));
+        if(active&&Math.hypot((p.u-cursor.u)*b.w*TILE,(p.v-cursor.v)*b.h*TILE)<25) {
+          target.hp=Math.max(0,target.hp-dt*(state.upgrades.equipment?1.5:1)/(target.kind==='person'?.6:1.2));
+          if(target.hp===0){target.doneAt=state.t;target.pickup={...cursor};}
+        }
       }
     }
-    if (f.targets.every(target=>target.hp===0)) {
+    if (f.targets.every(target=>target.hp===0&&state.t-target.doneAt>=.9)) {
       const bonus=Math.round(f.t)*5, gained=200+bonus+(f.clean?150:0);
       state.score+=gained;state.firesOut++;f.building.state='saved';
       state.events.push({type:'extinguished',building:f.building,gained,bonus,clean:f.clean});
@@ -544,7 +548,7 @@ export function step(state, dt, inp = {}) {
     }
   }
   if (state.fire) {
-    state.fire.t = Math.max(0, state.fire.t - dt);
+    if(state.fire.targets.some(target=>target.hp>0))state.fire.t = Math.max(0, state.fire.t - dt);
     if (state.fire.t === 0) {
       const b = state.fire.building; b.state = 'ruined'; state.lives--;
       state.events.push({ type: 'burnout', building: b });

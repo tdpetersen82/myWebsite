@@ -279,6 +279,7 @@ for (let seed = 1; seed <= 100; seed++) {
     run(g,1.3,kind==='person'?{grab:true}:{spray:true});
     check('each tool works independently in either order',target.hp===0);
   }
+  run(g,1); // Let the basket return and steam finish before the next dispatch.
   check('both jobs finish the call on the map',g.firesOut===1&&g.score>0&&!g.fire);
   const score=g.score;run(g,2);
   check('next call also requires driving',g.fire?.dist>=RULES.minDispatchTiles&&g.score===score);
@@ -385,6 +386,14 @@ function bumpCar(speed){
  const g=playing();g.world=openWorld();g.nextFireIn=1e9;
  const car={x:W-35,y:100,w:34,h:17,vx:180,vy:0};g.world.cars=[car];
  run(g,1);check('recoil respects the map boundary',car.x>=0&&car.x+car.w<=W);
+}
+{
+ const g=playing();run(g,1);const f=g.fire;
+ for(const target of f.targets){target.hp=0;target.doneAt=g.t;target.pickup={u:.5,v:.5};}
+ f.t=.05;run(g,.5);
+ check('completion animation keeps incident visible',g.fire===f&&g.firesOut===0);
+ check('finished jobs cannot burn out during their animation',f.t===.05&&g.lives===RULES.lives);
+ run(g,.5);check('completion animation awards the call once',g.firesOut===1&&!g.fire);
 }
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

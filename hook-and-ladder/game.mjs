@@ -2,9 +2,9 @@
 import {
   createGame, startGame, step, drainEvents, readyToPark, parkedInZone,
   serviceZones, turntable, roofPoint, W as WORLD_W, H as WORLD_H, TILE, RULES,
-} from './engine.mjs?v=20260916g';
+} from './engine.mjs?v=20260916i';
 
-import { paintCity, drawWorldFire, drawCars } from './art.mjs?v=20260916g';
+import { paintCity, drawWorldFire, drawCars, person } from './art.mjs?v=20260916i';
 
 const W = 1240, H = 680; // Fixed camera viewport; the world can grow independently.
 const HS_KEY = 'hookAndLadderHighScore';
@@ -155,7 +155,7 @@ function startShift() {
   runId++; held.clear(); tapped.clear(); cityLayer = null;
   game = createGame({...seedOption,upgrades:garage.upgrades});
   startGame(game);
-  camera.zoom = 1.65; camera.x = Math.max(W / camera.zoom / 2, game.truck.x); camera.y = H / 2;
+  camera.zoom = 1.48; camera.x = Math.max(W / camera.zoom / 2, game.truck.x); camera.y = H / 2;
   particles = []; floaters = []; banner = null; shake = 0;
   scoreEl.textContent = '0'; firesEl.textContent = '0';
   menu.hidden = true;
@@ -274,7 +274,7 @@ function buildCityLayer() {
 
 // ---------------------------------------------------------------- dynamic drawing
 function drawZones(t) {
-  const f = game.fire; if (!f) return;
+  const f = game.fire; if (!f || f.crew) return;
   const parked = parkedInZone(game);
   const pulse = 0.55 + 0.45 * Math.sin(t * 5);
   for (const z of serviceZones(f.building)) {
@@ -297,19 +297,35 @@ function drawCrew(t) {
   const f=game.fire;if(!f?.crew)return;
   const base=turntable(game.truck),b=f.building;
   const point=p=>({x:(b.col+p.u*b.w)*TILE,y:(b.row+p.v*b.h)*TILE});
-  const tip=point(f.crew.ladder),hose=point(f.crew.hose);
+  const rescued=f.targets.find(target=>target.kind==='person'&&target.hp===0);
+  let tip=point(f.crew.ladder);const hose=point(f.crew.hose);
+  if(rescued){const start=point(rescued.pickup);const progress=Math.min(1,(game.t-rescued.doneAt)/.9),ease=progress*progress*(3-2*progress);tip={x:start.x+(base.x-start.x)*ease,y:start.y+(base.y-start.y)*ease};}
   ctx.save();
   const angle=Math.atan2(tip.y-base.y,tip.x-base.x),length=Math.hypot(tip.x-base.x,tip.y-base.y);
-  ctx.translate(base.x,base.y);ctx.rotate(angle);ctx.strokeStyle='#ffe2a0';ctx.lineWidth=2;
-  ctx.beginPath();ctx.moveTo(0,-4);ctx.lineTo(length,-4);ctx.moveTo(0,4);ctx.lineTo(length,4);
-  for(let x=3;x<length;x+=9){ctx.moveTo(x,-4);ctx.lineTo(x,4);}ctx.stroke();ctx.restore();
-  ctx.strokeStyle='#ffda87';ctx.lineWidth=2;ctx.strokeRect(tip.x-8,tip.y-8,16,16);
-  ctx.strokeStyle='#75dcff';ctx.beginPath();ctx.arc(hose.x,hose.y,10,0,Math.PI*2);ctx.stroke();
-  if(f.crew.spray){ctx.save();ctx.strokeStyle='#9eeaff';ctx.lineWidth=3;ctx.setLineDash([6,4]);ctx.lineDashOffset=-t*70;ctx.beginPath();ctx.moveTo(base.x,base.y);ctx.lineTo(hose.x,hose.y);ctx.stroke();ctx.restore();}
+  ctx.translate(base.x,base.y);ctx.rotate(angle);
+  ctx.shadowColor='rgba(0,0,0,.6)';ctx.shadowBlur=5;ctx.shadowOffsetY=5;
+  ctx.fillStyle='#14242e';ctx.fillRect(0,-6,length,12);ctx.shadowBlur=0;ctx.shadowOffsetY=0;
+  const steel=ctx.createLinearGradient(0,-6,0,6);steel.addColorStop(0,'#fcf8da');steel.addColorStop(.4,'#9aabb7');steel.addColorStop(1,'#d8e6eb');
+  ctx.strokeStyle=steel;ctx.lineWidth=2.5;ctx.beginPath();ctx.moveTo(0,-5);ctx.lineTo(length,-5);ctx.moveTo(0,5);ctx.lineTo(length,5);
+  for(let x=4;x<length;x+=8){ctx.moveTo(x,-5);ctx.lineTo(x,5);}ctx.stroke();ctx.restore();
+  ctx.save();ctx.translate(tip.x,tip.y);
+  if(rescued) {ctx.save();ctx.scale(.55,.55);person(ctx,0,-8,t);ctx.restore();}
+  ctx.fillStyle='#203843';ctx.fillRect(-10,-3,20,10);ctx.strokeStyle='#ffe09c';ctx.lineWidth=2;ctx.strokeRect(-10,-7,20,14);
+  ctx.strokeStyle='#b8c8cb';ctx.beginPath();ctx.moveTo(-4,-7);ctx.lineTo(-4,7);ctx.moveTo(4,-7);ctx.lineTo(4,7);ctx.stroke();ctx.restore();
+  if(f.crew.spray){
+    const bend={x:(base.x+hose.x)/2,y:(base.y+hose.y)/2-24};
+    ctx.save();ctx.lineCap='round';ctx.beginPath();ctx.moveTo(base.x,base.y);ctx.quadraticCurveTo(bend.x,bend.y,hose.x,hose.y);
+    ctx.strokeStyle='rgba(55,173,234,.25)';ctx.lineWidth=9;ctx.stroke();ctx.strokeStyle='#72ccf3';ctx.lineWidth=4;ctx.stroke();ctx.strokeStyle='#e7fbff';ctx.lineWidth=1.5;ctx.stroke();
+    for(let i=0;i<16;i++){const q=(t*1.7+i/16)%1,x=(1-q)**2*base.x+2*(1-q)*q*bend.x+q*q*hose.x,y=(1-q)**2*base.y+2*(1-q)*q*bend.y+q*q*hose.y;ctx.fillStyle='#e6fcff';ctx.beginPath();ctx.arc(x,y,1.4,0,Math.PI*2);ctx.fill();}
+    for(let i=0;i<14;i++){const q=(t*2+i*.071)%1,a=i*2.4;ctx.globalAlpha=1-q;ctx.fillStyle='#b0e8fa';ctx.beginPath();ctx.arc(hose.x+Math.cos(a)*q*21,hose.y+Math.sin(a)*q*13-q*5,1+q*2,0,Math.PI*2);ctx.fill();}ctx.restore();
+  }
+  ctx.save();ctx.strokeStyle='#8de3ff';ctx.lineWidth=1.5;
+  ctx.beginPath();ctx.arc(hose.x,hose.y,13,0,Math.PI*2);ctx.moveTo(hose.x-18,hose.y);ctx.lineTo(hose.x-8,hose.y);ctx.moveTo(hose.x+8,hose.y);ctx.lineTo(hose.x+18,hose.y);ctx.stroke();
+  ctx.font='bold 9px system-ui';ctx.textAlign='center';ctx.fillStyle='#101f29';ctx.fillRect(tip.x-60,tip.y+12,52,14);ctx.fillRect(hose.x+8,hose.y+12,52,14);ctx.fillStyle='#ffe09c';ctx.fillText(rescued?'SAFE':'P1 GRAB',tip.x-34,tip.y+22);ctx.fillStyle='#a5eaff';ctx.fillText('P2 HOSE',hose.x+34,hose.y+22);
   for(const target of f.targets){
     if(target.hp<=0)continue;
-    const p=point(roofPoint(target.at));ctx.fillStyle='#142530';ctx.fillRect(p.x-14,p.y+13,28,4);ctx.fillStyle=target.kind==='person'?'#ffda87':'#75dcff';ctx.fillRect(p.x-14,p.y+13,28*(1-target.hp),4);
-  }
+    const p=point(roofPoint(target.at));ctx.fillStyle='#142530';ctx.fillRect(p.x-16,p.y+18,32,5);ctx.fillStyle=target.kind==='person'?'#ffda87':'#75dcff';ctx.fillRect(p.x-16,p.y+18,32*(1-target.hp),5);
+  }ctx.restore();
 }
 function drawRuined(b) {
   const x = b.col * TILE + 7, y = b.row * TILE + 7, w = b.w * TILE - 14, h = b.h * TILE - 14;
@@ -503,7 +519,7 @@ function drawFloaters(dt) {
 // ---------------------------------------------------------------- loop
 function render(dt, t) {
   if (!cityLayer) cityLayer = buildCityLayer();
-  const active = game.status !== 'menu', zoom = active ? (hud > 1.5 ? 2 : 1.65) : 1;
+  const active = game.status !== 'menu', zoom = active ? (hud > 1.5 ? 1.8 : 1.48) : 1;
   camera.zoom = zoom;
   const tr = game.truck;
   const focal = { x: tr.x - Math.cos(tr.h2) * 25 + Math.cos(tr.h1) * tr.v * .35, y: tr.y - Math.sin(tr.h2) * 25 + Math.sin(tr.h1) * tr.v * .35 };
@@ -522,7 +538,7 @@ function render(dt, t) {
   }
   drawZones(t);
   drawTruck(t);
-  if (game.fire) { drawWorldFire(ctx, game.fire, t); if (dt) spawnSmoke(game.fire.building, dt); }
+  if (game.fire) { drawWorldFire(ctx, game.fire, game.t); if (dt && game.fire.targets.some(target=>target.kind==='fire'&&target.hp>0)) spawnSmoke(game.fire.building, dt); }
   drawCrew(t);
   drawParticles(dt); drawFloaters(dt);
   ctx.restore();

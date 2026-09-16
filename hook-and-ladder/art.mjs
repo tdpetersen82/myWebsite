@@ -1,5 +1,5 @@
 // Canvas artwork. The city and the incident board share one night-shift palette.
-import { W, H, TILE, PITCH, BLOCKS_X, BLOCKS_Y, blockAt, roofPoint } from './engine.mjs?v=20260916g';
+import { W, H, TILE, PITCH, BLOCKS_X, BLOCKS_Y, blockAt, roofPoint } from './engine.mjs?v=20260916i';
 const TAU = Math.PI * 2;
 function rect(c,x,y,w,h,r=0){c.beginPath();c.roundRect(x,y,w,h,r);}
 function glow(c,x,y,r,color){const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}
@@ -88,19 +88,32 @@ function flame(c,x,y,size,t,seed){
     const age=(t*.7+i*.23+seed)%1;c.globalAlpha=1-age;c.fillStyle='#ffcf74';c.fillRect(x+Math.sin(i*7+t)*size*.8,y-age*size*4,2,3);
   }c.globalAlpha=1;
 }
-function person(c,x,y,t,color='#ffd5aa'){
-  c.fillStyle='rgba(0,0,0,.3)';c.beginPath();c.ellipse(x,y+12,11,4,0,0,TAU);c.fill();
-  c.strokeStyle='#a3efd0';c.lineWidth=5;c.lineCap='round';
-  c.beginPath();c.moveTo(x,y-3);c.lineTo(x,y+7);c.moveTo(x-7,y+15);c.lineTo(x,y+7);c.lineTo(x+7,y+15);c.stroke();
-  c.beginPath();c.moveTo(x-11,y-9-Math.sin(t*6)*4);c.lineTo(x,y);c.lineTo(x+11,y-8);c.stroke();
-  c.fillStyle=color;c.beginPath();c.arc(x,y-11,6,0,TAU);c.fill();
+export function person(c,x,y,t,color='#ffd5aa'){
+  c.save();c.translate(x,y);c.lineCap='round';
+  c.fillStyle='rgba(0,0,0,.35)';c.beginPath();c.ellipse(1,14,10,4,0,0,TAU);c.fill();
+  c.strokeStyle='#27465d';c.lineWidth=5;c.beginPath();c.moveTo(-3,4);c.lineTo(-4,12);c.moveTo(3,4);c.lineTo(4,12);c.stroke();
+  c.fillStyle='#18252d';rect(c,-8,11,7,4,2);c.fill();rect(c,1,11,7,4,2);c.fill();
+  c.fillStyle='#e99b51';rect(c,-6,-6,12,13,3);c.fill();c.fillStyle='#f5c080';c.fillRect(-2,-5,3,10);
+  c.strokeStyle='#e99b51';c.lineWidth=4;c.beginPath();c.moveTo(-5,-3);c.lineTo(-10,3);c.moveTo(5,-3);c.lineTo(10,-9-Math.sin(t*5)*3);c.stroke();
+  c.fillStyle=color;c.beginPath();c.arc(10,-11-Math.sin(t*5)*3,2.5,0,TAU);c.arc(-10,4,2.5,0,TAU);c.fill();
+  c.fillStyle='#513c32';c.beginPath();c.arc(0,-12,6,0,TAU);c.fill();c.fillStyle=color;c.beginPath();c.arc(0,-10,5,0,TAU);c.fill();
+  c.fillStyle='#332b2b';c.fillRect(-3,-11,1.5,1.5);c.fillRect(2,-11,1.5,1.5);c.restore();
 }
 export function drawWorldFire(c,f,t){
   const b=f.building;
   glow(c,b.cx,b.cy,Math.max(b.w,b.h)*TILE,'rgba(240,102,34,.14)');
   for(const target of f.targets){
-    if(target.hp<=0)continue;const p=roofPoint(target.at),x=(b.col+p.u*b.w)*TILE,y=(b.row+p.v*b.h)*TILE;
-    if(target.kind==='fire')flame(c,x,y,7+target.hp*5,t,target.at*10);else{c.save();c.translate(x,y);c.scale(.65,.65);person(c,0,0,t);c.restore();}
+    const p=roofPoint(target.at),x=(b.col+p.u*b.w)*TILE,y=(b.row+p.v*b.h)*TILE;
+    if(target.kind==='fire'){
+      if(target.hp>0){for(let i=0;i<3;i++)flame(c,x+(i-1)*9,y+(i%2)*4,5+target.hp*(i===1?12:8),t,target.at*10+i);}
+      if(target.hp<1){
+        c.save();for(let i=0;i<7;i++){const age=(t*.8+i/7)%1;c.globalAlpha=(1-age)*(1-target.hp)*.6;c.fillStyle='#c9e5e8';c.beginPath();c.ellipse(x+Math.sin(i*2.8)*age*22,y-age*35,4+age*12,3+age*8,0,0,TAU);c.fill();}c.restore();
+        if(target.hp===0){c.fillStyle='#a4f0dc';c.font='bold 10px system-ui';c.textAlign='center';c.fillText('FIRE OUT',x,y+19);}
+      }
+    }else if(target.hp>0){
+      c.save();glow(c,x,y,25,'rgba(255,203,110,.16)');c.translate(x,y);c.scale(.8,.8);person(c,0,0,t);c.restore();
+      c.fillStyle='#26323b';rect(c,x-12,y-30,24,13,4);c.fill();c.fillStyle='#ffe1a4';c.font='bold 9px system-ui';c.textAlign='center';c.fillText('SOS',x,y-20);
+    }
   }
 }
 
