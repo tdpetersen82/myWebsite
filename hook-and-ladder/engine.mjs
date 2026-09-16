@@ -159,9 +159,34 @@ export function trafficPose(car, distance) {
   const h=Math.abs(Math.sin(heading))*34+Math.abs(Math.cos(heading))*17;
   return { x:left+x-w/2, y:top+y-h/2, w, h, heading };
 }
+function moveRecoil(state,car,dt) {
+  car.bumpCooldown=Math.max(0,(car.bumpCooldown||0)-dt);
+  let vx=car.vx||0,vy=car.vy||0;
+  const anchor=car.route?trafficPose(car,car.distance):null;
+  const offset=anchor?Math.hypot(anchor.x-car.x,anchor.y-car.y):0;
+  if(Math.hypot(vx,vy)<.5&&offset<.05){car.vx=car.vy=0;return false;}
+  // Traffic eases back into its lane after the recoil settles. Parked cars
+  // remain where the impact pushed them.
+  if(anchor&&Math.hypot(vx,vy)<8){vx=(anchor.x-car.x)*2;vy=(anchor.y-car.y)*2;}
+  const steps=Math.max(1,Math.ceil(Math.hypot(vx,vy)*dt/2));
+  const bodies=Object.values(truckBodies(state.truck,2));
+  for(let i=0;i<steps;i++){
+    const x=car.x+vx*dt/steps,y=car.y+vy*dt/steps;
+    let blocked=x<0||y<0||x+car.w>W||y+car.h>H;
+    for(let r=tileOf(y);r<=tileOf(y+car.h-.001);r++)for(let c=tileOf(x);c<=tileOf(x+car.w-.001);c++)if(tileAt(state.world,c,r)!==STREET)blocked=true;
+    if(bodies.some(poly=>overlapsRect(poly,x,y,car.w,car.h)))blocked=true;
+    if([...state.world.cars,...(state.world.traffic||[])].some(other=>other!==car&&x<other.x+other.w&&x+car.w>other.x&&y<other.y+other.h&&y+car.h>other.y))blocked=true;
+    if(blocked){vx*=-.2;vy*=-.2;break;}
+    car.x=x;car.y=y;
+  }
+  car.vx=vx*Math.exp(-5*dt);car.vy=vy*Math.exp(-5*dt);
+  return true;
+}
 export function stepTraffic(state, dt) {
   const traffic=state.world.traffic || [], bodies=Object.values(truckBodies(state.truck, -5));
+  for(const car of state.world.cars)moveRecoil(state,car,dt);
   for (const car of traffic) {
+    if(moveRecoil(state,car,dt))continue;
     const ahead=trafficPose(car,car.distance+car.speed*dt+26);
     const next=trafficPose(car,car.distance+car.speed*dt);
     const blocked=[next,ahead].some(p=>bodies.some(poly=>overlapsRect(poly,p.x,p.y,p.w,p.h))) ||
@@ -246,7 +271,7 @@ function truckContact(world, tr) {
     }
     for(const car of [...world.cars, ...(world.traffic || [])]){
       if(car.x>right||car.x+car.w<left||car.y>bottom||car.y+car.h<top)continue;
-      if(overlapsRect(poly,car.x,car.y,car.w,car.h))return {part:name,n:contactNormal(poly,car.x,car.y,car.w,car.h)};
+      if(overlapsRect(poly,car.x,car.y,car.w,car.h))return {part:name,car,n:contactNormal(poly,car.x,car.y,car.w,car.h)};
     }
   }
   return null;
@@ -328,6 +353,12 @@ export function stepTruck(state, inp, dt) {
   // Measure motion into the surface at the struck body, including rotation.
   const before=truckBodies(prev,2)[hit],after=truckBodies(desired,2)[hit];
   state.contactImpact=Math.max(0,...before.map((p,i)=>-((after[i][0]-p[0])*normal[0]+(after[i][1]-p[1])*normal[1])/dt));
+  const car=result.contact.car;
+  if(car&&state.contactImpact>8&&!(car.bumpCooldown>0)){
+    const impulse=Math.min(180,state.contactImpact*.8);
+    car.vx=(car.vx||0)-normal[0]*impulse;car.vy=(car.vy||0)-normal[1]*impulse;
+    car.bumpCooldown=.25;
+  }
   let pose=result.pose;
   for(let i=0;i<3&&result.contact;i++){
     const [nx,ny]=result.contact.n;

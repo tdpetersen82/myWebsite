@@ -370,5 +370,21 @@ console.log('contact resolution');
   for(let i=0;i<30;i++){const x=g.truck.x,y=g.truck.y;step(g,1/120,{gas:true});largestStep=Math.max(largestStep,Math.hypot(g.truck.x-x,g.truck.y-y));}
   check('glancing collision slides without a sideways teleport',largestStep<2&&g.truck.x>580&&!truckCollides(g.world,g.truck));
 }
+console.log('car recoil');
+function bumpCar(speed){
+ const g=playing();g.world=openWorld();g.nextFireIn=1e9;g.truck.x=610;g.truck.v=speed;
+ const car={x:650,y:331.5,w:34,h:17};g.world.cars=[car];
+ stepTruck(g,{gas:true},1/120);const impulse=car.vx;
+ run(g,.5,{handbrake:true});return {g,car,impulse};
+}
+{
+ const slow=bumpCar(40),fast=bumpCar(180);
+ check('cars recoil away from the truck',slow.car.x>650&&fast.car.x>slow.car.x);
+ check('harder impacts give cars a stronger shove',fast.impulse>slow.impulse);
+ check('recoiling cars do not overlap truck',!truckCollides(fast.g.world,fast.g.truck));
+ const g=playing();g.world=openWorld();g.nextFireIn=1e9;
+ const car={x:W-35,y:100,w:34,h:17,vx:180,vy:0};g.world.cars=[car];
+ run(g,1);check('recoil respects the map boundary',car.x>=0&&car.x+car.w<=W);
+}
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);
