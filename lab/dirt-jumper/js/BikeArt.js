@@ -90,10 +90,19 @@ class BikeArt {
         const bars=this.parts.bars,barsWidth=12,barsScale=barsWidth/bars.rect[2];
         const grip=[stem[0]+(bars.grip[0]-bars.origin[0]*bars.rect[2])*barsScale,
             stem[1]+(bars.grip[1]-bars.origin[1]*bars.rect[3])*barsScale];
-        const pedal=frameLocal(frame.pedal);
+        const trick = (bike.activeTricks || []).find(t => t.name !== 'backflip');
+        const pulse = trick ? Math.sin(Math.PI*trick.progress) : 0;
+        const tail = trick && trick.name === 'tailwhip';
+        const swing = trick ? (tail ? Math.PI*2*trick.progress : 1.05*pulse) : 0;
+        const swingPoint = ([x,y]) => {
+            const dx=x-stem[0],dy=y-stem[1];
+            return [stem[0]+dx*Math.cos(swing),stem[1]+dy];
+        };
+        const pedal=tail ? frameLocal(frame.pedal) : swingPoint(frameLocal(frame.pedal));
         const shoe=this.parts.shoe,shoeWidth=14;
         const ankleHeight=(shoe.rect[3]*(1-shoe.origin[1]))*shoeWidth/shoe.rect[2];
         const foot=[pedal[0]-1,pedal[1]-ankleHeight],farFoot=[pedal[0]-12,pedal[1]-ankleHeight-3];
+        if (tail) { foot[0]-=12*pulse; foot[1]-=20*pulse; farFoot[0]+=15*pulse; farFoot[1]-=24*pulse; }
         const q = Math.max(-0.3,Math.min(1.15,bike.compress));
         const hip = [-11-q*6+bike.bodyShift*3,-49+q*9];
         const shoulder = [4+q*4+bike.bodyShift*2,-68+q*12];
@@ -108,11 +117,15 @@ class BikeArt {
         bone('farUpperArm','upperArm',farShoulder,farElbow,6.5);
         bone('farForearm','forearm',farElbow,grip,5.5);
         for (const [id,x] of [['rearWheel',-32],['frontWheel',32]]) {
-            this.anchored(id,'wheel',world([x,-16],false),32,angle+bike.distance/16);
+            this.anchored(id,'wheel',world(x === -32 ? swingPoint([x,-16]) : [x,-16],false),32,angle+bike.distance/16);
         }
         // Frame anchor mapping is authored separately from the rider's bones.
-        const rear=world([-32,-16]);
+        const rear=world(swingPoint([-32,-16]));
         this.anchored('frame','frame',rear,frame.displayWidth,angle+pitch);
+        // Side-view projection of yaw around the steering axis. The frame
+        // swings horizontally beneath the rider, never over their head.
+        this.sprites.frame.setScale(frameScale*Math.cos(swing),frameScale);
+        if (trick) this.sprites.rearWheel.setScale(32/this.parts.wheel.rect[2]*Math.max(0.18,Math.abs(Math.cos(swing))),32/this.parts.wheel.rect[3]);
         const crown=world(crownLocal);
         const axle=world([32,-16],false);
         const d=Math.hypot(crown.x-axle.x,crown.y-axle.y);

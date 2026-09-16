@@ -55,6 +55,9 @@ class Bike {
         this.justPop = false;
         this.lastLanding = null;    // {grade, hardness, x, y}
         this.airTime = 0;
+        this.tricks = [];
+        this.activeTricks = [];
+        this.trickHeld = {};
     }
 
     get stateName() { return this.crashed ? 'crashed' : (this.airborne ? 'air' : 'ground'); }
@@ -73,10 +76,37 @@ class Bike {
         this.lastLanding = null;
 
         const previousSpeed = this.speed;
+        this._trickInput(input);
         if (this.airborne) this._updateAir(dt, terrain, input, false);
         else this._updateGround(dt, terrain, input);
 
         this._updateBody(dt, terrain, input, previousSpeed);
+    }
+
+    _trickInput(input) {
+        for (const name of ['whip', 'backflip', 'tailwhip']) {
+            if (input[name] && !this.trickHeld[name] && this.airborne &&
+                !this.activeTricks.some(t => t.name === name || (t.name !== 'backflip' && name !== 'backflip'))) {
+                this.activeTricks.push({name, elapsed:0, progress:0,
+                    duration: name === 'whip' ? 0.30 : name === 'backflip' ? 0.48 : 0.42});
+            }
+            this.trickHeld[name] = !!input[name];
+        }
+    }
+
+    _updateTricks(dt) {
+        for (const t of this.activeTricks) {
+            const before = t.progress;
+            t.elapsed += dt;
+            t.progress = Math.min(1, t.elapsed / t.duration);
+            // Smooth entry and exit, with an actual rotation used by collision grading.
+            if (t.name === 'backflip') {
+                const ease = p => p*p*(3-2*p);
+                this.angle = djNormDeg(this.angle - 360*(ease(t.progress)-ease(before)));
+            }
+            if (t.progress === 1) this.tricks.push(t.name);
+        }
+        this.activeTricks = this.activeTricks.filter(t => t.progress < 1);
     }
 
     _updateBody(dt, terrain, input, previousSpeed = this.speed) {
@@ -188,6 +218,8 @@ class Bike {
         const boost = terrain.lipBoostAt(this.x, vx0 * dt);
         if (this.speed > s.minAirSpeed && boost > 0) {
             this.airborne = true;
+            this.tricks = [];
+            this.activeTricks = [];
             this.airTime = 0;
             this.vx = vx0;
             this.vy = vy0 - boost - (!pump ? s.releasePop * this.releasePower : 0);          // up = -y
@@ -230,6 +262,8 @@ class Bike {
         } else {
             this.leanVelocity = 0;
         }
+
+        this._updateTricks(dt);
 
         // projectile integration (semi-implicit Euler)
         this.vy += g * dt;
@@ -286,7 +320,7 @@ class Bike {
 
         const lt = s.landTolerance;
         let grade;
-        if (intoSurface > s.caseBailSpeed) grade = 'bail';   // cased / smacked a face too hard
+        if (this.activeTricks.length || intoSurface > s.caseBailSpeed) grade = 'bail';   // cased / smacked a face too hard
         else if (diff <= lt.perfect) grade = 'perfect';
         else if (diff <= lt.clean) grade = 'clean';
         else if (diff <= lt.sketchy) grade = 'sketchy';
@@ -300,12 +334,21 @@ class Bike {
         this.lastLanding = { grade, hardness: Math.max(0, intoSurface), x: sx, y: gy, airTime: this.airTime };
 
         if (grade === 'bail') {
+            this.tricks = [];
             this.crashed = true;
             this.speed = 0;
             this.flow = 0;
             return;
         }
 
+        const values = {whip:150, backflip:350, tailwhip:300};
+        const combo = new Set(this.tricks).size;
+        const bonus = Math.round(this.tricks.reduce((sum,name)=>sum+values[name],0) *
+            (1 + Math.max(0,combo-1)*0.5) * (grade === 'sketchy' ? 0.5 : 1));
+        this.score += bonus;
+        this.lastLanding.tricks = [...this.tricks];
+        this.lastLanding.bonus = bonus;
+        this.tricks = [];
         let keep = Math.max(0, along);
         if (grade === 'clean') keep *= s.cleanScrub;
         else if (grade === 'sketchy') keep *= s.sketchyScrub;
