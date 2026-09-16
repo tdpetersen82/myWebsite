@@ -299,6 +299,19 @@ let shake = 0;
 let runStartBest = 0;
 let overShown = false;
 
+function updateControlHints() {
+  const count = game.players.filter(p => !p.cpu).length;
+  const hints = count > 1
+    ? ['Blue: WASD · Space bomb · F tool', 'Red: arrows · Enter bomb · Right Shift tool', ...(count === 3 ? ['Green: IJKL · U bomb · O tool'] : []), 'P pause']
+    : ['Arrows / WASD move', 'Space bomb · F tool', 'P pause'];
+  const footer = document.querySelector('.ch-hint');
+  footer.replaceChildren(...hints.map(text => {
+    const span = document.createElement('span');
+    span.textContent = text;
+    return span;
+  }));
+  canvas.setAttribute('aria-label', 'Dynamine game board. ' + hints.join('. '));
+}
 function startMode(m) {
   mode = m;
   held.forEach((keys) => {
@@ -329,6 +342,7 @@ function startMode(m) {
       p1Name: 'Blue',
       p2Name: m === 'cpu' ? 'The computer' : 'Red',
     });
+  updateControlHints();
   runStartBest = highScore;
   scoreEl.textContent = game.mode === 'adventure' ? '0' : game.players.map(() => '0').join('–');
   menu.hidden = true;
@@ -1795,6 +1809,7 @@ homeButton.addEventListener('click', () => {
 });
 document.querySelector('[data-act="restart"]').before(homeButton);
 function renderMenu(page) {
+  menu.scrollTop = 0;
   const choices = document.getElementById('menu-choices');
   const options =
     page === 'adventure'

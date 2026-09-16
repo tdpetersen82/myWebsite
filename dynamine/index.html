@@ -83,13 +83,27 @@
         .miner-loadout { display:flex; gap:8px; align-items:baseline; text-align:left; padding:4px 8px; border-left:3px solid var(--miner); font-size:11px; line-height:1.5; background:rgba(0,0,0,.2); }
         .miner-loadout b { color:var(--miner); min-width:45px; }
         .miner-loadout span { color:#eee1cf; }
-        #pickup-guide { max-width:728px; margin:16px auto; padding:20px; color:#e6d6c0; background:#21180f; border-radius:16px; font-size:14px; line-height:1.6; }
-        #pickup-guide h2 { margin:0 0 8px; }
-        #pickup-guide p { margin:6px 0; }
-        body:has(#menu[hidden]) #pickup-guide { display:none; }
-        #menu-choices { display: contents; }
-        #menu:has([data-mode="coop3"]), #menu:has([data-mode="triple"]) { gap: 5px; }
-        #menu:has([data-mode="coop3"]) .m-tag, #menu:has([data-mode="triple"]) .m-tag { display:none; }
+        #menu { justify-content: flex-start; overflow-y: auto; padding: 16px; gap: 8px; }
+        #menu > * { flex-shrink: 0; }
+        .ch-bezel #game-container:has(#menu:not([hidden])) { aspect-ratio: auto; }
+        #game-container:has(#menu:not([hidden])) canvas { display: none; }
+        #game-container #menu:not([hidden]) { position: relative; inset: auto; overflow: visible; }
+        #menu-choices { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 8px; width: 100%; max-width: 560px; }
+        #menu #menu-choices button { width: 100%; height: 100%; }
+        #pickup-guide { width: 100%; max-width: 560px; text-align: left; font-size: 12px; line-height: 1.4; }
+        #pickup-guide h2 { margin: 0 0 8px; font-size: 14px; color: #ffe09a; }
+        .pickup-grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 6px; margin-bottom: 14px; }
+        .pickup-grid p { margin: 0; padding: 8px; border: 1px solid #ffffff18; border-radius: 8px; background: #ffffff08; }
+        .pickup-grid b { display: block; color: #ffe0a5; }
+        .pickup-grid span { color: #c7c7bc; }
+        .menu-controls { width: 100%; border-collapse: collapse; font-size: 11px; }
+        .menu-controls th, .menu-controls td { text-align: left; padding: 5px 4px; border-bottom: 1px solid #ffffff18; }
+        .menu-controls thead { color: #b9b7a8; }
+        .menu-controls .blue { color: #80ceff; }
+        .menu-controls .red { color: #ff9a8e; }
+        .menu-controls .green { color: #a5e595; }
+        #pickup-guide .control-note { margin: 8px 0 0; color: #c7c7bc; font-size: 11px; }
+        .ch-stage:has(#menu:not([hidden])) .ch-hint { display: none; }
         #menu[hidden] { display: none; }
         #menu-sub:empty { display:none; }
         .ch-bezel:has(#menu:not([hidden])) #mission,
@@ -100,7 +114,7 @@
         }
         #menu .m-title {
             font-family: 'Bricolage Grotesque', system-ui, sans-serif;
-            font-weight: 700; font-size: clamp(34px, 9cqw, 64px); letter-spacing: 0.08em;
+            font-weight: 700; font-size: clamp(28px, 7cqw, 44px); letter-spacing: 0.08em;
             color: #ffe09a; line-height: 1; margin: 0;
             text-shadow: 0 0 24px rgba(255,120,60,0.45), 0 4px 0 #6b2a10;
         }
@@ -129,7 +143,7 @@
         /* Narrow cabinets (phones): one-line doors, no tagline, so the menu
            fits inside the board instead of spilling past its top edge. */
         @container (max-width: 520px) {
-            #menu { gap: 6px; padding: 4%; justify-content: center; }
+            #menu { gap: 8px; padding: 12px; justify-content: flex-start; }
             #menu .m-title { font-size: clamp(26px, 11cqw, 44px); }
             #menu .m-tag, #menu .m-keys, #menu button small { display: none; }
             #menu button { padding: 9px 12px; font-size: clamp(13px, 4.2cqw, 16px); gap: 8px; }
@@ -175,21 +189,34 @@
                 <p class="m-tag">Blast a path. Clear the mine.</p>
                 <p id="menu-sub"></p>
                 <div id="menu-choices"></div>
-                <a href="#pickup-guide" style="color:#ffd17a;font-size:12px">Pickups &amp; player controls ↓</a>
-                <p class="m-keys"><kbd>Arrows</kbd> or <kbd>WASD</kbd> move · <kbd>Space</kbd> dynamite · <kbd>P</kbd> pause</p>
+                <section id="pickup-guide" aria-label="Powerups and player controls">
+                    <h2>Powerups</h2>
+                    <div class="pickup-grid">
+                        <p><b>🧨 Extra dynamite</b><span>One more active bomb.</span></p>
+                        <p><b>🔥 Blast reach</b><span>Blasts travel one tile farther.</span></p>
+                        <p><b>🥾 Boots</b><span>Move faster.</span></p>
+                        <p><b>⛑ Helmet</b><span>Absorb one hit.</span></p>
+                        <p><b>☄ Flare launcher</b><span>Tool key fires ahead. Lasts 40 seconds.</span></p>
+                        <p><b>🕹 Plunger</b><span>Tool key detonates your oldest bomb. Lasts 40 seconds.</span></p>
+                    </div>
+                    <h2>Player controls</h2>
+                    <table class="menu-controls">
+                        <thead><tr><th>Player</th><th>Move</th><th>Bomb</th><th>Tool</th></tr></thead>
+                        <tbody>
+                            <tr><th class="blue">1 · Blue</th><td>WASD</td><td>Space</td><td>F</td></tr>
+                            <tr><th class="red">2 · Red</th><td>Arrow keys</td><td>Enter</td><td>Right Shift</td></tr>
+                            <tr><th class="green">3 · Green</th><td>IJKL</td><td>U</td><td>O</td></tr>
+                        </tbody>
+                    </table>
+                    <p class="control-note">Solo / vs computer: arrows or WASD · Space bomb · F tool. P pauses. On touchscreens, use the buttons for solo play.</p>
+                    <p class="control-note">Walk over powerups to collect them. Equipment belongs to that miner. Blasts can hit teammates.</p>
+                </section>
             </div>
         </div>
         <div class="controls">
             <p>Arrow keys or WASD to move, Space to lay dynamite</p>
         </div>
 
-        <section id="pickup-guide" aria-label="Controls and pickups">
-            <h2>Know your equipment</h2>
-            <p><b>Dynamite:</b> carry one more active bomb. <b>Blast reach:</b> fire travels one tile farther. <b>Boots:</b> move faster. <b>Helmet:</b> absorbs one hit.</p>
-            <p><b>Flare launcher:</b> fire straight ahead with your tool key. <b>Plunger:</b> detonate your oldest active bomb early. Both tools last 40 seconds.</p>
-            <p>Each miner’s equipment appears above the board. Bombs shows available / capacity; Reach is tiles in each direction; Boots shows speed upgrades. Pickups belong to the miner who collects them. Blasts can hit teammates.</p>
-            <p><b>Blue:</b> WASD · Space bomb · F tool<br><b>Red:</b> Arrows · Enter bomb · Right Shift tool<br><b>Green:</b> IJKL · U bomb · O tool</p>
-        </section>
         <section class="game-overview" aria-label="About Dynamine">
             <h2>Break through the mine</h2>
             <p>Plant dynamite, clear collapsed rock, and trap the creatures roaming the galleries. Defeat every creature to reveal the green exit, then step into it. The first five mines have designed layouts; deeper mines vary on each run. Play solo or choose two- or three-player co-op with a shared score and three lives. Any miner can enter the cleared exit. There is no Adventure time limit.</p>
@@ -220,7 +247,7 @@
         </section>
     </div>
 
-    <script type="module" src="game.mjs?v=20260916c"></script>
+    <script type="module" src="game.mjs?v=20260916d"></script>
     <!-- Ad Slot: Game Page Banner -->
     <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
         <ins class="adsbygoogle"
