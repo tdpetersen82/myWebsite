@@ -1,5 +1,5 @@
 // Canvas artwork. The city and the incident board share one night-shift palette.
-import { W, H, TILE, PITCH, BLOCKS_X, BLOCKS_Y, blockAt, roofPoint } from './engine.mjs?v=20260916j';
+import { W, H, TILE, PITCH, BLOCKS_X, BLOCKS_Y, blockAt, roofPoint } from './engine.mjs?v=20260916l';
 const TAU = Math.PI * 2;
 function rect(c,x,y,w,h,r=0){c.beginPath();c.roundRect(x,y,w,h,r);}
 function glow(c,x,y,r,color){const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}
@@ -119,7 +119,7 @@ export function drawWorldFire(c,f,t){
 
 export function drawCars(c,cars){
   for(const car of cars){
-    c.save();c.translate(car.x+car.w/2,car.y+car.h/2);c.rotate(car.heading ?? (car.dir==='v'?Math.PI/2:0));
+    c.save();c.translate(car.x+car.w/2,car.y+car.h/2);c.rotate(car.heading ?? (car.dir==='v'?Math.PI/2:0));if(car.work)c.scale(52/34,34/17);
     c.fillStyle='#061019';rect(c,-18,-8,37,20,5);c.fill();
     c.fillStyle=car.color;rect(c,-17,-8,34,16,4);c.fill();
     c.fillStyle='#142b38';rect(c,-8,-6,15,12,3);c.fill();

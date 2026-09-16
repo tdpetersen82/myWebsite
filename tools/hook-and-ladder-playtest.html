@@ -5,7 +5,7 @@
 <header><b>Input playtest</b><button id="release">Release all</button><button id="arrival">Drive and inspect scene</button><button id="call">Drive and work call</button><button id="backing">Test backing</button><span id="keys"></span><output id="state"></output></header>
 <iframe title="Game" src="../hook-and-ladder/?seed=61"></iframe>
 <script type="module">
-import {serviceZones,roofPoint} from "../hook-and-ladder/engine.mjs?v=20260916j";
+import {serviceZones,callZones,roofPoint} from "../hook-and-ladder/engine.mjs?v=20260916l";
 // Test controls send the same keyboard events as the site's touch pads.
 // No teleporting or state edits: drive, park, aim and complete calls normally.
 const frame = document.querySelector('iframe'), down = new Set();
@@ -41,11 +41,11 @@ setInterval(()=>{
   if(pilot==='call'||pilot==='arrival') {
     if(g.firesOut>0){setKeys([]);pilot=null;key('keydown','p');key('keyup','p');return;}
     const f=g.fire;if(!f)return;
-    if(!f.crew){const z=serviceZones(f.building).find(z=>z.side==='s'&&z.y===280);if(!z){pilot=null;return;}setKeys(g.truck.x<z.x+100?['w']:[' ']);return;}
+    if(!f.crew){const z=callZones(g).find(z=>z.side==='s'&&z.y===280);if(!z){pilot=null;return;}setKeys(g.truck.x<z.x+100?['w']:[' ']);return;}
     if(pilot==='arrival'){setKeys([]);pilot=null;key('keydown','p');key('keyup','p');return;}
     const keys=[];
     for(const [kind,cursor,left,right,up,down,action]of[['person',f.crew.ladder,'a','d','w','s',' '],['fire',f.crew.hose,'ArrowLeft','ArrowRight','ArrowUp','ArrowDown','Enter']]){
-      const target=f.targets.find(t=>t.kind===kind);if(target.hp===0)continue;
+      const target=f.targets.find(t=>t.kind===kind&&t.hp>0);if(!target)continue;
       const p=roofPoint(target.at);
       if(Math.abs(cursor.u-p.u)>.025)keys.push(cursor.u<p.u?right:left);
       if(Math.abs(cursor.v-p.v)>.025)keys.push(cursor.v<p.v?down:up);

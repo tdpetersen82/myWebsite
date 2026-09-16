@@ -1,10 +1,10 @@
 // Hook & Ladder — rendering, input, sound and page wiring. Rules live in engine.mjs.
 import {
   createGame, startGame, step, drainEvents, readyToPark, parkedInZone,
-  serviceZones, turntable, roofPoint, W as WORLD_W, H as WORLD_H, TILE, RULES,
-} from './engine.mjs?v=20260916j';
+  serviceZones, callZones, routeToCall, turntable, roofPoint, W as WORLD_W, H as WORLD_H, TILE, RULES,
+} from './engine.mjs?v=20260916l';
 
-import { paintCity, drawWorldFire, drawCars, person } from './art.mjs?v=20260916j';
+import { paintCity, drawWorldFire, drawCars, person } from './art.mjs?v=20260916l';
 
 const W = 1240, H = 680; // Fixed camera viewport; the world can grow independently.
 const HS_KEY = 'hookAndLadderHighScore';
@@ -51,7 +51,7 @@ let particles = [];
 let floaters = [];
 let banner = null;       // { text, sub, t, dur, color }
 let lightPhase = 0;
-let shake = 0;
+let shake = 0, impactFlash=0, navKey='', navPath=[], lastUrgent=-1, lastDamageAlarm=-1;
 let lastTs = 0;
 let runId = 0;
 const camera = { x: W / 2, y: H / 2, zoom: 1 };
@@ -156,7 +156,7 @@ function startShift() {
   game = createGame({...seedOption,upgrades:garage.upgrades});
   startGame(game);
   camera.zoom = 1.48; camera.x = Math.max(W / camera.zoom / 2, game.truck.x); camera.y = H / 2;
-  particles = []; floaters = []; banner = null; shake = 0;
+  particles = []; floaters = []; banner = null; shake = 0; impactFlash=0;navKey='';navPath=[];lastUrgent=-1;lastDamageAlarm=-1;
   scoreEl.textContent = '0'; firesEl.textContent = '0';
   menu.hidden = true;
   if (window.ArcadeGameOver) window.ArcadeGameOver.hide();
@@ -221,6 +221,7 @@ function onEvent(e) {
       break;
     }
     case 'crash': {
+      impactFlash=.45;
       if (e.scrape) noise(.08, .05); else SFX.crash(); shake = e.scrape ? .10 : .3;
       for (let i = 0; i < 10; i++) particles.push({ x: e.x, y: e.y, vx: (Math.random() - 0.5) * 160, vy: (Math.random() - 0.5) * 160, life: 0, max: 0.4 + Math.random() * 0.3, r: 2, color: '#ffd166', kind: 'spark' });
       break;
@@ -280,7 +281,7 @@ function drawZones(t) {
   const f = game.fire; if (!f || f.crew) return;
   const parked = parkedInZone(game);
   const pulse = 0.55 + 0.45 * Math.sin(t * 5);
-  for (const z of serviceZones(f.building)) {
+  for (const z of callZones(game)) {
     const ready = parked?.side === z.side && readyToPark(game);
     ctx.fillStyle = ready ? 'rgba(90,230,140,0.30)' : `rgba(255,190,60,${0.14 + 0.12 * pulse})`;
     ctx.fillRect(z.x, z.y, z.w, z.h);
@@ -300,7 +301,7 @@ function drawCrew(t) {
   const f=game.fire;if(!f?.crew)return;
   const base=turntable(game.truck),b=f.building;
   const point=p=>({x:(b.col+p.u*b.w)*TILE,y:(b.row+p.v*b.h)*TILE});
-  const rescued=f.targets.find(target=>target.kind==='person'&&target.hp===0);
+  const rescued=f.targets.find(target=>target.kind==='person'&&target.hp===0&&game.t-target.doneAt<.9);
   let tip=point(f.crew.ladder);const hose=point(f.crew.hose);
   if(rescued){const start=point(rescued.pickup);const progress=Math.min(1,(game.t-rescued.doneAt)/.9),ease=progress*progress*(3-2*progress);tip={x:start.x+(base.x-start.x)*ease,y:start.y+(base.y-start.y)*ease};}
   ctx.save();
@@ -438,6 +439,24 @@ function hudBox(x, y, w, h, align = 'left') {
   ctx.fillStyle = 'rgba(8,10,16,0.72)'; roundRect(ctx, x, y, w, h, 8); ctx.fill();
   ctx.strokeStyle = 'rgba(255,255,255,0.12)'; ctx.lineWidth = 1; roundRect(ctx, x + 0.5, y + 0.5, w - 1, h - 1, 8); ctx.stroke();
 }
+function updateNavigation() {
+  const key=game.fire?game.fire.number+':'+Math.floor(game.truck.x/TILE)+':'+Math.floor(game.truck.y/TILE):'';
+  if(key!==navKey){navKey=key;navPath=routeToCall(game);}
+}
+function drawRoute() {
+  if(game.fire?.crew||navPath.length<2)return;
+  ctx.save();ctx.strokeStyle='rgba(85,213,235,.45)';ctx.lineWidth=3;ctx.lineJoin='round';
+  ctx.beginPath();navPath.forEach((p,i)=>i?ctx.lineTo(p.x,p.y):ctx.moveTo(p.x,p.y));ctx.stroke();
+  for(let i=1;i<navPath.length;i+=2){const p=navPath[i],a=navPath[i-1];ctx.save();ctx.translate(p.x,p.y);ctx.rotate(Math.atan2(p.y-a.y,p.x-a.x));ctx.strokeStyle='#97e8f3';ctx.lineWidth=2;ctx.beginPath();ctx.moveTo(-5,-4);ctx.lineTo(0,0);ctx.lineTo(-5,4);ctx.stroke();ctx.restore();}ctx.restore();
+}
+function warningAudio(){
+  if(game.paused||game.status!=='playing')return;
+  const remaining=Math.ceil(game.fire?.t||0),urgent=!!game.fire&&game.fire.targets.some(t=>t.hp>0)&&remaining<=10;
+  if(urgent&&remaining!==lastUrgent){lastUrgent=remaining;if(!muted)tone(remaining<=3?1100:820,.12,'square',.06);}
+  const beat=Math.floor(game.t/3);
+  if(game.damage>=75&&beat!==lastDamageAlarm){lastDamageAlarm=beat;if(!urgent&&!muted){tone(240,.15,'triangle',.12);tone(180,.2,'triangle',.1,.18);}}
+  if(!urgent)lastUrgent=-1;
+}
 function drawHUD(t) {
   ctx.save(); ctx.scale(hud, hud);
   const sw = W / hud, sh = H / hud, f = game.fire;
@@ -455,6 +474,7 @@ function drawHUD(t) {
     hudBox(mx-4,my-4,mw+8,mh+8);ctx.fillStyle='#192e3a';ctx.fillRect(mx,my,mw,mh);
     for(const b of game.world.buildings){ctx.fillStyle=b===f?.building?'#ffae6a':b.state==='saved'?'#467e70':'#526b78';ctx.fillRect(mx+b.col*TILE/WORLD_W*mw,my+b.row*TILE/WORLD_H*mh,b.w*TILE/WORLD_W*mw,b.h*TILE/WORLD_H*mh);}
     ctx.strokeStyle='#94bccb';ctx.lineWidth=1;ctx.strokeRect(mx+(camera.x-W/camera.zoom/2)/WORLD_W*mw,my+(camera.y-H/camera.zoom/2)/WORLD_H*mh,mw*W/WORLD_W/camera.zoom,mh*H/WORLD_H/camera.zoom);
+    if(navPath.length){ctx.strokeStyle='#8be8f1';ctx.beginPath();navPath.forEach((p,i)=>i?ctx.lineTo(mx+p.x/WORLD_W*mw,my+p.y/WORLD_H*mh):ctx.moveTo(mx+p.x/WORLD_W*mw,my+p.y/WORLD_H*mh));ctx.stroke();}
     ctx.fillStyle='#fff';ctx.beginPath();ctx.arc(mx+game.truck.x/WORLD_W*mw,my+game.truck.y/WORLD_H*mh,3,0,Math.PI*2);ctx.fill();
   }
   if (f) {
@@ -465,6 +485,19 @@ function drawHUD(t) {
       ctx.fillStyle = '#ffbd68'; ctx.beginPath(); ctx.moveTo(14, 0); ctx.lineTo(-9, -9); ctx.lineTo(-9, 9); ctx.closePath(); ctx.fill(); ctx.restore();
       ctx.fillStyle = '#ffe4bb'; ctx.font = 'bold 10px system-ui'; ctx.textAlign = 'center'; ctx.fillText('FIRE', x, y + 23);
     }
+  }
+  const urgent=f&&f.t<=10&&f.targets.some(target=>target.hp>0);
+  const critical=game.damage>=75;
+  ctx.textAlign='center';ctx.font='bold 12px system-ui';ctx.fillStyle=critical?'#ff927f':'#bdd5dd';
+  ctx.fillText(critical?'TRUCK CRITICAL · AVOID COLLISIONS':'TRUCK DAMAGE '+game.damage+'%',sw/2,76);
+  ctx.fillStyle='#243943';ctx.fillRect(sw/2-85,86,170,6);ctx.fillStyle=critical?'#ff785e':'#e3b064';ctx.fillRect(sw/2-85,86,170*game.damage/100,6);
+  if(urgent){ctx.fillStyle=Math.sin(t*7)>0?'#ffad92':'#ffe7da';ctx.font='bold 17px system-ui';ctx.fillText(Math.ceil(f.t)+' SECONDS · FINISH BOTH JOBS',sw/2,115);}
+  else if(f&&!f.crew){
+    const distance=Math.round(Math.max(0,(navPath.length-1)*TILE)*.08);ctx.fillStyle='#9de5ed';ctx.font='bold 12px monospace';
+    let instruction='FOLLOW BLUE ARROWS';
+    if(navPath.length<3)instruction='PARK IN THE GOLD ZONE';
+    else{const a=navPath[1],b=navPath[2],angle=Math.atan2(b.y-a.y,b.x-a.x),relative=Math.atan2(Math.sin(angle-game.truck.h1),Math.cos(angle-game.truck.h1));if(Math.abs(relative)>2.4)instruction='TURN AROUND WHEN CLEAR';else if(relative>.6)instruction='BEAR RIGHT';else if(relative<-.6)instruction='BEAR LEFT';}
+    ctx.fillText(instruction+' · '+distance+' m',sw/2,115);
   }
   const panelW = (sw - 36) / 2, py = sh - 65;
   for (const [x, color, title, detail] of [
@@ -522,6 +555,7 @@ function drawFloaters(dt) {
 // ---------------------------------------------------------------- loop
 function render(dt, t) {
   if (!cityLayer) cityLayer = buildCityLayer();
+  updateNavigation();
   const active = game.status !== 'menu', zoom = active ? (hud > 1.5 ? 1.8 : 1.48) : 1;
   camera.zoom = zoom;
   const tr = game.truck;
@@ -539,6 +573,7 @@ function render(dt, t) {
     if (b.state === 'ruined') drawRuined(b);
     else if (b.state === 'saved') drawSaved(b);
   }
+  drawRoute();
   drawZones(t);
   drawTruck(t);
   if (game.fire) { drawWorldFire(ctx, game.fire, game.t); if (dt && game.fire.targets.some(target=>target.kind==='fire'&&target.hp>0)) spawnSmoke(game.fire.building, dt); }
@@ -546,9 +581,10 @@ function render(dt, t) {
   drawParticles(dt); drawFloaters(dt);
   ctx.restore();
   if (active) drawHUD(t);
+  if(impactFlash>0){impactFlash=Math.max(0,impactFlash-dt);ctx.save();ctx.strokeStyle='rgba(255,75,45,'+impactFlash+')';ctx.lineWidth=18;ctx.strokeRect(9,9,W-18,H-18);ctx.restore();}
   drawBanner(dt);
   if (game.status === 'playing' && game.fire) {
-    setMission(game.fire.crew ? 'P1: WASD ladder + Space grab · P2: arrows hose + Enter spray · Either order · E to drive' : readyToPark(game) ? 'HOLD STILL · Setting up…' : 'DRIVE TO THE ALARM · Park both axles in the marked area, parallel to the curb. Space brakes. R recovers (−5s).', readyToPark(game));
+    setMission(game.fire.crew ? 'P1: WASD ladder + Space grab · P2: arrows hose + Enter spray · Either order · E to drive' : readyToPark(game) ? 'HOLD STILL · Setting up…' : game.fire.title+' · Follow blue route. '+(game.fire.approach?'Use the '+({n:'north',s:'south',e:'east',w:'west'}[game.fire.approach])+' side. ':'')+(game.fire.tight?'Tight bay: P2 guide the tail. ':'')+'Park both axles in gold. Space brakes.', readyToPark(game));
   }
 }
 function frame(ts) {
@@ -561,7 +597,7 @@ function frame(ts) {
     for (let i = 0; i < steps; i++) step(game, dt / steps, input);
     for (const e of drainEvents(game)) onEvent(e);
   }
-  updateEngineAudio();
+  updateEngineAudio();warningAudio();
   render(game.paused ? 0 : dt, lightPhase);
   requestAnimationFrame(frame);
 }

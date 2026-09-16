@@ -1,0 +1,54 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="600" height="600" viewBox="0 0 600 600">
+<defs>
+ <linearGradient id="bg" x2=".9" y2="1"><stop stop-color="#153843"/><stop offset="1" stop-color="#070f1c"/></linearGradient>
+ <linearGradient id="red" x2="0" y2="1"><stop stop-color="#ff694f"/><stop offset=".5" stop-color="#d72837"/><stop offset="1" stop-color="#77182c"/></linearGradient>
+ <linearGradient id="steel" x2="0" y2="1"><stop stop-color="#f8efcb"/><stop offset=".5" stop-color="#7596a5"/><stop offset="1" stop-color="#e0eef0"/></linearGradient>
+ <radialGradient id="fire"><stop stop-color="#ffbd5b" stop-opacity=".55"/><stop offset="1" stop-color="#ff703c" stop-opacity="0"/></radialGradient>
+ <filter id="shadow"><feDropShadow dx="0" dy="9" stdDeviation="7" flood-opacity=".6"/></filter>
+ <filter id="glow"><feGaussianBlur stdDeviation="8"/></filter>
+ <pattern id="windows" width="24" height="22" patternUnits="userSpaceOnUse"><rect x="5" y="5" width="8" height="9" rx="1" fill="#759399" opacity=".45"/></pattern>
+</defs>
+<rect width="600" height="600" fill="url(#bg)"/>
+<!-- The night city remains readable behind the truck silhouette. -->
+<path d="M-30 388H374Q432 388 432 326V180" fill="none" stroke="#243b47" stroke-width="142"/>
+<path d="M-30 388H374Q432 388 432 326V180" fill="none" stroke="#79969a" stroke-width="3" stroke-dasharray="16 20" opacity=".65"/>
+<g stroke="#4b6975" stroke-width="3" fill="#243b4c">
+ <rect x="-15" y="216" width="230" height="93" rx="9"/><rect x="18" y="467" width="320" height="125" rx="9"/>
+ <rect x="502" y="204" width="124" height="282" rx="9"/><rect x="263" y="205" width="104" height="99" rx="8"/>
+</g>
+<g fill="url(#windows)"><rect x="0" y="229" width="200" height="65"/><rect x="31" y="480" width="285" height="99"/><rect x="515" y="215" width="75" height="249"/></g>
+<path d="M30 434H383Q475 434 475 340V244" fill="none" stroke="#80e0e7" stroke-width="2" stroke-dasharray="4 10" opacity=".6"/>
+<circle cx="314" cy="243" r="93" fill="url(#fire)"/>
+<path d="M277 269Q254 246 281 221L289 238Q301 224 301 198Q344 219 329 245L342 230Q366 261 338 275Z" fill="#ed5635"/>
+<path d="M291 267Q282 248 302 236L307 219Q329 241 318 254L332 247Q337 265 323 272Z" fill="#ffcf76"/>
+<!-- Articulated ladder trailer and separate cab, visibly bent at the hitch. -->
+<g filter="url(#shadow)" transform="translate(274 387) rotate(-9)">
+ <g fill="#09131c"><rect x="-155" y="-39" width="32" height="17" rx="4"/><rect x="-155" y="22" width="32" height="17" rx="4"/></g>
+ <rect x="-170" y="-29" width="198" height="58" rx="10" fill="url(#red)" stroke="#ffbb87" stroke-width="2"/>
+ <rect x="-160" y="17" width="171" height="6" rx="2" fill="#f6e9c5"/>
+ <g stroke="url(#steel)" stroke-width="4"><path d="M-145-16H14M-145 13H14"/><path d="M-138-16V13M-122-16V13M-106-16V13M-90-16V13M-74-16V13M-58-16V13M-42-16V13M-26-16V13M-10-16V13M6-16V13"/></g>
+ <rect x="-167" y="-18" width="25" height="36" rx="5" fill="#e6dfc7"/><rect x="-164" y="-12" width="15" height="24" rx="3" fill="#245467"/>
+ <circle r="15" fill="#334d59" stroke="#c4d9d8" stroke-width="4"/>
+ <g transform="rotate(-38)">
+ <g fill="#09131c"><rect x="61" y="-41" width="28" height="17" rx="4"/><rect x="61" y="24" width="28" height="17" rx="4"/></g>
+ <rect x="3" y="-30" width="111" height="60" rx="11" fill="url(#red)" stroke="#ffbb87" stroke-width="2"/>
+ <rect x="26" y="-25" width="59" height="50" rx="6" fill="#f4ecd8"/>
+ <rect x="85" y="-24" width="17" height="48" rx="4" fill="#174153"/>
+ <path d="M90-20V19" stroke="#79aab8" stroke-width="3"/>
+ <rect x="105" y="-24" width="7" height="11" rx="2" fill="#fff0b0"/><rect x="105" y="13" width="7" height="11" rx="2" fill="#fff0b0"/>
+ <rect x="32" y="-24" width="12" height="21" rx="3" fill="#ff4056"/><rect x="32" y="3" width="12" height="21" rx="3" fill="#66caff"/>
+ <g filter="url(#glow)" opacity=".7"><circle cx="38" cy="-14" r="20" fill="#ff4056"/><circle cx="38" cy="14" r="20" fill="#57c5ff"/></g>
+ <text x="64" y="7" text-anchor="middle" font-family="sans-serif" font-size="20" font-weight="900" fill="#a63039">07</text>
+ </g>
+</g>
+<!-- Water arc and rescue ladder link the driving scene to the crew's job. -->
+<path d="M272 374Q223 292 312 255" fill="none" stroke="#91e4fa" stroke-width="5" opacity=".85"/>
+<path d="M271 372Q225 292 313 255" fill="none" stroke="#e8fcff" stroke-width="1.5"/>
+<g fill="#b8eeff"><circle cx="305" cy="254" r="3"/><circle cx="316" cy="251" r="4"/><circle cx="323" cy="263" r="2"/></g>
+<rect x="0" y="0" width="600" height="184" fill="#091b29" opacity=".94"/>
+<text x="300" y="39" text-anchor="middle" font-family="sans-serif" font-size="16" font-weight="700" letter-spacing="6" fill="#8fe0e4">TWO PLAYERS · ONE CREW</text>
+<text x="300" y="105" text-anchor="middle" font-family="sans-serif" font-size="59" font-weight="900" letter-spacing="-2" fill="#fff2cf">HOOK &amp; LADDER</text>
+<text x="300" y="150" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="700" letter-spacing="4" fill="#f0a868">DRIVE · RESCUE · RESPOND</text>
+<rect x="87" y="528" width="426" height="45" rx="22" fill="#071923" stroke="#607f85"/>
+<text x="300" y="557" text-anchor="middle" font-family="sans-serif" font-size="18" font-weight="700" letter-spacing="2" fill="#ddede9">TRAFFIC. TIGHT TURNS. TEAMWORK.</text>
+</svg>

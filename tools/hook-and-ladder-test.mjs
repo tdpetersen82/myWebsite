@@ -5,7 +5,7 @@
 // collisions, dispatch fairness, ladder flow, lives). It says nothing about feel.
 import {
   truckBodies, stepTruck, createGame, startGame, step, drainEvents, buildWorld, mulberry32, tileAt, truckCollides,
-  streetDistance, readyToPark, serviceZones, roofPoint, stepTraffic, trafficPose, turntable, wrapAngle, burnTimeFor,
+  streetDistance, readyToPark, serviceZones, callZones, routeToCall, dispatchFire, roofPoint, stepTraffic, trafficPose, turntable, wrapAngle, burnTimeFor,
   COLS, ROWS, TILE, W, H, STREET, BUILDING, PARK, RULES, isStreetCol, isStreetRow, spawnTruck, PITCH, STREET_W,
 } from '../hook-and-ladder/engine.mjs';
 
@@ -58,7 +58,7 @@ for (let seed = 1; seed <= 30; seed++) {
     const inside = c.x >= 0 && c.y >= 0 && c.x + c.w <= W && c.y + c.h <= H;
     const corners = [[c.x, c.y], [c.x + c.w, c.y], [c.x, c.y + c.h], [c.x + c.w, c.y + c.h]];
     if (!inside || corners.some(([x, y]) => tileAt(w, Math.floor(x / TILE), Math.floor(y / TILE)) !== STREET)) carsOk = false;
-    if (c.dir === 'h' ? c.h > 20 : c.w > 20) carsOk = false;
+    if (!c.work && (c.dir === 'h' ? c.h > 20 : c.w > 20)) carsOk = false;
     // never at a block corner tile: the along-street tile index within the block edge is 1 or 2
     const along = c.dir === 'h' ? Math.floor((c.x + c.w / 2) / TILE) : Math.floor((c.y + c.h / 2) / TILE);
     if ((along - STREET_W) % PITCH === 0 || (along - STREET_W) % PITCH === 3) carsOk = false;
@@ -302,7 +302,8 @@ console.log('traffic and damage');
   for(const car of g.world.traffic)for(let d=0;d<1000;d+=5){const p=trafficPose(car,d);for(const [x,y]of[[p.x,p.y],[p.x+p.w,p.y+p.h]])if(tileAt(g.world,Math.floor(x/TILE),Math.floor(y/TILE))!==STREET)streets=false;}
   check('rounded traffic routes remain entirely on streets',streets);
   check('traffic yields without driving into stationary truck',!truckCollides(g.world,g.truck));
-  const car=g.world.traffic[0],p=trafficPose(car,car.distance+50);
+  g.world.cars=[];
+  const car=g.world.traffic[0];g.world.traffic=[car];const p=trafficPose(car,car.distance+180);
   g.truck={...spawnTruck(),x:p.x+p.w/2,y:p.y+p.h/2,h1:p.heading,h2:p.heading};
   for(let i=0;i<300;i++)stepTraffic(g,1/60);
   check('traffic brakes for a truck occupying its route',!truckCollides(g.world,g.truck));
@@ -394,6 +395,31 @@ function bumpCar(speed){
  check('completion animation keeps incident visible',g.fire===f&&g.firesOut===0);
  check('finished jobs cannot burn out during their animation',f.t===.05&&g.lives===RULES.lives);
  run(g,.5);check('completion animation awards the call once',g.firesOut===1&&!g.fire);
+}
+console.log('routes and call variety');
+const callTitles=new Set();
+for(let seed=1;seed<=30;seed++)for(let variant=0;variant<4;variant++){
+ const g=playing(seed);g.dispatches=variant;dispatchFire(g);callTitles.add(g.fire.title);
+ const zones=callZones(g),route=routeToCall(g);
+ check('every call variant has a road route',route.length>0);
+ check('route never crosses a building',route.every(p=>tileAt(g.world,Math.floor(p.x/TILE),Math.floor(p.y/TILE))===STREET));
+ check('route follows contiguous road cells',route.every((p,i)=>!i||Math.abs(p.x-route[i-1].x)+Math.abs(p.y-route[i-1].y)===TILE));
+ check('route ends in assigned parking approach',route.length&&zones.some(z=>route.at(-1).x>=z.x&&route.at(-1).x<=z.x+z.w&&route.at(-1).y>=z.y&&route.at(-1).y<=z.y+z.h));
+ let pose;
+ for(const z of zones){const h=z.side==='n'||z.side==='s'?0:Math.PI/2;for(const sign of [1,-1]){const p={...spawnTruck(),x:z.x+z.w/2+Math.cos(h)*RULES.L2/2*sign,y:z.y+z.h/2+Math.sin(h)*RULES.L2/2*sign,h1:h+(sign<0?Math.PI:0),h2:h+(sign<0?Math.PI:0)};if(!truckCollides(g.world,p)){pose=p;break;}}}
+ check('every variant retains a collision-free parking pose',!!pose);
+ if(pose){g.truck=pose;check('whole rig fits assigned bay',readyToPark(g));}
+ if(variant>0)check('later calls select a specific approach',zones.length===1);
+}
+check('four different call types rotate',callTitles.size===4);
+{
+ const g=playing(12);g.dispatches=2;dispatchFire(g);const f=g.fire;
+ f.crew={ladder:{u:.5,v:.5},hose:{u:.5,v:.5}};
+ for(const target of [...f.targets].reverse()){
+  const key=target.kind==='person'?'ladder':'hose';f.crew[key]=roofPoint(target.at);
+  run(g,1.3,target.kind==='person'?{grab:true}:{spray:true});check('multi-target call can finish each target independently',target.hp===0);
+ }
+ run(g,1);check('multi-person rescue completes once',g.firesOut===1);
 }
 console.log(`\n${passed} passed, ${failed} failed`);
 process.exit(failed ? 1 : 0);

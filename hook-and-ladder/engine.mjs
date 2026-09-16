@@ -129,12 +129,21 @@ export function buildWorld(rng) {
   const CAR_COLORS = ['#e8e4dc', '#3d5a80', '#6b7b8c', '#c0392b', '#2c3e50', '#d9c27a', '#7f8c8d', '#2e7d5b'];
   for (const c of cars) c.color = CAR_COLORS[Math.floor(rng() * CAR_COLORS.length)];
 
+  // Staggered utility vans create short slaloms on selected inner streets.
+  // They occupy opposing curb lanes, never the full road or an intersection.
+  for(let bx=2;bx<BLOCKS_X-1;bx+=2){
+    const x=(STREET_W+bx*PITCH)*TILE;
+    for(let i=cars.length-1;i>=0;i--){const c=cars[i];if(c.x<x+145&&c.x+c.w>x+15&&c.y<396&&c.y+c.h>280)cars.splice(i,1);}
+    cars.push({x:x+20,y:284,w:52,h:34,dir:'h',color:'#d4ae66',work:true});
+    cars.push({x:x+90,y:362,w:52,h:34,dir:'h',color:'#d4ae66',work:true});
+  }
   const traffic = [];
   for (const b of blocks) {
     const route = { left: (b.bx * PITCH + 1.5) * TILE + 18,
       top: (b.by * PITCH + 1.5) * TILE + 18, size: PITCH * TILE - 36 };
     const car = { route, distance: rng() * (route.size * 4), speed: 44 + rng() * 24, color: CAR_COLORS[Math.floor(rng()*CAR_COLORS.length)] };
-    Object.assign(car, trafficPose(car, car.distance)); traffic.push(car);
+    Object.assign(car, trafficPose(car, car.distance));
+    if(!cars.some(c=>car.x<c.x+c.w&&car.x+car.w>c.x&&car.y<c.y+c.h&&car.y+car.h>c.y))traffic.push(car);
   }
   return { grid, buildings, parks, trees, cars, traffic };
 }
@@ -413,11 +422,21 @@ export function dispatchFire(state) {
   const pool = scored.length ? scored : cands.map(b => ({ b, d: Math.max(1, streetDistance(world, truck.x, truck.y, serviceZones(b))) }));
   const pick = pool[Math.floor(state.rng() * pool.length)];
   pick.b.state = 'burning';
-  const total = burnTimeFor(pick.d, state.firesOut);
-  const targets = [{ at: .25, kind: 'person', hp: 1 }, { at: .65, kind: 'fire', hp: 1 }];
-  state.fire = { building: pick.b, number: state.firesOut + 1, title: 'FIRE & RESCUE', t: total, total, dist: pick.d, clean: true, targets };
+  const patterns=[
+    {title:'APARTMENT RESCUE',kinds:['person','fire']},
+    {title:'WAREHOUSE FIRE',kinds:['fire','person','fire']},
+    {title:'ROOFTOP EVACUATION',kinds:['person','fire','person']},
+    {title:'TIGHT ACCESS',kinds:['fire','person'],tight:true},
+  ];
+  const index=state.dispatches||0,pattern=patterns[index%patterns.length];state.dispatches=index+1;
+  const total=burnTimeFor(pick.d,state.firesOut)+(pattern.kinds.length-2)*12;
+  const targets=pattern.kinds.map((kind,i)=>({at:index===0?(i===0?.25:.65):.10+i*.72/(pattern.kinds.length-1),kind,hp:1}));
+  const approach=index===0?null:pick.b.zones[index%pick.b.zones.length].side;
+  state.fire={building:pick.b,number:index+1,title:pattern.title,t:total,total,dist:pick.d,clean:true,targets,approach,tight:!!pattern.tight};
   // Clear the service frontage so a mission never asks players to park on a car.
-  const zones = serviceZones(pick.b);
+  const zones = callZones(state);
+  state.fire.dist=streetDistance(world,truck.x,truck.y,zones);
+  state.fire.total=state.fire.t=burnTimeFor(state.fire.dist,state.firesOut)+(targets.length-2)*12+(pattern.tight?8:0);
   world.cars = world.cars.filter(c => !zones.some(z => c.x < z.x + z.w && c.x + c.w > z.x && c.y < z.y + z.h && c.y + c.h > z.y));
   state.lastBuilding = pick.b;
   state.events.push({ type: 'dispatch', building: pick.b, time: total });
@@ -433,17 +452,50 @@ export function serviceZones(building) {
     };
   });
 }
+export function callZones(state) {
+  if(!state.fire)return [];
+  return serviceZones(state.fire.building).filter(z=>!state.fire.approach||z.side===state.fire.approach).map(z=>{
+    if(!state.fire.tight)return z;
+    const horizontal=z.side==='n'||z.side==='s';
+    return {...z,x:z.x+12,y:z.y+12,w:z.w-24,h:z.h-24};
+  });
+}
+// Road-centre guidance avoids routing a long vehicle diagonally through blocks.
+export function routeToCall(state) {
+  if(!state.fire)return [];
+  const world=state.world,start=tileOf(state.truck.y)*COLS+tileOf(state.truck.x);
+  const zones=callZones(state),prev=new Int32Array(COLS*ROWS).fill(-1),queue=[start];prev[start]=start;
+  let end=-1;
+  for(let i=0;i<queue.length;i++){
+    const n=queue[i],c=n%COLS,r=Math.floor(n/COLS),x=(c+.5)*TILE,y=(r+.5)*TILE;
+    if(zones.some(z=>x>=z.x&&x<=z.x+z.w&&y>=z.y&&y<=z.y+z.h)){end=n;break;}
+    const onCentre=c%PITCH===1||r%PITCH===1;
+    const adjacent=[[1,0],[-1,0],[0,1],[0,-1]].sort((a,b)=>{
+      const centre=(dc,dr)=>(c+dc)%PITCH===1||(r+dr)%PITCH===1;
+      return Number(centre(...b))-Number(centre(...a));
+    });
+    for(const [dc,dr]of adjacent){
+      const nc=c+dc,nr=r+dr,next=nr*COLS+nc;
+      if(nc<0||nr<0||nc>=COLS||nr>=ROWS||prev[next]!==-1||tileAt(world,nc,nr)!==STREET)continue;
+      if(onCentre&&nc%PITCH!==1&&nr%PITCH!==1)continue;
+      prev[next]=n;queue.push(next);
+    }
+  }
+  if(end===-1)return [];
+  const path=[];for(let n=end;;n=prev[n]){path.push({x:(n%COLS+.5)*TILE,y:(Math.floor(n/COLS)+.5)*TILE});if(n===start)break;}
+  return path.reverse();
+}
 export function parkedInZone(state) {
   if (!state.fire) return null;
   const points = [turntable(state.truck), state.truck];
-  return serviceZones(state.fire.building).find(z => points.some(p =>
+  return callZones(state).find(z => points.some(p =>
     p.x >= z.x && p.x <= z.x + z.w && p.y >= z.y && p.y <= z.y + z.h)) || null;
 }
 export function readyToPark(state) {
   if (!state.fire || Math.abs(state.truck.v) > 8) return false;
   const tr = state.truck;
   const rear = { x: tr.x - Math.cos(tr.h2) * RULES.L2, y: tr.y - Math.sin(tr.h2) * RULES.L2 };
-  return serviceZones(state.fire.building).some(z => {
+  return callZones(state).some(z => {
     const heading = z.side === 'n' || z.side === 's' ? 0 : Math.PI / 2;
     const parallel = h => Math.abs(Math.sin(h - heading)) < Math.sin(20 * DEG);
     const inside = p => p.x >= z.x && p.x <= z.x + z.w && p.y >= z.y && p.y <= z.y + z.h;
