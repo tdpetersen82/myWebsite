@@ -322,12 +322,22 @@ function startMode(m) {
   runStartBest = highScore;
   scoreEl.textContent = m === 'adventure' ? '0' : '0–0';
   menu.hidden = true;
+  document.querySelector('[data-act="pause"]').disabled = false;
   canvas.focus({ preventScroll: true });
   window.scrollTo(0, 0);
   drainEvents(game).forEach(handleEvent);
   gtagEvent('dynamine_start', { mode: m });
 }
 function showMenu(sub) {
+  const pauseButton = document.querySelector('[data-act="pause"]');
+  if (document.querySelector('.ch-bezel.ch-paused')) pauseButton.click();
+  pauseButton.disabled = true;
+  paused = false;
+  acc = 0;
+  held.forEach((keys) => { keys.length = 0; });
+  bombQueued.fill(false);
+  powerQueued.fill(false);
+  if (window.ArcadeGameOver) window.ArcadeGameOver.hide();
   game = null;
   mode = null;
   menuSub.textContent = sub || '';
@@ -1738,6 +1748,16 @@ function roundRect(x, y, w, h, r) {
 }
 
 // ---------------------------------------------------------------- menu + chrome hooks
+const homeButton = document.createElement('button');
+homeButton.className = 'ch-btn';
+homeButton.textContent = 'Menu';
+homeButton.setAttribute('aria-label', 'Main menu');
+homeButton.addEventListener('click', () => {
+  showMenu('');
+  menu.querySelector('button[data-mode]').focus({ preventScroll: true });
+  window.scrollTo(0, 0);
+});
+document.querySelector('[data-act="restart"]').before(homeButton);
 menu.addEventListener('click', (e) => {
   const btn = e.target.closest('button[data-mode]');
   if (!btn) return;
