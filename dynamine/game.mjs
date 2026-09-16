@@ -14,8 +14,8 @@ import {
   ENEMY,
   tileOf,
   atCentre,
-} from './engine.mjs?v=20260916a';
-import { drawShaft, drawVent, drawExitMist } from './shaft-art.mjs?v=20260916a';
+} from './engine.mjs?v=20260916c';
+import { drawShaft, drawVent, drawExitMist } from './shaft-art.mjs?v=20260916c';
 
 const TILE = 56,
   HUD = 48;
@@ -208,9 +208,9 @@ const Sound = (() => {
 
 // ---------------------------------------------------------------- input
 // Per-player "held" lists, most recent key first, plus an edge-triggered bomb.
-const held = [[], []];
-const bombQueued = [false, false];
-const powerQueued = [false, false];
+const held = [[], [], []];
+const bombQueued = [false, false, false];
+const powerQueued = [false, false, false];
 let mode = null; // 'adventure' | 'cpu' | 'duel'
 const KEYMAP = {
   arrows: { ArrowUp: 'up', ArrowDown: 'down', ArrowLeft: 'left', ArrowRight: 'right' },
@@ -218,9 +218,15 @@ const KEYMAP = {
 };
 function routeKey(e) {
   const k = e.key;
+  if (game?.players.length === 3) {
+    const third = { i: 'up', j: 'left', k: 'down', l: 'right' }[k.toLowerCase()];
+    if (third) return { p: 2, dir: third };
+    if (k.toLowerCase() === 'u') return { p: 2, bomb: true };
+    if (k.toLowerCase() === 'o') return { p: 2, power: true };
+  }
   const arrows = KEYMAP.arrows[k],
     wasd = KEYMAP.wasd[k];
-  if (mode === 'duel') {
+  if (game && game.players.filter((p) => !p.cpu).length > 1) {
     if (k === 'f' || k === 'F') return { p: 0, power: true };
     if (k === 'Shift' && e.location !== 1) return { p: 1, power: true };
     if (wasd) return { p: 0, dir: wasd };
@@ -272,8 +278,9 @@ document.addEventListener('keyup', (e) => {
   if (i >= 0) h.splice(i, 1);
 });
 window.addEventListener('blur', () => {
-  held[0].length = 0;
-  held[1].length = 0;
+  held.forEach((keys) => {
+    keys.length = 0;
+  });
 });
 
 // ---------------------------------------------------------------- game state
@@ -294,10 +301,11 @@ let overShown = false;
 
 function startMode(m) {
   mode = m;
-  held[0].length = 0;
-  held[1].length = 0;
-  bombQueued[0] = bombQueued[1] = false;
-  powerQueued[0] = powerQueued[1] = false;
+  held.forEach((keys) => {
+    keys.length = 0;
+  });
+  bombQueued.fill(false);
+  powerQueued.fill(false);
   blasts = [];
   particles = [];
   popups = [];
@@ -311,16 +319,18 @@ function startMode(m) {
     bezel.classList.remove('ch-paused');
     bezel.classList.add('ch-started');
   } // hides the chrome's INSERT COIN
-  if (m === 'adventure') game = createGame({ mode: 'adventure' });
+  if (m === 'adventure' || m.startsWith('coop'))
+    game = createGame({ mode: 'adventure', players: m === 'coop3' ? 3 : m === 'coop' ? 2 : 1 });
   else
     game = createGame({
       mode: 'battle',
       cpu: m === 'cpu',
+      players: m === 'triple' ? 3 : 2,
       p1Name: 'Blue',
       p2Name: m === 'cpu' ? 'The computer' : 'Red',
     });
   runStartBest = highScore;
-  scoreEl.textContent = m === 'adventure' ? '0' : '0–0';
+  scoreEl.textContent = game.mode === 'adventure' ? '0' : game.players.map(() => '0').join('–');
   menu.hidden = true;
   document.querySelector('[data-act="pause"]').disabled = false;
   canvas.focus({ preventScroll: true });
@@ -334,12 +344,15 @@ function showMenu(sub) {
   pauseButton.disabled = true;
   paused = false;
   acc = 0;
-  held.forEach((keys) => { keys.length = 0; });
+  held.forEach((keys) => {
+    keys.length = 0;
+  });
   bombQueued.fill(false);
   powerQueued.fill(false);
   if (window.ArcadeGameOver) window.ArcadeGameOver.hide();
   game = null;
   mode = null;
+  renderMenu('home');
   menuSub.textContent = sub || '';
   menu.hidden = false;
   scoreEl.textContent = '0';
@@ -415,7 +428,7 @@ function handleEvent(e) {
         x: e.x + 0.5,
         y: e.y + 0.5,
         text:
-          mode === 'duel' && e.player === 1
+          game && game.players.filter((p) => !p.cpu).length > 1 && e.player === 1
             ? ITEM_LABEL[e.item].replace('F TO', 'SHIFT TO')
             : ITEM_LABEL[e.item],
         until: g.time + 1.0,
@@ -490,19 +503,19 @@ function handleEvent(e) {
       const name = e.winner == null ? null : g.players[e.winner].name;
       banner = {
         text: name ? name.toUpperCase() + ' WINS THE ROUND' : 'DRAW',
-        sub: e.wins[0] + ' – ' + e.wins[1],
+        sub: e.wins.join(' – '),
         until: g.time + 2.6,
         style: name ? 'good' : 'warn',
       };
-      scoreEl.textContent = e.wins[0] + '–' + e.wins[1];
+      scoreEl.textContent = e.wins.join('–');
       break;
     }
     case 'matchOver': {
       const wn = g.players[e.winner];
-      const line = wn.name + ' wins the match ' + g.players[0].wins + '–' + g.players[1].wins;
+      const line = wn.name + ' wins the match ' + g.players.map((p) => p.wins).join('–');
       banner = {
         text: wn.name.toUpperCase() + ' WINS',
-        sub: 'Match ' + g.players[0].wins + '–' + g.players[1].wins,
+        sub: 'Match ' + g.players.map((p) => p.wins).join('–'),
         until: g.time + 3.0,
         style: 'good',
       };
@@ -524,7 +537,9 @@ function handleEvent(e) {
             best: highScore,
             restart: () => {
               gtagEvent('play_again', { from: 'dynamine' });
-              startMode('adventure');
+              startMode(
+                g.players.length === 3 ? 'coop3' : g.players.length === 2 ? 'coop' : 'adventure',
+              );
             },
           });
         } else showMenu('Game over. Score ' + e.score.toLocaleString());
@@ -554,12 +569,13 @@ function frame(now) {
   if (game && !paused && !window.__dynamine?.frozen) {
     acc += dtReal;
     while (acc >= FIXED) {
-      const inputs = [
-        { held: held[0], bomb: bombQueued[0], power: powerQueued[0] },
-        { held: held[1], bomb: bombQueued[1], power: powerQueued[1] },
-      ];
-      bombQueued[0] = bombQueued[1] = false;
-      powerQueued[0] = powerQueued[1] = false;
+      const inputs = held.map((keys, id) => ({
+        held: keys,
+        bomb: bombQueued[id],
+        power: powerQueued[id],
+      }));
+      bombQueued.fill(false);
+      powerQueued.fill(false);
       step(game, FIXED, inputs);
       drainEvents(game).forEach(handleEvent);
       acc -= FIXED;
@@ -1386,7 +1402,11 @@ function drawCorpses(g) {
 }
 
 // ---- the miner
-const OVERALLS = { blue: ['#4f7cff', '#243f9e'], red: ['#ff5a5a', '#8e1f2a'] };
+const OVERALLS = {
+  blue: ['#4f7cff', '#243f9e'],
+  red: ['#ff5a5a', '#8e1f2a'],
+  green: ['#62d58a', '#247044'],
+};
 function drawMiner(p, g) {
   const px = p.x * TILE,
     py = p.y * TILE;
@@ -1601,26 +1621,20 @@ function drawBanner(g) {
 
 function updatePowerHud(g) {
   const panel = document.getElementById('power-status');
-  const lines = g.players
-    .filter((p) => !p.cpu)
+  const rows = g.players
     .map((p) => {
       const remaining = Math.max(0, Math.ceil(p.powerUntil - g.time));
-      const key = mode === 'duel' && p.id === 1 ? 'Right Shift' : 'F';
-      if (!p.power || !remaining)
-        return g.mode === 'adventure' && g.lesson
-          ? g.lesson.hint
-          : `${mode === 'duel' ? p.name + ': ' : ''}${key} · Find a flare launcher or plunger`;
-      const action =
-        p.power === ITEM.FIREBALL
-          ? 'Flare launcher — fire'
-          : g.bombs.some((b) => b.owner === p.id && !b.exploded)
-            ? 'Plunger — detonate bomb'
-            : 'Plunger — place a bomb first';
-      return `${key} · ${action} · ${remaining}s`;
-    });
-  const text = lines.join(' | ');
-  if (panel.textContent !== text) panel.textContent = text;
-  panel.dataset.active = String(g.players.some((p) => !p.cpu && p.powerUntil > g.time));
+      const key = p.cpu ? 'CPU' : p.id === 2 ? 'O' : p.id === 1 ? 'Right Shift' : 'F';
+      const tool =
+        !p.power || !remaining
+          ? 'No tool'
+          : `${p.power === ITEM.FIREBALL ? 'Flare launcher' : 'Plunger'} · ${key} · ${remaining}s`;
+      const planted = g.bombs.filter((b) => b.owner === p.id && !b.exploded).length;
+      return `<div class="miner-loadout" style="--miner:${OVERALLS[p.color][0]}"><b>${p.name}${p.alive ? '' : ' · down'}</b><span>Bombs ${p.maxBombs - planted}/${p.maxBombs} · Reach ${p.range} · Boots +${p.speedItems} · Helmet ${p.shield ? 'ON' : '—'} · ${tool}</span></div>`;
+    })
+    .join('');
+  if (panel.innerHTML !== rows) panel.innerHTML = rows;
+  panel.dataset.active = String(g.players.some((p) => p.powerUntil > g.time));
 }
 
 function drawHud(g) {
@@ -1636,6 +1650,7 @@ function drawHud(g) {
     label('CLEAR THE MINE', BW / 2, 30, 12, '#c7b196', mono);
     const left = g.enemies.filter((e) => e.alive).length;
     labelRight(left + ' FOES', BW - 200, 30, 13, '#c7b196', mono);
+    if (g.players.length > 1) return;
     let x = BW - 16;
     const chips = [
       ['🧨', p.maxBombs],
@@ -1659,6 +1674,27 @@ function drawHud(g) {
       x -= 6;
     }
   } else {
+    if (g.players.length === 3) {
+      g.players.forEach((p, i) =>
+        labelLeft(
+          `${p.name.toUpperCase()} ${p.wins}`,
+          16 + i * 150,
+          28,
+          14,
+          OVERALLS[p.color][0],
+          mono,
+        ),
+      );
+      labelRight(
+        `R${g.round} · ${g.suddenDeath ? 'CAVE-IN' : mmss(Math.ceil(g.timer))}`,
+        BW - 16,
+        28,
+        14,
+        '#f4e6d2',
+        mono,
+      );
+      return;
+    }
     const [a, b] = g.players;
     const drawSide = (p, right) => {
       const col = p.color === 'blue' ? '#7fa2ff' : '#ff7a7a';
@@ -1754,14 +1790,46 @@ homeButton.textContent = 'Menu';
 homeButton.setAttribute('aria-label', 'Main menu');
 homeButton.addEventListener('click', () => {
   showMenu('');
-  menu.querySelector('button[data-mode]').focus({ preventScroll: true });
+  menu.querySelector('button').focus({ preventScroll: true });
   window.scrollTo(0, 0);
 });
 document.querySelector('[data-act="restart"]').before(homeButton);
+function renderMenu(page) {
+  const choices = document.getElementById('menu-choices');
+  const options =
+    page === 'adventure'
+      ? [
+          ['adventure', '1 player', 'Explore the mines solo.'],
+          ['coop', '2 players', 'Co-op · Shared score and three lives.'],
+          ['coop3', '3 players', 'Co-op · One keyboard, one team.'],
+        ]
+      : page === 'battle'
+        ? [
+            ['duel', '2 players · Head-to-head', 'Two players on one keyboard.'],
+            ['triple', '3 players · Head-to-head', 'Three miners, last one standing.'],
+            ['cpu', 'Against the computer', 'One player versus the computer.'],
+          ]
+        : [
+            ['adventure', 'Adventure', 'Clear the mine, solo or together.'],
+            ['battle', 'Battle', 'Head-to-head or against the computer.'],
+          ];
+  menuSub.textContent =
+    page === 'adventure' ? 'How many players?' : page === 'battle' ? 'Choose your opponent' : '';
+  choices.innerHTML =
+    options
+      .map(
+        ([value, title, detail]) =>
+          `<button type="button" data-${page === 'home' ? 'page' : 'mode'}="${value}"><span><b>${title}</b><small>${detail}</small></span></button>`,
+      )
+      .join('') + (page === 'home' ? '' : '<button type="button" data-page="home">← Back</button>');
+}
 menu.addEventListener('click', (e) => {
-  const btn = e.target.closest('button[data-mode]');
+  const btn = e.target.closest('button');
   if (!btn) return;
-  startMode(btn.dataset.mode);
+  if (btn.dataset.page) {
+    renderMenu(btn.dataset.page);
+    menu.querySelector('button').focus({ preventScroll: true });
+  } else if (btn.dataset.mode) startMode(btn.dataset.mode);
 });
 window.gameAPI = {
   pause() {
@@ -1809,12 +1877,13 @@ window.__dynamine = {
     if (!game) return null;
     let n = Math.round(seconds / FIXED);
     while (n-- > 0) {
-      const inputs = [
-        { held: held[0], bomb: bombQueued[0], power: powerQueued[0] },
-        { held: held[1], bomb: bombQueued[1], power: powerQueued[1] },
-      ];
-      bombQueued[0] = bombQueued[1] = false;
-      powerQueued[0] = powerQueued[1] = false;
+      const inputs = held.map((keys, id) => ({
+        held: keys,
+        bomb: bombQueued[id],
+        power: powerQueued[id],
+      }));
+      bombQueued.fill(false);
+      powerQueued.fill(false);
       step(game, FIXED, inputs);
       drainEvents(game).forEach(handleEvent);
     }

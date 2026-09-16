@@ -216,7 +216,14 @@ export function createGame(opts = {}) {
     cpuLevel: opts.cpuLevel || 1,
   };
   if (mode === 'adventure') {
-    state.players = [makePlayer(0, CORNERS[0], { name: 'You', color: 'blue' })];
+    state.players = [
+      makePlayer(0, CORNERS[0], { name: opts.players >= 2 ? 'Blue' : 'You', color: 'blue' }),
+    ];
+    if (opts.players >= 2) {
+      state.players.push(makePlayer(1, { x: 2, y: 1 }, { name: 'Red', color: 'red' }));
+    }
+    if (opts.players === 3)
+      state.players.push(makePlayer(2, { x: 1, y: 2 }, { name: 'Green', color: 'green' }));
     startLevel(state, 1);
   } else {
     state.players = [
@@ -227,6 +234,8 @@ export function createGame(opts = {}) {
         cpu: !!opts.cpu,
       }),
     ];
+    if (opts.players === 3)
+      state.players.push(makePlayer(2, CORNERS[2], { name: 'Green', color: 'green' }));
     startRound(state);
   }
   return state;
@@ -410,8 +419,10 @@ export function startLevel(state, level) {
 }
 
 function finishLevelSetup(state, level) {
-  const p = state.players[0];
-  resetPlayer(p, level > 1);
+  for (const p of state.players) {
+    state.grid[key(p.spawn.x, p.spawn.y)] = FLOOR;
+    resetPlayer(p, level > 1);
+  }
   state.status = 'intro';
   state.statusUntil = state.time + 1.6;
   state.events.push({ type: 'level', level });
@@ -419,7 +430,11 @@ function finishLevelSetup(state, level) {
 
 export function startRound(state) {
   state.round += 1;
-  const { grid, bricks } = buildGrid(state.rng, 0.62, [CORNERS[0], CORNERS[1]]);
+  const { grid, bricks } = buildGrid(
+    state.rng,
+    0.62,
+    state.players.map((p) => p.spawn),
+  );
   state.grid = grid;
   state.projectiles = [];
   state.projectileHits = new Set();
@@ -1031,8 +1046,13 @@ function enemyThink(state, e, danger = null) {
           : best,
       );
   }
-  const p = state.players[0];
-  const target = p && p.alive ? p : null;
+  const target =
+    state.players
+      .filter((p) => p.alive)
+      .sort(
+        (a, b) =>
+          Math.abs(a.x - e.x) + Math.abs(a.y - e.y) - Math.abs(b.x - e.x) - Math.abs(b.y - e.y),
+      )[0] || null;
   const forward = open.filter((d) => d !== OPPOSITE[e.dir]);
   const pick = (arr) => arr[Math.floor(state.rng() * arr.length)];
 
@@ -1294,8 +1314,8 @@ function resolveHits(state) {
     p.moving = false;
     state.events.push({ type: 'death', player: p.id, cause: hit, x: p.x, y: p.y });
     if (state.mode === 'adventure') {
-      state.lives -= 1;
-      if (state.lives <= 0) {
+      state.lives = Math.max(0, state.lives - 1);
+      if (state.lives <= 0 && state.status !== 'over') {
         state.status = 'over';
         state.events.push({ type: 'gameOver', score: state.score, level: state.level });
       }

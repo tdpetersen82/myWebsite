@@ -11,9 +11,9 @@
     <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
     <meta name="description" content="Blast paths through a collapsed limestone mine, use linked shafts, and clear the creatures to reveal the exit. Play solo or battle on one keyboard.">
     <link rel="canonical" href="https://limestonegames.com/dynamine/">
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Dynamine","description":"Blast paths through a collapsed limestone mine, use linked shafts, and clear the creatures to reveal the exit. Play solo or battle on one keyboard.","playMode":["SinglePlayer","MultiPlayer"],"numberOfPlayers":{"@type":"QuantitativeValue","minValue":1,"maxValue":2},"applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Dynamine","description":"Blast paths through a collapsed limestone mine, use linked shafts, and clear the creatures to reveal the exit. Play solo or battle on one keyboard.","playMode":["SinglePlayer","MultiPlayer"],"numberOfPlayers":{"@type":"QuantitativeValue","minValue":1,"maxValue":3},"applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
     <script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Arcade","item":"https://limestonegames.com/arcade/"},{"@type":"ListItem","position":3,"name":"Dynamine"}]}</script>
-    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Dynamine?","acceptedAnswer":{"@type":"Answer","text":"Move with arrows or WASD. Space plants dynamite with a two-second fuse. Retreat around a corner before it explodes. Clear every creature to reveal the green exit, then enter it."}},{"@type":"Question","name":"Can I play Dynamine with two players?","acceptedAnswer":{"@type":"Answer","text":"Yes. Local Battle uses WASD and Space for Blue, arrows and Enter for Red. F and Right Shift use their equipped tools. You can also battle the computer."}},{"@type":"Question","name":"Does my high score save?","acceptedAnswer":{"@type":"Answer","text":"Yes. Your best Adventure score saves in this browser."}}]}</script>
+    <script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do I play Dynamine?","acceptedAnswer":{"@type":"Answer","text":"Move with arrows or WASD. Space plants dynamite with a two-second fuse. Retreat around a corner before it explodes. Clear every creature to reveal the green exit, then enter it."}},{"@type":"Question","name":"Can I play Dynamine with two players?","acceptedAnswer":{"@type":"Answer","text":"Yes. Adventure supports two- or three-player co-op; Battle supports head-to-head. Both use WASD and Space for Blue, arrows and Enter for Red. F and Right Shift use their equipped tools. A third player uses IJKL, U for bombs and O for tools. You can also battle the computer."}},{"@type":"Question","name":"Does my high score save?","acceptedAnswer":{"@type":"Answer","text":"Yes. Your best Adventure score saves in this browser."}}]}</script>
     <meta property="og:title" content="Dynamine — Blast the Rock, Beat the Bats | Limestone Games">
     <meta property="og:description" content="Blast paths through a collapsed limestone mine, use linked shafts, and clear the creatures to reveal the exit. Play solo or battle on one keyboard.">
     <meta property="og:type" content="website">
@@ -80,6 +80,16 @@
             color: #f4e6d2; text-align: center;
             font-family: 'Inter', system-ui, sans-serif;
         }
+        .miner-loadout { display:flex; gap:8px; align-items:baseline; text-align:left; padding:4px 8px; border-left:3px solid var(--miner); font-size:11px; line-height:1.5; background:rgba(0,0,0,.2); }
+        .miner-loadout b { color:var(--miner); min-width:45px; }
+        .miner-loadout span { color:#eee1cf; }
+        #pickup-guide { max-width:728px; margin:16px auto; padding:20px; color:#e6d6c0; background:#21180f; border-radius:16px; font-size:14px; line-height:1.6; }
+        #pickup-guide h2 { margin:0 0 8px; }
+        #pickup-guide p { margin:6px 0; }
+        body:has(#menu[hidden]) #pickup-guide { display:none; }
+        #menu-choices { display: contents; }
+        #menu:has([data-mode="coop3"]), #menu:has([data-mode="triple"]) { gap: 5px; }
+        #menu:has([data-mode="coop3"]) .m-tag, #menu:has([data-mode="triple"]) .m-tag { display:none; }
         #menu[hidden] { display: none; }
         #menu-sub:empty { display:none; }
         .ch-bezel:has(#menu:not([hidden])) #mission,
@@ -164,9 +174,8 @@
                 <p class="m-title">DYNAMINE</p>
                 <p class="m-tag">Blast a path. Clear the mine.</p>
                 <p id="menu-sub"></p>
-                <button type="button" data-mode="adventure"><span class="m-ico">⛑️</span><span><b>Adventure</b><small>Learn the tricks. Clear the creatures. Reach the exit.</small></span></button>
-                <button type="button" data-mode="cpu"><span class="m-ico">⚔️</span><span><b>Battle the computer</b><small>Connected shafts. Last miner standing. First to three.</small></span></button>
-                <button type="button" data-mode="duel"><span class="m-ico">👥</span><span><b>Two players</b><small>One keyboard: WASD + Space vs Arrows + Enter.</small></span></button>
+                <div id="menu-choices"></div>
+                <a href="#pickup-guide" style="color:#ffd17a;font-size:12px">Pickups &amp; player controls ↓</a>
                 <p class="m-keys"><kbd>Arrows</kbd> or <kbd>WASD</kbd> move · <kbd>Space</kbd> dynamite · <kbd>P</kbd> pause</p>
             </div>
         </div>
@@ -174,11 +183,18 @@
             <p>Arrow keys or WASD to move, Space to lay dynamite</p>
         </div>
 
+        <section id="pickup-guide" aria-label="Controls and pickups">
+            <h2>Know your equipment</h2>
+            <p><b>Dynamite:</b> carry one more active bomb. <b>Blast reach:</b> fire travels one tile farther. <b>Boots:</b> move faster. <b>Helmet:</b> absorbs one hit.</p>
+            <p><b>Flare launcher:</b> fire straight ahead with your tool key. <b>Plunger:</b> detonate your oldest active bomb early. Both tools last 40 seconds.</p>
+            <p>Each miner’s equipment appears above the board. Bombs shows available / capacity; Reach is tiles in each direction; Boots shows speed upgrades. Pickups belong to the miner who collects them. Blasts can hit teammates.</p>
+            <p><b>Blue:</b> WASD · Space bomb · F tool<br><b>Red:</b> Arrows · Enter bomb · Right Shift tool<br><b>Green:</b> IJKL · U bomb · O tool</p>
+        </section>
         <section class="game-overview" aria-label="About Dynamine">
             <h2>Break through the mine</h2>
-            <p>Plant dynamite, clear collapsed rock, and trap the creatures roaming the galleries. Defeat every creature to reveal the green exit, then step into it. The first five mines have designed layouts; deeper mines vary on each run. You have three lives, with no Adventure time limit.</p>
+            <p>Plant dynamite, clear collapsed rock, and trap the creatures roaming the galleries. Defeat every creature to reveal the green exit, then step into it. The first five mines have designed layouts; deeper mines vary on each run. Play solo or choose two- or three-player co-op with a shared score and three lives. Any miner can enter the cleared exit. There is no Adventure time limit.</p>
             <h3>Controls</h3>
-            <p><b>Arrows / WASD:</b> move. <b>Space:</b> plant dynamite. <b>F:</b> use your equipped tool. <b>P:</b> pause. On a phone, use the on-screen buttons.</p>
+            <p><b>Arrows / WASD:</b> move. <b>Space:</b> plant dynamite. <b>F:</b> use your equipped tool. <b>P:</b> pause. For local multiplayer: Blue uses WASD / Space / F, Red uses arrows / Enter / Right Shift, and Green uses IJKL / U / O. On a phone, use the on-screen buttons for solo play.</p>
             <h3>Know your blast</h3>
             <ul>
                 <li><b>Two-second fuse.</b> Find your escape before planting. Fire travels in straight lines; rock and bedrock stop it.</li>
@@ -187,10 +203,10 @@
                 <li><b>Supplies.</b> Extra dynamite, blast reach, boots, and a protective helmet are hidden under rock. The helmet absorbs one hit.</li>
             </ul>
             <h3>Battle</h3>
-            <p>Play the computer or a friend on one keyboard. Blue uses WASD / Space / F; Red uses arrows / Enter / Right Shift. Last miner standing takes the round; first to three wins. The roof starts closing in with 45 seconds left.</p>
+            <p>Play the computer or choose two or three players on one keyboard. Blue uses WASD / Space / F; Red uses arrows / Enter / Right Shift; Green uses IJKL / U / O. Last miner standing takes the round; first to three wins. The roof starts closing in with 45 seconds left.</p>
             <h3>Frequently asked</h3>
             <p><b>How do I play Dynamine?</b> Move with arrows or WASD. Space plants dynamite with a two-second fuse. Retreat around a corner before it explodes. Clear every creature to reveal the green exit, then enter it.</p>
-            <p><b>Can I play Dynamine with two players?</b> Yes. Local Battle uses WASD and Space for Blue, arrows and Enter for Red. F and Right Shift use their equipped tools. You can also battle the computer.</p>
+            <p><b>Can I play Dynamine with two players?</b> Yes. Adventure supports two- or three-player co-op; Battle supports head-to-head. Both use WASD and Space for Blue, arrows and Enter for Red. F and Right Shift use their equipped tools. A third player uses IJKL, U for bombs and O for tools. You can also battle the computer.</p>
             <p><b>Does my high score save?</b> Yes. Your best Adventure score saves in this browser.</p>
 
             <h3>More arcade games</h3>
@@ -204,7 +220,7 @@
         </section>
     </div>
 
-    <script type="module" src="game.mjs?v=20260916b"></script>
+    <script type="module" src="game.mjs?v=20260916c"></script>
     <!-- Ad Slot: Game Page Banner -->
     <div class="ad-slot ad-slot-responsive" style="max-width:728px;margin:10px auto;text-align:center">
         <ins class="adsbygoogle"
