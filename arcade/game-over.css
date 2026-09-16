@@ -16,3 +16,5 @@
 .arcade-end :focus-visible{outline:3px solid #f3d58e;outline-offset:3px;}
 @media(max-height:540px){.arcade-end{padding:18px 24px;}.arcade-end h2{font-size:24px;margin-bottom:6px;}.arcade-end .arcade-end-best{margin-bottom:12px;}.arcade-end h3{margin-top:14px;}.arcade-end-games img{max-height:80px;object-fit:cover;}.arcade-end .arcade-end-all{margin-top:12px;}}
 @media(prefers-reduced-motion:reduce){.arcade-end-games a{transition:none;}}
+
+.arcade-end-message { max-width: 420px; margin: 8px auto 16px; color: #c5d5df; font-size: 15px; line-height: 1.5; }

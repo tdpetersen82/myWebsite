@@ -43,3 +43,19 @@ for(const game of games.slice(0,4)) {
 }
 new vm.Script(fs.readFileSync('spacex-lander/js/scenes/RunScene.js','utf8'));
 console.log('PASS: 10 game integrations, 30 recommendation assets, vanilla end/restart hooks, Phaser syntax, and Lunar Lander final-life gating.');
+// Optional explanations must display safely and reset for games that omit them.
+{
+  const nodes=new Map();
+  function element(){return {open:false,isConnected:true,dataset:{},append(){},appendChild(){},addEventListener(){},setAttribute(){},removeAttribute(){},focus(){},showModal(){this.open=true;},close(){this.open=false;},querySelector(key){if(!nodes.has(key))nodes.set(key,element());return nodes.get(key);},querySelectorAll(){return [];}};}
+  const sandbox={window:{},location:{pathname:'/hook-and-ladder/'},document:{createElement:element,body:element(),activeElement:element(),getElementById(){return null;}}};
+  vm.runInNewContext(shared,sandbox);
+  sandbox.window.ArcadeGameOver.show({title:'Truck wrecked',message:'Damage reached 100%.',score:50});
+  assert.equal(nodes.get('#arcade-end-title').textContent,'Truck wrecked');
+  assert.equal(nodes.get('.arcade-end-message').textContent,'Damage reached 100%.');
+  assert.equal(nodes.get('.arcade-end-message').hidden,false);
+  sandbox.window.ArcadeGameOver.show({score:0});
+  assert.equal(nodes.get('#arcade-end-title').textContent,'Game over');
+  assert.equal(nodes.get('.arcade-end-message').hidden,true);
+  assert.equal(nodes.get('.arcade-end-message').textContent,'');
+  console.log('PASS: custom failure reasons display and reset between runs.');
+}

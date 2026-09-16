@@ -1,5 +1,5 @@
 // Canvas artwork. The city and the incident board share one night-shift palette.
-import { W, H, TILE, PITCH, BLOCKS_X, BLOCKS_Y, blockAt, roofPoint } from './engine.mjs?v=20260916i';
+import { W, H, TILE, PITCH, BLOCKS_X, BLOCKS_Y, blockAt, roofPoint } from './engine.mjs?v=20260916j';
 const TAU = Math.PI * 2;
 function rect(c,x,y,w,h,r=0){c.beginPath();c.roundRect(x,y,w,h,r);}
 function glow(c,x,y,r,color){const g=c.createRadialGradient(x,y,0,x,y,r);g.addColorStop(0,color);g.addColorStop(1,'rgba(0,0,0,0)');c.fillStyle=g;c.fillRect(x-r,y-r,r*2,r*2);}

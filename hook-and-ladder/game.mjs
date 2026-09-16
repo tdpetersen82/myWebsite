@@ -2,9 +2,9 @@
 import {
   createGame, startGame, step, drainEvents, readyToPark, parkedInZone,
   serviceZones, turntable, roofPoint, W as WORLD_W, H as WORLD_H, TILE, RULES,
-} from './engine.mjs?v=20260916i';
+} from './engine.mjs?v=20260916j';
 
-import { paintCity, drawWorldFire, drawCars, person } from './art.mjs?v=20260916i';
+import { paintCity, drawWorldFire, drawCars, person } from './art.mjs?v=20260916j';
 
 const W = 1240, H = 680; // Fixed camera viewport; the world can grow independently.
 const HS_KEY = 'hookAndLadderHighScore';
@@ -246,13 +246,16 @@ function onEvent(e) {
     }
     case 'gameover': {
       SFX.over();
+      const title=e.reason==='Truck disabled'?'Truck wrecked':'Three calls missed';
+      const explanation=e.reason==='Truck disabled'?'Truck damage reached 100%. Slow down before corners and avoid hitting traffic.':'Three buildings were lost before you completed the rescue and firefighting. Both jobs must finish before the call timer runs out.';
+      const summary=e.fires+' calls completed · '+game.crashes+' collisions · '+game.damage+'% damage';
       gtagEvent('game_over', { score: e.score, fires: e.fires, mode: 'driving' });
       setMission((e.reason || 'Shift over') + '. ' + e.fires + (e.fires === 1 ? ' fire' : ' fires') + ' put out.');
       const finishedRun = runId;
       setTimeout(() => {
         if (runId !== finishedRun || game.status !== 'over') return;
-        showMenu('Shift over · ' + e.fires + ' saved · ' + e.score + ' points');
-        if (window.ArcadeGameOver) window.ArcadeGameOver.show({ score: e.score, best: highScore, restart: () => { gtagEvent('play_again', { from: 'hook-and-ladder' }); startShift(); } });
+        showMenu(title+' · '+summary);
+        if (window.ArcadeGameOver) window.ArcadeGameOver.show({ title, message: explanation + ' ' + summary, score: e.score, best: highScore, restart: () => { gtagEvent('play_again', { from: 'hook-and-ladder' }); startShift(); } });
       }, 900);
       break;
     }

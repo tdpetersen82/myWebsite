@@ -555,7 +555,7 @@ export function step(state, dt, inp = {}) {
       state.fire = null;
       if (state.lives <= 0) {
         state.status = 'over';
-        state.events.push({ type: 'gameover', score: state.score, fires: state.firesOut });
+        state.events.push({ type: 'gameover', score: state.score, fires: state.firesOut, reason: 'Three calls missed' });
       } else state.nextFireIn = RULES.betweenFires + 0.6;
     }
   } else {

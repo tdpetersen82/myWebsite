@@ -36,7 +36,7 @@
     dialog.setAttribute('aria-labelledby', 'arcade-end-title');
     dialog.innerHTML = '<button class="arcade-end-close" type="button" aria-label="Close game-over panel">×</button>' +
       '<p class="arcade-end-eyebrow">RUN COMPLETE</p><h2 id="arcade-end-title">Game over</h2>' +
-      '<p class="arcade-end-score"></p><p class="arcade-end-best"></p>' +
+      '<p class="arcade-end-message" id="arcade-end-message" hidden></p><p class="arcade-end-score"></p><p class="arcade-end-best"></p>' +
       '<button class="arcade-end-again" type="button" autofocus>▶ Play again</button>' +
       '<h3>Play next</h3><div class="arcade-end-games"></div>' +
       '<a class="arcade-end-all" href="../arcade/" data-game="arcade">All arcade games →</a>';
@@ -76,6 +76,11 @@
     show(options = {}) {
       if (!dialog) build();
       restart = options.restart || (() => window.gameAPI && window.gameAPI.restart());
+      dialog.querySelector('#arcade-end-title').textContent = options.title || 'Game over';
+      const message = dialog.querySelector('.arcade-end-message');
+      message.textContent = options.message || ''; message.hidden = !options.message;
+      if(options.message)dialog.setAttribute('aria-describedby','arcade-end-message');
+      else dialog.removeAttribute('aria-describedby');
       const score = Number(options.score ?? document.getElementById('score')?.textContent ?? 0);
       const best = Math.max(score, Number(options.best ?? document.getElementById('highScore')?.textContent ?? 0));
       dialog.querySelector('.arcade-end-score').textContent = 'Score: ' + score.toLocaleString();
