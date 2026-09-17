@@ -42,6 +42,8 @@ export const RULES = {
   maxRange: 6,
   maxSpeedItems: 3,
   hitbox: 0.38, // half-width of a miner, in tiles
+  startLives: 3, // adventure lives per miner (each player has their own)
+  levelLives: 1, // extra lives every miner gets when a co-op team reaches the next mine
   respawnDelay: 1.6, // seconds the corpse lingers before respawn
   invulnTime: 2.2, // seconds of protection after respawn
   spawnGrace: 6, // …and protection holds until the miner first moves, up to this long
@@ -133,6 +135,7 @@ function makePlayer(id, corner, opts = {}) {
     powerReady: 0,
     alive: true,
     deadAt: -1,
+    lives: RULES.startLives,
     invulnUntil: 0,
     graceUntil: 0,
     movedSinceSpawn: false,
@@ -205,7 +208,6 @@ export function createGame(opts = {}) {
     timer: 0,
     level: 0,
     score: 0,
-    lives: 3,
     extraLifeIdx: 0,
     status: 'intro',
     statusUntil: 0,
@@ -419,13 +421,17 @@ export function startLevel(state, level) {
 }
 
 function finishLevelSetup(state, level) {
+  const bonusLives = level > 1 && state.players.length > 1 ? RULES.levelLives : 0;
   for (const p of state.players) {
     state.grid[key(p.spawn.x, p.spawn.y)] = FLOOR;
+    // Reaching the next mine brings every miner back, including one who
+    // was out of lives, and hands each of them an extra life.
+    p.lives += bonusLives;
     resetPlayer(p, level > 1);
   }
   state.status = 'intro';
   state.statusUntil = state.time + 1.6;
-  state.events.push({ type: 'level', level });
+  state.events.push({ type: 'level', level, bonusLives });
 }
 
 export function startRound(state) {
@@ -689,7 +695,7 @@ function addScore(state, n) {
   const at = RULES.extraLifeAt[state.extraLifeIdx];
   if (at != null && state.score >= at) {
     state.extraLifeIdx++;
-    state.lives++;
+    for (const p of state.players) p.lives++;
     state.events.push({ type: 'extraLife' });
   }
 }
@@ -1155,7 +1161,7 @@ export function step(state, dt, inputs = []) {
   for (const p of state.players) {
     if (!p.alive) {
       if (state.mode === 'adventure' && state.time >= p.deadAt + RULES.respawnDelay) {
-        if (state.lives > 0) {
+        if (p.lives > 0) {
           resetPlayer(p, true);
           p.shield = false;
           p.invulnUntil = state.time + RULES.invulnTime;
@@ -1312,10 +1318,20 @@ function resolveHits(state) {
     p.alive = false;
     p.deadAt = state.time;
     p.moving = false;
-    state.events.push({ type: 'death', player: p.id, cause: hit, x: p.x, y: p.y });
+    if (state.mode === 'adventure') p.lives = Math.max(0, p.lives - 1);
+    state.events.push({
+      type: 'death',
+      player: p.id,
+      cause: hit,
+      x: p.x,
+      y: p.y,
+      lives: p.lives,
+    });
     if (state.mode === 'adventure') {
-      state.lives = Math.max(0, state.lives - 1);
-      if (state.lives <= 0 && state.status !== 'over') {
+      // Each miner has their own lives; the run ends only once every miner
+      // is down with none left.
+      const allOut = state.players.every((q) => !q.alive && q.lives <= 0);
+      if (allOut && state.status !== 'over') {
         state.status = 'over';
         state.events.push({ type: 'gameOver', score: state.score, level: state.level });
       }
@@ -1413,7 +1429,7 @@ export function summary(state) {
     status: state.status,
     level: state.level,
     score: state.score,
-    lives: state.lives,
+    lives: state.players.map((p) => p.lives),
     timer: state.timer,
     round: state.round,
     wins: state.players.map((p) => p.wins),

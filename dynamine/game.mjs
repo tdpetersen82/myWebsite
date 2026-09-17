@@ -396,6 +396,16 @@ function handleEvent(e) {
         until: g.time + 1.6,
         style: 'level',
       };
+      if (e.bonusLives) {
+        // Miners spawn side by side, so one popup over the group beats one each.
+        const n = g.players.length;
+        popups.push({
+          x: g.players.reduce((a, p) => a + p.x, 0) / n,
+          y: g.players.reduce((a, p) => a + p.y, 0) / n - 0.4,
+          text: '+' + e.bonusLives + (e.bonusLives === 1 ? ' LIFE EACH' : ' LIVES EACH'),
+          until: g.time + 2.2,
+        });
+      }
       break;
     case 'round':
       banner = { text: 'ROUND ' + e.round, sub: firstTo(), until: g.time + 1.6, style: 'level' };
@@ -456,12 +466,22 @@ function handleEvent(e) {
     case 'death':
       Sound.death();
       shake = Math.max(shake, 8);
-      if (g.mode === 'adventure' && g.lives > 0)
-        banner = {
-          text: g.lives + (g.lives === 1 ? ' LIFE LEFT' : ' LIVES LEFT'),
-          until: g.time + 1.4,
-          style: 'warn',
-        };
+      if (g.mode === 'adventure') {
+        const who = g.players.length > 1 ? g.players[e.player].name.toUpperCase() + ': ' : '';
+        if (e.lives > 0)
+          banner = {
+            text: who + e.lives + (e.lives === 1 ? ' LIFE LEFT' : ' LIVES LEFT'),
+            until: g.time + 1.4,
+            style: 'warn',
+          };
+        else if (g.players.length > 1 && g.status !== 'over')
+          banner = {
+            text: who + 'OUT OF LIVES',
+            sub: 'Back in the next mine with an extra life.',
+            until: g.time + 1.8,
+            style: 'warn',
+          };
+      }
       break;
     case 'shieldPop':
       Sound.shield();
@@ -1644,7 +1664,7 @@ function updatePowerHud(g) {
           ? 'No tool'
           : `${p.power === ITEM.FIREBALL ? 'Flare launcher' : 'Plunger'} · ${key} · ${remaining}s`;
       const planted = g.bombs.filter((b) => b.owner === p.id && !b.exploded).length;
-      return `<div class="miner-loadout" style="--miner:${OVERALLS[p.color][0]}"><b>${p.name}${p.alive ? '' : ' · down'}</b><span>Bombs ${p.maxBombs - planted}/${p.maxBombs} · Reach ${p.range} · Boots +${p.speedItems} · Helmet ${p.shield ? 'ON' : '—'} · ${tool}</span></div>`;
+      return `<div class="miner-loadout" style="--miner:${OVERALLS[p.color][0]}"><b>${p.name}${p.alive ? '' : p.lives > 0 ? ' · down' : ' · out'}</b><span>${p.lives} ${p.lives === 1 ? 'life' : 'lives'} · Bombs ${p.maxBombs - planted}/${p.maxBombs} · Reach ${p.range} · Boots +${p.speedItems} · Helmet ${p.shield ? 'ON' : '—'} · ${tool}</span></div>`;
     })
     .join('');
   if (panel.innerHTML !== rows) panel.innerHTML = rows;
@@ -1660,7 +1680,19 @@ function drawHud(g) {
   if (g.mode === 'adventure') {
     const p = g.players[0];
     labelLeft('LEVEL ' + g.level, 16, 30, 17, '#ffc34d', 'Bricolage Grotesque');
-    for (let i = 0; i < g.lives; i++) hatIcon(150 + i * 24, 30);
+    if (g.players.length === 1) {
+      for (let i = 0; i < p.lives; i++) hatIcon(150 + i * 24, 30);
+    } else {
+      // One coloured hat and a count per miner: each has their own lives.
+      let hx = 150;
+      for (const q of g.players) {
+        const [c1] = OVERALLS[q.color] || OVERALLS.blue;
+        const out = !q.alive && q.lives <= 0;
+        hatIcon(hx, 30, out ? '#5a4a3a' : c1);
+        labelLeft('×' + q.lives, hx + 14, 30, 13, out ? '#8a7660' : '#f3e6d2', mono);
+        hx += 52;
+      }
+    }
     label('CLEAR THE MINE', BW / 2, 30, 12, '#c7b196', mono);
     const left = g.enemies.filter((e) => e.alive).length;
     labelRight(left + ' FOES', BW - 200, 30, 13, '#c7b196', mono);
@@ -1737,8 +1769,8 @@ function drawHud(g) {
     label('ROUND ' + g.round, BW / 2, 12, 10, '#8e7a60', mono);
   }
 }
-function hatIcon(x, y) {
-  ctx.fillStyle = '#ffd93d';
+function hatIcon(x, y, color = '#ffd93d') {
+  ctx.fillStyle = color;
   ctx.beginPath();
   ctx.arc(x, y + 1, 8, Math.PI, 0);
   ctx.closePath();
@@ -1815,7 +1847,7 @@ function renderMenu(page) {
     page === 'adventure'
       ? [
           ['adventure', '1 player', 'Explore the mines solo.'],
-          ['coop', '2 players', 'Co-op · Shared score and three lives.'],
+          ['coop', '2 players', 'Co-op · Shared score, three lives each.'],
           ['coop3', '3 players', 'Co-op · One keyboard, one team.'],
         ]
       : page === 'battle'
