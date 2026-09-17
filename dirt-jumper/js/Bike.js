@@ -104,16 +104,6 @@ class Bike {
     }
 
     _updateTricks(dt, input) {
-        // Tuck to build pitch momentum; opening out brakes it progressively.
-        const target = input.backflip ? -420 : 0;
-        const response = input.backflip ? 7 : 9;
-        const decay = Math.exp(-response*dt);
-        const turn = target*dt + (this.flipVelocity-target)*(1-decay)/response;
-        this.flipVelocity = target + (this.flipVelocity-target)*decay;
-        this.angle = djNormDeg(this.angle+turn);
-        this.flipRotation -= turn;
-        while(this.flipRotation>=360) { this.tricks.push('backflip'); this.flipRotation-=360; }
-
         // Whip is a sprung yaw axis, separate from pitch. Release to pull back in.
         const tailActive = this.activeTricks.some(t=>t.name==='tailwhip');
         const yawTarget = input.whip && !tailActive ? 1.05 : 0;
@@ -139,7 +129,7 @@ class Bike {
         const s = this.stats;
         const curve = terrain.curvatureAt ? terrain.curvatureAt(this.x) : 0;
         const load = this.airborne ? 0 : Phaser.Math.Clamp(-curve * this.speed * this.speed / s.gravity, 0, 1.5);
-        const squatTarget = this.airborne ? (input.backflip ? 0.65 : -0.18) : input.pump ? 0.85 : this.releasePower > 0 ? -0.2 : load * 0.15;
+        const squatTarget = this.airborne ? ((input.left || input.right) ? 0.65 : -0.18) : input.pump ? 0.85 : this.releasePower > 0 ? -0.2 : load * 0.15;
         const forkTarget = this.airborne ? 0 : Math.min(s.forkTravel, 0.5 + load * 2.2 + (input.pump ? 1.7 : 0));
         if (this.lastLanding) {
             const impact = Math.min(1, this.lastLanding.hardness / 650);
@@ -291,10 +281,14 @@ class Bike {
             const turn = target * dt + (this.leanVelocity - target) * tau * (1 - decay);
             this.leanVelocity = target + (this.leanVelocity - target) * decay;
             this.angle = djNormDeg(this.angle + turn);
+            this.flipRotation -= turn;
+            while(this.flipRotation>=360) { this.tricks.push("backflip"); this.flipRotation-=360; }
+            while(this.flipRotation<=-360) { this.tricks.push("frontflip"); this.flipRotation+=360; }
         } else {
             this.leanVelocity = 0;
         }
 
+        this.flipVelocity = this.leanVelocity;
         this._updateTricks(dt, input);
 
         // projectile integration (semi-implicit Euler)
@@ -374,7 +368,7 @@ class Bike {
             return;
         }
 
-        const values = {whip:150, backflip:350, tailwhip:300};
+        const values = {whip:150, backflip:350, frontflip:350, tailwhip:300};
         const combo = new Set(this.tricks).size;
         const bonus = Math.round(this.tricks.reduce((sum,name)=>sum+values[name],0) *
             (1 + Math.max(0,combo-1)*0.5) * (grade === 'sketchy' ? 0.5 : 1));

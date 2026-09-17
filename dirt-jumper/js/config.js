@@ -45,7 +45,7 @@ const CONFIG = {
         riderDamping: 15,
 
         // Air
-        flipRate: 115,              // deg/sec rotation — gentle, just for setting landing angle
+        flipRate: 420,              // hold arrows for flips; short taps adjust landing pitch
         leanResponse: 0.12,         // seconds to ease into a held lean
         airDrag: 0.04,              // gentle horizontal air drag (per sec)
         minAirSpeed: 70,            // below this a jump lip won't launch you

@@ -56,7 +56,7 @@ class RideScene extends Phaser.Scene {
             s: Phaser.Input.Keyboard.KeyCodes.S,
             a: Phaser.Input.Keyboard.KeyCodes.A,
             d: Phaser.Input.Keyboard.KeyCodes.D,
-            z: Phaser.Input.Keyboard.KeyCodes.Z, x: Phaser.Input.Keyboard.KeyCodes.X, c: Phaser.Input.Keyboard.KeyCodes.C
+            z: Phaser.Input.Keyboard.KeyCodes.Z, c: Phaser.Input.Keyboard.KeyCodes.C
         });
         this.input.keyboard.on('keydown-R', () => this._restart());
         this.input.keyboard.on('keydown-P', () => this._togglePause());
@@ -71,7 +71,7 @@ class RideScene extends Phaser.Scene {
         const setTouch = pointer => {
             const action = pointer.y < CONFIG.HEIGHT - 100 ? 'pump'
                 : pointer.x < 140 ? 'left' : pointer.x < 280 ? 'right'
-                : pointer.x < 440 ? 'whip' : pointer.x < 590 ? 'backflip' : pointer.x < 750 ? 'tailwhip' : 'pump';
+                : pointer.x < 500 ? 'whip' : pointer.x < 750 ? 'tailwhip' : 'pump';
             this._touchControls.set(pointer.id, action);
         };
         this.input.on('pointerdown', pointer => {
@@ -167,7 +167,6 @@ class RideScene extends Phaser.Scene {
             left: c.left.isDown || k.a.isDown || [...this._touchControls.values()].includes('left'),
             right: c.right.isDown || k.d.isDown || [...this._touchControls.values()].includes('right'),
             whip: k.z.isDown || [...this._touchControls.values()].includes('whip'),
-            backflip: k.x.isDown || [...this._touchControls.values()].includes('backflip'),
             tailwhip: k.c.isDown || [...this._touchControls.values()].includes('tailwhip')
         };
     }
@@ -280,7 +279,7 @@ class RideScene extends Phaser.Scene {
         this.touchLabels = [];
         this.touchPanels = [];
         this.hasTouch = this.sys.game.device.input.touch;
-        for (const [x, width, label] of [[22, 106, '← LEAN'], [150, 106, 'LEAN →'], [292, 138, 'WHIP'], [450, 130, 'FLIP'], [600, 140, 'TAILWHIP'], [W - 170, 148, 'PUMP ↓']]) {
+        for (const [x, width, label] of [[22, 106, '← ROTATE'], [150, 106, 'ROTATE →'], [310, 180, 'WHIP'], [530, 190, 'TAILWHIP'], [W - 170, 148, 'PUMP ↓']]) {
             const box = this.add.graphics().setScrollFactor(0).setDepth(19);
             box.fillStyle(0x173c38, 0.82); box.fillRoundedRect(x, H - 80, width, 58, 12);
             box.lineStyle(1, 0xf2d6a8, 0.35); box.strokeRoundedRect(x, H - 80, width, 58, 12);
@@ -288,7 +287,7 @@ class RideScene extends Phaser.Scene {
             this.touchPanels.push(box);
             this.touchLabels.push(mk(x + width / 2, H - 51, label, 13, '#fff1d7', [0.5, 0.5]).setVisible(this.hasTouch));
         }
-        this.keyboardHint = mk(24, H - 25, '↓ / S PUMP    ← → / A D LEAN    HOLD Z WHIP    HOLD X FLIP    C TAILWHIP', 10, '#ddc39f').setVisible(!this.hasTouch);
+        this.keyboardHint = mk(24, H - 25, '↓ / S PUMP    ← → / A D ROTATE / FLIP    HOLD Z WHIP    C TAILWHIP', 10, '#ddc39f').setVisible(!this.hasTouch);
         this.speedLines = this.add.graphics().setScrollFactor(0).setDepth(18);
         this.pausePanel = this.add.rectangle(W / 2, H / 2, 440, 140, 0x142f31, 0.95)
             .setScrollFactor(0).setDepth(39).setVisible(false);
@@ -303,7 +302,7 @@ class RideScene extends Phaser.Scene {
         const tag = mk(537, 141, 'LIMESTONE TRAILS / 01', 11, '#aac4b7').setDepth(31);
         const title = mk(487, 166, 'DIRT JUMPER', 46, '#fff0d2').setDepth(31);
         const subtitle = mk(490, 225, 'Find the rhythm. Send the next jump.', 16, '#d9ddc9').setDepth(31);
-        const help = mk(490, 267, '01   Hold pump down the back of each roller.\n02   Release uphill: carry speed + boost your pop.\n03   Hold X to flip / Z to whip. Release to recover.\n04   C tailwhip. Lean to match the landing.', 12, '#b6cbbd').setDepth(31).setLineSpacing(10);
+        const help = mk(490, 267, '01   Hold pump down the back of each roller.\n02   Release uphill: carry speed + boost your pop.\n03   Hold ← / → to flip. Tap to adjust your landing.\n04   Hold Z to whip / C tailwhip. Release to recover.', 12, '#b6cbbd').setDepth(31).setLineSpacing(10);
         card.fillStyle(0xeea15b, 1); card.fillRoundedRect(488, 367, 404, 53, 8);
         const prompt = mk(690, 394, 'DROP IN    /    TAP OR SPACE', 15, '#193b38', [0.5, 0.5]).setDepth(31);
         this._startOverlay = [card, tag, title, subtitle, help, prompt];
@@ -328,10 +327,10 @@ class RideScene extends Phaser.Scene {
 
         const input = this._readInput();
         this.touchLabels.forEach((label, i) => label.setColor(
-            input[['left', 'right', 'whip', 'backflip', 'tailwhip', 'pump'][i]] ? CONFIG.COLORS.PERFECT : CONFIG.COLORS.HUD));
+            input[['left', 'right', 'whip', 'tailwhip', 'pump'][i]] ? CONFIG.COLORS.PERFECT : CONFIG.COLORS.HUD));
         const slope = this.terrain.slopeAt(b.x);
         this.hud.coach.setText(!this.started || this.runOver ? '' : b.airborne
-            ? (b.activeTricks.length || b.tricks.length ? [...b.tricks, ...b.activeTricks.map(t=>t.name)].join(' + ').toUpperCase() + ' / LAND TO BANK' : (Math.abs(b.whipYaw)>0.15 ? 'RELEASE Z TO STRAIGHTEN' : Math.abs(b.flipVelocity)>30 ? 'RELEASE X TO OPEN OUT / LEAN TO LAND' : 'HOLD X FLIP / HOLD Z WHIP / C TAILWHIP'))
+            ? (b.activeTricks.length || b.tricks.length ? [...b.tricks, ...b.activeTricks.map(t=>t.name)].join(' + ').toUpperCase() + ' / LAND TO BANK' : (Math.abs(b.whipYaw)>0.15 ? 'RELEASE Z TO STRAIGHTEN' : Math.abs(b.flipVelocity)>30 ? 'RELEASE ARROWS / TAP TO LINE UP' : '← → ROTATE / HOLD Z WHIP / C TAILWHIP'))
             : slope > 0.025 ? '↓  PUMP'
             : slope < -0.025 ? (b.releasePower > 0 ? '↑  LIGHT / CARRY SPEED' : '↑  RELEASE') : 'FIND YOUR FLOW');
         this.hud.coach.setColor('#23483f');

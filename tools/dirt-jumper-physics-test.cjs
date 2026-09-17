@@ -23,9 +23,9 @@ function turn(ms, step, input) {
     return b;
 }
 const tap = turn(100, 10, {right: true});
-assert(tap.angle > 3 && tap.angle < 4, '100 ms tap is a small correction');
+assert(tap.angle > 13 && tap.angle < 14, '100 ms tap is a small correction');
 const hold = turn(500, 10, {right: true});
-assert(hold.angle > 43 && hold.angle < 45, 'long hold can match a downslope');
+assert(hold.angle > 159 && hold.angle < 162, 'long hold rotates fast enough for flips');
 assert(Math.abs(hold.angle + turn(500, 10, {left: true}).angle) < 1e-9, 'lean is symmetric');
 assert(Math.abs(turn(500, 8, {right:true}).angle - turn(500, 16, {right:true}).angle) < 1e-8, 'lean is frame independent');
 const beforeRelease = hold.angle;
