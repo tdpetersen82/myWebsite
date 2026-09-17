@@ -119,13 +119,13 @@
   function startRunning(now) {
     phase = 'running';
     round.startAt = now;
-    round.bustAt = now + E.timeToMultiplier(round.crash);
+    round.bustAt = now + E.timeToBust(round.crash);
     renderAll();
   }
 
   function liveMultiplier(now) {
     if (phase !== 'running' || !round) return 1;
-    return E.displayMultiplier(now - round.startAt);
+    return Math.min(round.crash, E.displayMultiplier(now - round.startAt));
   }
 
   function tick(now) {
@@ -137,17 +137,17 @@
     if (phase === 'running') {
       var atBust = now >= round.bustAt;
       var m = atBust ? round.crash : liveMultiplier(now);
-      // Computer players cash at their targets, but only targets under the
-      // bust point ever fire.
+      // Computer players cash at their targets; a target at or under the
+      // bust value fires (the display holds the bust value until the round ends).
       for (var i = 0; i < round.bots.length; i++) {
         var b = round.bots[i];
         if (b.done) continue;
-        if (b.target < round.crash && b.target <= m) {
+        if (b.target <= round.crash && b.target <= m) {
           b.done = true; b.cashedAt = b.target;
           round.cashouts.push({ t: E.timeToMultiplier(b.target), m: b.target, who: b.name, payout: Math.floor(b.bet * b.target), bot: true });
         }
       }
-      if (bet && bet.cashedAt == null && bet.auto && bet.auto < round.crash && bet.auto <= m) {
+      if (bet && bet.cashedAt == null && bet.auto && bet.auto <= round.crash && bet.auto <= m) {
         cashOutAt(bet.auto, true);
       }
       if (atBust) bust(now);

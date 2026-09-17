@@ -43,20 +43,27 @@ check('bad r → 1.00', E.crashPointFromUniform(NaN) === 1 && E.crashPointFromUn
   check('crash point is whole cents', cents);
 }
 
-// 3. house edge: cashing at any target x returns 0.99 per dollar.
-// Analytic over a fine grid of r (no sampling noise), then a random check.
+// 3. house edge: cashing at any target x returns 0.99 per dollar, settled
+// through settle() itself (auto AND manual paths) so the tie rule is what's
+// measured. Analytic over a fine grid of r (no sampling noise), then random.
 {
   const N = 400000;
-  for (const x of [1.01, 1.5, 2, 3, 5, 10, 50]) {
-    let sum = 0;
+  for (const x of [1.01, 1.1, 1.25, 1.5, 2, 3, 5, 10, 50]) {
+    let sumAuto = 0, sumManual = 0;
     for (let i = 0; i < N; i++) {
       const r = (i + 0.5) / N;
       const c = E.crashPointFromUniform(r);
-      sum += c >= x ? x : 0;
+      sumAuto += E.settle({ bet: 100, auto: x, crash: c, cashedAt: null }).payout / 100;
+      // manual: the player presses when the display shows x, which it does iff c >= x
+      sumManual += c >= x ? E.settle({ bet: 100, auto: null, crash: c, cashedAt: x }).payout / 100 : 0;
     }
-    const ev = sum / N;
-    check(`EV of cashing at ${x}x ≈ 0.99`, near(ev, 0.99, 0.006), ev.toFixed(4));
+    const evA = sumAuto / N, evM = sumManual / N;
+    check(`EV of auto cash-out at ${x}x = 0.99`, near(evA, 0.99, 0.0015), evA.toFixed(4));
+    check(`EV of manual cash-out at ${x}x = 0.99`, near(evM, 0.99, 0.0015), evM.toFixed(4));
   }
+  check('display reaches the bust value before the round ends',
+    // ±0.05 ms: at 1000x a cent lasts only ~0.17 ms
+    [1, 1.25, 2, 9.99, 1000].every(c => E.displayMultiplier(E.timeToBust(c) - 0.05) === c && E.displayMultiplier(E.timeToBust(c) + 0.05) > c));
   let sum = 0, n = 200000;
   for (let i = 0; i < n; i++) sum += E.crashPointFromBytes(randomBytes(32)) >= 2 ? 2 : 0;
   check('random seeds: EV at 2x ≈ 0.99 (±0.02)', near(sum / n, 0.99, 0.02), (sum / n).toFixed(4));
@@ -84,7 +91,7 @@ check('10x lands near 38.4 s', near(E.timeToMultiplier(10) / 1000, 38.38, 0.05))
   s = E.settle({ bet: 100, auto: 2, crash: 2.5, cashedAt: null });
   check('auto 2.00 before 2.50 → pays 200', s.won && s.at === 2 && s.payout === 200);
   s = E.settle({ bet: 100, auto: 2.5, crash: 2.5, cashedAt: null });
-  check('auto equal to the bust point → bust (tie to the house)', !s.won);
+  check('auto equal to the bust value → pays (tie to the player)', s.won && s.payout === 250);
   s = E.settle({ bet: 100, auto: 3, crash: 2.5, cashedAt: null });
   check('auto above the bust point → bust', !s.won);
   s = E.settle({ bet: 100, auto: 3, crash: 2.5, cashedAt: 1.5 });
@@ -92,7 +99,9 @@ check('10x lands near 38.4 s', near(E.timeToMultiplier(10) / 1000, 38.38, 0.05))
   s = E.settle({ bet: 100, auto: 1.3, crash: 2.5, cashedAt: 1.5 });
   check('earlier auto beats a later manual', s.won && s.at === 1.3 && s.payout === 130);
   s = E.settle({ bet: 100, auto: null, crash: 2.5, cashedAt: 2.5 });
-  check('manual at the bust point is not honoured', !s.won);
+  check('manual at the bust value pays', s.won && s.payout === 250);
+  s = E.settle({ bet: 100, auto: null, crash: 2.5, cashedAt: 2.51 });
+  check('manual above the bust value is impossible and pays nothing', !s.won);
   s = E.settle({ bet: 7, auto: null, crash: 9, cashedAt: 1.33 });
   check('payout is floored to whole dollars', s.payout === 9, String(s.payout));
   s = E.settle({ bet: 100, auto: 1.0, crash: 5, cashedAt: null });

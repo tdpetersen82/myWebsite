@@ -12,7 +12,10 @@
 //     1.00x and a ceiling of MAX_MULT.
 //     Cashing out at any target x pays x with probability 0.99 / x, so every
 //     strategy returns 99 cents on the dollar: a 1% house edge, and the
-//     "0.99" in the formula is exactly that edge.
+//     "0.99" in the formula is exactly that edge. For that to hold on a
+//     cents grid, a cash-out AT the bust value must pay: the round stays live
+//     while the display shows the bust value and ends when it would tick
+//     past it (timeToBust), and settle() treats a tie as a win.
 //   * The multiplier climbs as e^(GROWTH * ms): 2x at ~11.6 s, 10x at ~38 s.
 (function (root, factory) {
   if (typeof module === 'object' && module.exports) module.exports = factory();
@@ -64,13 +67,18 @@
   function displayMultiplier(ms) {
     return Math.floor(multiplierAt(ms) * 100) / 100;
   }
+  // Round length: the display must reach the bust value and hold it until
+  // the next cent would show, so P(display reaches x) = P(crash >= x) = 0.99/x.
+  function timeToBust(crash) {
+    return timeToMultiplier(Math.round(crash * 100 + 1) / 100);
+  }
 
   // Settle one bet against a finished round.
   //   bet      stake in dollars
   //   auto     auto cash-out target or null
   //   crash    the round's bust multiplier
-  //   cashedAt manual cash-out multiplier or null (must be < crash to count;
-  //            the UI only allows it while the round is live)
+  //   cashedAt manual cash-out multiplier or null (the UI only allows it
+  //            while the round is live, so it is always <= crash)
   // Returns { won, at, payout, profit } — payout is the full amount returned
   // to the bankroll (0 on a bust), profit is payout - bet.
   function settle(opts) {
@@ -79,11 +87,10 @@
     var auto = opts.auto != null ? Number(opts.auto) : null;
     var manual = opts.cashedAt != null ? Number(opts.cashedAt) : null;
     var at = null;
-    if (manual != null && manual < crash) at = manual;
-    if (auto != null && auto >= MIN_AUTO && auto <= crash - 1e-9 && (at == null || auto < at)) at = auto;
-    // An auto target reached exactly at the bust point is a bust: the bust
-    // happens when the live multiplier reaches `crash`, and the auto fires
-    // when the live multiplier reaches `auto`, so a tie goes to the house.
+    if (manual != null && manual <= crash + 1e-9) at = manual;
+    if (auto != null && auto >= MIN_AUTO && auto <= crash + 1e-9 && (at == null || auto < at)) at = auto;
+    // A target equal to the bust value pays: the display shows that value
+    // while the round is still live (see timeToBust).
     if (at == null) return { won: false, at: null, payout: 0, profit: -bet };
     var payout = Math.floor(bet * at);
     return { won: true, at: at, payout: payout, profit: payout - bet };
@@ -137,6 +144,7 @@
     multiplierAt: multiplierAt,
     timeToMultiplier: timeToMultiplier,
     displayMultiplier: displayMultiplier,
+    timeToBust: timeToBust,
     settle: settle,
     makeBots: makeBots,
     hex: hex,
