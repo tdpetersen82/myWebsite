@@ -1,4 +1,4 @@
-// Run with: node lab/dirt-jumper/tests/physics.cjs
+// Run with: node tools/dirt-jumper-physics-test.cjs
 const assert = require('node:assert/strict');
 const fs = require('node:fs');
 const vm = require('node:vm');
@@ -8,7 +8,7 @@ const context = vm.createContext({
     Phaser: { Math: { Clamp: (v, lo, hi) => Math.max(lo, Math.min(hi, v)) } }
 });
 for (const file of ['config', 'Terrain', 'Bike']) {
-    vm.runInContext(fs.readFileSync(path.join(__dirname, '../js', file + '.js'), 'utf8'), context);
+    vm.runInContext(fs.readFileSync(path.join(__dirname, '../dirt-jumper/js', file + '.js'), 'utf8'), context);
 }
 vm.runInContext(`
 const flat = {heightAt: () => 0, slopeAt: () => 0, lipBoostAt: () => 0};

@@ -1,9 +1,9 @@
-// node lab/dirt-jumper/tests/course.cjs
+// node tools/dirt-jumper-course-test.cjs
 // A simple rider pumps down, releases up, and holds a modest fixed landing angle.
 // No predicted collision point or per-jump optimization is used.
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 const context=vm.createContext({assert,console,Phaser:{Math:{Clamp:(x,a,b)=>Math.max(a,Math.min(b,x))}}});
-for(const name of ['config','Terrain','Bike'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/'+name+'.js'),'utf8'),context);
+for(const name of ['config','Terrain','Bike'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../dirt-jumper/js/'+name+'.js'),'utf8'),context);
 vm.runInContext(`
 const results=[];
 for(const dt of [8,16,33]) for(const targetAngle of [15,20,25]) {

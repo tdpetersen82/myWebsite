@@ -66,6 +66,7 @@
     { name: 'Frogger',        href: '../frogger/',        best: () => readBest('froggerHighScore') },
     { name: 'Dynamine',         href: '../dynamine/',         best: () => readBest('dynamineHighScore') },
     { name: 'Hook & Ladder',  href: '../hook-and-ladder/',  best: () => readBest('hookAndLadderHighScore') },
+    { name: 'Dirt Jumper',    href: '../dirt-jumper/',    best: () => readBest('dirtJumperBest') },
     { name: 'Defender',       href: '../defender/',       best: () => readBest('defenderHighScore') },
     { name: 'Missile Command',href: '../missile-command/',best: () => readBest('missileCommandHighScore') },
     { name: 'Lunar Lander',   href: '../lunar-lander/',   best: () => readBest('lunarLanderHighScore') },

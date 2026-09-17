@@ -1,6 +1,6 @@
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 const ctx=vm.createContext({assert,console,Phaser:{Math:{Clamp:(x,a,b)=>Math.max(a,Math.min(b,x))}}});
-for(const name of ['config','Terrain','Bike'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/'+name+'.js'),'utf8'),ctx);
+for(const name of ['config','Terrain','Bike'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../dirt-jumper/js/'+name+'.js'),'utf8'),ctx);
 vm.runInContext(`
 const flat={heightAt:()=>0,slopeAt:()=>0,curvatureAt:()=>0,lipBoostAt:()=>0};
 for(const dt of [8,16,33]) for(const names of [['whip'],['backflip'],['tailwhip'],['backflip','tailwhip'],['backflip','whip']]) {

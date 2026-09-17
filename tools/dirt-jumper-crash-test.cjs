@@ -1,4 +1,4 @@
-// node lab/dirt-jumper/tests/crash.cjs /path/to/phaser-3.80.1.js
+// node tools/dirt-jumper-crash-test.cjs /path/to/phaser-3.80.1.js
 // Runs the exact bundled Matter engine, without a browser or a second engine version.
 const fs=require('node:fs'),vm=require('node:vm'),assert=require('node:assert/strict'),path=require('node:path');
 if(!process.argv[2]) throw Error('Pass a local copy of the game\'s unminified Phaser 3.80.1 build.');
@@ -15,9 +15,9 @@ function bundled(id) {
     return module.exports;
 }
 const Matter=bundled(19933);
-const parts=JSON.parse(fs.readFileSync(path.join(__dirname,'../assets/rider-atlas.json')));
+const parts=JSON.parse(fs.readFileSync(path.join(__dirname,'../dirt-jumper/assets/rider-atlas.json')));
 const context=vm.createContext({console,assert,Phaser:{Math:{Clamp:(x,a,b)=>Math.max(a,Math.min(b,x))},Physics:{Matter:{Matter}}},parts});
-for(const name of ['config','Bike','BikeArt','CrashRig'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../js/'+name+'.js'),'utf8'),context);
+for(const name of ['config','Bike','BikeArt','CrashRig'])vm.runInContext(fs.readFileSync(path.join(__dirname,'../dirt-jumper/js/'+name+'.js'),'utf8'),context);
 vm.runInContext(`
 const scene={cache:{json:{get:()=>parts}},textures:{get:()=>({has:()=>true})},add:{image:()=>{
     const sprite={};for(const method of ['setDepth','setTint','setOrigin','setPosition','setScale','setRotation'])sprite[method]=()=>sprite;return sprite;

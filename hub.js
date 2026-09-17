@@ -43,6 +43,7 @@
   const GAME_ART = new Map([
     ['hook-and-ladder', 'hook-and-ladder-arcade-20260915.png'],
     ['dynamine', 'dynamine-arcade-20260915.png'],
+    ['dirt-jumper', 'dirt-jumper-arcade-20260916.png'],
     ['mini-golf', 'mini-golf-arcade-20260909.png'],
     ['daily-orbit', 'daily-orbit-arcade-20260911.png'],
     ['snake', 'snake-kids-20260909.png'],
@@ -114,6 +115,7 @@
     frogger: 'froggerHighScore',
     dynamine: 'dynamineHighScore',
     'hook-and-ladder': 'hookAndLadderHighScore',
+    'dirt-jumper': 'dirtJumperBest',
     simon: 'simonHighScore',
     defender: 'defenderHighScore',
     'lunar-lander': 'lunarLanderHighScore',
@@ -190,6 +192,7 @@
     mahjong: '<rect x="20" y="8" width="24" height="48" rx="4" fill="C" opacity="0.18"/><rect x="20" y="8" width="24" height="48" rx="4" fill="none" stroke="C" stroke-width="2.5"/><circle cx="32" cy="22" r="4" fill="C"/><circle cx="32" cy="34" r="4" fill="C"/><circle cx="32" cy="46" r="3" fill="C" opacity="0.6"/>',
     'daily-orbit': '<circle cx="32" cy="32" r="6" fill="C"/><ellipse cx="32" cy="32" rx="25" ry="14" fill="none" stroke="C" stroke-width="2" opacity="0.35" transform="rotate(-25 32 32)"/><path d="M14 44 C18 30 30 18 50 16" fill="none" stroke="C" stroke-width="2.5" stroke-dasharray="3 3"/><circle cx="50" cy="16" r="4" fill="C"/><circle cx="14" cy="44" r="3" fill="C" opacity="0.7"/>',
     'solar-system': '<circle cx="32" cy="32" r="7" fill="C"/><circle cx="32" cy="32" r="15" fill="none" stroke="C" stroke-width="2" opacity="0.45"/><circle cx="32" cy="32" r="24" fill="none" stroke="C" stroke-width="2" opacity="0.3"/><circle cx="47" cy="32" r="3.5" fill="C"/><circle cx="32" cy="8" r="3" fill="C" opacity="0.7"/>',
+    'dirt-jumper': '<path d="M6 50 Q22 40 34 46 T58 30" fill="none" stroke="C" stroke-width="2.5" opacity="0.4"/><circle cx="22" cy="42" r="8" fill="none" stroke="C" stroke-width="3"/><circle cx="44" cy="36" r="8" fill="none" stroke="C" stroke-width="3"/><path d="M22 42 L33 31 L44 36" fill="none" stroke="C" stroke-width="2.5" stroke-linejoin="round"/><path d="M33 31 L31 25" stroke="C" stroke-width="2.5" stroke-linecap="round"/>',
     'tic-tac-toe': '<path d="M24 8v48M40 8v48M8 24h48M8 40h48" stroke="C" stroke-width="4" stroke-linecap="round" fill="none"/><path d="M11 11l10 10M21 11l-10 10M43 43l10 10M53 43l-10 10" stroke="C" stroke-width="4" stroke-linecap="round" fill="none"/><circle cx="32" cy="32" r="6" stroke="C" stroke-width="4" fill="none"/>',
     'go-fish': '<path d="M8 34 C16 22 32 18 42 24 C46 27 49 30 50 34 C49 38 46 41 42 44 C32 50 16 46 8 34 Z" fill="none" stroke="C" stroke-width="4" stroke-linejoin="round"/><path d="M50 34 L60 25 L60 43 Z" fill="none" stroke="C" stroke-width="4" stroke-linejoin="round"/><circle cx="19" cy="32" r="2.5" fill="C"/><circle cx="52" cy="13" r="3" fill="none" stroke="C" stroke-width="3"/><circle cx="45" cy="6.5" r="2" fill="none" stroke="C" stroke-width="2.5"/>',
     'crazy-eights': '<rect x="8" y="16" width="24" height="34" rx="3.5" fill="C" opacity="0.5" transform="rotate(-14 20 33)"/><rect x="26" y="13" width="26" height="38" rx="4" fill="#fff" stroke="C" stroke-width="2.5" transform="rotate(9 39 32)"/><text x="39" y="38" font-size="19" font-weight="800" fill="C" text-anchor="middle" transform="rotate(9 39 32)">8</text>',
