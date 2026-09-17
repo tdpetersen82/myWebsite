@@ -40,3 +40,5 @@ button:focus-visible,a:focus-visible{outline:2px solid #acfff0;outline-offset:4p
 .portrait .cr-graph{height:250px}
 .portrait .cr-chips,.portrait .cr-pills{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
 .portrait .cr-chip,.portrait .cr-pill{font-size:12px;min-height:32px;padding:6px 0}
+
+[data-phase="busted"][data-result="won"] #cr-phase{color:var(--green)}

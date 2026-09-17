@@ -173,7 +173,7 @@
       bet.settled = true;
     }
     saveSession();
-    sfx.bust();
+    if (!lastOutcome || !lastOutcome.won) sfx.bust();
     renderAll();
   }
 
@@ -469,19 +469,23 @@
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     var hx = padL + gw / 2, hy = padT + gh * (portrait ? 0.34 : 0.36);
     if (busted) {
-      ctx.fillStyle = RED;
+      var won = !!(lastOutcome && lastOutcome.won);
+      ctx.fillStyle = won ? GREEN : lastOutcome ? RED : IVORY;
       ctx.font = '700 ' + (portrait ? 13 : 16) + 'px ' + MONO;
-      ctx.fillText('B U S T E D', hx, hy - big * 0.62);
+      ctx.fillText(won ? 'C A S H E D   O U T' : lastOutcome ? 'B U S T E D' : 'F L I G H T   E N D E D', hx, hy - big * 0.62);
       ctx.font = '700 ' + big + 'px ' + DISPLAY;
-      ctx.shadowColor = 'rgba(232,120,111,0.55)'; ctx.shadowBlur = 24;
-      ctx.fillText(fmtMult(round.crash), hx, hy);
+      ctx.shadowColor = won ? 'rgba(126,216,161,0.45)' : 'rgba(232,120,111,0.55)'; ctx.shadowBlur = 24;
+      ctx.fillText(won ? fmtSigned(lastOutcome.profit) : fmtMult(round.crash), hx, hy);
       ctx.shadowBlur = 0;
-      if (lastOutcome) {
-        ctx.font = '600 ' + (portrait ? 14 : 18) + 'px Inter, system-ui, sans-serif';
-        ctx.fillStyle = lastOutcome.won ? GREEN : RED;
-        ctx.fillText(lastOutcome.won
-          ? 'You cashed out at ' + fmtMult(lastOutcome.at) + ' for ' + fmtSigned(lastOutcome.profit)
-          : 'You lost ' + fmt(lastOutcome.amount), hx, hy + big * 0.66);
+      ctx.font = '600 ' + (portrait ? 12 : 16) + 'px Inter, system-ui, sans-serif';
+      ctx.fillStyle = won ? GREEN : RED;
+      if (lastOutcome) ctx.fillText(won
+        ? 'Profit secured · cashed out at ' + fmtMult(lastOutcome.at)
+        : 'You lost ' + fmt(lastOutcome.amount), hx, hy + big * 0.66);
+      if (won) {
+        ctx.font = (portrait ? 10 : 12) + 'px ' + MONO;
+        ctx.fillStyle = 'rgba(244,236,216,0.6)';
+        ctx.fillText('Flight ended at ' + fmtMult(round.crash), hx, hy + big * 0.66 + 23);
       }
     } else {
       ctx.fillStyle = GOLD;
@@ -542,9 +546,11 @@
     $('cr-bank').textContent = fmt(bankroll);
   }
   function renderControls() {
+    var secured = !!(lastOutcome && lastOutcome.won);
     $('cr-root').dataset.phase = phase;
-    $('cr-phase').textContent = phase === 'betting' ? '● Boarding open' : phase === 'running' ? '● Flight live' : '● Flight ended';
-    $('cr-guidance').textContent = queued ? 'Next flight reserved · Tap Queued to cancel.' : phase === 'betting' ? (bet ? 'You’re on board. Get ready to cash out.' : 'Set your stake and board the next flight.') : phase === 'running' ? (bet && bet.cashedAt == null ? 'You’re flying! Cash out any time, or wait for your auto target.' : bet ? 'Cash-out secured. Enjoy the rest of the flight.' : 'Watching this flight · You can queue a bet for the next one.') : 'Flight complete · A new countdown starts shortly.';
+    $('cr-root').dataset.result = secured ? 'won' : '';
+    $('cr-phase').textContent = phase === 'betting' ? '● Boarding open' : phase === 'running' ? '● Flight live' : secured ? '● Cashed out · profit secured' : '● Flight ended';
+    $('cr-guidance').textContent = queued ? 'Next flight reserved · Tap Queued to cancel.' : phase === 'betting' ? (bet ? 'You’re on board. Get ready to cash out.' : 'Set your stake and board the next flight.') : phase === 'running' ? (bet && bet.cashedAt == null ? 'You’re flying! Cash out any time, or wait for your auto target.' : bet ? 'Cash-out secured. Enjoy the rest of the flight.' : 'Watching this flight · You can queue a bet for the next one.') : secured ? 'Your ' + fmtSigned(lastOutcome.profit) + ' profit is secured. The flight ended after your cash-out.' : 'Flight complete · A new countdown starts shortly.';
     var btn = $('cr-action');
     var amt = currentAmount();
     btn.className = 'cr-action';
