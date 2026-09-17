@@ -48,6 +48,26 @@ for(const squat of [-0.3,0,0.85,1.15]) for(const fork of [0,2.2,5.2]) for(const 
     const crown=art.texturePoint('frame',...parts.frame.crown);
     assert(Math.hypot(crown.x-art.pose.forkUpper.a.x,crown.y-art.pose.forkUpper.a.y)<1e-7,'fork joins rendered headtube');
 }
+// Entire rig rotates around one stable combined center, not a tire/contact point.
+{
+ const b=new Bike(null,CONFIG.STATS,200);b.airborne=true;b.y=-200;b.forkCompression=0;
+ const art=new BikeArt(scene);art.update(b);
+ const before=JSON.parse(JSON.stringify(art.pose)),offset={...art.flightOffset};
+ const center={x:b.x+offset.x,y:b.y+offset.y};b.angle=90;art.update(b);
+ for(const id of Object.keys(before)) for(const key of ['a','b','anchor']) if(before[id][key]) {
+  const p=before[id][key],q=art.pose[id][key];
+  assert(Math.abs(q.x-(center.x-(p.y-center.y)))<1e-7);
+  assert(Math.abs(q.y-(center.y+(p.x-center.x)))<1e-7);
+ }
+ b.compress=.8;art.update(b);assert.deepEqual(art.flightOffset,offset,'tucking does not move the flight pivot');
+ for(const yaw of [.3,.7,1.05]) {
+  b.whipYaw=yaw;b.forkCompression=2;art.update(b);
+  const crown=art.texturePoint('frame',...parts.frame.crown),grip=art.texturePoint('bars',...parts.bars.grip);
+  assert(Math.hypot(crown.x-art.pose.forkUpper.a.x,crown.y-art.pose.forkUpper.a.y)<1e-7,'whip preserves fork attachment');
+  assert(Math.hypot(grip.x-art.pose.forearm.b.x,grip.y-art.pose.forearm.b.y)<1e-7,'whip preserves grip attachment');
+  assert(Math.hypot(art.pose.frame.anchor.x-art.pose.rearWheel.anchor.x,art.pose.frame.anchor.y-art.pose.rearWheel.anchor.y)<1e-7,'whip preserves rear axle');
+ }
+}
 console.log('PASS: 36 sprite poses; exact joint endpoints, collar, grips and fork attachment.');
 for(const velocity of [200,500,820]) for(const slope of [0,0.15,-0.1]) for(const angle of [-75,0,75,160]) {
     const terrain={heightAt:x=>slope*x};

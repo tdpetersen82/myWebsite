@@ -1,6 +1,6 @@
 // Dirt Jumper — Terrain heightfield.
 //
-// Continuous C^1 height profile T(x) built from streamed parametric features
+// C^1 height profile T(x), with deliberate sharp takeoff edges, built from streamed features
 // (rollers / tabletop / gap), stitched at matching height AND slope.
 //
 // Implementation: a list of control knots {x, y} interpolated with MONOTONE
@@ -151,8 +151,13 @@ class Terrain {
         this._rel(kickLen * 0.45, -kickH * 0.62);
         const lipX = this._last().x;
         this._registerLip(lipX, J.lipBoost + kickH * J.lipBoostPerH);
-        // Continue the takeoff tangent instead of flattening the top of the lip.
-        this._rel(kickLen * 0.12, -kickH * 0.09);
+        // A sharp edge has separate incoming and outgoing tangents. The
+        // final face keeps climbing right to the lip, then breaks onto the deck.
+        this._last().inSlope = -0.50;
+        this._last().outSlope = 0;
+        this._rel(14, 5);
+        this._last().inSlope = 0;
+        this._last().outSlope = 0;
         const deck = J.tableLen + d * 30;
         if (kind === 'gap') {
             const gap = J.gapMin + J.gapPerD * d;
@@ -235,6 +240,8 @@ class Terrain {
     // The launch boost of a jump lip in the bike's step (x .. x+step], or 0 if
     // none. Pump rollers register no lip → the bike stays glued and flows; only a
     // jump lip launches you, with its designed kicker impulse.
+    lipAt(x, step) { return this.lips.find(lip => lip.x >= x && lip.x <= x + step) || null; }
+
     lipBoostAt(x, step) {
         const lo = x - 2, hi = x + step + 4;
         for (let i = 0; i < this.lips.length; i++) {
@@ -270,10 +277,10 @@ class Terrain {
         const h10 = t3 - 2 * t2 + t;
         const h01 = -2 * t3 + 3 * t2;
         const h11 = t3 - t2;
-        return h00 * k[i].y + h10 * h * k[i].m + h01 * k[i + 1].y + h11 * h * k[i + 1].m;
+        return h00 * k[i].y + h10 * h * (k[i].outSlope ?? k[i].m) + h01 * k[i + 1].y + h11 * h * (k[i + 1].inSlope ?? k[i + 1].m);
     }
 
-    // analytic d(height)/dx (continuous -> C^1)
+    // Analytic slope; launch edges deliberately have different one-sided slopes.
     slopeAt(x) {
         this._ensure(x);
         const k = this.knots;
@@ -287,7 +294,7 @@ class Terrain {
         const dh10 = 3 * t2 - 4 * t + 1;
         const dh01 = -6 * t2 + 6 * t;
         const dh11 = 3 * t2 - 2 * t;
-        return (dh00 * k[i].y + dh01 * k[i + 1].y) / h + dh10 * k[i].m + dh11 * k[i + 1].m;
+        return (dh00 * k[i].y + dh01 * k[i + 1].y) / h + dh10 * (k[i].outSlope ?? k[i].m) + dh11 * (k[i + 1].inSlope ?? k[i + 1].m);
     }
 
     // second derivative (not continuous across knots; used only as a hint)
@@ -304,7 +311,7 @@ class Terrain {
         const d2h01 = -12 * t + 6;
         const d2h11 = 6 * t - 2;
         return (d2h00 * k[i].y + d2h01 * k[i + 1].y) / (h * h)
-            + (d2h10 * k[i].m + d2h11 * k[i + 1].m) / h;
+            + (d2h10 * (k[i].outSlope ?? k[i].m) + d2h11 * (k[i + 1].inSlope ?? k[i + 1].m)) / h;
     }
 
     // ---- Draw ----
@@ -317,6 +324,11 @@ class Terrain {
         for (let x = camLeft - step; x <= camRight + step; x += step) {
             top.push({ x, y: this.heightAt(x) });
         }
+
+        // Include exact corners so render sampling cannot round a launch edge.
+        for (const knot of this.knots) if (knot.inSlope !== undefined && knot.x >= camLeft-step && knot.x <= camRight+step)
+            top.push({x:knot.x,y:knot.y});
+        top.sort((a,b)=>a.x-b.x);
 
         // dirt body
         g.fillStyle(CONFIG.COLORS.DIRT_FILL, 1);

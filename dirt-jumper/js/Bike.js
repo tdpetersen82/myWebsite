@@ -59,6 +59,11 @@ class Bike {
         this.activeTricks = [];
         this.trickHeld = {};
         this.trickBuffer = {};
+        this.flipVelocity = 0;
+        this.flipRotation = 0;
+        this.whipYaw = 0;
+        this.whipVelocity = 0;
+        this.whipPeak = 0;
     }
 
     get stateName() { return this.crashed ? 'crashed' : (this.airborne ? 'air' : 'ground'); }
@@ -85,29 +90,46 @@ class Bike {
     }
 
     _trickInput(input, dt) {
-        for (const name of ['whip', 'backflip', 'tailwhip']) {
+        for (const name of ['tailwhip']) {
             this.trickBuffer[name] = Math.max(0, (this.trickBuffer[name] || 0) - dt);
             if (input[name] && !this.trickHeld[name]) this.trickBuffer[name] = 0.22;
-            if (this.trickBuffer[name] > 0 && this.airborne &&
+            if (this.trickBuffer[name] > 0 && this.airborne && Math.abs(this.whipYaw)<0.15 &&
                 !this.activeTricks.some(t => t.name === name || (t.name !== 'backflip' && name !== 'backflip'))) {
                 this.trickBuffer[name] = 0;
                 this.activeTricks.push({name, elapsed:0, progress:0,
-                    duration: name === 'whip' ? 0.38 : name === 'backflip' ? 0.55 : 0.50});
+                    duration: 0.50});
             }
             this.trickHeld[name] = !!input[name];
         }
     }
 
-    _updateTricks(dt) {
+    _updateTricks(dt, input) {
+        // Tuck to build pitch momentum; opening out brakes it progressively.
+        const target = input.backflip ? -420 : 0;
+        const response = input.backflip ? 7 : 9;
+        const decay = Math.exp(-response*dt);
+        const turn = target*dt + (this.flipVelocity-target)*(1-decay)/response;
+        this.flipVelocity = target + (this.flipVelocity-target)*decay;
+        this.angle = djNormDeg(this.angle+turn);
+        this.flipRotation -= turn;
+        while(this.flipRotation>=360) { this.tricks.push('backflip'); this.flipRotation-=360; }
+
+        // Whip is a sprung yaw axis, separate from pitch. Release to pull back in.
+        const tailActive = this.activeTricks.some(t=>t.name==='tailwhip');
+        const yawTarget = input.whip && !tailActive ? 1.05 : 0;
+        const steps=Math.ceil(dt*240),h=dt/steps;
+        for(let i=0;i<steps;i++) {
+            this.whipVelocity += ((yawTarget-this.whipYaw)*85-this.whipVelocity*15)*h;
+            this.whipYaw += this.whipVelocity*h;
+        }
+        this.whipPeak=Math.max(this.whipPeak,Math.abs(this.whipYaw));
+        if(!input.whip && this.whipPeak>0.65 && Math.abs(this.whipYaw)<0.15 && Math.abs(this.whipVelocity)<1.8) {
+            this.tricks.push('whip');this.whipPeak=0;
+        }
+
         for (const t of this.activeTricks) {
-            const before = t.progress;
             t.elapsed += dt;
             t.progress = Math.min(1, t.elapsed / t.duration);
-            // Smooth entry and exit, with an actual rotation used by collision grading.
-            if (t.name === 'backflip') {
-                const ease = p => p*p*(3-2*p);
-                this.angle = djNormDeg(this.angle - 360*(ease(t.progress)-ease(before)));
-            }
             if (t.progress === 1) this.tricks.push(t.name);
         }
         this.activeTricks = this.activeTricks.filter(t => t.progress < 1);
@@ -117,7 +139,7 @@ class Bike {
         const s = this.stats;
         const curve = terrain.curvatureAt ? terrain.curvatureAt(this.x) : 0;
         const load = this.airborne ? 0 : Phaser.Math.Clamp(-curve * this.speed * this.speed / s.gravity, 0, 1.5);
-        const squatTarget = this.airborne ? -0.18 : input.pump ? 0.85 : this.releasePower > 0 ? -0.2 : load * 0.15;
+        const squatTarget = this.airborne ? (input.backflip ? 0.65 : -0.18) : input.pump ? 0.85 : this.releasePower > 0 ? -0.2 : load * 0.15;
         const forkTarget = this.airborne ? 0 : Math.min(s.forkTravel, 0.5 + load * 2.2 + (input.pump ? 1.7 : 0));
         if (this.lastLanding) {
             const impact = Math.min(1, this.lastLanding.hardness / 650);
@@ -219,19 +241,25 @@ class Bike {
         // SPEED (built by pumping the rollers) carries the distance. So pumping a
         // section well lets you clear bigger gaps and jump farther/faster.
         const yNow = terrain.heightAt(this.x);
-        const boost = terrain.lipBoostAt(this.x, vx0 * dt);
+        const lip = terrain.lipAt ? terrain.lipAt(this.x, vx0*dt) : null;
+        const boost = terrain.lipAt ? (lip ? lip.boost : 0) : terrain.lipBoostAt(this.x, vx0 * dt);
         if (this.speed > s.minAirSpeed && boost > 0) {
             this.airborne = true;
             this.tricks = [];
             this.activeTricks = [];
+            this.flipVelocity=0;this.flipRotation=0;this.whipYaw=0;this.whipVelocity=0;this.whipPeak=0;
             this.airTime = 0;
-            this.vx = vx0;
-            this.vy = vy0 - boost - (!pump ? s.releasePop * this.releasePower : 0);          // up = -y
+            const launchSlope = lip ? terrain.slopeAt(lip.x-0.001) : slope;
+            const launchCos = 1/Math.sqrt(1+launchSlope*launchSlope);
+            const remaining = lip ? Math.max(0,dt-(lip.x-this.x)/vx0) : dt;
+            if(lip) this.x=lip.x;
+            this.vx = this.speed*launchCos;
+            this.vy = this.speed*launchSlope*launchCos - boost - (!pump ? s.releasePop * this.releasePower : 0);          // up = -y
             this.pumpCharge = 0;
             this.releasePower = 0;
             this.justPop = true;
-            this.y = yNow;
-            this._updateAir(dt, terrain, input, true);
+            this.y = lip ? terrain.heightAt(lip.x) : yNow;
+            this._updateAir(remaining, terrain, input, true);
             return;
         }
 
@@ -267,7 +295,7 @@ class Bike {
             this.leanVelocity = 0;
         }
 
-        this._updateTricks(dt);
+        this._updateTricks(dt, input);
 
         // projectile integration (semi-implicit Euler)
         this.vy += g * dt;
@@ -324,7 +352,7 @@ class Bike {
 
         const lt = s.landTolerance;
         let grade;
-        if (this.activeTricks.length || intoSurface > s.caseBailSpeed) grade = 'bail';   // cased / smacked a face too hard
+        if (this.activeTricks.length || Math.abs(this.whipYaw)>0.35 || Math.abs(this.flipVelocity)>240 || intoSurface > s.caseBailSpeed) grade = 'bail';   // cased / smacked a face too hard
         else if (diff <= lt.perfect) grade = 'perfect';
         else if (diff <= lt.clean) grade = 'clean';
         else if (diff <= lt.sketchy) grade = 'sketchy';
@@ -358,6 +386,7 @@ class Bike {
         if (grade === 'clean') keep *= s.cleanScrub;
         else if (grade === 'sketchy') keep *= s.sketchyScrub;
         this.speed = Math.max(s.speedFloor, keep);
+        this.flipVelocity=0;this.whipYaw=0;this.whipVelocity=0;
         this.angle = slopeDeg;                               // stomp level with the landing
         this._pumpedThisDown = false;
 
