@@ -313,8 +313,8 @@
   window.addEventListener('resize', function () { fitCanvas(); });
   window.addEventListener('cr:canvas', function () { fitCanvas(); renderAll(); });
 
-  var GRID = 'rgba(201,162,106,0.10)';
-  var GOLD = '#e6c590';
+  var GRID = 'rgba(132,165,213,0.07)';
+  var GOLD = '#6cf5d5';
   var GOLD_DIM = 'rgba(230,197,144,0.35)';
   var RED = '#e8786f';
   var GREEN = '#7ed8a1';
@@ -322,13 +322,47 @@
   var MONO = '"JetBrains Mono", ui-monospace, monospace';
   var DISPLAY = '"Bricolage Grotesque", "Inter", sans-serif';
 
+  var reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
+  function drawSpace(now) {
+    var time = reducedMotion.matches ? 0 : now * .00008;
+    var nebula = ctx.createRadialGradient(cw * .7, ch * .25, 0, cw * .7, ch * .25, cw * .7);
+    nebula.addColorStop(0, 'rgba(89,57,157,.24)'); nebula.addColorStop(.5, 'rgba(20,79,115,.12)'); nebula.addColorStop(1, 'transparent');
+    ctx.fillStyle = nebula; ctx.fillRect(0, 0, cw, ch);
+    for (var i = 0; i < 95; i++) {
+      var x = ((i * 137.508 + time * (i % 3 + 1) * 14) % 997) / 997 * cw;
+      var y = ((i * 89.713) % 491) / 491 * ch;
+      ctx.globalAlpha = .2 + (Math.sin(time * 3 + i) + 1) * .22;
+      ctx.fillStyle = i % 4 ? '#b4cce9' : '#77ffe1';
+      ctx.beginPath(); ctx.arc(x, y, i % 7 === 0 ? 1.6 : .7, 0, Math.PI * 2); ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+    var planet = ctx.createRadialGradient(cw * .73, ch * 2.6, ch * 1.68, cw * .73, ch * 2.6, ch * 1.86);
+    planet.addColorStop(0, '#081321'); planet.addColorStop(.7, '#102a3d'); planet.addColorStop(.92, '#21637b'); planet.addColorStop(.96, '#63d5df'); planet.addColorStop(1, 'rgba(52,135,187,0)');
+    ctx.fillStyle = planet; ctx.beginPath(); ctx.arc(cw * .73, ch * 2.6, ch * 1.86, 0, Math.PI * 2); ctx.fill();
+  }
+  function drawShip(x, y, angle, now, scale) {
+    ctx.save(); ctx.translate(x, y); ctx.rotate(angle); ctx.scale(scale, scale);
+    var flame = reducedMotion.matches ? 36 : 34 + Math.sin(now * .04) * 9;
+    ctx.shadowColor = '#58ecd9'; ctx.shadowBlur = 22;
+    var plume = ctx.createLinearGradient(-22 - flame, 0, -18, 0);
+    plume.addColorStop(0, 'rgba(79,116,255,0)'); plume.addColorStop(.55, '#6a87ff'); plume.addColorStop(1, '#aaffef');
+    ctx.fillStyle = plume; ctx.beginPath(); ctx.moveTo(-18, -7); ctx.quadraticCurveTo(-34, -10, -22 - flame, 0); ctx.quadraticCurveTo(-34, 10, -18, 7); ctx.fill();
+    ctx.shadowBlur = 0;
+    ctx.fillStyle = '#7980f4'; ctx.beginPath(); ctx.moveTo(-6, -7); ctx.lineTo(-23, -19); ctx.lineTo(-19, 0); ctx.lineTo(-23, 19); ctx.lineTo(-6, 7); ctx.fill();
+    var hull = ctx.createLinearGradient(0, -11, 0, 11); hull.addColorStop(0, '#ffffff'); hull.addColorStop(.5, '#c9dfef'); hull.addColorStop(1, '#668da5');
+    ctx.fillStyle = hull; ctx.beginPath(); ctx.moveTo(29, 0); ctx.bezierCurveTo(13, -15, -5, -12, -19, -8); ctx.lineTo(-19, 8); ctx.bezierCurveTo(-5, 12, 13, 15, 29, 0); ctx.fill();
+    ctx.fillStyle = '#0b263d'; ctx.strokeStyle = '#76f4e1'; ctx.lineWidth = 2; ctx.beginPath(); ctx.ellipse(7, 0, 6, 5, 0, 0, Math.PI * 2); ctx.fill(); ctx.stroke();
+    ctx.restore();
+  }
+
   function drawGraph(now) {
     if (!cw) fitCanvas();
     if (!cw) return;
     ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
     ctx.clearRect(0, 0, cw, ch);
+    drawSpace(now);
     var portrait = ch < 360;
-    var padL = portrait ? 34 : 48, padR = 18, padT = 20, padB = portrait ? 24 : 30;
+    var padL = portrait ? 34 : 48, padR = 18, padT = 52, padB = portrait ? 24 : 30;
     var gw = cw - padL - padR, gh = ch - padT - padB;
 
     var elapsed = 0, m = 1;
@@ -413,19 +447,21 @@
       }
     }
 
-    // tip
+    // The ship follows the actual slope of the multiplier curve.
     if (!busted) {
-      ctx.beginPath(); ctx.arc(tipX, tipY, 9, 0, Math.PI * 2);
-      ctx.fillStyle = 'rgba(230,197,144,0.25)'; ctx.fill();
-      ctx.beginPath(); ctx.arc(tipX, tipY, 4.5, 0, Math.PI * 2);
-      ctx.fillStyle = IVORY; ctx.fill();
+      var slope = -(E.multiplierAt(elapsed) * 0.00006 * gh / (mMax - 1)) / (gw / tMax);
+      drawShip(tipX, tipY, Math.atan(slope), now, portrait ? 0.7 : 1);
     } else {
-      // burst
+      var age = reducedMotion.matches ? 0.45 : Math.min(1, (now - round.bustAt) / 1000);
+      ctx.save(); ctx.globalAlpha = 1 - age * 0.7;
       ctx.strokeStyle = RED; ctx.lineWidth = 2;
-      for (var a = 0; a < 8; a++) {
-        var ang = (a / 8) * Math.PI * 2;
-        ctx.beginPath(); ctx.moveTo(tipX + Math.cos(ang) * 6, tipY + Math.sin(ang) * 6); ctx.lineTo(tipX + Math.cos(ang) * 16, tipY + Math.sin(ang) * 16); ctx.stroke();
+      ctx.beginPath(); ctx.arc(tipX, tipY, 12 + age * 65, 0, Math.PI * 2); ctx.stroke();
+      for (var a = 0; a < 18; a++) {
+        var ang = a * 2.39996, distance = 14 + age * (30 + a * 3);
+        ctx.fillStyle = a % 2 ? '#ffce8b' : RED;
+        ctx.beginPath(); ctx.arc(tipX + Math.cos(ang) * distance, tipY + Math.sin(ang) * distance, 3 * (1 - age * .6), 0, Math.PI * 2); ctx.fill();
       }
+      ctx.restore();
     }
 
     // headline multiplier
@@ -472,7 +508,7 @@
     ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
     ctx.fillStyle = 'rgba(244,236,216,0.55)';
     ctx.font = '700 ' + (portrait ? 12 : 14) + 'px ' + MONO;
-    ctx.fillText('N E X T   R O U N D', hx, hy - (portrait ? 40 : 58));
+    ctx.fillText('L A U N C H   I N', hx, hy - (portrait ? 40 : 58));
     ctx.fillStyle = GOLD;
     ctx.font = '700 ' + (portrait ? 48 : 72) + 'px ' + DISPLAY;
     ctx.fillText((left / 1000).toFixed(1) + 's', hx, hy);
@@ -506,6 +542,9 @@
     $('cr-bank').textContent = fmt(bankroll);
   }
   function renderControls() {
+    $('cr-root').dataset.phase = phase;
+    $('cr-phase').textContent = phase === 'betting' ? '● Boarding open' : phase === 'running' ? '● Flight live' : '● Flight ended';
+    $('cr-guidance').textContent = queued ? 'Next flight reserved · Tap Queued to cancel.' : phase === 'betting' ? (bet ? 'You’re on board. Get ready to cash out.' : 'Set your stake and board the next flight.') : phase === 'running' ? (bet && bet.cashedAt == null ? 'You’re flying! Cash out any time, or wait for your auto target.' : bet ? 'Cash-out secured. Enjoy the rest of the flight.' : 'Watching this flight · You can queue a bet for the next one.') : 'Flight complete · A new countdown starts shortly.';
     var btn = $('cr-action');
     var amt = currentAmount();
     btn.className = 'cr-action';
@@ -533,6 +572,8 @@
     var locked = !!bet && !bet.settled && phase !== 'busted';
     $('cr-amount').disabled = locked;
     $('cr-auto').disabled = locked;
+    $('cr-half').disabled = locked;
+    $('cr-double').disabled = locked;
     var chips = document.querySelectorAll('.cr-chip');
     for (var i = 0; i < chips.length; i++) {
       chips[i].disabled = locked;
@@ -682,6 +723,7 @@
     var b = $('cr-sound');
     b.classList.toggle('muted', !soundOn);
     b.setAttribute('aria-label', soundOn ? 'Sound on' : 'Sound off');
+    b.setAttribute('aria-pressed', String(soundOn));
     b.title = soundOn ? 'Sound on' : 'Sound off';
   }
   $('cr-seed-go').addEventListener('click', verifySeed);
@@ -690,6 +732,8 @@
   window.addEventListener('keydown', function (e) {
     if (e.defaultPrevented) return;
     var tag = (e.target && e.target.tagName) || '';
+    if (e.repeat) return;
+    if ((tag === 'BUTTON' || tag === 'A') && (e.code === 'Space' || e.key === ' ')) return;
     if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT') return;
     if (e.code === 'Space' || e.key === ' ') { e.preventDefault(); if (!$('cr-action').disabled) primaryAction(); }
     else if (e.key === 'Escape') { if (phase === 'betting' && bet) cancelBet(); else if (queued) { queued = false; renderControls(); } }

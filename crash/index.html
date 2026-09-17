@@ -208,6 +208,7 @@
   @media (max-width:768px){.game-overview{padding:0 18px}.game-overview h2{font-size:22px}.game-overview h3{font-size:16px}}
   @media (prefers-reduced-motion:reduce){.cr-action.is-cash{animation:none}}
 </style>
+<link rel="stylesheet" href="crash-style.css?v=20260917b">
 </head>
 <body>
 <h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Crash</h1>
@@ -216,7 +217,7 @@
     <div class="cr-root" id="cr-root">
       <div class="cr-topbar">
         <a class="cr-back" href="../casino/">← Casino</a>
-        <div class="cr-title">Crash <span class="cr-title-sub">Cash out before it busts</span></div>
+        <div class="cr-title"><span class="cr-logo">↗</span> CRASH <span class="cr-title-sub">Beyond the limit</span></div>
         <div class="cr-right">
           <button class="cr-icon" id="cr-sound" type="button" aria-label="Sound on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="on" d="M16 9.5a3.5 3.5 0 0 1 0 5"/><path class="on" d="M18.5 7a7 7 0 0 1 0 10"/><path class="off" d="M17 9.5l4 5M21 9.5l-4 5"/></svg></button>
           <div class="cr-bank"><span class="cr-bank-l">Bankroll</span><span id="cr-bank">$1,000</span></div>
@@ -225,11 +226,14 @@
 
       <div class="cr-stage">
         <div class="cr-main">
+          <div class="cr-flightbar"><span class="cr-flight-label">FLIGHT CONTROL <span> / PLAY MONEY</span></span><span id="cr-phase" role="status">Preparing launch</span></div>
           <div class="cr-graph">
             <canvas id="cr-canvas" aria-label="Multiplier curve"></canvas>
+            <div class="cr-orbit-label" aria-hidden="true">LIMESTONE / ORBITAL DIVISION</div>
             <div class="cr-fair" id="cr-fair"></div>
           </div>
 
+          <div class="cr-guidance" id="cr-guidance" role="status">Choose your stake. Cash out before the flight ends.</div>
           <div class="cr-controls">
             <div>
               <div class="cr-field-l">Bet <span>$5 – $500</span></div>
@@ -253,15 +257,15 @@
 
         <aside class="cr-side">
           <div class="cr-card">
-            <div class="cr-card-head"><div class="cr-card-title">Last rounds</div></div>
+            <div class="cr-card-head"><div class="cr-card-title">Flight history</div><span class="cr-badge">LATEST FIRST</span></div>
             <div class="cr-history" id="cr-history"></div>
           </div>
           <div class="cr-card cr-table-card">
-            <div class="cr-card-head"><div class="cr-card-title">Table</div></div>
+            <div class="cr-card-head"><div class="cr-card-title">Flight crew</div><span class="cr-badge">SIMULATED</span></div>
             <div class="cr-table" id="cr-table"></div>
           </div>
           <div class="cr-card">
-            <div class="cr-card-head"><div class="cr-card-title">Session</div><button class="cr-reset" id="cr-reset" type="button">Reset</button></div>
+            <div class="cr-card-head"><div class="cr-card-title">Your session</div><button class="cr-reset" id="cr-reset" type="button">Reset</button></div>
             <div class="cr-stats">
               <div class="cr-stat"><div class="cr-stat-l">Rounds</div><div class="cr-stat-v" id="cr-st-rounds">0</div></div>
               <div class="cr-stat"><div class="cr-stat-l">Win rate</div><div class="cr-stat-v" id="cr-st-wr">—</div></div>
@@ -358,7 +362,7 @@
 <script src="../casino/casino-stats.js?v=20260917a"></script>
 <script src="../casino/casino-reload.js?v=20260910d"></script>
 <script src="crash-engine.js?v=20260917a"></script>
-<script src="crash-app.js?v=20260917a"></script>
+<script src="crash-app.js?v=20260917b"></script>
 <a id="fb-pill" href="/feedback/?from=crash" style="position:fixed;left:10px;bottom:10px;z-index:2147483000;font:600 11px/1 Inter,system-ui,sans-serif;color:#fff;background:rgba(16,62,60,0.5);padding:6px 11px;border-radius:999px;text-decoration:none;letter-spacing:0.02em;opacity:0.75" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.75">💬 Feedback</a>
 </body>
 </html>

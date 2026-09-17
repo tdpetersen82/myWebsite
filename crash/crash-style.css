@@ -1,0 +1,42 @@
+/* Orbital flight deck. Canvas art is drawn at the scaled device resolution. */
+:root{--brass:#76e9d5;--brass-2:#b1fff0;--brass-deep:#329988;--ivory:#eef4ff;--ivory-dim:#a8b9d1;--green:#76e9b1;--red:#ff8196;--line:rgba(142,173,220,.18)}
+body{background:radial-gradient(ellipse at 15% 0%,#14233b 0,transparent 55%),radial-gradient(ellipse at 90% 50%,#1c1535 0,transparent 60%),#080d18}
+.cr-root{padding-top:24px;gap:20px}
+.cr-topbar{padding-bottom:18px}
+.cr-title{font-weight:700;letter-spacing:.13em;font-size:31px}
+.cr-logo{display:grid;place-items:center;width:38px;height:38px;border-radius:12px;background:linear-gradient(135deg,#8affe2,#69a7ff);color:#102235;font-size:32px;box-shadow:0 0 28px #61dfd522}
+.cr-title-sub{font-size:9px;letter-spacing:.17em;border:0;color:#a8b9d1;padding-left:0}
+.cr-back,.cr-icon{background:#121d30;border-color:var(--line);border-radius:12px}
+.cr-bank{background:linear-gradient(130deg,#193537,#142432);border-color:#72ebd52e;color:#b1fff0;border-radius:12px}
+.cr-stage{gap:20px}.cr-main{gap:12px}
+.cr-flightbar{display:flex;justify-content:space-between;align-items:center;padding:0 4px;font:600 11px Inter,sans-serif;letter-spacing:.06em;min-height:22px;color:#87f1da}
+.cr-flight-label{color:#d4e0f3;letter-spacing:.15em;font-size:10px}.cr-flight-label span{color:#8294af}
+.cr-graph{height:450px;border-radius:20px;border-color:#789ccc30;background:linear-gradient(145deg,#0c192b,#100f25 70%,#0b2330);box-shadow:0 20px 50px #0005,inset 0 1px #ffffff0b}
+.cr-fair{top:15px;left:18px;font-size:10px;color:#8294af}.cr-orbit-label{position:absolute;right:18px;top:17px;font:8px Inter,sans-serif;letter-spacing:.18em;color:#8498b5}
+.cr-guidance{color:#b0c1d9;font-size:12px;padding:0 4px;min-height:18px}
+.cr-controls,.cr-card{background:linear-gradient(140deg,#162238e8,#101929ee);border-color:var(--line);box-shadow:inset 0 1px #ffffff05;border-radius:16px}
+.cr-controls{padding:18px;gap:14px;grid-template-columns:1fr 1fr 224px}
+.cr-input{background:#080f1e;border-color:#425573;color:#edf6ff;height:46px}.cr-input:focus{box-shadow:0 0 0 3px #76e9d520}
+.cr-field-l{opacity:1;color:#b5c8e0;font-weight:600;letter-spacing:.13em}.cr-field-l span{opacity:.8}
+.cr-step,.cr-chip,.cr-pill{background:#1b2941;border-color:#35435e;color:#c3d0e5;border-radius:8px}
+.cr-chip.active,.cr-pill.active{background:#76e9d51c;color:#a3ffe9;border-color:#76e9d580}
+.cr-action{border-radius:12px;box-shadow:0 8px 24px #0004,inset 0 1px #ffffff66;border:1px solid #baffed44}
+.cr-action.is-bet,.cr-action.is-next{background:linear-gradient(125deg,#8cffe1,#53ccb7);color:#08282b}
+.cr-action.is-cash{background:linear-gradient(125deg,#a7ffd6,#56e4a1)}
+.cr-action .l{letter-spacing:0;font-size:24px}.cr-action .s{font-size:12px}
+.cr-card{padding:16px}.cr-card-title{color:#d6e3f6;font-size:11px;letter-spacing:.13em}.cr-badge{font-size:8px;color:#92a7c5;letter-spacing:.1em}
+.cr-row{background:#0c1424;border-color:#ffffff06;padding:8px}.cr-row.you{background:#69e4cf12;border-color:#69e4cf4a}.cr-row.you .n{color:#96ffe4}
+.cr-stat{background:#0c1526;border-radius:8px;padding:8px}.cr-stat-l{opacity:1;color:#8ea5c3;letter-spacing:.07em}.cr-stat-v{font-size:16px}
+.cr-hist{border-radius:7px}.cr-history{max-height:102px;overflow:auto}.cr-empty{color:#8ea5c3}
+[data-phase="busted"] #cr-phase{color:var(--red)}
+button:focus-visible,a:focus-visible{outline:2px solid #acfff0;outline-offset:4px}
+.portrait .cr-logo{width:26px;height:26px;font-size:23px;border-radius:8px}.portrait .cr-title{font-size:18px;letter-spacing:.06em}
+.portrait .cr-flightbar{font-size:10px}.portrait .cr-flight-label{font-size:9px}.portrait .cr-flight-label span{display:none}
+.portrait .cr-orbit-label{display:none}.portrait .cr-graph{height:285px}.portrait .cr-guidance{font-size:11px;line-height:1.5;min-height:32px}
+.portrait .cr-controls{padding:12px}.portrait .cr-input{height:44px}.portrait .cr-action{min-height:66px}.portrait .cr-chip,.portrait .cr-pill{padding:9px 0}
+.portrait .cr-stats{grid-template-columns:repeat(3,1fr)}.portrait .cr-stat{padding:5px 8px}.portrait .cr-stat-l{font-size:9px}
+.portrait .cr-row{padding:5px 8px}.portrait .cr-table-card{max-height:150px}.portrait .cr-history{max-height:30px;overflow-x:auto}.portrait .cr-badge{font-size:7px}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important}}
+.portrait .cr-graph{height:250px}
+.portrait .cr-chips,.portrait .cr-pills{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:5px}
+.portrait .cr-chip,.portrait .cr-pill{font-size:12px;min-height:32px;padding:6px 0}
