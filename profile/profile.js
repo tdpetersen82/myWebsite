@@ -17,6 +17,7 @@
     { id: 'threeCardPoker', name: 'Three Card',     href: '../three-card-poker/', tag: 'Cards' },
     { id: 'texasHoldem',    name: "Texas Hold'em",  href: '../texas-holdem/',     tag: 'Cards' },
     { id: 'slotMachine',    name: 'Slot Machine',   href: '../slot-machine/',     tag: 'Reels' },
+    { id: 'crash',          name: 'Crash',          href: '../crash/',            tag: 'Curve' },
   ];
 
   // Skeleton section config: each row reads a localStorage key. `transform`
@@ -192,6 +193,15 @@
         { l: 'Best spin', v: fmtPay(g.biggestWin) },
       ];
     }
+    if (id === 'crash') {
+      const wr = (g.roundsPlayed || 0) > 0 ? Math.round(100 * (g.roundsWon || 0) / g.roundsPlayed) + '%' : '—';
+      return [
+        { l: 'Rounds', v: num(g.roundsPlayed) },
+        { l: 'Cashed out', v: wr },
+        { l: 'Best cash-out', v: g.bestMultiplier > 0 ? Number(g.bestMultiplier).toFixed(2) + 'x' : '—' },
+        { l: 'Best win', v: fmtPay(g.biggestWin) },
+      ];
+    }
     return [];
   }
 
@@ -296,7 +306,7 @@
 
     // Casino per-game cards
     renderCasinoCards(stats);
-    $('prof-casino-count').textContent = '8 tables';
+    $('prof-casino-count').textContent = '9 tables';
 
     // Skeleton sections
     const aw = renderSkeleton('prof-arcade-grid', ARCADE_ROWS);

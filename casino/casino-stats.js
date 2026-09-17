@@ -49,6 +49,7 @@
           threeCardPoker: { handsPlayed: 0, handsWon: 0, biggestWin: 0, biggestPP: 0 },
           texasHoldem:    { handsPlayed: 0, handsWon: 0, biggestPot: 0, biggestWin: 0 },
           slotMachine:    { spinsPlayed: 0, biggestWin: 0 },
+          crash:          { roundsPlayed: 0, roundsWon: 0, biggestWin: 0, bestMultiplier: 0 },
         },
       },
       run: {
@@ -79,10 +80,20 @@
     migrated = true;
     const existing = readBlob();
     if (existing && existing.schemaVersion === SCHEMA) {
+      let changed = false;
       if (existing.run && !existing.run.runId) {
         existing.run.runId = newRunId();
-        writeBlob(existing);
+        changed = true;
       }
+      // Tables added after a blob was written (crash, 2026-09-17) get their
+      // per-game bucket on first load instead of a silent no-op recordEvent.
+      const fresh = defaults().lifetime.perGame;
+      if (existing.lifetime && existing.lifetime.perGame) {
+        for (const g in fresh) {
+          if (!existing.lifetime.perGame[g]) { existing.lifetime.perGame[g] = fresh[g]; changed = true; }
+        }
+      }
+      if (changed) writeBlob(existing);
       return;
     }
 
@@ -165,8 +176,8 @@
   }
 
   // game ids (camelCase): blackjack, roulette, videoPoker, solitaire, craps,
-  // threeCardPoker, texasHoldem, slotMachine
-  // evt: { kind, won, payout, rare, pot, pp }
+  // threeCardPoker, texasHoldem, slotMachine, crash
+  // evt: { kind, won, payout, rare, pot, pp, mult }
   function recordEvent(game, evt) {
     migrateIfNeeded();
     const blob = readBlob() || defaults();
@@ -195,6 +206,12 @@
     } else if (game === 'slotMachine') {
       g.spinsPlayed = (g.spinsPlayed || 0) + 1;
       if (payout > (g.biggestWin || 0)) g.biggestWin = payout;
+    } else if (game === 'crash') {
+      g.roundsPlayed = (g.roundsPlayed || 0) + 1;
+      if (won) g.roundsWon = (g.roundsWon || 0) + 1;
+      if (payout > (g.biggestWin || 0)) g.biggestWin = payout;
+      const mult = Number(evt && evt.mult) || 0;
+      if (mult > (g.bestMultiplier || 0)) g.bestMultiplier = mult;
     }
 
     if (game === 'texasHoldem' && evt && evt.pot != null) {

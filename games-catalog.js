@@ -66,6 +66,7 @@
     { id: 'three-card-poker',  name: 'Three Card Poker',  cat: 'casino',  desc: 'Play or fold? Three cards.',       color: '#9B7EDC', added: '2026-03-27' },
     { id: 'texas-holdem',      name: "Texas Hold'em",     cat: 'casino',  desc: '4-handed cash game. Equity hints.', color: '#E8B05B', added: '2026-05-07' },
     { id: 'slot-machine',      name: 'Slot Machine',      cat: 'casino',  desc: 'Three reels, three themes.',       color: '#C8A14A', added: '2026-05-08' },
+    { id: 'crash',             name: 'Crash',             cat: 'casino',  desc: 'Cash out before it busts.',        color: '#E6C590', added: '2026-09-17', isNew: true },
   ];
 
   // `twoPlayer: true` = two people can play on one screen (same keyboard or

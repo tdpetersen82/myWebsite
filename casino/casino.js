@@ -39,7 +39,8 @@
         (pg.craps.rollsPlayed           || 0) +
         (pg.threeCardPoker.handsPlayed  || 0) +
         (pg.texasHoldem.handsPlayed     || 0) +
-        (pg.slotMachine.spinsPlayed     || 0);
+        (pg.slotMachine.spinsPlayed     || 0) +
+        ((pg.crash && pg.crash.roundsPlayed) || 0);
       const sumWon =
         (pg.blackjack.handsWon       || 0) +
         (pg.roulette.spinsWon        || 0) +
@@ -47,7 +48,8 @@
         (pg.solitaire.gamesWon       || 0) +
         (pg.craps.passWins           || 0) +
         (pg.threeCardPoker.handsWon  || 0) +
-        (pg.texasHoldem.handsWon     || 0);
+        (pg.texasHoldem.handsWon     || 0) +
+        ((pg.crash && pg.crash.roundsWon) || 0);
       totalHands = sumPlayed;
       totalWins  = sumWon;
       biggestPot = stats.lifetime.biggestPayout.amount || 0;

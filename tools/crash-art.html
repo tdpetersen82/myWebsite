@@ -1,0 +1,181 @@
+<!doctype html>
+<meta charset="utf-8">
+<title>Crash art builder</title>
+<!--
+  Draws the Crash casino tile (assets/thumbs/crash-casino-YYYYMMDD.png, 600×600,
+  same size as the other casino tiles) and the OG share card
+  (assets/og/crash.jpg, 1200×630) with canvas, then POSTs them to
+  tools/serve.mjs's /__save. No PIL needed.
+  Run:  node tools/serve.mjs 8099  →  open http://localhost:8099/tools/crash-art.html?save=1
+-->
+<style>body{background:#111;color:#ddd;font:14px system-ui;margin:20px}canvas{display:block;margin:12px 0;max-width:100%;border:1px solid #333}</style>
+<p id="status">drawing…</p>
+<canvas id="tile" width="600" height="600"></canvas>
+<canvas id="og" width="1200" height="630"></canvas>
+<script>
+const TILE_NAME = 'crash-casino-20260917.png';
+
+function felt(x, W, H) {
+  const bg = x.createRadialGradient(W * 0.5, H * 0.42, W * 0.05, W * 0.5, H * 0.5, W * 0.75);
+  bg.addColorStop(0, '#12442f'); bg.addColorStop(0.6, '#0b2e20'); bg.addColorStop(1, '#061a12');
+  x.fillStyle = bg; x.fillRect(0, 0, W, H);
+  // felt grain
+  x.save(); x.globalAlpha = 0.06;
+  for (let i = 0; i < 2600; i++) {
+    x.fillStyle = Math.random() < 0.5 ? '#000' : '#5a9a7a';
+    x.fillRect(Math.random() * W, Math.random() * H, 1.5, 1.5);
+  }
+  x.restore();
+}
+
+function rr(x, px, py, w, h, r) {
+  x.beginPath(); x.moveTo(px + r, py); x.lineTo(px + w - r, py); x.quadraticCurveTo(px + w, py, px + w, py + r);
+  x.lineTo(px + w, py + h - r); x.quadraticCurveTo(px + w, py + h, px + w - r, py + h); x.lineTo(px + r, py + h);
+  x.quadraticCurveTo(px, py + h, px, py + h - r); x.lineTo(px, py + r); x.quadraticCurveTo(px, py, px + r, py); x.closePath();
+}
+
+// The screen: a brass-framed dark display with the rising curve.
+function screen(x, px, py, w, h, s) {
+  x.save(); x.translate(px, py); x.scale(s, s);
+  // drop shadow
+  x.save(); x.shadowColor = 'rgba(0,0,0,0.6)'; x.shadowBlur = 40; x.shadowOffsetY = 18;
+  x.fillStyle = '#2a1d10'; rr(x, 0, 0, w, h, 26); x.fill(); x.restore();
+  // brass bezel
+  const bz = x.createLinearGradient(0, 0, w, h);
+  bz.addColorStop(0, '#f3dc9f'); bz.addColorStop(0.18, '#a67c3f'); bz.addColorStop(0.42, '#f0d090'); bz.addColorStop(0.6, '#8f6a34'); bz.addColorStop(0.8, '#e8c98a'); bz.addColorStop(1, '#6b4e26');
+  x.fillStyle = bz; rr(x, 0, 0, w, h, 26); x.fill();
+  // inner dark lip
+  x.fillStyle = '#1a120a'; rr(x, 14, 14, w - 28, h - 28, 18); x.fill();
+  // display
+  const sc = x.createLinearGradient(0, 22, 0, h - 22);
+  sc.addColorStop(0, '#141a2c'); sc.addColorStop(1, '#070a12');
+  x.fillStyle = sc; rr(x, 22, 22, w - 44, h - 44, 12); x.fill();
+  x.save(); rr(x, 22, 22, w - 44, h - 44, 12); x.clip();
+  const gx0 = 22, gy0 = 22, gw = w - 44, gh = h - 44;
+  // glow behind curve
+  const gl = x.createRadialGradient(gx0 + gw * 0.72, gy0 + gh * 0.32, 10, gx0 + gw * 0.72, gy0 + gh * 0.32, gw * 0.7);
+  gl.addColorStop(0, 'rgba(230,197,144,0.35)'); gl.addColorStop(1, 'rgba(230,197,144,0)');
+  x.fillStyle = gl; x.fillRect(gx0, gy0, gw, gh);
+  // grid
+  x.strokeStyle = 'rgba(201,162,106,0.13)'; x.lineWidth = 1.2;
+  for (let i = 1; i < 6; i++) { const gx = gx0 + (gw * i) / 6; x.beginPath(); x.moveTo(gx, gy0); x.lineTo(gx, gy0 + gh); x.stroke(); }
+  for (let j = 1; j < 5; j++) { const gy = gy0 + (gh * j) / 5; x.beginPath(); x.moveTo(gx0, gy); x.lineTo(gx0 + gw, gy); x.stroke(); }
+  // curve points: exponential from bottom-left
+  const pts = [];
+  const N = 60;
+  for (let i = 0; i <= N; i++) {
+    const t = i / N;
+    const px2 = gx0 + 30 + t * (gw - 110);
+    const py2 = gy0 + gh - 40 - (Math.exp(2.1 * t) - 1) / (Math.exp(2.1) - 1) * (gh - 120);
+    pts.push([px2, py2]);
+  }
+  // area fill
+  x.beginPath(); x.moveTo(pts[0][0], gy0 + gh); pts.forEach(p => x.lineTo(p[0], p[1])); x.lineTo(pts[N][0], gy0 + gh); x.closePath();
+  const af = x.createLinearGradient(0, gy0, 0, gy0 + gh);
+  af.addColorStop(0, 'rgba(230,197,144,0.42)'); af.addColorStop(1, 'rgba(230,197,144,0)');
+  x.fillStyle = af; x.fill();
+  // stroke with glow
+  x.save(); x.shadowColor = '#f0d090'; x.shadowBlur = 24;
+  x.beginPath(); pts.forEach((p, i) => i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1]));
+  x.strokeStyle = '#f2d79a'; x.lineWidth = 9; x.lineCap = 'round'; x.lineJoin = 'round'; x.stroke();
+  x.restore();
+  x.beginPath(); pts.forEach((p, i) => i ? x.lineTo(p[0], p[1]) : x.moveTo(p[0], p[1]));
+  x.strokeStyle = '#fff5dc'; x.lineWidth = 3; x.stroke();
+  // cash-out dots along the curve
+  x.fillStyle = '#8fe3ad';
+  for (const t of [0.35, 0.55, 0.7]) { const p = pts[Math.round(t * N)]; x.beginPath(); x.arc(p[0], p[1], 6, 0, Math.PI * 2); x.fill(); }
+  // tip: bright ball
+  const tip = pts[N];
+  const tg = x.createRadialGradient(tip[0], tip[1], 2, tip[0], tip[1], 34);
+  tg.addColorStop(0, 'rgba(255,250,235,1)'); tg.addColorStop(0.3, 'rgba(255,240,200,0.9)'); tg.addColorStop(1, 'rgba(255,220,150,0)');
+  x.fillStyle = tg; x.beginPath(); x.arc(tip[0], tip[1], 34, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#fffaf0'; x.beginPath(); x.arc(tip[0], tip[1], 11, 0, Math.PI * 2); x.fill();
+  // multiplier
+  x.textAlign = 'left'; x.textBaseline = 'alphabetic';
+  x.font = '800 118px "Bricolage Grotesque", "Arial Black", Arial, sans-serif';
+  x.save(); x.shadowColor = 'rgba(230,197,144,0.7)'; x.shadowBlur = 30;
+  const tx = x.createLinearGradient(0, gy0 + 40, 0, gy0 + 150);
+  tx.addColorStop(0, '#fff2cf'); tx.addColorStop(1, '#e0b86a');
+  x.fillStyle = tx; x.fillText('2.47x', gx0 + 40, gy0 + 148);
+  x.restore();
+  x.font = '700 22px "JetBrains Mono", Menlo, monospace'; x.fillStyle = 'rgba(244,236,216,0.55)';
+  x.fillText('C A S H   O U T', gx0 + 46, gy0 + 186);
+  // screen sheen
+  const sh = x.createLinearGradient(gx0, gy0, gx0 + gw * 0.6, gy0 + gh);
+  sh.addColorStop(0, 'rgba(255,255,255,0.10)'); sh.addColorStop(0.35, 'rgba(255,255,255,0.02)'); sh.addColorStop(0.36, 'rgba(255,255,255,0)');
+  x.fillStyle = sh; x.fillRect(gx0, gy0, gw, gh);
+  x.restore();
+  // bezel screws
+  for (const [sx, sy] of [[30, 30], [w - 30, 30], [30, h - 30], [w - 30, h - 30]]) {
+    const sg = x.createRadialGradient(sx - 2, sy - 2, 1, sx, sy, 8);
+    sg.addColorStop(0, '#fff0c8'); sg.addColorStop(1, '#6b4e26');
+    x.fillStyle = sg; x.beginPath(); x.arc(sx, sy, 7, 0, Math.PI * 2); x.fill();
+  }
+  x.restore();
+}
+
+function chip(x, cx, cy, r, color, dark) {
+  x.save(); x.translate(cx, cy);
+  x.save(); x.shadowColor = 'rgba(0,0,0,0.55)'; x.shadowBlur = 16; x.shadowOffsetY = 8;
+  x.fillStyle = dark; x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); x.fill(); x.restore();
+  const g = x.createRadialGradient(-r * 0.3, -r * 0.35, r * 0.1, 0, 0, r);
+  g.addColorStop(0, color); g.addColorStop(1, dark);
+  x.fillStyle = g; x.beginPath(); x.arc(0, 0, r, 0, Math.PI * 2); x.fill();
+  x.fillStyle = '#f4ecd8';
+  for (let i = 0; i < 6; i++) { x.save(); x.rotate((i / 6) * Math.PI * 2); x.fillRect(-r * 0.16, -r, r * 0.32, r * 0.24); x.restore(); }
+  x.strokeStyle = 'rgba(255,255,255,0.35)'; x.lineWidth = 3; x.beginPath(); x.arc(0, 0, r * 0.66, 0, Math.PI * 2); x.stroke();
+  x.fillStyle = dark; x.beginPath(); x.arc(0, 0, r * 0.62, 0, Math.PI * 2); x.fill();
+  const ig = x.createRadialGradient(-r * 0.2, -r * 0.2, 2, 0, 0, r * 0.6);
+  ig.addColorStop(0, color); ig.addColorStop(1, dark);
+  x.fillStyle = ig; x.beginPath(); x.arc(0, 0, r * 0.58, 0, Math.PI * 2); x.fill();
+  x.restore();
+}
+
+function drawTile() {
+  const c = document.getElementById('tile'), x = c.getContext('2d');
+  felt(x, 600, 600);
+  screen(x, 52, 96, 496, 376, 1);
+  chip(x, 96, 500, 46, '#e8b05b', '#7a4d14');
+  chip(x, 150, 528, 46, '#c8423a', '#5a1710');
+  // vignette
+  const vg = x.createRadialGradient(300, 300, 200, 300, 300, 440);
+  vg.addColorStop(0, 'rgba(0,0,0,0)'); vg.addColorStop(1, 'rgba(0,0,0,0.55)');
+  x.fillStyle = vg; x.fillRect(0, 0, 600, 600);
+}
+
+// OG card: same layout as tools/make-og-images.py (dark navy, corner brackets, title, board shot).
+function drawOg() {
+  const c = document.getElementById('og'), x = c.getContext('2d');
+  const W = 1200, H = 630;
+  const bg = x.createLinearGradient(0, 0, W, H); bg.addColorStop(0, '#20203f'); bg.addColorStop(1, '#0d0d1e');
+  x.fillStyle = bg; x.fillRect(0, 0, W, H);
+  x.strokeStyle = '#e6e6f0'; x.lineWidth = 3;
+  x.beginPath(); x.moveTo(50, 200); x.lineTo(50, 50); x.lineTo(200, 50); x.stroke();
+  x.beginPath(); x.moveTo(1000, 580); x.lineTo(1150, 580); x.lineTo(1150, 430); x.stroke();
+  x.fillStyle = '#ffffff'; x.font = 'bold 96px "Arial Bold", Arial, Helvetica, sans-serif'; x.textBaseline = 'alphabetic';
+  x.fillText('Crash', 96, 318);
+  x.fillStyle = '#b9b6d9'; x.font = '30px Arial, Helvetica, sans-serif';
+  x.fillText('Free browser game — no installs', 96, 374);
+  x.fillStyle = '#6d63d4'; x.fillRect(96, 508, 250, 4);
+  x.fillStyle = '#ffffff'; x.font = 'bold 26px Arial, Helvetica, sans-serif'; x.fillText('LIMESTONE GAMES', 96, 548);
+  x.fillStyle = '#ffffff'; x.fillRect(672, 97, 436, 436);
+  x.drawImage(document.getElementById('tile'), 676, 101, 428, 428);
+}
+
+async function save(canvas, path, type, q) {
+  const dataUrl = canvas.toDataURL(type, q);
+  const r = await fetch('/__save', { method: 'POST', body: JSON.stringify({ path, dataUrl }) });
+  return path + ' → ' + await r.text();
+}
+(async () => {
+  try { await document.fonts.load('800 118px "Bricolage Grotesque"'); await document.fonts.load('700 22px "JetBrains Mono"'); } catch (e) {}
+  drawTile(); drawOg();
+  let msg = 'drawn';
+  if (new URLSearchParams(location.search).get('save')) {
+    msg += ' | ' + await save(document.getElementById('tile'), 'assets/thumbs/' + TILE_NAME, 'image/png');
+    msg += ' | ' + await save(document.getElementById('og'), 'assets/og/crash.jpg', 'image/jpeg', 0.9);
+  }
+  document.getElementById('status').textContent = msg;
+})();
+</script>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,800&family=JetBrains+Mono:wght@700&display=swap" rel="stylesheet">

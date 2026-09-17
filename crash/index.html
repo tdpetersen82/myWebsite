@@ -1,0 +1,364 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="google-adsense-account" content="ca-pub-1622542088326216">
+    <script async src="https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client=ca-pub-1622542088326216" crossorigin="anonymous"></script>
+    <title>Crash — Free Online Crash Game | Limestone Games</title>
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<meta name="description" content="Play the crash game free in your browser. Bet, watch the multiplier climb, cash out before it busts. Provably fair rounds, 1% house edge, auto cash-out. Play money only.">
+<meta name="keywords" content="crash game, crash gambling game, aviator game, free crash game, crash casino game, multiplier game, cash out game, browser crash game, provably fair">
+<link rel="canonical" href="https://limestonegames.com/crash/">
+<meta property="og:title" content="Crash — Limestone Games">
+<meta property="og:description" content="Watch the multiplier climb and cash out before it busts. Provably fair, play money only, no downloads.">
+<meta property="og:type" content="website">
+<meta property="og:url" content="https://limestonegames.com/crash/">
+<meta property="og:site_name" content="Limestone Games">
+<meta property="og:image" content="https://limestonegames.com/assets/og/crash.jpg">
+<meta name="twitter:card" content="summary_large_image">
+<meta name="twitter:title" content="Crash — Limestone Games">
+<meta name="twitter:description" content="Watch the multiplier climb and cash out before it busts. Provably fair, play money only, no downloads.">
+<meta name="twitter:image" content="https://limestonegames.com/assets/og/crash.jpg">
+    <link rel="icon" href="/favicon.ico" sizes="any">
+    <link rel="icon" type="image/png" sizes="32x32" href="/favicon-32.png">
+    <link rel="icon" type="image/png" sizes="192x192" href="/icon-192.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+    <link rel="manifest" href="/manifest.json">
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"VideoGame","name":"Crash","description":"The crash game: a multiplier climbs from 1.00x and busts at a random point. Bet before the round, cash out before the bust to win your stake times the multiplier. Provably fair rounds with a 1% house edge.","url":"https://limestonegames.com/crash/","playMode":"SinglePlayer","applicationCategory":"Game","operatingSystem":"Web Browser","offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"author":{"@type":"Organization","name":"Limestone Games"}}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Home","item":"https://limestonegames.com/"},{"@type":"ListItem","position":2,"name":"Casino","item":"https://limestonegames.com/casino/"},{"@type":"ListItem","position":3,"name":"Crash"}]}</script>
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"FAQPage","mainEntity":[{"@type":"Question","name":"How do you play the crash game?","acceptedAnswer":{"@type":"Answer","text":"Place a bet during the countdown. When the round starts a multiplier climbs from 1.00x. Press Cash out (or Space) before it busts and you win your bet times the multiplier at that moment. If it busts first, you lose the bet. You can set an auto cash-out so the game cashes you out at a target multiplier."}},{"@type":"Question","name":"Is this crash game free?","acceptedAnswer":{"@type":"Answer","text":"Yes. It is entirely play money, shared with the other Limestone casino tables. No real betting, no deposits, no signup."}},{"@type":"Question","name":"What is the house edge in crash?","acceptedAnswer":{"@type":"Answer","text":"1%. The bust multiplier is 0.99 divided by (1 minus a uniform random number), so cashing out at any target x wins with probability 0.99 divided by x. Every strategy returns 99 cents on the dollar over the long run."}},{"@type":"Question","name":"What does provably fair mean?","acceptedAnswer":{"@type":"Answer","text":"Each round's bust point comes from a random 32-byte seed. The SHA-256 hash of the seed is shown before the round, and the seed itself is shown after the bust, so you can check the hash matches and recompute the bust point yourself. The game cannot change the outcome after you bet."}},{"@type":"Question","name":"Is there a best strategy for crash?","acceptedAnswer":{"@type":"Answer","text":"No target beats the 1% edge: cashing at 1.10x or 10x has the same expected return. What changes is variance. Low targets win often and lose slowly; high targets lose often and win big. Auto cash-out removes the temptation to ride one more second."}}]}</script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;700&display=swap" rel="stylesheet">
+
+<!-- Google Analytics -->
+<script async src="https://www.googletagmanager.com/gtag/js?id=G-DP6FGVETMV"></script>
+<script>window.dataLayer=window.dataLayer||[];function gtag(){dataLayer.push(arguments);}gtag("js",new Date());if(/(^|\.)limestonegames\.com$/.test(location.hostname))gtag("config","G-DP6FGVETMV");addEventListener("error",function(e){try{gtag("event","js_error",{message:String(e.message||"").slice(0,150),src:(String(e.filename||"").split("/").pop().split("?")[0]||location.pathname)+":"+(e.lineno||0),page_path:location.pathname})}catch(_){}});addEventListener("unhandledrejection",function(e){try{var r=e.reason;gtag("event","js_error",{message:String(r&&r.message||r||"").slice(0,150),src:"promise",page_path:location.pathname})}catch(_){}});</script>
+
+<style>
+  :root{
+    --brass:#c9a26a; --brass-2:#e6c590; --brass-deep:#8c6a3f;
+    --ivory:#f4ecd8; --ivory-dim:#d9cfb8;
+    --red:#e8786f; --green:#7ed8a1;
+    --ink:#0c1611; --screen:#090c14; --screen-2:#0f1422;
+    --line:rgba(201,162,106,.22);
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{min-height:100%;background:#0a0805;color:var(--ivory);font-family:'Inter',system-ui,sans-serif;overflow-x:hidden}
+  body{
+    background:
+      radial-gradient(1200px 700px at 50% 30%, rgba(89,60,30,.45), transparent 70%),
+      radial-gradient(900px 600px at 50% 90%, rgba(0,0,0,.7), transparent 70%),
+      #0a0805;
+  }
+  button{font-family:inherit;cursor:pointer;border:none;background:none;color:inherit}
+  button:disabled{cursor:not-allowed}
+  a{color:inherit;text-decoration:none}
+  input{font-family:inherit;color:inherit}
+  #game-wrapper{margin:0 auto;position:relative}
+  #root{transform-origin:top left}
+
+  .cr-root{width:1380px;height:860px;padding:22px 40px 16px;display:flex;flex-direction:column;gap:14px}
+
+  /* Top bar */
+  .cr-topbar{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;padding:0 4px 12px;border-bottom:1px solid var(--line)}
+  .cr-back{justify-self:start;color:var(--ivory-dim);font-size:14px;letter-spacing:.04em;padding:8px 14px;border-radius:8px;border:1px solid rgba(201,162,106,.25);background:rgba(0,0,0,.25);transition:all .2s}
+  .cr-back:hover{color:var(--brass);border-color:var(--brass);background:rgba(201,162,106,.08)}
+  .cr-title{font-family:'Bricolage Grotesque',serif;font-weight:500;font-size:30px;letter-spacing:.02em;display:flex;align-items:baseline;gap:14px}
+  .cr-title-sub{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:12px;letter-spacing:.18em;text-transform:uppercase;color:var(--brass);padding:3px 10px;border:1px solid rgba(201,162,106,.4);border-radius:4px}
+  .cr-right{justify-self:end;display:flex;align-items:center;gap:10px}
+  .cr-bank{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:22px;font-weight:700;color:var(--brass-2);padding:8px 16px;border-radius:8px;background:rgba(0,0,0,.35);border:1px solid rgba(201,162,106,.3)}
+  .cr-bank-l{font-size:10px;letter-spacing:.18em;text-transform:uppercase;color:var(--ivory-dim);opacity:.7;margin-right:6px}
+  .cr-icon{width:40px;height:40px;border-radius:8px;border:1px solid rgba(201,162,106,.25);background:rgba(0,0,0,.25);font-size:17px;display:grid;place-items:center}
+  .cr-icon:hover{border-color:var(--brass)}
+  .cr-icon svg{width:18px;height:18px;fill:none;stroke:var(--ivory-dim);stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+  .cr-icon .on{display:block}.cr-icon .off{display:none}
+  .cr-icon.muted .on{display:none}.cr-icon.muted .off{display:block}
+  .cr-icon.muted svg{stroke:var(--red)}
+
+  /* Stage */
+  .cr-stage{flex:1;min-height:0;display:grid;grid-template-columns:minmax(0,1fr) 360px;gap:22px}
+  .cr-main{display:flex;flex-direction:column;gap:12px;min-width:0}
+  .cr-graph{position:relative;height:470px;border-radius:16px;overflow:hidden;
+    background:radial-gradient(900px 420px at 50% 100%, rgba(201,162,106,.10), transparent 70%), linear-gradient(180deg, var(--screen-2), var(--screen));
+    border:1px solid var(--line);box-shadow:inset 0 0 80px rgba(0,0,0,.6), 0 18px 38px rgba(0,0,0,.5)}
+  .cr-graph canvas{display:block;width:100%;height:100%}
+  .cr-fair{position:absolute;left:14px;top:10px;display:flex;gap:10px;align-items:center;font-family:'JetBrains Mono',ui-monospace,monospace;font-size:10.5px;color:rgba(244,236,216,.45);letter-spacing:.02em}
+  .cr-fair .k{color:var(--brass);opacity:.8}
+  .cr-fair .cr-verify{color:var(--brass-2);text-decoration:underline;text-underline-offset:2px}
+
+  /* Controls */
+  .cr-controls{display:grid;grid-template-columns:1fr 1fr 250px;gap:18px;align-items:stretch;
+    padding:14px 18px;border-radius:14px;background:rgba(8,4,2,.55);border:1px solid var(--line)}
+  .cr-field-l{font-size:10px;letter-spacing:.2em;text-transform:uppercase;color:var(--ivory-dim);opacity:.75;margin-bottom:8px;display:flex;justify-content:space-between}
+  .cr-field-l span{opacity:.6;letter-spacing:.04em;text-transform:none}
+  .cr-inrow{display:flex;gap:8px;align-items:stretch;margin-bottom:8px}
+  .cr-input{flex:1;min-width:0;height:44px;padding:0 12px;border-radius:8px;background:rgba(0,0,0,.4);border:1px solid rgba(201,162,106,.3);
+    font-family:'JetBrains Mono',ui-monospace,monospace;font-size:18px;font-weight:700;color:var(--ivory);outline:none;-moz-appearance:textfield}
+  .cr-input::-webkit-outer-spin-button,.cr-input::-webkit-inner-spin-button{-webkit-appearance:none}
+  .cr-input:focus{border-color:var(--brass)}
+  .cr-input:disabled{opacity:.55}
+  .cr-input-wrap{position:relative;flex:1;display:flex}
+  .cr-input-wrap .u{position:absolute;left:12px;top:50%;transform:translateY(-50%);font-family:'JetBrains Mono',monospace;font-size:16px;color:var(--brass);opacity:.8;pointer-events:none}
+  .cr-input-wrap .u.r{left:auto;right:12px}
+  .cr-input-wrap .cr-input{padding-left:28px}
+  .cr-input-wrap .cr-input.auto{padding-left:12px;padding-right:26px}
+  .cr-step{width:44px;border-radius:8px;border:1px solid rgba(201,162,106,.25);background:rgba(0,0,0,.25);color:var(--ivory-dim);font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;transition:all .15s}
+  .cr-step:hover:not(:disabled){color:var(--brass);border-color:var(--brass)}
+  .cr-step:disabled{opacity:.4}
+  .cr-chips,.cr-pills{display:flex;gap:6px;flex-wrap:wrap}
+  .cr-chip,.cr-pill{padding:6px 0;flex:1;min-width:44px;border-radius:999px;border:1px solid rgba(201,162,106,.25);background:rgba(0,0,0,.25);color:var(--ivory-dim);
+    font-family:'JetBrains Mono',monospace;font-size:12px;font-weight:700;transition:all .15s}
+  .cr-chip:hover:not(:disabled),.cr-pill:hover:not(:disabled){color:var(--ivory);border-color:rgba(201,162,106,.55)}
+  .cr-chip.active,.cr-pill.active{background:rgba(201,162,106,.16);border-color:var(--brass);color:var(--brass-2)}
+  .cr-chip:disabled,.cr-pill:disabled{opacity:.45}
+
+  .cr-action{display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;min-height:112px;border-radius:14px;
+    border:2px solid rgba(0,0,0,.25);color:var(--ink);
+    box-shadow:0 6px 0 rgba(0,0,0,.45),0 12px 24px rgba(0,0,0,.5),inset 0 2px 0 rgba(255,255,255,.35),inset 0 -3px 0 rgba(0,0,0,.2);
+    transition:transform .12s, box-shadow .12s, background .2s}
+  .cr-action .l{font-family:'Bricolage Grotesque',sans-serif;font-weight:700;font-size:22px;letter-spacing:.04em}
+  .cr-action .s{font-family:'JetBrains Mono',monospace;font-size:13px;font-weight:700;opacity:.8}
+  .cr-action:hover:not(:disabled){transform:translateY(-2px)}
+  .cr-action:active:not(:disabled){transform:translateY(3px);box-shadow:0 2px 0 rgba(0,0,0,.45),0 6px 12px rgba(0,0,0,.5),inset 0 2px 0 rgba(255,255,255,.3)}
+  .cr-action.is-bet,.cr-action.is-next{background:linear-gradient(180deg,#f0d8a4,#c9a26a)}
+  .cr-action.is-cash{background:linear-gradient(180deg,#9ee8b8,#5cbf82);animation:crPulse 1s ease-in-out infinite}
+  .cr-action.is-cancel,.cr-action.is-queued{background:rgba(0,0,0,.3);color:var(--ivory);border-color:rgba(201,162,106,.4);box-shadow:none}
+  .cr-action.is-done{background:rgba(126,216,161,.14);color:var(--green);border-color:rgba(126,216,161,.4);box-shadow:none;opacity:1}
+  .cr-action.is-lost{background:rgba(232,120,111,.12);color:var(--red);border-color:rgba(232,120,111,.4);box-shadow:none;opacity:1}
+  .cr-action:disabled:not(.is-done):not(.is-lost){opacity:.5;box-shadow:none;transform:none}
+  @keyframes crPulse{0%,100%{box-shadow:0 6px 0 rgba(0,0,0,.45),0 12px 24px rgba(0,0,0,.5),0 0 0 0 rgba(126,216,161,.5)}50%{box-shadow:0 6px 0 rgba(0,0,0,.45),0 12px 24px rgba(0,0,0,.5),0 0 0 8px rgba(126,216,161,0)}}
+
+  /* Sidebar */
+  .cr-side{display:flex;flex-direction:column;gap:12px;min-width:0;min-height:0}
+  .cr-card{background:rgba(8,4,2,.55);border:1px solid var(--line);border-radius:14px;padding:12px 14px;display:flex;flex-direction:column;min-height:0}
+  .cr-card-head{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+  .cr-card-title{font-family:'JetBrains Mono',ui-monospace,monospace;font-size:10px;letter-spacing:.22em;text-transform:uppercase;color:var(--brass)}
+  .cr-reset{font-size:10px;font-weight:600;letter-spacing:.08em;text-transform:uppercase;padding:4px 10px;border-radius:999px;border:1px solid rgba(201,162,106,.25);background:rgba(0,0,0,.25);color:var(--ivory-dim);transition:all .15s}
+  .cr-reset:hover:not(:disabled){color:var(--brass);border-color:var(--brass)}
+  .cr-reset:disabled{opacity:.35}
+  .cr-history{display:flex;flex-wrap:wrap;gap:6px}
+  .cr-hist{font-family:'JetBrains Mono',monospace;font-size:11.5px;font-weight:700;padding:4px 8px;border-radius:6px;background:rgba(0,0,0,.3);border:1px solid transparent}
+  .cr-hist.lo{color:var(--red);border-color:rgba(232,120,111,.25)}
+  .cr-hist.mid{color:var(--green);border-color:rgba(126,216,161,.25)}
+  .cr-hist.hi{color:var(--brass-2);border-color:rgba(230,197,144,.5);background:rgba(230,197,144,.10)}
+  .cr-hist.latest{box-shadow:0 0 0 1px rgba(244,236,216,.25)}
+  .cr-empty{font-size:11px;color:var(--ivory-dim);opacity:.55;font-style:italic;padding:6px 0}
+  .cr-table-card{flex:1}
+  .cr-table{display:flex;flex-direction:column;gap:4px;overflow-y:auto;min-height:0;padding-right:4px}
+  .cr-table::-webkit-scrollbar{width:6px}.cr-table::-webkit-scrollbar-thumb{background:rgba(201,162,106,.25);border-radius:3px}
+  .cr-row{display:grid;grid-template-columns:1fr 60px 130px;gap:8px;align-items:center;padding:5px 10px;border-radius:8px;background:rgba(0,0,0,.22);border:1px solid rgba(201,162,106,.08);font-size:12.5px}
+  .cr-row.you{border-color:rgba(230,197,144,.4);background:rgba(230,197,144,.06)}
+  .cr-row .n{color:var(--ivory);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  .cr-row .b{font-family:'JetBrains Mono',monospace;color:var(--ivory-dim);text-align:right}
+  .cr-row .s{font-family:'JetBrains Mono',monospace;font-size:11.5px;text-align:right;white-space:nowrap}
+  .cr-row .s.win{color:var(--green)}.cr-row .s.lose{color:var(--red);opacity:.85}.cr-row .s.live{color:var(--brass-2)}.cr-row .s.dim{color:var(--ivory-dim);opacity:.5}
+  .cr-stats{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px 12px}
+  .cr-stat{display:flex;flex-direction:column;gap:2px}
+  .cr-stat-l{font-size:9px;letter-spacing:.14em;text-transform:uppercase;color:var(--ivory-dim);opacity:.6}
+  .cr-stat-v{font-family:'JetBrains Mono',monospace;font-size:15px;font-weight:700;color:var(--ivory)}
+  .cr-stat-v.pos{color:var(--green)}.cr-stat-v.neg{color:var(--red)}
+
+  /* Portrait phone: a 460×1000 design, stacked */
+  .cr-root.portrait{width:460px;height:1000px;padding:12px 12px 10px;gap:10px}
+  .portrait .cr-topbar{grid-template-columns:auto 1fr auto;padding-bottom:10px;gap:8px}
+  .portrait .cr-back{padding:7px 10px;font-size:12px}
+  .portrait .cr-title{font-size:20px;gap:8px;justify-self:center}
+  .portrait .cr-title-sub{display:none}
+  .portrait .cr-bank{font-size:16px;padding:6px 10px}
+  .portrait .cr-bank-l{display:none}
+  .portrait .cr-icon{width:34px;height:34px;font-size:14px}
+  .portrait .cr-stage{display:flex;flex-direction:column;gap:10px}
+  .portrait .cr-graph{height:300px;border-radius:12px}
+  .portrait .cr-controls{grid-template-columns:1fr 1fr;grid-template-rows:auto auto;gap:10px 12px;padding:10px 12px}
+  .portrait .cr-action{grid-column:1 / -1;min-height:64px;flex-direction:row;gap:12px}
+  .portrait .cr-action .l{font-size:19px}
+  .portrait .cr-input{height:38px;font-size:15px}
+  .portrait .cr-step{width:36px}
+  .portrait .cr-chip,.cr-root.portrait .cr-pill{min-width:0;font-size:11px;padding:5px 0}
+  .portrait .cr-side{gap:8px}
+  .portrait .cr-card{padding:9px 12px}
+  .portrait .cr-card-head{margin-bottom:6px}
+  .portrait .cr-history{flex-wrap:nowrap;overflow:hidden}
+  .portrait .cr-table-card{max-height:196px}
+  .portrait .cr-row{padding:3px 8px;font-size:11.5px;grid-template-columns:1fr 50px 118px}
+  .portrait .cr-stats{grid-template-columns:repeat(6,1fr);gap:4px}
+  .portrait .cr-stat-v{font-size:12px}
+  .portrait .cr-stat-l{font-size:8px}
+
+  /* SEO overview block below the game (casino dark theme) */
+  .game-overview{max-width:720px;margin:24px auto 40px;padding:0 24px;color:var(--ivory);line-height:1.6;text-align:left}
+  .game-overview h2{font-family:'Bricolage Grotesque',serif;font-size:28px;font-weight:700;color:var(--brass-2);margin:0 0 12px;letter-spacing:.3px}
+  .game-overview h3{font-family:'Bricolage Grotesque',serif;font-size:18px;font-weight:600;color:var(--brass);margin:22px 0 8px}
+  .game-overview p{font-size:14.5px;color:var(--ivory-dim);margin:0 0 10px}
+  .game-overview ul{padding-left:22px;margin:0 0 10px;font-size:14.5px;color:var(--ivory-dim)}
+  .game-overview ul li{margin-bottom:5px}
+  .game-overview b{color:var(--ivory)} .game-overview i{color:var(--ivory)}
+  .game-overview code{font-family:'JetBrains Mono',monospace;font-size:12.5px;color:var(--brass-2);background:rgba(201,162,106,.08);padding:1px 6px;border-radius:4px}
+  .game-overview kbd{display:inline-block;padding:1px 7px;background:rgba(201,162,106,.08);border:1px solid rgba(201,162,106,.25);border-bottom-width:2px;border-radius:4px;font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ivory);margin:0 1px}
+  .game-overview .related-games-list{display:flex;flex-wrap:wrap;gap:8px;list-style:none;padding-left:0;margin-top:0}
+  .game-overview .related-games-list li{margin-bottom:0}
+  .game-overview .related-games-list a{display:inline-block;padding:7px 16px;border-radius:999px;background:rgba(201,162,106,.12);color:var(--brass-2);font-weight:600;font-size:13px;border:1px solid rgba(201,162,106,.25)}
+  .game-overview .related-games-list a:hover{background:var(--brass);color:var(--ink);border-color:var(--brass)}
+  .cr-verifier{display:flex;gap:8px;margin:8px 0 6px}
+  .cr-verifier input{flex:1;min-width:0;height:40px;padding:0 12px;border-radius:8px;background:rgba(0,0,0,.4);border:1px solid rgba(201,162,106,.3);font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ivory);outline:none}
+  .cr-verifier input:focus{border-color:var(--brass)}
+  .cr-verifier button{padding:0 16px;border-radius:8px;background:rgba(201,162,106,.16);border:1px solid var(--brass);color:var(--brass-2);font-weight:600;font-size:13px}
+  #cr-seed-out{font-family:'JetBrains Mono',monospace;font-size:12px;color:var(--ivory);word-break:break-all;min-height:18px}
+  @media (max-width:768px){.game-overview{padding:0 18px}.game-overview h2{font-size:22px}.game-overview h3{font-size:16px}}
+  @media (prefers-reduced-motion:reduce){.cr-action.is-cash{animation:none}}
+</style>
+</head>
+<body>
+<h1 style="position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0">Crash</h1>
+<div id="game-wrapper">
+  <div id="root">
+    <div class="cr-root" id="cr-root">
+      <div class="cr-topbar">
+        <a class="cr-back" href="../casino/">← Casino</a>
+        <div class="cr-title">Crash <span class="cr-title-sub">Cash out before it busts</span></div>
+        <div class="cr-right">
+          <button class="cr-icon" id="cr-sound" type="button" aria-label="Sound on"><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9v6h4l5 4V5L8 9H4z"/><path class="on" d="M16 9.5a3.5 3.5 0 0 1 0 5"/><path class="on" d="M18.5 7a7 7 0 0 1 0 10"/><path class="off" d="M17 9.5l4 5M21 9.5l-4 5"/></svg></button>
+          <div class="cr-bank"><span class="cr-bank-l">Bankroll</span><span id="cr-bank">$1,000</span></div>
+        </div>
+      </div>
+
+      <div class="cr-stage">
+        <div class="cr-main">
+          <div class="cr-graph">
+            <canvas id="cr-canvas" aria-label="Multiplier curve"></canvas>
+            <div class="cr-fair" id="cr-fair"></div>
+          </div>
+
+          <div class="cr-controls">
+            <div>
+              <div class="cr-field-l">Bet <span>$5 – $500</span></div>
+              <div class="cr-inrow">
+                <div class="cr-input-wrap"><span class="u">$</span><input class="cr-input" id="cr-amount" type="number" inputmode="numeric" min="5" max="500" step="1" value="25" aria-label="Bet amount"></div>
+                <button class="cr-step" id="cr-half" type="button" aria-label="Halve bet">½</button>
+                <button class="cr-step" id="cr-double" type="button" aria-label="Double bet">2×</button>
+              </div>
+              <div class="cr-chips" id="cr-chips"></div>
+            </div>
+            <div>
+              <div class="cr-field-l">Auto cash-out <span>optional</span></div>
+              <div class="cr-inrow">
+                <div class="cr-input-wrap"><input class="cr-input auto" id="cr-auto" type="number" inputmode="decimal" min="1.01" step="0.01" placeholder="Off" aria-label="Auto cash-out multiplier"><span class="u r">x</span></div>
+              </div>
+              <div class="cr-pills" id="cr-pills"></div>
+            </div>
+            <button class="cr-action is-bet" id="cr-action" type="button"><span class="l">Place bet</span><span class="s">$25</span></button>
+          </div>
+        </div>
+
+        <aside class="cr-side">
+          <div class="cr-card">
+            <div class="cr-card-head"><div class="cr-card-title">Last rounds</div></div>
+            <div class="cr-history" id="cr-history"></div>
+          </div>
+          <div class="cr-card cr-table-card">
+            <div class="cr-card-head"><div class="cr-card-title">Table</div></div>
+            <div class="cr-table" id="cr-table"></div>
+          </div>
+          <div class="cr-card">
+            <div class="cr-card-head"><div class="cr-card-title">Session</div><button class="cr-reset" id="cr-reset" type="button">Reset</button></div>
+            <div class="cr-stats">
+              <div class="cr-stat"><div class="cr-stat-l">Rounds</div><div class="cr-stat-v" id="cr-st-rounds">0</div></div>
+              <div class="cr-stat"><div class="cr-stat-l">Win rate</div><div class="cr-stat-v" id="cr-st-wr">—</div></div>
+              <div class="cr-stat"><div class="cr-stat-l">Net</div><div class="cr-stat-v" id="cr-st-net">$0</div></div>
+              <div class="cr-stat"><div class="cr-stat-l">Best win</div><div class="cr-stat-v" id="cr-st-big">—</div></div>
+              <div class="cr-stat"><div class="cr-stat-l">Best cash-out</div><div class="cr-stat-v" id="cr-st-mult">—</div></div>
+              <div class="cr-stat"><div class="cr-stat-l">Highest bust</div><div class="cr-stat-v" id="cr-st-bust">—</div></div>
+            </div>
+          </div>
+        </aside>
+      </div>
+    </div>
+  </div>
+</div>
+
+<section class="game-overview" aria-label="About Crash">
+    <h2>How to play Crash</h2>
+    <p>Crash is the simplest game on the casino floor. A multiplier starts at <b>1.00x</b> and climbs. At a random moment it busts and the round is over. Place a bet during the countdown, then press <b>Cash out</b> before the bust and you win your bet times the multiplier at that instant. Wait one beat too long and the whole stake is gone. Rounds run back to back, so you can sit out and watch as many as you like.</p>
+
+    <h3>Controls</h3>
+    <ul>
+        <li>Pick a bet with the chips, the <b>½</b> and <b>2×</b> buttons, or by typing an amount ($5 to $500)</li>
+        <li>Optionally set an <b>auto cash-out</b> target. The game cashes you out the moment the multiplier reaches it, even if you look away.</li>
+        <li><kbd>Space</kbd> places your bet during the countdown and cashes out while the round is live</li>
+        <li><kbd>Esc</kbd> cancels a bet before the round starts</li>
+        <li>Press the button while a round is running to queue a bet for the next one</li>
+    </ul>
+
+    <h3>The odds</h3>
+    <p>The bust point is <code>0.99 ÷ (1 − r)</code> where <i>r</i> is a uniform random number, floored to the cent, with a floor of 1.00x and a ceiling of 1,000x. That means the chance the round reaches any multiplier <i>x</i> is exactly <code>0.99 ÷ x</code>: a 2x round happens 49.5% of the time, a 10x round 9.9%, a 100x round about once in a hundred. About one round in a hundred busts instantly at 1.00x. Cashing out at any target returns 99 cents per dollar over the long run, so the house edge is <b>1%</b> and it is the same at every target. The multiplier climbs as <code>e<sup>0.00006 · ms</sup></code>: about 11.5 seconds to 2x and 38 seconds to 10x.</p>
+
+    <h3 id="fairness">Provably fair</h3>
+    <p>Every round draws a random 32-byte seed before betting opens. While the round runs, the strip under the graph shows the seed's <b>SHA-256 hash</b>. After the bust it shows the seed itself. The bust point is computed from the first 52 bits of that seed, so you can confirm the hash matches and recompute the multiplier: the outcome was fixed before you bet and could not be changed afterward. Paste a seed here to check it.</p>
+    <div class="cr-verifier"><input id="cr-seed-in" type="text" placeholder="64-character seed from a finished round" spellcheck="false" autocomplete="off"><button id="cr-seed-go" type="button">Verify</button></div>
+    <div id="cr-seed-out"></div>
+
+    <h3>Tips &amp; strategy</h3>
+    <ul>
+        <li><b>No target beats the edge.</b> Cashing at 1.10x or 10x has the same expected return. What you choose is variance, not value.</li>
+        <li><b>Low targets, long sessions.</b> A 1.5x target wins two rounds in three and grinds slowly. A 5x target loses four rounds in five and wins big when it hits.</li>
+        <li><b>Use auto cash-out.</b> The loss in this game is almost always "one more second." A preset target takes that decision away from your thumb.</li>
+        <li><b>The history strip means nothing.</b> Every round is an independent draw. A run of low busts does not make a big one "due."</li>
+        <li><b>Set a session budget</b> and walk away when it is spent. Rounds are fifteen seconds; the bankroll goes fast.</li>
+    </ul>
+
+    <h3>About the crash game</h3>
+    <p>Crash appeared on a bitcoin gambling site called Bustabit in 2014, where the graph, the exponential curve, and the seed-hash fairness scheme were all invented. It stayed a crypto curiosity until Spribe released Aviator in 2019, which put a little red plane on the curve and became one of the most-played casino games in India, Africa, and Latin America. JetX, Spaceman, Space XY, and the house-branded Crash tables on the big crypto sites all use the same math. The other seats at this table are computer players so the feed looks like a real lobby; their cash-outs do not affect yours.</p>
+
+    <h3>Frequently asked</h3>
+    <p><b>How do you play the crash game?</b> Bet during the countdown, watch the multiplier climb, cash out before it busts. Auto cash-out does it for you at a target you set.</p>
+    <p><b>Is this crash game free?</b> Yes. Play money only, shared with the other Limestone casino tables. No deposits, no signup.</p>
+    <p><b>What is the house edge?</b> 1%, and it is the same whether you cash out at 1.10x or 50x.</p>
+    <p><b>What does provably fair mean?</b> The bust point comes from a seed whose hash is shown before the round and revealed after it, so you can check nothing changed once you bet.</p>
+    <p><b>Is there a best strategy?</b> No. Targets only change how bumpy the ride is. Auto cash-out and a session budget are the two habits that matter.</p>
+
+    <h3>More casino games</h3>
+    <ul class="related-games-list">
+        <li><a href="../slot-machine/">Slot Machine</a></li>
+        <li><a href="../roulette/">Roulette</a></li>
+        <li><a href="../blackjack/">Blackjack</a></li>
+        <li><a href="../craps/">Craps</a></li>
+        <li><a href="../casino/">All casino games &rarr;</a></li>
+    </ul>
+</section>
+
+<script>
+(function() {
+  var wrapper = document.getElementById('game-wrapper');
+  var root = document.getElementById('root');
+  var crRoot = document.getElementById('cr-root');
+  var prev = null;
+  function resize() {
+    var portrait = window.innerWidth < window.innerHeight && window.innerWidth < 760;
+    var W = portrait ? 460 : 1380, H = portrait ? 1000 : 860;
+    crRoot.classList.toggle('portrait', portrait);
+    var s = Math.min(window.innerWidth / W, window.innerHeight / H, 1);
+    root.style.width = W + 'px';
+    root.style.height = H + 'px';
+    root.style.transform = 'scale(' + s + ')';
+    wrapper.style.width = (W * s) + 'px';
+    wrapper.style.height = (H * s) + 'px';
+    if (prev !== portrait) { prev = portrait; window.dispatchEvent(new Event('cr:canvas')); }
+    else window.dispatchEvent(new Event('cr:canvas'));
+  }
+  window.addEventListener('resize', resize);
+  resize();
+})();
+</script>
+
+<script src="../casino/casino-config.js?v=20260508a"></script>
+<script src="../casino/casino-sync.js?v=20260508a"></script>
+<script src="../casino/casino-bankroll.js?v=20260507c"></script>
+<script src="../casino/casino-player.js?v=20260507a"></script>
+<script src="../casino/casino-stats.js?v=20260917a"></script>
+<script src="../casino/casino-reload.js?v=20260910d"></script>
+<script src="crash-engine.js?v=20260917a"></script>
+<script src="crash-app.js?v=20260917a"></script>
+<a id="fb-pill" href="/feedback/?from=crash" style="position:fixed;left:10px;bottom:10px;z-index:2147483000;font:600 11px/1 Inter,system-ui,sans-serif;color:#fff;background:rgba(16,62,60,0.5);padding:6px 11px;border-radius:999px;text-decoration:none;letter-spacing:0.02em;opacity:0.75" onmouseover="this.style.opacity=1" onmouseout="this.style.opacity=0.75">💬 Feedback</a>
+</body>
+</html>
