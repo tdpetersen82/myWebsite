@@ -4,7 +4,7 @@ class BikeArt {
     constructor(scene) {
         this.scene = scene;
         this.parts = scene.cache.json.get('rider-atlas');
-        const texture = scene.textures.get('rider-art');
+        const texture = scene.textures.get('rider-render');
         for (const [name, part] of Object.entries(this.parts)) {
             if (!texture.has(name)) texture.add(name, 0, ...part.rect);
         }
@@ -19,7 +19,7 @@ class BikeArt {
             ['head', 'head'], ['upperArm', 'upperArm'], ['forearm', 'forearm']
         ];
         for (const [id, part] of order) {
-            const sprite = scene.add.image(0, 0, 'rider-art', part).setDepth(4);
+            const sprite = scene.add.image(0, 0, 'rider-render', part).setDepth(4);
             if (id.startsWith('far')) sprite.setTint(0xa2afb2);
             this.sprites[id] = sprite;
         }
@@ -76,6 +76,7 @@ class BikeArt {
                 const px=x+32,py=y+16;
                 x=-32+px*pc-py*ps; y=-16+px*ps+py*pc;
             }
+            y -= 4; // 40px tires: keep the contact patch at the physics origin.
             return {x:bike.x+x*c-y*s,y:bike.y+x*s+y*c};
         };
         const joint = (a,b,length,bend=1) => {
@@ -99,17 +100,27 @@ class BikeArt {
             return [stem[0]+dx*Math.cos(swing),stem[1]+dy];
         };
         const pedal=tail ? frameLocal(frame.pedal) : swingPoint(frameLocal(frame.pedal));
+        const oppositePedal = frameLocal([2*frame.crank[0]-frame.pedal[0],2*frame.crank[1]-frame.pedal[1]]);
+        const farPedal = tail ? oppositePedal : swingPoint(oppositePedal);
         const shoe=this.parts.shoe,shoeWidth=14;
         const ankleHeight=(shoe.rect[3]*(1-shoe.origin[1]))*shoeWidth/shoe.rect[2];
-        const foot=[pedal[0]-1,pedal[1]-ankleHeight],farFoot=[pedal[0]-12,pedal[1]-ankleHeight-3];
+        // Put the ball of each foot over opposite ends of the crank.
+        const foot=[pedal[0]-5,pedal[1]-ankleHeight],farFoot=[farPedal[0]-5,farPedal[1]-ankleHeight];
         if (tail) { foot[0]-=12*pulse; foot[1]-=20*pulse; farFoot[0]+=15*pulse; farFoot[1]-=24*pulse; }
         const q = Math.max(-0.3,Math.min(1.15,bike.compress));
-        const hip = [-11-q*6+bike.bodyShift*3,-49+q*9];
-        const shoulder = [4+q*4+bike.bodyShift*2,-68+q*12];
+        const hip = [-12-q*5+bike.bodyShift*2,-53+q*9];
+        // Hinge a rigid torso at the hip; do not stretch the shirt as we pump.
+        // Keep both pedals reachable before solving fixed-length leg bones.
+        for (const ankle of [foot,farFoot]) {
+            const dx=hip[0]-ankle[0],dy=hip[1]-ankle[1],d=Math.hypot(dx,dy);
+            if(d>45) { hip[0]=ankle[0]+dx*45/d; hip[1]=ankle[1]+dy*45/d; }
+        }
+        const torsoAngle = -Math.PI/4 + q*0.17;
+        const shoulder = [hip[0]+27*Math.cos(torsoAngle),hip[1]+27*Math.sin(torsoAngle)];
         const farHip=[hip[0]-3,hip[1]];
-        const knee=joint(hip,foot,21,-1),farKnee=joint(farHip,farFoot,20,-1);
-        const elbow=joint(shoulder,grip,17),farShoulder=[shoulder[0]-3,shoulder[1]+2];
-        const farElbow=joint(farShoulder,grip,17);
+        const knee=joint(hip,foot,23,-1),farKnee=joint(farHip,farFoot,23,-1);
+        const elbow=joint(shoulder,grip,20),farShoulder=[shoulder[0]-3,shoulder[1]+2];
+        const farElbow=joint(farShoulder,grip,20);
         const bone=(id,name,a,b,width)=>this.bone(id,name,world(a),world(b),width);
         bone('farThigh','thigh',farHip,farKnee,9);
         bone('farShin','shin',farKnee,farFoot,6.5);
@@ -117,7 +128,7 @@ class BikeArt {
         bone('farUpperArm','upperArm',farShoulder,farElbow,6.5);
         bone('farForearm','forearm',farElbow,grip,5.5);
         for (const [id,x] of [['rearWheel',-32],['frontWheel',32]]) {
-            this.anchored(id,'wheel',world(x === -32 ? swingPoint([x,-16]) : [x,-16],false),32,angle+bike.distance/16);
+            this.anchored(id,'wheel',world(x === -32 ? swingPoint([x,-16]) : [x,-16],false),40,angle+bike.distance/20);
         }
         // Frame anchor mapping is authored separately from the rider's bones.
         const rear=world(swingPoint([-32,-16]));
@@ -125,7 +136,7 @@ class BikeArt {
         // Side-view projection of yaw around the steering axis. The frame
         // swings horizontally beneath the rider, never over their head.
         this.sprites.frame.setScale(frameScale*Math.cos(swing),frameScale);
-        if (trick) this.sprites.rearWheel.setScale(32/this.parts.wheel.rect[2]*Math.max(0.18,Math.abs(Math.cos(swing))),32/this.parts.wheel.rect[3]);
+        if (trick) this.sprites.rearWheel.setScale(40/this.parts.wheel.rect[2]*Math.max(0.18,Math.abs(Math.cos(swing))),40/this.parts.wheel.rect[3]);
         const crown=world(crownLocal);
         const axle=world([32,-16],false);
         const d=Math.hypot(crown.x-axle.x,crown.y-axle.y);

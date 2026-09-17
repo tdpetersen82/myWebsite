@@ -33,8 +33,8 @@ for (let i = 0; i < 50; i++) hold.update(16, free, {});
 assert.equal(hold.angle, beforeRelease, 'release stops rotation without drift');
 assert.equal(hold.leanVelocity, 0);
 const falling = turn(1000, 10, {});
-assert(Math.abs(falling.vy - CONFIG.STATS.gravity) < 1e-7);
-assert(Math.abs(falling.y - CONFIG.STATS.gravity / 2) < 9, 'free-fall parabola');
+assert(Math.abs(falling.vy - CONFIG.STATS.airGravity) < 1e-7);
+assert(Math.abs(falling.y - CONFIG.STATS.airGravity / 2) < 9, 'free-fall parabola');
 for (const [angle, grade] of [[8,'perfect'],[8.01,'clean'],[22,'clean'],[22.01,'sketchy'],[40,'sketchy'],[40.01,'bail']]) {
     const b = makeAir(); b.angle = angle; b.vy = 200; b._land(flat, 10, 0);
     assert.equal(b.lastLanding.grade, grade); assert.equal(b.leanVelocity, 0);

@@ -16,7 +16,7 @@ class RideScene extends Phaser.Scene {
 
     preload() {
         this.load.image('rider-art', 'assets/rider-atlas-v1.png');
-        this.load.json('rider-atlas', 'assets/rider-atlas.json?v=20260914g');
+        this.load.json('rider-atlas', 'assets/rider-atlas.json?v=20260917b');
     }
 
     create() {
@@ -39,6 +39,12 @@ class RideScene extends Phaser.Scene {
         this.bike = new Bike(this, CONFIG.STATS, CONFIG.TERRAIN.startFlat * 0.5);
         this.bike.y = this.terrain.heightAt(this.bike.x);
         this.particles = new ParticleField();
+        // Mipmaps prevent the large atlas from shimmering when drawn at game size.
+        if (!this.textures.exists('rider-render')) {
+            const atlas = this.textures.createCanvas('rider-render', 2048, 2048);
+            atlas.context.drawImage(this.textures.get('rider-art').getSourceImage(), 0, 0);
+            atlas.refresh();
+        }
         this.bikeArt = new BikeArt(this);
         this.bikeArt.update(this.bike);
         this.crash = null;
@@ -305,9 +311,9 @@ class RideScene extends Phaser.Scene {
 
     _updateHUD() {
         const b = this.bike;
-        const mph = Math.round(b.speed * 0.12 / 1.609344); // convert the existing speed scale to miles/hour
+        const mph = Math.round((b.airborne ? Math.hypot(b.vx,b.vy) : b.speed) * CONFIG.METERS_PER_PIXEL * 2.236936); // world meters/sec to MPH
         this.hud.speed.setText(String(mph));
-        this.hud.distance.setText(Math.floor(b.distance / 10) + ' m');
+        this.hud.distance.setText(Math.floor(b.distance * CONFIG.METERS_PER_PIXEL) + ' m');
         this.hud.score.setText(String(b.scoreValue()));
         const best = this.best;
         this.hud.best.setText('BEST ' + Math.max(best, b.scoreValue()));
@@ -376,7 +382,7 @@ class RideScene extends Phaser.Scene {
         add(H * 0.30, 'RUN OVER', 13, '#ff8a6a');
         add(H * 0.42, String(score), 52, '#ffffff');
         add(H * 0.50, 'SCORE', 11, CONFIG.COLORS.HUD_DIM);
-        add(H * 0.58, 'DISTANCE ' + Math.floor(this.bike.distance / 10) + 'm   •   BEST ' + best, 14, CONFIG.COLORS.HUD);
+        add(H * 0.58, 'DISTANCE ' + Math.floor(this.bike.distance * CONFIG.METERS_PER_PIXEL) + 'm   •   BEST ' + best, 14, CONFIG.COLORS.HUD);
         if (isBest) {
             const nb = add(H * 0.65, '★ NEW BEST ★', 14, CONFIG.COLORS.PERFECT);
             this.tweens.add({ targets: nb, alpha: { from: 1, to: 0.4 }, duration: 600, yoyo: true, repeat: -1 });

@@ -10,17 +10,19 @@ const CONFIG = {
     HEIGHT: 540,
 
     // localStorage
+    METERS_PER_PIXEL: 1.05 / 64, // 1.05 m wheelbase spans 64 world pixels
     BEST_KEY: 'dirtJumperBest',     // plain int (distance + flow score)
 
     // ---- The single vehicle's stats (Phase 2 swaps this object) ----
     // All accelerations are px/s^2, speeds px/s, angles in degrees.
     STATS: {
+        airGravity: 850,             // longer, readable jump arcs
         gravity: 1500,              // global down accel (also used in air)
 
         // Rolling on terrain
         rollDragConst: 24,          // constant rolling resistance (px/s^2)
         rollDragK2: 0.00050,        // quadratic (air) drag -> terminal speed
-        topSpeed: 820,              // soft ceiling; pump speedFactor fades to 0 here
+        topSpeed: 700,              // soft ceiling; pump speedFactor fades to 0 here
         speedFloor: 26,             // never fully stall on the descent
 
         // Pump (the signature mechanic)
@@ -64,11 +66,11 @@ const CONFIG = {
         jump: {
             kickH: 34, kickHPerD: 12,
             kickRatio: 2.8,
-            lipBoost: 90, lipBoostPerH: 1.2,
-            tableLen: 125, tableDrop: 5,
-            landRatio: 0.30,
-            landingLen: 340, landingLenPerD: 90,
-            gapMin: 90, gapPerD: 25,
+            lipBoost: 220, lipBoostPerH: 1.2,
+            tableLen: 360, tableDrop: 5,
+            landRatio: 0.22,
+            landingLen: 600, landingLenPerD: 90,
+            gapMin: 320, gapPerD: 25,
             runUp: 250
         },
         lookahead: 1700,
@@ -87,7 +89,7 @@ const CONFIG = {
     FLOW_PER_GOODPUMP: 0.34,        // flow gained per good pump cycle
     FLOW_PER_CLEAN: 1.0,            // flow gained per clean/perfect landing
     FLOW_SCORE_MULT: 0.06,         // each flow unit adds this fraction to score rate
-    FLOW_TOPSPEED_BONUS: 12,        // px/s top-speed nudge per flow unit
+    FLOW_TOPSPEED_BONUS: 5,        // px/s top-speed nudge per flow unit
 
     // ---- Colors ----
     COLORS: {

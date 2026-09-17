@@ -58,6 +58,7 @@ class Bike {
         this.tricks = [];
         this.activeTricks = [];
         this.trickHeld = {};
+        this.trickBuffer = {};
     }
 
     get stateName() { return this.crashed ? 'crashed' : (this.airborne ? 'air' : 'ground'); }
@@ -76,19 +77,22 @@ class Bike {
         this.lastLanding = null;
 
         const previousSpeed = this.speed;
-        this._trickInput(input);
+        this._trickInput(input, dt);
         if (this.airborne) this._updateAir(dt, terrain, input, false);
         else this._updateGround(dt, terrain, input);
 
         this._updateBody(dt, terrain, input, previousSpeed);
     }
 
-    _trickInput(input) {
+    _trickInput(input, dt) {
         for (const name of ['whip', 'backflip', 'tailwhip']) {
-            if (input[name] && !this.trickHeld[name] && this.airborne &&
+            this.trickBuffer[name] = Math.max(0, (this.trickBuffer[name] || 0) - dt);
+            if (input[name] && !this.trickHeld[name]) this.trickBuffer[name] = 0.22;
+            if (this.trickBuffer[name] > 0 && this.airborne &&
                 !this.activeTricks.some(t => t.name === name || (t.name !== 'backflip' && name !== 'backflip'))) {
+                this.trickBuffer[name] = 0;
                 this.activeTricks.push({name, elapsed:0, progress:0,
-                    duration: name === 'whip' ? 0.30 : name === 'backflip' ? 0.48 : 0.42});
+                    duration: name === 'whip' ? 0.38 : name === 'backflip' ? 0.55 : 0.50});
             }
             this.trickHeld[name] = !!input[name];
         }
@@ -245,7 +249,7 @@ class Bike {
     // ====================================================================
     _updateAir(dt, terrain, input, takeoffFrame) {
         const s = this.stats;
-        const g = s.gravity;
+        const g = s.airGravity || s.gravity;
 
         // rotation to set landing angle (symmetric; none when no key held)
         let rot = 0;
@@ -327,6 +331,7 @@ class Bike {
         else grade = 'bail';
 
         this.airborne = false;
+        this.trickBuffer = {};
         this.leanVelocity = 0;
         this.pumpCharge = 0;
         this.releasePower = 0;

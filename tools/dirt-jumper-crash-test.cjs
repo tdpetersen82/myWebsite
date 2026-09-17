@@ -33,6 +33,12 @@ for(const squat of [-0.3,0,0.85,1.15]) for(const fork of [0,2.2,5.2]) for(const 
         assert(Math.hypot(start.x-pose.a.x,start.y-pose.a.y)<1e-7,'upper texture joint is attached');
         assert(Math.hypot(end.x-pose.b.x,end.y-pose.b.y)<1e-7,'lower texture joint is attached');
     }
+    for(const [id,length] of [['torso',27],['thigh',23],['shin',23],['upperArm',20],['forearm',20]]) {
+        const p=art.pose[id];assert(Math.abs(Math.hypot(p.b.x-p.a.x,p.b.y-p.a.y)-length)<0.001,'rigid '+id+' length');
+    }
+    const rear=art.pose.rearWheel.anchor,dropout=art.pose.frame.anchor;
+    assert(Math.hypot(rear.x-dropout.x,rear.y-dropout.y)<0.001,'rear axle stays in hardtail dropout');
+    assert.equal(art.pose.rearWheel.width,40,'wheel proportions');
     const collar=art.texturePoint('torso',...parts.torso.neck);
     assert(Math.hypot(collar.x-art.pose.head.anchor.x,collar.y-art.pose.head.anchor.y)<1e-7,'helmet follows actual collar');
     const grip=art.texturePoint('bars',...parts.bars.grip);
@@ -49,18 +55,20 @@ for(const velocity of [200,500,820]) for(const slope of [0,0.15,-0.1]) for(const
     const art=new BikeArt(scene);art.update(bike);
     const crash=new CrashRig(art,bike,terrain);
     const start=crash.focus().x;
-    let maxAngle=0;
+    let maxAngle=0,maxSeparationChange=0;
+    const offset={x:crash.focus().x-crash.frame.position.x,y:crash.focus().y-crash.frame.position.y};
     for(let i=0;i<600;i++) {
         crash.update(1000/120);
         for(const body of crash.dynamic) {
             assert(Number.isFinite(body.position.x+body.position.y+body.angle));
             assert(body.position.y<terrain.heightAt(body.position.x)+8,JSON.stringify({check:'terrain',velocity,slope,i,position:body.position,label:body.label,angle:body.angle}));
         }
+        maxSeparationChange=Math.max(maxSeparationChange,Math.hypot(crash.focus().x-crash.frame.position.x-offset.x,crash.focus().y-crash.frame.position.y-offset.y));
         maxAngle=Math.max(maxAngle,Math.abs(crash.links.torso.body.angle));
     }
     assert(crash.focus().x>start+20,'impact momentum carries rider forward');
     assert(maxAngle>0.5,'rider tumbles instead of freezing');
-    assert(Math.hypot(crash.focus().x-crash.frame.position.x,crash.focus().y-crash.frame.position.y)>8,'rider separates from bike');
+    assert(maxSeparationChange>8,'rider moves independently of bike during crash, even if they settle together');
     assert(crash.engine.world.bodies.length<230,'bounded crash world');
     crash.destroy();assert.equal(crash.engine.world.bodies.length,0);
 }

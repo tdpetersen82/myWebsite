@@ -18,13 +18,14 @@ for(const dt of [8,16,33]) for(const targetAngle of [15,20,25]) {
         if(bike.justPop && firstJump===null) firstJump=time/1000;
         if(bike.lastLanding) {
             landings++;
+            assert(bike.airTime >= 1.15 && bike.airTime <= 1.65, "usable hangtime on every jump");
             minLandingSpeed=Math.min(minLandingSpeed,bike.speed);
             if(terrain.lips.some(lip=>bike.x>=lip.landingStart&&bike.x<=lip.landingEnd))onRamp++;
         }
         terrain.cull(bike.x-350);
     }
     assert(firstJump>1.5&&firstJump<4,'short predictable opening');
-    assert(landings>=20,'track regularly offers jumps');
+    assert(landings>=15,'track regularly offers jumps');
     assert(onRamp/landings>=0.9,'flight arcs meet the broad landing ramps');
     assert(minLandingSpeed>450,'landings carry useful speed into the next section');
     results.push({dt,targetAngle,firstJump,landings,onRamp,minLandingSpeed:Math.round(minLandingSpeed),distance:Math.round(bike.distance)});

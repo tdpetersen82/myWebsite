@@ -48,8 +48,8 @@ class CrashRig {
         const angle=bike.angle*Math.PI/180;
         this.frame=add(M.Bodies.rectangle((rear.x+front.x)/2+Math.sin(angle)*10,
             (rear.y+front.y)/2-Math.cos(angle)*10,52,13,{...opts,angle}));
-        this.rearWheel=add(M.Bodies.circle(rear.x,rear.y,15,{...opts,friction:0.9}));
-        this.frontWheel=add(M.Bodies.circle(front.x,front.y,15,{...opts,friction:0.9}));
+        this.rearWheel=add(M.Bodies.circle(rear.x,rear.y,this.pose.rearWheel.width/2-1,{...opts,friction:0.9}));
+        this.frontWheel=add(M.Bodies.circle(front.x,front.y,this.pose.frontWheel.width/2-1,{...opts,friction:0.9}));
         joint(this.frame,this.rearWheel,rear,0.98);
         joint(this.frame,this.frontWheel,front,0.98);
         // The riding model grades a landing at its contact origin. With a bad
@@ -90,8 +90,8 @@ class CrashRig {
             const link=this.links[parent];
             this.art.anchored(id,'shoe',this.local(link.body,0,link.length/2),this.pose[id].width,link.body.angle);
         }
-        this.art.anchored('rearWheel','wheel',this.rearWheel.position,32,this.rearWheel.angle);
-        this.art.anchored('frontWheel','wheel',this.frontWheel.position,32,this.frontWheel.angle);
+        this.art.anchored('rearWheel','wheel',this.rearWheel.position,this.pose.rearWheel.width,this.rearWheel.angle);
+        this.art.anchored('frontWheel','wheel',this.frontWheel.position,this.pose.frontWheel.width,this.frontWheel.angle);
         this.art.anchored('frame','frame',this.local(this.frame,-32,10),this.art.parts.frame.displayWidth,this.frame.angle);
         const framePart=this.art.parts.frame;
         const framePoint=([x,y])=>this.local(this.frame,
